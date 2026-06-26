@@ -418,6 +418,59 @@ void test_runtime_expression_errors_route_through_catalog() {
         "#2541: qps-ploc expression error should pseudo-localize prose");
 }
 
+void test_runtime_record_precondition_errors_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    const copperfin::localization::PlaceholderMap replace_placeholders{{"command", "REPLACE"}};
+    const copperfin::localization::PlaceholderMap field_placeholders{{"fieldName", "CustomerID"}};
+
+    expect(
+        english.translate("Runtime.Prg.Records.Error.RequiresLocalTableBackedCursor") ==
+            "This command requires a local table-backed cursor",
+        "#2542: generic local table-backed cursor error should preserve en-US default output");
+    expect(
+        english.translate("Runtime.Prg.Records.Error.CommandRequiresCurrentRemoteRecord", replace_placeholders) ==
+            "REPLACE requires a current remote record",
+        "#2542: command-specific remote record error should preserve command placeholder");
+    expect(
+        english.translate("Runtime.Prg.Records.Error.CommandRequiresCurrentLocalRecord", replace_placeholders) ==
+            "REPLACE requires a current local record",
+        "#2542: command-specific local record error should preserve command placeholder");
+    expect(
+        english.translate("Runtime.Prg.Records.Error.RemoteSqlFieldNotFound", field_placeholders) ==
+            "Field not found on remote SQL cursor: CustomerID",
+        "#2542: remote SQL field error should preserve field-name placeholder");
+    expect(
+        english.translate("Runtime.Prg.Records.Error.LockRetryCancelled") == "Lock retry cancelled.",
+        "#2542: lock retry cancellation should preserve en-US default output");
+
+    const std::string spanish_field =
+        spanish.translate("Runtime.Prg.Records.Error.RemoteSqlFieldNotFound", field_placeholders);
+    expect(
+        spanish_field.find("CustomerID") != std::string::npos &&
+            spanish_field.find("Field not found") == std::string::npos,
+        "#2542: es-419 remote SQL field error should preserve field name without falling back to English");
+
+    const std::string portuguese_replace =
+        portuguese.translate("Runtime.Prg.Records.Error.CommandRequiresCurrentLocalRecord", replace_placeholders);
+    expect(
+        portuguese_replace.find("REPLACE") != std::string::npos &&
+            portuguese_replace.find("requires a current local record") == std::string::npos,
+        "#2542: pt-BR command-specific record error should preserve command without falling back to English");
+
+    const std::string pseudo_message =
+        pseudo.translate("Runtime.Prg.Records.Error.RemoteSqlFieldNotFound", field_placeholders);
+    expect(
+        pseudo_message.find("[!! ") == 0U &&
+            pseudo_message.find("CustomerID") != std::string::npos &&
+            pseudo_message.find("{fieldName}") == std::string::npos,
+        "#2542: qps-ploc record precondition error should pseudo-localize prose while preserving placeholders");
+}
+
 void test_inspect_usage_routes_through_localization(const std::string& inspect_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_inspect_usage_tests";
@@ -454,6 +507,7 @@ int main(int argc, char** argv) {
     test_build_host_catalog_entries_cover_placeholder_locales();
     test_runtime_numeric_domain_errors_route_through_catalog();
     test_runtime_expression_errors_route_through_catalog();
+    test_runtime_record_precondition_errors_route_through_catalog();
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);
     } else {

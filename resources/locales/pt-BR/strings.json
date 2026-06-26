@@ -15,5 +15,12 @@
   "Runtime.Prg.Expression.Error.ExpectedFunctionArgument": "Argumento de funcao esperado",
   "Runtime.Prg.Expression.Error.IntegerDivisionByZero": "Divisao por zero em expressao inteira",
   "Runtime.Prg.Numeric.Error.PositiveArgumentRequired": "{function} exige um argumento positivo (recebeu {value})",
-  "Runtime.Prg.Numeric.Error.UnitRangeArgumentRequired": "{function} exige um argumento entre -1 e 1 (recebeu {value})"
+  "Runtime.Prg.Numeric.Error.UnitRangeArgumentRequired": "{function} exige um argumento entre -1 e 1 (recebeu {value})",
+  "Runtime.Prg.Records.Error.CommandRequiresCurrentLocalRecord": "{command} exige um registro local atual",
+  "Runtime.Prg.Records.Error.CommandRequiresCurrentRemoteRecord": "{command} exige um registro remoto atual",
+  "Runtime.Prg.Records.Error.LockRetryCancelled": "Tentativa de bloqueio cancelada.",
+  "Runtime.Prg.Records.Error.RemoteSqlFieldNotFound": "Campo nao encontrado no cursor SQL remoto: {fieldName}",
+  "Runtime.Prg.Records.Error.RequiresCurrentLocalRecord": "Este comando exige um registro local atual",
+  "Runtime.Prg.Records.Error.RequiresCurrentRemoteRecord": "Este comando exige um registro remoto atual",
+  "Runtime.Prg.Records.Error.RequiresLocalTableBackedCursor": "Este comando exige um cursor local baseado em tabela"
 }

@@ -319,7 +319,7 @@
         {
             if (!cursor.remote && cursor.source_path.empty())
             {
-                last_error_message = "This command requires a local table-backed cursor";
+                last_error_message = runtime_text("Runtime.Prg.Records.Error.RequiresLocalTableBackedCursor");
                 return false;
             }
 
@@ -481,7 +481,7 @@
             {
                 if (task_cancel_requested != nullptr && task_cancel_requested->load(std::memory_order_relaxed))
                 {
-                    last_error_message = "Lock retry cancelled.";
+                    last_error_message = runtime_text("Runtime.Prg.Records.Error.LockRetryCancelled");
                     return false;
                 }
                 std::this_thread::sleep_for(std::chrono::milliseconds(1U));
@@ -633,7 +633,9 @@
             {
                 if (cursor.recno == 0U || cursor.eof || cursor.recno > cursor.remote_records.size())
                 {
-                    last_error_message = "REPLACE requires a current remote record";
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Records.Error.CommandRequiresCurrentRemoteRecord",
+                        {{"command", "REPLACE"}});
                     return false;
                 }
 
@@ -646,7 +648,9 @@
                                               { return collapse_identifier(candidate.field_name) == normalized_field; });
                     if (field == record.values.end())
                     {
-                        last_error_message = "Field not found on remote SQL cursor: " + assignment.field_name;
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Records.Error.RemoteSqlFieldNotFound",
+                            {{"fieldName", assignment.field_name}});
                         return false;
                     }
                     field->display_value = value_as_string(value);
@@ -655,7 +659,9 @@
             }
             if (cursor.source_path.empty() || cursor.recno == 0U || cursor.eof)
             {
-                last_error_message = "REPLACE requires a current local record";
+                last_error_message = runtime_text(
+                    "Runtime.Prg.Records.Error.CommandRequiresCurrentLocalRecord",
+                    {{"command", "REPLACE"}});
                 return false;
             }
             if (!ensure_transaction_backup_for_table(cursor.source_path))
@@ -1214,7 +1220,7 @@
                 {
                     if (cursor.recno == 0U || cursor.eof || cursor.recno > cursor.remote_records.size())
                     {
-                        last_error_message = "This command requires a current remote record";
+                        last_error_message = runtime_text("Runtime.Prg.Records.Error.RequiresCurrentRemoteRecord");
                         return false;
                     }
                     target_records.push_back(cursor.recno);
@@ -1245,7 +1251,7 @@
             }
             if (cursor.source_path.empty())
             {
-                last_error_message = "This command requires a local table-backed cursor";
+                last_error_message = runtime_text("Runtime.Prg.Records.Error.RequiresLocalTableBackedCursor");
                 return false;
             }
             if (!ensure_transaction_backup_for_table(cursor.source_path))
@@ -1258,7 +1264,7 @@
             {
                 if (cursor.recno == 0U || cursor.eof)
                 {
-                    last_error_message = "This command requires a current local record";
+                    last_error_message = runtime_text("Runtime.Prg.Records.Error.RequiresCurrentLocalRecord");
                     return false;
                 }
                 target_records.push_back(cursor.recno);
