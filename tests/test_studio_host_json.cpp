@@ -6226,16 +6226,16 @@ void test_studio_host_launch_selection_marker_diagnostics_localize(const std::st
         temp_root);
 
     expect(process.exit_code == 2,
-        "#2446: pseudo-localized hide-selection missing-option diagnostics should preserve parse-failure exit status");
+        "#2524: pseudo-localized hide-selection missing-option diagnostics should preserve parse-failure exit status");
     expect_contains(process.stdout_text,
         "[!! ",
-        "#2446: pseudo-localized hide-selection missing-option diagnostics should decorate human-facing prose");
+        "#2524: pseudo-localized hide-selection missing-option diagnostics should decorate human-facing prose");
     expect_contains(process.stdout_text,
         "--hide-selection",
-        "#2446: pseudo-localized hide-selection missing-option diagnostics should preserve CLI option names");
+        "#2524: pseudo-localized hide-selection missing-option diagnostics should preserve CLI option names");
     expect_not_contains(process.stdout_text,
         "An object hide-selection assignment requires --hide-selection.",
-        "#2446: pseudo-localized hide-selection missing-option diagnostics should not fall back to raw English prose");
+        "#2524: pseudo-localized hide-selection missing-option diagnostics should not fall back to raw English prose");
 
     process = run_process_capture(
         studio_host_path,
@@ -6248,13 +6248,13 @@ void test_studio_host_launch_selection_marker_diagnostics_localize(const std::st
         temp_root);
 
     expect(process.exit_code == 2,
-        "#2446: pseudo-localized highlight-row missing-target diagnostics should preserve parse-failure exit status");
+        "#2524: pseudo-localized highlight-row missing-target diagnostics should preserve parse-failure exit status");
     expect_contains(process.stdout_text,
         "[!! ",
-        "#2446: pseudo-localized highlight-row missing-target diagnostics should decorate human-facing prose");
+        "#2524: pseudo-localized highlight-row missing-target diagnostics should decorate human-facing prose");
     expect_not_contains(process.stdout_text,
         "An object highlight-row assignment requires at least one target selector.",
-        "#2446: pseudo-localized highlight-row missing-target diagnostics should not fall back to raw English prose");
+        "#2524: pseudo-localized highlight-row missing-target diagnostics should not fall back to raw English prose");
 
     process = run_process_capture(
         studio_host_path,
@@ -6266,16 +6266,16 @@ void test_studio_host_launch_selection_marker_diagnostics_localize(const std::st
         temp_root);
 
     expect(process.exit_code == 2,
-        "#2446: pseudo-localized allow-row-sizing stray-argument diagnostics should preserve parse-failure exit status");
+        "#2524: pseudo-localized allow-row-sizing stray-argument diagnostics should preserve parse-failure exit status");
     expect_contains(process.stdout_text,
         "[!! ",
-        "#2446: pseudo-localized allow-row-sizing stray-argument diagnostics should decorate human-facing prose");
+        "#2524: pseudo-localized allow-row-sizing stray-argument diagnostics should decorate human-facing prose");
     expect_contains(process.stdout_text,
         "--allow-row-sizing-object",
-        "#2446: pseudo-localized allow-row-sizing stray-argument diagnostics should preserve required mode option");
+        "#2524: pseudo-localized allow-row-sizing stray-argument diagnostics should preserve required mode option");
     expect_not_contains(process.stdout_text,
         "Allow-row-sizing arguments can only be used with --allow-row-sizing-object.",
-        "#2446: pseudo-localized allow-row-sizing stray-argument diagnostics should not fall back to raw English prose");
+        "#2524: pseudo-localized allow-row-sizing stray-argument diagnostics should not fall back to raw English prose");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -6304,10 +6304,10 @@ void test_studio_host_launch_sizing_zorder_diagnostics_localize(const std::strin
         temp_root);
 
     expect(process.exit_code == 2,
-        "#2447: default resizable diagnostics should preserve parse-failure exit status");
+        "#2524: default resizable diagnostics should preserve parse-failure exit status");
     expect_contains(process.stdout_text,
         "An object resizable assignment requires at least one target selector.",
-        "#2447: default resizable diagnostics should preserve en-US missing-target prose");
+        "#2524: default resizable diagnostics should preserve en-US missing-target prose");
 
     set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
     process = run_process_capture(
@@ -6321,16 +6321,16 @@ void test_studio_host_launch_sizing_zorder_diagnostics_localize(const std::strin
         temp_root);
 
     expect(process.exit_code == 2,
-        "#2447: pseudo-localized add-line-feeds missing-option diagnostics should preserve parse-failure exit status");
+        "#2524: pseudo-localized add-line-feeds missing-option diagnostics should preserve parse-failure exit status");
     expect_contains(process.stdout_text,
         "[!! ",
-        "#2447: pseudo-localized add-line-feeds missing-option diagnostics should decorate human-facing prose");
+        "#2524: pseudo-localized add-line-feeds missing-option diagnostics should decorate human-facing prose");
     expect_contains(process.stdout_text,
         "--add-line-feeds",
-        "#2447: pseudo-localized add-line-feeds missing-option diagnostics should preserve CLI option names");
+        "#2524: pseudo-localized add-line-feeds missing-option diagnostics should preserve CLI option names");
     expect_not_contains(process.stdout_text,
         "An object add-line-feeds assignment requires --add-line-feeds.",
-        "#2447: pseudo-localized add-line-feeds missing-option diagnostics should not fall back to raw English prose");
+        "#2524: pseudo-localized add-line-feeds missing-option diagnostics should not fall back to raw English prose");
 
     process = run_process_capture(
         studio_host_path,

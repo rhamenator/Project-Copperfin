@@ -11518,167 +11518,210 @@ LaunchParseResult parse_launch_arguments(
     if (result.request.allow_cell_selection_object && !result.request.allow_cell_selection_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "allow-cell-selection",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AllowCellSelection"),
             "--allow-cell-selection")};
     }
     if (result.request.allow_cell_selection_object && result.request.allow_cell_selection_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "allow-cell-selection")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AllowCellSelection"))};
     }
     if (!result.request.allow_cell_selection_object &&
         (result.request.allow_cell_selection_available ||
          !result.request.allow_cell_selection_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Allow-cell-selection",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AllowCellSelectionTitle"),
             "--allow-cell-selection-object")};
     }
     if (result.request.hide_selection_object && !result.request.hide_selection_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "hide-selection", "--hide-selection")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.HideSelection"),
+            "--hide-selection")};
     }
     if (result.request.hide_selection_object && result.request.hide_selection_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "hide-selection")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.HideSelection"))};
     }
     if (!result.request.hide_selection_object &&
         (result.request.hide_selection_available ||
          !result.request.hide_selection_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Hide-selection",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.HideSelectionTitle"),
             "--hide-selection-object")};
     }
     if (result.request.delete_mark_object && !result.request.delete_mark_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "delete-mark", "--delete-mark")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DeleteMark"),
+            "--delete-mark")};
     }
     if (result.request.delete_mark_object && result.request.delete_mark_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "delete-mark")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DeleteMark"))};
     }
     if (!result.request.delete_mark_object &&
         (result.request.delete_mark_available ||
          !result.request.delete_mark_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Delete-mark",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DeleteMarkTitle"),
             "--delete-mark-object")};
     }
     if (result.request.record_mark_object && !result.request.record_mark_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "record-mark", "--record-mark")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.RecordMark"),
+            "--record-mark")};
     }
     if (result.request.record_mark_object && result.request.record_mark_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "record-mark")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.RecordMark"))};
     }
     if (!result.request.record_mark_object &&
         (result.request.record_mark_available ||
          !result.request.record_mark_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Record-mark",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.RecordMarkTitle"),
             "--record-mark-object")};
     }
     if (result.request.split_bar_object && !result.request.split_bar_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "split-bar", "--split-bar")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.SplitBar"),
+            "--split-bar")};
     }
     if (result.request.split_bar_object && result.request.split_bar_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "split-bar")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.SplitBar"))};
     }
     if (!result.request.split_bar_object &&
         (result.request.split_bar_available ||
          !result.request.split_bar_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Split-bar",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.SplitBarTitle"),
             "--split-bar-object")};
     }
     if (result.request.highlight_row_object && !result.request.highlight_row_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "highlight-row", "--highlight-row")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.HighlightRow"),
+            "--highlight-row")};
     }
     if (result.request.highlight_row_object && result.request.highlight_row_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "highlight-row")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.HighlightRow"))};
     }
     if (!result.request.highlight_row_object &&
         (result.request.highlight_row_available ||
          !result.request.highlight_row_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Highlight-row",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.HighlightRowTitle"),
             "--highlight-row-object")};
     }
     if (result.request.panel_link_object && !result.request.panel_link_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "panel-link", "--panel-link")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.PanelLink"),
+            "--panel-link")};
     }
     if (result.request.panel_link_object && result.request.panel_link_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "panel-link")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.PanelLink"))};
     }
     if (!result.request.panel_link_object &&
         (result.request.panel_link_available ||
          !result.request.panel_link_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Panel-link",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.PanelLinkTitle"),
             "--panel-link-object")};
     }
     if (result.request.allow_header_sizing_object && !result.request.allow_header_sizing_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "allow-header-sizing",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AllowHeaderSizing"),
             "--allow-header-sizing")};
     }
     if (result.request.allow_header_sizing_object && result.request.allow_header_sizing_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "allow-header-sizing")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AllowHeaderSizing"))};
     }
     if (!result.request.allow_header_sizing_object &&
         (result.request.allow_header_sizing_available ||
          !result.request.allow_header_sizing_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Allow-header-sizing",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AllowHeaderSizingTitle"),
             "--allow-header-sizing-object")};
     }
     if (result.request.allow_row_sizing_object && !result.request.allow_row_sizing_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "allow-row-sizing",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AllowRowSizing"),
             "--allow-row-sizing")};
     }
     if (result.request.allow_row_sizing_object && result.request.allow_row_sizing_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "allow-row-sizing")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AllowRowSizing"))};
     }
     if (!result.request.allow_row_sizing_object &&
         (result.request.allow_row_sizing_available ||
          !result.request.allow_row_sizing_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Allow-row-sizing",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AllowRowSizingTitle"),
             "--allow-row-sizing-object")};
     }
     if (result.request.resizable_object && !result.request.resizable_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "resizable", "--resizable")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.Resizable"),
+            "--resizable")};
     }
     if (result.request.resizable_object && result.request.resizable_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "resizable")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.Resizable"))};
     }
     if (!result.request.resizable_object &&
         (result.request.resizable_available ||
          !result.request.resizable_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Resizable",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ResizableTitle"),
             "--resizable-object")};
     }
     if (result.request.add_line_feeds_object && !result.request.add_line_feeds_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "add-line-feeds",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AddLineFeeds"),
             "--add-line-feeds")};
     }
     if (result.request.add_line_feeds_object && result.request.add_line_feeds_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "add-line-feeds")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AddLineFeeds"))};
     }
     if (!result.request.add_line_feeds_object &&
         (result.request.add_line_feeds_available ||
          !result.request.add_line_feeds_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Add-line-feeds",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AddLineFeedsTitle"),
             "--add-line-feeds-object")};
     }
     if (result.request.always_on_top_object && !result.request.always_on_top_available) {
