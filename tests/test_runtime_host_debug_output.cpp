@@ -34,9 +34,11 @@ void write_text(const std::filesystem::path& path, const std::string& text) {
 
 void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root) {
     const std::filesystem::path english_root = locale_root / "en-US";
+    const std::filesystem::path spanish_root = locale_root / "es-419";
     const std::filesystem::path portuguese_root = locale_root / "pt-BR";
     const std::filesystem::path pseudo_root = locale_root / "qps-ploc";
     std::filesystem::create_directories(english_root);
+    std::filesystem::create_directories(spanish_root);
     std::filesystem::create_directories(portuguese_root);
     std::filesystem::create_directories(pseudo_root);
     write_text(
@@ -80,8 +82,36 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Usage.Manifest\": \"Usage: {commandName} {manifestOption} {manifestValue} [{debugOption}] [{breakpointOption} {breakpointValue}] [{debugCommandOption} {debugCommandValue}]\"\n"
         "}\n");
     write_text(
+        spanish_root / "strings.json",
+        "{\n"
+        "  \"RuntimeHost.Prefix.Error\": \"error: \",\n"
+        "  \"RuntimeHost.Prefix.Warning\": \"advertencia: \",\n"
+        "  \"RuntimeHost.Launch.Note.CompatibilityLauncher\": \"El asset de inicio no es un archivo PRG. La ejecucion de PRG es real; el codigo xBase incrustado en assets SCX/VCX/FRX/MNX/LBX corresponde a una fase posterior del runtime.\",\n"
+        "  \"RuntimeHost.Error.BridgeFederationModeConflict\": \"El modo de invocacion bridge no puede combinarse con el modo de consulta de federacion.\",\n"
+        "  \"RuntimeHost.Error.FederationRequiredOptions\": \"{federationBackendOption} y {federationQueryOption} son obligatorios en el modo de federacion.\",\n"
+        "  \"RuntimeHost.Error.ManifestEmptyOrInvalid\": \"El manifiesto esta vacio o no es valido.\",\n"
+        "  \"RuntimeHost.Error.ManifestNotFound\": \"No se encontro el archivo de manifiesto.\",\n"
+        "  \"RuntimeHost.Error.SecurityPolicyDenied\": \"La politica de seguridad denego {permission} para el rol '{role}'.\",\n"
+        "  \"RuntimeHost.Error.UnknownArgument\": \"Argumento desconocido: {argument}\",\n"
+        "  \"RuntimeHost.Error.UnknownFederationBackend\": \"Backend de federacion desconocido: {backend}\",\n"
+        "  \"RuntimeHost.Usage.Federation\": \"   o: {commandName} {federationBackendOption} {federationBackendValue} {federationQueryOption} {federationQueryValue} [{federationTargetOption} {federationTargetValue}]\",\n"
+        "  \"RuntimeHost.Usage.FederationPlanning\": \"       [{planningEnableOption} {booleanValue}] [{planningRequireOption} {booleanValue}] [{planningAuditOption} {booleanValue}]\",\n"
+        "  \"RuntimeHost.Usage.Manifest\": \"Uso: {commandName} {manifestOption} {manifestValue} [{debugOption}] [{breakpointOption} {breakpointValue}] [{debugCommandOption} {debugCommandValue}]\"\n"
+        "}\n");
+    write_text(
         portuguese_root / "strings.json",
         "{\n"
+        "  \"RuntimeHost.Launch.Note.CompatibilityLauncher\": \"O asset de inicializacao nao e um arquivo PRG. A execucao de PRG e real; o codigo xBase incorporado em assets SCX/VCX/FRX/MNX/LBX pertence a uma etapa posterior do runtime.\",\n"
+        "  \"RuntimeHost.Error.BridgeFederationModeConflict\": \"O modo de invocacao bridge nao pode ser combinado com o modo de consulta de federacao.\",\n"
+        "  \"RuntimeHost.Error.FederationRequiredOptions\": \"{federationBackendOption} e {federationQueryOption} sao obrigatorios no modo de federacao.\",\n"
+        "  \"RuntimeHost.Error.ManifestEmptyOrInvalid\": \"O manifesto esta vazio ou e invalido.\",\n"
+        "  \"RuntimeHost.Error.ManifestNotFound\": \"Arquivo de manifesto nao encontrado.\",\n"
+        "  \"RuntimeHost.Error.SecurityPolicyDenied\": \"A politica de seguranca negou {permission} para a funcao '{role}'.\",\n"
+        "  \"RuntimeHost.Error.UnknownArgument\": \"Argumento desconhecido: {argument}\",\n"
+        "  \"RuntimeHost.Error.UnknownFederationBackend\": \"Backend de federacao desconhecido: {backend}\",\n"
+        "  \"RuntimeHost.Usage.Federation\": \"   ou: {commandName} {federationBackendOption} {federationBackendValue} {federationQueryOption} {federationQueryValue} [{federationTargetOption} {federationTargetValue}]\",\n"
+        "  \"RuntimeHost.Usage.FederationPlanning\": \"       [{planningEnableOption} {booleanValue}] [{planningRequireOption} {booleanValue}] [{planningAuditOption} {booleanValue}]\",\n"
+        "  \"RuntimeHost.Usage.Manifest\": \"Uso: {commandName} {manifestOption} {manifestValue} [{debugOption}] [{breakpointOption} {breakpointValue}] [{debugCommandOption} {debugCommandValue}]\",\n"
         "  \"RuntimeHost.Debug.Error.InvalidBreakpointCommand\": \"Comando de breakpoint invalido: {command}\",\n"
         "  \"RuntimeHost.Prefix.Error\": \"erro: \",\n"
         "  \"RuntimeHost.Prefix.Warning\": \"aviso: \"\n"
@@ -2077,6 +2107,22 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
 
     {
         ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "es-419");
+        const auto process = run_process_capture(runtime_host_path, {}, temp_root);
+        expect(process.exit_code == 2,
+               "#2585: es-419 runtime host usage should keep the usage exit code");
+        expect(process.stdout_text.find("Uso: copperfin_runtime_host --manifest <path> [--debug]") != std::string::npos,
+               "#2585: es-419 runtime host usage should localize manifest usage prose");
+        expect(process.stdout_text.find("   o: copperfin_runtime_host") != std::string::npos &&
+                   process.stdout_text.find("--federation-backend") != std::string::npos &&
+                   process.stdout_text.find("--federation-query") != std::string::npos,
+               "#2585: es-419 runtime host usage should localize alternate usage prose while preserving CLI tokens");
+        expect(process.stdout_text.find("Usage: copperfin_runtime_host --manifest <path> [--debug]") == std::string::npos,
+               "#2585: es-419 runtime host usage should not fall back to raw English prose");
+    }
+
+    {
+        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
         ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "qps-ploc");
         const auto process = run_process_capture(runtime_host_path, {}, temp_root);
         expect(process.exit_code == 2,
@@ -2145,6 +2191,35 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
                "#2352: pseudo-localized bridge errors should preserve bridge runtime mode");
         expect(bridge_error.stdout_text.find("[!! ") != std::string::npos,
                "#2352: pseudo-localized bridge errors should decorate prose");
+    }
+
+    {
+        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "pt-BR");
+
+        const auto unknown_argument = run_process_capture(runtime_host_path, {"--unknown-option"}, temp_root);
+        expect(unknown_argument.exit_code == 2,
+               "#2585: pt-BR runtime host unknown arguments should keep the usage exit code");
+        expect(unknown_argument.stdout_text.find("status: error") != std::string::npos,
+               "#2585: pt-BR runtime host unknown arguments should preserve machine-readable status");
+        expect(unknown_argument.stdout_text.find("erro: Argumento desconhecido: --unknown-option") != std::string::npos,
+               "#2585: pt-BR runtime host unknown arguments should localize prefixed error prose");
+        expect(unknown_argument.stdout_text.find("error: Unknown argument: --unknown-option") == std::string::npos,
+               "#2585: pt-BR runtime host unknown arguments should not fall back to raw English prose");
+
+        const auto missing_federation_argument = run_process_capture(
+            runtime_host_path,
+            {"--federation-backend", "sqlite"},
+            temp_root);
+        expect(missing_federation_argument.exit_code == 2,
+               "#2585: pt-BR federation validation should keep the usage exit code");
+        expect(missing_federation_argument.stdout_text.find("erro: --federation-backend e --federation-query sao obrigatorios no modo de federacao.") != std::string::npos,
+               "#2585: pt-BR federation validation should localize required-option prose");
+        expect(missing_federation_argument.stdout_text.find("--federation-backend") != std::string::npos &&
+                   missing_federation_argument.stdout_text.find("--federation-query") != std::string::npos,
+               "#2585: pt-BR federation validation should preserve CLI tokens");
+        expect(missing_federation_argument.stdout_text.find("error: --federation-backend and --federation-query are both required in federation mode.") == std::string::npos,
+               "#2585: pt-BR federation validation should not fall back to raw English prose");
     }
 
     fs::remove_all(temp_root, ignored);
