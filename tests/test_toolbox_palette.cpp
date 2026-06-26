@@ -258,6 +258,11 @@ int main() {
         "Studio.Toolbox.Item.Line.Title",
         "Studio.Toolbox.Item.Shape.Description",
         "Studio.Toolbox.Item.Shape.Title"};
+    const std::vector<std::string_view> frame_interop_item_keys = {
+        "Studio.Toolbox.Item.OLEControl.Description",
+        "Studio.Toolbox.Item.OLEControl.Title",
+        "Studio.Toolbox.Item.PageFrame.Description",
+        "Studio.Toolbox.Item.PageFrame.Title"};
     const auto* spanish_label = find_toolbox_item(spanish_toolbox, "label");
     const auto* spanish_checkbox = find_toolbox_item(spanish_toolbox, "checkbox");
     const auto* spanish_container = find_toolbox_item(spanish_toolbox, "container");
@@ -266,10 +271,13 @@ int main() {
     const auto* portuguese_commandbutton = find_toolbox_item(portuguese_toolbox, "commandbutton");
     const auto* portuguese_grid = find_toolbox_item(portuguese_toolbox, "grid");
     const auto* portuguese_shape = find_toolbox_item(portuguese_toolbox, "shape");
+    const auto* portuguese_pageframe = find_toolbox_item(portuguese_toolbox, "pageframe");
     const auto* pseudo_editbox = find_toolbox_item(pseudo_toolbox, "editbox");
     const auto* pseudo_combobox = find_toolbox_item(pseudo_toolbox, "combobox");
     const auto* pseudo_container = find_toolbox_item(pseudo_toolbox, "container");
     const auto* pseudo_line = find_toolbox_item(pseudo_toolbox, "line");
+    const auto* pseudo_olecontrol = find_toolbox_item(pseudo_toolbox, "olecontrol");
+    const auto* spanish_olecontrol = find_toolbox_item(spanish_toolbox, "olecontrol");
     expect(
         spanish_label != nullptr &&
             spanish_label->title == "Etiqueta" &&
@@ -396,6 +404,39 @@ int main() {
             !pseudo_line->container,
         "#2636: qps-ploc line toolbox metadata should resolve through the pseudo-localization transform");
     expect(
+        spanish_olecontrol != nullptr &&
+            spanish_olecontrol->title == "Control OLE" &&
+            spanish_olecontrol->description ==
+                "Representar placeholders de controles OLE de VFP para una edicion centrada en la compatibilidad." &&
+            spanish_olecontrol->id == "olecontrol" &&
+            spanish_olecontrol->vfp_class == "OLEControl" &&
+            spanish_olecontrol->base_class == "OLEControl" &&
+            spanish_olecontrol->default_name_prefix == "ole" &&
+            !spanish_olecontrol->container,
+        "#2637: es-419 OLE control toolbox metadata should localize through the palette without changing invariant fields");
+    expect(
+        portuguese_pageframe != nullptr &&
+            portuguese_pageframe->title == "Quadro de paginas" &&
+            portuguese_pageframe->description == "Hospedar paginas com abas e controles aninhados." &&
+            portuguese_pageframe->id == "pageframe" &&
+            portuguese_pageframe->vfp_class == "PageFrame" &&
+            portuguese_pageframe->base_class == "PageFrame" &&
+            portuguese_pageframe->default_name_prefix == "pgf" &&
+            portuguese_pageframe->container,
+        "#2637: pt-BR pageframe toolbox metadata should localize through the palette without changing invariant fields");
+    expect(
+        pseudo_olecontrol != nullptr &&
+            pseudo_olecontrol->title == copperfin::localization::pseudo_localize("OLEControl") &&
+            pseudo_olecontrol->description ==
+                copperfin::localization::pseudo_localize(
+                    "Represent VFP OLE control placeholders for compatibility-focused editing.") &&
+            pseudo_olecontrol->id == "olecontrol" &&
+            pseudo_olecontrol->vfp_class == "OLEControl" &&
+            pseudo_olecontrol->base_class == "OLEControl" &&
+            pseudo_olecontrol->default_name_prefix == "ole" &&
+            !pseudo_olecontrol->container,
+        "#2637: qps-ploc OLE control toolbox metadata should resolve through the pseudo-localization transform");
+    expect(
         count_missing_locale_keys(spanish_catalog, "es-419", text_item_keys) == 0U,
         "#2633: es-419 should define every remaining toolbox text-item localization key");
     expect(
@@ -431,6 +472,15 @@ int main() {
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", graphics_item_keys) == 0U,
         "#2636: qps-ploc should define every remaining toolbox graphics-item localization key");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", frame_interop_item_keys) == 0U,
+        "#2637: es-419 should define every remaining toolbox frame/interop localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", frame_interop_item_keys) == 0U,
+        "#2637: pt-BR should define every remaining toolbox frame/interop localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", frame_interop_item_keys) == 0U,
+        "#2637: qps-ploc should define every remaining toolbox frame/interop localization key");
 
     const auto visual_plan = copperfin::studio::plan_studio_toolbox_palette_launch({
         .selection_context = StudioEditorSelectionContext::visual_object,
