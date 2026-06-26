@@ -416,8 +416,74 @@ void test_runtime_cursor_diagnostics_route_through_catalog() {
     expect(
         pseudo_work_area.find("[!! ") == 0U &&
             pseudo_work_area.find("42") != std::string::npos &&
-            pseudo_work_area.find("USE target work area not found: 42") == std::string::npos,
+        pseudo_work_area.find("USE target work area not found: 42") == std::string::npos,
         "#2608: qps-ploc cursor missing-work-area error should pseudo-localize prose while preserving the target");
+}
+
+void test_runtime_total_diagnostics_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    expect(
+        english.translate("Runtime.Prg.Total.Error.RequiresToTarget") == "TOTAL requires a TO target",
+        "#2609: TOTAL missing-target error should remain catalog-backed in en-US");
+    expect(
+        english.translate("Runtime.Prg.Total.Error.RequiresOnField") == "TOTAL requires an ON field",
+        "#2609: TOTAL missing-ON-field error should remain catalog-backed in en-US");
+    expect(
+        english.translate("Runtime.Prg.Total.Error.FieldNotFound", {{"fieldName", "MISSING"}}) ==
+            "TOTAL field was not found: MISSING",
+        "#2609: TOTAL missing-field error should preserve the named field placeholder in en-US");
+
+    const std::string spanish_target =
+        spanish.translate("Runtime.Prg.Total.Error.RequiresSelectedWorkArea");
+    expect(
+        spanish_target == "TOTAL requiere un area de trabajo seleccionada",
+        "#2609: es-419 TOTAL missing-work-area error should localize the prose");
+    expect(
+        spanish_target.find("TOTAL") != std::string::npos &&
+            spanish_target.find("requires a selected work area") == std::string::npos,
+        "#2609: es-419 TOTAL missing-work-area error should preserve TOTAL without falling back to English prose");
+
+    const std::string spanish_field =
+        spanish.translate("Runtime.Prg.Total.Error.FieldNotFound", {{"fieldName", "MISSING"}});
+    expect(
+        spanish_field == "No se encontro el campo de TOTAL: MISSING",
+        "#2609: es-419 TOTAL missing-field error should localize the prose while preserving the field name");
+    expect(
+        spanish_field.find("MISSING") != std::string::npos &&
+            spanish_field.find("TOTAL field was not found") == std::string::npos,
+        "#2609: es-419 TOTAL missing-field error should preserve the field name without falling back to English prose");
+
+    const std::string portuguese_numeric =
+        portuguese.translate("Runtime.Prg.Total.Error.RequiresNumericField");
+    expect(
+        portuguese_numeric == "TOTAL exige pelo menos um campo numerico para totalizar",
+        "#2609: pt-BR TOTAL numeric-field requirement should localize the prose");
+
+    const std::string portuguese_local_cursor =
+        portuguese.translate("Runtime.Prg.Total.Error.RequiresLocalTableBackedCursor");
+    expect(
+        portuguese_local_cursor == "TOTAL exige um cursor local com suporte de tabela",
+        "#2609: pt-BR TOTAL local-cursor requirement should localize the prose");
+
+    const std::string pseudo_only_numeric =
+        pseudo.translate("Runtime.Prg.Total.Error.OnlyNumericFields");
+    expect(
+        pseudo_only_numeric.find("[!! ") == 0U &&
+            pseudo_only_numeric.find("TOTAL only supports numeric FIELDS in the first pass") == std::string::npos,
+        "#2609: qps-ploc TOTAL numeric-fields error should pseudo-localize prose");
+
+    const std::string pseudo_missing_field =
+        pseudo.translate("Runtime.Prg.Total.Error.FieldNotFound", {{"fieldName", "MISSING"}});
+    expect(
+        pseudo_missing_field.find("[!! ") == 0U &&
+            pseudo_missing_field.find("MISSING") != std::string::npos &&
+            pseudo_missing_field.find("TOTAL field was not found: MISSING") == std::string::npos,
+        "#2609: qps-ploc TOTAL missing-field error should pseudo-localize prose while preserving the field name");
 }
 
 void test_runtime_report_output_messages_route_through_catalog() {
@@ -1919,6 +1985,7 @@ int main(int argc, char** argv) {
     test_parser_behavior_remains_locale_invariant();
     test_runtime_session_diagnostics_route_through_catalog();
     test_runtime_cursor_diagnostics_route_through_catalog();
+    test_runtime_total_diagnostics_route_through_catalog();
     test_runtime_report_output_messages_route_through_catalog();
     test_runtime_report_output_errors_localize_without_changing_runtime_behavior();
     test_runtime_aggregate_errors_route_through_catalog();
