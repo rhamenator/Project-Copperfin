@@ -11,6 +11,7 @@
   "BuildHost.Error.SigningKeyValidationFailed": "Signing key reference validation failed: {error}",
   "BuildHost.Error.UnknownOrIncompleteArgument": "Unknown or incomplete argument: {argument}",
   "BuildHost.Usage": "Usage: {commandName} {buildCommand} {projectOption} {projectValue} {outputDirOption} {outputDirValue} [{configurationOption} {configurationValue}] [{enableSecurityOption}] [{emitDotnetLauncherOption}] [{runtimeHostOption} {runtimeHostValue}]",
+  "BuildHost.Warning.ProcessHardening": "warning: {message}",
   "Command.Inspect": "Inspect",
   "Command.Run": "Run",
   "Diagnostic.ExpectedTokenBeforeToken": "Expected {expectedToken} before {actualToken}.",

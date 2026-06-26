@@ -1,2 +1,14 @@
 {
+  "BuildHost.Error.BuildPlanCreationFailed": "Build plan creation failed.",
+  "BuildHost.Error.DotnetPublishDenied": "dotnet publish denied by external process policy: {error}",
+  "BuildHost.Error.DotnetPublishFailed": "dotnet publish failed for generated launcher.",
+  "BuildHost.Error.DotnetPublishFailedToStart": "dotnet publish failed to start: {error}",
+  "BuildHost.Error.GeneratedLauncherMissing": "Generated launcher executable was not found after publish.",
+  "BuildHost.Error.ReleaseSigningKeyRequired": "Security-enabled release builds require {environmentVariable} ({environmentValue}).",
+  "BuildHost.Error.RequiredProjectAndOutput": "{projectOption} and {outputDirOption} are required.",
+  "BuildHost.Error.SecurityPolicyDenied": "Security policy denied {permission} for role '{role}'.",
+  "BuildHost.Error.SigningKeyValidationFailed": "Signing key reference validation failed: {error}",
+  "BuildHost.Error.UnknownOrIncompleteArgument": "Unknown or incomplete argument: {argument}",
+  "BuildHost.Usage": "Usage: {commandName} {buildCommand} {projectOption} {projectValue} {outputDirOption} {outputDirValue} [{configurationOption} {configurationValue}] [{enableSecurityOption}] [{emitDotnetLauncherOption}] [{runtimeHostOption} {runtimeHostValue}]",
+  "BuildHost.Warning.ProcessHardening": "warning: {message}"
 }

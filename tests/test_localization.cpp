@@ -282,6 +282,58 @@ void test_runtime_report_output_messages_route_through_catalog() {
         "#2536: report output write error should preserve the named path placeholder");
 }
 
+void test_build_host_catalog_entries_cover_placeholder_locales() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    const copperfin::localization::PlaceholderMap usage_placeholders{
+        {"buildCommand", "build"},
+        {"commandName", "copperfin_build_host"},
+        {"configurationOption", "--configuration"},
+        {"configurationValue", "debug|release"},
+        {"emitDotnetLauncherOption", "--emit-dotnet-launcher"},
+        {"enableSecurityOption", "--enable-security"},
+        {"outputDirOption", "--output-dir"},
+        {"outputDirValue", "<directory>"},
+        {"projectOption", "--project"},
+        {"projectValue", "<path-to-pjx>"},
+        {"runtimeHostOption", "--runtime-host"},
+        {"runtimeHostValue", "<path>"}
+    };
+
+    const std::string english_usage = english.translate("BuildHost.Usage", usage_placeholders);
+    const std::string spanish_usage = spanish.translate("BuildHost.Usage", usage_placeholders);
+    const std::string portuguese_usage = portuguese.translate("BuildHost.Usage", usage_placeholders);
+    const std::string pseudo_usage = pseudo.translate("BuildHost.Usage", usage_placeholders);
+
+    expect(
+        english.translate("BuildHost.Warning.ProcessHardening", {{"message", "harden"}}) == "warning: harden",
+        "#2539: build-host process-hardening warning label should be catalog-backed");
+    expect(
+        spanish_usage.find("Uso: copperfin_build_host build") != std::string::npos &&
+            spanish_usage.find("--project") != std::string::npos &&
+            spanish_usage.find("debug|release") != std::string::npos,
+        "#2539: es-419 build-host usage should preserve CLI invariants while routing prose through the catalog");
+    expect(
+        spanish_usage != english_usage && spanish_usage.find("Usage: copperfin_build_host") == std::string::npos,
+        "#2539: es-419 build-host usage should not fall back to raw English prose");
+    expect(
+        portuguese.translate("BuildHost.Error.UnknownOrIncompleteArgument", {{"argument", "--project"}}) ==
+            "Argumento desconhecido ou incompleto: --project",
+        "#2539: pt-BR build-host parse diagnostics should preserve CLI placeholders");
+    expect(
+        portuguese_usage != english_usage && portuguese_usage.find("Usage: copperfin_build_host") == std::string::npos,
+        "#2539: pt-BR build-host usage should not fall back to raw English prose");
+    expect(
+        pseudo_usage.find("[!! ") == 0U &&
+            pseudo_usage.find("copperfin_build_host") != std::string::npos &&
+            pseudo_usage.find("--output-dir") != std::string::npos,
+        "#2539: qps-ploc build-host usage should pseudo-localize prose while preserving placeholder values");
+}
+
 void test_inspect_usage_routes_through_localization(const std::string& inspect_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_inspect_usage_tests";
@@ -315,6 +367,7 @@ int main(int argc, char** argv) {
     test_parser_behavior_remains_locale_invariant();
     test_runtime_transaction_journal_messages_route_through_catalog();
     test_runtime_report_output_messages_route_through_catalog();
+    test_build_host_catalog_entries_cover_placeholder_locales();
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);
     } else {

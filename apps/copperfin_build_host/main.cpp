@@ -225,13 +225,16 @@ bool is_library_output_kind(const copperfin::runtime::BuildOutputKind output_kin
 }  // namespace
 
 int main(int argc, char** argv) {
-    const auto hardening = copperfin::security::apply_default_process_hardening();
-    if (!hardening.applied) {
-        std::cerr << "warning: " << hardening.message << "\n";
-    }
-
     const copperfin::localization::LocalizedCatalog catalog =
         load_localization(argv[0], explicit_locale_from_arguments(argc, argv));
+
+    const auto hardening = copperfin::security::apply_default_process_hardening();
+    if (!hardening.applied) {
+        std::cerr << message(
+            catalog,
+            "BuildHost.Warning.ProcessHardening",
+            {{"message", hardening.message}}) << "\n";
+    }
 
     std::vector<std::string> args;
     for (int index = 1; index < argc; ++index) {

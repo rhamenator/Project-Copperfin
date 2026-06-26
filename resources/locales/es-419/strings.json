@@ -1,2 +1,14 @@
 {
+  "BuildHost.Error.BuildPlanCreationFailed": "No se pudo crear el plan de build.",
+  "BuildHost.Error.DotnetPublishDenied": "dotnet publish fue denegado por la politica de procesos externos: {error}",
+  "BuildHost.Error.DotnetPublishFailed": "dotnet publish fallo para el launcher generado.",
+  "BuildHost.Error.DotnetPublishFailedToStart": "dotnet publish no pudo iniciarse: {error}",
+  "BuildHost.Error.GeneratedLauncherMissing": "No se encontro el ejecutable launcher generado despues de publish.",
+  "BuildHost.Error.ReleaseSigningKeyRequired": "Los builds release con seguridad habilitada requieren {environmentVariable} ({environmentValue}).",
+  "BuildHost.Error.RequiredProjectAndOutput": "Se requieren {projectOption} y {outputDirOption}.",
+  "BuildHost.Error.SecurityPolicyDenied": "La politica de seguridad denego {permission} para el rol '{role}'.",
+  "BuildHost.Error.SigningKeyValidationFailed": "Fallo la validacion de la referencia de clave de firma: {error}",
+  "BuildHost.Error.UnknownOrIncompleteArgument": "Argumento desconocido o incompleto: {argument}",
+  "BuildHost.Usage": "Uso: {commandName} {buildCommand} {projectOption} {projectValue} {outputDirOption} {outputDirValue} [{configurationOption} {configurationValue}] [{enableSecurityOption}] [{emitDotnetLauncherOption}] [{runtimeHostOption} {runtimeHostValue}]",
+  "BuildHost.Warning.ProcessHardening": "advertencia: {message}"
 }

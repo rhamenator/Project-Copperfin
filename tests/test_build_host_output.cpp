@@ -3061,6 +3061,37 @@ void run_build_host_localized_usage_smoke(const std::string& build_host_path) {
     {
         ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
         ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+        set_env_value("COPPERFIN_LOCALE", "es-419", true);
+
+        const auto process = run_process_capture(build_host_path, {}, temp_root);
+        expect(process.exit_code == 2, "Spanish placeholder build host usage should still fail usage validation");
+        expect(process.stdout_text.find("Uso: copperfin_build_host build --project <path-to-pjx> --output-dir <directory>") !=
+                   std::string::npos,
+               "Spanish placeholder build host usage should resolve through the es-419 catalog");
+        expect(process.stdout_text.find("Usage: copperfin_build_host") == std::string::npos,
+               "Spanish placeholder build host usage should not fall back to raw English prose");
+        expect(process.stdout_text.find("--configuration debug|release") != std::string::npos,
+               "Spanish placeholder build host usage should preserve invariant configuration tokens");
+    }
+
+    {
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
+        ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+        set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
+
+        const auto process = run_process_capture(build_host_path, {"build", "--project"}, temp_root);
+        expect(process.exit_code == 2, "Portuguese placeholder build host errors should still use the original exit code");
+        expect(process.stdout_text.find("status: error") != std::string::npos,
+               "Portuguese placeholder build host errors should preserve machine-readable status");
+        expect(process.stdout_text.find("Argumento desconhecido ou incompleto: --project") != std::string::npos,
+               "Portuguese placeholder build host errors should resolve through the pt-BR catalog");
+        expect(process.stdout_text.find("Unknown or incomplete argument") == std::string::npos,
+               "Portuguese placeholder build host errors should not fall back to raw English prose");
+    }
+
+    {
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
+        ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
         set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
 
         const auto process = run_process_capture(build_host_path, {}, temp_root);
