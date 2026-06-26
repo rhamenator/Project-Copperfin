@@ -5829,10 +5829,10 @@ void test_studio_host_launch_form_appearance_diagnostics_localize(const std::str
         temp_root);
 
     expect(process.exit_code == 2,
-        "#2442: default special-effect diagnostics should preserve parse-failure exit status");
+        "#2520: default special-effect diagnostics should preserve parse-failure exit status");
     expect_contains(process.stdout_text,
         "An object special-effect assignment requires at least one target selector.",
-        "#2442: default special-effect diagnostics should preserve en-US missing-target prose");
+        "#2520: default special-effect diagnostics should preserve en-US missing-target prose");
 
     set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
     process = run_process_capture(
@@ -5846,16 +5846,16 @@ void test_studio_host_launch_form_appearance_diagnostics_localize(const std::str
         temp_root);
 
     expect(process.exit_code == 2,
-        "#2442: pseudo-localized scroll-bars missing-option diagnostics should preserve parse-failure exit status");
+        "#2520: pseudo-localized scroll-bars missing-option diagnostics should preserve parse-failure exit status");
     expect_contains(process.stdout_text,
         "[!! ",
-        "#2442: pseudo-localized scroll-bars missing-option diagnostics should decorate human-facing prose");
+        "#2520: pseudo-localized scroll-bars missing-option diagnostics should decorate human-facing prose");
     expect_contains(process.stdout_text,
         "--scroll-bars",
-        "#2442: pseudo-localized scroll-bars missing-option diagnostics should preserve CLI option names");
+        "#2520: pseudo-localized scroll-bars missing-option diagnostics should preserve CLI option names");
     expect_not_contains(process.stdout_text,
         "An object scroll-bars assignment requires --scroll-bars.",
-        "#2442: pseudo-localized scroll-bars missing-option diagnostics should not fall back to raw English prose");
+        "#2520: pseudo-localized scroll-bars missing-option diagnostics should not fall back to raw English prose");
 
     process = run_process_capture(
         studio_host_path,
@@ -5868,13 +5868,13 @@ void test_studio_host_launch_form_appearance_diagnostics_localize(const std::str
         temp_root);
 
     expect(process.exit_code == 2,
-        "#2442: pseudo-localized picture-margin missing-target diagnostics should preserve parse-failure exit status");
+        "#2520: pseudo-localized picture-margin missing-target diagnostics should preserve parse-failure exit status");
     expect_contains(process.stdout_text,
         "[!! ",
-        "#2442: pseudo-localized picture-margin missing-target diagnostics should decorate human-facing prose");
+        "#2520: pseudo-localized picture-margin missing-target diagnostics should decorate human-facing prose");
     expect_not_contains(process.stdout_text,
         "An object picture-margin assignment requires at least one target selector.",
-        "#2442: pseudo-localized picture-margin missing-target diagnostics should not fall back to raw English prose");
+        "#2520: pseudo-localized picture-margin missing-target diagnostics should not fall back to raw English prose");
 
     process = run_process_capture(
         studio_host_path,
@@ -5886,16 +5886,16 @@ void test_studio_host_launch_form_appearance_diagnostics_localize(const std::str
         temp_root);
 
     expect(process.exit_code == 2,
-        "#2442: pseudo-localized picture-selection-display stray-argument diagnostics should preserve parse-failure exit status");
+        "#2520: pseudo-localized picture-selection-display stray-argument diagnostics should preserve parse-failure exit status");
     expect_contains(process.stdout_text,
         "[!! ",
-        "#2442: pseudo-localized picture-selection-display stray-argument diagnostics should decorate human-facing prose");
+        "#2520: pseudo-localized picture-selection-display stray-argument diagnostics should decorate human-facing prose");
     expect_contains(process.stdout_text,
         "--picture-selection-display-object",
-        "#2442: pseudo-localized picture-selection-display stray-argument diagnostics should preserve required mode option");
+        "#2520: pseudo-localized picture-selection-display stray-argument diagnostics should preserve required mode option");
     expect_not_contains(process.stdout_text,
         "Picture-selection-display arguments can only be used with --picture-selection-display-object.",
-        "#2442: pseudo-localized picture-selection-display stray-argument diagnostics should not fall back to raw English prose");
+        "#2520: pseudo-localized picture-selection-display stray-argument diagnostics should not fall back to raw English prose");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
