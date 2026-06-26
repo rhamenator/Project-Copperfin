@@ -2,6 +2,7 @@
 
 #include "prg_engine_file_io_functions.h"
 #include "prg_engine_helpers.h"
+#include "localized_text.h"
 
 #include <algorithm>
 #include <cctype>
@@ -33,7 +34,12 @@ std::int64_t signed_bitwise_result(std::uint32_t value) {
 int bit_position(const PrgValue& value) {
     const int position = static_cast<int>(std::llround(value_as_number(value)));
     if (position < 0 || position > 31) {
-        throw std::runtime_error("Bit position must be between 0 and 31");
+        throw std::runtime_error(runtime_text(
+            "Runtime.Prg.RuntimeSurface.Error.BitPositionOutOfRange",
+            {
+                {"maximum", "31"},
+                {"minimum", "0"}
+            }));
     }
     return position;
 }

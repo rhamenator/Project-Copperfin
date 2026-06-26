@@ -15,7 +15,7 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 ## Current State
 
 - Last shipped E3 child: `#2367`, builder and wizard registry display title, description, launch validation, and launch catalog error localization for report/label designer-facing builder discovery paths.
-- Last shipped localization child: `#2542`, selected record mutation precondition errors, lock-retry cancellation, and remote SQL cursor field-not-found prose route through the portable C++ localization catalog while preserving command names, field names, parser behavior, event categories, runtime state fields, and default en-US output.
+- Last shipped localization child: `#2543`, bitwise runtime bit-position range error prose routes through the portable C++ localization catalog while preserving numeric bounds, function behavior, parser tokens, event categories, runtime state fields, and default en-US output.
 - Current lane: continue prompt-sized localization cleanup under `#2348` until the obvious repo-wide user-facing string backlog is handled, then return to E3/#24 report/label designer fidelity and section-aware host surfaces.
 - Next action: inspect live GitHub children under `#2348`; pick the highest-weight open prompt-sized localization child, or create the next child under `#2348` if no prompt-sized child fits and the user-facing string backlog remains obvious. Return to `#24` only after the localization cleanup pass is complete or blocked.
 - E2/#23 remains open mostly for evidence-audit/closure cleanup. Do not open more E2 wrapper work unless new APIs or fresh regression evidence show a real implementation gap.

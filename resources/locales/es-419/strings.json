@@ -22,5 +22,6 @@
   "Runtime.Prg.Records.Error.RemoteSqlFieldNotFound": "Campo no encontrado en cursor SQL remoto: {fieldName}",
   "Runtime.Prg.Records.Error.RequiresCurrentLocalRecord": "Este comando requiere un registro local actual",
   "Runtime.Prg.Records.Error.RequiresCurrentRemoteRecord": "Este comando requiere un registro remoto actual",
-  "Runtime.Prg.Records.Error.RequiresLocalTableBackedCursor": "Este comando requiere un cursor local respaldado por tabla"
+  "Runtime.Prg.Records.Error.RequiresLocalTableBackedCursor": "Este comando requiere un cursor local respaldado por tabla",
+  "Runtime.Prg.RuntimeSurface.Error.BitPositionOutOfRange": "La posicion de bit debe estar entre {minimum} y {maximum}"
 }

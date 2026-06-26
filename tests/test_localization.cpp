@@ -471,6 +471,39 @@ void test_runtime_record_precondition_errors_route_through_catalog() {
         "#2542: qps-ploc record precondition error should pseudo-localize prose while preserving placeholders");
 }
 
+void test_runtime_surface_errors_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const copperfin::localization::PlaceholderMap bounds{
+        {"maximum", "31"},
+        {"minimum", "0"}
+    };
+
+    expect(
+        english.translate("Runtime.Prg.RuntimeSurface.Error.BitPositionOutOfRange", bounds) ==
+            "Bit position must be between 0 and 31",
+        "#2543: bit-position range error should preserve en-US default output");
+    expect(
+        spanish.translate("Runtime.Prg.RuntimeSurface.Error.BitPositionOutOfRange", bounds).find("0") !=
+                std::string::npos &&
+            spanish.translate("Runtime.Prg.RuntimeSurface.Error.BitPositionOutOfRange", bounds).find("31") !=
+                std::string::npos &&
+            spanish.translate("Runtime.Prg.RuntimeSurface.Error.BitPositionOutOfRange", bounds).find("Bit position") ==
+                std::string::npos,
+        "#2543: es-419 bit-position range error should preserve bounds without falling back to English");
+
+    const std::string pseudo_message =
+        pseudo.translate("Runtime.Prg.RuntimeSurface.Error.BitPositionOutOfRange", bounds);
+    expect(
+        pseudo_message.find("[!! ") == 0U &&
+            pseudo_message.find("0") != std::string::npos &&
+            pseudo_message.find("31") != std::string::npos &&
+            pseudo_message.find("{minimum}") == std::string::npos,
+        "#2543: qps-ploc bit-position range error should pseudo-localize prose while preserving bounds");
+}
+
 void test_inspect_usage_routes_through_localization(const std::string& inspect_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_inspect_usage_tests";
@@ -508,6 +541,7 @@ int main(int argc, char** argv) {
     test_runtime_numeric_domain_errors_route_through_catalog();
     test_runtime_expression_errors_route_through_catalog();
     test_runtime_record_precondition_errors_route_through_catalog();
+    test_runtime_surface_errors_route_through_catalog();
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);
     } else {

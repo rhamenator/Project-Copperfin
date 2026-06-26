@@ -809,6 +809,7 @@
   "Runtime.Prg.Records.Error.RequiresCurrentLocalRecord": "This command requires a current local record",
   "Runtime.Prg.Records.Error.RequiresCurrentRemoteRecord": "This command requires a current remote record",
   "Runtime.Prg.Records.Error.RequiresLocalTableBackedCursor": "This command requires a local table-backed cursor",
+  "Runtime.Prg.RuntimeSurface.Error.BitPositionOutOfRange": "Bit position must be between {minimum} and {maximum}",
   "Runtime.Prg.ReportAsset.Error.ResolveFailed": "Unable to resolve report asset: {path}",
   "Runtime.Prg.ReportOutput.Error.OpenFailed": "Unable to open report output path: {path}",
   "Runtime.Prg.ReportOutput.Error.PathRequired": "REPORT/LABEL TO clause requires a writable output path",
