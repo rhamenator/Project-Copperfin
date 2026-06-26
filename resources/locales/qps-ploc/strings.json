@@ -31,6 +31,7 @@
   "StudioHost.ToolboxExecution.Error.LaunchCommandNonZeroExit": "Toolbox launch command returned a non-zero exit code.",
   "Inspect.Prefix.Error": "error: ",
   "Inspect.Prefix.Warning": "warning: ",
+  "Inspect.Usage": "Usage: {commandName} [{localeOption} {localeValue}] {assetPathArgument}",
   "RuntimeHost.Prefix.Error": "error: ",
   "RuntimeHost.Prefix.Warning": "warning: ",
   "StudioHost.Prefix.Error": "error: ",

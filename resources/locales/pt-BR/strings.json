@@ -31,6 +31,7 @@
   "StudioHost.ToolboxExecution.Error.LaunchCommandNonZeroExit": "O comando de inicializacao da caixa de ferramentas retornou um codigo de saida diferente de zero.",
   "Inspect.Prefix.Error": "erro: ",
   "Inspect.Prefix.Warning": "aviso: ",
+  "Inspect.Usage": "Uso: {commandName} [{localeOption} {localeValue}] {assetPathArgument}",
   "RuntimeHost.Prefix.Error": "erro: ",
   "RuntimeHost.Prefix.Warning": "aviso: ",
   "StudioHost.Prefix.Error": "erro: ",

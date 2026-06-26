@@ -357,6 +357,48 @@ void test_build_host_catalog_entries_cover_placeholder_locales() {
         "#2539: qps-ploc build-host usage should pseudo-localize prose while preserving placeholder values");
 }
 
+void test_inspect_catalog_entries_cover_placeholder_locales() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    const copperfin::localization::PlaceholderMap usage_placeholders{
+        {"assetPathArgument", "<path-to-vfp-asset>"},
+        {"commandName", "copperfin_inspect"},
+        {"localeOption", "--locale"},
+        {"localeValue", "<locale>"}
+    };
+
+    const std::string english_usage = english.translate("Inspect.Usage", usage_placeholders);
+    const std::string spanish_usage = spanish.translate("Inspect.Usage", usage_placeholders);
+    const std::string portuguese_usage = portuguese.translate("Inspect.Usage", usage_placeholders);
+    const std::string pseudo_usage = pseudo.translate("Inspect.Usage", usage_placeholders);
+
+    expect(
+        spanish_usage.find("Uso: copperfin_inspect") != std::string::npos &&
+            spanish_usage.find("--locale") != std::string::npos &&
+            spanish_usage.find("<path-to-vfp-asset>") != std::string::npos,
+        "#2579: es-419 inspect usage should preserve CLI invariants while routing prose through the catalog");
+    expect(
+        spanish_usage != english_usage && spanish_usage.find("Usage: copperfin_inspect") == std::string::npos,
+        "#2579: es-419 inspect usage should not fall back to raw English prose");
+    expect(
+        portuguese_usage.find("Uso: copperfin_inspect") != std::string::npos &&
+            portuguese_usage.find("--locale") != std::string::npos &&
+            portuguese_usage.find("<path-to-vfp-asset>") != std::string::npos,
+        "#2579: pt-BR inspect usage should preserve CLI invariants while routing prose through the catalog");
+    expect(
+        portuguese_usage != english_usage && portuguese_usage.find("Usage: copperfin_inspect") == std::string::npos,
+        "#2579: pt-BR inspect usage should not fall back to raw English prose");
+    expect(
+        pseudo_usage.find("[!! ") == 0U &&
+            pseudo_usage.find("copperfin_inspect") != std::string::npos &&
+            pseudo_usage.find("--locale") != std::string::npos,
+        "#2579: qps-ploc inspect usage should pseudo-localize prose while preserving placeholder values");
+}
+
 void test_runtime_numeric_domain_errors_route_through_catalog() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
@@ -1178,6 +1220,7 @@ int main(int argc, char** argv) {
     test_runtime_transaction_journal_messages_route_through_catalog();
     test_runtime_report_output_messages_route_through_catalog();
     test_build_host_catalog_entries_cover_placeholder_locales();
+    test_inspect_catalog_entries_cover_placeholder_locales();
     test_runtime_numeric_domain_errors_route_through_catalog();
     test_runtime_expression_errors_route_through_catalog();
     test_runtime_record_precondition_errors_route_through_catalog();

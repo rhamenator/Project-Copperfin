@@ -31,6 +31,7 @@
   "StudioHost.ToolboxExecution.Error.LaunchCommandNonZeroExit": "El comando de lanzamiento de la caja de herramientas devolvio un codigo de salida distinto de cero.",
   "Inspect.Prefix.Error": "error: ",
   "Inspect.Prefix.Warning": "advertencia: ",
+  "Inspect.Usage": "Uso: {commandName} [{localeOption} {localeValue}] {assetPathArgument}",
   "RuntimeHost.Prefix.Error": "error: ",
   "RuntimeHost.Prefix.Warning": "advertencia: ",
   "StudioHost.Prefix.Error": "error: ",
