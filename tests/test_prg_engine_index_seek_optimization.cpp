@@ -1,12 +1,74 @@
+#include "copperfin/localization/localization.h"
 #include "copperfin/runtime/index_seek_optimizer.h"
 #include "prg_engine_test_support.h"
 
 #include <cstdlib>
 #include <iostream>
+#include <string>
+#include <string_view>
+#include <vector>
+
+#if defined(_WIN32)
+#include <cstdlib>
+#else
+#include <cstdlib>
+#endif
 
 namespace {
 
 using namespace copperfin::test_support;
+
+void set_env_value(const std::string& name, const std::string& value, bool has_value) {
+#ifdef _WIN32
+    if (has_value) {
+        _putenv_s(name.c_str(), value.c_str());
+    } else {
+        _putenv_s(name.c_str(), "");
+    }
+#else
+    if (has_value) {
+        setenv(name.c_str(), value.c_str(), 1);
+    } else {
+        unsetenv(name.c_str());
+    }
+#endif
+}
+
+struct ScopedEnvironmentValue {
+    std::string name;
+    bool had_value = false;
+    std::string original_value;
+
+    explicit ScopedEnvironmentValue(std::string environment_name)
+        : name(std::move(environment_name)) {
+        if (const char* current = std::getenv(name.c_str())) {
+            had_value = true;
+            original_value = current;
+        }
+    }
+
+    ~ScopedEnvironmentValue() {
+        set_env_value(name, original_value, had_value);
+    }
+};
+
+std::size_t count_missing_locale_keys(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view locale,
+    const std::vector<std::string_view>& keys) {
+    const auto locale_entries = catalog.catalogs.find(std::string(locale));
+    if (locale_entries == catalog.catalogs.end()) {
+        return keys.size();
+    }
+
+    std::size_t missing = 0U;
+    for (const auto key : keys) {
+        if (locale_entries->second.find(std::string(key)) == locale_entries->second.end()) {
+            ++missing;
+        }
+    }
+    return missing;
+}
 
 void test_index_operator_kind_values() {
     expect(static_cast<int>(copperfin::runtime::IndexOperatorKind::equal) == 0,
@@ -217,6 +279,94 @@ void test_index_seek_matcher_ranks_and_limits_candidate_orders() {
         "matcher should route rejected-pattern rationale through the default locale catalog");
 }
 
+void test_index_seek_localization_catalogs_and_runtime_locale_switching() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const std::vector<std::string_view> keys{
+        "Runtime.IndexSeek.Field.Compound",
+        "Runtime.IndexSeek.MatchReason.HighConfidenceRushmoreMatch",
+        "Runtime.IndexSeek.MatchReason.ModerateConfidenceRushmoreMatch",
+        "Runtime.IndexSeek.MatchReason.NoMatch",
+        "Runtime.IndexSeek.MatchReason.PossibleRushmoreMatch",
+        "Runtime.IndexSeek.PatternReason.EmptyOrBooleanConstant",
+        "Runtime.IndexSeek.PatternReason.FieldBetweenRangeComparison",
+        "Runtime.IndexSeek.PatternReason.SimpleFieldRuntimeEvaluatedComparison",
+        "Runtime.IndexSeek.PatternReason.SimpleFieldToLiteralComparison",
+        "Runtime.IndexSeek.PatternReason.TopLevelAndChain",
+        "Runtime.IndexSeek.PatternReason.TopLevelNotPattern",
+        "Runtime.IndexSeek.PatternReason.UnrecognizedOptimizationPattern",
+        "Runtime.IndexSeek.PlanDecision.NoMatchingIndexes",
+        "Runtime.IndexSeek.PlanDecision.PatternFieldMatchedOrder",
+        "Runtime.IndexSeek.PlanDecision.PatternNotRecognized"};
+
+    expect(
+        english_catalog.translate("Runtime.IndexSeek.PatternReason.SimpleFieldToLiteralComparison") ==
+            "Simple field-to-literal comparison",
+        "#2603: index-seek equality rationale should preserve the en-US catalog text");
+    expect(
+        spanish_catalog.translate("Runtime.IndexSeek.MatchReason.HighConfidenceRushmoreMatch") ==
+            "coincidencia Rushmore de alta confianza",
+        "#2603: index-seek match reasons should resolve through the es-419 catalog");
+    expect(
+        portuguese_catalog.translate(
+            "Runtime.IndexSeek.PlanDecision.PatternFieldMatchedOrder",
+            {{"fieldName", "NAME"}, {"orderName", "NAME"}}) ==
+            "O campo de padrao 'NAME' correspondeu a ordem 'NAME'",
+        "#2603: index-seek plan decisions should preserve placeholders through the pt-BR catalog");
+    expect(
+        pseudo_catalog.translate("Runtime.IndexSeek.PatternReason.TopLevelNotPattern") ==
+            copperfin::localization::pseudo_localize("Top-level NOT pattern"),
+        "#2603: index-seek qps-ploc strings should route through the pseudo-localization transform");
+
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", keys) == 0U,
+        "#2603: es-419 should define every remaining Runtime.IndexSeek localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", keys) == 0U,
+        "#2603: pt-BR should define every remaining Runtime.IndexSeek localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", keys) == 0U,
+        "#2603: qps-ploc should define every remaining Runtime.IndexSeek localization key");
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    copperfin::runtime::IndexExpressionAnalyzer analyzer;
+    copperfin::runtime::IndexSeekMatcher matcher;
+    copperfin::runtime::IndexOrderCandidate exact;
+    exact.order_name = "NAME";
+    exact.order_expression = "NAME";
+
+    set_env_value("COPPERFIN_LOCALE", "es-419", true);
+    const auto spanish_pattern = analyzer.analyze_expression("NAME = 'BRAVO'", {"NAME"});
+    expect(
+        spanish_pattern.reason == "Comparacion simple de campo con literal",
+        "#2603: index-seek analyzer should emit es-419 rationale after locale selection");
+
+    set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
+    const auto portuguese_plan = matcher.create_plan(spanish_pattern, {exact}, "NAME");
+    expect(
+        portuguese_plan.selected_order.has_value() &&
+            portuguese_plan.selected_order->match_reason ==
+                "correspondencia Rushmore de alta confianca",
+        "#2603: index-seek matcher should refresh localized match reasons when the runtime locale changes in-process");
+    expect(
+        portuguese_plan.decision_rationale ==
+            "O campo de padrao 'NAME' correspondeu a ordem 'NAME'",
+        "#2603: index-seek matcher should refresh localized plan decisions when the runtime locale changes in-process");
+    expect(
+        portuguese_plan.selected_order.has_value() &&
+            portuguese_plan.selected_order->order_name == "NAME",
+        "#2603: index-seek localization should preserve invariant order names");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    const auto pseudo_pattern = analyzer.analyze_expression(".NOT. NAME = 'BRAVO'", {"NAME"});
+    expect(
+        pseudo_pattern.reason == copperfin::localization::pseudo_localize("Top-level NOT pattern"),
+        "#2603: index-seek analyzer should refresh qps-ploc rationale when the runtime locale changes in-process");
+}
+
 }  // namespace
 
 int main() {
@@ -229,6 +379,7 @@ int main() {
     test_index_seek_plan_can_hold_selected_order();
     test_index_expression_analyzer_recognizes_comparison_between_and_not_chain();
     test_index_seek_matcher_ranks_and_limits_candidate_orders();
+    test_index_seek_localization_catalogs_and_runtime_locale_switching();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

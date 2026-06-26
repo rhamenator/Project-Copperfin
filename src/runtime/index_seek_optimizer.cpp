@@ -1,5 +1,5 @@
 #include "copperfin/runtime/index_seek_optimizer.h"
-#include "copperfin/localization/localization.h"
+#include "localized_text.h"
 
 #include <algorithm>
 #include <cmath>
@@ -18,9 +18,7 @@ namespace {
 std::string index_seek_text(
     std::string_view key,
     const localization::PlaceholderMap& placeholders = {}) {
-    static const localization::LocalizedCatalog catalog =
-        localization::load_catalogs(localization::resolve_catalog_root(), localization::select_locale());
-    return catalog.translate(key, placeholders);
+    return runtime_text(key, placeholders);
 }
 
 std::string trim_copy(std::string text) {
