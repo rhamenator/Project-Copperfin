@@ -7,6 +7,8 @@ namespace Copperfin.VisualStudio;
 
 internal static class CopperfinStudioSnapshotClient
 {
+    private static readonly CopperfinLocalization Localization = CopperfinLocalization.FromEnvironment();
+
     private static CopperfinStudioSnapshotResult RunSnapshotCommand(string studioHostPath, string arguments)
     {
         var startInfo = new ProcessStartInfo
@@ -25,7 +27,7 @@ internal static class CopperfinStudioSnapshotClient
             return new CopperfinStudioSnapshotResult
             {
                 Success = false,
-                Error = "Copperfin Studio host could not be started."
+                Error = Localization.Text("AssetEditor.Dialog.StudioHostCouldNotStart")
             };
         }
 
@@ -43,12 +45,12 @@ internal static class CopperfinStudioSnapshotClient
             {
             }
 
-            return new CopperfinStudioSnapshotResult
-            {
-                Success = false,
-                Error = "Timed out while waiting for Copperfin Studio host."
-            };
-        }
+                return new CopperfinStudioSnapshotResult
+                {
+                    Success = false,
+                    Error = Localization.Text("AssetEditor.Dialog.StudioHostTimedOut")
+                };
+            }
 
         if (process.ExitCode != 0)
         {
@@ -68,7 +70,7 @@ internal static class CopperfinStudioSnapshotClient
                 return new CopperfinStudioSnapshotResult
                 {
                     Success = false,
-                    Error = "Copperfin Studio returned an empty snapshot."
+                    Error = Localization.Text("AssetEditor.Dialog.StudioSnapshotEmpty")
                 };
             }
 
@@ -83,7 +85,7 @@ internal static class CopperfinStudioSnapshotClient
             return new CopperfinStudioSnapshotResult
             {
                 Success = false,
-                Error = "Could not parse Copperfin Studio snapshot: " + ex.Message
+                Error = Localization.Format("AssetEditor.Dialog.StudioSnapshotParseFailed", ex.Message)
             };
         }
     }
@@ -96,7 +98,7 @@ internal static class CopperfinStudioSnapshotClient
             return new CopperfinStudioSnapshotResult
             {
                 Success = false,
-                Error = "Copperfin Studio host was not found."
+                Error = Localization.Text("AssetEditor.Dialog.StudioHostMissing")
             };
         }
 
@@ -115,7 +117,7 @@ internal static class CopperfinStudioSnapshotClient
             return new CopperfinStudioSnapshotResult
             {
                 Success = false,
-                Error = "Copperfin Studio host was not found."
+                Error = Localization.Text("AssetEditor.Dialog.StudioHostMissing")
             };
         }
 
@@ -132,7 +134,7 @@ internal static class CopperfinStudioSnapshotClient
             return new CopperfinStudioSnapshotResult
             {
                 Success = false,
-                Error = "Copperfin Studio host was not found."
+                Error = Localization.Text("AssetEditor.Dialog.StudioHostMissing")
             };
         }
 

@@ -12,6 +12,7 @@ internal static class Program
     private static int Main()
     {
         TestLocalizationCatalogNormalizesSpanishAndPortugueseLocales();
+        TestLocalizationCatalogSupportsPseudoLocale();
         TestLocalizationCatalogFallsBackToEnglish();
         TestLocalizationCatalogKeepsSupportedLocaleKeysAligned();
         TestLocalizationCatalogFormatsWithInvariantCulture();
@@ -75,6 +76,29 @@ internal static class Program
         var spanish = new CopperfinLocalization("es-419");
         Expect(spanish.Text("Missing.Key") == "Missing.Key",
             "missing localization keys should fall back to the stable key instead of returning blank text");
+    }
+
+    private static void TestLocalizationCatalogSupportsPseudoLocale()
+    {
+        var pseudo = new CopperfinLocalization("qps-ploc");
+        Expect(pseudo.Locale == CopperfinLocalization.PseudoLocale,
+            "qps-ploc should normalize to the shared pseudo-localization catalog");
+
+        var english = new CopperfinLocalization("en-US");
+        var pseudoTitle = pseudo.Text("Studio.OpenDialogTitle");
+        Expect(!string.Equals(pseudoTitle, english.Text("Studio.OpenDialogTitle"), StringComparison.Ordinal),
+            "qps-ploc should not fall back to raw English for catalog-backed text");
+        Expect(pseudoTitle.StartsWith("[!! ", StringComparison.Ordinal) &&
+               pseudoTitle.EndsWith(" !!]", StringComparison.Ordinal),
+            "qps-ploc should decorate catalog-backed text so hard-coded UI stands out");
+
+        var formatted = pseudo.Format("Studio.OpenDocumentStatus", @"C:\demo\orders.scx", "Visual form", 3);
+        Expect(formatted.Contains(@"C:\demo\orders.scx", StringComparison.Ordinal),
+            "pseudo-localized formatting should preserve path placeholders");
+        Expect(formatted.Contains("Visual form", StringComparison.Ordinal),
+            "pseudo-localized formatting should preserve dynamic string arguments");
+        Expect(formatted.Contains("3", StringComparison.Ordinal),
+            "pseudo-localized formatting should preserve numeric placeholders");
     }
 
     private static void TestLocalizationCatalogKeepsSupportedLocaleKeysAligned()

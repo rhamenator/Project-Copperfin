@@ -8,6 +8,8 @@ namespace Copperfin.VisualStudio;
 
 internal static class CopperfinProjectInsightClient
 {
+    private static readonly CopperfinLocalization Localization = CopperfinLocalization.FromEnvironment();
+
     private static readonly string[] TaskMarkers = { "TODO", "FIXME", "HACK", "BUG", "UNDONE" };
     private static readonly Regex ProcedureRegex = new(@"^\s*PROCEDURE\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex FunctionRegex = new(@"^\s*FUNCTION\s+([A-Za-z0-9_\.]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -29,7 +31,7 @@ internal static class CopperfinProjectInsightClient
         var workspace = snapshot.ProjectWorkspace;
         if (workspace is null)
         {
-            insights.Warnings.Add("Project workspace metadata is unavailable.");
+            insights.Warnings.Add(Localization.Text("AssetEditor.ProjectInsights.Warning.MetadataUnavailable"));
             return insights;
         }
 
@@ -43,13 +45,13 @@ internal static class CopperfinProjectInsightClient
             var resolvedPath = ResolveEntryPath(projectRoot, entry);
             if (string.IsNullOrWhiteSpace(resolvedPath))
             {
-                insights.Warnings.Add($"Could not resolve project entry: {entry.Name}");
+                insights.Warnings.Add(Localization.Format("AssetEditor.ProjectInsights.Warning.ResolveProjectEntry", entry.Name));
                 continue;
             }
 
             if (!File.Exists(resolvedPath))
             {
-                insights.Warnings.Add($"Missing project entry on disk: {resolvedPath}");
+                insights.Warnings.Add(Localization.Format("AssetEditor.ProjectInsights.Warning.MissingProjectEntry", resolvedPath));
                 continue;
             }
 
@@ -164,7 +166,7 @@ internal static class CopperfinProjectInsightClient
                 Kind = entry.TypeTitle,
                 Title = Path.GetFileName(string.IsNullOrWhiteSpace(entry.Name) ? resolvedPath : entry.Name),
                 FilePath = resolvedPath,
-                Detail = entry.GroupTitle + (entry.Excluded ? " (excluded)" : string.Empty)
+                Detail = entry.GroupTitle + (entry.Excluded ? Localization.Text("AssetEditor.Summary.ExcludedSuffix") : string.Empty)
             });
         }
     }
@@ -177,12 +179,12 @@ internal static class CopperfinProjectInsightClient
         }
         catch (IOException)
         {
-            insights.Warnings.Add($"Could not read project file: {path}");
+            insights.Warnings.Add(Localization.Format("AssetEditor.ProjectInsights.Warning.ReadProjectFile", path));
             return null;
         }
         catch (UnauthorizedAccessException)
         {
-            insights.Warnings.Add($"Access denied while reading project file: {path}");
+            insights.Warnings.Add(Localization.Format("AssetEditor.ProjectInsights.Warning.ReadProjectFileAccessDenied", path));
             return null;
         }
     }

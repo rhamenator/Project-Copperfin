@@ -13,6 +13,7 @@ internal sealed class CopperfinProjectCommands
     private const int RunCommandId = 0x0201;
     private const int DebugCommandId = 0x0202;
     private static readonly Guid CommandSet = new(PackageGuids.CommandSetString);
+    private static readonly CopperfinLocalization Localization = CopperfinLocalization.FromEnvironment();
 
     private readonly AsyncPackage package;
 
@@ -21,9 +22,9 @@ internal sealed class CopperfinProjectCommands
         ThreadHelper.ThrowIfNotOnUIThread();
         this.package = package;
 
-        AddCommand(commandService, BuildCommandId, "Build Copperfin Project", CopperfinProjectOperation.Build);
-        AddCommand(commandService, RunCommandId, "Run Copperfin Project", CopperfinProjectOperation.Run);
-        AddCommand(commandService, DebugCommandId, "Debug Copperfin Project", CopperfinProjectOperation.Debug);
+        AddCommand(commandService, BuildCommandId, Localization.Text("AssetEditor.Project.BuildButton"), CopperfinProjectOperation.Build);
+        AddCommand(commandService, RunCommandId, Localization.Text("AssetEditor.Project.RunButton"), CopperfinProjectOperation.Run);
+        AddCommand(commandService, DebugCommandId, Localization.Text("AssetEditor.Project.DebugButton"), CopperfinProjectOperation.Debug);
     }
 
     public static async Task InitializeAsync(AsyncPackage package)
@@ -67,7 +68,7 @@ internal sealed class CopperfinProjectCommands
         if (!CopperfinProjectWorkflow.IsCopperfinProjectPath(projectPath))
         {
             ShowMessage(
-                "Open or select a Copperfin `PJX` project first, then run the command again.",
+                Localization.Text("AssetEditor.Dialog.OpenProjectFirst"),
                 OLEMSGICON.OLEMSGICON_INFO);
             return;
         }
@@ -79,7 +80,7 @@ internal sealed class CopperfinProjectCommands
             return;
         }
 
-        ShowMessage(result.Message + "\n\nLauncher: " + result.LauncherPath, OLEMSGICON.OLEMSGICON_INFO);
+        ShowMessage(Localization.Format("AssetEditor.Dialog.WorkflowLauncher", result.Message, result.LauncherPath), OLEMSGICON.OLEMSGICON_INFO);
     }
 
     private void ShowMessage(string message, OLEMSGICON icon)
@@ -87,7 +88,7 @@ internal sealed class CopperfinProjectCommands
         VsShellUtilities.ShowMessageBox(
             package,
             message,
-            "Copperfin",
+            Localization.Text("AssetEditor.Title"),
             icon,
             OLEMSGBUTTON.OLEMSGBUTTON_OK,
             OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);

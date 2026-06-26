@@ -10,6 +10,8 @@ namespace Copperfin.VisualStudio;
 
 internal static class CopperfinRuntimeDebugClient
 {
+    private static readonly CopperfinLocalization Localization = CopperfinLocalization.FromEnvironment();
+
     public static async Task<CopperfinRuntimeDebugSession> StartSessionAsync(string projectPath)
     {
         var buildResult = await CopperfinProjectWorkflow.ExecuteAsync(projectPath, CopperfinProjectOperation.Build);
@@ -27,7 +29,7 @@ internal static class CopperfinRuntimeDebugClient
             return new CopperfinRuntimeDebugSession
             {
                 Success = false,
-                Error = "Copperfin built the project, but the debug manifest was not found."
+                Error = Localization.Text("AssetEditor.Dialog.DebugManifestMissing")
             };
         }
 
@@ -80,7 +82,7 @@ internal static class CopperfinRuntimeDebugClient
             if (string.IsNullOrWhiteSpace(runtimeHostPath) || !File.Exists(runtimeHostPath))
             {
                 session.Success = false;
-                session.Error = "Copperfin runtime host was not found.";
+                session.Error = Localization.Text("AssetEditor.Dialog.RuntimeHostMissing");
                 return session;
             }
 
@@ -105,7 +107,7 @@ internal static class CopperfinRuntimeDebugClient
             if (!process.Start())
             {
                 session.Success = false;
-                session.Error = "Copperfin runtime host could not be started.";
+                session.Error = Localization.Text("AssetEditor.Dialog.RuntimeHostCouldNotStart");
                 return session;
             }
 
@@ -124,7 +126,7 @@ internal static class CopperfinRuntimeDebugClient
                 }
 
                 session.Success = false;
-                session.Error = "Timed out while waiting for the Copperfin runtime host.";
+                session.Error = Localization.Text("AssetEditor.Dialog.RuntimeHostTimedOut");
                 return session;
             }
 

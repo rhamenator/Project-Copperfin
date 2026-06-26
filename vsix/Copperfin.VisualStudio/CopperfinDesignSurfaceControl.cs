@@ -8,6 +8,8 @@ namespace Copperfin.VisualStudio;
 
 internal sealed class CopperfinDesignSurfaceControl : Control
 {
+    private readonly CopperfinLocalization localization;
+
     private sealed class SurfaceObject
     {
         public CopperfinStudioSnapshotObject Source { get; set; } = null!;
@@ -38,8 +40,9 @@ internal sealed class CopperfinDesignSurfaceControl : Control
     public event Action<int>? SelectedRecordChanged;
     public event Action<int, int, int>? ObjectMoved;
 
-    public CopperfinDesignSurfaceControl()
+    public CopperfinDesignSurfaceControl(CopperfinLocalization? localization = null)
     {
+        this.localization = localization ?? CopperfinLocalization.FromEnvironment();
         DoubleBuffered = true;
         BackColor = Color.White;
         MinimumSize = new Size(400, 260);
@@ -218,7 +221,7 @@ internal sealed class CopperfinDesignSurfaceControl : Control
         {
             using var brush = new SolidBrush(Color.FromArgb(96, 102, 118));
             e.Graphics.DrawString(
-                "No visual objects with layout coordinates are available yet.",
+                this.localization.Text("AssetEditor.DesignSurface.NoObjectsWithLayout"),
                 Font,
                 brush,
                 new RectangleF(24, 24, Width - 48, Height - 48));

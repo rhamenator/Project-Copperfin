@@ -12,6 +12,7 @@ internal sealed class OpenInCopperfinStudioCommand
 {
     private const int CommandId = 0x0100;
     private static readonly Guid CommandSet = new(PackageGuids.CommandSetString);
+    private static readonly CopperfinLocalization Localization = CopperfinLocalization.FromEnvironment();
 
     private readonly AsyncPackage package;
 
@@ -48,8 +49,8 @@ internal sealed class OpenInCopperfinStudioCommand
         {
             VsShellUtilities.ShowMessageBox(
                 package,
-                "Open or select a Copperfin-supported asset first, then run the command again.",
-                "Copperfin",
+                Localization.Text("AssetEditor.Dialog.OpenAssetFirst"),
+                Localization.Text("AssetEditor.Title"),
                 OLEMSGICON.OLEMSGICON_INFO,
                 OLEMSGBUTTON.OLEMSGBUTTON_OK,
                 OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
@@ -61,8 +62,8 @@ internal sealed class OpenInCopperfinStudioCommand
         {
             VsShellUtilities.ShowMessageBox(
                 package,
-                "Copperfin Studio host was not found. Set COPPERFIN_STUDIO_HOST_PATH or build E:\\Project-Copperfin\\build\\Release\\copperfin_studio_host.exe.",
-                "Copperfin",
+                Localization.Text("AssetEditor.Dialog.StudioHostMissing"),
+                Localization.Text("AssetEditor.Title"),
                 OLEMSGICON.OLEMSGICON_WARNING,
                 OLEMSGBUTTON.OLEMSGBUTTON_OK,
                 OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
@@ -73,8 +74,8 @@ internal sealed class OpenInCopperfinStudioCommand
         {
             VsShellUtilities.ShowMessageBox(
                 package,
-                "Copperfin Studio did not start successfully.",
-                "Copperfin",
+                Localization.Text("AssetEditor.Dialog.StudioLaunchFailed"),
+                Localization.Text("AssetEditor.Title"),
                 OLEMSGICON.OLEMSGICON_WARNING,
                 OLEMSGBUTTON.OLEMSGBUTTON_OK,
                 OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);

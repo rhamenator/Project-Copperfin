@@ -38,6 +38,8 @@ internal sealed class CopperfinProcessExecutionResult
 
 internal static class CopperfinProjectWorkflow
 {
+    private static readonly CopperfinLocalization Localization = CopperfinLocalization.FromEnvironment();
+
     private const string RepoBuildHostPath = @"E:\Project-Copperfin\build\Release\copperfin_build_host.exe";
     private const string RepoRuntimeHostPath = @"E:\Project-Copperfin\build\Release\copperfin_runtime_host.exe";
 
@@ -89,13 +91,13 @@ internal static class CopperfinProjectWorkflow
         var buildHostPath = ResolveBuildHostPath();
         if (buildHostPath is null)
         {
-            return Failure(projectPath, "Copperfin build host was not found. Set COPPERFIN_BUILD_HOST_PATH or build E:\\Project-Copperfin\\build\\Release\\copperfin_build_host.exe.");
+            return Failure(projectPath, Localization.Text("AssetEditor.Project.Workflow.BuildHostMissing"));
         }
 
         var runtimeHostPath = ResolveRuntimeHostPath();
         if (runtimeHostPath is null)
         {
-            return Failure(projectPath, "Copperfin runtime host was not found. Set COPPERFIN_RUNTIME_HOST_PATH or build E:\\Project-Copperfin\\build\\Release\\copperfin_runtime_host.exe.");
+            return Failure(projectPath, Localization.Text("AssetEditor.Project.Workflow.RuntimeHostMissing"));
         }
 
         var outputDirectory = CreateOutputDirectory(projectPath);
@@ -113,7 +115,7 @@ internal static class CopperfinProjectWorkflow
         var buildResult = RunProcess(buildHostPath, buildArguments);
         if (buildResult.ExitCode != 0 || !string.Equals(GetValueOrDefault(buildResult.Values, "status"), "ok", StringComparison.OrdinalIgnoreCase))
         {
-            return Failure(projectPath, "Copperfin build failed.", outputDirectory, string.Empty, buildResult.ExitCode, buildResult.StandardOutput, buildResult.StandardError);
+            return Failure(projectPath, Localization.Text("AssetEditor.Project.Workflow.BuildFailed"), outputDirectory, string.Empty, buildResult.ExitCode, buildResult.StandardOutput, buildResult.StandardError);
         }
 
         var launcherPath = buildResult.Values.TryGetValue("launcher.output", out var parsedLauncher)
@@ -122,7 +124,14 @@ internal static class CopperfinProjectWorkflow
 
         if (string.IsNullOrWhiteSpace(launcherPath) || !File.Exists(launcherPath))
         {
-            return Failure(projectPath, "Copperfin build completed, but the launcher executable was not found.", outputDirectory, launcherPath ?? string.Empty, buildResult.ExitCode, buildResult.StandardOutput, buildResult.StandardError);
+            return Failure(
+                projectPath,
+                Localization.Text("AssetEditor.Project.Workflow.LauncherMissing"),
+                outputDirectory,
+                launcherPath ?? string.Empty,
+                buildResult.ExitCode,
+                buildResult.StandardOutput,
+                buildResult.StandardError);
         }
 
         if (operation == CopperfinProjectOperation.Build)
@@ -130,7 +139,7 @@ internal static class CopperfinProjectWorkflow
             return new CopperfinProjectExecutionResult
             {
                 Success = true,
-                Message = "Copperfin build completed successfully.",
+                Message = Localization.Text("AssetEditor.Project.Workflow.BuildSuccess"),
                 ProjectPath = projectPath,
                 OutputDirectory = outputDirectory,
                 LauncherPath = launcherPath,
@@ -152,8 +161,8 @@ internal static class CopperfinProjectWorkflow
         {
             Success = true,
             Message = operation == CopperfinProjectOperation.Debug
-                ? "Copperfin project launched in debug mode."
-                : "Copperfin project launched successfully.",
+                ? Localization.Text("AssetEditor.Project.Workflow.LaunchDebugSuccess")
+                : Localization.Text("AssetEditor.Project.Workflow.LaunchSuccess"),
             ProjectPath = projectPath,
             OutputDirectory = outputDirectory,
             LauncherPath = launcherPath,
@@ -204,7 +213,7 @@ internal static class CopperfinProjectWorkflow
             return new CopperfinProcessExecutionResult
             {
                 ExitCode = -1,
-                StandardError = "Copperfin process could not be started."
+                StandardError = Localization.Text("AssetEditor.Project.Workflow.ProcessCouldNotStart")
             };
         }
 
@@ -244,18 +253,18 @@ internal static class CopperfinProjectWorkflow
         {
             if (System.Diagnostics.Process.Start(startInfo) is null)
             {
-                return Failure(fileName, "Copperfin launcher could not be started.");
+                return Failure(fileName, Localization.Text("AssetEditor.Project.Workflow.LauncherCouldNotStart"));
             }
         }
         catch (Exception ex)
         {
-            return Failure(fileName, "Copperfin launcher could not be started: " + ex.Message);
+            return Failure(fileName, Localization.Format("AssetEditor.Project.Workflow.LauncherCouldNotStartWithMessage", ex.Message));
         }
 
         return new CopperfinProjectExecutionResult
         {
             Success = true,
-            Message = "Copperfin launcher started.",
+            Message = Localization.Text("AssetEditor.Project.Workflow.LauncherStarted"),
             ProjectPath = fileName
         };
     }

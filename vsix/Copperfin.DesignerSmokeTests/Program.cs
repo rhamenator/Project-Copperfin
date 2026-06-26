@@ -21,6 +21,7 @@ internal static class Program
 
         SmokeDesignSurfaceWithSyntheticReportLayout();
         SmokeLocalizedAssetEditorChrome();
+        SmokePseudoLocalizedAssetEditorChrome();
         SmokeLocalizedHostModeSubtitles();
         SmokeLocalizedProjectWorkspaceChrome();
         SmokeLocalizedProjectCommandDebuggerChrome();
@@ -139,6 +140,23 @@ internal static class Program
                HasButtonText(portugueseControl, "Revelar no Explorer") &&
                HasButtonText(portugueseControl, "Atualizar"),
             "Portuguese editor chrome should localize shell command buttons");
+    }
+
+    private static void SmokePseudoLocalizedAssetEditorChrome()
+    {
+        var pseudoLocalization = new CopperfinLocalization("qps-ploc");
+        using var pseudoControl = new CopperfinAssetEditorControl(pseudoLocalization);
+
+        Expect(HasLabelText(pseudoControl, pseudoLocalization.Text("AssetEditor.Title")),
+            "Pseudo-localized editor chrome should route the asset editor title through the shared catalog");
+        Expect(HasLabelTextContaining(pseudoControl, pseudoLocalization.Text("AssetEditor.Subtitle")),
+            "Pseudo-localized editor chrome should route the embedded subtitle through the shared catalog");
+        Expect(HasButtonText(pseudoControl, pseudoLocalization.Text("AssetEditor.RefreshButton")) &&
+               HasTabPageText(pseudoControl, pseudoLocalization.Text("AssetEditor.Tab.Summary")) &&
+               HasLabelText(pseudoControl, pseudoLocalization.Text("AssetEditor.Debugger.ReadyStatus")),
+            "Pseudo-localized editor chrome should route buttons, tabs, and status labels through the shared catalog");
+        Expect(HasRichTextBoxTextContaining(pseudoControl, pseudoLocalization.Text("AssetEditor.Debugger.InitialSummary")),
+            "Pseudo-localized editor chrome should route debugger pane guidance through the shared catalog");
     }
 
     private static void SmokeLocalizedHostModeSubtitles()

@@ -242,7 +242,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         };
         propertyGrid.PropertyValueChanged += (_, e) => ApplyPropertyGridChange(e.ChangedItem.PropertyDescriptor.Name, e.ChangedItem.Value);
 
-        designSurface = new CopperfinDesignSurfaceControl
+        designSurface = new CopperfinDesignSurfaceControl(this.localization)
         {
             Dock = DockStyle.Fill
         };
@@ -1118,7 +1118,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
         if (string.IsNullOrWhiteSpace(currentPath) || !File.Exists(currentPath))
         {
-            MessageBox.Show(this, BuildAssetPathUnavailableMessage(), "Copperfin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(this, BuildAssetPathUnavailableMessage(), DialogTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
 
@@ -1128,7 +1128,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             MessageBox.Show(
                 this,
                 BuildStudioHostMissingMessage(),
-                "Copperfin",
+                DialogTitle,
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning);
             return;
@@ -1136,7 +1136,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
         if (!CopperfinStudioHostBridge.Launch(studioHostPath, currentPath!))
         {
-            MessageBox.Show(this, BuildStudioLaunchFailedMessage(), "Copperfin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(this, BuildStudioLaunchFailedMessage(), DialogTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
     }
 
@@ -1196,7 +1196,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             }
 
             snapshotStatusLabel.Text = ex.Message;
-            MessageBox.Show(this, ex.Message, "Copperfin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(this, ex.Message, DialogTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
     }
 
@@ -1204,7 +1204,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     {
         if (!CopperfinProjectWorkflow.IsCopperfinProjectPath(currentPath))
         {
-            MessageBox.Show(this, BuildOpenProjectFirstMessage(), "Copperfin", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(this, BuildOpenProjectFirstMessage(), DialogTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
 
@@ -1218,7 +1218,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         snapshotStatusLabel.Text = result.Message;
         if (!result.Success)
         {
-            MessageBox.Show(this, result.Message, "Copperfin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(this, result.Message, DialogTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
 
@@ -1227,7 +1227,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             MessageBox.Show(
                 this,
                 BuildWorkflowLauncherMessage(result.Message, result.LauncherPath),
-                "Copperfin",
+                DialogTitle,
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
         }
@@ -1254,7 +1254,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     {
         if (currentDebugSession is null || !currentDebugSession.Success)
         {
-            MessageBox.Show(this, this.localization.Text("AssetEditor.Debugger.StartSessionFirstMessage"), "Copperfin", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(this, this.localization.Text("AssetEditor.Debugger.StartSessionFirstMessage"), DialogTitle, MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
 
@@ -1283,7 +1283,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 debuggerStatusLabel.Text = this.localization.Text("AssetEditor.Debugger.UnavailableStatus");
                 debuggerSummaryBox.Text = session.Error;
                 SetDebuggerButtonsEnabled(false);
-                MessageBox.Show(this, session.Error, "Copperfin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(this, session.Error, DialogTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -1375,38 +1375,53 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         return currentSnapshot?.ProjectWorkspace?.Entries.FirstOrDefault(entry => entry.RecordIndex == recordIndex);
     }
 
-    private static string BuildProjectWorkspaceSummary(CopperfinStudioProjectWorkspace workspace)
+    private string L(string key) => this.localization.Text(key);
+
+    private string F(string key, params object[] args) => this.localization.Format(key, args);
+
+    private string DialogTitle => L("AssetEditor.Title");
+
+    private string BuildProjectWorkspaceSummary(CopperfinStudioProjectWorkspace workspace)
     {
         var summary = new StringBuilder();
-        summary.AppendLine("Copperfin Project Workspace");
+        summary.AppendLine(L("AssetEditor.Summary.ProjectWorkspace"));
         summary.AppendLine();
-        summary.AppendLine($"Project: {workspace.ProjectTitle}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelProject")}: {workspace.ProjectTitle}");
         if (!string.IsNullOrWhiteSpace(workspace.ProjectKey))
         {
-            summary.AppendLine($"Key: {workspace.ProjectKey}");
+            summary.AppendLine($"{L("AssetEditor.Summary.LabelKey")}: {workspace.ProjectKey}");
         }
         if (!string.IsNullOrWhiteSpace(workspace.HomeDirectory))
         {
-            summary.AppendLine($"Home Directory: {workspace.HomeDirectory}");
+            summary.AppendLine($"{L("AssetEditor.Summary.LabelHomeDirectory")}: {workspace.HomeDirectory}");
         }
-        summary.AppendLine($"Planned Output: {workspace.BuildPlan.OutputPath}");
-        summary.AppendLine($"Build Target: {workspace.BuildPlan.BuildTarget}");
-        summary.AppendLine($"Startup Item: {workspace.BuildPlan.StartupItem}");
-        summary.AppendLine($"Items: {workspace.BuildPlan.TotalItems} total, {workspace.BuildPlan.ExcludedItems} excluded");
-        summary.AppendLine($"Debug: {workspace.BuildPlan.DebugEnabled}");
-        summary.AppendLine($"Encrypt: {workspace.BuildPlan.EncryptEnabled}");
-        summary.AppendLine($"Save Code: {workspace.BuildPlan.SaveCode}");
-        summary.AppendLine($"No Logo: {workspace.BuildPlan.NoLogo}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelPlannedOutput")}: {workspace.BuildPlan.OutputPath}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelBuildTarget")}: {workspace.BuildPlan.BuildTarget}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelStartupItem")}: {workspace.BuildPlan.StartupItem}");
+        summary.AppendLine(
+            F(
+                "AssetEditor.Summary.LabelItems",
+                workspace.BuildPlan.TotalItems,
+                workspace.BuildPlan.ExcludedItems));
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelDebug")}: {workspace.BuildPlan.DebugEnabled}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelEncrypt")}: {workspace.BuildPlan.EncryptEnabled}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelSaveCode")}: {workspace.BuildPlan.SaveCode}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelNoLogo")}: {workspace.BuildPlan.NoLogo}");
         summary.AppendLine();
-        summary.AppendLine("Groups:");
+        summary.AppendLine(L("AssetEditor.Summary.GroupsHeading"));
         foreach (var group in workspace.Groups)
         {
-            summary.AppendLine($"- {group.Title}: {group.ItemCount} item(s), {group.ExcludedCount} excluded");
+            summary.AppendLine(
+                F(
+                    "AssetEditor.Summary.GroupLine",
+                    group.Title,
+                    group.ItemCount,
+                    group.ExcludedCount));
         }
 
         summary.AppendLine();
-        summary.AppendLine("Next build-workflow step:");
-        summary.AppendLine("Copperfin can now inspect the project structure, launch build/run workflows, and surface a first integrated debugger pane from the shared project workspace.");
+        summary.AppendLine($"{L("AssetEditor.Summary.BuildWorkflowHeading")}:");
+        summary.AppendLine(L("AssetEditor.Summary.BuildWorkflowText"));
         return summary.ToString();
     }
 
@@ -1417,80 +1432,80 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         if (snapshot.SecurityProfile.Available)
         {
             summary.AppendLine();
-            summary.AppendLine("Native Security:");
-            summary.AppendLine($"- Mode: {snapshot.SecurityProfile.Mode}");
-            summary.AppendLine($"- Roles: {snapshot.SecurityProfile.Roles.Count}");
-            summary.AppendLine($"- Identity Providers: {snapshot.SecurityProfile.IdentityProviders.Count}");
-            summary.AppendLine($"- Package Policy: {snapshot.SecurityProfile.PackagePolicy}");
-            summary.AppendLine($"- Managed Interop Policy: {snapshot.SecurityProfile.ManagedInteropPolicy}");
+            summary.AppendLine(L("AssetEditor.Summary.NativeSecurity"));
+            summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelMode"), snapshot.SecurityProfile.Mode));
+            summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelRoles"), snapshot.SecurityProfile.Roles.Count));
+            summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelIdentityProviders"), snapshot.SecurityProfile.IdentityProviders.Count));
+            summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelPackagePolicy"), snapshot.SecurityProfile.PackagePolicy));
+            summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelManagedInteropPolicy"), snapshot.SecurityProfile.ManagedInteropPolicy));
             if (snapshot.SecurityProfile.HardeningProfiles.Count > 0)
             {
-                summary.AppendLine($"- Hardening: {snapshot.SecurityProfile.HardeningProfiles[0]}");
+                summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelHardening"), snapshot.SecurityProfile.HardeningProfiles[0]));
             }
         }
 
         if (snapshot.ExtensibilityProfile.Available)
         {
             summary.AppendLine();
-            summary.AppendLine(".NET And Extensibility:");
-            summary.AppendLine($"- .NET Story: {snapshot.ExtensibilityProfile.DotNetOutput.PrimaryStory}");
-            summary.AppendLine($"- Languages: {snapshot.ExtensibilityProfile.Languages.Count}");
-            summary.AppendLine($"- AI/MCP Features: {snapshot.ExtensibilityProfile.AiFeatures.Count}");
+            summary.AppendLine(L("AssetEditor.Summary.DotNetExtensibility"));
+            summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelDotNetStory"), snapshot.ExtensibilityProfile.DotNetOutput.PrimaryStory));
+            summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelLanguages"), snapshot.ExtensibilityProfile.Languages.Count));
+            summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelAiFeatures"), snapshot.ExtensibilityProfile.AiFeatures.Count));
             var python = snapshot.ExtensibilityProfile.Languages.FirstOrDefault(language => language.Id == "python");
             if (python is not null)
             {
-                summary.AppendLine($"- Python: {python.OutputStory}");
+                summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelPython"), python.OutputStory));
             }
             var rLanguage = snapshot.ExtensibilityProfile.Languages.FirstOrDefault(language => language.Id == "r");
             if (rLanguage is not null)
             {
-                summary.AppendLine($"- R: {rLanguage.OutputStory}");
+                summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelR"), rLanguage.OutputStory));
             }
             var mcp = snapshot.ExtensibilityProfile.AiFeatures.FirstOrDefault(feature => feature.Id == "mcp-host");
             if (mcp is not null)
             {
-                summary.AppendLine($"- MCP: {mcp.Description}");
+                summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelMcp"), mcp.Description));
             }
             var modelSelection = snapshot.ExtensibilityProfile.AiFeatures.FirstOrDefault(feature => feature.Id == "model-selection");
             if (modelSelection is not null)
             {
-                summary.AppendLine($"- AI Model Selection: {modelSelection.Description}");
+                summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelAiModelSelection"), modelSelection.Description));
             }
         }
 
         if (snapshot.DatabaseProfile.Available)
         {
             summary.AppendLine();
-            summary.AppendLine("Database Federation:");
-            summary.AppendLine($"- Connectors: {snapshot.DatabaseProfile.Connectors.Count}");
-            summary.AppendLine($"- Query Paths: {snapshot.DatabaseProfile.QueryPaths.Count}");
+            summary.AppendLine(L("AssetEditor.Summary.DatabaseFederation"));
+            summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelConnectors"), snapshot.DatabaseProfile.Connectors.Count));
+            summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelQueryPaths"), snapshot.DatabaseProfile.QueryPaths.Count));
             var directRelational = snapshot.DatabaseProfile.Connectors.Count(connector => connector.FoxSqlTranslationDirect);
-            summary.AppendLine($"- Direct Fox SQL Targets: {directRelational}");
+            summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelDirectFoxSqlTargets"), directRelational));
             var aiOptional = snapshot.DatabaseProfile.QueryPaths.Count(path => path.AiOptional);
-            summary.AppendLine($"- Optional AI Planning Paths: {aiOptional}");
+            summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelOptionalAiPlanningPaths"), aiOptional));
         }
 
         return summary.ToString();
     }
 
-    private static string BuildDebugSessionSummary(CopperfinRuntimeDebugSession session)
+    private string BuildDebugSessionSummary(CopperfinRuntimeDebugSession session)
     {
         var state = session.State;
         var summary = new StringBuilder();
-        summary.AppendLine("Copperfin Debug Session");
+        summary.AppendLine(L("AssetEditor.Summary.DebugSession"));
         summary.AppendLine();
-        summary.AppendLine($"Pause Reason: {state.Reason}");
-        summary.AppendLine($"Location: {state.Location}");
-        summary.AppendLine($"Statement: {state.Statement}");
-        summary.AppendLine($"Message: {state.Message}");
-        summary.AppendLine($"Executed Statements: {state.ExecutedStatements}");
-        summary.AppendLine($"Command History: {string.Join(", ", session.Commands)}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelPauseReason")}: {state.Reason}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelLocation")}: {state.Location}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelStatement")}: {state.Statement}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelMessage")}: {state.Message}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelExecutedStatements")}: {state.ExecutedStatements}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelCommandHistory")}: {string.Join(", ", session.Commands)}");
 
         summary.AppendLine();
-        summary.AppendLine("Call Stack:");
+        summary.AppendLine(L("AssetEditor.Summary.CallStack"));
         if (state.Frames.Count == 0)
         {
-            summary.AppendLine("- (no frames)");
+            summary.AppendLine(L("AssetEditor.Summary.NoFrames"));
         }
         else
         {
@@ -1499,23 +1514,23 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 summary.AppendLine($"- {frame.RoutineName} @ {frame.Location}");
                 if (frame.Locals.Count == 0)
                 {
-                    summary.AppendLine("  locals: (none)");
+                    summary.AppendLine(F("AssetEditor.Summary.FrameLocalsNone", L("AssetEditor.Summary.LabelLocals")));
                 }
                 else
                 {
                     foreach (var local in frame.Locals)
                     {
-                        summary.AppendLine($"  local {local.Name} = {local.Value}");
+                        summary.AppendLine($"{L("AssetEditor.Summary.FrameLocal")}: {local.Name} = {local.Value}");
                     }
                 }
             }
         }
 
         summary.AppendLine();
-        summary.AppendLine("Globals:");
+        summary.AppendLine(L("AssetEditor.Summary.Globals"));
         if (state.Globals.Count == 0)
         {
-            summary.AppendLine("- (none)");
+            summary.AppendLine(L("AssetEditor.Summary.NoGlobals"));
         }
         else
         {
@@ -1526,44 +1541,49 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
 
         summary.AppendLine();
-        summary.AppendLine("Runtime Events:");
+        summary.AppendLine(L("AssetEditor.Summary.RuntimeEvents"));
         if (state.Events.Count == 0)
         {
-            summary.AppendLine("- (none)");
+            summary.AppendLine(L("AssetEditor.Summary.NoRuntimeEvents"));
         }
         else
         {
             foreach (var runtimeEvent in state.Events)
             {
-                summary.AppendLine($"- [{runtimeEvent.Category}] {runtimeEvent.Detail} @ {runtimeEvent.Location}");
+                summary.AppendLine(
+                    F(
+                        "AssetEditor.Summary.RuntimeEventLine",
+                        runtimeEvent.Category,
+                        runtimeEvent.Detail,
+                        runtimeEvent.Location));
             }
         }
 
         return summary.ToString();
     }
 
-    private static string BuildTaskListSummary(CopperfinProjectInsights? insights)
+    private string BuildTaskListSummary(CopperfinProjectInsights? insights)
     {
         var summary = new StringBuilder();
-        summary.AppendLine("Copperfin Task List");
+        summary.AppendLine(L("AssetEditor.Summary.TaskList"));
         summary.AppendLine();
         if (insights is null)
         {
-            summary.AppendLine("Project insights are not available.");
+            summary.AppendLine(L("AssetEditor.Summary.ProjectInsightsUnavailable"));
             return summary.ToString();
         }
 
-        summary.AppendLine($"Project Root: {insights.ProjectRoot}");
-        summary.AppendLine($"Tasks: {insights.TaskItems.Count}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelProjectRoot")}: {insights.ProjectRoot}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelTasks")}: {insights.TaskItems.Count}");
         if (insights.Warnings.Count > 0)
         {
-            summary.AppendLine($"Warnings: {insights.Warnings.Count}");
+            summary.AppendLine($"{L("AssetEditor.Summary.LabelWarnings")}: {insights.Warnings.Count}");
         }
 
         summary.AppendLine();
         if (insights.TaskItems.Count == 0)
         {
-            summary.AppendLine("No TODO/FIXME/HACK/BUG markers were found in the scanned text-based project files.");
+            summary.AppendLine(L("AssetEditor.Summary.NoTaskItems"));
         }
         else
         {
@@ -1573,14 +1593,14 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             }
             if (insights.TaskItems.Count > 40)
             {
-                summary.AppendLine($"... {insights.TaskItems.Count - 40} more task item(s)");
+                summary.AppendLine(F("AssetEditor.Summary.MoreItems", insights.TaskItems.Count - 40, L("AssetEditor.Summary.LabelTaskItems")));
             }
         }
 
         if (insights.Warnings.Count > 0)
         {
             summary.AppendLine();
-            summary.AppendLine("Scan Warnings:");
+            summary.AppendLine(L("AssetEditor.Summary.ScanWarnings"));
             foreach (var warning in insights.Warnings.Take(10))
             {
                 summary.AppendLine($"- {warning}");
@@ -1590,25 +1610,25 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         return summary.ToString();
     }
 
-    private static string BuildCodeReferenceSummary(CopperfinProjectInsights? insights)
+    private string BuildCodeReferenceSummary(CopperfinProjectInsights? insights)
     {
         var summary = new StringBuilder();
-        summary.AppendLine("Copperfin Code References");
+        summary.AppendLine(L("AssetEditor.Summary.CodeReferences"));
         summary.AppendLine();
         if (insights is null)
         {
-            summary.AppendLine("Project insights are not available.");
+            summary.AppendLine(L("AssetEditor.Summary.ProjectInsightsUnavailable"));
             return summary.ToString();
         }
 
-        summary.AppendLine($"Project Root: {insights.ProjectRoot}");
-        summary.AppendLine($"Definitions: {insights.DefinedSymbols.Count}");
-        summary.AppendLine($"Runtime References: {insights.RuntimeReferences.Count}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelProjectRoot")}: {insights.ProjectRoot}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelDefinitions")}: {insights.DefinedSymbols.Count}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelRuntimeReferences")}: {insights.RuntimeReferences.Count}");
         summary.AppendLine();
-        summary.AppendLine("Definitions:");
+        summary.AppendLine(L("AssetEditor.Summary.Definitions"));
         if (insights.DefinedSymbols.Count == 0)
         {
-            summary.AppendLine("- No textual definitions were found in the scanned project files.");
+            summary.AppendLine(L("AssetEditor.Summary.NoDefinitions"));
         }
         else
         {
@@ -1618,15 +1638,15 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             }
             if (insights.DefinedSymbols.Count > 40)
             {
-                summary.AppendLine($"... {insights.DefinedSymbols.Count - 40} more definition(s)");
+                summary.AppendLine(F("AssetEditor.Summary.MoreItems", insights.DefinedSymbols.Count - 40, L("AssetEditor.Summary.LabelDefinitions")));
             }
         }
 
         summary.AppendLine();
-        summary.AppendLine("Runtime References:");
+        summary.AppendLine(L("AssetEditor.Summary.RuntimeReferences"));
         if (insights.RuntimeReferences.Count == 0)
         {
-            summary.AppendLine("- No runtime references were found in the scanned project files.");
+            summary.AppendLine(L("AssetEditor.Summary.NoRuntimeReferences"));
         }
         else
         {
@@ -1636,22 +1656,26 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             }
             if (insights.RuntimeReferences.Count > 40)
             {
-                summary.AppendLine($"... {insights.RuntimeReferences.Count - 40} more runtime reference(s)");
+                summary.AppendLine(
+                    F(
+                        "AssetEditor.Summary.MoreItems",
+                        insights.RuntimeReferences.Count - 40,
+                        L("AssetEditor.Summary.LabelRuntimeReferences")));
             }
         }
 
         return summary.ToString();
     }
 
-    private static string BuildDataExplorerSummary(CopperfinStudioSnapshotDocument snapshot, CopperfinProjectInsights? insights, string? filter)
+    private string BuildDataExplorerSummary(CopperfinStudioSnapshotDocument snapshot, CopperfinProjectInsights? insights, string? filter)
     {
         var summary = new StringBuilder();
-        summary.AppendLine("Copperfin Data Explorer");
+        summary.AppendLine(L("AssetEditor.Summary.DataExplorer"));
         summary.AppendLine();
-        summary.AppendLine($"Project: {snapshot.ProjectWorkspace?.ProjectTitle}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelProject")}: {snapshot.ProjectWorkspace?.ProjectTitle}");
         if (insights is null)
         {
-            summary.AppendLine("Project insights are not available.");
+            summary.AppendLine(L("AssetEditor.Summary.ProjectInsightsUnavailable"));
             return summary.ToString();
         }
 
@@ -1664,23 +1688,23 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 asset.FilePath.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0)
             .ToList();
 
-        summary.AppendLine($"Discovered Data Assets: {insights.DataAssets.Count}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelDiscoveredDataAssets")}: {insights.DataAssets.Count}");
         if (!string.IsNullOrWhiteSpace(normalizedFilter))
         {
-            summary.AppendLine($"Filter: {normalizedFilter}");
+            summary.AppendLine($"{L("AssetEditor.Summary.LabelFilter")}: {normalizedFilter}");
         }
         summary.AppendLine();
         if (filteredAssets.Count == 0)
         {
             summary.AppendLine(string.IsNullOrWhiteSpace(normalizedFilter)
-                ? "No DBF/DBC/query assets were discovered in the current project workspace."
-                : "No data assets matched the current filter.");
+                ? L("AssetEditor.Summary.NoDataAssets")
+                : L("AssetEditor.Summary.NoDataAssetsFiltered"));
         }
         else
         {
             foreach (var asset in filteredAssets.Take(40))
             {
-                var excludedSuffix = asset.Excluded ? " [excluded]" : string.Empty;
+                var excludedSuffix = asset.Excluded ? L("AssetEditor.Summary.ExcludedSuffix") : string.Empty;
                 summary.AppendLine($"- [{asset.Kind}] {asset.Title}{excludedSuffix}");
                 if (!string.IsNullOrWhiteSpace(asset.FilePath))
                 {
@@ -1689,26 +1713,30 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             }
             if (filteredAssets.Count > 40)
             {
-                summary.AppendLine($"... {filteredAssets.Count - 40} more data asset(s)");
+                summary.AppendLine(
+                    F(
+                        "AssetEditor.Summary.MoreItems",
+                        filteredAssets.Count - 40,
+                        L("AssetEditor.Summary.LabelDataAssets")));
             }
         }
 
         summary.AppendLine();
-        summary.AppendLine("Modern Connector Direction:");
-        summary.AppendLine("- SQLite, PostgreSQL, SQL Server, and Oracle remain first-class targets alongside DBF/DBC assets.");
-        summary.AppendLine("- Data-science jobs can flow through Python or R sidecars without weakening the trusted native core.");
+        summary.AppendLine(L("AssetEditor.Summary.ModernConnectorHeading"));
+        summary.AppendLine(F("AssetEditor.Summary.IndentedLine", L("AssetEditor.Summary.ModernConnectorBulletOne")));
+        summary.AppendLine(F("AssetEditor.Summary.IndentedLine", L("AssetEditor.Summary.ModernConnectorBulletTwo")));
         return summary.ToString();
     }
 
-    private static string BuildObjectBrowserSummary(CopperfinStudioSnapshotDocument snapshot, CopperfinProjectInsights? insights, string? filter, bool hideProjectRecords)
+    private string BuildObjectBrowserSummary(CopperfinStudioSnapshotDocument snapshot, CopperfinProjectInsights? insights, string? filter, bool hideProjectRecords)
     {
         var summary = new StringBuilder();
-        summary.AppendLine("Copperfin Object Browser");
+        summary.AppendLine(L("AssetEditor.Summary.ObjectBrowser"));
         summary.AppendLine();
-        summary.AppendLine($"Project: {snapshot.ProjectWorkspace?.ProjectTitle}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelProject")}: {snapshot.ProjectWorkspace?.ProjectTitle}");
         if (insights is null)
         {
-            summary.AppendLine("Project insights are not available.");
+            summary.AppendLine(L("AssetEditor.Summary.ProjectInsightsUnavailable"));
             return summary.ToString();
         }
 
@@ -1723,20 +1751,20 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                  node.FilePath.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0))
             .ToList();
 
-        summary.AppendLine($"Object Nodes: {insights.ObjectNodes.Count}");
-        summary.AppendLine($"Definitions: {insights.DefinedSymbols.Count}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelObjectNodes")}: {insights.ObjectNodes.Count}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelDefinitions")}: {insights.DefinedSymbols.Count}");
         if (!string.IsNullOrWhiteSpace(normalizedFilter))
         {
-            summary.AppendLine($"Filter: {normalizedFilter}");
+            summary.AppendLine($"{L("AssetEditor.Summary.LabelFilter")}: {normalizedFilter}");
         }
         if (hideProjectRecords)
         {
-            summary.AppendLine("Project records hidden: true");
+            summary.AppendLine(L("AssetEditor.Summary.LabelProjectRecordsHidden"));
         }
         summary.AppendLine();
         if (filteredNodes.Count == 0)
         {
-            summary.AppendLine("No object-browser nodes matched the current view.");
+            summary.AppendLine(L("AssetEditor.Summary.NoObjectBrowserNodes"));
         }
         else
         {
@@ -1754,34 +1782,38 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             }
             if (filteredNodes.Count > 50)
             {
-                summary.AppendLine($"... {filteredNodes.Count - 50} more object node(s)");
+                summary.AppendLine(
+                    F(
+                        "AssetEditor.Summary.MoreItems",
+                        filteredNodes.Count - 50,
+                        L("AssetEditor.Summary.LabelObjectNodes")));
             }
         }
 
         summary.AppendLine();
-        summary.AppendLine("Next browser step:");
-        summary.AppendLine("- Promote these summaries into navigable designers and code-navigation surfaces shared by Visual Studio and Copperfin Studio.");
+        summary.AppendLine(L("AssetEditor.Summary.NextBrowserStep"));
+        summary.AppendLine(F("AssetEditor.Summary.IndentedLine", L("AssetEditor.Summary.NextBrowserStepDetails")));
         return summary.ToString();
     }
 
-    private static string BuildToolboxSummary(CopperfinStudioSnapshotDocument snapshot, CopperfinProjectInsights? insights)
+    private string BuildToolboxSummary(CopperfinStudioSnapshotDocument snapshot, CopperfinProjectInsights? insights)
     {
         var summary = new StringBuilder();
-        summary.AppendLine("Copperfin Toolbox And Add-ins");
+        summary.AppendLine(L("AssetEditor.Summary.Toolbox"));
         summary.AppendLine();
-        summary.AppendLine($"Project: {snapshot.ProjectWorkspace?.ProjectTitle}");
-        summary.AppendLine($"Workspace Groups: {snapshot.ProjectWorkspace?.Groups.Count ?? 0}");
-        summary.AppendLine($"Language Integrations: {snapshot.ExtensibilityProfile.Languages.Count}");
-        summary.AppendLine($"AI/MCP Features: {snapshot.ExtensibilityProfile.AiFeatures.Count}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelProject")}: {snapshot.ProjectWorkspace?.ProjectTitle}");
+        summary.AppendLine(F("AssetEditor.Summary.LabelWorkspaceGroups", snapshot.ProjectWorkspace?.Groups.Count ?? 0));
+        summary.AppendLine(F("AssetEditor.Summary.LabelLanguageIntegrations", snapshot.ExtensibilityProfile.Languages.Count));
+        summary.AppendLine(F("AssetEditor.Summary.LabelAiMcpFeatures", snapshot.ExtensibilityProfile.AiFeatures.Count));
         summary.AppendLine();
-        summary.AppendLine("Suggested Toolbox Seeds:");
+        summary.AppendLine(L("AssetEditor.Summary.SuggestedToolboxSeeds"));
         foreach (var group in snapshot.ProjectWorkspace?.Groups.Take(8) ?? Enumerable.Empty<CopperfinStudioProjectGroup>())
         {
-            summary.AppendLine($"- {group.Title}: {group.ItemCount} project item(s)");
+            summary.AppendLine(F("AssetEditor.Summary.ToolboxGroupLine", group.Title, group.ItemCount));
         }
 
         summary.AppendLine();
-        summary.AppendLine("Add-in Surfaces:");
+        summary.AppendLine(L("AssetEditor.Summary.AddInSurfaces"));
         foreach (var feature in snapshot.ExtensibilityProfile.AiFeatures.Take(6))
         {
             summary.AppendLine($"- {feature.Title}: {feature.Description}");
@@ -1790,7 +1822,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         if (insights is not null && insights.RuntimeReferences.Count > 0)
         {
             summary.AppendLine();
-            summary.AppendLine("High-value shortcuts:");
+            summary.AppendLine(L("AssetEditor.Summary.HighValueShortcuts"));
             foreach (var reference in insights.RuntimeReferences.Take(6))
             {
                 summary.AppendLine($"- [{reference.Kind}] {reference.Name}");
@@ -1800,22 +1832,22 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         return summary.ToString();
     }
 
-    private static string BuildBuilderSummary(CopperfinStudioSnapshotDocument snapshot, CopperfinProjectInsights? insights)
+    private string BuildBuilderSummary(CopperfinStudioSnapshotDocument snapshot, CopperfinProjectInsights? insights)
     {
         var summary = new StringBuilder();
-        summary.AppendLine("Copperfin Builders");
+        summary.AppendLine(L("AssetEditor.Summary.Builders"));
         summary.AppendLine();
-        summary.AppendLine($"Project: {snapshot.ProjectWorkspace?.ProjectTitle}");
-        summary.AppendLine("Recommended Builder Contexts:");
-        summary.AppendLine("- Form/Class designers: property sheet, event wiring, and layout helpers");
-        summary.AppendLine("- Report/Label designers: band, expression, print, and export helpers");
-        summary.AppendLine("- Menus/Projects: startup, deployment, and migration helpers");
-        summary.AppendLine("- Security/AI/MCP: policy-controlled setup builders");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelProject")}: {snapshot.ProjectWorkspace?.ProjectTitle}");
+        summary.AppendLine(L("AssetEditor.Summary.RecommendedBuilderContexts"));
+        summary.AppendLine(F("AssetEditor.Summary.IndentedLine", L("AssetEditor.Summary.BuilderContextForms")));
+        summary.AppendLine(F("AssetEditor.Summary.IndentedLine", L("AssetEditor.Summary.BuilderContextReports")));
+        summary.AppendLine(F("AssetEditor.Summary.IndentedLine", L("AssetEditor.Summary.BuilderContextMenus")));
+        summary.AppendLine(F("AssetEditor.Summary.IndentedLine", L("AssetEditor.Summary.BuilderContextSecurity")));
 
         if (insights is not null)
         {
             summary.AppendLine();
-            summary.AppendLine("Current Builder Targets:");
+            summary.AppendLine(L("AssetEditor.Summary.CurrentBuilderTargets"));
             foreach (var node in insights.ObjectNodes.Take(8))
             {
                 summary.AppendLine($"- [{node.Kind}] {node.Title}");
@@ -1825,15 +1857,15 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         return summary.ToString();
     }
 
-    private static string BuildCoverageSummary(CopperfinStudioSnapshotDocument snapshot, CopperfinRuntimeDebugSession? session)
+    private string BuildCoverageSummary(CopperfinStudioSnapshotDocument snapshot, CopperfinRuntimeDebugSession? session)
     {
         var summary = new StringBuilder();
-        summary.AppendLine("Copperfin Coverage");
+        summary.AppendLine(L("AssetEditor.Summary.Coverage"));
         summary.AppendLine();
-        summary.AppendLine($"Project: {snapshot.ProjectWorkspace?.ProjectTitle}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelProject")}: {snapshot.ProjectWorkspace?.ProjectTitle}");
         if (session is null || !session.Success)
         {
-            summary.AppendLine("Start a Copperfin debug session to collect first-pass runtime coverage signals.");
+            summary.AppendLine(L("AssetEditor.Summary.CoverageNoSession"));
             return summary.ToString();
         }
 
@@ -1844,11 +1876,11 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        summary.AppendLine($"Pause Reason: {state.Reason}");
-        summary.AppendLine($"Executed Statements: {state.ExecutedStatements}");
-        summary.AppendLine($"Distinct Runtime Locations: {executedLocations.Count}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelPauseReason")}: {state.Reason}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelExecutedStatements")}: {state.ExecutedStatements}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelDistinctRuntimeLocations")}: {executedLocations.Count}");
         summary.AppendLine();
-        summary.AppendLine("Recent Coverage Signals:");
+        summary.AppendLine(L("AssetEditor.Summary.RecentCoverageSignals"));
         foreach (var location in executedLocations.Take(12))
         {
             summary.AppendLine($"- {location}");
@@ -1856,20 +1888,20 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
         if (executedLocations.Count == 0)
         {
-            summary.AppendLine("- No runtime locations captured yet.");
+            summary.AppendLine(L("AssetEditor.Summary.NoRuntimeLocations"));
         }
 
         return summary.ToString();
     }
 
-    private static string BuildDatabaseFederationSummary(CopperfinStudioSnapshotDocument snapshot, string? filter)
+    private string BuildDatabaseFederationSummary(CopperfinStudioSnapshotDocument snapshot, string? filter)
     {
         var summary = new StringBuilder();
-        summary.AppendLine("Copperfin Database Federation");
+        summary.AppendLine(L("AssetEditor.Summary.DatabaseFederation"));
         summary.AppendLine();
         if (!snapshot.DatabaseProfile.Available)
         {
-            summary.AppendLine("Database federation metadata is unavailable.");
+            summary.AppendLine(L("AssetEditor.Summary.DatabaseFederationUnavailable"));
             return summary.ToString();
         }
 
@@ -1889,15 +1921,15 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 path.TargetShape.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0)
             .ToList();
 
-        summary.AppendLine($"Connectors: {snapshot.DatabaseProfile.Connectors.Count}");
-        summary.AppendLine($"Query Paths: {snapshot.DatabaseProfile.QueryPaths.Count}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelConnectors")}: {snapshot.DatabaseProfile.Connectors.Count}");
+        summary.AppendLine($"{L("AssetEditor.Summary.LabelQueryPaths")}: {snapshot.DatabaseProfile.QueryPaths.Count}");
         if (!string.IsNullOrWhiteSpace(normalizedFilter))
         {
-            summary.AppendLine($"Filter: {normalizedFilter}");
+            summary.AppendLine($"{L("AssetEditor.Summary.LabelFilter")}: {normalizedFilter}");
         }
 
         summary.AppendLine();
-        summary.AppendLine("Connector Targets:");
+        summary.AppendLine(L("AssetEditor.Summary.ConnectorTargets"));
         foreach (var connector in filteredConnectors.Take(10))
         {
             summary.AppendLine($"- [{connector.Family}] {connector.Title}");
@@ -1905,11 +1937,11 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
         if (filteredConnectors.Count == 0)
         {
-            summary.AppendLine("- No connector targets matched the current filter.");
+            summary.AppendLine(L("AssetEditor.Summary.NoConnectorTargets"));
         }
 
         summary.AppendLine();
-        summary.AppendLine("Query Translation Paths:");
+        summary.AppendLine(L("AssetEditor.Summary.QueryTranslationPaths"));
         foreach (var path in filteredPaths.Take(8))
         {
             summary.AppendLine($"- {path.Title} ({path.Complexity})");
@@ -1917,11 +1949,11 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
         if (filteredPaths.Count == 0)
         {
-            summary.AppendLine("- No query translation paths matched the current filter.");
+            summary.AppendLine(L("AssetEditor.Summary.NoQueryPaths"));
         }
 
         summary.AppendLine();
-        summary.AppendLine("Guardrails:");
+        summary.AppendLine(L("AssetEditor.Summary.Guardrails"));
         foreach (var guardrail in snapshot.DatabaseProfile.Guardrails.Take(6))
         {
             summary.AppendLine($"- {guardrail}");
