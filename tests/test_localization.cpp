@@ -334,6 +334,57 @@ void test_build_host_catalog_entries_cover_placeholder_locales() {
         "#2539: qps-ploc build-host usage should pseudo-localize prose while preserving placeholder values");
 }
 
+void test_runtime_numeric_domain_errors_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    const copperfin::localization::PlaceholderMap log_placeholders{
+        {"function", "LOG()"},
+        {"value", "0.000000"}
+    };
+    const copperfin::localization::PlaceholderMap asin_placeholders{
+        {"function", "ASIN()"},
+        {"value", "2.000000"}
+    };
+
+    expect(
+        english.translate("Runtime.Prg.Numeric.Error.PositiveArgumentRequired", log_placeholders) ==
+            "LOG() requires a positive argument (got 0.000000)",
+        "#2540: positive-argument numeric error should preserve en-US default output");
+    expect(
+        english.translate("Runtime.Prg.Numeric.Error.UnitRangeArgumentRequired", asin_placeholders) ==
+            "ASIN() requires an argument between -1 and 1 (got 2.000000)",
+        "#2540: unit-range numeric error should preserve en-US default output");
+
+    const std::string spanish_log =
+        spanish.translate("Runtime.Prg.Numeric.Error.PositiveArgumentRequired", log_placeholders);
+    expect(
+        spanish_log.find("LOG()") != std::string::npos &&
+            spanish_log.find("0.000000") != std::string::npos &&
+            spanish_log.find("requires a positive argument") == std::string::npos,
+        "#2540: es-419 numeric error should preserve placeholders without falling back to English prose");
+
+    const std::string portuguese_asin =
+        portuguese.translate("Runtime.Prg.Numeric.Error.UnitRangeArgumentRequired", asin_placeholders);
+    expect(
+        portuguese_asin.find("ASIN()") != std::string::npos &&
+            portuguese_asin.find("2.000000") != std::string::npos &&
+            portuguese_asin.find("requires an argument between") == std::string::npos,
+        "#2540: pt-BR numeric error should preserve placeholders without falling back to English prose");
+
+    const std::string pseudo_message =
+        pseudo.translate("Runtime.Prg.Numeric.Error.PositiveArgumentRequired", log_placeholders);
+    expect(
+        pseudo_message.find("[!! ") == 0U &&
+            pseudo_message.find("LOG()") != std::string::npos &&
+            pseudo_message.find("0.000000") != std::string::npos &&
+            pseudo_message.find("{function}") == std::string::npos,
+        "#2540: qps-ploc numeric error should pseudo-localize prose while preserving placeholders");
+}
+
 void test_inspect_usage_routes_through_localization(const std::string& inspect_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_inspect_usage_tests";
@@ -368,6 +419,7 @@ int main(int argc, char** argv) {
     test_runtime_transaction_journal_messages_route_through_catalog();
     test_runtime_report_output_messages_route_through_catalog();
     test_build_host_catalog_entries_cover_placeholder_locales();
+    test_runtime_numeric_domain_errors_route_through_catalog();
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);
     } else {

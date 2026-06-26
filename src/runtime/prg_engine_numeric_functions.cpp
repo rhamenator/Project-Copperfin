@@ -1,5 +1,6 @@
 #include "prg_engine_numeric_functions.h"
 
+#include "localized_text.h"
 #include "prg_engine_helpers.h"
 
 #include <algorithm>
@@ -17,6 +18,18 @@ namespace {
 
 int color_component(const PrgValue& value) {
     return std::clamp(static_cast<int>(std::llround(value_as_number(value))), 0, 255);
+}
+
+std::string numeric_domain_error(
+    const std::string& key,
+    const std::string& function_name,
+    const double value) {
+    return runtime_text(
+        key,
+        {
+            {"function", function_name},
+            {"value", std::to_string(value)}
+        });
 }
 
 }  // namespace
@@ -60,14 +73,20 @@ std::optional<PrgValue> evaluate_numeric_function(
     if (function == "log" && !arguments.empty()) {
         const double value = value_as_number(arguments[0]);
         if (value <= 0.0) {
-            throw std::runtime_error("LOG() requires a positive argument (got " + std::to_string(value) + ")");
+            throw std::runtime_error(numeric_domain_error(
+                "Runtime.Prg.Numeric.Error.PositiveArgumentRequired",
+                "LOG()",
+                value));
         }
         return make_number_value(std::log(value));
     }
     if (function == "log10" && !arguments.empty()) {
         const double value = value_as_number(arguments[0]);
         if (value <= 0.0) {
-            throw std::runtime_error("LOG10() requires a positive argument (got " + std::to_string(value) + ")");
+            throw std::runtime_error(numeric_domain_error(
+                "Runtime.Prg.Numeric.Error.PositiveArgumentRequired",
+                "LOG10()",
+                value));
         }
         return make_number_value(std::log10(value));
     }
@@ -86,14 +105,20 @@ std::optional<PrgValue> evaluate_numeric_function(
     if (function == "asin" && !arguments.empty()) {
         const double value = value_as_number(arguments[0]);
         if (value < -1.0 || value > 1.0) {
-            throw std::runtime_error("ASIN() requires an argument between -1 and 1 (got " + std::to_string(value) + ")");
+            throw std::runtime_error(numeric_domain_error(
+                "Runtime.Prg.Numeric.Error.UnitRangeArgumentRequired",
+                "ASIN()",
+                value));
         }
         return make_number_value(std::asin(value));
     }
     if (function == "acos" && !arguments.empty()) {
         const double value = value_as_number(arguments[0]);
         if (value < -1.0 || value > 1.0) {
-            throw std::runtime_error("ACOS() requires an argument between -1 and 1 (got " + std::to_string(value) + ")");
+            throw std::runtime_error(numeric_domain_error(
+                "Runtime.Prg.Numeric.Error.UnitRangeArgumentRequired",
+                "ACOS()",
+                value));
         }
         return make_number_value(std::acos(value));
     }

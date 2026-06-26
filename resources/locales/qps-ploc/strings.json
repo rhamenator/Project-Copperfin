@@ -10,5 +10,7 @@
   "BuildHost.Error.SigningKeyValidationFailed": "Signing key reference validation failed: {error}",
   "BuildHost.Error.UnknownOrIncompleteArgument": "Unknown or incomplete argument: {argument}",
   "BuildHost.Usage": "Usage: {commandName} {buildCommand} {projectOption} {projectValue} {outputDirOption} {outputDirValue} [{configurationOption} {configurationValue}] [{enableSecurityOption}] [{emitDotnetLauncherOption}] [{runtimeHostOption} {runtimeHostValue}]",
-  "BuildHost.Warning.ProcessHardening": "warning: {message}"
+  "BuildHost.Warning.ProcessHardening": "warning: {message}",
+  "Runtime.Prg.Numeric.Error.PositiveArgumentRequired": "{function} requires a positive argument (got {value})",
+  "Runtime.Prg.Numeric.Error.UnitRangeArgumentRequired": "{function} requires an argument between -1 and 1 (got {value})"
 }

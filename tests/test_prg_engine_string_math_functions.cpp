@@ -542,6 +542,45 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_numeric_domain_errors_route_through_runtime_catalog()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_numeric_domain_errors";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const auto run_fault = [&](const std::string &script_name, const std::string &source)
+        {
+            const fs::path main_path = temp_root / script_name;
+            write_text(main_path, source);
+            copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string()));
+            return session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        };
+
+        const auto log_state = run_fault("log_domain.prg", "n = LOG(0)\nRETURN\n");
+        expect(!log_state.completed, "LOG(0) should pause with a runtime error");
+        expect(log_state.message == "LOG() requires a positive argument (got 0.000000)",
+               "#2540: LOG() domain error should route through the default locale catalog");
+
+        const auto log10_state = run_fault("log10_domain.prg", "n = LOG10(-1)\nRETURN\n");
+        expect(!log10_state.completed, "LOG10(-1) should pause with a runtime error");
+        expect(log10_state.message == "LOG10() requires a positive argument (got -1.000000)",
+               "#2540: LOG10() domain error should preserve function and value placeholders");
+
+        const auto asin_state = run_fault("asin_domain.prg", "n = ASIN(2)\nRETURN\n");
+        expect(!asin_state.completed, "ASIN(2) should pause with a runtime error");
+        expect(asin_state.message == "ASIN() requires an argument between -1 and 1 (got 2.000000)",
+               "#2540: ASIN() domain error should route through the default locale catalog");
+
+        const auto acos_state = run_fault("acos_domain.prg", "n = ACOS(-2)\nRETURN\n");
+        expect(!acos_state.completed, "ACOS(-2) should pause with a runtime error");
+        expect(acos_state.message == "ACOS() requires an argument between -1 and 1 (got -2.000000)",
+               "#2540: ACOS() domain error should preserve function and value placeholders");
+
+        fs::remove_all(temp_root, ignored);
+    }
 
 } // namespace
 
@@ -550,6 +589,7 @@ int main()
     test_string_and_math_expression_functions();
     test_financial_and_misc_expression_functions();
     test_nested_macro_eval_textmerge_execscript_semantics();
+    test_numeric_domain_errors_route_through_runtime_catalog();
 
     if (test_failures() != 0)
     {

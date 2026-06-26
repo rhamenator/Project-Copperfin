@@ -10,5 +10,7 @@
   "BuildHost.Error.SigningKeyValidationFailed": "Falha na validacao da referencia da chave de assinatura: {error}",
   "BuildHost.Error.UnknownOrIncompleteArgument": "Argumento desconhecido ou incompleto: {argument}",
   "BuildHost.Usage": "Uso: {commandName} {buildCommand} {projectOption} {projectValue} {outputDirOption} {outputDirValue} [{configurationOption} {configurationValue}] [{enableSecurityOption}] [{emitDotnetLauncherOption}] [{runtimeHostOption} {runtimeHostValue}]",
-  "BuildHost.Warning.ProcessHardening": "aviso: {message}"
+  "BuildHost.Warning.ProcessHardening": "aviso: {message}",
+  "Runtime.Prg.Numeric.Error.PositiveArgumentRequired": "{function} exige um argumento positivo (recebeu {value})",
+  "Runtime.Prg.Numeric.Error.UnitRangeArgumentRequired": "{function} exige um argumento entre -1 e 1 (recebeu {value})"
 }
