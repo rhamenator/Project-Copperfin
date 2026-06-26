@@ -1307,7 +1307,9 @@ namespace copperfin::runtime
         if (!model.ok || !model.runnable_startup)
         {
             last_error_message = model.error.empty()
-                                     ? "No runnable startup methods were found in asset: " + asset_path
+                                     ? runtime_text(
+                                           "Runtime.Prg.Session.Error.NoRunnableStartupMethodsFoundInAsset",
+                                           {{"path", asset_path}})
                                      : model.error;
             return std::nullopt;
         }
@@ -1473,12 +1475,16 @@ namespace copperfin::runtime
         if (entry_pause_pending)
         {
             entry_pause_pending = false;
-            return finalize_pause_state(DebugPauseReason::entry, "Stopped on entry.");
+            return finalize_pause_state(
+                DebugPauseReason::entry,
+                runtime_text("Runtime.Prg.Session.Message.StoppedOnEntry"));
         }
 
         if (waiting_for_events)
         {
-            return finalize_pause_state(DebugPauseReason::event_loop, "The runtime is waiting in READ EVENTS.");
+            return finalize_pause_state(
+                DebugPauseReason::event_loop,
+                runtime_text("Runtime.Prg.Session.Message.WaitingInReadEvents"));
         }
 
         const std::size_t base_depth = stack.size();
@@ -1510,7 +1516,9 @@ namespace copperfin::runtime
                     {
                         restore_event_loop_after_dispatch = false;
                         waiting_for_events = true;
-                        return finalize_pause_state(DebugPauseReason::event_loop, "The runtime is waiting in READ EVENTS.");
+                        return finalize_pause_state(
+                            DebugPauseReason::event_loop,
+                            runtime_text("Runtime.Prg.Session.Message.WaitingInReadEvents"));
                     }
                     restore_event_loop_after_dispatch = false;
                 }
@@ -1540,7 +1548,9 @@ namespace copperfin::runtime
                 }
                 if (stack.empty())
                 {
-                    return finalize_pause_state(DebugPauseReason::completed, "Execution completed.");
+                    return finalize_pause_state(
+                        DebugPauseReason::completed,
+                        runtime_text("Runtime.Prg.Session.Message.ExecutionCompleted"));
                 }
 
                 const Statement *next = current_statement();
@@ -1572,7 +1582,9 @@ namespace copperfin::runtime
                     else
                     {
                         resume_skip_breakpoint_location = next->location;
-                        return finalize_pause_state(DebugPauseReason::breakpoint, "Breakpoint hit.");
+                        return finalize_pause_state(
+                            DebugPauseReason::breakpoint,
+                            runtime_text("Runtime.Prg.Session.Message.BreakpointHit"));
                     }
                 }
                 else
@@ -1628,12 +1640,16 @@ namespace copperfin::runtime
                 }
                 if (outcome.waiting_for_events)
                 {
-                    return finalize_pause_state(DebugPauseReason::event_loop, "The runtime is waiting in READ EVENTS.");
+                    return finalize_pause_state(
+                        DebugPauseReason::event_loop,
+                        runtime_text("Runtime.Prg.Session.Message.WaitingInReadEvents"));
                 }
 
                 if (stack.empty())
                 {
-                    return finalize_pause_state(DebugPauseReason::completed, "Execution completed.");
+                    return finalize_pause_state(
+                        DebugPauseReason::completed,
+                        runtime_text("Runtime.Prg.Session.Message.ExecutionCompleted"));
                 }
 
                 switch (action)
@@ -1653,17 +1669,23 @@ namespace copperfin::runtime
                     }
                     break;
                 case DebugResumeAction::step_into:
-                    return finalize_pause_state(DebugPauseReason::step, "Step completed.");
+                    return finalize_pause_state(
+                        DebugPauseReason::step,
+                        runtime_text("Runtime.Prg.Session.Message.StepCompleted"));
                 case DebugResumeAction::step_over:
                     if (stack.size() <= base_depth)
                     {
-                        return finalize_pause_state(DebugPauseReason::step, "Step-over completed.");
+                        return finalize_pause_state(
+                            DebugPauseReason::step,
+                            runtime_text("Runtime.Prg.Session.Message.StepOverCompleted"));
                     }
                     break;
                 case DebugResumeAction::step_out:
                     if (stack.size() < base_depth)
                     {
-                        return finalize_pause_state(DebugPauseReason::step, "Step-out completed.");
+                        return finalize_pause_state(
+                            DebugPauseReason::step,
+                            runtime_text("Runtime.Prg.Session.Message.StepOutCompleted"));
                     }
                     break;
                 }

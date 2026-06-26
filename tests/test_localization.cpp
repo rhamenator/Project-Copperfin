@@ -816,9 +816,74 @@ void test_runtime_core_errors_route_through_catalog() {
         pseudo.translate("Runtime.Prg.Core.Error.XAssetBootstrapMaterializeFailed", path_placeholders);
     expect(
         pseudo_xasset.find("[!! ") == 0U &&
-            pseudo_xasset.find("forms/customer.scx") != std::string::npos &&
+        pseudo_xasset.find("forms/customer.scx") != std::string::npos &&
             pseudo_xasset.find("{path}") == std::string::npos,
         "#2552: qps-ploc xAsset bootstrap error should pseudo-localize prose while preserving path");
+}
+
+void test_runtime_pause_and_session_messages_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    const copperfin::localization::PlaceholderMap path_placeholders{{"path", "forms/customer.scx"}};
+
+    expect(
+        english.translate("Runtime.Prg.Session.Message.StoppedOnEntry") == "Stopped on entry.",
+        "#2589: stopped-on-entry pause message should preserve the en-US default output");
+    expect(
+        english.translate("Runtime.Prg.Session.Message.WaitingInReadEvents") ==
+            "The runtime is waiting in READ EVENTS.",
+        "#2589: READ EVENTS pause message should preserve the invariant token in en-US");
+    expect(
+        english.translate("Runtime.Prg.Session.Message.ExecutionCompleted") == "Execution completed.",
+        "#2589: execution-completed pause message should preserve the en-US default output");
+    expect(
+        english.translate("Runtime.Prg.Session.Message.BreakpointHit") == "Breakpoint hit.",
+        "#2589: breakpoint-hit pause message should preserve the en-US default output");
+    expect(
+        english.translate("Runtime.Prg.Session.Message.StepCompleted") == "Step completed.",
+        "#2589: step-completed pause message should preserve the en-US default output");
+    expect(
+        english.translate("Runtime.Prg.Session.Message.StepOverCompleted") == "Step-over completed.",
+        "#2589: step-over-completed pause message should preserve the en-US default output");
+    expect(
+        english.translate("Runtime.Prg.Session.Message.StepOutCompleted") == "Step-out completed.",
+        "#2589: step-out-completed pause message should preserve the en-US default output");
+    expect(
+        english.translate("Runtime.Prg.Session.Error.NoRunnableStartupMethodsFoundInAsset", path_placeholders) ==
+            "No runnable startup methods were found in asset: forms/customer.scx",
+        "#2589: no-runnable-startup message should preserve the asset path placeholder in en-US");
+
+    const std::string spanish_waiting =
+        spanish.translate("Runtime.Prg.Session.Message.WaitingInReadEvents");
+    expect(
+        spanish_waiting.find("READ EVENTS") != std::string::npos &&
+            spanish_waiting.find("The runtime is waiting") == std::string::npos,
+        "#2589: es-419 READ EVENTS pause message should preserve invariant tokens without falling back to English");
+
+    const std::string portuguese_breakpoint =
+        portuguese.translate("Runtime.Prg.Session.Message.BreakpointHit");
+    expect(
+        portuguese_breakpoint == "Um breakpoint foi atingido.",
+        "#2589: pt-BR breakpoint-hit pause message should localize the prose");
+
+    const std::string pseudo_step =
+        pseudo.translate("Runtime.Prg.Session.Message.StepOverCompleted");
+    expect(
+        pseudo_step.find("[!! ") == 0U &&
+            pseudo_step.find("Step-over completed.") == std::string::npos,
+        "#2589: qps-ploc step-over pause message should pseudo-localize the prose");
+
+    const std::string pseudo_no_runnable =
+        pseudo.translate("Runtime.Prg.Session.Error.NoRunnableStartupMethodsFoundInAsset", path_placeholders);
+    expect(
+        pseudo_no_runnable.find("[!! ") == 0U &&
+            pseudo_no_runnable.find("forms/customer.scx") != std::string::npos &&
+            pseudo_no_runnable.find("{path}") == std::string::npos,
+        "#2589: qps-ploc no-runnable-startup message should pseudo-localize prose while preserving the asset path");
 }
 
 void test_runtime_dispatch_errors_route_through_catalog() {
@@ -1318,6 +1383,7 @@ int main(int argc, char** argv) {
     test_runtime_record_precondition_errors_route_through_catalog();
     test_runtime_dll_errors_route_through_catalog();
     test_runtime_core_errors_route_through_catalog();
+    test_runtime_pause_and_session_messages_route_through_catalog();
     test_runtime_dispatch_errors_route_through_catalog();
     test_runtime_surface_errors_route_through_catalog();
     test_runtime_package_warnings_pseudo_localize();
