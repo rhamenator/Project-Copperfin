@@ -1516,6 +1516,19 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         "VisualAssetEditor.Undo.PropertyLabel",
         "VisualAssetEditor.Undo.PropertyLookupMismatch",
         "VisualAssetEditor.Undo.RenamePropertyLabel"};
+    const std::vector<std::string_view> pseudo_builder_parse_error_keys = {
+        "StudioHost.BuilderParse.Error.BooleanValueRequired",
+        "StudioHost.BuilderParse.Error.ContextConflict",
+        "StudioHost.BuilderParse.Error.MissingValue",
+        "StudioHost.BuilderParse.Error.NoBuilderContext",
+        "StudioHost.BuilderParse.Error.NoBuilderId",
+        "StudioHost.BuilderParse.Error.NoBuilderLaunchCommand",
+        "StudioHost.BuilderParse.Error.NoBuilderOrSelectionContext",
+        "StudioHost.BuilderParse.Error.NoSelectionContext",
+        "StudioHost.BuilderParse.Error.RecordNonNegativeInteger",
+        "StudioHost.BuilderParse.Error.UnknownBuilderContextToken",
+        "StudioHost.BuilderParse.Error.UnknownOption",
+        "StudioHost.BuilderParse.Error.UnknownSelectionContextToken"};
     expect_contains(process.stdout_text,
         pseudo_catalog.translate(
             "StudioHost.Usage.Alternate",
@@ -1876,6 +1889,12 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
                 copperfin::localization::pseudo_localize("No visual asset undo history is available."),
         "#2678: asset-editor storage and undo labels should resolve through locale catalogs without changing machine contracts");
     expect(
+        pseudo_catalog.translate("StudioHost.BuilderParse.Error.NoBuilderLaunchCommand") ==
+                copperfin::localization::pseudo_localize("No builder launch command was provided.") &&
+            pseudo_catalog.translate("StudioHost.BuilderParse.Error.UnknownOption") ==
+                copperfin::localization::pseudo_localize("Unknown {commandName} option: {argument}"),
+        "#2679: qps-ploc builder-parse diagnostics should pseudo-localize the remaining builder parse error prose without changing placeholders");
+    expect(
         count_missing_locale_keys(spanish_catalog, "es-419", object_command_keys) == 0U,
         "#2628: es-419 should define every remaining StudioHost.LaunchParse.ObjectCommand localization key");
     expect(
@@ -2118,6 +2137,9 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", asset_editor_storage_undo_keys) == 0U,
         "#2678: qps-ploc should define every remaining asset-editor storage/undo localization key in this slice");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", pseudo_builder_parse_error_keys) == 0U,
+        "#2679: qps-ploc should define every remaining builder-parse error localization key in this slice");
     expect_not_contains(process.stdout_text,
         "Usage: copperfin_studio_host --path <asset>",
         "#2576: pseudo-localized studio host usage should not fall back to raw English primary usage prose");
