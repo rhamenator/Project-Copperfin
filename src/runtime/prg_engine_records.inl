@@ -1021,13 +1021,23 @@
                 const auto value = current_record_field_display_value(cursor, field_name);
                 if (!value.has_value())
                 {
-                    last_error_message = "NOT NULL field not found: " + field_name;
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Records.Error.ConstraintFieldNotFound",
+                        {
+                            {"constraint", "NOT NULL"},
+                            {"fieldName", field_name}
+                        });
                     return false;
                 }
                 const std::string normalized_value = lowercase_copy(trim_copy(*value));
                 if (normalized_value.empty() || normalized_value == "null")
                 {
-                    last_error_message = "NOT NULL constraint failed for field: " + field_name;
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Records.Error.ConstraintFailedForField",
+                        {
+                            {"constraint", "NOT NULL"},
+                            {"fieldName", field_name}
+                        });
                     return false;
                 }
             }
@@ -1046,7 +1056,9 @@
                 fields = cursor_field_names(cursor);
                 if (fields.empty())
                 {
-                    last_error_message = "INSERT INTO could not resolve target field names";
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Records.Error.InsertTargetFieldsResolveFailed",
+                        {{"command", "INSERT INTO"}});
                     return false;
                 }
             }
@@ -1065,12 +1077,16 @@
             std::vector<std::string> values = split_csv_like(value_list_text);
             if (fields.empty())
             {
-                last_error_message = "INSERT INTO requires at least one target field";
+                last_error_message = runtime_text(
+                    "Runtime.Prg.Records.Error.InsertRequiresTargetField",
+                    {{"command", "INSERT INTO"}});
                 return false;
             }
             if (values.size() != fields.size())
             {
-                last_error_message = "INSERT INTO field/value counts do not match";
+                last_error_message = runtime_text(
+                    "Runtime.Prg.Records.Error.InsertFieldValueCountMismatch",
+                    {{"command", "INSERT INTO"}});
                 return false;
             }
 

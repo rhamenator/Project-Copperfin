@@ -427,6 +427,11 @@ void test_runtime_record_precondition_errors_route_through_catalog() {
 
     const copperfin::localization::PlaceholderMap replace_placeholders{{"command", "REPLACE"}};
     const copperfin::localization::PlaceholderMap field_placeholders{{"fieldName", "CustomerID"}};
+    const copperfin::localization::PlaceholderMap constraint_placeholders{
+        {"constraint", "NOT NULL"},
+        {"fieldName", "CustomerID"}
+    };
+    const copperfin::localization::PlaceholderMap insert_placeholders{{"command", "INSERT INTO"}};
 
     expect(
         english.translate("Runtime.Prg.Records.Error.RequiresLocalTableBackedCursor") ==
@@ -447,6 +452,26 @@ void test_runtime_record_precondition_errors_route_through_catalog() {
     expect(
         english.translate("Runtime.Prg.Records.Error.LockRetryCancelled") == "Lock retry cancelled.",
         "#2542: lock retry cancellation should preserve en-US default output");
+    expect(
+        english.translate("Runtime.Prg.Records.Error.ConstraintFieldNotFound", constraint_placeholders) ==
+            "NOT NULL field not found: CustomerID",
+        "#2546: NOT NULL field-not-found error should preserve constraint and field placeholders");
+    expect(
+        english.translate("Runtime.Prg.Records.Error.ConstraintFailedForField", constraint_placeholders) ==
+            "NOT NULL constraint failed for field: CustomerID",
+        "#2546: NOT NULL constraint error should preserve constraint and field placeholders");
+    expect(
+        english.translate("Runtime.Prg.Records.Error.InsertTargetFieldsResolveFailed", insert_placeholders) ==
+            "INSERT INTO could not resolve target field names",
+        "#2546: INSERT INTO field resolution error should preserve command placeholder");
+    expect(
+        english.translate("Runtime.Prg.Records.Error.InsertRequiresTargetField", insert_placeholders) ==
+            "INSERT INTO requires at least one target field",
+        "#2546: INSERT INTO target-field error should preserve command placeholder");
+    expect(
+        english.translate("Runtime.Prg.Records.Error.InsertFieldValueCountMismatch", insert_placeholders) ==
+            "INSERT INTO field/value counts do not match",
+        "#2546: INSERT INTO count mismatch error should preserve command placeholder");
 
     const std::string spanish_field =
         spanish.translate("Runtime.Prg.Records.Error.RemoteSqlFieldNotFound", field_placeholders);
@@ -461,6 +486,19 @@ void test_runtime_record_precondition_errors_route_through_catalog() {
         portuguese_replace.find("REPLACE") != std::string::npos &&
             portuguese_replace.find("requires a current local record") == std::string::npos,
         "#2542: pt-BR command-specific record error should preserve command without falling back to English");
+    const std::string spanish_insert =
+        spanish.translate("Runtime.Prg.Records.Error.InsertFieldValueCountMismatch", insert_placeholders);
+    expect(
+        spanish_insert.find("INSERT INTO") != std::string::npos &&
+            spanish_insert.find("field/value counts do not match") == std::string::npos,
+        "#2546: es-419 INSERT INTO error should preserve command without falling back to English");
+    const std::string portuguese_constraint =
+        portuguese.translate("Runtime.Prg.Records.Error.ConstraintFailedForField", constraint_placeholders);
+    expect(
+        portuguese_constraint.find("NOT NULL") != std::string::npos &&
+            portuguese_constraint.find("CustomerID") != std::string::npos &&
+            portuguese_constraint.find("constraint failed") == std::string::npos,
+        "#2546: pt-BR NOT NULL error should preserve invariant placeholders without falling back to English");
 
     const std::string pseudo_message =
         pseudo.translate("Runtime.Prg.Records.Error.RemoteSqlFieldNotFound", field_placeholders);
@@ -469,6 +507,15 @@ void test_runtime_record_precondition_errors_route_through_catalog() {
             pseudo_message.find("CustomerID") != std::string::npos &&
             pseudo_message.find("{fieldName}") == std::string::npos,
         "#2542: qps-ploc record precondition error should pseudo-localize prose while preserving placeholders");
+    const std::string pseudo_constraint =
+        pseudo.translate("Runtime.Prg.Records.Error.ConstraintFieldNotFound", constraint_placeholders);
+    expect(
+        pseudo_constraint.find("[!! ") == 0U &&
+            pseudo_constraint.find("NOT NULL") != std::string::npos &&
+            pseudo_constraint.find("CustomerID") != std::string::npos &&
+            pseudo_constraint.find("{constraint}") == std::string::npos &&
+            pseudo_constraint.find("{fieldName}") == std::string::npos,
+        "#2546: qps-ploc NOT NULL error should pseudo-localize prose while preserving placeholders");
 }
 
 void test_runtime_surface_errors_route_through_catalog() {
