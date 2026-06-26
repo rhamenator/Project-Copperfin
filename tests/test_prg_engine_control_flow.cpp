@@ -67,6 +67,24 @@ struct ScopedEnvironmentValue {
     }
 };
 
+std::size_t count_missing_locale_keys(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view locale,
+    const std::vector<std::string_view>& keys) {
+    const auto locale_entries = catalog.catalogs.find(std::string(locale));
+    if (locale_entries == catalog.catalogs.end()) {
+        return keys.size();
+    }
+
+    std::size_t missing = 0U;
+    for (const auto key : keys) {
+        if (locale_entries->second.find(std::string(key)) == locale_entries->second.end()) {
+            ++missing;
+        }
+    }
+    return missing;
+}
+
 void test_command_keyword_scanner_ignores_nested_text() {
     using copperfin::runtime::extract_command_clause;
     using copperfin::runtime::find_keyword_top_level;
@@ -2203,6 +2221,44 @@ void test_static_diagnostic_flags_likely_infinite_do_while_loop() {
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const std::vector<std::string_view> keys{
+        "Runtime.PrgStaticAnalysis.Diagnostic.PRG0001.Message",
+        "Runtime.PrgStaticAnalysis.Diagnostic.PRG1001.Message",
+        "Runtime.PrgStaticAnalysis.Diagnostic.PRG1002.Message"};
+
+    expect(
+        english_catalog.translate("Runtime.PrgStaticAnalysis.Diagnostic.PRG1001.Message") ==
+            "Likely infinite loop: DO WHILE condition is always true and no EXIT/RETURN path was found.",
+        "#2605: PRG1001 should preserve the en-US catalog text");
+    expect(
+        spanish_catalog.translate("Runtime.PrgStaticAnalysis.Diagnostic.PRG1002.Message") ==
+            "Al bloque DO WHILE le falta ENDDO.",
+        "#2605: PRG1002 should resolve through the es-419 catalog");
+    expect(
+        portuguese_catalog.translate("Runtime.PrgStaticAnalysis.Diagnostic.PRG0001.Message") ==
+            "Falha ao analisar o codigo-fonte PRG: nao foi possivel abrir o arquivo.",
+        "#2605: PRG0001 should resolve through the pt-BR catalog");
+    expect(
+        pseudo_catalog.translate("Runtime.PrgStaticAnalysis.Diagnostic.PRG1002.Message") ==
+            copperfin::localization::pseudo_localize("DO WHILE block is missing ENDDO."),
+        "#2605: qps-ploc static-analysis diagnostics should route through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", keys) == 0U,
+        "#2605: es-419 should define every remaining Runtime.PrgStaticAnalysis localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", keys) == 0U,
+        "#2605: pt-BR should define every remaining Runtime.PrgStaticAnalysis localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", keys) == 0U,
+        "#2605: qps-ploc should define every remaining Runtime.PrgStaticAnalysis localization key");
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "en-US", true);
 
     const fs::path flagged_path = temp_root / "flagged.prg";
     write_text(
@@ -2229,6 +2285,21 @@ void test_static_diagnostic_flags_likely_infinite_do_while_loop() {
             "PRG1001 message should route through the default locale catalog");
     }
 
+    set_env_value("COPPERFIN_LOCALE", "es-419", true);
+    const auto spanish_diagnostics = copperfin::runtime::analyze_prg_file(flagged_path.string());
+    const auto spanish_infinite_loop_warning = std::find_if(
+        spanish_diagnostics.begin(),
+        spanish_diagnostics.end(),
+        [](const copperfin::runtime::PrgStaticDiagnostic& diagnostic) {
+            return diagnostic.code == "PRG1001";
+        });
+    expect(
+        spanish_infinite_loop_warning != spanish_diagnostics.end() &&
+            spanish_infinite_loop_warning->message ==
+                "Bucle probablemente infinito: la condicion DO WHILE siempre es verdadera y no se encontro ninguna ruta EXIT/RETURN.",
+        "#2605: PRG1001 should refresh to es-419 when the runtime locale changes in-process");
+    set_env_value("COPPERFIN_LOCALE", "en-US", true);
+
     const fs::path missing_enddo_path = temp_root / "missing_enddo.prg";
     write_text(
         missing_enddo_path,
@@ -2249,6 +2320,21 @@ void test_static_diagnostic_flags_likely_infinite_do_while_loop() {
             "PRG1002 message should route through the default locale catalog");
     }
 
+    set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
+    const auto portuguese_missing_enddo_diagnostics =
+        copperfin::runtime::analyze_prg_file(missing_enddo_path.string());
+    const auto portuguese_missing_enddo_error = std::find_if(
+        portuguese_missing_enddo_diagnostics.begin(),
+        portuguese_missing_enddo_diagnostics.end(),
+        [](const copperfin::runtime::PrgStaticDiagnostic& diagnostic) {
+            return diagnostic.code == "PRG1002";
+        });
+    expect(
+        portuguese_missing_enddo_error != portuguese_missing_enddo_diagnostics.end() &&
+            portuguese_missing_enddo_error->message == "O bloco DO WHILE esta sem ENDDO.",
+        "#2605: PRG1002 should refresh to pt-BR when the runtime locale changes in-process");
+    set_env_value("COPPERFIN_LOCALE", "en-US", true);
+
     const fs::path missing_path = temp_root / "missing.prg";
     const auto missing_file_diagnostics = copperfin::runtime::analyze_prg_file(missing_path.string());
     expect(missing_file_diagnostics.size() == 1U, "missing PRG source should emit exactly one diagnostic");
@@ -2261,6 +2347,17 @@ void test_static_diagnostic_flags_likely_infinite_do_while_loop() {
             missing_file_diagnostics.front().message == "Failed to analyze PRG source: file could not be opened.",
             "PRG0001 message should route through the default locale catalog");
     }
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    const auto pseudo_missing_file_diagnostics = copperfin::runtime::analyze_prg_file(missing_path.string());
+    expect(
+        pseudo_missing_file_diagnostics.size() == 1U &&
+            pseudo_missing_file_diagnostics.front().message ==
+                copperfin::localization::pseudo_localize(
+                    "Failed to analyze PRG source: file could not be opened."),
+        "#2605: PRG0001 should refresh to qps-ploc when the runtime locale changes in-process");
+
+    set_env_value("COPPERFIN_LOCALE", "en-US", true);
 
     const fs::path safe_path = temp_root / "safe.prg";
     write_text(

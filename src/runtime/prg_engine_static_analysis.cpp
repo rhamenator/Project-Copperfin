@@ -1,5 +1,5 @@
 #include "copperfin/runtime/prg_engine.h"
-#include "copperfin/localization/localization.h"
+#include "localized_text.h"
 
 #include <algorithm>
 #include <cctype>
@@ -15,9 +15,7 @@ namespace {
 std::string prg_static_analysis_text(
     std::string_view key,
     const localization::PlaceholderMap& placeholders = {}) {
-    static const localization::LocalizedCatalog catalog =
-        localization::load_catalogs(localization::resolve_catalog_root(), localization::select_locale());
-    return catalog.translate(key, placeholders);
+    return runtime_text(key, placeholders);
 }
 
 enum class StaticLineKind {
