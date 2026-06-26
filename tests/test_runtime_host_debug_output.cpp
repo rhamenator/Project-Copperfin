@@ -84,6 +84,16 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
     write_text(
         spanish_root / "strings.json",
         "{\n"
+        "  \"RuntimeHost.Debug.Error.DispatchXAssetActionFailed\": \"No se pudo despachar la accion xAsset: {command}\",\n"
+        "  \"RuntimeHost.Debug.Error.InvalidBreakpointCommand\": \"Comando de breakpoint invalido: {command}\",\n"
+        "  \"RuntimeHost.Debug.Error.MaterializeXAssetBootstrapFailed\": \"No se pudo materializar el bootstrap xAsset.\",\n"
+        "  \"RuntimeHost.Debug.Error.NoRunnableStartupMethodsFound\": \"No se encontraron metodos de inicio ejecutables en el asset.\",\n"
+        "  \"RuntimeHost.Debug.Error.UnknownBreakpoint\": \"Breakpoint desconocido: {path}:{line}\",\n"
+        "  \"RuntimeHost.Debug.Error.UnknownBreakpointForXAssetAction\": \"Breakpoint desconocido para la accion xAsset: {action}\",\n"
+        "  \"RuntimeHost.Debug.Error.UnknownOrNonBreakpointableXAssetAction\": \"Accion xAsset desconocida o no breakpointable: {action}\",\n"
+        "  \"RuntimeHost.Debug.Error.UnknownXAssetAction\": \"Accion xAsset desconocida: {command}\",\n"
+        "  \"RuntimeHost.Debug.Error.WatchRequiresPausedState\": \"La evaluacion de watch requiere un estado pausado activo.\",\n"
+        "  \"RuntimeHost.Debug.Error.XAssetActionBreakpointsRequireBootstrapMode\": \"Los breakpoints de accion xAsset requieren el modo xasset-bootstrap.\",\n"
         "  \"RuntimeHost.Prefix.Error\": \"error: \",\n"
         "  \"RuntimeHost.Prefix.Warning\": \"advertencia: \",\n"
         "  \"RuntimeHost.Launch.Note.CompatibilityLauncher\": \"El asset de inicio no es un archivo PRG. La ejecucion de PRG es real; el codigo xBase incrustado en assets SCX/VCX/FRX/MNX/LBX corresponde a una fase posterior del runtime.\",\n"
@@ -112,7 +122,16 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Usage.Federation\": \"   ou: {commandName} {federationBackendOption} {federationBackendValue} {federationQueryOption} {federationQueryValue} [{federationTargetOption} {federationTargetValue}]\",\n"
         "  \"RuntimeHost.Usage.FederationPlanning\": \"       [{planningEnableOption} {booleanValue}] [{planningRequireOption} {booleanValue}] [{planningAuditOption} {booleanValue}]\",\n"
         "  \"RuntimeHost.Usage.Manifest\": \"Uso: {commandName} {manifestOption} {manifestValue} [{debugOption}] [{breakpointOption} {breakpointValue}] [{debugCommandOption} {debugCommandValue}]\",\n"
+        "  \"RuntimeHost.Debug.Error.DispatchXAssetActionFailed\": \"Nao foi possivel despachar a acao xAsset: {command}\",\n"
         "  \"RuntimeHost.Debug.Error.InvalidBreakpointCommand\": \"Comando de breakpoint invalido: {command}\",\n"
+        "  \"RuntimeHost.Debug.Error.MaterializeXAssetBootstrapFailed\": \"Nao foi possivel materializar o bootstrap xAsset.\",\n"
+        "  \"RuntimeHost.Debug.Error.NoRunnableStartupMethodsFound\": \"Nenhum metodo de inicializacao executavel foi encontrado no asset.\",\n"
+        "  \"RuntimeHost.Debug.Error.UnknownBreakpoint\": \"Breakpoint desconhecido: {path}:{line}\",\n"
+        "  \"RuntimeHost.Debug.Error.UnknownBreakpointForXAssetAction\": \"Breakpoint desconhecido para a acao xAsset: {action}\",\n"
+        "  \"RuntimeHost.Debug.Error.UnknownOrNonBreakpointableXAssetAction\": \"Acao xAsset desconhecida ou sem suporte a breakpoint: {action}\",\n"
+        "  \"RuntimeHost.Debug.Error.UnknownXAssetAction\": \"Acao xAsset desconhecida: {command}\",\n"
+        "  \"RuntimeHost.Debug.Error.WatchRequiresPausedState\": \"A avaliacao de watch requer um estado pausado ativo.\",\n"
+        "  \"RuntimeHost.Debug.Error.XAssetActionBreakpointsRequireBootstrapMode\": \"Breakpoints de acao xAsset exigem o modo xasset-bootstrap.\",\n"
         "  \"RuntimeHost.Prefix.Error\": \"erro: \",\n"
         "  \"RuntimeHost.Prefix.Warning\": \"aviso: \"\n"
         "}\n");
@@ -2276,6 +2295,28 @@ void test_runtime_host_debug_errors_localize_without_changing_command_tokens(con
 
     {
         ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "es-419");
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {
+                "--manifest", manifest_path.string(),
+                "--debug",
+                "--debug-command", "break:remove:2"
+            },
+            temp_root);
+        expect(process.exit_code == 5,
+               "#2586: es-419 unknown breakpoint diagnostics should keep the debug error exit code");
+        expect(process.stdout_text.find("status: error") != std::string::npos,
+               "#2586: es-419 unknown breakpoint diagnostics should preserve machine-readable status");
+        expect(
+            process.stdout_text.find("Breakpoint desconocido: " + startup_path.string() + ":2") != std::string::npos,
+            "#2586: es-419 unknown breakpoint diagnostics should localize the error body while preserving path and line");
+        expect(process.stdout_text.find("Unknown breakpoint: " + startup_path.string() + ":2") == std::string::npos,
+               "#2586: es-419 unknown breakpoint diagnostics should not fall back to the raw English error");
+    }
+
+    {
+        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
         ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "pt-BR");
         const auto process = run_process_capture(
             runtime_host_path,
@@ -2295,6 +2336,29 @@ void test_runtime_host_debug_errors_localize_without_changing_command_tokens(con
                "#2566: pt-BR invalid breakpoint diagnostics should localize the error body");
         expect(process.stdout_text.find("error: Invalid breakpoint command") == std::string::npos,
                "#2566: pt-BR invalid breakpoint diagnostics should not fall back to the raw English prefixed error");
+    }
+
+    {
+        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "pt-BR");
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {
+                "--manifest", manifest_path.string(),
+                "--debug",
+                "--debug-command", "watch:nValue"
+            },
+            temp_root);
+        expect(process.exit_code == 5,
+               "#2586: pt-BR watch diagnostics should keep the debug error exit code");
+        expect(process.stdout_text.find("status: error") != std::string::npos,
+               "#2586: pt-BR watch diagnostics should preserve machine-readable status");
+        expect(process.stdout_text.find("erro: ") != std::string::npos,
+               "#2586: pt-BR watch diagnostics should localize the error prefix");
+        expect(process.stdout_text.find("A avaliacao de watch requer um estado pausado ativo.") != std::string::npos,
+               "#2586: pt-BR watch diagnostics should localize the paused-state error");
+        expect(process.stdout_text.find("Watch evaluation requires an active paused state.") == std::string::npos,
+               "#2586: pt-BR watch diagnostics should not fall back to the raw English error");
     }
 
     {
