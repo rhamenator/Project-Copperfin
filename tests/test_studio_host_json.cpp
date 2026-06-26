@@ -1155,6 +1155,32 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         "StudioHost.VisualObjectParse.Error.NoRootObjectSelector",
         "StudioHost.VisualObjectParse.Error.NoSubtreeReplacementIdentities",
         "StudioHost.VisualObjectParse.Error.NoUpdateOperations"};
+    const std::vector<std::string_view> visual_object_property_error_keys = {
+        "StudioHost.VisualObjectParse.Error.NonNegativeInteger",
+        "StudioHost.VisualObjectParse.Error.RenameBatchItemRequiresSelectedObject",
+        "StudioHost.VisualObjectParse.Error.ReorderBatchItemRequiresSelectedObject",
+        "StudioHost.VisualObjectParse.Error.ReparentBatchItemRequiresSelectedObject",
+        "StudioHost.VisualObjectParse.Error.SubtreeReplacementRequiresSourceUniqueId",
+        "StudioHost.VisualObjectParse.Error.UnknownOption",
+        "StudioHost.VisualObjectParse.Error.UpdateBatchPropertyOptionsRequireSelectedObject",
+        "StudioHost.VisualObjectParse.Error.UpdateBatchPropertyValuesRequirePropertyName",
+        "StudioHost.VisualPropertyParse.Error.BooleanValueRequired",
+        "StudioHost.VisualPropertyParse.Error.ClearBatchItemRequiresPropertyName",
+        "StudioHost.VisualPropertyParse.Error.CopyBatchItemRequiresPropertyName",
+        "StudioHost.VisualPropertyParse.Error.MissingValue",
+        "StudioHost.VisualPropertyParse.Error.MoveBatchItemRequiresPropertyName",
+        "StudioHost.VisualPropertyParse.Error.NoAssetPath",
+        "StudioHost.VisualPropertyParse.Error.NoPropertyChanges",
+        "StudioHost.VisualPropertyParse.Error.NoPropertyClears",
+        "StudioHost.VisualPropertyParse.Error.NoPropertyCopies",
+        "StudioHost.VisualPropertyParse.Error.NoPropertyMoves",
+        "StudioHost.VisualPropertyParse.Error.NoPropertyName",
+        "StudioHost.VisualPropertyParse.Error.NoPropertyPlacement",
+        "StudioHost.VisualPropertyParse.Error.NoPropertyRenames",
+        "StudioHost.VisualPropertyParse.Error.NoPropertyReorders",
+        "StudioHost.VisualPropertyParse.Error.NoTargetPropertyName",
+        "StudioHost.VisualPropertyParse.Error.NonNegativeInteger",
+        "StudioHost.VisualPropertyParse.Error.RenameBatchItemRequiresPropertyName"};
     expect_contains(process.stdout_text,
         pseudo_catalog.translate(
             "StudioHost.Usage.Alternate",
@@ -1370,6 +1396,18 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
                 copperfin::localization::pseudo_localize("Unknown {commandName} option: {argument}"),
         "#2664: host visual method and visual object parse errors should resolve through locale catalogs without changing host usage tokens");
     expect(
+        spanish_catalog.translate("StudioHost.VisualObjectParse.Error.UpdateBatchPropertyValuesRequirePropertyName") ==
+                "Los valores de propiedad del lote de actualizacion de objeto visual requieren un {propertyNameOption} anterior." &&
+            spanish_catalog.translate("StudioHost.VisualPropertyParse.Error.NoPropertyChanges") ==
+                "No se proporcionaron cambios de propiedad." &&
+            portuguese_catalog.translate("StudioHost.VisualObjectParse.Error.ReparentBatchItemRequiresSelectedObject") ==
+                "As opcoes do item do lote de reparentamento de objeto visual exigem um seletor de objeto selecionado anterior." &&
+            portuguese_catalog.translate("StudioHost.VisualPropertyParse.Error.RenameBatchItemRequiresPropertyName") ==
+                "As opcoes do item do lote de renomeacao de propriedade visual exigem um {propertyNameOption} anterior." &&
+            pseudo_catalog.translate("StudioHost.VisualPropertyParse.Error.NoPropertyCopies") ==
+                copperfin::localization::pseudo_localize("No property copies were provided."),
+        "#2665: host visual object and visual property parse errors should resolve through locale catalogs without changing host usage tokens");
+    expect(
         count_missing_locale_keys(spanish_catalog, "es-419", object_command_keys) == 0U,
         "#2628: es-419 should define every remaining StudioHost.LaunchParse.ObjectCommand localization key");
     expect(
@@ -1486,6 +1524,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", visual_method_object_error_keys) == 0U,
         "#2664: qps-ploc should define every remaining visual-method/object parse localization key in this slice");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", visual_object_property_error_keys) == 0U,
+        "#2665: es-419 should define every remaining visual-object/property parse localization key in this slice");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", visual_object_property_error_keys) == 0U,
+        "#2665: pt-BR should define every remaining visual-object/property parse localization key in this slice");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", visual_object_property_error_keys) == 0U,
+        "#2665: qps-ploc should define every remaining visual-object/property parse localization key in this slice");
     expect_not_contains(process.stdout_text,
         "Usage: copperfin_studio_host --path <asset>",
         "#2576: pseudo-localized studio host usage should not fall back to raw English primary usage prose");
