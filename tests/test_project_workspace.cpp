@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
+#include <string_view>
+#include <vector>
 
 namespace {
 
@@ -14,6 +16,24 @@ void expect(bool condition, const std::string& message) {
         std::cerr << "FAIL: " << message << "\n";
         ++failures;
     }
+}
+
+std::size_t count_missing_locale_keys(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view locale,
+    const std::vector<std::string_view>& keys) {
+    const auto locale_entries = catalog.catalogs.find(std::string(locale));
+    if (locale_entries == catalog.catalogs.end()) {
+        return keys.size();
+    }
+
+    std::size_t missing = 0U;
+    for (const auto key : keys) {
+        if (locale_entries->second.find(std::string(key)) == locale_entries->second.end()) {
+            ++missing;
+        }
+    }
+    return missing;
 }
 
 copperfin::vfp::DbfRecord make_record(
@@ -258,6 +278,133 @@ void test_build_project_workspace() {
         expect(menus_group->id_memo_block_number == 41U, "#727: deleted-menu group ids should inherit selected NAME memo block provenance");
         expect(menus_group->title_field_index == 1U, "#727: deleted-menu group titles should retain selected NAME field provenance");
         expect(menus_group->title_memo_block_number == 41U, "#727: deleted-menu group titles should inherit selected NAME memo block provenance");
+    }
+}
+
+void test_project_workspace_catalog_entries_cover_placeholder_locales() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const std::vector<std::string_view> keys = {
+        "Studio.ProjectWorkspace.Group.ClassLibraries",
+        "Studio.ProjectWorkspace.Group.Code",
+        "Studio.ProjectWorkspace.Group.Databases",
+        "Studio.ProjectWorkspace.Group.Forms",
+        "Studio.ProjectWorkspace.Group.Labels",
+        "Studio.ProjectWorkspace.Group.Libraries",
+        "Studio.ProjectWorkspace.Group.Menus",
+        "Studio.ProjectWorkspace.Group.OtherAssets",
+        "Studio.ProjectWorkspace.Group.OtherRecords",
+        "Studio.ProjectWorkspace.Group.Programs",
+        "Studio.ProjectWorkspace.Group.Project",
+        "Studio.ProjectWorkspace.Group.ProjectItems",
+        "Studio.ProjectWorkspace.Group.Queries",
+        "Studio.ProjectWorkspace.Group.Reports",
+        "Studio.ProjectWorkspace.Group.Tables",
+        "Studio.ProjectWorkspace.ItemType.ClassLibrary",
+        "Studio.ProjectWorkspace.ItemType.Database",
+        "Studio.ProjectWorkspace.ItemType.Form",
+        "Studio.ProjectWorkspace.ItemType.Header",
+        "Studio.ProjectWorkspace.ItemType.Label",
+        "Studio.ProjectWorkspace.ItemType.Library",
+        "Studio.ProjectWorkspace.ItemType.Menu",
+        "Studio.ProjectWorkspace.ItemType.Program",
+        "Studio.ProjectWorkspace.ItemType.ProjectHeader",
+        "Studio.ProjectWorkspace.ItemType.ProjectItem",
+        "Studio.ProjectWorkspace.ItemType.ProjectRecord",
+        "Studio.ProjectWorkspace.ItemType.Query",
+        "Studio.ProjectWorkspace.ItemType.Report",
+        "Studio.ProjectWorkspace.ItemType.Table"};
+
+    expect(
+        english_catalog.translate("Studio.ProjectWorkspace.Group.Forms") == "Forms",
+        "#2611: project-workspace forms group should remain catalog-backed in en-US");
+    expect(
+        spanish_catalog.translate("Studio.ProjectWorkspace.Group.Forms") == "Formularios",
+        "#2611: es-419 project-workspace forms group should localize through the catalog");
+    expect(
+        spanish_catalog.translate("Studio.ProjectWorkspace.ItemType.ProjectHeader") == "Encabezado del proyecto",
+        "#2611: es-419 project-workspace project-header type should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.ProjectWorkspace.Group.Reports") == "Relatorios",
+        "#2611: pt-BR project-workspace reports group should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.ProjectWorkspace.ItemType.Label") == "Rotulo",
+        "#2611: pt-BR project-workspace label type should localize through the catalog");
+    expect(
+        pseudo_catalog.translate("Studio.ProjectWorkspace.Group.ProjectItems") ==
+            copperfin::localization::pseudo_localize("Project Items"),
+        "#2611: qps-ploc project-workspace group titles should resolve through the pseudo-localization transform");
+
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", keys) == 0U,
+        "#2611: es-419 should define every remaining Studio.ProjectWorkspace group/item-type localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", keys) == 0U,
+        "#2611: pt-BR should define every remaining Studio.ProjectWorkspace group/item-type localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", keys) == 0U,
+        "#2611: qps-ploc should define every remaining Studio.ProjectWorkspace group/item-type localization key");
+}
+
+void test_build_project_workspace_localizes_titles_without_changing_ids() {
+    copperfin::studio::StudioDocumentModel document;
+    document.path = R"(E:\Project-Copperfin\samples\localized.pjx)";
+    document.kind = copperfin::studio::StudioAssetKind::project;
+    document.table_preview_available = true;
+    document.table_preview.records = {
+        make_record(0, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "H"},
+            {.field_name = "KEY", .field_type = 'C', .display_value = "LOCALIZED"}
+        }),
+        make_record(1, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "forms\\customer.scx", .memo_block_number = 11U}
+        }),
+        make_record(2, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "K"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "reports\\invoice.frx", .memo_block_number = 12U}
+        })
+    };
+
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+
+    const auto spanish_workspace = copperfin::studio::build_project_workspace(document, spanish_catalog);
+    expect(spanish_workspace.entries.size() == 3U, "#2611: es-419 project workspace should preserve entry detection");
+    if (spanish_workspace.entries.size() >= 3U) {
+        expect(spanish_workspace.entries[0].group_id == "project",
+            "#2611: es-419 project workspace should preserve invariant group ids");
+        expect(spanish_workspace.entries[0].group_title == "Proyecto",
+            "#2611: es-419 project workspace should localize project group titles");
+        expect(spanish_workspace.entries[1].type_title == "Formulario",
+            "#2611: es-419 project workspace should localize form type titles");
+        expect(spanish_workspace.entries[1].group_title == "Formularios",
+            "#2611: es-419 project workspace should localize forms group titles");
+        expect(spanish_workspace.entries[1].group_id == "forms",
+            "#2611: es-419 project workspace should preserve invariant forms group ids");
+        expect(spanish_workspace.entries[2].type_title == "Reporte",
+            "#2611: es-419 project workspace should localize report type titles");
+        expect(spanish_workspace.entries[2].group_title == "Reportes",
+            "#2611: es-419 project workspace should localize reports group titles");
+    }
+
+    const auto portuguese_workspace = copperfin::studio::build_project_workspace(document, portuguese_catalog);
+    expect(portuguese_workspace.entries.size() == 3U, "#2611: pt-BR project workspace should preserve entry detection");
+    if (portuguese_workspace.entries.size() >= 3U) {
+        expect(portuguese_workspace.entries[1].type_title == "Formulario",
+            "#2611: pt-BR project workspace should localize form type titles");
+        expect(portuguese_workspace.entries[1].group_title == "Formularios",
+            "#2611: pt-BR project workspace should localize forms group titles");
+        expect(portuguese_workspace.entries[2].type_title == "Relatorio",
+            "#2611: pt-BR project workspace should localize report type titles");
+        expect(portuguese_workspace.entries[2].group_title == "Relatorios",
+            "#2611: pt-BR project workspace should localize reports group titles");
+        expect(portuguese_workspace.entries[2].group_id == "reports",
+            "#2611: pt-BR project workspace should preserve invariant reports group ids");
     }
 }
 
@@ -710,6 +857,8 @@ void test_build_project_workspace_with_app_output() {
 
 int main() {
     test_build_project_workspace();
+    test_project_workspace_catalog_entries_cover_placeholder_locales();
+    test_build_project_workspace_localizes_titles_without_changing_ids();
     test_build_project_workspace_with_excluded_assets();
     test_build_project_workspace_suppresses_unresolved_memo_placeholders();
     test_build_project_workspace_normalizes_vfp_absolute_item_paths();
