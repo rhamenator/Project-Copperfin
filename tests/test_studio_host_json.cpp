@@ -39759,6 +39759,517 @@ void test_studio_host_json_exposes_record_selected_deleted_nested_group_sections
     }
 }
 
+void test_studio_host_json_updates_nested_report_group_section_expressions_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_nested_group_section_expression_update_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_nested_group_expression_update = [&](const fs::path& asset_path,
+                                                        const std::string& title,
+                                                        const std::string& label) {
+        write_synthetic_report_table_for_stable_nested_group_section_expression_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--record", "2",
+                "--property-name", "EXPR",
+                "--property-value", "customer.state",
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " nested group section expression update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " nested group section expression update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#2682: nested report/label group section expression update should exit successfully");
+        const auto expr_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 2U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "EXPR"
+        });
+        expect(expr_property.ok && expr_property.exists && expr_property.value == "customer.state",
+               "#2682: nested report/label group section expression update should persist the EXPR memo field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#2682: nested group section expression update should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#2682: nested label group section expression update should retain label identity");
+        }
+        expect_contains(update_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#2682: nested group section expression update should preserve selected-section availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#2682: nested group section expression update should preserve section selection kind");
+        expect_contains(update_process.stdout_text, "\"sectionCount\": 5",
+                        "#2682: nested group section expression update should preserve live section counts");
+        expect_contains(update_process.stdout_text, "\"deletedSectionCount\": 0",
+                        "#2682: nested group section expression update should preserve deleted section counts");
+        expect_contains(update_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2682: nested group section expression update should preserve live preview availability");
+        expect_contains(update_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#2682: nested group section expression update should preserve live preview top bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsBottom\": 3500",
+                        "#2682: nested group section expression update should preserve live preview bottom bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsHeight\": 3500",
+                        "#2682: nested group section expression update should preserve live preview heights");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#2682: nested group section expression update should not fabricate deleted preview bounds");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"sections\": [",
+                "\"id\": \"group_header_1\"",
+                "\"expression\": \"customer.region\"",
+                "\"expressionMemoBlockNumber\": 2",
+                "\"recordIndex\": 1",
+                "\"id\": \"group_header_2\"",
+                "\"expression\": \"customer.state\"",
+                "\"expressionMemoBlockNumber\": 6",
+                "\"recordIndex\": 2",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 3",
+                "\"id\": \"group_footer_4\"",
+                "\"expression\": \"customer.country\"",
+                "\"expressionMemoBlockNumber\": 4",
+                "\"recordIndex\": 4",
+                "\"id\": \"group_footer_5\"",
+                "\"expression\": \"customer.region\"",
+                "\"expressionMemoBlockNumber\": 5",
+                "\"recordIndex\": 5"
+            },
+            "#2682: nested group section expression update should preserve nested sibling ordering and expressions");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"id\": \"group_header_2\"",
+                "\"bandKind\": \"group_header\"",
+                "\"expression\": \"customer.state\"",
+                "\"expressionFieldIndex\": 2",
+                "\"expressionMemoBlockNumber\": 6",
+                "\"recordIndex\": 2",
+                "\"deleted\": false",
+                "\"sectionIndex\": 1",
+                "\"sectionCount\": 5",
+                "\"top\": 400",
+                "\"height\": 300",
+                "\"bottom\": 700"
+            },
+            "#2682: nested group section expression update should refresh selected inner-group metadata");
+    };
+
+    run_nested_group_expression_update(temp_root / "nested_expression_update.frx",
+                                       "nested_expression_update.frx",
+                                       "report");
+    run_nested_group_expression_update(temp_root / "nested_expression_update.lbx",
+                                       "nested_expression_update.lbx",
+                                       "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_clears_nested_report_group_section_expressions_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_nested_group_section_expression_clear_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_nested_group_expression_clear = [&](const fs::path& asset_path,
+                                                       const std::string& title,
+                                                       const std::string& label) {
+        write_synthetic_report_table_for_stable_nested_group_section_expression_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--record", "2",
+                "--property-name", "EXPR",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " nested group section expression clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " nested group section expression clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#2682: nested report/label group section expression clear should exit successfully");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#2682: nested group section expression clear should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#2682: nested label group section expression clear should retain label identity");
+        }
+        expect_contains(clear_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#2682: nested group section expression clear should preserve selected-section availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#2682: nested group section expression clear should preserve section selection kind");
+        expect_contains(clear_process.stdout_text, "\"sectionCount\": 5",
+                        "#2682: nested group section expression clear should preserve live section counts");
+        expect_contains(clear_process.stdout_text, "\"deletedSectionCount\": 0",
+                        "#2682: nested group section expression clear should preserve deleted section counts");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2682: nested group section expression clear should preserve live preview availability");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#2682: nested group section expression clear should preserve live preview top bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsBottom\": 3500",
+                        "#2682: nested group section expression clear should preserve live preview bottom bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsHeight\": 3500",
+                        "#2682: nested group section expression clear should preserve live preview heights");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#2682: nested group section expression clear should not fabricate deleted preview bounds");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"sections\": [",
+                "\"id\": \"group_header_1\"",
+                "\"expression\": \"customer.region\"",
+                "\"expressionMemoBlockNumber\": 2",
+                "\"recordIndex\": 1",
+                "\"id\": \"group_header_2\"",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": null",
+                "\"expressionMemoBlockNumber\": 0",
+                "\"recordIndex\": 2",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 3",
+                "\"id\": \"group_footer_4\"",
+                "\"expression\": \"customer.country\"",
+                "\"expressionMemoBlockNumber\": 4",
+                "\"recordIndex\": 4",
+                "\"id\": \"group_footer_5\"",
+                "\"expression\": \"customer.region\"",
+                "\"expressionMemoBlockNumber\": 5",
+                "\"recordIndex\": 5"
+            },
+            "#2682: nested group section expression clear should preserve nested sibling ordering and expressions");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"id\": \"group_header_2\"",
+                "\"bandKind\": \"group_header\"",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": null",
+                "\"expressionMemoBlockNumber\": 0",
+                "\"recordIndex\": 2",
+                "\"deleted\": false",
+                "\"sectionIndex\": 1",
+                "\"sectionCount\": 5",
+                "\"top\": 400",
+                "\"height\": 300",
+                "\"bottom\": 700"
+            },
+            "#2682: nested group section expression clear should refresh selected inner-group metadata");
+    };
+
+    run_nested_group_expression_clear(temp_root / "nested_expression_clear.frx",
+                                      "nested_expression_clear.frx",
+                                      "report");
+    run_nested_group_expression_clear(temp_root / "nested_expression_clear.lbx",
+                                      "nested_expression_clear.lbx",
+                                      "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_updates_deleted_nested_report_group_section_expressions(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_nested_group_section_expression_update_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_nested_group_expression_update = [&](const fs::path& asset_path,
+                                                                const std::string& title,
+                                                                const std::string& label) {
+        write_synthetic_report_table_for_deleted_nested_group_footer_expression_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--record", "4",
+                "--property-name", "EXPR",
+                "--property-value", "customer.state",
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " deleted nested group section expression update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " deleted nested group section expression update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#2682: deleted nested report/label group section expression update should exit successfully");
+        const auto expr_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 4U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "EXPR"
+        });
+        expect(expr_property.ok && expr_property.exists && expr_property.value == "customer.state",
+               "#2682: deleted nested report/label group section expression update should persist the EXPR memo field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#2682: deleted nested group section expression update should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#2682: deleted nested label group section expression update should retain label identity");
+        }
+        expect_contains(update_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#2682: deleted nested group section expression update should preserve selected-section availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#2682: deleted nested group section expression update should preserve section selection kind");
+        expect_contains(update_process.stdout_text, "\"sectionCount\": 4",
+                        "#2682: deleted nested group section expression update should preserve live section counts");
+        expect_contains(update_process.stdout_text, "\"deletedSectionCount\": 1",
+                        "#2682: deleted nested group section expression update should preserve deleted section counts");
+        expect_contains(update_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2682: deleted nested group section expression update should preserve live preview availability");
+        expect_contains(update_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#2682: deleted nested group section expression update should preserve live preview top bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsBottom\": 3500",
+                        "#2682: deleted nested group section expression update should preserve live preview bottom bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsHeight\": 3500",
+                        "#2682: deleted nested group section expression update should preserve live preview heights");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#2682: deleted nested group section expression update should preserve deleted preview availability");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsTop\": 2900",
+                        "#2682: deleted nested group section expression update should preserve deleted preview top bounds");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsBottom\": 3150",
+                        "#2682: deleted nested group section expression update should preserve deleted preview bottom bounds");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsHeight\": 250",
+                        "#2682: deleted nested group section expression update should preserve deleted preview heights");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"deletedSections\": [",
+                "\"id\": \"group_footer_4\"",
+                "\"bandKind\": \"group_footer\"",
+                "\"expression\": \"customer.state\"",
+                "\"expressionFieldIndex\": 2",
+                "\"expressionMemoBlockNumber\": 6",
+                "\"recordIndex\": 4",
+                "\"deleted\": true"
+            },
+            "#2682: deleted nested group section expression update should refresh deleted-section expression metadata");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"id\": \"group_footer_4\"",
+                "\"bandKind\": \"group_footer\"",
+                "\"expression\": \"customer.state\"",
+                "\"expressionFieldIndex\": 2",
+                "\"expressionMemoBlockNumber\": 6",
+                "\"recordIndex\": 4",
+                "\"deleted\": true",
+                "\"sectionIndex\": null",
+                "\"sectionCount\": 0",
+                "\"top\": 2900",
+                "\"height\": 250",
+                "\"bottom\": 3150"
+            },
+            "#2682: deleted nested group section expression update should refresh selected deleted-section metadata");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"sections\": [",
+                "\"id\": \"group_header_1\"",
+                "\"expression\": \"customer.region\"",
+                "\"expressionMemoBlockNumber\": 2",
+                "\"recordIndex\": 1",
+                "\"id\": \"group_header_2\"",
+                "\"expression\": \"customer.country\"",
+                "\"expressionMemoBlockNumber\": 3",
+                "\"recordIndex\": 2",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 3",
+                "\"id\": \"group_footer_5\"",
+                "\"expression\": \"customer.region\"",
+                "\"expressionMemoBlockNumber\": 5",
+                "\"recordIndex\": 5"
+            },
+            "#2682: deleted nested group section expression update should preserve unaffected live sibling expressions");
+    };
+
+    run_deleted_nested_group_expression_update(temp_root / "nested_deleted_expression_update.frx",
+                                               "nested_deleted_expression_update.frx",
+                                               "report");
+    run_deleted_nested_group_expression_update(temp_root / "nested_deleted_expression_update.lbx",
+                                               "nested_deleted_expression_update.lbx",
+                                               "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_clears_deleted_nested_report_group_section_expressions(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_nested_group_section_expression_clear_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_nested_group_expression_clear = [&](const fs::path& asset_path,
+                                                               const std::string& title,
+                                                               const std::string& label) {
+        write_synthetic_report_table_for_deleted_nested_group_footer_expression_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--record", "4",
+                "--property-name", "EXPR",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " deleted nested group section expression clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " deleted nested group section expression clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#2682: deleted nested report/label group section expression clear should exit successfully");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#2682: deleted nested group section expression clear should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#2682: deleted nested label group section expression clear should retain label identity");
+        }
+        expect_contains(clear_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#2682: deleted nested group section expression clear should preserve selected-section availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#2682: deleted nested group section expression clear should preserve section selection kind");
+        expect_contains(clear_process.stdout_text, "\"sectionCount\": 4",
+                        "#2682: deleted nested group section expression clear should preserve live section counts");
+        expect_contains(clear_process.stdout_text, "\"deletedSectionCount\": 1",
+                        "#2682: deleted nested group section expression clear should preserve deleted section counts");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2682: deleted nested group section expression clear should preserve live preview availability");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#2682: deleted nested group section expression clear should preserve live preview top bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsBottom\": 3500",
+                        "#2682: deleted nested group section expression clear should preserve live preview bottom bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsHeight\": 3500",
+                        "#2682: deleted nested group section expression clear should preserve live preview heights");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#2682: deleted nested group section expression clear should preserve deleted preview availability");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsTop\": 2900",
+                        "#2682: deleted nested group section expression clear should preserve deleted preview top bounds");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsBottom\": 3150",
+                        "#2682: deleted nested group section expression clear should preserve deleted preview bottom bounds");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsHeight\": 250",
+                        "#2682: deleted nested group section expression clear should preserve deleted preview heights");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"deletedSections\": [",
+                "\"id\": \"group_footer_4\"",
+                "\"bandKind\": \"group_footer\"",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": null",
+                "\"expressionMemoBlockNumber\": 0",
+                "\"recordIndex\": 4",
+                "\"deleted\": true"
+            },
+            "#2682: deleted nested group section expression clear should refresh deleted-section expression metadata");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"id\": \"group_footer_4\"",
+                "\"bandKind\": \"group_footer\"",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": null",
+                "\"expressionMemoBlockNumber\": 0",
+                "\"recordIndex\": 4",
+                "\"deleted\": true",
+                "\"sectionIndex\": null",
+                "\"sectionCount\": 0",
+                "\"top\": 2900",
+                "\"height\": 250",
+                "\"bottom\": 3150"
+            },
+            "#2682: deleted nested group section expression clear should refresh selected deleted-section metadata");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"sections\": [",
+                "\"id\": \"group_header_1\"",
+                "\"expression\": \"customer.region\"",
+                "\"expressionMemoBlockNumber\": 2",
+                "\"recordIndex\": 1",
+                "\"id\": \"group_header_2\"",
+                "\"expression\": \"customer.country\"",
+                "\"expressionMemoBlockNumber\": 3",
+                "\"recordIndex\": 2",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 3",
+                "\"id\": \"group_footer_5\"",
+                "\"expression\": \"customer.region\"",
+                "\"expressionMemoBlockNumber\": 5",
+                "\"recordIndex\": 5"
+            },
+            "#2682: deleted nested group section expression clear should preserve unaffected live sibling expressions");
+    };
+
+    run_deleted_nested_group_expression_clear(temp_root / "nested_deleted_expression_clear.frx",
+                                              "nested_deleted_expression_clear.frx",
+                                              "report");
+    run_deleted_nested_group_expression_clear(temp_root / "nested_deleted_expression_clear.lbx",
+                                              "nested_deleted_expression_clear.lbx",
+                                              "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_selected_group_header_report_sections_by_record_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -126036,6 +126547,10 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_nested_report_group_section_ordering_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_record_selected_nested_group_sections(argv[1]);
     test_studio_host_json_exposes_record_selected_deleted_nested_group_sections(argv[1]);
+    test_studio_host_json_updates_nested_report_group_section_expressions_by_record_selection(argv[1]);
+    test_studio_host_json_clears_nested_report_group_section_expressions_by_record_selection(argv[1]);
+    test_studio_host_json_updates_deleted_nested_report_group_section_expressions(argv[1]);
+    test_studio_host_json_clears_deleted_nested_report_group_section_expressions(argv[1]);
     test_studio_host_json_exposes_selected_group_header_report_sections_by_record_selection(argv[1]);
     test_studio_host_json_exposes_selected_group_header_label_sections_by_record_selection(argv[1]);
     test_studio_host_json_exposes_selected_group_footer_report_sections_by_record_selection(argv[1]);
