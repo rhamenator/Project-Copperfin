@@ -740,5 +740,15 @@
   "Studio.ProjectWorkspace.ItemType.ProjectRecord": "Registro del proyecto",
   "Studio.ProjectWorkspace.ItemType.Query": "Consulta",
   "Studio.ProjectWorkspace.ItemType.Report": "Reporte",
-  "Studio.ProjectWorkspace.ItemType.Table": "Tabla"
+  "Studio.ProjectWorkspace.ItemType.Table": "Tabla",
+  "Studio.BuilderDispatch.Execution.Error.AdmittedDispatchRequired": "Una solicitud de ejecucion de dispatch de builder requiere un dispatch admitido que no sea dry-run.",
+  "Studio.BuilderDispatch.Execution.Error.CommandTokenRequired": "Una solicitud de ejecucion de dispatch de builder requiere un token de comando.",
+  "Studio.BuilderDispatch.Execution.Error.DispatchArgumentsRequired": "Una solicitud de ejecucion de dispatch de builder requiere argumentos de dispatch.",
+  "Studio.BuilderDispatch.Execution.Error.EntryPointRequired": "Una solicitud de ejecucion de dispatch de builder requiere un punto de entrada de lanzamiento.",
+  "Studio.BuilderDispatch.Execution.Error.ExecutionAdmissionRequired": "Una solicitud de ejecucion de dispatch de builder requiere admision explicita de ejecucion.",
+  "Studio.BuilderDispatch.Execution.Error.ExecutorDidNotLaunch": "Un ejecutor de dispatch de builder no inicio el builder.",
+  "Studio.BuilderDispatch.Execution.Error.ExecutorNonZeroExit": "Un ejecutor de dispatch de builder devolvio un codigo de salida distinto de cero.",
+  "Studio.BuilderDispatch.Execution.Error.ExecutorRequired": "Una solicitud de ejecucion de dispatch de builder requiere un ejecutor.",
+  "Studio.BuilderDispatch.Execution.Error.NonExecutedDispatchRequired": "Una solicitud de ejecucion de dispatch de builder requiere un dispatch no ejecutado.",
+  "Studio.BuilderDispatch.Execution.Error.ValidatedBuilderIdRequired": "Una solicitud de ejecucion de dispatch de builder requiere un id de builder validado."
 }

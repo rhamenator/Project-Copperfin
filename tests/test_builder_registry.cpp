@@ -6,6 +6,8 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
+#include <string_view>
+#include <vector>
 
 namespace {
 
@@ -16,6 +18,24 @@ void expect(bool condition, const std::string& message) {
         std::cerr << "FAIL: " << message << "\n";
         ++failures;
     }
+}
+
+std::size_t count_missing_locale_keys(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view locale,
+    const std::vector<std::string_view>& keys) {
+    const auto locale_entries = catalog.catalogs.find(std::string(locale));
+    if (locale_entries == catalog.catalogs.end()) {
+        return keys.size();
+    }
+
+    std::size_t missing = 0U;
+    for (const auto key : keys) {
+        if (locale_entries->second.find(std::string(key)) == locale_entries->second.end()) {
+            ++missing;
+        }
+    }
+    return missing;
 }
 
 bool has_builder(const std::vector<copperfin::studio::StudioBuilderDescriptor>& builders, std::string_view id) {
@@ -193,6 +213,49 @@ int main() {
                pseudo_catalog.translate("Studio.BuilderDispatch.Execution.Error.ExecutorDidNotLaunch").starts_with("[!! ") &&
                pseudo_catalog.translate("Studio.BuilderDispatch.Error.ExecutionCatalogRequiresBuilder").starts_with("[!! "),
            "#2368: builder invocation and dispatch error prose should resolve through localizable catalog keys");
+
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const std::vector<std::string_view> execution_keys = {
+        "Studio.BuilderDispatch.Execution.Error.AdmittedDispatchRequired",
+        "Studio.BuilderDispatch.Execution.Error.CommandTokenRequired",
+        "Studio.BuilderDispatch.Execution.Error.DispatchArgumentsRequired",
+        "Studio.BuilderDispatch.Execution.Error.EntryPointRequired",
+        "Studio.BuilderDispatch.Execution.Error.ExecutionAdmissionRequired",
+        "Studio.BuilderDispatch.Execution.Error.ExecutorDidNotLaunch",
+        "Studio.BuilderDispatch.Execution.Error.ExecutorNonZeroExit",
+        "Studio.BuilderDispatch.Execution.Error.ExecutorRequired",
+        "Studio.BuilderDispatch.Execution.Error.NonExecutedDispatchRequired",
+        "Studio.BuilderDispatch.Execution.Error.ValidatedBuilderIdRequired"};
+    expect(
+        spanish_catalog.translate("Studio.BuilderDispatch.Execution.Error.ExecutionAdmissionRequired") ==
+            "Una solicitud de ejecucion de dispatch de builder requiere admision explicita de ejecucion.",
+        "#2612: es-419 builder dispatch execution-admission error should localize through the catalog");
+    expect(
+        spanish_catalog.translate("Studio.BuilderDispatch.Execution.Error.ExecutorNonZeroExit") ==
+            "Un ejecutor de dispatch de builder devolvio un codigo de salida distinto de cero.",
+        "#2612: es-419 builder dispatch executor-exit error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.BuilderDispatch.Execution.Error.EntryPointRequired") ==
+            "Uma solicitacao de execucao de dispatch de builder exige um ponto de entrada de inicializacao.",
+        "#2612: pt-BR builder dispatch entry-point error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.BuilderDispatch.Execution.Error.ValidatedBuilderIdRequired") ==
+            "Uma solicitacao de execucao de dispatch de builder exige um id de builder validado.",
+        "#2612: pt-BR builder dispatch validated-builder-id error should localize through the catalog");
+    expect(
+        pseudo_catalog.translate("Studio.BuilderDispatch.Execution.Error.ExecutorDidNotLaunch") ==
+            copperfin::localization::pseudo_localize("A builder dispatch executor did not launch the builder."),
+        "#2612: qps-ploc builder dispatch executor-launch error should resolve through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", execution_keys) == 0U,
+        "#2612: es-419 should define every remaining Studio.BuilderDispatch.Execution localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", execution_keys) == 0U,
+        "#2612: pt-BR should define every remaining Studio.BuilderDispatch.Execution localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", execution_keys) == 0U,
+        "#2612: qps-ploc should define every remaining Studio.BuilderDispatch.Execution localization key");
 
     const auto control_builders = copperfin::studio::studio_builders_for_context(StudioBuilderContext::control);
     expect(control_builders.size() >= 2U, "#956: control context should expose multiple control builders");
