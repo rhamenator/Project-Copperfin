@@ -11725,34 +11725,41 @@ LaunchParseResult parse_launch_arguments(
             "--add-line-feeds-object")};
     }
     if (result.request.always_on_top_object && !result.request.always_on_top_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "always-on-top", "--always-on-top")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AlwaysOnTop"),
+            "--always-on-top")};
     }
     if (result.request.always_on_top_object && result.request.always_on_top_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "always-on-top")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AlwaysOnTop"))};
     }
     if (!result.request.always_on_top_object &&
         (result.request.always_on_top_available ||
          !result.request.always_on_top_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Always-on-top",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AlwaysOnTopTitle"),
             "--always-on-top-object")};
     }
     if (result.request.always_on_bottom_object && !result.request.always_on_bottom_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "always-on-bottom",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AlwaysOnBottom"),
             "--always-on-bottom")};
     }
     if (result.request.always_on_bottom_object && result.request.always_on_bottom_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "always-on-bottom")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AlwaysOnBottom"))};
     }
     if (!result.request.always_on_bottom_object &&
         (result.request.always_on_bottom_available ||
          !result.request.always_on_bottom_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Always-on-bottom",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AlwaysOnBottomTitle"),
             "--always-on-bottom-object")};
     }
     if (!result.request.align_object && !result.request.resize_object &&

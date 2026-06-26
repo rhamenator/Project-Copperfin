@@ -6343,13 +6343,13 @@ void test_studio_host_launch_sizing_zorder_diagnostics_localize(const std::strin
         temp_root);
 
     expect(process.exit_code == 2,
-        "#2447: pseudo-localized always-on-top missing-target diagnostics should preserve parse-failure exit status");
+        "#2525: pseudo-localized always-on-top missing-target diagnostics should preserve parse-failure exit status");
     expect_contains(process.stdout_text,
         "[!! ",
-        "#2447: pseudo-localized always-on-top missing-target diagnostics should decorate human-facing prose");
+        "#2525: pseudo-localized always-on-top missing-target diagnostics should decorate human-facing prose");
     expect_not_contains(process.stdout_text,
         "An object always-on-top assignment requires at least one target selector.",
-        "#2447: pseudo-localized always-on-top missing-target diagnostics should not fall back to raw English prose");
+        "#2525: pseudo-localized always-on-top missing-target diagnostics should not fall back to raw English prose");
 
     process = run_process_capture(
         studio_host_path,
@@ -6361,16 +6361,16 @@ void test_studio_host_launch_sizing_zorder_diagnostics_localize(const std::strin
         temp_root);
 
     expect(process.exit_code == 2,
-        "#2447: pseudo-localized always-on-bottom stray-argument diagnostics should preserve parse-failure exit status");
+        "#2525: pseudo-localized always-on-bottom stray-argument diagnostics should preserve parse-failure exit status");
     expect_contains(process.stdout_text,
         "[!! ",
-        "#2447: pseudo-localized always-on-bottom stray-argument diagnostics should decorate human-facing prose");
+        "#2525: pseudo-localized always-on-bottom stray-argument diagnostics should decorate human-facing prose");
     expect_contains(process.stdout_text,
         "--always-on-bottom-object",
-        "#2447: pseudo-localized always-on-bottom stray-argument diagnostics should preserve required mode option");
+        "#2525: pseudo-localized always-on-bottom stray-argument diagnostics should preserve required mode option");
     expect_not_contains(process.stdout_text,
         "Always-on-bottom arguments can only be used with --always-on-bottom-object.",
-        "#2447: pseudo-localized always-on-bottom stray-argument diagnostics should not fall back to raw English prose");
+        "#2525: pseudo-localized always-on-bottom stray-argument diagnostics should not fall back to raw English prose");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
