@@ -3891,6 +3891,88 @@ void test_studio_host_designer_parse_diagnostics_localize(const std::string& stu
         "No designer editor action launch command was provided.",
         "#2400: pseudo-localized missing-launch-command diagnostics should not fall back to raw English prose");
 
+    set_env_value("COPPERFIN_LOCALE", "es-419", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--designer-launch-surfaces", "--selection-context", "unknown", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2581: es-419 unknown-selection diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"status\": \"error\"",
+        "#2581: es-419 unknown-selection diagnostics should preserve JSON status contracts");
+    expect_contains(process.stdout_text,
+        "\"designerLaunchSurfaces\": null",
+        "#2581: es-419 unknown-selection diagnostics should preserve JSON payload contracts");
+    expect_contains(process.stdout_text,
+        "Token de contexto de seleccion desconocido: unknown",
+        "#2581: es-419 unknown-selection diagnostics should localize selection-context token prose");
+    expect_not_contains(process.stdout_text,
+        "Unknown selection context token: unknown",
+        "#2581: es-419 unknown-selection diagnostics should not fall back to raw English prose");
+
+    set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-invocation-admission",
+            "--selection-context", "visual_object",
+            "--admit-editor-invocations", "maybe",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2581: pt-BR invalid-boolean diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "O valor de --admit-editor-invocations deve ser true ou false.",
+        "#2581: pt-BR invalid-boolean diagnostics should localize boolean validation prose");
+    expect_contains(process.stdout_text,
+        "true",
+        "#2581: pt-BR invalid-boolean diagnostics should preserve invariant true tokens");
+    expect_contains(process.stdout_text,
+        "false",
+        "#2581: pt-BR invalid-boolean diagnostics should preserve invariant false tokens");
+    expect_not_contains(process.stdout_text,
+        "The --admit-editor-invocations value must be true or false.",
+        "#2581: pt-BR invalid-boolean diagnostics should not fall back to raw English prose");
+
+    set_env_value("COPPERFIN_LOCALE", "es-419", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--designer-launch-surface-catalog", "--selection-context", "visual_object", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2581: es-419 unknown-option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Opcion desconocida de designer-launch-surface-catalog: --selection-context",
+        "#2581: es-419 unknown-option diagnostics should localize command-option prose");
+    expect_not_contains(process.stdout_text,
+        "Unknown designer-launch-surface-catalog option: --selection-context",
+        "#2581: es-419 unknown-option diagnostics should not fall back to raw English prose");
+
+    set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-execute",
+            "--selection-context", "visual_object",
+            "--admit-editor-invocations", "true",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2581: pt-BR missing-launch-command diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Nenhum comando de lancamento da acao do editor do designer foi fornecido.",
+        "#2581: pt-BR missing-launch-command diagnostics should localize designer editor-action launch-command prose");
+    expect_not_contains(process.stdout_text,
+        "No designer editor action launch command was provided.",
+        "#2581: pt-BR missing-launch-command diagnostics should not fall back to raw English prose");
+
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
     }
