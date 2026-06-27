@@ -865,6 +865,7 @@ void test_build_report_layout_summarizes_groupings() {
 
     const auto layout = copperfin::studio::build_report_layout(document);
     expect(layout.groupings.size() == 1U, "#2685: grouped report layouts should expose one grouping summary");
+    expect(layout.sections.size() == 3U, "#2686: grouped report layouts should preserve three live sections");
     if (layout.groupings.size() == 1U) {
         const auto& grouping = layout.groupings[0];
         expect(grouping.grouping_index == 0U, "#2685: grouped report layouts should number groupings from zero");
@@ -881,6 +882,38 @@ void test_build_report_layout_summarizes_groupings() {
         expect(grouping.footer_section_id == "group_footer_3" && grouping.footer_record_index == 3U &&
                    !grouping.footer_deleted,
                "#2685: grouping summaries should expose live group-footer identity");
+    }
+    if (layout.sections.size() == 3U) {
+        const auto& header = layout.sections[0];
+        expect(header.grouping_context_available,
+               "#2686: live group headers should expose grouping context");
+        expect(header.grouping_index == 0U && header.grouping_nesting_depth == 0U,
+               "#2686: top-level group headers should expose grouping index and depth");
+        expect(header.grouping_role == "header",
+               "#2686: live group headers should expose header role");
+        expect(header.grouping_partner_section_id == "group_footer_3" &&
+                   header.grouping_partner_record_index == 3U &&
+                   !header.grouping_partner_deleted,
+               "#2686: live group headers should expose live footer partner identity");
+
+        const auto& detail = layout.sections[1];
+        expect(!detail.grouping_context_available,
+               "#2686: non-group detail sections should keep grouping context unavailable");
+        expect(detail.grouping_index == copperfin::studio::StudioReportMissingRecordIndex &&
+                   detail.grouping_partner_record_index == copperfin::studio::StudioReportMissingRecordIndex,
+               "#2686: non-group detail sections should keep grouping identifiers absent");
+
+        const auto& footer = layout.sections[2];
+        expect(footer.grouping_context_available,
+               "#2686: live group footers should expose grouping context");
+        expect(footer.grouping_index == 0U && footer.grouping_nesting_depth == 0U,
+               "#2686: top-level group footers should expose grouping index and depth");
+        expect(footer.grouping_role == "footer",
+               "#2686: live group footers should expose footer role");
+        expect(footer.grouping_partner_section_id == "group_header_1" &&
+                   footer.grouping_partner_record_index == 1U &&
+                   !footer.grouping_partner_deleted,
+               "#2686: live group footers should expose live header partner identity");
     }
 }
 
@@ -958,6 +991,8 @@ void test_build_report_layout_summarizes_nested_mixed_state_groupings() {
     const auto layout = copperfin::studio::build_report_layout(document);
     expect(layout.groupings.size() == 2U,
            "#2685: nested mixed-state grouped layouts should expose both grouping levels");
+    expect(layout.sections.size() == 4U && layout.deleted_sections.size() == 1U,
+           "#2686: nested mixed-state grouped layouts should preserve live and deleted section partitions");
     if (layout.groupings.size() == 2U) {
         const auto& outer_group = layout.groupings[0];
         expect(outer_group.grouping_index == 0U && outer_group.nesting_depth == 0U,
@@ -985,6 +1020,55 @@ void test_build_report_layout_summarizes_nested_mixed_state_groupings() {
                    inner_group.footer_record_index == 4U &&
                    inner_group.footer_deleted,
                "#2685: inner grouping summaries should expose deleted inner group-footers without losing the grouping pair");
+    }
+    if (layout.sections.size() == 4U && layout.deleted_sections.size() == 1U) {
+        const auto& outer_header = layout.sections[0];
+        expect(outer_header.grouping_context_available &&
+                   outer_header.grouping_index == 0U &&
+                   outer_header.grouping_nesting_depth == 0U &&
+                   outer_header.grouping_role == "header",
+               "#2686: live outer group headers should expose top-level grouping context");
+        expect(outer_header.grouping_partner_section_id == "group_footer_5" &&
+                   outer_header.grouping_partner_record_index == 5U &&
+                   !outer_header.grouping_partner_deleted,
+               "#2686: live outer group headers should point at the live outer footer");
+
+        const auto& inner_header = layout.sections[1];
+        expect(inner_header.grouping_context_available &&
+                   inner_header.grouping_index == 1U &&
+                   inner_header.grouping_nesting_depth == 1U &&
+                   inner_header.grouping_role == "header",
+               "#2686: live inner group headers should expose nested grouping context");
+        expect(inner_header.grouping_partner_section_id == "group_footer_4" &&
+                   inner_header.grouping_partner_record_index == 4U &&
+                   inner_header.grouping_partner_deleted,
+               "#2686: live inner group headers should point at the deleted nested footer");
+
+        const auto& detail = layout.sections[2];
+        expect(!detail.grouping_context_available,
+               "#2686: nested detail sections should keep grouping context unavailable");
+
+        const auto& outer_footer = layout.sections[3];
+        expect(outer_footer.grouping_context_available &&
+                   outer_footer.grouping_index == 0U &&
+                   outer_footer.grouping_nesting_depth == 0U &&
+                   outer_footer.grouping_role == "footer",
+               "#2686: live outer group footers should expose top-level grouping context");
+        expect(outer_footer.grouping_partner_section_id == "group_header_1" &&
+                   outer_footer.grouping_partner_record_index == 1U &&
+                   !outer_footer.grouping_partner_deleted,
+               "#2686: live outer group footers should point back to the live outer header");
+
+        const auto& deleted_inner_footer = layout.deleted_sections[0];
+        expect(deleted_inner_footer.grouping_context_available &&
+                   deleted_inner_footer.grouping_index == 1U &&
+                   deleted_inner_footer.grouping_nesting_depth == 1U &&
+                   deleted_inner_footer.grouping_role == "footer",
+               "#2686: deleted inner group footers should expose nested grouping context");
+        expect(deleted_inner_footer.grouping_partner_section_id == "group_header_2" &&
+                   deleted_inner_footer.grouping_partner_record_index == 2U &&
+                   !deleted_inner_footer.grouping_partner_deleted,
+               "#2686: deleted inner group footers should point back to the live inner header");
     }
 }
 

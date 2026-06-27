@@ -84,6 +84,13 @@ struct StudioReportSectionSnapshot {
     bool deleted = false;
     std::size_t section_index = StudioReportMissingRecordIndex;
     std::size_t section_count = 0;
+    bool grouping_context_available = false;
+    std::size_t grouping_index = StudioReportMissingRecordIndex;
+    std::size_t grouping_nesting_depth = StudioReportMissingRecordIndex;
+    std::string grouping_role{};
+    std::string grouping_partner_section_id{};
+    std::size_t grouping_partner_record_index = StudioReportMissingRecordIndex;
+    bool grouping_partner_deleted = false;
     int objcode_code = 0;
     std::size_t objcode_field_index = StudioReportMissingFieldIndex;
     std::uint32_t objcode_memo_block_number = 0;

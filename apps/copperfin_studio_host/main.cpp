@@ -21076,6 +21076,32 @@ void print_json_report_layout_section(
     print_json_report_record_index_or_null(section.section_index);
     std::cout << ",\n";
     std::cout << indent << "  \"sectionCount\": " << section.section_count << ",\n";
+    std::cout << indent << "  \"groupingContextAvailable\": "
+              << (section.grouping_context_available ? "true" : "false") << ",\n";
+    std::cout << indent << "  \"groupingIndex\": ";
+    print_json_report_record_index_or_null(section.grouping_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"groupingNestingDepth\": ";
+    print_json_report_record_index_or_null(section.grouping_nesting_depth);
+    std::cout << ",\n";
+    std::cout << indent << "  \"groupRole\": ";
+    if (section.grouping_context_available) {
+        print_json_string(section.grouping_role);
+    } else {
+        std::cout << "null";
+    }
+    std::cout << ",\n";
+    std::cout << indent << "  \"groupPartnerSectionId\": ";
+    if (section.grouping_partner_section_id.empty()) {
+        std::cout << "null";
+    } else {
+        print_json_string(section.grouping_partner_section_id);
+    }
+    std::cout << ",\n";
+    std::cout << indent << "  \"groupPartnerRecordIndex\": ";
+    print_json_report_record_index_or_null(section.grouping_partner_record_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"groupPartnerDeleted\": " << (section.grouping_partner_deleted ? "true" : "false") << ",\n";
     std::cout << indent << "  \"objectCode\": " << section.objcode_code << ",\n";
     std::cout << indent << "  \"objectCodeFieldIndex\": ";
     print_json_report_field_index_or_null(section.objcode_field_index);

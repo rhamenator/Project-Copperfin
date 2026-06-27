@@ -95,6 +95,13 @@ internal sealed class CopperfinStudioReportSection
     public string Title { get; set; } = string.Empty;
     public string BandKind { get; set; } = string.Empty;
     public int RecordIndex { get; set; }
+    public bool GroupingContextAvailable { get; set; }
+    public int? GroupingIndex { get; set; }
+    public int? GroupingNestingDepth { get; set; }
+    public string? GroupRole { get; set; }
+    public string? GroupPartnerSectionId { get; set; }
+    public int? GroupPartnerRecordIndex { get; set; }
+    public bool GroupPartnerDeleted { get; set; }
     public int Top { get; set; }
     public int Height { get; set; }
     public List<CopperfinStudioReportLayoutObject> Objects { get; set; } = new();

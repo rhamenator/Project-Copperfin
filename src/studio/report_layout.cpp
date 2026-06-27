@@ -642,6 +642,61 @@ void finalize_groupings(StudioReportLayoutSnapshot& snapshot) {
     }
 }
 
+void finalize_section_grouping_context(StudioReportLayoutSnapshot& snapshot) {
+    const auto annotate_section = [](
+        std::vector<StudioReportSectionSnapshot>& sections,
+        std::size_t record_index,
+        const StudioReportGroupingSnapshot& grouping,
+        std::string role,
+        std::string partner_section_id,
+        std::size_t partner_record_index,
+        bool partner_deleted) {
+        const auto section = std::find_if(
+            sections.begin(),
+            sections.end(),
+            [&](const StudioReportSectionSnapshot& candidate) {
+                return candidate.record_index == record_index;
+            });
+        if (section == sections.end()) {
+            return;
+        }
+
+        section->grouping_context_available = true;
+        section->grouping_index = grouping.grouping_index;
+        section->grouping_nesting_depth = grouping.nesting_depth;
+        section->grouping_role = std::move(role);
+        section->grouping_partner_section_id = std::move(partner_section_id);
+        section->grouping_partner_record_index = partner_record_index;
+        section->grouping_partner_deleted = partner_deleted;
+    };
+
+    for (const auto& grouping : snapshot.groupings) {
+        if (grouping.header_record_index != StudioReportMissingRecordIndex) {
+            auto& target_sections = grouping.header_deleted ? snapshot.deleted_sections : snapshot.sections;
+            annotate_section(
+                target_sections,
+                grouping.header_record_index,
+                grouping,
+                "header",
+                grouping.footer_section_id,
+                grouping.footer_record_index,
+                grouping.footer_deleted);
+        }
+
+        if (grouping.footer_record_index != StudioReportMissingRecordIndex) {
+            auto& target_sections = grouping.footer_deleted ? snapshot.deleted_sections : snapshot.sections;
+            annotate_section(
+                target_sections,
+                grouping.footer_record_index,
+                grouping,
+                "footer",
+                grouping.header_section_id,
+                grouping.header_record_index,
+                grouping.header_deleted);
+        }
+    }
+}
+
 StudioReportSectionSnapshot build_report_section(
     const DbfRecord& record,
     const localization::LocalizedCatalog& catalog) {
@@ -815,6 +870,7 @@ StudioReportLayoutSnapshot build_report_layout(
     finalize_object_kind_counts(snapshot);
     finalize_section_kind_counts(snapshot);
     finalize_groupings(snapshot);
+    finalize_section_grouping_context(snapshot);
 
     return snapshot;
 }
