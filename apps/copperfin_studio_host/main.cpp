@@ -21091,6 +21091,18 @@ void print_json_report_layout_section(
         std::cout << "null";
     }
     std::cout << ",\n";
+    std::cout << indent << "  \"groupingExpression\": ";
+    if (section.grouping_context_available) {
+        print_json_string(section.grouping_expression);
+    } else {
+        std::cout << "null";
+    }
+    std::cout << ",\n";
+    std::cout << indent << "  \"groupingExpressionFieldIndex\": ";
+    print_json_report_field_index_or_null(section.grouping_expression_field_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"groupingExpressionMemoBlockNumber\": "
+              << section.grouping_expression_memo_block_number << ",\n";
     std::cout << indent << "  \"groupPartnerSectionId\": ";
     if (section.grouping_partner_section_id.empty()) {
         std::cout << "null";

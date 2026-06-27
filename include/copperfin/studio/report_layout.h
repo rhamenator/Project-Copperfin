@@ -88,6 +88,9 @@ struct StudioReportSectionSnapshot {
     std::size_t grouping_index = StudioReportMissingRecordIndex;
     std::size_t grouping_nesting_depth = StudioReportMissingRecordIndex;
     std::string grouping_role{};
+    std::string grouping_expression{};
+    std::size_t grouping_expression_field_index = StudioReportMissingFieldIndex;
+    std::uint32_t grouping_expression_memo_block_number = 0;
     std::string grouping_partner_section_id{};
     std::size_t grouping_partner_record_index = StudioReportMissingRecordIndex;
     bool grouping_partner_deleted = false;

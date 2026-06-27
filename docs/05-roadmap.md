@@ -25,7 +25,7 @@ Current state:
 Active issue lanes:
 
 - critical-path Phase A lanes are closed: `#92`, `#93`, `#94`, `#97`, `#98`, `#99`, `#100`, `#101`, `#150`, `#151`, `#152`, `#153`
-- live execution is centered on E3/#24 report/label designer fidelity, where latest shipped child `#2686` exposes explicit shared Studio host JSON section grouping context after `#2680`-`#2685` established nested, stable-selected, record-selected, mixed live/deleted group-section behavior, and document-level grouping summaries across FRX/LBX assets; localization/#2348 remains a standing requirement for new user-facing text, and E2/#23 remains open mainly for evidence-backed audit/closure cleanup of already implemented designer host slices
+- live execution is centered on E3/#24 report/label designer fidelity, where latest shipped child `#2687` exposes resolved shared Studio host JSON grouping-expression provenance after `#2680`-`#2686` established nested, stable-selected, record-selected, mixed live/deleted group-section behavior plus document-level grouping summaries and section grouping context across FRX/LBX assets; localization/#2348 remains a standing requirement for new user-facing text, and E2/#23 remains open mainly for evidence-backed audit/closure cleanup of already implemented designer host slices
 
 Execution rule:
 

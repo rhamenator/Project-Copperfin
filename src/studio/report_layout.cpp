@@ -665,6 +665,9 @@ void finalize_section_grouping_context(StudioReportLayoutSnapshot& snapshot) {
         section->grouping_index = grouping.grouping_index;
         section->grouping_nesting_depth = grouping.nesting_depth;
         section->grouping_role = std::move(role);
+        section->grouping_expression = grouping.expression;
+        section->grouping_expression_field_index = grouping.expression_field_index;
+        section->grouping_expression_memo_block_number = grouping.expression_memo_block_number;
         section->grouping_partner_section_id = std::move(partner_section_id);
         section->grouping_partner_record_index = partner_record_index;
         section->grouping_partner_deleted = partner_deleted;

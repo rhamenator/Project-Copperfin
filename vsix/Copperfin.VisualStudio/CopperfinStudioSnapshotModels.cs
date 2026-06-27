@@ -99,6 +99,9 @@ internal sealed class CopperfinStudioReportSection
     public int? GroupingIndex { get; set; }
     public int? GroupingNestingDepth { get; set; }
     public string? GroupRole { get; set; }
+    public string? GroupingExpression { get; set; }
+    public int? GroupingExpressionFieldIndex { get; set; }
+    public int GroupingExpressionMemoBlockNumber { get; set; }
     public string? GroupPartnerSectionId { get; set; }
     public int? GroupPartnerRecordIndex { get; set; }
     public bool GroupPartnerDeleted { get; set; }

@@ -18134,6 +18134,39 @@ void write_synthetic_report_table_for_stable_group_section_expression_json(
            "#1666: synthetic report table for stable group section expression JSON should be created");
 }
 
+void write_synthetic_report_table_for_stable_blank_group_footer_expression_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 24U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", "", "", ""},
+        {"9", "3", "customer.country", "", "0", "", "600", "group-header-guid"},
+        {"9", "4", "", "", "600", "", "3000", ""},
+        {"5", "", "\"Detail label\"", "120", "900", "1400", "240", "detail-object-guid"},
+        {"9", "5", "", "", "3600", "", "500", "group-footer-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok,
+           "#2687: synthetic report table for stable blank group-footer expression JSON should be created");
+}
+
+void write_synthetic_report_table_for_deleted_blank_group_footer_expression_json(
+    const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_stable_blank_group_footer_expression_json(report_path);
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 4U, true);
+    expect(delete_result.ok,
+           "#2687: synthetic report table should mark the blank group-footer section deleted");
+}
+
 void write_synthetic_report_table_for_stable_nested_group_section_expression_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -39666,6 +39699,126 @@ void test_studio_host_json_exposes_nested_mixed_state_groupings_in_layout_summar
     run_nested_groupings_summary_json(temp_root / "nested_groupings_summary.lbx",
                                       "nested_groupings_summary.lbx",
                                       "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_exposes_resolved_grouping_expression_for_blank_footer_sections(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_blank_group_footer_expression_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_blank_footer_grouping_expression_json = [&](const fs::path& asset_path,
+                                                               const std::string& title,
+                                                               const std::string& label,
+                                                               bool deleted_footer) {
+        if (deleted_footer) {
+            write_synthetic_report_table_for_deleted_blank_group_footer_expression_json(asset_path);
+        } else {
+            write_synthetic_report_table_for_stable_blank_group_footer_expression_json(asset_path);
+        }
+
+        const auto footer_record = deleted_footer ? "4" : "4";
+        const auto section_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", footer_record, "--json"},
+            temp_root);
+
+        if (section_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " blank group footer expression stdout:\n"
+                      << section_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " blank group footer expression stderr:\n"
+                      << section_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(section_process.exit_code == 0,
+               "#2687: blank group-footer selection JSON should exit successfully");
+        expect_contains(section_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#2687: blank group-footer selection JSON should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(section_process.stdout_text, "\"isLabel\": true",
+                            "#2687: blank group-footer label selection JSON should retain label identity");
+        }
+        expect_contains_in_order(
+            section_process.stdout_text,
+            {
+                deleted_footer ? "\"deletedSections\": [" : "\"sections\": [",
+                "\"id\": \"group_footer_4\"",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": null",
+                "\"expressionMemoBlockNumber\": 0",
+                "\"groupingExpression\": \"customer.country\"",
+                "\"groupingExpressionFieldIndex\": 2",
+                "\"groupingExpressionMemoBlockNumber\": 2"
+            },
+            "#2687: blank group-footer section arrays should expose resolved grouping-expression metadata without fabricating direct EXPR");
+        expect_contains_in_order(
+            section_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"id\": \"group_footer_4\"",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": null",
+                "\"expressionMemoBlockNumber\": 0",
+                "\"groupRole\": \"footer\"",
+                "\"groupingExpression\": \"customer.country\"",
+                "\"groupingExpressionFieldIndex\": 2",
+                "\"groupingExpressionMemoBlockNumber\": 2"
+            },
+            "#2687: selected blank group footers should expose resolved grouping-expression provenance from the paired header");
+
+        const auto object_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "3", "--json"},
+            temp_root);
+
+        if (object_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " blank group footer object stdout:\n"
+                      << object_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " blank group footer object stderr:\n"
+                      << object_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(object_process.exit_code == 0,
+               "#2687: blank group-footer selected object JSON should exit successfully");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"detail_2\"",
+                "\"groupingContextAvailable\": false",
+                "\"groupingExpression\": null",
+                "\"groupingExpressionFieldIndex\": null",
+                "\"groupingExpressionMemoBlockNumber\": 0"
+            },
+            "#2687: non-group selected object sections should keep resolved grouping-expression metadata absent");
+    };
+
+    run_blank_footer_grouping_expression_json(temp_root / "blank_group_footer.frx",
+                                              "blank_group_footer.frx",
+                                              "report",
+                                              false);
+    run_blank_footer_grouping_expression_json(temp_root / "blank_group_footer.lbx",
+                                              "blank_group_footer.lbx",
+                                              "label",
+                                              false);
+    run_blank_footer_grouping_expression_json(temp_root / "blank_deleted_group_footer.frx",
+                                              "blank_deleted_group_footer.frx",
+                                              "deleted report",
+                                              true);
+    run_blank_footer_grouping_expression_json(temp_root / "blank_deleted_group_footer.lbx",
+                                              "blank_deleted_group_footer.lbx",
+                                              "deleted label",
+                                              true);
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -127870,6 +128023,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_nested_report_group_section_ordering_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_report_groupings_in_layout_summary(argv[1]);
     test_studio_host_json_exposes_nested_mixed_state_groupings_in_layout_summary(argv[1]);
+    test_studio_host_json_exposes_resolved_grouping_expression_for_blank_footer_sections(argv[1]);
     test_studio_host_json_updates_nested_report_group_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_record_selected_nested_group_sections(argv[1]);
     test_studio_host_json_exposes_record_selected_deleted_nested_group_sections(argv[1]);

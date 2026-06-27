@@ -917,6 +917,148 @@ void test_build_report_layout_summarizes_groupings() {
     }
 }
 
+void test_build_report_layout_resolves_grouping_expression_for_blank_footer() {
+    copperfin::studio::StudioDocumentModel document;
+    document.display_name = "grouped_blank_footer.frx";
+    document.kind = copperfin::studio::StudioAssetKind::report;
+    document.table_preview_available = true;
+
+    document.table_preview.records = {
+        {
+            .record_index = 0U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "1"),
+                value("OBJCODE", "53")
+            }
+        },
+        {
+            .record_index = 1U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "3"),
+                value("EXPR", "customer.country", 95U),
+                value("VPOS", "0.000"),
+                value("HEIGHT", "600.000")
+            }
+        },
+        {
+            .record_index = 2U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "4"),
+                value("VPOS", "600.000"),
+                value("HEIGHT", "3000.000")
+            }
+        },
+        {
+            .record_index = 3U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "5"),
+                value("VPOS", "3600.000"),
+                value("HEIGHT", "500.000")
+            }
+        }
+    };
+
+    const auto layout = copperfin::studio::build_report_layout(document);
+    expect(layout.sections.size() == 3U,
+           "#2687: grouped report layouts with blank footer EXPR should preserve all live sections");
+    if (layout.sections.size() == 3U) {
+        const auto& header = layout.sections[0];
+        expect(header.grouping_expression == "customer.country" &&
+                   header.grouping_expression_field_index == 2U &&
+                   header.grouping_expression_memo_block_number == 95U,
+               "#2687: group headers should expose resolved grouping-expression provenance");
+
+        const auto& footer = layout.sections[2];
+        expect(footer.expression.empty(),
+               "#2687: blank group footers should preserve empty direct EXPR payloads");
+        expect(footer.expression_field_index == copperfin::studio::StudioReportMissingFieldIndex &&
+                   footer.expression_memo_block_number == 0U,
+               "#2687: blank group footers should preserve missing direct EXPR provenance");
+        expect(footer.grouping_context_available,
+               "#2687: blank group footers should still expose grouping context");
+        expect(footer.grouping_expression == "customer.country",
+               "#2687: blank group footers should expose the resolved grouping expression from the paired header");
+        expect(footer.grouping_expression_field_index == 2U &&
+                   footer.grouping_expression_memo_block_number == 95U,
+               "#2687: blank group footers should expose resolved grouping-expression provenance from the paired header");
+    }
+}
+
+void test_build_report_layout_resolves_grouping_expression_for_deleted_blank_footer() {
+    copperfin::studio::StudioDocumentModel document;
+    document.display_name = "grouped_deleted_blank_footer.frx";
+    document.kind = copperfin::studio::StudioAssetKind::report;
+    document.table_preview_available = true;
+
+    document.table_preview.records = {
+        {
+            .record_index = 0U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "1"),
+                value("OBJCODE", "53")
+            }
+        },
+        {
+            .record_index = 1U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "3"),
+                value("EXPR", "customer.country", 96U),
+                value("VPOS", "0.000"),
+                value("HEIGHT", "600.000")
+            }
+        },
+        {
+            .record_index = 2U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "4"),
+                value("VPOS", "600.000"),
+                value("HEIGHT", "3000.000")
+            }
+        },
+        {
+            .record_index = 3U,
+            .deleted = true,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "5"),
+                value("VPOS", "3600.000"),
+                value("HEIGHT", "500.000")
+            }
+        }
+    };
+
+    const auto layout = copperfin::studio::build_report_layout(document);
+    expect(layout.deleted_sections.size() == 1U,
+           "#2687: grouped report layouts with deleted blank footer EXPR should preserve one deleted section");
+    if (layout.deleted_sections.size() == 1U) {
+        const auto& deleted_footer = layout.deleted_sections[0];
+        expect(deleted_footer.expression.empty(),
+               "#2687: deleted blank group footers should preserve empty direct EXPR payloads");
+        expect(deleted_footer.expression_field_index == copperfin::studio::StudioReportMissingFieldIndex &&
+                   deleted_footer.expression_memo_block_number == 0U,
+               "#2687: deleted blank group footers should preserve missing direct EXPR provenance");
+        expect(deleted_footer.grouping_context_available,
+               "#2687: deleted blank group footers should still expose grouping context");
+        expect(deleted_footer.grouping_expression == "customer.country",
+               "#2687: deleted blank group footers should expose the resolved grouping expression from the paired header");
+        expect(deleted_footer.grouping_expression_field_index == 2U &&
+                   deleted_footer.grouping_expression_memo_block_number == 96U,
+               "#2687: deleted blank group footers should expose resolved grouping-expression provenance from the paired header");
+    }
+}
+
 void test_build_report_layout_summarizes_nested_mixed_state_groupings() {
     copperfin::studio::StudioDocumentModel document;
     document.display_name = "nested_deleted_grouped.frx";
@@ -1069,6 +1211,10 @@ void test_build_report_layout_summarizes_nested_mixed_state_groupings() {
                    deleted_inner_footer.grouping_partner_record_index == 2U &&
                    !deleted_inner_footer.grouping_partner_deleted,
                "#2686: deleted inner group footers should point back to the live inner header");
+        expect(deleted_inner_footer.grouping_expression == "customer.country" &&
+                   deleted_inner_footer.grouping_expression_field_index == 2U &&
+                   deleted_inner_footer.grouping_expression_memo_block_number == 102U,
+               "#2687: deleted inner group footers should expose resolved grouping-expression provenance from the paired header");
     }
 }
 
@@ -1213,6 +1359,8 @@ int main() {
     test_build_report_layout_carries_group_section_expressions();
     test_build_report_layout_carries_nested_group_section_ordering();
     test_build_report_layout_summarizes_groupings();
+    test_build_report_layout_resolves_grouping_expression_for_blank_footer();
+    test_build_report_layout_resolves_grouping_expression_for_deleted_blank_footer();
     test_build_report_layout_summarizes_nested_mixed_state_groupings();
     test_build_report_layout_reports_missing_title_provenance_when_unavailable();
     test_build_report_layout_includes_direct_orientation_settings();
