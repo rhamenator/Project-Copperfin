@@ -21114,6 +21114,51 @@ void print_json_report_layout_sections(
     std::cout << indent << "]";
 }
 
+void print_json_report_layout_grouping(
+    const copperfin::studio::StudioReportGroupingSnapshot& grouping,
+    const std::string& indent) {
+    std::cout << "{\n";
+    std::cout << indent << "  \"groupingIndex\": " << grouping.grouping_index << ",\n";
+    std::cout << indent << "  \"nestingDepth\": " << grouping.nesting_depth << ",\n";
+    std::cout << indent << "  \"expression\": ";
+    print_json_string(grouping.expression);
+    std::cout << ",\n";
+    std::cout << indent << "  \"expressionFieldIndex\": ";
+    print_json_report_field_index_or_null(grouping.expression_field_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"expressionMemoBlockNumber\": " << grouping.expression_memo_block_number << ",\n";
+    std::cout << indent << "  \"headerSectionId\": ";
+    print_json_string(grouping.header_section_id);
+    std::cout << ",\n";
+    std::cout << indent << "  \"headerRecordIndex\": ";
+    print_json_report_record_index_or_null(grouping.header_record_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"headerDeleted\": " << (grouping.header_deleted ? "true" : "false") << ",\n";
+    std::cout << indent << "  \"footerSectionId\": ";
+    print_json_string(grouping.footer_section_id);
+    std::cout << ",\n";
+    std::cout << indent << "  \"footerRecordIndex\": ";
+    print_json_report_record_index_or_null(grouping.footer_record_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"footerDeleted\": " << (grouping.footer_deleted ? "true" : "false") << "\n";
+    std::cout << indent << "}";
+}
+
+void print_json_report_layout_groupings(
+    const std::vector<copperfin::studio::StudioReportGroupingSnapshot>& groupings,
+    const std::string& indent) {
+    std::cout << "[\n";
+    for (std::size_t grouping_index = 0; grouping_index < groupings.size(); ++grouping_index) {
+        std::cout << indent << "  ";
+        print_json_report_layout_grouping(groupings[grouping_index], indent + "  ");
+        if ((grouping_index + 1U) != groupings.size()) {
+            std::cout << ",";
+        }
+        std::cout << "\n";
+    }
+    std::cout << indent << "]";
+}
+
 void print_json_document(const copperfin::studio::StudioDocumentModel& document,
                          bool asset_mutation_performed = false) {
     const auto objects = copperfin::studio::build_object_snapshot(document);
@@ -21340,6 +21385,7 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document,
         std::cout << "      \"deletedObjectKindCount\": " << report_layout.deleted_object_kind_counts.size() << ",\n";
         std::cout << "      \"sectionKindCount\": " << report_layout.section_kind_counts.size() << ",\n";
         std::cout << "      \"deletedSectionKindCount\": " << report_layout.deleted_section_kind_counts.size() << ",\n";
+        std::cout << "      \"groupingCount\": " << report_layout.groupings.size() << ",\n";
         std::cout << "      \"sectionHeightTotal\": " << report_layout.section_height_total << ",\n";
         std::cout << "      \"deletedSectionHeightTotal\": " << report_layout.deleted_section_height_total << ",\n";
         std::cout << "      \"settingCount\": " << report_layout.settings.size() << ",\n";
@@ -21362,6 +21408,9 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document,
         std::cout << ",\n";
         std::cout << "      \"deletedSectionKindCounts\": ";
         print_json_report_kind_counts(report_layout.deleted_section_kind_counts, "      ");
+        std::cout << ",\n";
+        std::cout << "      \"groupings\": ";
+        print_json_report_layout_groupings(report_layout.groupings, "      ");
         std::cout << ",\n";
         std::cout << "      \"settings\": ";
         print_json_report_named_values(report_layout.settings, "      ");

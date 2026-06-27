@@ -571,6 +571,77 @@ void finalize_section_kind_counts(StudioReportLayoutSnapshot& snapshot) {
     sort_kind_counts(snapshot.deleted_section_kind_counts);
 }
 
+void finalize_groupings(StudioReportLayoutSnapshot& snapshot) {
+    struct SectionRef {
+        const StudioReportSectionSnapshot* section = nullptr;
+    };
+
+    std::vector<SectionRef> ordered_sections;
+    ordered_sections.reserve(snapshot.sections.size() + snapshot.deleted_sections.size());
+    for (const auto& section : snapshot.sections) {
+        ordered_sections.push_back({.section = &section});
+    }
+    for (const auto& section : snapshot.deleted_sections) {
+        ordered_sections.push_back({.section = &section});
+    }
+
+    std::sort(ordered_sections.begin(), ordered_sections.end(), [](const SectionRef& left, const SectionRef& right) {
+        if (left.section->top != right.section->top) {
+            return left.section->top < right.section->top;
+        }
+        return left.section->record_index < right.section->record_index;
+    });
+
+    std::vector<std::size_t> open_group_stack;
+    for (const auto& section_ref : ordered_sections) {
+        const auto& section = *section_ref.section;
+        if (section.band_kind == "group_header") {
+            snapshot.groupings.push_back({
+                .grouping_index = snapshot.groupings.size(),
+                .nesting_depth = open_group_stack.size(),
+                .expression = section.expression,
+                .expression_field_index = section.expression_field_index,
+                .expression_memo_block_number = section.expression_memo_block_number,
+                .header_section_id = section.id,
+                .header_record_index = section.record_index,
+                .header_deleted = section.deleted
+            });
+            open_group_stack.push_back(snapshot.groupings.size() - 1U);
+            continue;
+        }
+
+        if (section.band_kind != "group_footer") {
+            continue;
+        }
+
+        if (open_group_stack.empty()) {
+            snapshot.groupings.push_back({
+                .grouping_index = snapshot.groupings.size(),
+                .nesting_depth = 0U,
+                .expression = section.expression,
+                .expression_field_index = section.expression_field_index,
+                .expression_memo_block_number = section.expression_memo_block_number,
+                .footer_section_id = section.id,
+                .footer_record_index = section.record_index,
+                .footer_deleted = section.deleted
+            });
+            continue;
+        }
+
+        const std::size_t grouping_index = open_group_stack.back();
+        open_group_stack.pop_back();
+        auto& grouping = snapshot.groupings[grouping_index];
+        if (grouping.expression.empty()) {
+            grouping.expression = section.expression;
+            grouping.expression_field_index = section.expression_field_index;
+            grouping.expression_memo_block_number = section.expression_memo_block_number;
+        }
+        grouping.footer_section_id = section.id;
+        grouping.footer_record_index = section.record_index;
+        grouping.footer_deleted = section.deleted;
+    }
+}
+
 StudioReportSectionSnapshot build_report_section(
     const DbfRecord& record,
     const localization::LocalizedCatalog& catalog) {
@@ -743,6 +814,7 @@ StudioReportLayoutSnapshot build_report_layout(
     finalize_page_setup_summary(snapshot);
     finalize_object_kind_counts(snapshot);
     finalize_section_kind_counts(snapshot);
+    finalize_groupings(snapshot);
 
     return snapshot;
 }

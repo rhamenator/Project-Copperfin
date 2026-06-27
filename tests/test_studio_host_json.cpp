@@ -39513,6 +39513,165 @@ void test_studio_host_json_exposes_nested_report_group_section_ordering_by_stabl
     }
 }
 
+void test_studio_host_json_exposes_report_groupings_in_layout_summary(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_groupings_summary_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_groupings_summary_json = [&](const fs::path& asset_path,
+                                                const std::string& title,
+                                                const std::string& label) {
+        write_synthetic_report_table_for_stable_group_section_expression_json(asset_path);
+        const auto process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (process.exit_code != 0) {
+            std::cerr << "studio host " << label << " report grouping summary stdout:\n"
+                      << process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " report grouping summary stderr:\n"
+                      << process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(process.exit_code == 0,
+               "#2685: report/label grouping summary JSON should exit successfully");
+        expect_contains(process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#2685: report/label grouping summary JSON should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(process.stdout_text, "\"isLabel\": true",
+                            "#2685: label grouping summary JSON should retain label identity");
+        }
+        expect_contains(process.stdout_text, "\"groupingCount\": 1",
+                        "#2685: report/label grouping summary JSON should expose one grouping");
+        expect_contains(process.stdout_text, "\"sectionCount\": 3",
+                        "#2685: report/label grouping summary JSON should preserve live section counts");
+        expect_contains(process.stdout_text, "\"deletedSectionCount\": 0",
+                        "#2685: report/label grouping summary JSON should preserve deleted section counts");
+        expect_contains(process.stdout_text, "\"selectedReportSelectionAvailable\": false",
+                        "#2685: report/label grouping summary JSON should preserve no-selection state");
+        expect_contains(process.stdout_text, "\"selectedReportSelectionKind\": \"none\"",
+                        "#2685: report/label grouping summary JSON should classify the summary launch as no selection");
+        expect_contains_in_order(
+            process.stdout_text,
+            {
+                "\"groupings\": [",
+                "\"groupingIndex\": 0",
+                "\"nestingDepth\": 0",
+                "\"expression\": \"customer.country\"",
+                "\"expressionFieldIndex\": 2",
+                "\"expressionMemoBlockNumber\": 2",
+                "\"headerSectionId\": \"group_header_1\"",
+                "\"headerRecordIndex\": 1",
+                "\"headerDeleted\": false",
+                "\"footerSectionId\": \"group_footer_3\"",
+                "\"footerRecordIndex\": 3",
+                "\"footerDeleted\": false"
+            },
+            "#2685: report/label grouping summary JSON should expose explicit group-header/footer pairing metadata");
+    };
+
+    run_groupings_summary_json(temp_root / "groupings_summary.frx",
+                               "groupings_summary.frx",
+                               "report");
+    run_groupings_summary_json(temp_root / "groupings_summary.lbx",
+                               "groupings_summary.lbx",
+                               "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_exposes_nested_mixed_state_groupings_in_layout_summary(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_nested_groupings_summary_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_nested_groupings_summary_json = [&](const fs::path& asset_path,
+                                                       const std::string& title,
+                                                       const std::string& label) {
+        write_synthetic_report_table_for_deleted_nested_group_footer_expression_json(asset_path);
+        const auto process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (process.exit_code != 0) {
+            std::cerr << "studio host " << label << " nested grouping summary stdout:\n"
+                      << process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " nested grouping summary stderr:\n"
+                      << process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(process.exit_code == 0,
+               "#2685: nested mixed-state report/label grouping summary JSON should exit successfully");
+        expect_contains(process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#2685: nested mixed-state grouping summary JSON should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(process.stdout_text, "\"isLabel\": true",
+                            "#2685: nested mixed-state label grouping summary JSON should retain label identity");
+        }
+        expect_contains(process.stdout_text, "\"groupingCount\": 2",
+                        "#2685: nested mixed-state grouping summary JSON should expose both grouping levels");
+        expect_contains(process.stdout_text, "\"sectionCount\": 4",
+                        "#2685: nested mixed-state grouping summary JSON should preserve live section counts");
+        expect_contains(process.stdout_text, "\"deletedSectionCount\": 1",
+                        "#2685: nested mixed-state grouping summary JSON should preserve deleted section counts");
+        expect_contains_in_order(
+            process.stdout_text,
+            {
+                "\"groupings\": [",
+                "\"groupingIndex\": 0",
+                "\"nestingDepth\": 0",
+                "\"expression\": \"customer.region\"",
+                "\"expressionFieldIndex\": 2",
+                "\"expressionMemoBlockNumber\": 2",
+                "\"headerSectionId\": \"group_header_1\"",
+                "\"headerRecordIndex\": 1",
+                "\"headerDeleted\": false",
+                "\"footerSectionId\": \"group_footer_5\"",
+                "\"footerRecordIndex\": 5",
+                "\"footerDeleted\": false",
+                "\"groupingIndex\": 1",
+                "\"nestingDepth\": 1",
+                "\"expression\": \"customer.country\"",
+                "\"expressionFieldIndex\": 2",
+                "\"expressionMemoBlockNumber\": 3",
+                "\"headerSectionId\": \"group_header_2\"",
+                "\"headerRecordIndex\": 2",
+                "\"headerDeleted\": false",
+                "\"footerSectionId\": \"group_footer_4\"",
+                "\"footerRecordIndex\": 4",
+                "\"footerDeleted\": true"
+            },
+            "#2685: nested mixed-state grouping summary JSON should pair live headers with deleted nested footers");
+    };
+
+    run_nested_groupings_summary_json(temp_root / "nested_groupings_summary.frx",
+                                      "nested_groupings_summary.frx",
+                                      "report");
+    run_nested_groupings_summary_json(temp_root / "nested_groupings_summary.lbx",
+                                      "nested_groupings_summary.lbx",
+                                      "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_record_selected_nested_group_sections(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -127625,6 +127784,8 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_report_group_section_expressions(argv[1]);
     test_studio_host_json_exposes_report_group_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_nested_report_group_section_ordering_by_stable_selection(argv[1]);
+    test_studio_host_json_exposes_report_groupings_in_layout_summary(argv[1]);
+    test_studio_host_json_exposes_nested_mixed_state_groupings_in_layout_summary(argv[1]);
     test_studio_host_json_updates_nested_report_group_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_record_selected_nested_group_sections(argv[1]);
     test_studio_host_json_exposes_record_selected_deleted_nested_group_sections(argv[1]);

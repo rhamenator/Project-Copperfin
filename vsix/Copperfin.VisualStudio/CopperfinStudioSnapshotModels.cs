@@ -62,9 +62,25 @@ internal sealed class CopperfinStudioReportLayout
 {
     public bool IsLabel { get; set; }
     public string DocumentTitle { get; set; } = string.Empty;
+    public List<CopperfinStudioReportGrouping> Groupings { get; set; } = new();
     public List<CopperfinStudioNamedValue> Settings { get; set; } = new();
     public List<CopperfinStudioReportSection> Sections { get; set; } = new();
     public List<CopperfinStudioReportLayoutObject> UnplacedObjects { get; set; } = new();
+}
+
+internal sealed class CopperfinStudioReportGrouping
+{
+    public int GroupingIndex { get; set; }
+    public int NestingDepth { get; set; }
+    public string Expression { get; set; } = string.Empty;
+    public int? ExpressionFieldIndex { get; set; }
+    public int ExpressionMemoBlockNumber { get; set; }
+    public string HeaderSectionId { get; set; } = string.Empty;
+    public int? HeaderRecordIndex { get; set; }
+    public bool HeaderDeleted { get; set; }
+    public string FooterSectionId { get; set; } = string.Empty;
+    public int? FooterRecordIndex { get; set; }
+    public bool FooterDeleted { get; set; }
 }
 
 internal sealed class CopperfinStudioNamedValue

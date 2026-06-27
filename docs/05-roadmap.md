@@ -25,7 +25,7 @@ Current state:
 Active issue lanes:
 
 - critical-path Phase A lanes are closed: `#92`, `#93`, `#94`, `#97`, `#98`, `#99`, `#100`, `#101`, `#150`, `#151`, `#152`, `#153`
-- live execution is centered on E3/#24 report/label designer fidelity, where latest shipped child `#2684` covers stable-selected nested report/label group-section `EXPR` edit fidelity in the shared Studio host JSON contract after `#2680`-`#2683` established nested, stable-selected, and record-selected group-section behavior across live and deleted cases; localization/#2348 remains a standing requirement for new user-facing text, and E2/#23 remains open mainly for evidence-backed audit/closure cleanup of already implemented designer host slices
+- live execution is centered on E3/#24 report/label designer fidelity, where latest shipped child `#2685` exposes explicit shared Studio host JSON grouping summaries after `#2680`-`#2684` established nested, stable-selected, record-selected, and mixed live/deleted group-section behavior across FRX/LBX assets; localization/#2348 remains a standing requirement for new user-facing text, and E2/#23 remains open mainly for evidence-backed audit/closure cleanup of already implemented designer host slices
 
 Execution rule:
 
@@ -75,7 +75,7 @@ Current state:
 
 - `#22` is closed; `#23` and `#24` remain open as designer lane parents.
 - `#23` still has many open evidence-audit child rows; close completed children only with specific issue/test/validation evidence, and keep parent `#23` open until root-level closure evidence is explicit.
-- `#2348` is the temporary active localization cleanup lane before ordinary feature work resumes; latest shipped localization child is `#2538`. `#24` remains the active E3 report/label lane after localization cleanup, with latest shipped E3 child `#2367`; inspect live GitHub state and create or pick the next prompt-sized child under the current lane unless a higher-weight blocker is open.
+- `#2348` is no longer the default active lane; its shipped catalog sweep now acts as a standing requirement that new user-facing work stay localized. `#24` remains the active E3 report/label lane, with latest shipped child `#2685`; inspect live GitHub state and create or pick the next prompt-sized child under the current lane unless a higher-weight blocker is open.
 - `#27`-`#29` currently have no downstream open native slice queue in the tracked handoff (`#178`-`#183`, `#395`-`#401` shipped); re-audit those parent issues before opening new language-service children.
 
 ## Phase F: Federation, Interop, And Modern Platform

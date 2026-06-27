@@ -102,6 +102,20 @@ struct StudioReportKindCount {
     std::size_t count = 0;
 };
 
+struct StudioReportGroupingSnapshot {
+    std::size_t grouping_index = 0;
+    std::size_t nesting_depth = 0;
+    std::string expression{};
+    std::size_t expression_field_index = StudioReportMissingFieldIndex;
+    std::uint32_t expression_memo_block_number = 0;
+    std::string header_section_id{};
+    std::size_t header_record_index = StudioReportMissingRecordIndex;
+    bool header_deleted = false;
+    std::string footer_section_id{};
+    std::size_t footer_record_index = StudioReportMissingRecordIndex;
+    bool footer_deleted = false;
+};
+
 struct StudioReportLayoutSnapshot {
     bool available = false;
     bool is_label = false;
@@ -153,6 +167,7 @@ struct StudioReportLayoutSnapshot {
     std::vector<StudioReportKindCount> deleted_object_kind_counts{};
     std::vector<StudioReportKindCount> section_kind_counts{};
     std::vector<StudioReportKindCount> deleted_section_kind_counts{};
+    std::vector<StudioReportGroupingSnapshot> groupings{};
     std::vector<StudioNamedValue> settings{};
     std::vector<StudioNamedValue> deleted_settings{};
     std::vector<StudioReportSectionSnapshot> sections{};

@@ -141,13 +141,16 @@ add_library(cf_prg_analysis
     src/runtime/prg_engine_static_analysis.cpp
 )
 
+add_library(cf_runtime_text
+    src/runtime/localized_text.cpp
+)
+
 add_library(cf_xbase_runtime
     src/runtime/prg_engine_command_helpers.cpp
     src/runtime/prg_engine_date_time_functions.cpp
     src/runtime/prg_engine_file_io_functions.cpp
     src/runtime/prg_engine.cpp
     src/runtime/index_seek_optimizer.cpp
-    src/runtime/localized_text.cpp
     src/runtime/prg_engine_helpers.cpp
     src/runtime/prg_engine_numeric_functions.cpp
     src/runtime/prg_engine_path_functions.cpp
@@ -165,13 +168,21 @@ target_include_directories(cf_prg_analysis
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+target_include_directories(cf_runtime_text
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
 if(MSVC)
     target_compile_options(cf_prg_analysis PRIVATE /W4 /permissive-)
+    target_compile_options(cf_runtime_text PRIVATE /W4 /permissive-)
 else()
     target_compile_options(cf_prg_analysis PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(cf_runtime_text PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
-target_link_libraries(cf_prg_analysis PRIVATE cf_localization)
+target_link_libraries(cf_runtime_text PRIVATE cf_localization)
+target_link_libraries(cf_prg_analysis PUBLIC cf_runtime_text)
 
 target_include_directories(cf_xbase_runtime
     PUBLIC
@@ -181,6 +192,7 @@ target_include_directories(cf_xbase_runtime
 target_link_libraries(cf_xbase_runtime
     PUBLIC
         cf_prg_analysis
+        cf_runtime_text
         cf_design_model
     PRIVATE
         cf_localization

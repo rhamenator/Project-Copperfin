@@ -814,6 +814,180 @@ void test_build_report_layout_carries_nested_group_section_ordering() {
     run_nested_group_layout(copperfin::studio::StudioAssetKind::label, "nested_grouped.lbx", true);
 }
 
+void test_build_report_layout_summarizes_groupings() {
+    copperfin::studio::StudioDocumentModel document;
+    document.display_name = "grouped.frx";
+    document.kind = copperfin::studio::StudioAssetKind::report;
+    document.table_preview_available = true;
+
+    document.table_preview.records = {
+        {
+            .record_index = 0U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "1"),
+                value("OBJCODE", "53")
+            }
+        },
+        {
+            .record_index = 1U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "3"),
+                value("EXPR", "customer.country", 91U),
+                value("VPOS", "0.000"),
+                value("HEIGHT", "600.000")
+            }
+        },
+        {
+            .record_index = 2U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "4"),
+                value("VPOS", "600.000"),
+                value("HEIGHT", "3000.000")
+            }
+        },
+        {
+            .record_index = 3U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "5"),
+                value("EXPR", "customer.country", 92U),
+                value("VPOS", "3600.000"),
+                value("HEIGHT", "500.000")
+            }
+        }
+    };
+
+    const auto layout = copperfin::studio::build_report_layout(document);
+    expect(layout.groupings.size() == 1U, "#2685: grouped report layouts should expose one grouping summary");
+    if (layout.groupings.size() == 1U) {
+        const auto& grouping = layout.groupings[0];
+        expect(grouping.grouping_index == 0U, "#2685: grouped report layouts should number groupings from zero");
+        expect(grouping.nesting_depth == 0U, "#2685: top-level groupings should expose zero nesting depth");
+        expect(grouping.expression == "customer.country",
+               "#2685: grouping summaries should expose the grouping expression");
+        expect(grouping.expression_field_index == 2U,
+               "#2685: grouping summaries should retain grouping-expression field provenance");
+        expect(grouping.expression_memo_block_number == 91U,
+               "#2685: grouping summaries should prefer header expression memo provenance");
+        expect(grouping.header_section_id == "group_header_1" && grouping.header_record_index == 1U &&
+                   !grouping.header_deleted,
+               "#2685: grouping summaries should expose live group-header identity");
+        expect(grouping.footer_section_id == "group_footer_3" && grouping.footer_record_index == 3U &&
+                   !grouping.footer_deleted,
+               "#2685: grouping summaries should expose live group-footer identity");
+    }
+}
+
+void test_build_report_layout_summarizes_nested_mixed_state_groupings() {
+    copperfin::studio::StudioDocumentModel document;
+    document.display_name = "nested_deleted_grouped.frx";
+    document.kind = copperfin::studio::StudioAssetKind::report;
+    document.table_preview_available = true;
+
+    document.table_preview.records = {
+        {
+            .record_index = 0U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "1"),
+                value("OBJCODE", "53")
+            }
+        },
+        {
+            .record_index = 1U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "3"),
+                value("EXPR", "customer.region", 101U),
+                value("VPOS", "0.000"),
+                value("HEIGHT", "400.000")
+            }
+        },
+        {
+            .record_index = 2U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "3"),
+                value("EXPR", "customer.country", 102U),
+                value("VPOS", "400.000"),
+                value("HEIGHT", "300.000")
+            }
+        },
+        {
+            .record_index = 3U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "4"),
+                value("VPOS", "700.000"),
+                value("HEIGHT", "2200.000")
+            }
+        },
+        {
+            .record_index = 4U,
+            .deleted = true,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "5"),
+                value("EXPR", "customer.country", 103U),
+                value("VPOS", "2900.000"),
+                value("HEIGHT", "250.000")
+            }
+        },
+        {
+            .record_index = 5U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "5"),
+                value("EXPR", "customer.region", 104U),
+                value("VPOS", "3150.000"),
+                value("HEIGHT", "350.000")
+            }
+        }
+    };
+
+    const auto layout = copperfin::studio::build_report_layout(document);
+    expect(layout.groupings.size() == 2U,
+           "#2685: nested mixed-state grouped layouts should expose both grouping levels");
+    if (layout.groupings.size() == 2U) {
+        const auto& outer_group = layout.groupings[0];
+        expect(outer_group.grouping_index == 0U && outer_group.nesting_depth == 0U,
+               "#2685: outer grouping summaries should stay first at depth zero");
+        expect(outer_group.expression == "customer.region" &&
+                   outer_group.header_section_id == "group_header_1" &&
+                   outer_group.footer_section_id == "group_footer_5" &&
+                   !outer_group.header_deleted &&
+                   !outer_group.footer_deleted,
+               "#2685: outer grouping summaries should pair live outer group bands");
+
+        const auto& inner_group = layout.groupings[1];
+        expect(inner_group.grouping_index == 1U && inner_group.nesting_depth == 1U,
+               "#2685: inner grouping summaries should expose nested depth");
+        expect(inner_group.expression == "customer.country",
+               "#2685: inner grouping summaries should preserve the inner grouping expression");
+        expect(inner_group.expression_field_index == 2U &&
+                   inner_group.expression_memo_block_number == 102U,
+               "#2685: inner grouping summaries should prefer live header expression provenance");
+        expect(inner_group.header_section_id == "group_header_2" &&
+                   inner_group.header_record_index == 2U &&
+                   !inner_group.header_deleted,
+               "#2685: inner grouping summaries should expose the live inner group-header identity");
+        expect(inner_group.footer_section_id == "group_footer_4" &&
+                   inner_group.footer_record_index == 4U &&
+                   inner_group.footer_deleted,
+               "#2685: inner grouping summaries should expose deleted inner group-footers without losing the grouping pair");
+    }
+}
+
 void test_build_report_layout_reports_missing_title_provenance_when_unavailable() {
     copperfin::studio::StudioDocumentModel label_document;
     label_document.display_name = "mailing.lbx";
@@ -954,6 +1128,8 @@ int main() {
     test_build_report_layout_suppresses_unresolved_memo_placeholders();
     test_build_report_layout_carries_group_section_expressions();
     test_build_report_layout_carries_nested_group_section_ordering();
+    test_build_report_layout_summarizes_groupings();
+    test_build_report_layout_summarizes_nested_mixed_state_groupings();
     test_build_report_layout_reports_missing_title_provenance_when_unavailable();
     test_build_report_layout_includes_direct_orientation_settings();
     test_build_report_layout_includes_direct_paper_size_settings();
