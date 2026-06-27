@@ -20243,6 +20243,8 @@ void test_studio_host_json_updates_detail_header_footer_section_heights_by_stabl
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
     const auto run_detail_header_footer_section_height_update =
         [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
             write_synthetic_report_table_for_detail_header_footer_section_kind_json(asset_path);
@@ -20437,6 +20439,8 @@ void test_studio_host_json_refreshes_detail_header_footer_section_preview_bounds
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
     const auto run_detail_header_footer_section_preview_bounds =
         [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
             write_synthetic_report_table_for_detail_header_footer_section_kind_json(asset_path);
@@ -20607,6 +20611,8 @@ void test_studio_host_json_clears_detail_header_footer_section_heights_by_stable
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_detail_header_footer_section_height_clear =
         [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
@@ -20799,6 +20805,8 @@ void test_studio_host_json_updates_deleted_detail_header_footer_section_heights_
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_deleted_detail_header_footer_section_height_update =
         [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
@@ -21008,6 +21016,8 @@ void test_studio_host_json_refreshes_deleted_detail_header_footer_section_previe
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
     const auto run_deleted_detail_header_footer_section_preview_bounds =
         [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
             write_synthetic_report_table_for_deleted_detail_header_footer_section_expression_json(asset_path);
@@ -21193,6 +21203,8 @@ void test_studio_host_json_clears_deleted_detail_header_footer_section_heights_b
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_deleted_detail_header_footer_section_height_clear =
         [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
@@ -21399,6 +21411,8 @@ void test_studio_host_json_updates_detail_header_footer_section_tops_by_stable_s
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
     const auto run_detail_header_footer_section_top_update =
         [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
             write_synthetic_report_table_for_detail_header_footer_section_kind_json(asset_path);
@@ -21596,6 +21610,8 @@ void test_studio_host_json_clears_detail_header_footer_section_tops_by_stable_se
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
     const auto run_detail_header_footer_section_top_clear =
         [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
             write_synthetic_report_table_for_detail_header_footer_section_kind_json(asset_path);
@@ -21787,6 +21803,8 @@ void test_studio_host_json_updates_deleted_detail_header_footer_section_tops_by_
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_deleted_detail_header_footer_section_top_update =
         [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
@@ -21995,6 +22013,8 @@ void test_studio_host_json_clears_deleted_detail_header_footer_section_tops_by_s
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_deleted_detail_header_footer_section_top_clear =
         [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
