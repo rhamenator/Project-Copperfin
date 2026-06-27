@@ -107,6 +107,7 @@ internal sealed class CopperfinStudioReportSection
     public bool GroupPartnerDeleted { get; set; }
     public int Top { get; set; }
     public int Height { get; set; }
+    public int DeletedObjectCount { get; set; }
     public List<CopperfinStudioReportLayoutObject> Objects { get; set; } = new();
 }
 

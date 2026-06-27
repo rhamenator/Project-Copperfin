@@ -1059,6 +1059,114 @@ void test_build_report_layout_resolves_grouping_expression_for_deleted_blank_foo
     }
 }
 
+void test_build_report_layout_counts_deleted_objects_per_section() {
+    copperfin::studio::StudioDocumentModel document;
+    document.display_name = "section-deleted-objects.frx";
+    document.kind = copperfin::studio::StudioAssetKind::report;
+    document.table_preview_available = true;
+
+    document.table_preview.records = {
+        {
+            .record_index = 0U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "1"),
+                value("OBJCODE", "53"),
+                value("EXPR", "ORIENTATION=0")
+            }
+        },
+        {
+            .record_index = 1U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "4"),
+                value("VPOS", "0"),
+                value("HEIGHT", "1000")
+            }
+        },
+        {
+            .record_index = 2U,
+            .deleted = true,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "8"),
+                value("VPOS", "2000"),
+                value("HEIGHT", "500")
+            }
+        },
+        {
+            .record_index = 3U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "8"),
+                value("OBJCODE", "0"),
+                value("EXPR", "detail.value"),
+                value("HPOS", "100"),
+                value("VPOS", "200"),
+                value("WIDTH", "400"),
+                value("HEIGHT", "100")
+            }
+        },
+        {
+            .record_index = 4U,
+            .deleted = true,
+            .values = {
+                value("OBJTYPE", "5"),
+                value("EXPR", "\"Deleted detail\""),
+                value("HPOS", "150"),
+                value("VPOS", "300"),
+                value("WIDTH", "200"),
+                value("HEIGHT", "100")
+            }
+        },
+        {
+            .record_index = 5U,
+            .deleted = true,
+            .values = {
+                value("OBJTYPE", "5"),
+                value("EXPR", "\"Deleted summary\""),
+                value("HPOS", "200"),
+                value("VPOS", "2100"),
+                value("WIDTH", "250"),
+                value("HEIGHT", "100")
+            }
+        },
+        {
+            .record_index = 6U,
+            .deleted = true,
+            .values = {
+                value("OBJTYPE", "6"),
+                value("HPOS", "50"),
+                value("VPOS", "5000"),
+                value("WIDTH", "100"),
+                value("HEIGHT", "100")
+            }
+        }
+    };
+
+    const auto layout = copperfin::studio::build_report_layout(document);
+    expect(layout.sections.size() == 1U, "#2688: live section-deleted-object layout should keep one live section");
+    expect(layout.deleted_sections.size() == 1U,
+           "#2688: live section-deleted-object layout should keep one deleted section");
+    expect(layout.deleted_placed_object_count == 2U,
+           "#2688: section-deleted-object layout should count placed deleted objects across live and deleted sections");
+    expect(layout.deleted_unplaced_object_count == 1U,
+           "#2688: section-deleted-object layout should keep deleted unplaced objects separate");
+    if (layout.sections.size() == 1U) {
+        expect(layout.sections[0].objects.size() == 1U,
+               "#2688: live section-deleted-object layout should preserve live section membership");
+        expect(layout.sections[0].deleted_object_count == 1U,
+               "#2688: live sections should count deleted placed objects inside their geometry");
+    }
+    if (layout.deleted_sections.size() == 1U) {
+        expect(layout.deleted_sections[0].objects.empty(),
+               "#2688: deleted sections should keep live object membership empty");
+        expect(layout.deleted_sections[0].deleted_object_count == 1U,
+               "#2688: deleted sections should count deleted placed objects inside their geometry");
+    }
+}
+
 void test_build_report_layout_summarizes_nested_mixed_state_groupings() {
     copperfin::studio::StudioDocumentModel document;
     document.display_name = "nested_deleted_grouped.frx";
@@ -1361,6 +1469,7 @@ int main() {
     test_build_report_layout_summarizes_groupings();
     test_build_report_layout_resolves_grouping_expression_for_blank_footer();
     test_build_report_layout_resolves_grouping_expression_for_deleted_blank_footer();
+    test_build_report_layout_counts_deleted_objects_per_section();
     test_build_report_layout_summarizes_nested_mixed_state_groupings();
     test_build_report_layout_reports_missing_title_provenance_when_unavailable();
     test_build_report_layout_includes_direct_orientation_settings();

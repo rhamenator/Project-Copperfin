@@ -21131,6 +21131,7 @@ void print_json_report_layout_section(
     std::cout << indent << "  \"heightMemoBlockNumber\": " << section.height_memo_block_number << ",\n";
     std::cout << indent << "  \"bottom\": " << section.bottom << ",\n";
     std::cout << indent << "  \"objectCount\": " << section.objects.size() << ",\n";
+    std::cout << indent << "  \"deletedObjectCount\": " << section.deleted_object_count << ",\n";
     std::cout << indent << "  \"objects\": ";
     print_json_report_layout_objects(section.objects, indent + "  ");
     std::cout << "\n";

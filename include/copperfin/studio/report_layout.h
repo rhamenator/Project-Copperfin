@@ -84,6 +84,7 @@ struct StudioReportSectionSnapshot {
     bool deleted = false;
     std::size_t section_index = StudioReportMissingRecordIndex;
     std::size_t section_count = 0;
+    std::size_t deleted_object_count = 0;
     bool grouping_context_available = false;
     std::size_t grouping_index = StudioReportMissingRecordIndex;
     std::size_t grouping_nesting_depth = StudioReportMissingRecordIndex;

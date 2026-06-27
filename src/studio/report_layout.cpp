@@ -857,12 +857,17 @@ StudioReportLayoutSnapshot build_report_layout(
     });
 
     for (const auto& object : snapshot.deleted_objects) {
-        const bool inside_live_section =
-            find_section_index(snapshot.sections, object.top, object.height) < snapshot.sections.size();
-        const bool inside_deleted_section =
-            find_section_index(snapshot.deleted_sections, object.top, object.height) < snapshot.deleted_sections.size();
-        if (inside_live_section || inside_deleted_section) {
+        const std::size_t live_section_index = find_section_index(snapshot.sections, object.top, object.height);
+        const std::size_t deleted_section_index =
+            find_section_index(snapshot.deleted_sections, object.top, object.height);
+        const bool inside_live_section = live_section_index < snapshot.sections.size();
+        const bool inside_deleted_section = deleted_section_index < snapshot.deleted_sections.size();
+        if (inside_live_section) {
             ++snapshot.deleted_placed_object_count;
+            ++snapshot.sections[live_section_index].deleted_object_count;
+        } else if (inside_deleted_section) {
+            ++snapshot.deleted_placed_object_count;
+            ++snapshot.deleted_sections[deleted_section_index].deleted_object_count;
         } else {
             ++snapshot.deleted_unplaced_object_count;
         }

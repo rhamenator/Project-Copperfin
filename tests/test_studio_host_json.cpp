@@ -19028,6 +19028,39 @@ void write_synthetic_report_table_for_deleted_section_json(const std::filesystem
     expect(delete_result.ok, "#1474: synthetic FRX table should mark report section deleted");
 }
 
+void write_synthetic_report_table_for_section_deleted_object_count_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", "", "", ""},
+        {"9", "4", "", "", "0", "", "1000", "detail-section-guid"},
+        {"9", "8", "", "", "2000", "", "500", "deleted-summary-section-guid"},
+        {"8", "0", "detail.value", "100", "200", "400", "100", "detail-field-guid"},
+        {"5", "", "\"Deleted detail\"", "150", "300", "200", "100", "deleted-detail-label-guid"},
+        {"5", "", "\"Deleted summary\"", "200", "2100", "250", "100", "deleted-summary-label-guid"},
+        {"6", "", "", "50", "5000", "100", "100", "deleted-unplaced-line-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok,
+           "#2688: synthetic report table for section deleted-object counts should be created");
+
+    for (const auto record_index : {2U, 4U, 5U, 6U}) {
+        const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), record_index, true);
+        expect(delete_result.ok,
+               "#2688: synthetic report table should mark deleted sections and deleted objects");
+    }
+}
+
 void write_synthetic_report_table_for_stable_deleted_section_json(const std::filesystem::path& report_path) {
     write_synthetic_report_table_for_deleted_section_json(report_path);
     const auto unique_id_result = copperfin::vfp::update_visual_object_property({
@@ -39819,6 +39852,140 @@ void test_studio_host_json_exposes_resolved_grouping_expression_for_blank_footer
                                               "blank_deleted_group_footer.lbx",
                                               "deleted label",
                                               true);
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_exposes_deleted_object_counts_per_section(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_section_deleted_object_count_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_section_deleted_object_count_json = [&](const fs::path& asset_path,
+                                                           const std::string& title,
+                                                           const std::string& label) {
+        write_synthetic_report_table_for_section_deleted_object_count_json(asset_path);
+
+        const auto live_section_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "1", "--json"},
+            temp_root);
+        if (live_section_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " live section deleted-object-count stdout:\n"
+                      << live_section_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " live section deleted-object-count stderr:\n"
+                      << live_section_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+        expect(live_section_process.exit_code == 0,
+               "#2688: live section deleted-object-count JSON should exit successfully");
+        expect_contains(live_section_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#2688: live section deleted-object-count JSON should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(live_section_process.stdout_text, "\"isLabel\": true",
+                            "#2688: live label section deleted-object-count JSON should retain label identity");
+        }
+        expect_contains_in_order(
+            live_section_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"id\": \"detail_1\"",
+                "\"deleted\": false",
+                "\"objectCount\": 1",
+                "\"deletedObjectCount\": 1"
+            },
+            "#2688: live selected sections should expose deleted placed-object counts");
+
+        const auto deleted_section_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "2", "--json"},
+            temp_root);
+        if (deleted_section_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " deleted section deleted-object-count stdout:\n"
+                      << deleted_section_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " deleted section deleted-object-count stderr:\n"
+                      << deleted_section_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+        expect(deleted_section_process.exit_code == 0,
+               "#2688: deleted section deleted-object-count JSON should exit successfully");
+        expect_contains_in_order(
+            deleted_section_process.stdout_text,
+            {
+                "\"deletedSections\": [",
+                "\"id\": \"summary_2\"",
+                "\"deleted\": true",
+                "\"objectCount\": 0",
+                "\"deletedObjectCount\": 1"
+            },
+            "#2688: deleted section arrays should expose deleted placed-object counts");
+        expect_contains_in_order(
+            deleted_section_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"id\": \"summary_2\"",
+                "\"deleted\": true",
+                "\"objectCount\": 0",
+                "\"deletedObjectCount\": 1"
+            },
+            "#2688: deleted selected sections should expose deleted placed-object counts");
+
+        const auto object_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "3", "--json"},
+            temp_root);
+        if (object_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " object-section deleted-object-count stdout:\n"
+                      << object_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " object-section deleted-object-count stderr:\n"
+                      << object_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+        expect(object_process.exit_code == 0,
+               "#2688: selected object-section deleted-object-count JSON should exit successfully");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"detail_1\"",
+                "\"deleted\": false",
+                "\"objectCount\": 1",
+                "\"deletedObjectCount\": 1"
+            },
+            "#2688: selected containing sections should expose deleted placed-object counts");
+
+        const auto unplaced_deleted_object_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "6", "--json"},
+            temp_root);
+        if (unplaced_deleted_object_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " deleted unplaced section deleted-object-count stdout:\n"
+                      << unplaced_deleted_object_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " deleted unplaced section deleted-object-count stderr:\n"
+                      << unplaced_deleted_object_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+        expect(unplaced_deleted_object_process.exit_code == 0,
+               "#2688: deleted unplaced object deleted-object-count JSON should exit successfully");
+        expect_contains(unplaced_deleted_object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#2688: unplaced deleted object selections should not advertise containing-section availability");
+        expect_contains(unplaced_deleted_object_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#2688: unplaced deleted object selections should keep containing-section JSON null");
+    };
+
+    run_section_deleted_object_count_json(temp_root / "section_deleted_object_count.frx",
+                                          "section_deleted_object_count.frx",
+                                          "report");
+    run_section_deleted_object_count_json(temp_root / "section_deleted_object_count.lbx",
+                                          "section_deleted_object_count.lbx",
+                                          "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -128024,6 +128191,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_report_groupings_in_layout_summary(argv[1]);
     test_studio_host_json_exposes_nested_mixed_state_groupings_in_layout_summary(argv[1]);
     test_studio_host_json_exposes_resolved_grouping_expression_for_blank_footer_sections(argv[1]);
+    test_studio_host_json_exposes_deleted_object_counts_per_section(argv[1]);
     test_studio_host_json_updates_nested_report_group_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_record_selected_nested_group_sections(argv[1]);
     test_studio_host_json_exposes_record_selected_deleted_nested_group_sections(argv[1]);
