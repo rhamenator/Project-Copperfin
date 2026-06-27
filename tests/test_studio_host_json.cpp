@@ -23081,6 +23081,7 @@ void test_studio_host_json_refreshes_detail_header_footer_section_delete_restore
 void test_studio_host_json_duplicates_detail_header_footer_sections_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path temp_root =
         fs::temp_directory_path() / "copperfin_studio_host_detail_header_footer_section_duplicate_json_tests";
@@ -23285,6 +23286,7 @@ void test_studio_host_json_duplicates_detail_header_footer_sections_by_stable_se
 void test_studio_host_json_duplicates_deleted_detail_header_footer_sections_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path temp_root =
         fs::temp_directory_path() / "copperfin_studio_host_deleted_detail_header_footer_section_duplicate_json_tests";
@@ -23470,6 +23472,7 @@ void test_studio_host_json_duplicates_deleted_detail_header_footer_sections_by_s
 void test_studio_host_json_renames_detail_header_footer_sections_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path temp_root =
         fs::temp_directory_path() / "copperfin_studio_host_detail_header_footer_section_rename_json_tests";
@@ -23655,6 +23658,7 @@ void test_studio_host_json_renames_detail_header_footer_sections_by_stable_selec
 void test_studio_host_json_renames_deleted_detail_header_footer_sections_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path temp_root =
         fs::temp_directory_path() / "copperfin_studio_host_deleted_detail_header_footer_section_rename_json_tests";
@@ -23840,6 +23844,7 @@ void test_studio_host_json_renames_deleted_detail_header_footer_sections_by_stab
 void test_studio_host_json_reorders_detail_header_footer_sections_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path temp_root =
         fs::temp_directory_path() / "copperfin_studio_host_detail_header_footer_section_reorder_json_tests";
@@ -24031,6 +24036,7 @@ void test_studio_host_json_reorders_detail_header_footer_sections_by_stable_sele
 void test_studio_host_json_reorders_deleted_detail_header_footer_sections_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path temp_root =
         fs::temp_directory_path() / "copperfin_studio_host_deleted_detail_header_footer_section_reorder_json_tests";
