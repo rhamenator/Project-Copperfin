@@ -79,6 +79,21 @@ struct ScopedEnvironmentValue {
     }
 };
 
+struct ScopedDefaultLocaleCatalogEnvironment {
+    ScopedEnvironmentValue locale;
+    ScopedEnvironmentValue locale_dir;
+
+    ScopedDefaultLocaleCatalogEnvironment()
+        : locale("COPPERFIN_LOCALE"),
+          locale_dir("COPPERFIN_LOCALE_DIR") {
+        set_env_value("COPPERFIN_LOCALE", "en-US", true);
+        set_env_value(
+            "COPPERFIN_LOCALE_DIR",
+            std::filesystem::absolute("resources/locales").lexically_normal().string(),
+            true);
+    }
+};
+
 void expect(bool condition, const std::string& message) {
     if (!condition) {
         std::cerr << "FAIL: " << message << "\n";
@@ -31686,6 +31701,8 @@ void test_studio_host_json_updates_deleted_detail_header_footer_section_expressi
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
     const auto run_deleted_detail_header_footer_section_expression_stable_edits =
         [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
             write_synthetic_report_table_for_deleted_detail_header_footer_section_expression_json(asset_path);
@@ -32047,6 +32064,8 @@ void test_studio_host_json_exposes_deleted_detail_header_footer_sections_by_stab
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_deleted_detail_header_footer_stable_selection =
         [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
@@ -33214,6 +33233,8 @@ void test_studio_host_json_uses_integer_portions_for_fractional_report_layout_cl
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
     const auto run_fractional_classification_layout = [&](const fs::path& asset_path,
                                                           const std::string& title,
                                                           const std::string& label) {
@@ -33964,6 +33985,8 @@ void test_studio_host_json_exposes_unknown_report_band_codes(const std::string& 
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
     const auto run_unknown_band_layout = [&](const fs::path& asset_path,
                                              const std::string& title,
                                              const std::string& label) {
@@ -34103,6 +34126,8 @@ void test_studio_host_json_defaults_missing_report_section_objcode_schema(
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_missing_section_objcode_layout = [&](const fs::path& asset_path,
                                                         const std::string& title,
@@ -37788,6 +37813,8 @@ void test_studio_host_json_suppresses_unresolved_report_section_memo_placeholder
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_unresolved_section_memo_layout = [&](const fs::path& asset_path,
                                                         const std::string& title,
