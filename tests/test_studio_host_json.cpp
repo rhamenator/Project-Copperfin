@@ -39961,6 +39961,44 @@ void test_studio_host_json_exposes_deleted_object_counts_per_section(
             },
             "#2688: selected containing sections should expose deleted placed-object counts");
 
+        const auto deleted_section_object_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "5", "--json"},
+            temp_root);
+        if (deleted_section_object_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " deleted-section object containing-section stdout:\n"
+                      << deleted_section_object_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " deleted-section object containing-section stderr:\n"
+                      << deleted_section_object_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+        expect(deleted_section_object_process.exit_code == 0,
+               "#2689: deleted-section object containing-section JSON should exit successfully");
+        expect_contains_in_order(
+            deleted_section_object_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 5",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"summary_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 100",
+                "\"sectionRelativeBottom\": 200",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 1"
+            },
+            "#2689: deleted objects inside deleted sections should expose containing-section metadata");
+        expect_contains_in_order(
+            deleted_section_object_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"summary_2\"",
+                "\"deleted\": true",
+                "\"objectCount\": 0",
+                "\"deletedObjectCount\": 1"
+            },
+            "#2689: deleted objects inside deleted sections should expose deleted containing-section JSON");
+
         const auto unplaced_deleted_object_process = run_process_capture(
             studio_host_path,
             {"--path", asset_path.string(), "--record", "6", "--json"},
@@ -48917,25 +48955,33 @@ void test_studio_host_json_exposes_label_layout_parity(const std::string& studio
             "\"selectedReportObject\": {",
             "\"recordIndex\": 4",
             "\"deleted\": true",
-            "\"containingSectionId\": \"\"",
-            "\"containingSectionRecordIndex\": null",
-            "\"sectionRelativeTop\": 0",
-            "\"sectionRelativeBottom\": 0",
-            "\"sectionObjectIndex\": null",
-            "\"sectionObjectCount\": 0",
+            "\"containingSectionId\": \"page_header_1\"",
+            "\"containingSectionRecordIndex\": 1",
+            "\"sectionRelativeTop\": 100",
+            "\"sectionRelativeBottom\": 450",
+            "\"sectionObjectIndex\": 0",
+            "\"sectionObjectCount\": 1",
             "\"objectTypeCode\": 5",
             "\"objectKind\": \"label\"",
             "\"expression\": \"\\\"Invoice\\\"\""
         },
-        "#1975: deleted page-header label object selections should expose selected-object metadata without section membership");
+        "#1975: deleted page-header label object selections should expose selected-object metadata with containing-section membership");
     expect_contains(deleted_page_header_object_process.stdout_text, "\"right\": 2700",
                     "#1975: selected deleted page-header label object JSON should expose object right-edge coordinates");
     expect_contains(deleted_page_header_object_process.stdout_text, "\"bottom\": 450",
                     "#1975: selected deleted page-header label object JSON should expose object bottom-edge coordinates");
-    expect_contains(deleted_page_header_object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                    "#1975: deleted page-header label objects should not advertise selected containing-section availability");
-    expect_contains(deleted_page_header_object_process.stdout_text, "\"selectedReportObjectSection\": null",
-                    "#1975: deleted page-header label objects should serialize null selected containing-section JSON");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                    "#1975: deleted page-header label objects should advertise selected containing-section availability");
+    expect_contains_in_order(
+        deleted_page_header_object_process.stdout_text,
+        {
+            "\"selectedReportObjectSection\": {",
+            "\"id\": \"page_header_1\"",
+            "\"bandKind\": \"page_header\"",
+            "\"recordIndex\": 1",
+            "\"deleted\": false"
+        },
+        "#1975: deleted page-header label objects should expose live containing-section JSON");
 
     const auto deleted_object_process = run_process_capture(
         studio_host_path,
@@ -49830,25 +49876,33 @@ void test_studio_host_json_exposes_selected_report_objects(const std::string& st
             "\"selectedReportObject\": {",
             "\"recordIndex\": 4",
             "\"deleted\": true",
-            "\"containingSectionId\": \"\"",
-            "\"containingSectionRecordIndex\": null",
-            "\"sectionRelativeTop\": 0",
-            "\"sectionRelativeBottom\": 0",
-            "\"sectionObjectIndex\": null",
-            "\"sectionObjectCount\": 0",
+            "\"containingSectionId\": \"page_header_1\"",
+            "\"containingSectionRecordIndex\": 1",
+            "\"sectionRelativeTop\": 100",
+            "\"sectionRelativeBottom\": 450",
+            "\"sectionObjectIndex\": 0",
+            "\"sectionObjectCount\": 1",
             "\"objectTypeCode\": 5",
             "\"objectKind\": \"label\"",
             "\"expression\": \"\\\"Invoice\\\"\""
         },
-        "#1974: deleted page-header report object selections should expose selected-object metadata without section membership");
+        "#1974: deleted page-header report object selections should expose selected-object metadata with containing-section membership");
     expect_contains(deleted_page_header_object_process.stdout_text, "\"right\": 2700",
                     "#1974: selected deleted page-header report object JSON should expose object right-edge coordinates");
     expect_contains(deleted_page_header_object_process.stdout_text, "\"bottom\": 450",
                     "#1974: selected deleted page-header report object JSON should expose object bottom-edge coordinates");
-    expect_contains(deleted_page_header_object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                    "#1974: deleted page-header report objects should not advertise selected containing-section availability");
-    expect_contains(deleted_page_header_object_process.stdout_text, "\"selectedReportObjectSection\": null",
-                    "#1974: deleted page-header report objects should serialize null selected containing-section JSON");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                    "#1974: deleted page-header report objects should advertise selected containing-section availability");
+    expect_contains_in_order(
+        deleted_page_header_object_process.stdout_text,
+        {
+            "\"selectedReportObjectSection\": {",
+            "\"id\": \"page_header_1\"",
+            "\"bandKind\": \"page_header\"",
+            "\"recordIndex\": 1",
+            "\"deleted\": false"
+        },
+        "#1974: deleted page-header report objects should expose live containing-section JSON");
 
     const auto deleted_object_process = run_process_capture(
         studio_host_path,
@@ -77205,28 +77259,36 @@ void test_studio_host_json_exposes_selected_deleted_page_header_report_objects_b
                         "#1670: stable deleted page-header object selections should not advertise selected-settings availability");
         expect_contains(object_process.stdout_text, "\"selectedReportSettings\": null",
                         "#1670: stable deleted page-header object selections should serialize null selected settings");
-        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1670: stable deleted page-header object selections should not advertise containing-section availability");
-        expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1670: stable deleted page-header object selections should serialize null containing-section JSON");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1670: stable deleted page-header object selections should advertise containing-section availability");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"page_header_1\"",
+                "\"bandKind\": \"page_header\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": false"
+            },
+            "#1670: stable deleted page-header object selections should expose live containing-section JSON");
         expect_contains_in_order(
             object_process.stdout_text,
             {
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 4",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"containingSectionRecordIndex\": null",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
-                "\"sectionObjectIndex\": null",
-                "\"sectionObjectCount\": 0",
+                "\"containingSectionId\": \"page_header_1\"",
+                "\"containingSectionRecordIndex\": 1",
+                "\"sectionRelativeTop\": 100",
+                "\"sectionRelativeBottom\": 450",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 1",
                 "\"objectTypeCode\": 5",
                 "\"objectKind\": \"label\"",
                 "\"expression\": \"\\\"Invoice\\\"\"",
                 "\"expressionFieldIndex\": 2"
             },
-            "#1670: stable deleted page-header object selections should expose selected object metadata without section membership");
+            "#1670: stable deleted page-header object selections should expose selected object metadata with containing-section membership");
         expect_contains(object_process.stdout_text, "\"left\": 900",
                         "#1670: stable deleted page-header object selections should expose selected-object left bounds");
         expect_contains(object_process.stdout_text, "\"top\": 100",

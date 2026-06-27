@@ -700,6 +700,24 @@ void finalize_section_grouping_context(StudioReportLayoutSnapshot& snapshot) {
     }
 }
 
+void assign_deleted_object_section_order(std::vector<StudioLayoutObjectSnapshot*>& objects) {
+    std::sort(objects.begin(), objects.end(), [](const StudioLayoutObjectSnapshot* left,
+                                                 const StudioLayoutObjectSnapshot* right) {
+        if (left->top != right->top) {
+            return left->top < right->top;
+        }
+        if (left->left != right->left) {
+            return left->left < right->left;
+        }
+        return left->record_index < right->record_index;
+    });
+
+    for (std::size_t object_index = 0; object_index < objects.size(); ++object_index) {
+        objects[object_index]->section_object_index = object_index;
+        objects[object_index]->section_object_count = objects.size();
+    }
+}
+
 StudioReportSectionSnapshot build_report_section(
     const DbfRecord& record,
     const localization::LocalizedCatalog& catalog) {
@@ -856,21 +874,42 @@ StudioReportLayoutSnapshot build_report_layout(
         return left.record_index < right.record_index;
     });
 
-    for (const auto& object : snapshot.deleted_objects) {
+    std::vector<std::vector<StudioLayoutObjectSnapshot*>> live_section_deleted_objects(snapshot.sections.size());
+    std::vector<std::vector<StudioLayoutObjectSnapshot*>> deleted_section_deleted_objects(
+        snapshot.deleted_sections.size());
+
+    for (auto& object : snapshot.deleted_objects) {
         const std::size_t live_section_index = find_section_index(snapshot.sections, object.top, object.height);
         const std::size_t deleted_section_index =
             find_section_index(snapshot.deleted_sections, object.top, object.height);
         const bool inside_live_section = live_section_index < snapshot.sections.size();
         const bool inside_deleted_section = deleted_section_index < snapshot.deleted_sections.size();
         if (inside_live_section) {
+            object.containing_section_id = snapshot.sections[live_section_index].id;
+            object.containing_section_record_index = snapshot.sections[live_section_index].record_index;
+            object.section_relative_top = object.top - snapshot.sections[live_section_index].top;
+            object.section_relative_bottom = object.bottom - snapshot.sections[live_section_index].top;
             ++snapshot.deleted_placed_object_count;
             ++snapshot.sections[live_section_index].deleted_object_count;
+            live_section_deleted_objects[live_section_index].push_back(&object);
         } else if (inside_deleted_section) {
+            object.containing_section_id = snapshot.deleted_sections[deleted_section_index].id;
+            object.containing_section_record_index = snapshot.deleted_sections[deleted_section_index].record_index;
+            object.section_relative_top = object.top - snapshot.deleted_sections[deleted_section_index].top;
+            object.section_relative_bottom = object.bottom - snapshot.deleted_sections[deleted_section_index].top;
             ++snapshot.deleted_placed_object_count;
             ++snapshot.deleted_sections[deleted_section_index].deleted_object_count;
+            deleted_section_deleted_objects[deleted_section_index].push_back(&object);
         } else {
             ++snapshot.deleted_unplaced_object_count;
         }
+    }
+
+    for (auto& section_objects : live_section_deleted_objects) {
+        assign_deleted_object_section_order(section_objects);
+    }
+    for (auto& section_objects : deleted_section_deleted_objects) {
+        assign_deleted_object_section_order(section_objects);
     }
 
     finalize_preview_bounds(snapshot);

@@ -20911,18 +20911,12 @@ const copperfin::studio::StudioReportSectionSnapshot* find_selected_report_objec
     if (!report_layout.available) {
         return nullptr;
     }
-    for (const auto& section : report_layout.sections) {
-        const auto object = std::find_if(
-            section.objects.begin(),
-            section.objects.end(),
-            [&](const copperfin::studio::StudioLayoutObjectSnapshot& item) {
-                return item.record_index == record_index;
-            });
-        if (object != section.objects.end()) {
-            return &section;
-        }
+    const auto* object = find_selected_report_object(report_layout, record_index);
+    if (object == nullptr ||
+        object->containing_section_record_index == copperfin::studio::StudioReportMissingRecordIndex) {
+        return nullptr;
     }
-    return nullptr;
+    return find_selected_report_section(report_layout, object->containing_section_record_index);
 }
 
 std::vector<copperfin::studio::StudioNamedValue> find_selected_report_settings(

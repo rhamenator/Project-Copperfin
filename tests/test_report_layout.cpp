@@ -324,16 +324,18 @@ void test_build_report_layout_groups_band_objects() {
     expect(layout.deleted_objects.size() == 1U, "#689: deleted report layout objects should be preserved separately");
     if (!layout.deleted_objects.empty()) {
         expect(layout.deleted_objects[0].deleted, "#689: deleted report layout object snapshots should retain deleted state");
-        expect(layout.deleted_objects[0].containing_section_id.empty(),
-            "#1458: deleted report objects should not fabricate containing section ids");
-        expect(layout.deleted_objects[0].containing_section_record_index == copperfin::studio::StudioReportMissingRecordIndex,
-            "#1458: deleted report objects should expose missing containing section record indexes");
-        expect(layout.deleted_objects[0].section_object_index == copperfin::studio::StudioReportMissingRecordIndex,
-            "#1459: deleted report objects should expose missing section object indexes");
-        expect(layout.deleted_objects[0].section_object_count == 0U,
-            "#1459: deleted report objects should expose zero section object counts");
-        expect(layout.deleted_objects[0].section_relative_bottom == 0,
-            "#1461: deleted report objects should not fabricate relative bottom-edge coordinates");
+        expect(layout.deleted_objects[0].containing_section_id == "detail_2",
+            "#2689: deleted report objects inside live sections should expose containing section ids");
+        expect(layout.deleted_objects[0].containing_section_record_index == 2U,
+            "#2689: deleted report objects inside live sections should expose containing section record indexes");
+        expect(layout.deleted_objects[0].section_object_index == 0U,
+            "#2689: deleted report objects inside live sections should expose section-local deleted-object indexes");
+        expect(layout.deleted_objects[0].section_object_count == 1U,
+            "#2689: deleted report objects inside live sections should expose section-local deleted-object counts");
+        expect(layout.deleted_objects[0].section_relative_top == 600,
+            "#2689: deleted report objects inside live sections should expose relative top coordinates");
+        expect(layout.deleted_objects[0].section_relative_bottom == 900,
+            "#2689: deleted report objects inside live sections should expose relative bottom-edge coordinates");
         expect(layout.deleted_objects[0].title == "\"Deleted label\"", "#689: deleted report layout objects should retain title metadata");
         expect(layout.deleted_objects[0].title_field_index == 1U,
             "#689: deleted report layout objects should retain title provenance");
@@ -1164,6 +1166,41 @@ void test_build_report_layout_counts_deleted_objects_per_section() {
                "#2688: deleted sections should keep live object membership empty");
         expect(layout.deleted_sections[0].deleted_object_count == 1U,
                "#2688: deleted sections should count deleted placed objects inside their geometry");
+    }
+    expect(layout.deleted_objects.size() == 3U,
+           "#2689: section-deleted-object layout should preserve deleted live-section, deleted-section, and unplaced objects");
+    if (layout.deleted_objects.size() == 3U) {
+        const auto& deleted_live_section_object = layout.deleted_objects[0];
+        expect(deleted_live_section_object.containing_section_id == "detail_1" &&
+                   deleted_live_section_object.containing_section_record_index == 1U,
+               "#2689: deleted objects inside live sections should expose containing live-section identity");
+        expect(deleted_live_section_object.section_relative_top == 300 &&
+                   deleted_live_section_object.section_relative_bottom == 400,
+               "#2689: deleted objects inside live sections should expose relative geometry");
+        expect(deleted_live_section_object.section_object_index == 0U &&
+                   deleted_live_section_object.section_object_count == 1U,
+               "#2689: deleted objects inside live sections should expose section-local deleted-object order");
+
+        const auto& deleted_deleted_section_object = layout.deleted_objects[1];
+        expect(deleted_deleted_section_object.containing_section_id == "summary_2" &&
+                   deleted_deleted_section_object.containing_section_record_index == 2U,
+               "#2689: deleted objects inside deleted sections should expose containing deleted-section identity");
+        expect(deleted_deleted_section_object.section_relative_top == 100 &&
+                   deleted_deleted_section_object.section_relative_bottom == 200,
+               "#2689: deleted objects inside deleted sections should expose deleted section-relative geometry");
+        expect(deleted_deleted_section_object.section_object_index == 0U &&
+                   deleted_deleted_section_object.section_object_count == 1U,
+               "#2689: deleted objects inside deleted sections should expose section-local deleted-object order");
+
+        const auto& deleted_unplaced_object = layout.deleted_objects[2];
+        expect(deleted_unplaced_object.containing_section_id.empty() &&
+                   deleted_unplaced_object.containing_section_record_index ==
+                       copperfin::studio::StudioReportMissingRecordIndex,
+               "#2689: deleted unplaced objects should keep containing-section identity absent");
+        expect(deleted_unplaced_object.section_object_index ==
+                   copperfin::studio::StudioReportMissingRecordIndex &&
+                   deleted_unplaced_object.section_object_count == 0U,
+               "#2689: deleted unplaced objects should keep section-local deleted-object order absent");
     }
 }
 
