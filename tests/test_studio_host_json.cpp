@@ -22379,6 +22379,8 @@ void test_studio_host_json_deletes_and_restores_detail_header_footer_sections_by
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
     const auto run_detail_header_footer_section_delete_restore =
         [&](const fs::path& header_delete_path,
             const fs::path& footer_delete_path,
@@ -22442,6 +22444,7 @@ void test_studio_host_json_deletes_and_restores_detail_header_footer_sections_by
                                             std::size_t section_record_index,
                                             const std::string& section_title,
                                             const std::string& band_kind,
+                                            const std::string& deleted_section_id,
                                             const std::string& live_sibling_title,
                                             const std::string& live_sibling_band_kind,
                                             const std::string& live_sibling_record_index,
@@ -22476,10 +22479,10 @@ void test_studio_host_json_deletes_and_restores_detail_header_footer_sections_by
                                 "#1812: " + operation_label + " should preserve the remaining live section");
                 expect_contains(delete_process.stdout_text, "\"deletedSectionCount\": 1",
                                 "#1812: " + operation_label + " should expose the deleted section count");
-                expect_contains(delete_process.stdout_text, "\"placedObjectCount\": 1",
+                expect_contains(delete_process.stdout_text, "\"placedObjectCount\": 2",
                                 "#1812: " + operation_label + " should keep sibling section objects placed");
-                expect_contains(delete_process.stdout_text, "\"unplacedObjectCount\": 1",
-                                "#1812: " + operation_label + " should move former section objects to unplaced");
+                expect_contains(delete_process.stdout_text, "\"unplacedObjectCount\": 0",
+                                "#1812: " + operation_label + " should not orphan former section objects");
                 expect_contains_in_order(
                     delete_process.stdout_text,
                     {
@@ -22500,21 +22503,21 @@ void test_studio_host_json_deletes_and_restores_detail_header_footer_sections_by
                         "\"recordIndex\": " + std::to_string(section_record_index),
                         "\"deleted\": true",
                         "\"sectionIndex\": null",
-                        "\"sectionCount\": 0"
+                        "\"sectionCount\": 0",
+                        "\"objectCount\": 1"
                     },
                     "#1812: " + operation_label + " should move the section to deleted-section metadata");
                 expect_contains_in_order(
                     delete_process.stdout_text,
                     {
-                        "\"unplacedObjects\": [",
+                        "\"deletedSections\": [",
+                        "\"title\": \"" + section_title + "\"",
+                        "\"objects\": [",
                         "\"recordIndex\": " + orphan_object_record_index,
                         "\"deleted\": false",
-                        "\"containingSectionId\": \"\"",
-                        "\"containingSectionRecordIndex\": null",
-                        "\"sectionObjectIndex\": null",
-                        "\"sectionObjectCount\": 0"
+                        "\"containingSectionId\": \"" + deleted_section_id + "\""
                     },
-                    "#1812: " + operation_label + " should clear former section object containment");
+                    "#1812: " + operation_label + " should retain former section object containment inside deleted sections");
                 expect_selected_section_state(delete_process,
                                               section_title,
                                               band_kind,
@@ -22522,7 +22525,7 @@ void test_studio_host_json_deletes_and_restores_detail_header_footer_sections_by
                                               "true",
                                               "null",
                                               "0",
-                                              "0",
+                                              "1",
                                               operation_label);
             };
 
@@ -22613,6 +22616,7 @@ void test_studio_host_json_deletes_and_restores_detail_header_footer_sections_by
                            0U,
                            "Detail Header",
                            "detail_header",
+                           "detail_header_0",
                            "Detail Footer",
                            "detail_footer",
                            "2",
@@ -22623,6 +22627,7 @@ void test_studio_host_json_deletes_and_restores_detail_header_footer_sections_by
                            2U,
                            "Detail Footer",
                            "detail_footer",
+                           "detail_footer_2",
                            "Detail Header",
                            "detail_header",
                            "0",
@@ -22677,6 +22682,8 @@ void test_studio_host_json_refreshes_detail_header_footer_section_delete_restore
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
     const auto run_detail_header_delete_restore_preview_bounds =
         [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
             write_synthetic_report_table_for_detail_header_footer_object_json(asset_path);
@@ -22711,12 +22718,12 @@ void test_studio_host_json_refreshes_detail_header_footer_section_delete_restore
             }
             expect_contains(delete_process.stdout_text, "\"previewBoundsAvailable\": true",
                             "#2278: detail-header section preview delete should preserve live preview availability");
-            expect_contains(delete_process.stdout_text, "\"previewBoundsTop\": 50",
-                            "#2278: detail-header section preview delete should shrink live preview top bounds to orphaned objects");
+            expect_contains(delete_process.stdout_text, "\"previewBoundsTop\": 300",
+                            "#2278: detail-header section preview delete should shrink live preview top bounds to the sibling section");
             expect_contains(delete_process.stdout_text, "\"previewBoundsBottom\": 550",
-                            "#2278: detail-header section preview delete should preserve live preview bottom bounds");
-            expect_contains(delete_process.stdout_text, "\"previewBoundsHeight\": 500",
-                            "#2278: detail-header section preview delete should shrink live preview heights");
+                            "#2278: detail-header section preview delete should preserve sibling live preview bottom bounds");
+            expect_contains(delete_process.stdout_text, "\"previewBoundsHeight\": 250",
+                            "#2278: detail-header section preview delete should shrink live preview heights to the sibling section");
             expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
                             "#2278: detail-header section preview delete should expose deleted preview availability");
             expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsTop\": 0",
@@ -22729,10 +22736,10 @@ void test_studio_host_json_refreshes_detail_header_footer_section_delete_restore
                             "#2278: detail-header section preview delete should keep the sibling section live");
             expect_contains(delete_process.stdout_text, "\"deletedSectionCount\": 1",
                             "#2278: detail-header section preview delete should expose one deleted section");
-            expect_contains(delete_process.stdout_text, "\"placedObjectCount\": 1",
+            expect_contains(delete_process.stdout_text, "\"placedObjectCount\": 2",
                             "#2278: detail-header section preview delete should keep sibling objects placed");
-            expect_contains(delete_process.stdout_text, "\"unplacedObjectCount\": 1",
-                            "#2278: detail-header section preview delete should orphan former header objects");
+            expect_contains(delete_process.stdout_text, "\"unplacedObjectCount\": 0",
+                            "#2278: detail-header section preview delete should not orphan former header objects");
             expect_contains(delete_process.stdout_text, "\"selectedReportSectionAvailable\": true",
                             "#2278: detail-header section preview delete should preserve selected section availability");
             expect_contains(delete_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
@@ -22757,21 +22764,24 @@ void test_studio_host_json_refreshes_detail_header_footer_section_delete_restore
                     "\"sectionCount\": 0",
                     "\"top\": 0",
                     "\"height\": 300",
-                    "\"bottom\": 300"
+                    "\"bottom\": 300",
+                    "\"objectCount\": 1"
                 },
                 "#2278: detail-header section preview delete should refresh selected deleted-section geometry");
             expect_contains_in_order(
                 delete_process.stdout_text,
                 {
-                    "\"unplacedObjects\": [",
+                    "\"deletedSections\": [",
+                    "\"title\": \"Detail Header\"",
+                    "\"objects\": [",
                     "\"recordIndex\": 1",
                     "\"deleted\": false",
-                    "\"containingSectionId\": \"\"",
-                    "\"containingSectionRecordIndex\": null",
-                    "\"sectionObjectIndex\": null",
-                    "\"sectionObjectCount\": 0"
+                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionRecordIndex\": 0",
+                    "\"sectionObjectIndex\": 0",
+                    "\"sectionObjectCount\": 1"
                 },
-                "#2278: detail-header section preview delete should clear former header object containment");
+                "#2278: detail-header section preview delete should retain former header object containment inside the deleted section");
 
             const auto restore_process = run_process_capture(
                 studio_host_path,
@@ -22896,10 +22906,10 @@ void test_studio_host_json_refreshes_detail_header_footer_section_delete_restore
                             "#1821: detail-footer section preview delete should preserve live preview availability");
             expect_contains(delete_process.stdout_text, "\"previewBoundsTop\": 0",
                             "#1821: detail-footer section preview delete should preserve live preview top bounds");
-            expect_contains(delete_process.stdout_text, "\"previewBoundsBottom\": 460",
-                            "#1821: detail-footer section preview delete should shrink live preview bottom bounds to orphaned objects");
-            expect_contains(delete_process.stdout_text, "\"previewBoundsHeight\": 460",
-                            "#1821: detail-footer section preview delete should shrink live preview heights");
+            expect_contains(delete_process.stdout_text, "\"previewBoundsBottom\": 300",
+                            "#1821: detail-footer section preview delete should shrink live preview bottom bounds to the sibling section");
+            expect_contains(delete_process.stdout_text, "\"previewBoundsHeight\": 300",
+                            "#1821: detail-footer section preview delete should shrink live preview heights to the sibling section");
             expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
                             "#1821: detail-footer section preview delete should expose deleted preview availability");
             expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsTop\": 300",
@@ -22912,10 +22922,10 @@ void test_studio_host_json_refreshes_detail_header_footer_section_delete_restore
                             "#1821: detail-footer section preview delete should keep the sibling section live");
             expect_contains(delete_process.stdout_text, "\"deletedSectionCount\": 1",
                             "#1821: detail-footer section preview delete should expose one deleted section");
-            expect_contains(delete_process.stdout_text, "\"placedObjectCount\": 1",
+            expect_contains(delete_process.stdout_text, "\"placedObjectCount\": 2",
                             "#1821: detail-footer section preview delete should keep sibling objects placed");
-            expect_contains(delete_process.stdout_text, "\"unplacedObjectCount\": 1",
-                            "#1821: detail-footer section preview delete should orphan former footer objects");
+            expect_contains(delete_process.stdout_text, "\"unplacedObjectCount\": 0",
+                            "#1821: detail-footer section preview delete should not orphan former footer objects");
             expect_contains(delete_process.stdout_text, "\"selectedReportSectionAvailable\": true",
                             "#1821: detail-footer section preview delete should preserve selected section availability");
             expect_contains(delete_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
@@ -22940,21 +22950,24 @@ void test_studio_host_json_refreshes_detail_header_footer_section_delete_restore
                     "\"sectionCount\": 0",
                     "\"top\": 300",
                     "\"height\": 250",
-                    "\"bottom\": 550"
+                    "\"bottom\": 550",
+                    "\"objectCount\": 1"
                 },
                 "#1821: detail-footer section preview delete should refresh selected deleted-section geometry");
             expect_contains_in_order(
                 delete_process.stdout_text,
                 {
-                    "\"unplacedObjects\": [",
+                    "\"deletedSections\": [",
+                    "\"title\": \"Detail Footer\"",
+                    "\"objects\": [",
                     "\"recordIndex\": 3",
                     "\"deleted\": false",
-                    "\"containingSectionId\": \"\"",
-                    "\"containingSectionRecordIndex\": null",
-                    "\"sectionObjectIndex\": null",
-                    "\"sectionObjectCount\": 0"
+                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionRecordIndex\": 2",
+                    "\"sectionObjectIndex\": 0",
+                    "\"sectionObjectCount\": 1"
                 },
-                "#1821: detail-footer section preview delete should clear former footer object containment");
+                "#1821: detail-footer section preview delete should retain former footer object containment inside the deleted section");
 
             const auto restore_process = run_process_capture(
                 studio_host_path,
