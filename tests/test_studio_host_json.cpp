@@ -19704,6 +19704,8 @@ void test_studio_host_json_exposes_report_layout_provenance(const std::string& s
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
     const fs::path report_path = temp_root / "summary.frx";
     write_synthetic_report_table_for_layout_json(report_path);
 
@@ -20091,6 +20093,8 @@ void test_studio_host_json_exposes_detail_header_footer_section_kinds(
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_detail_header_footer_sections = [&](const fs::path& asset_path,
                                                        const std::string& title,
