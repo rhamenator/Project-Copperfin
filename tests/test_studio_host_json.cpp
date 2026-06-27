@@ -24960,10 +24960,8 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_font_meta
                             "#1776: deleted detail-header object font update should preserve selected object availability");
             expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                             "#1776: deleted detail-header object font update should preserve object selection kind");
-            expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                            "#1776: deleted detail-header object font update should not fabricate containing sections");
-            expect_contains(update_process.stdout_text, "\"selectedReportObjectSection\": null",
-                            "#1776: deleted detail-header object font update should serialize null containing-section JSON");
+            expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                            "#1776: deleted detail-header object font update should preserve containing sections");
             expect_contains(update_process.stdout_text, "\"previewBoundsAvailable\": true",
                             "#2283: deleted detail-header object font update should preserve live preview availability");
             expect_contains(update_process.stdout_text, "\"previewBoundsTop\": 0",
@@ -24986,7 +24984,12 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_font_meta
                     "\"deletedObjects\": [",
                     "\"recordIndex\": 1",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"\"",
+                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionRecordIndex\": 0",
+                    "\"sectionRelativeTop\": 50",
+                    "\"sectionRelativeBottom\": 170",
+                    "\"sectionObjectIndex\": 0",
+                    "\"sectionObjectCount\": 1",
                     "\"objectKind\": \"label\"",
                     "\"highlightCount\": 4",
                     "\"name\": \"FONTFACE\", \"recordIndex\": 1",
@@ -24999,18 +25002,33 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_font_meta
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 1",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"\"",
-                    "\"containingSectionRecordIndex\": null",
-                    "\"sectionRelativeTop\": 0",
-                    "\"sectionRelativeBottom\": 0",
-                    "\"sectionObjectIndex\": null",
-                    "\"sectionObjectCount\": 0",
+                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionRecordIndex\": 0",
+                    "\"sectionRelativeTop\": 50",
+                    "\"sectionRelativeBottom\": 170",
+                    "\"sectionObjectIndex\": 0",
+                    "\"sectionObjectCount\": 1",
                     "\"objectKind\": \"label\"",
                     "\"highlightCount\": 4",
                     "\"name\": \"FONTFACE\", \"recordIndex\": 1",
                     "\"value\": \"Consolas\""
                 },
                 "#1776: deleted detail-header object font update should refresh selected-object highlight metadata");
+            expect_contains_in_order(
+                update_process.stdout_text,
+                {
+                    "\"selectedReportObjectSection\": {",
+                    "\"id\": \"detail_header_0\"",
+                    "\"bandKind\": \"detail_header\"",
+                    "\"recordIndex\": 0",
+                    "\"deleted\": false",
+                    "\"sectionIndex\": 0",
+                    "\"sectionCount\": 2",
+                    "\"top\": 0",
+                    "\"height\": 300",
+                    "\"bottom\": 300"
+                },
+                "#1776: deleted detail-header object font update should expose selected containing-section metadata");
 
             const auto clear_process = run_process_capture(
                 studio_host_path,
@@ -25050,10 +25068,8 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_font_meta
                             "#1776: deleted detail-footer object font clear should preserve selected object availability");
             expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                             "#1776: deleted detail-footer object font clear should preserve object selection kind");
-            expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                            "#1776: deleted detail-footer object font clear should not fabricate containing sections");
-            expect_contains(clear_process.stdout_text, "\"selectedReportObjectSection\": null",
-                            "#1776: deleted detail-footer object font clear should serialize null containing-section JSON");
+            expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                            "#1776: deleted detail-footer object font clear should preserve containing sections");
             expect_contains(clear_process.stdout_text, "\"previewBoundsAvailable\": true",
                             "#2283: deleted detail-footer object font clear should preserve live preview availability");
             expect_contains(clear_process.stdout_text, "\"previewBoundsTop\": 0",
@@ -25076,7 +25092,12 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_font_meta
                     "\"deletedObjects\": [",
                     "\"recordIndex\": 3",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"\"",
+                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionRecordIndex\": 2",
+                    "\"sectionRelativeTop\": 60",
+                    "\"sectionRelativeBottom\": 160",
+                    "\"sectionObjectIndex\": 0",
+                    "\"sectionObjectCount\": 1",
                     "\"objectKind\": \"field\"",
                     "\"highlightCount\": 3"
                 },
@@ -25087,16 +25108,31 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_font_meta
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 3",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"\"",
-                    "\"containingSectionRecordIndex\": null",
-                    "\"sectionRelativeTop\": 0",
-                    "\"sectionRelativeBottom\": 0",
-                    "\"sectionObjectIndex\": null",
-                    "\"sectionObjectCount\": 0",
+                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionRecordIndex\": 2",
+                    "\"sectionRelativeTop\": 60",
+                    "\"sectionRelativeBottom\": 160",
+                    "\"sectionObjectIndex\": 0",
+                    "\"sectionObjectCount\": 1",
                     "\"objectKind\": \"field\"",
                     "\"highlightCount\": 3"
                 },
                 "#1776: deleted detail-footer object font clear should refresh selected-object highlight metadata");
+            expect_contains_in_order(
+                clear_process.stdout_text,
+                {
+                    "\"selectedReportObjectSection\": {",
+                    "\"id\": \"detail_footer_2\"",
+                    "\"bandKind\": \"detail_footer\"",
+                    "\"recordIndex\": 2",
+                    "\"deleted\": false",
+                    "\"sectionIndex\": 1",
+                    "\"sectionCount\": 2",
+                    "\"top\": 300",
+                    "\"height\": 250",
+                    "\"bottom\": 550"
+                },
+                "#1776: deleted detail-footer object font clear should expose selected containing-section metadata");
             expect_not_contains(clear_process.stdout_text, "\"name\": \"FONTFACE\", \"recordIndex\": 3",
                                 "#1776: deleted detail-footer object font clear should remove stale font highlights");
         };
