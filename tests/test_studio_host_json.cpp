@@ -24481,6 +24481,8 @@ void test_studio_host_json_exposes_deleted_detail_header_footer_object_font_meta
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
     const auto run_deleted_detail_header_footer_object_fonts =
         [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
             write_synthetic_report_table_for_detail_header_footer_object_font_json(asset_path);
@@ -24495,6 +24497,10 @@ void test_studio_host_json_exposes_deleted_detail_header_footer_object_font_meta
                 [&](const std::string& unique_id,
                     const std::string& record_index,
                     const std::string& object_kind,
+                    const std::string& containing_section_id,
+                    const std::string& containing_section_record_index,
+                    const std::string& relative_top,
+                    const std::string& relative_bottom,
                     const std::string& expression,
                     const std::string& expression_memo_block,
                     const std::string& fontface,
@@ -24533,10 +24539,8 @@ void test_studio_host_json_exposes_deleted_detail_header_footer_object_font_meta
                                     "#1774: selected deleted detail header/footer object fonts should remove live object counts");
                     expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 2",
                                     "#1774: selected deleted detail header/footer object fonts should preserve deleted object counts");
-                    expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                                    "#1774: selected deleted detail header/footer object fonts should not fabricate containing sections");
-                    expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": null",
-                                    "#1774: selected deleted detail header/footer object fonts should serialize null containing-section JSON");
+                    expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                                    "#1774: selected deleted detail header/footer object fonts should preserve containing sections");
                     expect_contains(object_process.stdout_text, "\"previewBoundsAvailable\": true",
                                     "#2281: selected deleted detail header/footer object fonts should preserve live preview availability");
                     expect_contains(object_process.stdout_text, "\"previewBoundsTop\": 0",
@@ -24559,7 +24563,12 @@ void test_studio_host_json_exposes_deleted_detail_header_footer_object_font_meta
                             "\"deletedObjects\": [",
                             "\"recordIndex\": " + record_index,
                             "\"deleted\": true",
-                            "\"containingSectionId\": \"\"",
+                            "\"containingSectionId\": \"" + containing_section_id + "\"",
+                            "\"containingSectionRecordIndex\": " + containing_section_record_index,
+                            "\"sectionRelativeTop\": " + relative_top,
+                            "\"sectionRelativeBottom\": " + relative_bottom,
+                            "\"sectionObjectIndex\": 0",
+                            "\"sectionObjectCount\": 1",
                             "\"objectKind\": \"" + object_kind + "\"",
                             "\"expression\": \"" + expression + "\"",
                             "\"expressionFieldIndex\": 2",
@@ -24574,12 +24583,12 @@ void test_studio_host_json_exposes_deleted_detail_header_footer_object_font_meta
                             "\"selectedReportObject\": {",
                             "\"recordIndex\": " + record_index,
                             "\"deleted\": true",
-                            "\"containingSectionId\": \"\"",
-                            "\"containingSectionRecordIndex\": null",
-                            "\"sectionRelativeTop\": 0",
-                            "\"sectionRelativeBottom\": 0",
-                            "\"sectionObjectIndex\": null",
-                            "\"sectionObjectCount\": 0",
+                            "\"containingSectionId\": \"" + containing_section_id + "\"",
+                            "\"containingSectionRecordIndex\": " + containing_section_record_index,
+                            "\"sectionRelativeTop\": " + relative_top,
+                            "\"sectionRelativeBottom\": " + relative_bottom,
+                            "\"sectionObjectIndex\": 0",
+                            "\"sectionObjectCount\": 1",
                             "\"objectKind\": \"" + object_kind + "\"",
                             "\"expression\": \"" + expression + "\"",
                             "\"expressionFieldIndex\": 2",
@@ -24606,11 +24615,27 @@ void test_studio_host_json_exposes_deleted_detail_header_footer_object_font_meta
                                         mode + "\"",
                                     "#1774: stable selected deleted " + selection_label +
                                         " should expose selected-object MODE provenance");
+                    expect_contains_in_order(
+                        object_process.stdout_text,
+                        {
+                            "\"selectedReportObjectSection\": {",
+                            "\"id\": \"" + containing_section_id + "\"",
+                            "\"recordIndex\": " + containing_section_record_index,
+                            "\"sectionCount\": 2",
+                            "\"objectCount\": 0",
+                            "\"deletedObjectCount\": 1"
+                        },
+                        "#1774: stable selected deleted " + selection_label +
+                            " should expose containing-section metadata");
                 };
 
             expect_deleted_selected_object_font("detail-header-label-guid",
                                                 "1",
                                                 "label",
+                                                "detail_header_0",
+                                                "0",
+                                                "50",
+                                                "170",
                                                 "\\\"Header label\\\"",
                                                 "2",
                                                 "Courier New",
@@ -24621,6 +24646,10 @@ void test_studio_host_json_exposes_deleted_detail_header_footer_object_font_meta
             expect_deleted_selected_object_font("detail-footer-field-guid",
                                                 "3",
                                                 "field",
+                                                "detail_footer_2",
+                                                "2",
+                                                "60",
+                                                "160",
                                                 "footer.total",
                                                 "5",
                                                 "Segoe UI",
@@ -30345,6 +30374,8 @@ void test_studio_host_json_exposes_deleted_detail_header_footer_object_expressio
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
     const auto run_deleted_detail_header_footer_object_expressions =
         [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
             write_synthetic_report_table_for_detail_header_footer_object_json(asset_path);
@@ -30359,6 +30390,10 @@ void test_studio_host_json_exposes_deleted_detail_header_footer_object_expressio
                 [&](const std::string& unique_id,
                     const std::string& record_index,
                     const std::string& object_kind,
+                    const std::string& containing_section_id,
+                    const std::string& containing_section_record_index,
+                    const std::string& relative_top,
+                    const std::string& relative_bottom,
                     const std::string& expression,
                     const std::string& memo_block,
                     const std::string& left,
@@ -30405,10 +30440,8 @@ void test_studio_host_json_exposes_deleted_detail_header_footer_object_expressio
                                     "#1771: selected deleted detail header/footer object expressions should not select sections");
                     expect_contains(object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
                                     "#1771: selected deleted detail header/footer object expressions should not select settings");
-                    expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                                    "#1771: selected deleted detail header/footer object expressions should not fabricate containing sections");
-                    expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": null",
-                                    "#1771: selected deleted detail header/footer object expressions should serialize null containing-section JSON");
+                    expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                                    "#1771: selected deleted detail header/footer object expressions should preserve containing sections");
                     expect_contains(object_process.stdout_text, "\"previewBoundsAvailable\": true",
                                     "#2309: selected deleted detail header/footer object expressions should preserve live preview availability");
                     expect_contains(object_process.stdout_text, "\"previewBoundsTop\": 0",
@@ -30431,7 +30464,12 @@ void test_studio_host_json_exposes_deleted_detail_header_footer_object_expressio
                             "\"deletedObjects\": [",
                             "\"recordIndex\": " + record_index,
                             "\"deleted\": true",
-                            "\"containingSectionId\": \"\"",
+                            "\"containingSectionId\": \"" + containing_section_id + "\"",
+                            "\"containingSectionRecordIndex\": " + containing_section_record_index,
+                            "\"sectionRelativeTop\": " + relative_top,
+                            "\"sectionRelativeBottom\": " + relative_bottom,
+                            "\"sectionObjectIndex\": 0",
+                            "\"sectionObjectCount\": 1",
                             "\"objectKind\": \"" + object_kind + "\"",
                             "\"expression\": \"" + expression + "\"",
                             "\"expressionFieldIndex\": 2",
@@ -30444,12 +30482,12 @@ void test_studio_host_json_exposes_deleted_detail_header_footer_object_expressio
                             "\"selectedReportObject\": {",
                             "\"recordIndex\": " + record_index,
                             "\"deleted\": true",
-                            "\"containingSectionId\": \"\"",
-                            "\"containingSectionRecordIndex\": null",
-                            "\"sectionRelativeTop\": 0",
-                            "\"sectionRelativeBottom\": 0",
-                            "\"sectionObjectIndex\": null",
-                            "\"sectionObjectCount\": 0",
+                            "\"containingSectionId\": \"" + containing_section_id + "\"",
+                            "\"containingSectionRecordIndex\": " + containing_section_record_index,
+                            "\"sectionRelativeTop\": " + relative_top,
+                            "\"sectionRelativeBottom\": " + relative_bottom,
+                            "\"sectionObjectIndex\": 0",
+                            "\"sectionObjectCount\": 1",
                             "\"objectKind\": \"" + object_kind + "\"",
                             "\"expression\": \"" + expression + "\"",
                             "\"expressionFieldIndex\": 2",
@@ -30474,11 +30512,27 @@ void test_studio_host_json_exposes_deleted_detail_header_footer_object_expressio
                                         memo_block + ", \"value\": \"" + expression + "\"",
                                     "#1771: stable selected deleted " + selection_label +
                                         " should expose selected-object expression provenance");
+                    expect_contains_in_order(
+                        object_process.stdout_text,
+                        {
+                            "\"selectedReportObjectSection\": {",
+                            "\"id\": \"" + containing_section_id + "\"",
+                            "\"recordIndex\": " + containing_section_record_index,
+                            "\"sectionCount\": 2",
+                            "\"objectCount\": 0",
+                            "\"deletedObjectCount\": 1"
+                        },
+                        "#1771: stable selected deleted " + selection_label +
+                            " should expose containing-section metadata");
                 };
 
             expect_deleted_selected_object_expression("detail-header-label-guid",
                                                       "1",
                                                       "label",
+                                                      "detail_header_0",
+                                                      "0",
+                                                      "50",
+                                                      "170",
                                                       "\\\"Header label\\\"",
                                                       "2",
                                                       "100",
@@ -30491,6 +30545,10 @@ void test_studio_host_json_exposes_deleted_detail_header_footer_object_expressio
             expect_deleted_selected_object_expression("detail-footer-field-guid",
                                                       "3",
                                                       "field",
+                                                      "detail_footer_2",
+                                                      "2",
+                                                      "60",
+                                                      "160",
                                                       "footer.total",
                                                       "4",
                                                       "140",
