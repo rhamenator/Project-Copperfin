@@ -1204,6 +1204,107 @@ void test_build_report_layout_counts_deleted_objects_per_section() {
     }
 }
 
+void test_build_report_layout_preserves_live_objects_in_deleted_sections() {
+    copperfin::studio::StudioDocumentModel document;
+    document.display_name = "live-objects-in-deleted-sections.frx";
+    document.kind = copperfin::studio::StudioAssetKind::report;
+    document.table_preview_available = true;
+
+    document.table_preview.records = {
+        {
+            .record_index = 0U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "1"),
+                value("OBJCODE", "53"),
+                value("EXPR", "ORIENTATION=0")
+            }
+        },
+        {
+            .record_index = 1U,
+            .deleted = true,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "1"),
+                value("VPOS", "0"),
+                value("HEIGHT", "2000")
+            }
+        },
+        {
+            .record_index = 2U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "4"),
+                value("VPOS", "2000"),
+                value("HEIGHT", "5000")
+            }
+        },
+        {
+            .record_index = 3U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "5"),
+                value("EXPR", "\"Deleted-section label\""),
+                value("HPOS", "900"),
+                value("VPOS", "100"),
+                value("WIDTH", "1800"),
+                value("HEIGHT", "350")
+            }
+        },
+        {
+            .record_index = 4U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "8"),
+                value("OBJCODE", "0"),
+                value("EXPR", "detail.value"),
+                value("HPOS", "1200"),
+                value("VPOS", "2600"),
+                value("WIDTH", "4000"),
+                value("HEIGHT", "450")
+            }
+        },
+        {
+            .record_index = 5U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "6"),
+                value("HPOS", "50"),
+                value("VPOS", "8000"),
+                value("WIDTH", "100"),
+                value("HEIGHT", "100")
+            }
+        }
+    };
+
+    const auto layout = copperfin::studio::build_report_layout(document);
+    expect(layout.sections.size() == 1U && layout.deleted_sections.size() == 1U,
+           "#2690: live-object deleted-section layouts should preserve both live and deleted section partitions");
+    expect(layout.live_object_count == 3U,
+           "#2690: live-object deleted-section layouts should still count all live objects");
+    expect(layout.placed_object_count == 2U,
+           "#2690: live objects inside deleted sections should remain placed");
+    expect(layout.unplaced_objects.size() == 1U,
+           "#2690: only true strays should remain unplaced when a section is deleted");
+    if (layout.deleted_sections.size() == 1U) {
+        expect(layout.deleted_sections[0].objects.size() == 1U,
+               "#2690: deleted sections should preserve live object membership when geometry still belongs to the band");
+        if (!layout.deleted_sections[0].objects.empty()) {
+            const auto& object = layout.deleted_sections[0].objects[0];
+            expect(object.containing_section_id == "page_header_1" &&
+                       object.containing_section_record_index == 1U,
+                   "#2690: live objects inside deleted sections should expose containing deleted-section identity");
+            expect(object.section_relative_top == 100 &&
+                       object.section_relative_bottom == 450,
+                   "#2690: live objects inside deleted sections should expose deleted section-relative geometry");
+            expect(object.section_object_index == 0U &&
+                       object.section_object_count == 1U,
+                   "#2690: live objects inside deleted sections should expose deleted section-local object order");
+        }
+    }
+}
+
 void test_build_report_layout_summarizes_nested_mixed_state_groupings() {
     copperfin::studio::StudioDocumentModel document;
     document.display_name = "nested_deleted_grouped.frx";
@@ -1507,6 +1608,7 @@ int main() {
     test_build_report_layout_resolves_grouping_expression_for_blank_footer();
     test_build_report_layout_resolves_grouping_expression_for_deleted_blank_footer();
     test_build_report_layout_counts_deleted_objects_per_section();
+    test_build_report_layout_preserves_live_objects_in_deleted_sections();
     test_build_report_layout_summarizes_nested_mixed_state_groupings();
     test_build_report_layout_reports_missing_title_provenance_when_unavailable();
     test_build_report_layout_includes_direct_orientation_settings();

@@ -544,6 +544,11 @@ void finalize_object_kind_counts(StudioReportLayoutSnapshot& snapshot) {
             increment_kind_count(snapshot.object_kind_counts, object.object_kind);
         }
     }
+    for (const auto& section : snapshot.deleted_sections) {
+        for (const auto& object : section.objects) {
+            increment_kind_count(snapshot.object_kind_counts, object.object_kind);
+        }
+    }
     for (const auto& object : snapshot.unplaced_objects) {
         increment_kind_count(snapshot.object_kind_counts, object.object_kind);
         increment_kind_count(snapshot.unplaced_object_kind_counts, object.object_kind);
@@ -840,28 +845,45 @@ StudioReportLayoutSnapshot build_report_layout(
             ++snapshot.placed_object_count;
             snapshot.sections[section_index].objects.push_back(std::move(object));
         } else {
-            expand_preview_bounds(snapshot, object.left, object.top, object.right, object.bottom);
-            ++snapshot.live_object_count;
-            snapshot.unplaced_objects.push_back(std::move(object));
+            const std::size_t deleted_section_index =
+                find_section_index(snapshot.deleted_sections, object.top, object.height);
+            if (deleted_section_index < snapshot.deleted_sections.size()) {
+                object.containing_section_id = snapshot.deleted_sections[deleted_section_index].id;
+                object.containing_section_record_index = snapshot.deleted_sections[deleted_section_index].record_index;
+                object.section_relative_top = object.top - snapshot.deleted_sections[deleted_section_index].top;
+                object.section_relative_bottom = object.bottom - snapshot.deleted_sections[deleted_section_index].top;
+                expand_deleted_preview_bounds(snapshot, object.left, object.top, object.right, object.bottom);
+                ++snapshot.live_object_count;
+                ++snapshot.placed_object_count;
+                snapshot.deleted_sections[deleted_section_index].objects.push_back(std::move(object));
+            } else {
+                expand_preview_bounds(snapshot, object.left, object.top, object.right, object.bottom);
+                ++snapshot.live_object_count;
+                snapshot.unplaced_objects.push_back(std::move(object));
+            }
         }
     }
 
-    for (auto& section : snapshot.sections) {
-        std::sort(section.objects.begin(), section.objects.end(), [](const StudioLayoutObjectSnapshot& left,
-                                                                    const StudioLayoutObjectSnapshot& right) {
-            if (left.top != right.top) {
-                return left.top < right.top;
+    const auto finalize_section_object_order = [](std::vector<StudioReportSectionSnapshot>& sections) {
+        for (auto& section : sections) {
+            std::sort(section.objects.begin(), section.objects.end(), [](const StudioLayoutObjectSnapshot& left,
+                                                                        const StudioLayoutObjectSnapshot& right) {
+                if (left.top != right.top) {
+                    return left.top < right.top;
+                }
+                if (left.left != right.left) {
+                    return left.left < right.left;
+                }
+                return left.record_index < right.record_index;
+            });
+            for (std::size_t object_index = 0; object_index < section.objects.size(); ++object_index) {
+                section.objects[object_index].section_object_index = object_index;
+                section.objects[object_index].section_object_count = section.objects.size();
             }
-            if (left.left != right.left) {
-                return left.left < right.left;
-            }
-            return left.record_index < right.record_index;
-        });
-        for (std::size_t object_index = 0; object_index < section.objects.size(); ++object_index) {
-            section.objects[object_index].section_object_index = object_index;
-            section.objects[object_index].section_object_count = section.objects.size();
         }
-    }
+    };
+    finalize_section_object_order(snapshot.sections);
+    finalize_section_object_order(snapshot.deleted_sections);
 
     std::sort(snapshot.unplaced_objects.begin(), snapshot.unplaced_objects.end(), [](const StudioLayoutObjectSnapshot& left,
                                                                                     const StudioLayoutObjectSnapshot& right) {

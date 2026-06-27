@@ -20887,6 +20887,17 @@ const copperfin::studio::StudioLayoutObjectSnapshot* find_selected_report_object
             return &*object;
         }
     }
+    for (const auto& section : report_layout.deleted_sections) {
+        const auto object = std::find_if(
+            section.objects.begin(),
+            section.objects.end(),
+            [&](const copperfin::studio::StudioLayoutObjectSnapshot& item) {
+                return item.record_index == record_index;
+            });
+        if (object != section.objects.end()) {
+            return &*object;
+        }
+    }
     const auto unplaced_object = std::find_if(
         report_layout.unplaced_objects.begin(),
         report_layout.unplaced_objects.end(),

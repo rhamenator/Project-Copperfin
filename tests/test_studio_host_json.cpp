@@ -49050,16 +49050,27 @@ void test_studio_host_json_exposes_label_layout_parity(const std::string& studio
             "\"selectedReportObject\": {",
             "\"recordIndex\": 6",
             "\"deleted\": true",
-            "\"containingSectionId\": \"\"",
-            "\"containingSectionRecordIndex\": null",
-            "\"sectionObjectIndex\": null",
+            "\"containingSectionId\": \"detail_2\"",
+            "\"containingSectionRecordIndex\": 2",
+            "\"sectionRelativeTop\": 600",
+            "\"sectionRelativeBottom\": 900",
+            "\"sectionObjectIndex\": 0",
+            "\"sectionObjectCount\": 1",
             "\"expression\": \"\\\"Deleted label\\\"\""
         },
         "#1500: deleted label object selections should expose selected deleted-object metadata");
-    expect_contains(deleted_object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                    "#1500: deleted label objects should not advertise selected containing-section availability");
-    expect_contains(deleted_object_process.stdout_text, "\"selectedReportObjectSection\": null",
-                    "#1500: deleted label objects should serialize null selected containing-section JSON");
+    expect_contains(deleted_object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                    "#1500: deleted label objects should advertise selected containing-section availability");
+    expect_contains_in_order(
+        deleted_object_process.stdout_text,
+        {
+            "\"selectedReportObjectSection\": {",
+            "\"id\": \"detail_2\"",
+            "\"bandKind\": \"detail\"",
+            "\"recordIndex\": 2",
+            "\"deleted\": false"
+        },
+        "#1500: deleted label objects should expose live containing-section JSON");
 
     const auto unplaced_object_process = run_process_capture(
         studio_host_path,
@@ -49969,17 +49980,27 @@ void test_studio_host_json_exposes_selected_report_objects(const std::string& st
             "\"selectedReportObject\": {",
             "\"recordIndex\": 6",
             "\"deleted\": true",
-            "\"containingSectionId\": \"\"",
-            "\"containingSectionRecordIndex\": null",
-            "\"sectionObjectIndex\": null",
-            "\"sectionObjectCount\": 0",
+            "\"containingSectionId\": \"detail_2\"",
+            "\"containingSectionRecordIndex\": 2",
+            "\"sectionRelativeTop\": 600",
+            "\"sectionRelativeBottom\": 900",
+            "\"sectionObjectIndex\": 0",
+            "\"sectionObjectCount\": 1",
             "\"expression\": \"\\\"Deleted label\\\"\""
         },
         "#1479: deleted report object selections should expose deleted selected-object metadata");
-    expect_contains(deleted_object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                    "#1479: deleted report objects should not advertise selected containing-section availability");
-    expect_contains(deleted_object_process.stdout_text, "\"selectedReportObjectSection\": null",
-                    "#1479: deleted report objects should serialize null selected containing-section JSON");
+    expect_contains(deleted_object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                    "#1479: deleted report objects should advertise selected containing-section availability");
+    expect_contains_in_order(
+        deleted_object_process.stdout_text,
+        {
+            "\"selectedReportObjectSection\": {",
+            "\"id\": \"detail_2\"",
+            "\"bandKind\": \"detail\"",
+            "\"recordIndex\": 2",
+            "\"deleted\": false"
+        },
+        "#1479: deleted report objects should expose live containing-section JSON");
 
     const auto unplaced_object_process = run_process_capture(
         studio_host_path,
@@ -77370,38 +77391,38 @@ void test_studio_host_json_exposes_selected_page_header_report_objects_orphaned_
                         "#1671: stable orphaned page-header object selections should expose deleted section counts");
         expect_contains(object_process.stdout_text, "\"liveObjectCount\": 3",
                         "#1671: stable orphaned page-header object selections should preserve live object counts");
-        expect_contains(object_process.stdout_text, "\"placedObjectCount\": 1",
-                        "#1671: stable orphaned page-header object selections should update placed object counts");
-        expect_contains(object_process.stdout_text, "\"unplacedObjectCount\": 2",
-                        "#1671: stable orphaned page-header object selections should count former section members as unplaced");
+        expect_contains(object_process.stdout_text, "\"placedObjectCount\": 2",
+                        "#2690: live objects inside deleted page-header sections should remain placed");
+        expect_contains(object_process.stdout_text, "\"unplacedObjectCount\": 1",
+                        "#2690: live objects inside deleted page-header sections should not be counted as unplaced");
         expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 1",
                         "#1671: stable orphaned page-header object selections should preserve deleted object counts");
         expect_contains(object_process.stdout_text, "\"previewBoundsAvailable\": true",
                         "#1953: stable orphaned page-header object JSON should preserve live preview availability");
         expect_contains(object_process.stdout_text, "\"previewBoundsLeft\": 0",
                         "#1953: stable orphaned page-header object JSON should preserve live preview left bounds");
-        expect_contains(object_process.stdout_text, "\"previewBoundsTop\": 100",
-                        "#1953: stable orphaned page-header object JSON should preserve live preview top bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsTop\": 2000",
+                        "#2690: live deleted-section page-header objects should drop out of live preview top bounds");
         expect_contains(object_process.stdout_text, "\"previewBoundsRight\": 5200",
                         "#1953: stable orphaned page-header object JSON should preserve live preview right bounds");
         expect_contains(object_process.stdout_text, "\"previewBoundsBottom\": 8100",
                         "#1953: stable orphaned page-header object JSON should preserve live preview bottom bounds");
         expect_contains(object_process.stdout_text, "\"previewBoundsWidth\": 5200",
                         "#1953: stable orphaned page-header object JSON should preserve live preview widths");
-        expect_contains(object_process.stdout_text, "\"previewBoundsHeight\": 8000",
-                        "#1953: stable orphaned page-header object JSON should preserve live preview heights");
+        expect_contains(object_process.stdout_text, "\"previewBoundsHeight\": 6100",
+                        "#2690: live deleted-section page-header objects should shrink live preview heights");
         expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
                         "#1953: stable orphaned page-header object JSON should expose deleted preview availability");
         expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
                         "#1953: stable orphaned page-header object JSON should preserve deleted preview left bounds");
         expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsTop\": 0",
                         "#1953: stable orphaned page-header object JSON should preserve deleted preview top bounds");
-        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
-                        "#1953: stable orphaned page-header object JSON should preserve deleted preview right bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsRight\": 2700",
+                        "#2690: live deleted-section page-header objects should expand deleted preview right bounds");
         expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2900",
                         "#1953: stable orphaned page-header object JSON should preserve deleted preview bottom bounds");
-        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsWidth\": 2200",
-                        "#1953: stable orphaned page-header object JSON should preserve deleted preview widths");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsWidth\": 2700",
+                        "#2690: live deleted-section page-header objects should expand deleted preview widths");
         expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsHeight\": 2900",
                         "#1953: stable orphaned page-header object JSON should preserve deleted preview heights");
         expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
@@ -77412,28 +77433,37 @@ void test_studio_host_json_exposes_selected_page_header_report_objects_orphaned_
                         "#1671: stable orphaned page-header object selections should not advertise selected-settings availability");
         expect_contains(object_process.stdout_text, "\"selectedReportSettings\": null",
                         "#1671: stable orphaned page-header object selections should serialize null selected settings");
-        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1671: stable orphaned page-header object selections should not advertise containing-section availability");
-        expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1671: stable orphaned page-header object selections should serialize null containing-section JSON");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#2690: live objects inside deleted page-header sections should advertise containing-section availability");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"page_header_1\"",
+                "\"bandKind\": \"page_header\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": true",
+                "\"objectCount\": 1"
+            },
+            "#2690: live objects inside deleted page-header sections should expose deleted containing-section JSON");
         expect_contains_in_order(
             object_process.stdout_text,
             {
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 4",
                 "\"deleted\": false",
-                "\"containingSectionId\": \"\"",
-                "\"containingSectionRecordIndex\": null",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
-                "\"sectionObjectIndex\": null",
-                "\"sectionObjectCount\": 0",
+                "\"containingSectionId\": \"page_header_1\"",
+                "\"containingSectionRecordIndex\": 1",
+                "\"sectionRelativeTop\": 100",
+                "\"sectionRelativeBottom\": 450",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 1",
                 "\"objectTypeCode\": 5",
                 "\"objectKind\": \"label\"",
                 "\"expression\": \"\\\"Invoice\\\"\"",
                 "\"expressionFieldIndex\": 2"
             },
-            "#1671: stable orphaned page-header object selections should expose selected object metadata without section membership");
+            "#2690: live objects inside deleted page-header sections should expose selected object metadata with deleted-section membership");
         expect_contains(object_process.stdout_text, "\"left\": 900",
                         "#1671: stable orphaned page-header object selections should expose selected-object left bounds");
         expect_contains(object_process.stdout_text, "\"top\": 100",
@@ -77515,10 +77545,10 @@ void test_studio_host_json_exposes_selected_detail_report_objects_orphaned_by_de
                         "#1672: stable orphaned detail object selections should expose deleted section counts");
         expect_contains(object_process.stdout_text, "\"liveObjectCount\": 3",
                         "#1672: stable orphaned detail object selections should preserve live object counts");
-        expect_contains(object_process.stdout_text, "\"placedObjectCount\": 1",
-                        "#1672: stable orphaned detail object selections should update placed object counts");
-        expect_contains(object_process.stdout_text, "\"unplacedObjectCount\": 2",
-                        "#1672: stable orphaned detail object selections should count former section members as unplaced");
+        expect_contains(object_process.stdout_text, "\"placedObjectCount\": 2",
+                        "#2690: live objects inside deleted detail sections should remain placed");
+        expect_contains(object_process.stdout_text, "\"unplacedObjectCount\": 1",
+                        "#2690: live objects inside deleted detail sections should not be counted as unplaced");
         expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 1",
                         "#1672: stable orphaned detail object selections should preserve deleted object counts");
         expect_contains(object_process.stdout_text, "\"previewBoundsAvailable\": true",
@@ -77527,8 +77557,8 @@ void test_studio_host_json_exposes_selected_detail_report_objects_orphaned_by_de
                         "#1954: stable orphaned detail object JSON should preserve live preview left bounds");
         expect_contains(object_process.stdout_text, "\"previewBoundsTop\": 0",
                         "#1954: stable orphaned detail object JSON should preserve live preview top bounds");
-        expect_contains(object_process.stdout_text, "\"previewBoundsRight\": 5200",
-                        "#1954: stable orphaned detail object JSON should preserve live preview right bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsRight\": 2700",
+                        "#2690: live deleted-section detail objects should drop out of live preview right bounds");
         expect_contains(object_process.stdout_text, "\"previewBoundsBottom\": 8100",
                         "#1954: stable orphaned detail object JSON should preserve live preview bottom bounds");
         expect_contains(object_process.stdout_text, "\"previewBoundsWidth\": 5200",
@@ -77541,8 +77571,8 @@ void test_studio_host_json_exposes_selected_detail_report_objects_orphaned_by_de
                         "#1954: stable orphaned detail object JSON should preserve deleted preview left bounds");
         expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsTop\": 2000",
                         "#1954: stable orphaned detail object JSON should preserve deleted preview top bounds");
-        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
-                        "#1954: stable orphaned detail object JSON should preserve deleted preview right bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsRight\": 5200",
+                        "#2690: live deleted-section detail objects should expand deleted preview right bounds");
         expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsBottom\": 7000",
                         "#1954: stable orphaned detail object JSON should preserve deleted preview bottom bounds");
         expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsWidth\": 2200",
@@ -77557,29 +77587,38 @@ void test_studio_host_json_exposes_selected_detail_report_objects_orphaned_by_de
                         "#1672: stable orphaned detail object selections should not advertise selected-settings availability");
         expect_contains(object_process.stdout_text, "\"selectedReportSettings\": null",
                         "#1672: stable orphaned detail object selections should serialize null selected settings");
-        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1672: stable orphaned detail object selections should not advertise containing-section availability");
-        expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1672: stable orphaned detail object selections should serialize null containing-section JSON");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#2690: live objects inside deleted detail sections should advertise containing-section availability");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"detail_2\"",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 2",
+                "\"deleted\": true",
+                "\"objectCount\": 1"
+            },
+            "#2690: live objects inside deleted detail sections should expose deleted containing-section JSON");
         expect_contains_in_order(
             object_process.stdout_text,
             {
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 3",
                 "\"deleted\": false",
-                "\"containingSectionId\": \"\"",
-                "\"containingSectionRecordIndex\": null",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
-                "\"sectionObjectIndex\": null",
-                "\"sectionObjectCount\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 1050",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 1",
                 "\"objectTypeCode\": 8",
                 "\"objectKind\": \"field\"",
                 "\"expression\": \"customer.company\"",
                 "\"expressionFieldIndex\": 2",
                 "\"highlightCount\": 2"
             },
-            "#1672: stable orphaned detail object selections should expose selected object metadata without section membership");
+            "#2690: live objects inside deleted detail sections should expose selected object metadata with deleted-section membership");
         expect_contains(object_process.stdout_text, "\"left\": 1200",
                         "#1672: stable orphaned detail object selections should expose selected-object left bounds");
         expect_contains(object_process.stdout_text, "\"top\": 2600",
@@ -77711,28 +77750,38 @@ void test_studio_host_json_exposes_selected_deleted_detail_report_objects_orphan
                         "#1673: stable deleted orphaned detail object selections should not advertise selected-settings availability");
         expect_contains(object_process.stdout_text, "\"selectedReportSettings\": null",
                         "#1673: stable deleted orphaned detail object selections should serialize null selected settings");
-        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1673: stable deleted orphaned detail object selections should not advertise containing-section availability");
-        expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1673: stable deleted orphaned detail object selections should serialize null containing-section JSON");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#2689: deleted objects inside deleted detail sections should advertise containing-section availability");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"detail_2\"",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 2",
+                "\"deleted\": true",
+                "\"objectCount\": 1",
+                "\"deletedObjectCount\": 1"
+            },
+            "#2689: deleted objects inside deleted detail sections should expose deleted containing-section JSON");
         expect_contains_in_order(
             object_process.stdout_text,
             {
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"containingSectionRecordIndex\": null",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
-                "\"sectionObjectIndex\": null",
-                "\"sectionObjectCount\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 900",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 1",
                 "\"objectTypeCode\": 5",
                 "\"objectKind\": \"label\"",
                 "\"expression\": \"\\\"Deleted label\\\"\"",
                 "\"expressionFieldIndex\": 2"
             },
-            "#1673: stable deleted orphaned detail object selections should expose selected object metadata without section membership");
+            "#2689: deleted objects inside deleted detail sections should expose selected object metadata with deleted-section membership");
         expect_contains(object_process.stdout_text, "\"left\": 1000",
                         "#1673: stable deleted orphaned detail object selections should expose selected-object left bounds");
         expect_contains(object_process.stdout_text, "\"top\": 2600",
