@@ -31093,6 +31093,7 @@ void test_studio_host_json_updates_detail_header_footer_section_expressions(
 void test_studio_host_json_exposes_detail_header_footer_section_expressions_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path temp_root =
         fs::temp_directory_path() / "copperfin_studio_host_detail_header_footer_stable_expression_json_tests";
@@ -31262,6 +31263,7 @@ void test_studio_host_json_exposes_detail_header_footer_section_expressions_by_s
 void test_studio_host_json_updates_detail_header_footer_section_expressions_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path temp_root =
         fs::temp_directory_path() /
