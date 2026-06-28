@@ -7537,7 +7537,7 @@
         }
         catch (const std::bad_alloc &)
         {
-            last_error_message = "Runtime resource fault: out of memory. Execution paused safely.";
+            last_error_message = runtime_text("Runtime.Prg.Core.Error.ResourceOutOfMemory");
             last_fault_location = statement.location;
             last_fault_statement = statement.text;
             events.push_back({.category = "runtime.error",
@@ -7547,7 +7547,11 @@
         }
         catch (const std::filesystem::filesystem_error &error)
         {
-            last_error_message = std::string("Runtime resource fault: filesystem failure: ") + error.what();
+            last_error_message = runtime_text(
+                "Runtime.Prg.Core.Error.ResourceFilesystemFailure",
+                {
+                    {"detail", error.what()},
+                });
             last_fault_location = statement.location;
             last_fault_statement = statement.text;
             events.push_back({.category = "runtime.error",
@@ -7557,7 +7561,11 @@
         }
         catch (const std::system_error &error)
         {
-            last_error_message = std::string("Runtime resource fault: system error: ") + error.what();
+            last_error_message = runtime_text(
+                "Runtime.Prg.Core.Error.ResourceSystemError",
+                {
+                    {"detail", error.what()},
+                });
             last_fault_location = statement.location;
             last_fault_statement = statement.text;
             events.push_back({.category = "runtime.error",
@@ -7567,7 +7575,11 @@
         }
         catch (const std::exception &error)
         {
-            last_error_message = std::string("Runtime fault: ") + error.what();
+            last_error_message = runtime_text(
+                "Runtime.Prg.Core.Error.RuntimeFault",
+                {
+                    {"detail", error.what()},
+                });
             last_fault_location = statement.location;
             last_fault_statement = statement.text;
             events.push_back({.category = "runtime.error",
@@ -7577,7 +7589,7 @@
         }
         catch (...)
         {
-            last_error_message = "Runtime fault: unknown exception";
+            last_error_message = runtime_text("Runtime.Prg.Core.Error.UnknownRuntimeFault");
             last_fault_location = statement.location;
             last_fault_statement = statement.text;
             events.push_back({.category = "runtime.error",

@@ -6693,6 +6693,8 @@ void test_division_by_zero_dispatches_runtime_error() {
     // GAP-01 #257: dividing by zero in a PRG expression must produce a runtime
     // error pause (not a host crash, not a silent NaN or infinity result).
     namespace fs = std::filesystem;
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "en-US", true);
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_divzero";
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
@@ -6724,6 +6726,18 @@ void test_division_by_zero_dispatches_runtime_error() {
     const auto after_div = state.globals.find("after_div");
     expect(after_div != state.globals.end(),
            "GAP-01/#257: statements after the divide-by-zero line should still execute after a fault continue");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    copperfin::runtime::PrgRuntimeSession pseudo_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto pseudo_state = pseudo_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(pseudo_state.reason == copperfin::runtime::DebugPauseReason::error,
+           "#2716: qps-ploc division by zero should still pause with an error reason");
+    expect(
+        pseudo_state.message.find("[!! ") == 0U &&
+            pseudo_state.message.find("Runtime fault") == std::string::npos &&
+            pseudo_state.message != "Runtime fault: Division by zero",
+        "#2716: division by zero should route through the localized runtime fault wrapper");
 
     fs::remove_all(temp_root, ignored);
 }
