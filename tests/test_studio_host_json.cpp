@@ -103021,24 +103021,41 @@ void test_studio_host_json_rejects_deleted_report_visual_property_rename_by_stab
                         "#1872: deleted report/label stable visual-property rename rejection should preserve deleted object counts");
         expect_contains(reopen_process.stdout_text, "\"selectedReportObjectAvailable\": true",
                         "#1872: deleted report/label stable visual-property rename rejection should still select the deleted row");
-        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1872: deleted report/label stable visual-property rename rejection should not fabricate containing sections");
-        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1872: deleted report/label stable visual-property rename rejection should serialize null containing-section metadata");
+        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1872: deleted report/label stable visual-property rename rejection should preserve containing sections");
         expect_contains(reopen_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1872: deleted report/label stable visual-property rename rejection should preserve report object selection kind");
-        expect_contains(reopen_process.stdout_text, "\"recordIndex\": 3",
-                        "#1872: deleted report/label stable visual-property rename rejection should preserve selected record indexes");
-        expect_contains(reopen_process.stdout_text, "\"deleted\": true",
-                        "#1872: deleted report/label stable visual-property rename rejection should preserve selected deleted state");
-        expect_contains(reopen_process.stdout_text, "\"objectKind\": \"field\"",
-                        "#1872: deleted report/label stable visual-property rename rejection should preserve selected object kind");
-        expect_contains(reopen_process.stdout_text, "\"expression\": \"middle.value\"",
-                        "#1872: deleted report/label stable visual-property rename rejection should preserve selected expressions");
-        expect_contains(reopen_process.stdout_text, "\"uniqueId\": \"middle-field-guid\"",
-                        "#1872: deleted report/label stable visual-property rename rejection should preserve stable identities");
-        expect_contains(reopen_process.stdout_text, "\"containingSectionRecordIndex\": null",
-                        "#1872: deleted report/label stable visual-property rename rejection should keep deleted rows uncontained");
+        expect_contains_in_order(
+            reopen_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"detail_1\"",
+                "\"containingSectionRecordIndex\": 1",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 800",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 2",
+                "\"objectKind\": \"field\"",
+                "\"expression\": \"middle.value\"",
+                "\"uniqueId\": \"middle-field-guid\""
+            },
+            "#1872: deleted report/label stable visual-property rename rejection should preserve selected deleted-row containing-section metadata");
+        expect_contains_in_order(
+            reopen_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"detail_1\"",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"sectionIndex\": 0",
+                "\"sectionCount\": 1",
+                "\"objectCount\": 1",
+                "\"deletedObjectCount\": 2"
+            },
+            "#1872: deleted report/label stable visual-property rename rejection should expose containing detail-band metadata");
     };
 
     const auto run_deleted_report_property_rename_missing_selector = [&](const fs::path& asset_path,
@@ -103430,24 +103447,41 @@ void test_studio_host_json_rejects_deleted_report_visual_property_reorder_by_sta
                         "#1873: deleted report/label stable visual-property reorder rejection should preserve deleted object counts");
         expect_contains(reopen_process.stdout_text, "\"selectedReportObjectAvailable\": true",
                         "#1873: deleted report/label stable visual-property reorder rejection should still select the deleted row");
-        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1873: deleted report/label stable visual-property reorder rejection should not fabricate containing sections");
-        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1873: deleted report/label stable visual-property reorder rejection should serialize null containing-section metadata");
+        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1873: deleted report/label stable visual-property reorder rejection should preserve containing sections");
         expect_contains(reopen_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1873: deleted report/label stable visual-property reorder rejection should preserve report object selection kind");
-        expect_contains(reopen_process.stdout_text, "\"recordIndex\": 3",
-                        "#1873: deleted report/label stable visual-property reorder rejection should preserve selected record indexes");
-        expect_contains(reopen_process.stdout_text, "\"deleted\": true",
-                        "#1873: deleted report/label stable visual-property reorder rejection should preserve selected deleted state");
-        expect_contains(reopen_process.stdout_text, "\"objectKind\": \"field\"",
-                        "#1873: deleted report/label stable visual-property reorder rejection should preserve selected object kind");
-        expect_contains(reopen_process.stdout_text, "\"expression\": \"middle.value\"",
-                        "#1873: deleted report/label stable visual-property reorder rejection should preserve selected expressions");
-        expect_contains(reopen_process.stdout_text, "\"uniqueId\": \"middle-field-guid\"",
-                        "#1873: deleted report/label stable visual-property reorder rejection should preserve stable identities");
-        expect_contains(reopen_process.stdout_text, "\"containingSectionRecordIndex\": null",
-                        "#1873: deleted report/label stable visual-property reorder rejection should keep deleted rows uncontained");
+        expect_contains_in_order(
+            reopen_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"detail_1\"",
+                "\"containingSectionRecordIndex\": 1",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 800",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 2",
+                "\"objectKind\": \"field\"",
+                "\"expression\": \"middle.value\"",
+                "\"uniqueId\": \"middle-field-guid\""
+            },
+            "#1873: deleted report/label stable visual-property reorder rejection should preserve selected deleted-row containing-section metadata");
+        expect_contains_in_order(
+            reopen_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"detail_1\"",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"sectionIndex\": 0",
+                "\"sectionCount\": 1",
+                "\"objectCount\": 1",
+                "\"deletedObjectCount\": 2"
+            },
+            "#1873: deleted report/label stable visual-property reorder rejection should expose containing detail-band metadata");
     };
 
     const auto run_deleted_report_property_reorder_missing_selector = [&](const fs::path& asset_path,
