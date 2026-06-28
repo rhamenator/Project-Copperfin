@@ -1240,6 +1240,8 @@
   "Runtime.Prg.Dispatch.Error.CopyToTypeOpenOutputFailed": "COPY TO TYPE {type}: no pudo abrir el archivo de salida",
   "Runtime.Prg.Dispatch.Error.CopyToTypeWriteOutputFailed": "COPY TO TYPE {type}: no pudo escribir el archivo de salida",
   "Runtime.Prg.Dispatch.Error.CopyToWriteFailed": "COPY TO: {errorMessage}",
+  "Runtime.Prg.Dispatch.Error.AppendFromArrayFailed": "APPEND FROM ARRAY: {errorMessage}",
+  "Runtime.Prg.Dispatch.Error.AppendFromArrayNoFieldsMatchFieldsClause": "APPEND FROM ARRAY: ningun campo coincide con la clausula FIELDS",
   "Runtime.Prg.Dispatch.Error.EraseFailed": "ERASE fallo: {errorMessage} ({path})",
   "Runtime.Prg.Dispatch.Error.RenameFileFailed": "RENAME fallo: {errorMessage}",
   "Runtime.Prg.Dispatch.Error.RestoreFromFilenameRequired": "RESTORE FROM requiere un nombre de archivo",

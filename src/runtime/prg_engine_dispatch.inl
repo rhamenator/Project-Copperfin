@@ -4931,7 +4931,11 @@
                             cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
                         if (!dest_result.ok)
                         {
-                            last_error_message = "APPEND FROM ARRAY: " + dest_result.error;
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.AppendFromArrayFailed",
+                                {
+                                    {"errorMessage", dest_result.error},
+                                });
                             return false;
                         }
                         std::vector<vfp::DbfFieldDescriptor> target_fields;
@@ -4944,7 +4948,8 @@
                         }
                         if (target_fields.empty())
                         {
-                            last_error_message = "APPEND FROM ARRAY: no fields match the FIELDS clause";
+                            last_error_message =
+                                runtime_text("Runtime.Prg.Dispatch.Error.AppendFromArrayNoFieldsMatchFieldsClause");
                             return false;
                         }
                         if (!ensure_transaction_backup_for_table(cursor->source_path))
@@ -4959,7 +4964,11 @@
                             const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
                             if (!blank_result.ok)
                             {
-                                last_error_message = "APPEND FROM ARRAY: " + blank_result.error;
+                                last_error_message = runtime_text(
+                                    "Runtime.Prg.Dispatch.Error.AppendFromArrayFailed",
+                                    {
+                                        {"errorMessage", blank_result.error},
+                                    });
                                 return false;
                             }
                             cursor->record_count = blank_result.record_count;

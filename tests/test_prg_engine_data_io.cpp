@@ -2368,6 +2368,39 @@ void test_copy_to_runtime_errors_localize() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_append_from_array_runtime_errors_localize() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_array_localization";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+
+    write_simple_dbf(temp_root / "target.dbf", {"Alice"});
+
+    const fs::path fields_fail_path = temp_root / "append_from_array_fields_fail.prg";
+    write_text(
+        fields_fail_path,
+        "USE '" + (temp_root / "target.dbf").string() + "'\n"
+        "DIMENSION aRows[1,1]\n"
+        "aRows[1,1] = 'Bob'\n"
+        "APPEND FROM ARRAY aRows FIELDS MissingField\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession fields_fail_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(fields_fail_path.string(), temp_root.string(), false));
+    const auto fields_fail_state = fields_fail_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!fields_fail_state.completed, "#2708: qps-ploc APPEND FROM ARRAY with no matching fields should fail");
+    expect(
+        fields_fail_state.message ==
+            copperfin::localization::pseudo_localize("APPEND FROM ARRAY: no fields match the FIELDS clause"),
+        "#2708: qps-ploc APPEND FROM ARRAY empty-fields error should route through the pseudo-localization transform");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_restore_from_additive_merges_variables() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_restore_additive";
@@ -6096,6 +6129,7 @@ int main() {
     test_restore_from_loads_variables_from_file();
     test_save_restore_runtime_errors_localize();
     test_copy_to_runtime_errors_localize();
+    test_append_from_array_runtime_errors_localize();
     test_restore_from_additive_merges_variables();
     test_save_to_like_pattern_filters_variables();
     test_save_to_except_pattern_filters_variables();

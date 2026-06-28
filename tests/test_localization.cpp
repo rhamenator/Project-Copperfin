@@ -2071,6 +2071,57 @@ void test_runtime_copy_to_errors_route_through_catalog() {
         "#2707: qps-ploc COPY TO wrapper error should pseudo-localize prose while preserving downstream error text");
 }
 
+void test_runtime_append_from_array_errors_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const copperfin::localization::PlaceholderMap error_placeholders{{"errorMessage", "table header parse failed"}};
+    const std::vector<std::string> keys{
+        "Runtime.Prg.Dispatch.Error.AppendFromArrayFailed",
+        "Runtime.Prg.Dispatch.Error.AppendFromArrayNoFieldsMatchFieldsClause"
+    };
+
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.AppendFromArrayFailed", error_placeholders) ==
+            "APPEND FROM ARRAY: table header parse failed",
+        "#2708: APPEND FROM ARRAY wrapper error should preserve downstream error text");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.AppendFromArrayNoFieldsMatchFieldsClause") ==
+            "APPEND FROM ARRAY: no fields match the FIELDS clause",
+        "#2708: APPEND FROM ARRAY empty-fields error should localize through the runtime catalog");
+
+    for (const std::string& key : keys) {
+        expect(
+            spanish.catalogs.contains("es-419") && spanish.catalogs.at("es-419").contains(key),
+            "#2708: es-419 should define every APPEND FROM ARRAY runtime dispatch key");
+        expect(
+            portuguese.catalogs.contains("pt-BR") && portuguese.catalogs.at("pt-BR").contains(key),
+            "#2708: pt-BR should define every APPEND FROM ARRAY runtime dispatch key");
+        expect(
+            pseudo.catalogs.contains("qps-ploc") && pseudo.catalogs.at("qps-ploc").contains(key),
+            "#2708: qps-ploc should define every APPEND FROM ARRAY runtime dispatch key");
+    }
+
+    expect(
+        spanish.translate("Runtime.Prg.Dispatch.Error.AppendFromArrayNoFieldsMatchFieldsClause")
+                .find("no fields match the FIELDS clause") == std::string::npos,
+        "#2708: es-419 APPEND FROM ARRAY empty-fields error should not fall back to raw English");
+    expect(
+        portuguese.translate("Runtime.Prg.Dispatch.Error.AppendFromArrayFailed", error_placeholders) ==
+            "APPEND FROM ARRAY: table header parse failed",
+        "#2708: pt-BR APPEND FROM ARRAY wrapper error should preserve invariant command text and downstream error text");
+
+    const std::string pseudo_wrapper =
+        pseudo.translate("Runtime.Prg.Dispatch.Error.AppendFromArrayFailed", error_placeholders);
+    expect(
+        pseudo_wrapper.find("[!! ") == 0U &&
+            pseudo_wrapper.find("table header parse failed") != std::string::npos &&
+            pseudo_wrapper.find("APPEND FROM ARRAY:") == std::string::npos,
+        "#2708: qps-ploc APPEND FROM ARRAY wrapper error should pseudo-localize prose while preserving downstream error text");
+}
+
 void test_inspect_usage_routes_through_localization(const std::string& inspect_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_inspect_usage_tests";
@@ -2231,6 +2282,7 @@ int main(int argc, char** argv) {
     test_runtime_save_restore_errors_route_through_catalog();
     test_runtime_file_operation_errors_route_through_catalog();
     test_runtime_copy_to_errors_route_through_catalog();
+    test_runtime_append_from_array_errors_route_through_catalog();
     test_runtime_package_warnings_pseudo_localize();
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);
