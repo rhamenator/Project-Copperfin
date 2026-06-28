@@ -104078,24 +104078,41 @@ void test_studio_host_json_renames_deleted_report_visual_object_batches_by_stabl
                         "#1862: deleted report/label stable visual-object rename-batch should preserve deleted object counts");
         expect_contains(reopen_process.stdout_text, "\"selectedReportObjectAvailable\": true",
                         "#1862: deleted report/label stable visual-object rename-batch should select the renamed deleted row");
-        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1862: deleted report/label stable visual-object rename-batch should not fabricate containing sections");
-        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1862: deleted report/label stable visual-object rename-batch should serialize null containing-section metadata");
+        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1862: deleted report/label stable visual-object rename-batch should preserve containing sections");
         expect_contains(reopen_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1862: deleted report/label stable visual-object rename-batch should preserve report object selection kind");
-        expect_contains(reopen_process.stdout_text, "\"recordIndex\": 3",
-                        "#1862: deleted report/label stable visual-object rename-batch should preserve renamed record indexes");
-        expect_contains(reopen_process.stdout_text, "\"deleted\": true",
-                        "#1862: deleted report/label stable visual-object rename-batch should preserve renamed deleted state");
-        expect_contains(reopen_process.stdout_text, "\"objectKind\": \"field\"",
-                        "#1862: deleted report/label stable visual-object rename-batch should preserve renamed object kind");
-        expect_contains(reopen_process.stdout_text, "\"expression\": \"middle.value\"",
-                        "#1862: deleted report/label stable visual-object rename-batch should preserve renamed expressions");
-        expect_contains(reopen_process.stdout_text, "\"uniqueId\": \"middle-renamed-guid\"",
-                        "#1862: deleted report/label stable visual-object rename-batch should preserve renamed stable identities");
-        expect_contains(reopen_process.stdout_text, "\"containingSectionRecordIndex\": null",
-                        "#1862: deleted report/label stable visual-object rename-batch should keep deleted rows uncontained");
+        expect_contains_in_order(
+            reopen_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"detail_1\"",
+                "\"containingSectionRecordIndex\": 1",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 800",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 2",
+                "\"objectKind\": \"field\"",
+                "\"expression\": \"middle.value\"",
+                "\"uniqueId\": \"middle-renamed-guid\""
+            },
+            "#1862: deleted report/label stable visual-object rename-batch should preserve selected deleted-row containing-section metadata");
+        expect_contains_in_order(
+            reopen_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"detail_1\"",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"sectionIndex\": 0",
+                "\"sectionCount\": 1",
+                "\"objectCount\": 1",
+                "\"deletedObjectCount\": 2"
+            },
+            "#1862: deleted report/label stable visual-object rename-batch should expose containing detail-band metadata");
     };
 
     const auto run_deleted_report_object_rename_batch_rollback = [&](const fs::path& asset_path,
