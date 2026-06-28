@@ -2190,11 +2190,19 @@ void test_runtime_append_from_type_errors_route_through_catalog() {
     const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
     const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
     const copperfin::localization::PlaceholderMap type_placeholders{{"type", "JSON"}};
+    const copperfin::localization::PlaceholderMap error_placeholders{{"errorMessage", "numeric value too large"}};
     const std::vector<std::string> keys{
+        "Runtime.Prg.Dispatch.Error.AppendFromTypeFailed",
         "Runtime.Prg.Dispatch.Error.AppendFromTypeNoFieldsMatchFieldsClause",
         "Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed"
     };
 
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.AppendFromTypeFailed", {
+            {"type", "JSON"},
+            {"errorMessage", "numeric value too large"},
+        }) == "APPEND FROM TYPE JSON: numeric value too large",
+        "#2711: APPEND FROM TYPE wrapper error should preserve type and downstream error text");
     expect(
         english.translate("Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed", type_placeholders) ==
             "APPEND FROM TYPE JSON: unable to open source file",
@@ -2224,6 +2232,12 @@ void test_runtime_append_from_type_errors_route_through_catalog() {
         portuguese.translate("Runtime.Prg.Dispatch.Error.AppendFromTypeNoFieldsMatchFieldsClause", type_placeholders)
                 .find("no fields match the FIELDS clause") == std::string::npos,
         "#2710: pt-BR APPEND FROM TYPE empty-fields error should not fall back to raw English");
+    expect(
+        portuguese.translate("Runtime.Prg.Dispatch.Error.AppendFromTypeFailed", {
+            {"type", "JSON"},
+            {"errorMessage", "numeric value too large"},
+        }) == "APPEND FROM TYPE JSON: numeric value too large",
+        "#2711: pt-BR APPEND FROM TYPE wrapper error should preserve invariant type and downstream error text");
 
     const std::string pseudo_open =
         pseudo.translate("Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed", type_placeholders);
@@ -2232,6 +2246,17 @@ void test_runtime_append_from_type_errors_route_through_catalog() {
             pseudo_open.find("JSON") != std::string::npos &&
             pseudo_open.find("unable to open source file") == std::string::npos,
         "#2710: qps-ploc APPEND FROM TYPE open-source error should pseudo-localize prose while preserving the type");
+    const std::string pseudo_wrapper =
+        pseudo.translate("Runtime.Prg.Dispatch.Error.AppendFromTypeFailed", {
+            {"type", "JSON"},
+            {"errorMessage", "numeric value too large"},
+        });
+    expect(
+        pseudo_wrapper.find("[!! ") == 0U &&
+            pseudo_wrapper.find("JSON") != std::string::npos &&
+            pseudo_wrapper.find("numeric value too large") != std::string::npos &&
+            pseudo_wrapper.find("APPEND FROM TYPE JSON:") == std::string::npos,
+        "#2711: qps-ploc APPEND FROM TYPE wrapper error should pseudo-localize prose while preserving type and downstream error text");
 }
 
 void test_inspect_usage_routes_through_localization(const std::string& inspect_path) {

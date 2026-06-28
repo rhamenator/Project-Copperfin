@@ -1246,6 +1246,7 @@
   "Runtime.Prg.Dispatch.Error.AppendFromNoCurrentWorkArea": "APPEND FROM: no current work area",
   "Runtime.Prg.Dispatch.Error.AppendFromNoFieldsMatchFieldsClause": "APPEND FROM: no fields match the FIELDS clause",
   "Runtime.Prg.Dispatch.Error.AppendFromSelectedSqlResultCursorUnsupportedSourceType": "APPEND FROM: selected SQL/result cursor does not support this source type",
+  "Runtime.Prg.Dispatch.Error.AppendFromTypeFailed": "APPEND FROM TYPE {type}: {errorMessage}",
   "Runtime.Prg.Dispatch.Error.AppendFromTypeNoFieldsMatchFieldsClause": "APPEND FROM TYPE {type}: no fields match the FIELDS clause",
   "Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed": "APPEND FROM TYPE {type}: unable to open source file",
   "Runtime.Prg.Dispatch.Error.EraseFailed": "ERASE failed: {errorMessage} ({path})",

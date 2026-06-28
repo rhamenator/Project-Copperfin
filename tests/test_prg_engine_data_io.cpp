@@ -2495,6 +2495,31 @@ void test_append_from_type_runtime_errors_localize() {
             fields_fail_state.message.find("no fields match the FIELDS clause") == std::string::npos,
         "#2710: qps-ploc APPEND FROM TYPE empty-fields error should pseudo-localize prose while preserving the type");
 
+    const fs::path strict_target_path = temp_root / "strict_target.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> strict_fields{
+        {.name = "NAME", .type = 'C', .length = 1U},
+    };
+    const auto strict_create =
+        copperfin::vfp::create_dbf_table_file(strict_target_path.string(), strict_fields, {});
+    expect(strict_create.ok, "#2711: strict APPEND FROM TYPE destination fixture should be created");
+
+    const fs::path wrapper_fail_path = temp_root / "append_from_type_json_wrapper_fail.prg";
+    write_text(
+        wrapper_fail_path,
+        "USE '" + strict_target_path.string() + "'\n"
+        "APPEND FROM '" + json_path.string() + "' TYPE JSON\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession wrapper_fail_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(wrapper_fail_path.string(), temp_root.string(), false));
+    const auto wrapper_fail_state = wrapper_fail_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!wrapper_fail_state.completed, "#2711: qps-ploc APPEND FROM TYPE JSON oversized field script should fail");
+    expect(
+        wrapper_fail_state.message.find("[!! ") == 0U &&
+            wrapper_fail_state.message.find("JSON") != std::string::npos &&
+            wrapper_fail_state.message.find("APPEND FROM TYPE JSON:") == std::string::npos,
+        "#2711: qps-ploc APPEND FROM TYPE wrapper error should pseudo-localize prose while preserving the type");
+
     fs::remove_all(temp_root, ignored);
 }
 

@@ -5459,7 +5459,12 @@
                         cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
                     if (!dest_result.ok)
                     {
-                        last_error_message = "APPEND FROM TYPE SDF: " + dest_result.error;
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromTypeFailed",
+                            {
+                                {"type", "SDF"},
+                                {"errorMessage", dest_result.error},
+                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -5497,7 +5502,12 @@
                         const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
                         if (!blank_result.ok)
                         {
-                            last_error_message = "APPEND FROM TYPE SDF: " + blank_result.error;
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.AppendFromTypeFailed",
+                                {
+                                    {"type", "SDF"},
+                                    {"errorMessage", blank_result.error},
+                                });
                             last_fault_location = statement.location;
                             last_fault_statement = statement.text;
                             return {.ok = false, .message = last_error_message};
@@ -5520,7 +5530,12 @@
                                 raw_value);
                             if (!rep_result.ok)
                             {
-                                last_error_message = "APPEND FROM TYPE SDF: " + rep_result.error;
+                                last_error_message = runtime_text(
+                                    "Runtime.Prg.Dispatch.Error.AppendFromTypeFailed",
+                                    {
+                                        {"type", "SDF"},
+                                        {"errorMessage", rep_result.error},
+                                    });
                                 last_fault_location = statement.location;
                                 last_fault_statement = statement.text;
                                 return {.ok = false, .message = last_error_message};
@@ -5557,7 +5572,12 @@
                         cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
                     if (!dest_result.ok)
                     {
-                        last_error_message = "APPEND FROM TYPE JSON: " + dest_result.error;
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromTypeFailed",
+                            {
+                                {"type", "JSON"},
+                                {"errorMessage", dest_result.error},
+                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -5596,7 +5616,12 @@
                         const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
                         if (!blank_result.ok)
                         {
-                            last_error_message = "APPEND FROM TYPE JSON: " + blank_result.error;
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.AppendFromTypeFailed",
+                                {
+                                    {"type", "JSON"},
+                                    {"errorMessage", blank_result.error},
+                                });
                             last_fault_location = statement.location;
                             last_fault_statement = statement.text;
                             return {.ok = false, .message = last_error_message};
@@ -5619,7 +5644,12 @@
                                 found->second);
                             if (!rep_result.ok)
                             {
-                                last_error_message = "APPEND FROM TYPE JSON: " + rep_result.error;
+                                last_error_message = runtime_text(
+                                    "Runtime.Prg.Dispatch.Error.AppendFromTypeFailed",
+                                    {
+                                        {"type", "JSON"},
+                                        {"errorMessage", rep_result.error},
+                                    });
                                 last_fault_location = statement.location;
                                 last_fault_statement = statement.text;
                                 return {.ok = false, .message = last_error_message};
@@ -5656,7 +5686,12 @@
                         cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
                     if (!dest_result.ok)
                     {
-                        last_error_message = "APPEND FROM TYPE DIF: " + dest_result.error;
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromTypeFailed",
+                            {
+                                {"type", "DIF"},
+                                {"errorMessage", dest_result.error},
+                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -5712,7 +5747,12 @@
                         const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
                         if (!blank_result.ok)
                         {
-                            last_error_message = "APPEND FROM TYPE DIF: " + blank_result.error;
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.AppendFromTypeFailed",
+                                {
+                                    {"type", "DIF"},
+                                    {"errorMessage", blank_result.error},
+                                });
                             last_fault_location = statement.location;
                             last_fault_statement = statement.text;
                             return {.ok = false, .message = last_error_message};
@@ -5730,7 +5770,12 @@
                                 row[index]);
                             if (!rep_result.ok)
                             {
-                                last_error_message = "APPEND FROM TYPE DIF: " + rep_result.error;
+                                last_error_message = runtime_text(
+                                    "Runtime.Prg.Dispatch.Error.AppendFromTypeFailed",
+                                    {
+                                        {"type", "DIF"},
+                                        {"errorMessage", rep_result.error},
+                                    });
                                 last_fault_location = statement.location;
                                 last_fault_statement = statement.text;
                                 return {.ok = false, .message = last_error_message};
@@ -5767,7 +5812,12 @@
                         cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
                     if (!dest_result.ok)
                     {
-                        last_error_message = "APPEND FROM TYPE SYLK: " + dest_result.error;
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromTypeFailed",
+                            {
+                                {"type", "SYLK"},
+                                {"errorMessage", dest_result.error},
+                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -5823,7 +5873,12 @@
                         const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
                         if (!blank_result.ok)
                         {
-                            last_error_message = "APPEND FROM TYPE SYLK: " + blank_result.error;
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.AppendFromTypeFailed",
+                                {
+                                    {"type", "SYLK"},
+                                    {"errorMessage", blank_result.error},
+                                });
                             last_fault_location = statement.location;
                             last_fault_statement = statement.text;
                             return {.ok = false, .message = last_error_message};
@@ -5841,7 +5896,12 @@
                                 row[index]);
                             if (!rep_result.ok)
                             {
-                                last_error_message = "APPEND FROM TYPE SYLK: " + rep_result.error;
+                                last_error_message = runtime_text(
+                                    "Runtime.Prg.Dispatch.Error.AppendFromTypeFailed",
+                                    {
+                                        {"type", "SYLK"},
+                                        {"errorMessage", rep_result.error},
+                                    });
                                 last_fault_location = statement.location;
                                 last_fault_statement = statement.text;
                                 return {.ok = false, .message = last_error_message};
@@ -5878,7 +5938,12 @@
                         cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
                     if (!dest_result.ok)
                     {
-                        last_error_message = "APPEND FROM TYPE XLS: " + dest_result.error;
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromTypeFailed",
+                            {
+                                {"type", "XLS"},
+                                {"errorMessage", dest_result.error},
+                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -5934,7 +5999,12 @@
                         const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
                         if (!blank_result.ok)
                         {
-                            last_error_message = "APPEND FROM TYPE XLS: " + blank_result.error;
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.AppendFromTypeFailed",
+                                {
+                                    {"type", "XLS"},
+                                    {"errorMessage", blank_result.error},
+                                });
                             last_fault_location = statement.location;
                             last_fault_statement = statement.text;
                             return {.ok = false, .message = last_error_message};
@@ -5952,7 +6022,12 @@
                                 row[index]);
                             if (!rep_result.ok)
                             {
-                                last_error_message = "APPEND FROM TYPE XLS: " + rep_result.error;
+                                last_error_message = runtime_text(
+                                    "Runtime.Prg.Dispatch.Error.AppendFromTypeFailed",
+                                    {
+                                        {"type", "XLS"},
+                                        {"errorMessage", rep_result.error},
+                                    });
                                 last_fault_location = statement.location;
                                 last_fault_statement = statement.text;
                                 return {.ok = false, .message = last_error_message};
@@ -5989,7 +6064,12 @@
                         cursor->source_path, std::max<std::size_t>(cursor->record_count + 1U, 1U));
                     if (!dest_result.ok)
                     {
-                        last_error_message = "APPEND FROM TYPE DELIMITED: " + dest_result.error;
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromTypeFailed",
+                            {
+                                {"type", "DELIMITED"},
+                                {"errorMessage", dest_result.error},
+                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -6052,7 +6132,12 @@
                         const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
                         if (!blank_result.ok)
                         {
-                            last_error_message = "APPEND FROM TYPE DELIMITED: " + blank_result.error;
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.AppendFromTypeFailed",
+                                {
+                                    {"type", "DELIMITED"},
+                                    {"errorMessage", blank_result.error},
+                                });
                             last_fault_location = statement.location;
                             last_fault_statement = statement.text;
                             return {.ok = false, .message = last_error_message};
@@ -6070,7 +6155,12 @@
                                 values[index]);
                             if (!rep_result.ok)
                             {
-                                last_error_message = "APPEND FROM TYPE DELIMITED: " + rep_result.error;
+                                last_error_message = runtime_text(
+                                    "Runtime.Prg.Dispatch.Error.AppendFromTypeFailed",
+                                    {
+                                        {"type", "DELIMITED"},
+                                        {"errorMessage", rep_result.error},
+                                    });
                                 last_fault_location = statement.location;
                                 last_fault_statement = statement.text;
                                 return {.ok = false, .message = last_error_message};
