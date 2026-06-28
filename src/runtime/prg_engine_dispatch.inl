@@ -3651,7 +3651,7 @@
                                         : normalize_identifier(unquote_identifier(trim_copy(statement.identifier)));
                 if (alias.empty())
                 {
-                    last_error_message = "CREATE CURSOR requires a non-empty alias";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.CreateCursorRequiresNonEmptyAlias");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -3661,7 +3661,8 @@
                 const std::vector<vfp::DbfFieldDescriptor> fields = table_field_descriptors(declarations);
                 if (fields.empty())
                 {
-                    last_error_message = "CREATE CURSOR requires at least one supported field declaration";
+                    last_error_message =
+                        runtime_text("Runtime.Prg.Dispatch.Error.CreateCursorRequiresSupportedFieldDeclaration");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -3718,7 +3719,7 @@
                 std::string target = trim_copy(statement.identifier);
                 if (target.empty())
                 {
-                    last_error_message = "CREATE TABLE requires a target table name";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.CreateTableRequiresTargetTableName");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -3748,7 +3749,8 @@
                 const std::vector<vfp::DbfFieldDescriptor> fields = table_field_descriptors(declarations);
                 if (fields.empty())
                 {
-                    last_error_message = "CREATE TABLE requires at least one supported field declaration";
+                    last_error_message =
+                        runtime_text("Runtime.Prg.Dispatch.Error.CreateTableRequiresSupportedFieldDeclaration");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -3792,7 +3794,8 @@
                 const std::string action = normalize_identifier(statement.secondary_expression);
                 if (action != "add" && action != "drop" && action != "alter")
                 {
-                    last_error_message = "ALTER TABLE currently supports ADD COLUMN, DROP COLUMN, and ALTER COLUMN only";
+                    last_error_message =
+                        runtime_text("Runtime.Prg.Dispatch.Error.AlterTableSupportsAddDropAlterColumnOnly");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -3801,7 +3804,7 @@
                 std::string target = trim_copy(statement.identifier);
                 if (target.empty())
                 {
-                    last_error_message = "ALTER TABLE requires a target table name";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.AlterTableRequiresTargetTableName");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};

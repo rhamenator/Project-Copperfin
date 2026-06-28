@@ -2334,6 +2334,63 @@ void test_runtime_scatter_gather_errors_route_through_catalog() {
         "#2712: qps-ploc GATHER NAME missing-object error should pseudo-localize prose");
 }
 
+void test_runtime_table_structure_errors_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const std::vector<std::string> keys{
+        "Runtime.Prg.Dispatch.Error.AlterTableRequiresTargetTableName",
+        "Runtime.Prg.Dispatch.Error.AlterTableSupportsAddDropAlterColumnOnly",
+        "Runtime.Prg.Dispatch.Error.CreateCursorRequiresNonEmptyAlias",
+        "Runtime.Prg.Dispatch.Error.CreateCursorRequiresSupportedFieldDeclaration",
+        "Runtime.Prg.Dispatch.Error.CreateTableRequiresSupportedFieldDeclaration",
+        "Runtime.Prg.Dispatch.Error.CreateTableRequiresTargetTableName"
+    };
+
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CreateCursorRequiresSupportedFieldDeclaration") ==
+            "CREATE CURSOR requires at least one supported field declaration",
+        "#2713: CREATE CURSOR field-declaration error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CreateTableRequiresTargetTableName") ==
+            "CREATE TABLE requires a target table name",
+        "#2713: CREATE TABLE target-name error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.AlterTableSupportsAddDropAlterColumnOnly") ==
+            "ALTER TABLE currently supports ADD COLUMN, DROP COLUMN, and ALTER COLUMN only",
+        "#2713: ALTER TABLE action-support error should localize through the runtime catalog");
+
+    for (const std::string& key : keys) {
+        expect(
+            spanish.catalogs.contains("es-419") && spanish.catalogs.at("es-419").contains(key),
+            "#2713: es-419 should define every table-structure runtime dispatch key");
+        expect(
+            portuguese.catalogs.contains("pt-BR") && portuguese.catalogs.at("pt-BR").contains(key),
+            "#2713: pt-BR should define every table-structure runtime dispatch key");
+        expect(
+            pseudo.catalogs.contains("qps-ploc") && pseudo.catalogs.at("qps-ploc").contains(key),
+            "#2713: qps-ploc should define every table-structure runtime dispatch key");
+    }
+
+    expect(
+        spanish.translate("Runtime.Prg.Dispatch.Error.CreateCursorRequiresSupportedFieldDeclaration")
+                .find("requires at least one supported field declaration") == std::string::npos,
+        "#2713: es-419 CREATE CURSOR field-declaration error should not fall back to raw English");
+    expect(
+        portuguese.translate("Runtime.Prg.Dispatch.Error.AlterTableSupportsAddDropAlterColumnOnly")
+                .find("currently supports ADD COLUMN, DROP COLUMN, and ALTER COLUMN only") == std::string::npos,
+        "#2713: pt-BR ALTER TABLE action-support error should not fall back to raw English");
+
+    const std::string pseudo_create_table =
+        pseudo.translate("Runtime.Prg.Dispatch.Error.CreateTableRequiresSupportedFieldDeclaration");
+    expect(
+        pseudo_create_table.find("[!! ") == 0U &&
+            pseudo_create_table.find("requires at least one supported field declaration") == std::string::npos,
+        "#2713: qps-ploc CREATE TABLE field-declaration error should pseudo-localize prose");
+}
+
 void test_inspect_usage_routes_through_localization(const std::string& inspect_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_inspect_usage_tests";
@@ -2498,6 +2555,7 @@ int main(int argc, char** argv) {
     test_runtime_append_from_errors_route_through_catalog();
     test_runtime_append_from_type_errors_route_through_catalog();
     test_runtime_scatter_gather_errors_route_through_catalog();
+    test_runtime_table_structure_errors_route_through_catalog();
     test_runtime_package_warnings_pseudo_localize();
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);

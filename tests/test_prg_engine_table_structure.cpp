@@ -1,8 +1,10 @@
+#include "copperfin/localization/localization.h"
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "prg_engine_test_support.h"
 
 #include <algorithm>
+#include <cstdlib>
 #include <cstdint>
 #include <filesystem>
 #include <iostream>
@@ -13,6 +15,42 @@
 namespace {
 
 using namespace copperfin::test_support;
+
+void set_env_value(const std::string& name, const std::string& value, bool has_value) {
+#ifdef _WIN32
+    if (has_value) {
+        _putenv_s(name.c_str(), value.c_str());
+    } else {
+        _putenv_s(name.c_str(), "");
+    }
+#else
+    if (has_value) {
+        setenv(name.c_str(), value.c_str(), 1);
+    } else {
+        unsetenv(name.c_str());
+    }
+#endif
+}
+
+struct ScopedEnvironmentValue {
+    std::string name;
+    std::string original_value;
+    bool had_value;
+
+    explicit ScopedEnvironmentValue(std::string environment_name)
+        : name(std::move(environment_name)),
+          original_value(),
+          had_value(false) {
+        if (const char* current = std::getenv(name.c_str())) {
+            original_value = current;
+            had_value = true;
+        }
+    }
+
+    ~ScopedEnvironmentValue() {
+        set_env_value(name, original_value, had_value);
+    }
+};
 
 std::filesystem::path memo_sidecar_path(std::filesystem::path table_path) {
     table_path.replace_extension(".fpt");
@@ -365,6 +403,71 @@ void test_not_null_insert_failure_rolls_back() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_table_structure_runtime_errors_localize() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_table_structure_localization";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+
+    const fs::path create_cursor_path = temp_root / "create_cursor_fields_fail.prg";
+    write_text(
+        create_cursor_path,
+        "CREATE CURSOR WorkItems ()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession create_cursor_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(create_cursor_path.string(), temp_root.string()));
+    const auto create_cursor_state = create_cursor_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!create_cursor_state.completed, "#2713: qps-ploc CREATE CURSOR with no fields should fail");
+    expect(
+        create_cursor_state.message ==
+            copperfin::localization::pseudo_localize("CREATE CURSOR requires at least one supported field declaration"),
+        "#2713: qps-ploc CREATE CURSOR field-declaration error should route through the pseudo-localization transform");
+
+    const fs::path create_table_path = temp_root / "create_table_fields_fail.prg";
+    write_text(
+        create_table_path,
+        "CREATE TABLE '" + (temp_root / "bad.dbf").string() + "' ()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession create_table_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(create_table_path.string(), temp_root.string()));
+    const auto create_table_state = create_table_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!create_table_state.completed, "#2713: qps-ploc CREATE TABLE with no fields should fail");
+    expect(
+        create_table_state.message ==
+            copperfin::localization::pseudo_localize("CREATE TABLE requires at least one supported field declaration"),
+        "#2713: qps-ploc CREATE TABLE field-declaration error should route through the pseudo-localization transform");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields = {
+        {.name = "NAME", .type = 'C', .length = 10U},
+    };
+    const auto create_result =
+        copperfin::vfp::create_dbf_table_file((temp_root / "people.dbf").string(), fields, {{"ALPHA"}});
+    expect(create_result.ok, "#2713: ALTER TABLE localization fixture should be created");
+
+    const fs::path alter_table_path = temp_root / "alter_table_action_fail.prg";
+    write_text(
+        alter_table_path,
+        "ALTER TABLE '" + (temp_root / "people.dbf").string() + "' RENAME COLUMN NAME TO TITLE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession alter_table_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(alter_table_path.string(), temp_root.string()));
+    const auto alter_table_state = alter_table_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!alter_table_state.completed, "#2713: qps-ploc ALTER TABLE unsupported-action script should fail");
+    expect(
+        alter_table_state.message ==
+            copperfin::localization::pseudo_localize("ALTER TABLE currently supports ADD COLUMN, DROP COLUMN, and ALTER COLUMN only"),
+        "#2713: qps-ploc ALTER TABLE action-support error should route through the pseudo-localization transform");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_pack_memo_rewrites_memo_sidecar() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_table_structure_pack_memo";
@@ -596,6 +699,7 @@ int main() {
     test_create_cursor_uses_temp_backed_local_table_flow();
     test_create_cursor_not_null_insert_failure_rolls_back();
     test_not_null_insert_failure_rolls_back();
+    test_table_structure_runtime_errors_localize();
     test_pack_memo_rewrites_memo_sidecar();
     test_pack_memo_rollback_restores_original_sidecar_and_readability();
 
