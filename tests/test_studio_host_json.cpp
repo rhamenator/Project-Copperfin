@@ -104585,6 +104585,7 @@ void test_studio_host_json_reorders_report_visual_object_batches_by_stable_selec
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_report_object_reorder_batch = [&](const fs::path& asset_path,
                                                      const std::string& title,

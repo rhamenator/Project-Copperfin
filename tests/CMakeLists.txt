@@ -369,6 +369,22 @@ add_test(
     COMMAND $<TARGET_FILE:test_studio_host_deleted_object_rename_batch_errors> $<TARGET_FILE:copperfin_studio_host>
 )
 
+add_executable(test_studio_host_object_reorder_batch_errors
+    test_studio_host_object_reorder_batch_errors.cpp
+)
+target_link_libraries(test_studio_host_object_reorder_batch_errors PRIVATE cf_vfp_assets)
+
+if(MSVC)
+    target_compile_options(test_studio_host_object_reorder_batch_errors PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_object_reorder_batch_errors PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_object_reorder_batch_errors
+    COMMAND $<TARGET_FILE:test_studio_host_object_reorder_batch_errors> $<TARGET_FILE:copperfin_studio_host>
+)
+
 copperfin_add_test(test_vfp_assets cf_vfp_assets
     test_vfp_assets.cpp
 )
