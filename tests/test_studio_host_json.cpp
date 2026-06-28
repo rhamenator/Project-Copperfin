@@ -100794,10 +100794,10 @@ void test_studio_host_json_updates_deleted_report_visual_object_batches_by_stabl
                         "#1863: deleted report/label stable visual-object update-batch should preserve deleted object counts");
         expect_contains(reopen_process.stdout_text, "\"selectedReportObjectAvailable\": true",
                         "#1863: deleted report/label stable visual-object update-batch should select the updated deleted row");
-        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1863: deleted report/label stable visual-object update-batch should not fabricate containing sections");
-        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1863: deleted report/label stable visual-object update-batch should serialize null containing-section metadata");
+        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1863: deleted report/label stable visual-object update-batch should preserve containing-section availability");
+        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1863: deleted report/label stable visual-object update-batch should serialize containing-section metadata");
         expect_contains(reopen_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1863: deleted report/label stable visual-object update-batch should preserve report object selection kind");
         expect_contains(reopen_process.stdout_text, "\"recordIndex\": 3",
@@ -100814,8 +100814,39 @@ void test_studio_host_json_updates_deleted_report_visual_object_batches_by_stabl
                         "#1863: deleted report/label stable visual-object update-batch should refresh updated expressions");
         expect_contains(reopen_process.stdout_text, "\"uniqueId\": \"middle-field-guid\"",
                         "#1863: deleted report/label stable visual-object update-batch should preserve updated stable identities");
-        expect_contains(reopen_process.stdout_text, "\"containingSectionRecordIndex\": null",
-                        "#1863: deleted report/label stable visual-object update-batch should keep deleted rows uncontained");
+        expect_contains_in_order(
+            reopen_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"detail_1\"",
+                "\"containingSectionRecordIndex\": 1",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 800",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 2",
+                "\"objectKind\": \"field\"",
+                "\"expression\": \"middle.updated\"",
+                "\"width\": 4300",
+                "\"right\": 4400",
+                "\"uniqueId\": \"middle-field-guid\""
+            },
+            "#1863: deleted report/label stable visual-object update-batch should refresh selected deleted-row section metadata");
+        expect_contains_in_order(
+            reopen_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"detail_1\"",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"sectionIndex\": 0",
+                "\"sectionCount\": 1",
+                "\"objectCount\": 1",
+                "\"deletedObjectCount\": 2"
+            },
+            "#1863: deleted report/label stable visual-object update-batch should expose containing detail-band metadata");
     };
 
     const auto run_deleted_report_object_update_batch_rollback = [&](const fs::path& asset_path,
