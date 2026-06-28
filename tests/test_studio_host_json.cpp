@@ -103245,24 +103245,41 @@ void test_studio_host_json_rejects_deleted_report_visual_property_rename_batches
                         "#1865: deleted report/label stable visual-property rename-batch rejection should preserve deleted object counts");
         expect_contains(reopen_process.stdout_text, "\"selectedReportObjectAvailable\": true",
                         "#1865: deleted report/label stable visual-property rename-batch rejection should still select the deleted row");
-        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1865: deleted report/label stable visual-property rename-batch rejection should not fabricate containing sections");
-        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1865: deleted report/label stable visual-property rename-batch rejection should serialize null containing-section metadata");
+        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1865: deleted report/label stable visual-property rename-batch rejection should preserve containing sections");
         expect_contains(reopen_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1865: deleted report/label stable visual-property rename-batch rejection should preserve report object selection kind");
-        expect_contains(reopen_process.stdout_text, "\"recordIndex\": 3",
-                        "#1865: deleted report/label stable visual-property rename-batch rejection should preserve selected record indexes");
-        expect_contains(reopen_process.stdout_text, "\"deleted\": true",
-                        "#1865: deleted report/label stable visual-property rename-batch rejection should preserve selected deleted state");
-        expect_contains(reopen_process.stdout_text, "\"objectKind\": \"field\"",
-                        "#1865: deleted report/label stable visual-property rename-batch rejection should preserve selected object kind");
-        expect_contains(reopen_process.stdout_text, "\"expression\": \"middle.value\"",
-                        "#1865: deleted report/label stable visual-property rename-batch rejection should preserve selected expressions");
-        expect_contains(reopen_process.stdout_text, "\"uniqueId\": \"middle-field-guid\"",
-                        "#1865: deleted report/label stable visual-property rename-batch rejection should preserve stable identities");
-        expect_contains(reopen_process.stdout_text, "\"containingSectionRecordIndex\": null",
-                        "#1865: deleted report/label stable visual-property rename-batch rejection should keep deleted rows uncontained");
+        expect_contains_in_order(
+            reopen_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"detail_1\"",
+                "\"containingSectionRecordIndex\": 1",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 800",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 2",
+                "\"objectKind\": \"field\"",
+                "\"expression\": \"middle.value\"",
+                "\"uniqueId\": \"middle-field-guid\""
+            },
+            "#1865: deleted report/label stable visual-property rename-batch rejection should preserve selected deleted-row containing-section metadata");
+        expect_contains_in_order(
+            reopen_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"detail_1\"",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"sectionIndex\": 0",
+                "\"sectionCount\": 1",
+                "\"objectCount\": 1",
+                "\"deletedObjectCount\": 2"
+            },
+            "#1865: deleted report/label stable visual-property rename-batch rejection should expose containing detail-band metadata");
     };
 
     const auto run_deleted_report_property_rename_batch_missing_selector = [&](const fs::path& asset_path,
@@ -103668,24 +103685,41 @@ void test_studio_host_json_rejects_deleted_report_visual_property_reorder_batche
                         "#1866: deleted report/label stable visual-property reorder-batch rejection should preserve deleted object counts");
         expect_contains(reopen_process.stdout_text, "\"selectedReportObjectAvailable\": true",
                         "#1866: deleted report/label stable visual-property reorder-batch rejection should still select the deleted row");
-        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1866: deleted report/label stable visual-property reorder-batch rejection should not fabricate containing sections");
-        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1866: deleted report/label stable visual-property reorder-batch rejection should serialize null containing-section metadata");
+        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1866: deleted report/label stable visual-property reorder-batch rejection should preserve containing sections");
         expect_contains(reopen_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1866: deleted report/label stable visual-property reorder-batch rejection should preserve report object selection kind");
-        expect_contains(reopen_process.stdout_text, "\"recordIndex\": 3",
-                        "#1866: deleted report/label stable visual-property reorder-batch rejection should preserve selected record indexes");
-        expect_contains(reopen_process.stdout_text, "\"deleted\": true",
-                        "#1866: deleted report/label stable visual-property reorder-batch rejection should preserve selected deleted state");
-        expect_contains(reopen_process.stdout_text, "\"objectKind\": \"field\"",
-                        "#1866: deleted report/label stable visual-property reorder-batch rejection should preserve selected object kind");
-        expect_contains(reopen_process.stdout_text, "\"expression\": \"middle.value\"",
-                        "#1866: deleted report/label stable visual-property reorder-batch rejection should preserve selected expressions");
-        expect_contains(reopen_process.stdout_text, "\"uniqueId\": \"middle-field-guid\"",
-                        "#1866: deleted report/label stable visual-property reorder-batch rejection should preserve stable identities");
-        expect_contains(reopen_process.stdout_text, "\"containingSectionRecordIndex\": null",
-                        "#1866: deleted report/label stable visual-property reorder-batch rejection should keep deleted rows uncontained");
+        expect_contains_in_order(
+            reopen_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"detail_1\"",
+                "\"containingSectionRecordIndex\": 1",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 800",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 2",
+                "\"objectKind\": \"field\"",
+                "\"expression\": \"middle.value\"",
+                "\"uniqueId\": \"middle-field-guid\""
+            },
+            "#1866: deleted report/label stable visual-property reorder-batch rejection should preserve selected deleted-row containing-section metadata");
+        expect_contains_in_order(
+            reopen_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"detail_1\"",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"sectionIndex\": 0",
+                "\"sectionCount\": 1",
+                "\"objectCount\": 1",
+                "\"deletedObjectCount\": 2"
+            },
+            "#1866: deleted report/label stable visual-property reorder-batch rejection should expose containing detail-band metadata");
     };
 
     const auto run_deleted_report_property_reorder_batch_missing_selector = [&](const fs::path& asset_path,
