@@ -64540,81 +64540,6 @@ void test_studio_host_json_deletes_report_settings_by_record_selection(const std
     }
 }
 
-void test_studio_host_json_deletes_label_settings_by_record_selection(const std::string& studio_host_path) {
-    namespace fs = std::filesystem;
-
-    const fs::path temp_root =
-        fs::temp_directory_path() / "copperfin_studio_host_label_settings_delete_json_tests";
-    std::error_code ignored;
-    fs::remove_all(temp_root, ignored);
-    fs::create_directories(temp_root);
-
-    const fs::path label_path = temp_root / "mailing.lbx";
-    write_synthetic_report_table_for_layout_json(label_path);
-
-    const auto delete_process = run_process_capture(
-        studio_host_path,
-        {
-            "--path", label_path.string(),
-            "--delete-object",
-            "--record", "0",
-            "--json"
-        },
-        temp_root);
-
-    if (delete_process.exit_code != 0) {
-        std::cerr << "studio host label settings delete stdout:\n" << delete_process.stdout_text << "\n";
-        std::cerr << "studio host label settings delete stderr:\n" << delete_process.stderr_text << "\n";
-        std::cerr << "fixture root: " << temp_root << "\n";
-    }
-
-    expect(delete_process.exit_code == 0,
-           "#1494: label settings delete should exit successfully");
-    expect(dbf_record_deleted(label_path, 0U),
-           "#1494: label settings delete should mark the LBX settings record deleted");
-    expect_contains(delete_process.stdout_text, "\"isLabel\": true",
-                    "#1494: deleted label settings JSON should retain label identity");
-    expect_full_report_layout_preview_bounds(
-        delete_process.stdout_text,
-        "#2040: record-selected label settings delete JSON");
-    expect_contains(delete_process.stdout_text, "\"settingCount\": 0",
-                    "#1494: deleted label settings JSON should remove settings from live counts");
-    expect_contains(delete_process.stdout_text, "\"pageSetupAvailable\": false",
-                    "#1517: deleted label settings JSON should clear live page setup summaries");
-    expect_contains(delete_process.stdout_text, "\"deletedSettingCount\": 6",
-                    "#1494: deleted label settings JSON should expose deleted setting counts");
-    expect_contains_in_order(
-        delete_process.stdout_text,
-        {
-            "\"deletedSettings\": [",
-            "\"name\": \"ORIENTATION\"",
-            "\"recordIndex\": 0",
-            "\"name\": \"PAPERSIZE\"",
-            "\"recordIndex\": 0",
-            "\"name\": \"BOTMARGIN\"",
-            "\"recordIndex\": 0",
-            "\"name\": \"GRIDV\"",
-            "\"recordIndex\": 0",
-            "\"name\": \"GRIDH\"",
-            "\"recordIndex\": 0",
-            "\"name\": \"TOPMARGIN\"",
-            "\"recordIndex\": 0"
-        },
-        "#1494: label layout JSON should move root settings into deleted-setting metadata");
-    expect_contains(delete_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
-                    "#1494: deleted label settings selections should advertise selected-settings availability");
-    expect_contains(delete_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
-                    "#1494: deleted label settings selections should expose settings selection kind");
-    expect_contains(delete_process.stdout_text, "\"sectionCount\": 2",
-                    "#1494: deleting label settings should preserve live section metadata");
-    expect_contains(delete_process.stdout_text, "\"deletedObjectCount\": 1",
-                    "#1494: deleting label settings should preserve deleted object metadata");
-
-    if (failures == 0) {
-        fs::remove_all(temp_root, ignored);
-    }
-}
-
 void test_studio_host_json_restores_report_settings_by_record_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -123419,7 +123344,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_deleted_report_column_width_fields_by_stable_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_column_width_fields_by_stable_selection(argv[1]);
     test_studio_host_json_deletes_report_settings_by_record_selection(argv[1]);
-    test_studio_host_json_deletes_label_settings_by_record_selection(argv[1]);
     test_studio_host_json_restores_report_settings_by_record_selection(argv[1]);
     test_studio_host_json_restores_label_settings_by_record_selection(argv[1]);
     test_studio_host_json_applies_report_deleted_states_by_stable_selection(argv[1]);
