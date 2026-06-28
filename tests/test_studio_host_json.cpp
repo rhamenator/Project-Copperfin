@@ -71808,6 +71808,7 @@ void test_studio_host_json_applies_report_object_subtree_deleted_state_by_stable
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_subtree_delete_restore = [&](const fs::path& asset_path,
                                                 const std::string& title,
