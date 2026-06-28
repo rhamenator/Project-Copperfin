@@ -76378,27 +76378,41 @@ void test_studio_host_json_exposes_selected_deleted_group_header_report_objects_
                         "#1692: stable deleted group-header object selections should clear live object counts");
         expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 1",
                         "#1692: stable deleted group-header object selections should preserve deleted object counts");
-        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1692: stable deleted group-header object selections should not advertise containing-section availability");
-        expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1692: stable deleted group-header object selections should serialize null containing sections");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1692: stable deleted group-header object selections should advertise containing-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1692: stable deleted group-header object selections should expose containing-section JSON");
         expect_contains_in_order(
             object_process.stdout_text,
             {
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 4",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"containingSectionRecordIndex\": null",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
-                "\"sectionObjectIndex\": null",
-                "\"sectionObjectCount\": 0",
+                "\"containingSectionId\": \"group-header-guid\"",
+                "\"containingSectionRecordIndex\": 1",
+                "\"sectionRelativeTop\": 100",
+                "\"sectionRelativeBottom\": 350",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 1",
                 "\"objectTypeCode\": 5",
                 "\"objectKind\": \"label\"",
                 "\"expression\": \"\\\"Group header label\\\"\""
             },
             "#1692: stable deleted group-header object selections should expose selected deleted-object metadata");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"group-header-guid\"",
+                "\"bandKind\": \"group_header\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"sectionIndex\": 0",
+                "\"sectionCount\": 3",
+                "\"objectCount\": 0",
+                "\"deletedObjectCount\": 1"
+            },
+            "#1692: stable deleted group-header object selections should expose containing group-header metadata");
         expect_contains(object_process.stdout_text, "\"left\": 300",
                         "#1692: stable deleted group-header object selections should expose selected-object left bounds");
         expect_contains(object_process.stdout_text, "\"top\": 100",
@@ -76662,27 +76676,41 @@ void test_studio_host_json_exposes_selected_deleted_group_footer_report_objects_
                         "#1693: stable deleted group-footer object selections should clear live object counts");
         expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 1",
                         "#1693: stable deleted group-footer object selections should preserve deleted object counts");
-        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1693: stable deleted group-footer object selections should not advertise containing-section availability");
-        expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1693: stable deleted group-footer object selections should serialize null containing sections");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1693: stable deleted group-footer object selections should advertise containing-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1693: stable deleted group-footer object selections should expose containing-section JSON");
         expect_contains_in_order(
             object_process.stdout_text,
             {
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 4",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"containingSectionRecordIndex\": null",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
-                "\"sectionObjectIndex\": null",
-                "\"sectionObjectCount\": 0",
+                "\"containingSectionId\": \"group-footer-guid\"",
+                "\"containingSectionRecordIndex\": 3",
+                "\"sectionRelativeTop\": 100",
+                "\"sectionRelativeBottom\": 350",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 1",
                 "\"objectTypeCode\": 5",
                 "\"objectKind\": \"label\"",
                 "\"expression\": \"\\\"Group footer label\\\"\""
             },
             "#1693: stable deleted group-footer object selections should expose selected deleted-object metadata");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"group-footer-guid\"",
+                "\"bandKind\": \"group_footer\"",
+                "\"recordIndex\": 3",
+                "\"deleted\": false",
+                "\"sectionIndex\": 2",
+                "\"sectionCount\": 3",
+                "\"objectCount\": 0",
+                "\"deletedObjectCount\": 1"
+            },
+            "#1693: stable deleted group-footer object selections should expose containing group-footer metadata");
         expect_contains(object_process.stdout_text, "\"left\": 350",
                         "#1693: stable deleted group-footer object selections should expose selected-object left bounds");
         expect_contains(object_process.stdout_text, "\"top\": 3700",
@@ -76932,27 +76960,41 @@ void test_studio_host_json_exposes_selected_deleted_title_report_objects_by_stab
                         "#1942: stable selected deleted title-band object JSON should preserve deleted preview widths");
         expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
                         "#1942: stable selected deleted title-band object JSON should preserve deleted preview heights");
-        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1686: stable deleted title-band object selections should not advertise containing-section availability");
-        expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1686: stable deleted title-band object selections should serialize null containing sections");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1686: stable deleted title-band object selections should advertise containing-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1686: stable deleted title-band object selections should expose containing-section JSON");
         expect_contains_in_order(
             object_process.stdout_text,
             {
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 4",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"containingSectionRecordIndex\": null",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
-                "\"sectionObjectIndex\": null",
-                "\"sectionObjectCount\": 0",
+                "\"containingSectionId\": \"title-section-guid\"",
+                "\"containingSectionRecordIndex\": 1",
+                "\"sectionRelativeTop\": 120",
+                "\"sectionRelativeBottom\": 420",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 1",
                 "\"objectTypeCode\": 5",
                 "\"objectKind\": \"label\"",
                 "\"expression\": \"\\\"Title label\\\"\""
             },
             "#1686: stable deleted title-band object selections should expose selected deleted-object metadata");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"title-section-guid\"",
+                "\"bandKind\": \"title\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"sectionIndex\": 0",
+                "\"sectionCount\": 3",
+                "\"objectCount\": 0",
+                "\"deletedObjectCount\": 1"
+            },
+            "#1686: stable deleted title-band object selections should expose containing title-band metadata");
         expect_contains(object_process.stdout_text, "\"left\": 100",
                         "#1686: stable deleted title-band object selections should expose selected-object left bounds");
         expect_contains(object_process.stdout_text, "\"top\": 120",
@@ -77202,27 +77244,41 @@ void test_studio_host_json_exposes_selected_deleted_page_footer_report_objects_b
                         "#1944: stable selected deleted page-footer object JSON should preserve deleted preview widths");
         expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
                         "#1944: stable selected deleted page-footer object JSON should preserve deleted preview heights");
-        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1687: stable deleted page-footer object selections should not advertise containing-section availability");
-        expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1687: stable deleted page-footer object selections should serialize null containing sections");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1687: stable deleted page-footer object selections should advertise containing-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1687: stable deleted page-footer object selections should expose containing-section JSON");
         expect_contains_in_order(
             object_process.stdout_text,
             {
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 4",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"containingSectionRecordIndex\": null",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
-                "\"sectionObjectIndex\": null",
-                "\"sectionObjectCount\": 0",
+                "\"containingSectionId\": \"page-footer-section-guid\"",
+                "\"containingSectionRecordIndex\": 3",
+                "\"sectionRelativeTop\": 100",
+                "\"sectionRelativeBottom\": 400",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 1",
                 "\"objectTypeCode\": 5",
                 "\"objectKind\": \"label\"",
                 "\"expression\": \"\\\"Page footer label\\\"\""
             },
             "#1687: stable deleted page-footer object selections should expose selected deleted-object metadata");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"page-footer-section-guid\"",
+                "\"bandKind\": \"page_footer\"",
+                "\"recordIndex\": 3",
+                "\"deleted\": false",
+                "\"sectionIndex\": 2",
+                "\"sectionCount\": 3",
+                "\"objectCount\": 0",
+                "\"deletedObjectCount\": 1"
+            },
+            "#1687: stable deleted page-footer object selections should expose containing page-footer metadata");
         expect_contains(object_process.stdout_text, "\"left\": 150",
                         "#1687: stable deleted page-footer object selections should expose selected-object left bounds");
         expect_contains(object_process.stdout_text, "\"top\": 3300",
@@ -77472,27 +77528,41 @@ void test_studio_host_json_exposes_selected_deleted_column_header_report_objects
                         "#1946: stable selected deleted column-header object JSON should preserve deleted preview widths");
         expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsHeight\": 250",
                         "#1946: stable selected deleted column-header object JSON should preserve deleted preview heights");
-        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1688: stable deleted column-header object selections should not advertise containing-section availability");
-        expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1688: stable deleted column-header object selections should serialize null containing sections");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1688: stable deleted column-header object selections should advertise containing-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1688: stable deleted column-header object selections should expose containing-section JSON");
         expect_contains_in_order(
             object_process.stdout_text,
             {
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 4",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"containingSectionRecordIndex\": null",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
-                "\"sectionObjectIndex\": null",
-                "\"sectionObjectCount\": 0",
+                "\"containingSectionId\": \"column-header-section-guid\"",
+                "\"containingSectionRecordIndex\": 1",
+                "\"sectionRelativeTop\": 100",
+                "\"sectionRelativeBottom\": 350",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 1",
                 "\"objectTypeCode\": 5",
                 "\"objectKind\": \"label\"",
                 "\"expression\": \"\\\"Column header label\\\"\""
             },
             "#1688: stable deleted column-header object selections should expose selected deleted-object metadata");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"column-header-section-guid\"",
+                "\"bandKind\": \"column_header\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"sectionIndex\": 0",
+                "\"sectionCount\": 3",
+                "\"objectCount\": 0",
+                "\"deletedObjectCount\": 1"
+            },
+            "#1688: stable deleted column-header object selections should expose containing column-header metadata");
         expect_contains(object_process.stdout_text, "\"left\": 200",
                         "#1688: stable deleted column-header object selections should expose selected-object left bounds");
         expect_contains(object_process.stdout_text, "\"top\": 100",
@@ -77742,27 +77812,41 @@ void test_studio_host_json_exposes_selected_deleted_column_footer_report_objects
                         "#1948: stable selected deleted column-footer object JSON should preserve deleted preview widths");
         expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsHeight\": 250",
                         "#1948: stable selected deleted column-footer object JSON should preserve deleted preview heights");
-        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1689: stable deleted column-footer object selections should not advertise containing-section availability");
-        expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1689: stable deleted column-footer object selections should serialize null containing sections");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1689: stable deleted column-footer object selections should advertise containing-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1689: stable deleted column-footer object selections should expose containing-section JSON");
         expect_contains_in_order(
             object_process.stdout_text,
             {
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 4",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"containingSectionRecordIndex\": null",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
-                "\"sectionObjectIndex\": null",
-                "\"sectionObjectCount\": 0",
+                "\"containingSectionId\": \"column-footer-section-guid\"",
+                "\"containingSectionRecordIndex\": 3",
+                "\"sectionRelativeTop\": 100",
+                "\"sectionRelativeBottom\": 350",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 1",
                 "\"objectTypeCode\": 5",
                 "\"objectKind\": \"label\"",
                 "\"expression\": \"\\\"Column footer label\\\"\""
             },
             "#1689: stable deleted column-footer object selections should expose selected deleted-object metadata");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"column-footer-section-guid\"",
+                "\"bandKind\": \"column_footer\"",
+                "\"recordIndex\": 3",
+                "\"deleted\": false",
+                "\"sectionIndex\": 2",
+                "\"sectionCount\": 3",
+                "\"objectCount\": 0",
+                "\"deletedObjectCount\": 1"
+            },
+            "#1689: stable deleted column-footer object selections should expose containing column-footer metadata");
         expect_contains(object_process.stdout_text, "\"left\": 250",
                         "#1689: stable deleted column-footer object selections should expose selected-object left bounds");
         expect_contains(object_process.stdout_text, "\"top\": 3150",
