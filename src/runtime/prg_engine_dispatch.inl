@@ -563,7 +563,9 @@
                     auto object = resolve_ole_object(object_value);
                     if (!object.has_value())
                     {
-                        last_error_message = "OLE object not found for property assignment: " + assignment_identifier;
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.OleObjectNotFoundForPropertyAssignment",
+                            {{"targetIdentifier", assignment_identifier}});
                         record_ole_aerror_context(assignment_identifier,
                                                   "Copperfin OLE",
                                                   object_part,
@@ -808,7 +810,7 @@
             {
                 if (segments.empty())
                 {
-                    last_error_message = "Object target assignment failed";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.ObjectTargetAssignmentFailed");
                     return nullptr;
                 }
 
@@ -824,7 +826,7 @@
                     current_object = create_empty_runtime_object(source_tag);
                     if (current_object == nullptr)
                     {
-                        last_error_message = "SCATTER NAME: unable to create object";
+                        last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.ScatterNameUnableToCreateObject");
                         return nullptr;
                     }
                     assign_variable(frame, segments.front(), make_runtime_object_reference(current_object));
@@ -848,7 +850,7 @@
                         next_object = create_empty_runtime_object(source_tag + " nested");
                         if (next_object == nullptr)
                         {
-                            last_error_message = "SCATTER NAME: unable to create object";
+                            last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.ScatterNameUnableToCreateObject");
                             return nullptr;
                         }
                         current_object->properties[property_name] = make_runtime_object_reference(next_object);
@@ -862,7 +864,7 @@
             {
                 if (segments.empty())
                 {
-                    last_error_message = "Object target assignment failed";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.ObjectTargetAssignmentFailed");
                     return false;
                 }
                 if (segments.size() == 1U)

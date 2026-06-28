@@ -2589,6 +2589,64 @@ void test_runtime_residual_command_dispatch_errors_route_through_catalog() {
         "#2717: qps-ploc TEXT missing-target error should pseudo-localize prose while preserving syntax markers");
 }
 
+void test_runtime_object_helper_dispatch_errors_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const copperfin::localization::PlaceholderMap ole_placeholders{
+        {"targetIdentifier", "missingOle.SomeProperty"}
+    };
+    const std::vector<std::string> keys{
+        "Runtime.Prg.Dispatch.Error.ObjectTargetAssignmentFailed",
+        "Runtime.Prg.Dispatch.Error.OleObjectNotFoundForPropertyAssignment",
+        "Runtime.Prg.Dispatch.Error.ScatterNameUnableToCreateObject"
+    };
+
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.ObjectTargetAssignmentFailed") ==
+            "Object target assignment failed",
+        "#2718: object-target assignment failure should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.OleObjectNotFoundForPropertyAssignment", ole_placeholders) ==
+            "OLE object not found for property assignment: missingOle.SomeProperty",
+        "#2718: OLE property-assignment miss should preserve the failing target identifier");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.ScatterNameUnableToCreateObject") ==
+            "SCATTER NAME: unable to create object",
+        "#2718: SCATTER NAME object-creation failure should localize through the runtime catalog");
+
+    for (const std::string& key : keys) {
+        expect(
+            spanish.catalogs.contains("es-419") && spanish.catalogs.at("es-419").contains(key),
+            "#2718: es-419 should define every object-helper runtime dispatch key");
+        expect(
+            portuguese.catalogs.contains("pt-BR") && portuguese.catalogs.at("pt-BR").contains(key),
+            "#2718: pt-BR should define every object-helper runtime dispatch key");
+        expect(
+            pseudo.catalogs.contains("qps-ploc") && pseudo.catalogs.at("qps-ploc").contains(key),
+            "#2718: qps-ploc should define every object-helper runtime dispatch key");
+    }
+
+    expect(
+        spanish.translate("Runtime.Prg.Dispatch.Error.ObjectTargetAssignmentFailed")
+                .find("Object target assignment failed") == std::string::npos,
+        "#2718: es-419 object-target assignment failure should not fall back to raw English");
+    expect(
+        portuguese.translate("Runtime.Prg.Dispatch.Error.ScatterNameUnableToCreateObject")
+                .find("unable to create object") == std::string::npos,
+        "#2718: pt-BR SCATTER NAME object-creation failure should not fall back to raw English");
+
+    const std::string pseudo_ole =
+        pseudo.translate("Runtime.Prg.Dispatch.Error.OleObjectNotFoundForPropertyAssignment", ole_placeholders);
+    expect(
+        pseudo_ole.find("[!! ") == 0U &&
+            pseudo_ole.find("missingOle.SomeProperty") != std::string::npos &&
+            pseudo_ole.find("OLE object not found for property assignment") == std::string::npos,
+        "#2718: qps-ploc OLE property-assignment miss should pseudo-localize prose while preserving the member path");
+}
+
 void test_inspect_usage_routes_through_localization(const std::string& inspect_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_inspect_usage_tests";
@@ -2757,6 +2815,7 @@ int main(int argc, char** argv) {
     test_runtime_set_filter_dimension_sleep_errors_route_through_catalog();
     test_runtime_declare_dispatch_errors_route_through_catalog();
     test_runtime_residual_command_dispatch_errors_route_through_catalog();
+    test_runtime_object_helper_dispatch_errors_route_through_catalog();
     test_runtime_package_warnings_pseudo_localize();
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);

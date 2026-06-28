@@ -5340,6 +5340,61 @@ void test_residual_dispatch_runtime_errors_localize() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_ole_property_assignment_runtime_errors_localize() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_ole_assignment_localization";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+
+    const fs::path main_path = temp_root / "ole_assignment_localization.prg";
+    write_text(
+        main_path,
+        "ON ERROR DO oleerr\n"
+        "missingOle.SomeProperty = 42\n"
+        "RETURN\n"
+        "PROCEDURE oleerr\n"
+        "nOleRows = AERROR(aOleErr)\n"
+        "cOleMessage = aOleErr[1,2]\n"
+        "cOleDetail = aOleErr[1,3]\n"
+        "RETURN\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#2718: qps-ploc OLE property-assignment handler script should complete");
+
+    const auto rows = state.globals.find("nolerows");
+    const auto message = state.globals.find("colemessage");
+    const auto detail = state.globals.find("coledetail");
+    expect(rows != state.globals.end(), "#2718: qps-ploc OLE AERROR should return a row count");
+    expect(message != state.globals.end(), "#2718: qps-ploc OLE AERROR should populate the localized message");
+    expect(detail != state.globals.end(), "#2718: qps-ploc OLE AERROR should populate the failing member path");
+
+    if (rows != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rows->second) == "1",
+               "#2718: qps-ploc OLE AERROR should expose one row");
+    }
+    if (message != state.globals.end()) {
+        const std::string localized_message = copperfin::runtime::format_value(message->second);
+        expect(
+            localized_message.find("[!! ") == 0U &&
+                localized_message.find("missingOle.SomeProperty") != std::string::npos &&
+                localized_message.find("OLE object not found for property assignment") == std::string::npos,
+            "#2718: qps-ploc OLE property-assignment message should pseudo-localize prose while preserving the member path");
+    }
+    if (detail != state.globals.end()) {
+        expect(copperfin::runtime::format_value(detail->second).find("missingOle.SomeProperty") != std::string::npos,
+               "#2718: qps-ploc OLE AERROR detail should preserve the failing member path");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_yield_is_explicit_policy_exception_in_enter_critical() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_enter_critical_yield_policy_exception";
@@ -7264,6 +7319,7 @@ int main() {
     test_critical_section_blocking_policy_rejects_await_inside_section();
     test_critical_section_blocking_policy_rejects_sleep_inside_section();
     test_residual_dispatch_runtime_errors_localize();
+    test_ole_property_assignment_runtime_errors_localize();
     test_yield_allowed_in_enter_critical_regression_minimal();
     test_yield_is_explicit_policy_exception_in_enter_critical();
     test_yield_in_enter_critical_has_no_blocking_violation();
