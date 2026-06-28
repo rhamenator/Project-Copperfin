@@ -27,6 +27,8 @@
   "Runtime.Package.Launcher.Error.ManifestMissing": "Copperfin manifest was not found beside the launcher.",
   "Runtime.Package.Launcher.Error.RuntimeHostMissing": "Copperfin runtime host was not found beside the launcher.",
   "Runtime.Package.Launcher.Error.RuntimeHostStartFailed": "Copperfin runtime host could not be started.",
+  "Runtime.Package.Transpilation.Error.ManualPortRequiredForXAssetMethod": "Manual port required for FoxPro xAsset method: {methodIdentity}",
+  "Runtime.Package.Transpilation.Error.UnsupportedFoxProStatement": "Unsupported FoxPro statement: {statementText}",
   "Runtime.Package.Error.CopyFileFailed": "Unable to copy file into package: {path}",
   "Runtime.Package.Error.CreateContentRootFailed": "Unable to create package content-root directory.",
   "Runtime.Package.Error.CreateDirectoryFailed": "Unable to create directory: {path}",

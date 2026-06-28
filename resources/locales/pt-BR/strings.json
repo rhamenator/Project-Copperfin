@@ -27,6 +27,8 @@
   "Runtime.Package.Launcher.Error.ManifestMissing": "O manifesto do Copperfin nao foi encontrado ao lado do iniciador.",
   "Runtime.Package.Launcher.Error.RuntimeHostMissing": "O host de runtime do Copperfin nao foi encontrado ao lado do iniciador.",
   "Runtime.Package.Launcher.Error.RuntimeHostStartFailed": "Nao foi possivel iniciar o host de runtime do Copperfin.",
+  "Runtime.Package.Transpilation.Error.ManualPortRequiredForXAssetMethod": "Port manual necessario para o metodo xAsset do FoxPro: {methodIdentity}",
+  "Runtime.Package.Transpilation.Error.UnsupportedFoxProStatement": "Instrucao FoxPro sem suporte: {statementText}",
   "Runtime.Package.Error.CopyFileFailed": "Nao foi possivel copiar o arquivo para o pacote: {path}",
   "Runtime.Package.Error.CreateContentRootFailed": "Nao foi possivel criar o diretorio raiz de conteudo do pacote.",
   "Runtime.Package.Error.CreateDirectoryFailed": "Nao foi possivel criar o diretorio: {path}",

@@ -395,6 +395,132 @@ void append_generated_launcher_localization_helpers(std::ostringstream& stream) 
     stream << "    }\n\n";
 }
 
+std::map<std::string, std::map<std::string, std::string>> build_generated_csharp_localized_messages() {
+    static const std::vector<std::string_view> locales{
+        "en-US",
+        "es-419",
+        "pt-BR",
+        "qps-ploc"
+    };
+    static const std::vector<std::string_view> keys{
+        "Runtime.Package.Transpilation.Error.UnsupportedFoxProStatement",
+        "Runtime.Package.Transpilation.Error.ManualPortRequiredForXAssetMethod"
+    };
+
+    const std::filesystem::path catalog_root = copperfin::localization::resolve_catalog_root();
+    std::map<std::string, std::map<std::string, std::string>> localized_messages;
+    for (const auto locale : locales) {
+        const auto catalog = copperfin::localization::load_catalogs(catalog_root, locale);
+        auto& locale_messages = localized_messages[std::string(locale)];
+        for (const auto key : keys) {
+            locale_messages[std::string(key)] = catalog.translate(key);
+        }
+    }
+    return localized_messages;
+}
+
+void append_generated_csharp_localization_helpers(std::ostringstream& stream) {
+    const auto localized_messages = build_generated_csharp_localized_messages();
+    stream << "    internal static class GeneratedLocalization\n";
+    stream << "    {\n";
+    stream << "        private static readonly Dictionary<string, Dictionary<string, string>> LocalizedMessages =\n";
+    stream << "            new(StringComparer.OrdinalIgnoreCase)\n";
+    stream << "            {\n";
+    for (const auto& [locale, messages] : localized_messages) {
+        stream << "                [\"" << json_escape(locale) << "\"] = new(StringComparer.OrdinalIgnoreCase)\n";
+        stream << "                {\n";
+        for (const auto& [key, value] : messages) {
+            stream << "                    [\"" << json_escape(key) << "\"] = \"" << json_escape(value) << "\",\n";
+        }
+        stream << "                },\n";
+    }
+    stream << "            };\n\n";
+
+    stream << "        internal static string Translate(string key, Dictionary<string, string>? placeholders = null)\n";
+    stream << "        {\n";
+    stream << "            var pattern = TranslatePattern(key);\n";
+    stream << "            if (placeholders is null || placeholders.Count == 0)\n";
+    stream << "            {\n";
+    stream << "                return pattern;\n";
+    stream << "            }\n\n";
+    stream << "            foreach (var placeholder in placeholders)\n";
+    stream << "            {\n";
+    stream << "                pattern = pattern.Replace(\"{\" + placeholder.Key + \"}\", placeholder.Value, StringComparison.Ordinal);\n";
+    stream << "            }\n";
+    stream << "            return pattern;\n";
+    stream << "        }\n\n";
+
+    stream << "        private static string TranslatePattern(string key)\n";
+    stream << "        {\n";
+    stream << "            foreach (var locale in LocaleFallbackChain(SelectLocale()))\n";
+    stream << "            {\n";
+    stream << "                if (LocalizedMessages.TryGetValue(locale, out var localeMessages) &&\n";
+    stream << "                    localeMessages.TryGetValue(key, out var value))\n";
+    stream << "                {\n";
+    stream << "                    return value;\n";
+    stream << "                }\n";
+    stream << "            }\n";
+    stream << "            return key;\n";
+    stream << "        }\n\n";
+
+    stream << "        private static string SelectLocale()\n";
+    stream << "        {\n";
+    stream << "            var args = Environment.GetCommandLineArgs();\n";
+    stream << "            for (var index = 0; index + 1 < args.Length; ++index)\n";
+    stream << "            {\n";
+    stream << "                if (string.Equals(args[index], \"--locale\", StringComparison.OrdinalIgnoreCase) ||\n";
+    stream << "                    string.Equals(args[index], \"/locale\", StringComparison.OrdinalIgnoreCase))\n";
+    stream << "                {\n";
+    stream << "                    return NormalizeLocale(args[index + 1]);\n";
+    stream << "                }\n";
+    stream << "            }\n\n";
+    stream << "            var configured = Environment.GetEnvironmentVariable(\"COPPERFIN_LOCALE\");\n";
+    stream << "            if (!string.IsNullOrWhiteSpace(configured))\n";
+    stream << "            {\n";
+    stream << "                return NormalizeLocale(configured);\n";
+    stream << "            }\n";
+    stream << "            return \"en-US\";\n";
+    stream << "        }\n\n";
+
+    stream << "        private static string NormalizeLocale(string value)\n";
+    stream << "        {\n";
+    stream << "            if (string.IsNullOrWhiteSpace(value))\n";
+    stream << "            {\n";
+    stream << "                return \"en-US\";\n";
+    stream << "            }\n\n";
+    stream << "            var parts = value.Trim().Replace('_', '-').Split('-', StringSplitOptions.RemoveEmptyEntries);\n";
+    stream << "            if (parts.Length == 0)\n";
+    stream << "            {\n";
+    stream << "                return \"en-US\";\n";
+    stream << "            }\n\n";
+    stream << "            for (var index = 0; index < parts.Length; ++index)\n";
+    stream << "            {\n";
+    stream << "                parts[index] = index == 0\n";
+    stream << "                    ? parts[index].ToLowerInvariant()\n";
+    stream << "                    : (string.Equals(parts[index], \"419\", StringComparison.Ordinal) ? \"419\" : parts[index].ToUpperInvariant());\n";
+    stream << "            }\n";
+    stream << "            return string.Join(\"-\", parts);\n";
+    stream << "        }\n\n";
+
+    stream << "        private static IEnumerable<string> LocaleFallbackChain(string locale)\n";
+    stream << "        {\n";
+    stream << "            var normalized = NormalizeLocale(locale);\n";
+    stream << "            yield return normalized;\n";
+    stream << "            if (normalized.StartsWith(\"es-\", StringComparison.OrdinalIgnoreCase) &&\n";
+    stream << "                !string.Equals(normalized, \"es-419\", StringComparison.OrdinalIgnoreCase))\n";
+    stream << "            {\n";
+    stream << "                yield return \"es-419\";\n";
+    stream << "            }\n\n";
+    stream << "            var separator = normalized.IndexOf('-');\n";
+    stream << "            if (separator >= 0)\n";
+    stream << "            {\n";
+    stream << "                yield return normalized.Substring(0, separator);\n";
+    stream << "            }\n";
+    stream << "            yield return \"en-US\";\n";
+    stream << "        }\n";
+    stream << "    }\n\n";
+}
+
 std::vector<std::string> collect_library_exported_symbols(const RuntimePackagePlan& plan) {
     std::vector<std::string> exported_symbols;
     std::unordered_set<std::string> seen;
@@ -3893,7 +4019,7 @@ std::string transpile_statement_to_csharp(
             break;
     }
 
-    return "throw new NotSupportedException(\"Unsupported FoxPro statement: " + json_escape(statement.text) + "\");\n";
+    return "throw new NotSupportedException(GeneratedLocalization.Translate(\"Runtime.Package.Transpilation.Error.UnsupportedFoxProStatement\", new Dictionary<string, string> { [\"statementText\"] = \"" + json_escape(statement.text) + "\" }));\n";
 }
 
 std::string sanitize_csharp_compound_identifier(std::string value, const std::string& fallback) {
@@ -3982,9 +4108,11 @@ void append_xasset_csharp_type(
             : method.object_path + "." + method.method_name;
         stream << "        public void " << mapped_name->second << "()\n";
         stream << "        {\n";
-        stream << "            throw new NotSupportedException(\"Manual port required for FoxPro xAsset method: "
+        stream << "            throw new NotSupportedException(GeneratedLocalization.Translate("
+               << "\"Runtime.Package.Transpilation.Error.ManualPortRequiredForXAssetMethod\", "
+               << "new Dictionary<string, string> { [\"methodIdentity\"] = \""
                << json_escape(method_identity)
-               << "\");\n";
+               << "\" }));\n";
         stream << "        }\n\n";
     }
 
@@ -4017,9 +4145,11 @@ void append_xasset_csharp_type(
 
 std::string build_csharp_transpilation_source(const RuntimePackagePlan& plan) {
     std::ostringstream stream;
-    stream << "using System;\n\n";
+    stream << "using System;\n";
+    stream << "using System.Collections.Generic;\n\n";
     stream << "namespace Copperfin.Generated\n";
     stream << "{\n";
+    append_generated_csharp_localization_helpers(stream);
     stream << "    public static class TranspiledProgram\n";
     stream << "    {\n";
 

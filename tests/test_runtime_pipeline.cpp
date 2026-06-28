@@ -4797,6 +4797,7 @@ void test_runtime_package_emits_csharp_transpilation_for_procedural_prg_code() {
                "LOCAL nValue\n"
                "nValue = 1\n"
                "DO worker\n"
+               "READ EVENTS\n"
                "RETURN\n"
                "PROCEDURE worker\n"
                "WAIT WINDOW 'csharp'\n"
@@ -4864,6 +4865,13 @@ void test_runtime_package_emits_csharp_transpilation_for_procedural_prg_code() {
                "csharp transpilation should emit the called FoxPro routine");
         expect(transpiled.find("Console.WriteLine(\"csharp\");") != std::string::npos,
                "csharp transpilation should map WAIT WINDOW literal output to Console.WriteLine");
+        expect(
+            transpiled.find("GeneratedLocalization.Translate(\"Runtime.Package.Transpilation.Error.UnsupportedFoxProStatement\"") != std::string::npos &&
+                transpiled.find("[\"statementText\"] = \"READ EVENTS\"") != std::string::npos,
+            "csharp transpilation should route unsupported-statement exceptions through localization while preserving statement text");
+        expect(
+            transpiled.find("[\"qps-ploc\"] = new(StringComparer.OrdinalIgnoreCase)") != std::string::npos,
+            "csharp transpilation should embed a qps-ploc locale bucket for runtime exception localization");
         if (dotnet_is_available()) {
             std::string compile_error;
             const bool compiled = compile_csharp_artifact(result.plan.transpiled_csharp_path, compile_error);
@@ -4960,8 +4968,10 @@ void test_runtime_package_emits_csharp_transpilation_for_class_library_objects()
                "class-library transpilation should emit an ordered shutdown wrapper");
         expect(transpiled.find("Destroy();") != std::string::npos,
                "class-library transpilation should preserve root shutdown ordering");
-        expect(transpiled.find("Manual port required for FoxPro xAsset method: custWidget.txtName.Valid") != std::string::npos,
-               "class-library transpilation should stay honest about untranslated xAsset method bodies");
+        expect(
+            transpiled.find("GeneratedLocalization.Translate(\"Runtime.Package.Transpilation.Error.ManualPortRequiredForXAssetMethod\"") != std::string::npos &&
+                transpiled.find("[\"methodIdentity\"] = \"custWidget.txtName.Valid\"") != std::string::npos,
+            "class-library transpilation should route xAsset manual-port exceptions through localization while preserving method identity");
 
         if (dotnet_is_available()) {
             std::string compile_error;
@@ -5694,6 +5704,8 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
         "Runtime.Package.Launcher.Error.ManifestMissing",
         "Runtime.Package.Launcher.Error.RuntimeHostMissing",
         "Runtime.Package.Launcher.Error.RuntimeHostStartFailed",
+        "Runtime.Package.Transpilation.Error.ManualPortRequiredForXAssetMethod",
+        "Runtime.Package.Transpilation.Error.UnsupportedFoxProStatement",
         "Runtime.Package.Error.CopyFileFailed",
         "Runtime.Package.Error.CreateContentRootFailed",
         "Runtime.Package.Error.CreateDirectoryFailed",
@@ -5730,9 +5742,33 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
             "Nao foi possivel iniciar o host de runtime do Copperfin.",
         "#2725: generated launcher runtime-host-start diagnostics should resolve through the pt-BR catalog");
     expect(
+        english_catalog.translate(
+            "Runtime.Package.Transpilation.Error.UnsupportedFoxProStatement",
+            {{"statementText", "READ EVENTS"}}) ==
+            "Unsupported FoxPro statement: READ EVENTS",
+        "#2726: transpiled unsupported-statement diagnostics should resolve through the en-US catalog");
+    expect(
+        spanish_catalog.translate(
+            "Runtime.Package.Transpilation.Error.ManualPortRequiredForXAssetMethod",
+            {{"methodIdentity", "custWidget.txtName.Valid"}}) ==
+            "Se requiere port manual para el metodo xAsset de FoxPro: custWidget.txtName.Valid",
+        "#2726: xAsset manual-port diagnostics should resolve through the es-419 catalog");
+    expect(
+        portuguese_catalog.translate(
+            "Runtime.Package.Transpilation.Error.UnsupportedFoxProStatement",
+            {{"statementText", "READ EVENTS"}}) ==
+            "Instrucao FoxPro sem suporte: READ EVENTS",
+        "#2726: transpiled unsupported-statement diagnostics should resolve through the pt-BR catalog");
+    expect(
         pseudo_catalog.translate("Runtime.Package.Launcher.Error.RuntimeHostMissing") ==
             copperfin::localization::pseudo_localize("Copperfin runtime host was not found beside the launcher."),
         "#2725: generated launcher qps-ploc runtime-host-missing diagnostics should route through the pseudo-localization transform");
+    expect(
+        pseudo_catalog.translate(
+            "Runtime.Package.Transpilation.Error.ManualPortRequiredForXAssetMethod",
+            {{"methodIdentity", "custWidget.txtName.Valid"}}) ==
+            "[!! Måñüål pørţ rëqüïrëd før FøxPrø xÅssëţ mëţhød: custWidget.txtName.Valid !!]",
+        "#2726: xAsset manual-port qps-ploc diagnostics should route through the pseudo-localization transform");
     expect(
         english_catalog.translate("Runtime.Package.Error.PlanInvalid") == "Package plan is not valid.",
         "#2390: runtime package invalid-plan diagnostics should resolve through the en-US catalog");
@@ -5740,6 +5776,14 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
         pseudo_catalog.translate("Runtime.Package.Launcher.Error.RuntimeHostMissing") !=
             english_catalog.translate("Runtime.Package.Launcher.Error.RuntimeHostMissing"),
         "#2725: generated launcher diagnostics should be pseudo-localizable");
+    expect(
+        pseudo_catalog.translate(
+            "Runtime.Package.Transpilation.Error.UnsupportedFoxProStatement",
+            {{"statementText", "READ EVENTS"}}) !=
+            english_catalog.translate(
+                "Runtime.Package.Transpilation.Error.UnsupportedFoxProStatement",
+                {{"statementText", "READ EVENTS"}}),
+        "#2726: transpiled unsupported-statement diagnostics should be pseudo-localizable");
     expect(
         english_catalog.translate("Runtime.Package.Error.PrimaryOutputRequiresLibraryOutput") ==
             "Primary-output builds are only supported for library-output packages.",
