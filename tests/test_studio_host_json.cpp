@@ -72035,6 +72035,7 @@ void test_studio_host_json_duplicates_report_visual_object_subtrees_by_stable_se
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_subtree_duplicate = [&](const fs::path& asset_path,
                                            const std::string& title,
