@@ -5522,6 +5522,102 @@ void test_residual_dispatch_runtime_errors_localize() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_dispatch_array_and_object_target_runtime_errors_use_default_locale_messages() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_dispatch_helper_defaults";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}});
+
+    const auto run_error_script = [&](const std::string& file_stem, const std::string& script) {
+        const fs::path main_path = temp_root / (file_stem + ".prg");
+        write_text(main_path, script + "RETURN\n");
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+        return session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    };
+
+    const auto copy_missing_array = run_error_script("copy_missing_array", "COPY TO ARRAY FIELDS NAME\n");
+    expect(!copy_missing_array.completed, "#2722: COPY TO ARRAY without a target array should fail");
+    expect(
+        copy_missing_array.message == "COPY TO ARRAY: array name required",
+        "#2722: COPY TO ARRAY should keep the default-locale array-name-required helper text");
+
+    const auto copy_invalid_array = run_error_script(
+        "copy_invalid_array",
+        "COPY TO ARRAY 'bad name'\n");
+    expect(!copy_invalid_array.completed, "#2722: COPY TO ARRAY with an invalid array target should fail");
+    expect(
+        copy_invalid_array.message == "COPY TO ARRAY: invalid array name",
+        "#2722: COPY TO ARRAY should keep the default-locale invalid-array-name helper text");
+
+    const auto scatter_invalid_object = run_error_script(
+        "scatter_invalid_object",
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SCATTER NAME 'bad path'\n");
+    expect(!scatter_invalid_object.completed, "#2722: SCATTER NAME with an invalid object target should fail");
+    expect(
+        scatter_invalid_object.message == "SCATTER NAME: invalid object target",
+        "#2722: SCATTER NAME should keep the default-locale invalid-object-target helper text");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_dispatch_array_and_object_target_runtime_errors_localize() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_dispatch_helper_localization";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}});
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+
+    const auto run_error_script = [&](const std::string& file_stem, const std::string& script) {
+        const fs::path main_path = temp_root / (file_stem + ".prg");
+        write_text(main_path, script + "RETURN\n");
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+        return session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    };
+
+    set_env_value("COPPERFIN_LOCALE", "es-419", true);
+    const auto copy_missing_array = run_error_script("copy_missing_array_es", "COPY TO ARRAY FIELDS NAME\n");
+    expect(!copy_missing_array.completed, "#2722: es-419 COPY TO ARRAY without a target array should fail");
+    expect(
+        copy_missing_array.message == "COPY TO ARRAY: se requiere un nombre de arreglo",
+        "#2722: es-419 COPY TO ARRAY helper error should localize the array-name-required text");
+
+    set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
+    const auto scatter_invalid_object = run_error_script(
+        "scatter_invalid_object_pt",
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SCATTER NAME 'bad path'\n");
+    expect(!scatter_invalid_object.completed, "#2722: pt-BR SCATTER NAME with an invalid object target should fail");
+    expect(
+        scatter_invalid_object.message == "SCATTER NAME: destino de objeto invalido",
+        "#2722: pt-BR SCATTER NAME helper error should localize the invalid-object-target text");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    const auto scatter_invalid_object_qps = run_error_script(
+        "scatter_invalid_object_qps",
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SCATTER NAME 'bad path'\n");
+    expect(!scatter_invalid_object_qps.completed, "#2722: qps-ploc SCATTER NAME with an invalid object target should fail");
+    expect(
+        scatter_invalid_object_qps.message.find("[!! ") == 0U &&
+            scatter_invalid_object_qps.message.find("SCATTER NAME") != std::string::npos &&
+            scatter_invalid_object_qps.message.find("invalid object target") == std::string::npos,
+        "#2722: qps-ploc SCATTER NAME helper error should pseudo-localize prose while preserving the command token");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_ole_property_assignment_runtime_errors_localize() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_ole_assignment_localization";
@@ -7602,6 +7698,8 @@ int main() {
     test_critical_section_blocking_policy_rejects_await_inside_section();
     test_critical_section_blocking_policy_rejects_sleep_inside_section();
     test_residual_dispatch_runtime_errors_localize();
+    test_dispatch_array_and_object_target_runtime_errors_use_default_locale_messages();
+    test_dispatch_array_and_object_target_runtime_errors_localize();
     test_runtime_guardrail_errors_localize_without_changing_behavior();
     test_ole_property_assignment_runtime_errors_localize();
     test_ole_invocation_and_property_read_runtime_errors_localize();

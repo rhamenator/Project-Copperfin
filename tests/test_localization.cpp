@@ -2413,6 +2413,68 @@ void test_runtime_scatter_gather_errors_route_through_catalog() {
         "#2712: qps-ploc GATHER NAME missing-object error should pseudo-localize prose");
 }
 
+void test_runtime_dispatch_array_and_object_target_errors_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const copperfin::localization::PlaceholderMap copy_placeholders{{"command", "COPY TO ARRAY"}};
+    const copperfin::localization::PlaceholderMap scatter_placeholders{{"command", "SCATTER NAME"}};
+    const std::vector<std::string> keys{
+        "Runtime.Prg.Dispatch.Error.ArrayNameRequired",
+        "Runtime.Prg.Dispatch.Error.InvalidArrayName",
+        "Runtime.Prg.Dispatch.Error.ObjectTargetRequired",
+        "Runtime.Prg.Dispatch.Error.InvalidObjectTarget"
+    };
+
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.ArrayNameRequired", copy_placeholders) ==
+            "COPY TO ARRAY: array name required",
+        "#2722: array-name-required helper error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.InvalidArrayName", copy_placeholders) ==
+            "COPY TO ARRAY: invalid array name",
+        "#2722: invalid-array-name helper error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.ObjectTargetRequired", scatter_placeholders) ==
+            "SCATTER NAME: object target required",
+        "#2722: object-target-required helper error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.InvalidObjectTarget", scatter_placeholders) ==
+            "SCATTER NAME: invalid object target",
+        "#2722: invalid-object-target helper error should localize through the runtime catalog");
+
+    for (const std::string& key : keys) {
+        expect(
+            spanish.catalogs.contains("es-419") && spanish.catalogs.at("es-419").contains(key),
+            "#2722: es-419 should define every shared array/object-target helper runtime dispatch key");
+        expect(
+            portuguese.catalogs.contains("pt-BR") && portuguese.catalogs.at("pt-BR").contains(key),
+            "#2722: pt-BR should define every shared array/object-target helper runtime dispatch key");
+        expect(
+            pseudo.catalogs.contains("qps-ploc") && pseudo.catalogs.at("qps-ploc").contains(key),
+            "#2722: qps-ploc should define every shared array/object-target helper runtime dispatch key");
+    }
+
+    expect(
+        spanish.translate("Runtime.Prg.Dispatch.Error.ArrayNameRequired", copy_placeholders)
+                .find("array name required") == std::string::npos,
+        "#2722: es-419 array-name-required helper error should not fall back to raw English");
+    expect(
+        portuguese.translate("Runtime.Prg.Dispatch.Error.InvalidObjectTarget", scatter_placeholders)
+                .find("invalid object target") == std::string::npos,
+        "#2722: pt-BR invalid-object-target helper error should not fall back to raw English");
+
+    const std::string pseudo_object_target =
+        pseudo.translate("Runtime.Prg.Dispatch.Error.ObjectTargetRequired", scatter_placeholders);
+    expect(
+        pseudo_object_target.find("[!! ") == 0U &&
+            pseudo_object_target.find("SCATTER NAME") != std::string::npos &&
+            pseudo_object_target.find("object target required") == std::string::npos,
+        "#2722: qps-ploc object-target-required helper error should pseudo-localize prose while preserving the command token");
+}
+
 void test_runtime_table_structure_errors_route_through_catalog() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
@@ -2970,6 +3032,7 @@ int main(int argc, char** argv) {
     test_runtime_append_from_errors_route_through_catalog();
     test_runtime_append_from_type_errors_route_through_catalog();
     test_runtime_scatter_gather_errors_route_through_catalog();
+    test_runtime_dispatch_array_and_object_target_errors_route_through_catalog();
     test_runtime_table_structure_errors_route_through_catalog();
     test_runtime_set_filter_dimension_sleep_errors_route_through_catalog();
     test_runtime_declare_dispatch_errors_route_through_catalog();

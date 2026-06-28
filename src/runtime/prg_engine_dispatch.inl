@@ -599,7 +599,9 @@
                 const std::string candidate = trim_copy(raw_name);
                 if (candidate.empty())
                 {
-                    last_error_message = command_name + ": array name required";
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.ArrayNameRequired",
+                        {{"command", command_name}});
                     return std::nullopt;
                 }
                 if (is_bare_identifier_text(candidate))
@@ -614,7 +616,9 @@
                     return evaluated_name;
                 }
 
-                last_error_message = command_name + ": invalid array name";
+                last_error_message = runtime_text(
+                    "Runtime.Prg.Dispatch.Error.InvalidArrayName",
+                    {{"command", command_name}});
                 return std::nullopt;
             };
             auto parse_command_object_target_path = [&](const std::string &raw_name, const std::string &command_name)
@@ -666,7 +670,9 @@
                 std::string candidate = trim_copy(raw_name);
                 if (candidate.empty())
                 {
-                    last_error_message = command_name + ": object target required";
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.ObjectTargetRequired",
+                        {{"command", command_name}});
                     return std::nullopt;
                 }
                 if (!candidate.empty() && candidate.front() == '&')
@@ -693,7 +699,9 @@
                 }
                 if (candidate.empty())
                 {
-                    last_error_message = command_name + ": invalid object target";
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.InvalidObjectTarget",
+                        {{"command", command_name}});
                     return std::nullopt;
                 }
 
@@ -708,7 +716,9 @@
                         const std::string expanded = trim_copy(value_as_string(evaluate_expression(segment, frame)));
                         if (expanded.empty())
                         {
-                            last_error_message = command_name + ": invalid object target";
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.InvalidObjectTarget",
+                                {{"command", command_name}});
                             return std::nullopt;
                         }
                         if (expanded.find('.') != std::string::npos)
@@ -724,7 +734,9 @@
                                     expand_object_target_identifier_chain(nested_segment);
                                 if (!is_bare_identifier_text(expanded_nested_segment))
                                 {
-                                    last_error_message = command_name + ": invalid object target";
+                                    last_error_message = runtime_text(
+                                        "Runtime.Prg.Dispatch.Error.InvalidObjectTarget",
+                                        {{"command", command_name}});
                                     return std::nullopt;
                                 }
                                 segments.push_back(expanded_nested_segment);
@@ -745,7 +757,9 @@
                     }
                     if (!is_bare_identifier_text(segment))
                     {
-                        last_error_message = command_name + ": invalid object target";
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.InvalidObjectTarget",
+                            {{"command", command_name}});
                         return std::nullopt;
                     }
                     segments.push_back(segment);
@@ -757,7 +771,9 @@
                 }
                 if (segments.empty())
                 {
-                    last_error_message = command_name + ": invalid object target";
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.InvalidObjectTarget",
+                        {{"command", command_name}});
                     return std::nullopt;
                 }
                 return segments;
