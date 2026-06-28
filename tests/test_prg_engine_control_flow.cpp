@@ -3785,6 +3785,66 @@ void test_erase_copy_rename_file_commands() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_file_operation_runtime_errors_localize() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_file_ops_localization";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+
+    const fs::path nonempty_dir = temp_root / "busy";
+    fs::create_directories(nonempty_dir);
+    write_text(nonempty_dir / "child.txt", "payload");
+
+    const fs::path erase_path = temp_root / "erase_error.prg";
+    write_text(
+        erase_path,
+        "ERASE 'busy'\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession erase_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(erase_path.string(), temp_root.string(), false));
+    const auto erase_state = erase_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!erase_state.completed, "#2706: qps-ploc ERASE non-empty-directory script should fail");
+    expect(
+        erase_state.message.find("[!! ") == 0U &&
+            erase_state.message.find("ERASE failed:") == std::string::npos &&
+            erase_state.message.find("busy") != std::string::npos,
+        "#2706: qps-ploc ERASE runtime error should localize the prose while preserving the path");
+
+    const fs::path copy_path = temp_root / "copy_error.prg";
+    write_text(
+        copy_path,
+        "COPY FILE 'missing.txt' TO 'copied.txt'\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession copy_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(copy_path.string(), temp_root.string(), false));
+    const auto copy_state = copy_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!copy_state.completed, "#2706: qps-ploc COPY FILE missing-source script should fail");
+    expect(
+        copy_state.message.find("[!! ") == 0U &&
+            copy_state.message.find("COPY FILE failed:") == std::string::npos,
+        "#2706: qps-ploc COPY FILE runtime error should localize the prose while preserving the OS error text");
+
+    const fs::path rename_path = temp_root / "rename_error.prg";
+    write_text(
+        rename_path,
+        "RENAME 'missing.txt' TO 'renamed.txt'\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession rename_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(rename_path.string(), temp_root.string(), false));
+    const auto rename_state = rename_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!rename_state.completed, "#2706: qps-ploc RENAME missing-source script should fail");
+    expect(
+        rename_state.message.find("[!! ") == 0U &&
+            rename_state.message.find("RENAME failed:") == std::string::npos,
+        "#2706: qps-ploc RENAME runtime error should localize the prose while preserving the OS error text");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_for_each_iterates_array_elements() {
     namespace fs = std::filesystem;
     const fs::path tmp = fs::temp_directory_path() / "copperfin_for_each_array";
@@ -7011,6 +7071,7 @@ int main() {
     test_close_command_closes_all_work_areas();
     test_close_all_releases_runtime_handles();
     test_erase_copy_rename_file_commands();
+    test_file_operation_runtime_errors_localize();
     test_for_each_iterates_array_elements();
     test_for_each_single_element_expression();
     test_release_vars_erases_named_globals();

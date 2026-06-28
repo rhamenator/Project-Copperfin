@@ -3554,7 +3554,9 @@
                 std::filesystem::remove(fpath, ec);
                 if (ec)
                 {
-                    last_error_message = "ERASE failed: " + ec.message() + " (" + fpath.string() + ")";
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.EraseFailed",
+                        {{"errorMessage", ec.message()}, {"path", fpath.string()}});
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -3586,7 +3588,9 @@
                 std::filesystem::copy_file(src, dst, std::filesystem::copy_options::overwrite_existing, ec);
                 if (ec)
                 {
-                    last_error_message = "COPY FILE failed: " + ec.message();
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CopyFileFailed",
+                        {{"errorMessage", ec.message()}});
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -3618,7 +3622,9 @@
                 std::filesystem::rename(old_path, new_path, ec);
                 if (ec)
                 {
-                    last_error_message = "RENAME failed: " + ec.message();
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.RenameFileFailed",
+                        {{"errorMessage", ec.message()}});
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};

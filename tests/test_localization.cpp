@@ -1912,6 +1912,81 @@ void test_runtime_save_restore_errors_route_through_catalog() {
         "#2705: qps-ploc RESTORE FROM open-failure error should match the pseudo-localization transform");
 }
 
+void test_runtime_file_operation_errors_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const copperfin::localization::PlaceholderMap erase_placeholders{
+        {"errorMessage", "directory not empty"},
+        {"path", "fixtures/nonempty"}
+    };
+    const copperfin::localization::PlaceholderMap io_placeholders{{"errorMessage", "No such file or directory"}};
+    const std::vector<std::string> keys{
+        "Runtime.Prg.Dispatch.Error.EraseFailed",
+        "Runtime.Prg.Dispatch.Error.CopyFileFailed",
+        "Runtime.Prg.Dispatch.Error.RenameFileFailed"
+    };
+
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.EraseFailed", erase_placeholders) ==
+            "ERASE failed: directory not empty (fixtures/nonempty)",
+        "#2706: ERASE failure should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CopyFileFailed", io_placeholders) ==
+            "COPY FILE failed: No such file or directory",
+        "#2706: COPY FILE failure should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.RenameFileFailed", io_placeholders) ==
+            "RENAME failed: No such file or directory",
+        "#2706: RENAME failure should localize through the runtime catalog");
+
+    for (const std::string& key : keys) {
+        expect(
+            spanish.catalogs.contains("es-419") && spanish.catalogs.at("es-419").contains(key),
+            "#2706: es-419 should define every file-operation runtime dispatch key");
+        expect(
+            portuguese.catalogs.contains("pt-BR") && portuguese.catalogs.at("pt-BR").contains(key),
+            "#2706: pt-BR should define every file-operation runtime dispatch key");
+        expect(
+            pseudo.catalogs.contains("qps-ploc") && pseudo.catalogs.at("qps-ploc").contains(key),
+            "#2706: qps-ploc should define every file-operation runtime dispatch key");
+    }
+
+    expect(
+        spanish.translate("Runtime.Prg.Dispatch.Error.EraseFailed", erase_placeholders).find("failed:") ==
+            std::string::npos,
+        "#2706: es-419 ERASE failure should not fall back to raw English");
+    expect(
+        portuguese.translate("Runtime.Prg.Dispatch.Error.CopyFileFailed", io_placeholders).find("failed:") ==
+            std::string::npos,
+        "#2706: pt-BR COPY FILE failure should not fall back to raw English");
+
+    const std::string pseudo_erase =
+        pseudo.translate("Runtime.Prg.Dispatch.Error.EraseFailed", erase_placeholders);
+    expect(
+        pseudo_erase.find("[!! ") == 0U &&
+            pseudo_erase.find("directory not empty") != std::string::npos &&
+            pseudo_erase.find("fixtures/nonempty") != std::string::npos &&
+            pseudo_erase.find("ERASE failed:") == std::string::npos,
+        "#2706: qps-ploc ERASE failure should pseudo-localize prose while preserving placeholders");
+    const std::string pseudo_copy =
+        pseudo.translate("Runtime.Prg.Dispatch.Error.CopyFileFailed", io_placeholders);
+    expect(
+        pseudo_copy.find("[!! ") == 0U &&
+            pseudo_copy.find("No such file or directory") != std::string::npos &&
+            pseudo_copy.find("COPY FILE failed:") == std::string::npos,
+        "#2706: qps-ploc COPY FILE failure should pseudo-localize prose while preserving the OS error text");
+    const std::string pseudo_rename =
+        pseudo.translate("Runtime.Prg.Dispatch.Error.RenameFileFailed", io_placeholders);
+    expect(
+        pseudo_rename.find("[!! ") == 0U &&
+            pseudo_rename.find("No such file or directory") != std::string::npos &&
+            pseudo_rename.find("RENAME failed:") == std::string::npos,
+        "#2706: qps-ploc RENAME failure should pseudo-localize prose while preserving the OS error text");
+}
+
 void test_inspect_usage_routes_through_localization(const std::string& inspect_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_inspect_usage_tests";
@@ -2070,6 +2145,7 @@ int main(int argc, char** argv) {
     test_runtime_dispatch_errors_route_through_catalog();
     test_runtime_surface_errors_route_through_catalog();
     test_runtime_save_restore_errors_route_through_catalog();
+    test_runtime_file_operation_errors_route_through_catalog();
     test_runtime_package_warnings_pseudo_localize();
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);
