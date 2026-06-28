@@ -966,6 +966,41 @@ void test_aggregate_command_errors_use_default_locale_messages() {
     expect(count_multi_target.message == "COUNT TO only accepts a single variable target",
         "COUNT TO multi-target error should route through the default locale catalog");
 
+    const auto no_work_area = run_error_script(
+        "sum_no_work_area",
+        "SUM AGE TO nSum\n");
+    expect(no_work_area.reason == copperfin::runtime::DebugPauseReason::error,
+        "SUM without a selected work area should pause with an error");
+    expect(no_work_area.message == "SUM requires a selected work area",
+        "aggregate no-work-area error should route through the default locale catalog");
+
+    const auto missing_target_work_area = run_error_script(
+        "sum_missing_target_work_area",
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SUM AGE TO nSum IN 'MissingAlias'\n");
+    expect(missing_target_work_area.reason == copperfin::runtime::DebugPauseReason::error,
+        "SUM with a missing IN target should pause with an error");
+    expect(missing_target_work_area.message == "SUM target work area not found",
+        "aggregate target-work-area error should route through the default locale catalog");
+
+    const auto to_array_missing_target = run_error_script(
+        "sum_to_array_missing_target",
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SUM AGE TO ARRAY\n");
+    expect(to_array_missing_target.reason == copperfin::runtime::DebugPauseReason::error,
+        "SUM TO ARRAY without a target array name should pause with an error");
+    expect(to_array_missing_target.message == "SUM TO ARRAY requires a target array name",
+        "aggregate TO ARRAY missing-target error should route through the default locale catalog");
+
+    const auto target_mismatch = run_error_script(
+        "sum_target_mismatch",
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SUM AGE TO nOne, nTwo\n");
+    expect(target_mismatch.reason == copperfin::runtime::DebugPauseReason::error,
+        "SUM TO with too many targets should pause with an error");
+    expect(target_mismatch.message == "SUM TO requires one variable per aggregate expression",
+        "aggregate TO target-count mismatch should route through the default locale catalog");
+
     fs::remove_all(temp_root, ignored);
 }
 
@@ -1017,6 +1052,39 @@ void test_aggregate_command_errors_localize_without_changing_runtime_behavior() 
         pseudo_count_multi_target.message ==
             copperfin::localization::pseudo_localize("COUNT TO only accepts a single variable target"),
         "#2595: qps-ploc COUNT TO multi-target error should resolve through the pseudo-localization transform");
+
+    set_env_value("COPPERFIN_LOCALE", "es-419", true);
+    const auto spanish_no_work_area = run_error_script("sum_no_work_area_es", "SUM AGE TO nSum\n");
+    expect(spanish_no_work_area.reason == copperfin::runtime::DebugPauseReason::error,
+           "#2721: es-419 SUM without a selected work area should still pause with an error");
+    expect(
+        spanish_no_work_area.message == "SUM requiere un area de trabajo seleccionada",
+        "#2721: es-419 aggregate no-work-area error should localize the prose");
+
+    set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
+    const auto portuguese_target_mismatch = run_error_script(
+        "sum_target_mismatch_pt",
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SUM AGE TO nOne, nTwo\n");
+    expect(portuguese_target_mismatch.reason == copperfin::runtime::DebugPauseReason::error,
+           "#2721: pt-BR SUM TO target mismatch should still pause with an error");
+    expect(
+        portuguese_target_mismatch.message == "SUM TO exige uma variavel por cada expressao agregada",
+        "#2721: pt-BR aggregate TO target-count mismatch should localize the prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    const auto pseudo_to_array_missing_target = run_error_script(
+        "sum_to_array_missing_target_qps",
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SUM AGE TO ARRAY\n");
+    expect(pseudo_to_array_missing_target.reason == copperfin::runtime::DebugPauseReason::error,
+           "#2721: qps-ploc SUM TO ARRAY without a target name should still pause with an error");
+    expect(
+        pseudo_to_array_missing_target.message.find("[!! ") == 0U &&
+            pseudo_to_array_missing_target.message.find("SUM") != std::string::npos &&
+            pseudo_to_array_missing_target.message.find("TO ARRAY") != std::string::npos &&
+            pseudo_to_array_missing_target.message.find("requires a target array name") == std::string::npos,
+        "#2721: qps-ploc aggregate TO ARRAY missing-target error should pseudo-localize prose while preserving invariant command tokens");
 
     set_env_value("COPPERFIN_LOCALE", "en-US", true);
 

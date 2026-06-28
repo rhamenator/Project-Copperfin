@@ -638,6 +638,16 @@ void test_runtime_aggregate_errors_route_through_catalog() {
     const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
     const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
     const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const copperfin::localization::PlaceholderMap function_placeholders{{"function", "SUM"}};
+    const copperfin::localization::PlaceholderMap to_placeholders{
+        {"function", "SUM"},
+        {"toKeyword", "TO"},
+    };
+    const copperfin::localization::PlaceholderMap to_array_placeholders{
+        {"function", "SUM"},
+        {"toKeyword", "TO"},
+        {"arrayKeyword", "ARRAY"},
+    };
 
     expect(
         english.translate("Runtime.Prg.Aggregate.Error.CalculateRequiresAssignments") ==
@@ -651,6 +661,30 @@ void test_runtime_aggregate_errors_route_through_catalog() {
         english.translate("Runtime.Prg.Aggregate.Error.CountToSingleTarget") ==
             "COUNT TO only accepts a single variable target",
         "#2595: count multi-target error should remain catalog-backed in en-US");
+    expect(
+        english.translate("Runtime.Prg.Aggregate.Error.RequiresSelectedWorkArea", function_placeholders) ==
+            "SUM requires a selected work area",
+        "#2721: aggregate no-work-area error should preserve the invariant command token");
+    expect(
+        english.translate("Runtime.Prg.Aggregate.Error.TargetWorkAreaNotFound", function_placeholders) ==
+            "SUM target work area not found",
+        "#2721: aggregate missing-target-work-area error should preserve the invariant command token");
+    expect(
+        english.translate("Runtime.Prg.Aggregate.Error.ToArrayRequiresTargetArrayName", to_array_placeholders) ==
+            "SUM TO ARRAY requires a target array name",
+        "#2721: aggregate TO ARRAY missing-target error should preserve invariant command tokens");
+    expect(
+        english.translate("Runtime.Prg.Aggregate.Error.ToArraySingleTargetOnly", to_array_placeholders) ==
+            "SUM TO ARRAY accepts exactly one array target",
+        "#2721: aggregate TO ARRAY multi-target error should preserve invariant command tokens");
+    expect(
+        english.translate("Runtime.Prg.Aggregate.Error.RequiresExpressions", function_placeholders) ==
+            "SUM requires one or more expressions",
+        "#2721: aggregate missing-expressions error should preserve the invariant command token");
+    expect(
+        english.translate("Runtime.Prg.Aggregate.Error.ToRequiresVariablePerAggregateExpression", to_placeholders) ==
+            "SUM TO requires one variable per aggregate expression",
+        "#2721: aggregate TO target-count mismatch error should preserve invariant command tokens");
 
     const std::string spanish_assignments =
         spanish.translate("Runtime.Prg.Aggregate.Error.CalculateRequiresAssignments");
@@ -668,6 +702,14 @@ void test_runtime_aggregate_errors_route_through_catalog() {
     expect(
         portuguese_expression == "CALCULATE exige expressoes agregadas como COUNT() ou SUM(field)",
         "#2595: pt-BR aggregate malformed-expression error should localize the prose");
+    expect(
+        spanish.translate("Runtime.Prg.Aggregate.Error.RequiresSelectedWorkArea", function_placeholders)
+                .find("requires a selected work area") == std::string::npos,
+        "#2721: es-419 aggregate no-work-area error should not fall back to raw English");
+    expect(
+        portuguese.translate("Runtime.Prg.Aggregate.Error.ToRequiresVariablePerAggregateExpression", to_placeholders)
+                .find("one variable per aggregate expression") == std::string::npos,
+        "#2721: pt-BR aggregate TO target-count mismatch error should not fall back to raw English");
 
     const std::string pseudo_count =
         pseudo.translate("Runtime.Prg.Aggregate.Error.CountToSingleTarget");
@@ -675,6 +717,14 @@ void test_runtime_aggregate_errors_route_through_catalog() {
         pseudo_count ==
             copperfin::localization::pseudo_localize("COUNT TO only accepts a single variable target"),
         "#2595: qps-ploc aggregate count-target error should resolve through the pseudo-localization transform");
+    const std::string pseudo_to_array =
+        pseudo.translate("Runtime.Prg.Aggregate.Error.ToArrayRequiresTargetArrayName", to_array_placeholders);
+    expect(
+        pseudo_to_array.find("[!! ") == 0U &&
+            pseudo_to_array.find("SUM") != std::string::npos &&
+            pseudo_to_array.find("TO ARRAY") != std::string::npos &&
+            pseudo_to_array.find("requires a target array name") == std::string::npos,
+        "#2721: qps-ploc aggregate TO ARRAY error should pseudo-localize prose while preserving invariant command tokens");
 }
 
 void test_runtime_sql_errors_route_through_catalog() {

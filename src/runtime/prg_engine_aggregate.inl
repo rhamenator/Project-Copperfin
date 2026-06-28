@@ -711,9 +711,12 @@
             CursorState *cursor = resolve_cursor_target_expression(statement.quaternary_expression, frame);
             if (cursor == nullptr)
             {
+                const localization::PlaceholderMap function_placeholders{
+                    {"function", uppercase_copy(function)}
+                };
                 error_message = statement.quaternary_expression.empty()
-                                    ? uppercase_copy(function) + " requires a selected work area"
-                                    : uppercase_copy(function) + " target work area not found";
+                                    ? runtime_text("Runtime.Prg.Aggregate.Error.RequiresSelectedWorkArea", function_placeholders)
+                                    : runtime_text("Runtime.Prg.Aggregate.Error.TargetWorkAreaNotFound", function_placeholders);
                 return false;
             }
 
@@ -729,7 +732,13 @@
                 }
                 if (array_target_tail.empty())
                 {
-                    error_message = uppercase_copy(function) + " TO ARRAY requires a target array name";
+                    error_message = runtime_text(
+                        "Runtime.Prg.Aggregate.Error.ToArrayRequiresTargetArrayName",
+                        {
+                            {"function", uppercase_copy(function)},
+                            {"toKeyword", "TO"},
+                            {"arrayKeyword", "ARRAY"},
+                        });
                     return false;
                 }
 
@@ -744,7 +753,13 @@
                     array_targets.end());
                 if (array_targets.size() != 1U)
                 {
-                    error_message = uppercase_copy(function) + " TO ARRAY accepts exactly one array target";
+                    error_message = runtime_text(
+                        "Runtime.Prg.Aggregate.Error.ToArraySingleTargetOnly",
+                        {
+                            {"function", uppercase_copy(function)},
+                            {"toKeyword", "TO"},
+                            {"arrayKeyword", "ARRAY"},
+                        });
                     return false;
                 }
 
@@ -840,7 +855,12 @@
                     {
                         if (targets.size() > 1U)
                         {
-                            error_message = uppercase_copy(function) + " TO requires one variable per aggregate expression";
+                            error_message = runtime_text(
+                                "Runtime.Prg.Aggregate.Error.ToRequiresVariablePerAggregateExpression",
+                                {
+                                    {"function", uppercase_copy(function)},
+                                    {"toKeyword", "TO"},
+                                });
                             return false;
                         }
                         assign_variable(frame, targets.front(), fallback);
@@ -862,13 +882,20 @@
                     expressions.end());
                 if (expressions.empty())
                 {
-                    error_message = uppercase_copy(function) + " requires one or more expressions";
+                    error_message = runtime_text(
+                        "Runtime.Prg.Aggregate.Error.RequiresExpressions",
+                        {{"function", uppercase_copy(function)}});
                     return false;
                 }
             }
             if (!targets.empty() && targets.size() != expressions.size())
             {
-                error_message = uppercase_copy(function) + " TO requires one variable per aggregate expression";
+                error_message = runtime_text(
+                    "Runtime.Prg.Aggregate.Error.ToRequiresVariablePerAggregateExpression",
+                    {
+                        {"function", uppercase_copy(function)},
+                        {"toKeyword", "TO"},
+                    });
                 return false;
             }
 
