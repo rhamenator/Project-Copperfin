@@ -993,6 +993,22 @@ add_test(
     COMMAND $<TARGET_FILE:test_studio_host_column_setup_stable_settings> $<TARGET_FILE:copperfin_studio_host>
 )
 
+add_executable(test_studio_host_section_delete_record_selection
+    test_studio_host_section_delete_record_selection.cpp
+)
+target_link_libraries(test_studio_host_section_delete_record_selection PRIVATE cf_vfp_assets)
+
+if(MSVC)
+    target_compile_options(test_studio_host_section_delete_record_selection PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_section_delete_record_selection PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_section_delete_record_selection
+    COMMAND $<TARGET_FILE:test_studio_host_section_delete_record_selection> $<TARGET_FILE:copperfin_studio_host>
+)
+
 add_executable(test_studio_host_subtree_deleted_state_errors
     test_studio_host_subtree_deleted_state_errors.cpp
 )

@@ -54138,63 +54138,6 @@ void test_studio_host_json_renames_live_edited_unplaced_report_layout_object_geo
     }
 }
 
-void test_studio_host_json_deletes_report_sections_by_record_selection(const std::string& studio_host_path) {
-    namespace fs = std::filesystem;
-
-    const fs::path temp_root =
-        fs::temp_directory_path() / "copperfin_studio_host_report_section_delete_json_tests";
-    std::error_code ignored;
-    fs::remove_all(temp_root, ignored);
-    fs::create_directories(temp_root);
-
-    const fs::path report_path = temp_root / "summary.frx";
-    write_synthetic_report_table_for_layout_reorder_json(report_path);
-
-    const auto delete_process = run_process_capture(
-        studio_host_path,
-        {
-            "--path", report_path.string(),
-            "--delete-object",
-            "--record", "1",
-            "--json"
-        },
-        temp_root);
-
-    if (delete_process.exit_code != 0) {
-        std::cerr << "studio host report section delete stdout:\n" << delete_process.stdout_text << "\n";
-        std::cerr << "studio host report section delete stderr:\n" << delete_process.stderr_text << "\n";
-        std::cerr << "fixture root: " << temp_root << "\n";
-    }
-
-    expect(delete_process.exit_code == 0,
-           "#1473: report section delete should exit successfully");
-    expect(dbf_record_deleted(report_path, 1U),
-           "#1473: report section delete should mark the FRX section record deleted");
-    expect_contains(delete_process.stdout_text, "\"sectionCount\": 0",
-                    "#1473: deleted report section JSON should remove the section from live section counts");
-    expect_contains(delete_process.stdout_text, "\"deletedSectionCount\": 1",
-                    "#1473: deleted report section JSON should expose deleted section counts");
-    expect_contains_in_order(
-        delete_process.stdout_text,
-        {
-            "\"deletedSections\": [",
-            "\"recordIndex\": 1",
-            "\"deleted\": true",
-            "\"sectionIndex\": null",
-            "\"sectionCount\": 0",
-            "\"bandKind\": \"detail\""
-        },
-        "#1473: report layout JSON should move the section into deleted-section metadata");
-    expect_contains(delete_process.stdout_text, "\"unplacedObjectCount\": 3",
-                    "#1473: deleting the only live section should leave former section objects unplaced");
-    expect_contains(delete_process.stdout_text, "\"containingSectionId\": \"\"",
-                    "#1473: former section objects should not fabricate containing-section ids");
-
-    if (failures == 0) {
-        fs::remove_all(temp_root, ignored);
-    }
-}
-
 void test_studio_host_json_updates_report_layout_object_expressions_by_record_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -64522,108 +64465,6 @@ void test_studio_host_json_clears_deleted_report_column_width_fields_by_stable_s
     run_deleted_column_width_clear(temp_root / "deleted_column_width_clear_stable.lbx",
                                    "deleted_column_width_clear_stable.lbx",
                                    "label");
-
-    if (failures == 0) {
-        fs::remove_all(temp_root, ignored);
-    }
-}
-
-void test_studio_host_json_deletes_label_sections_by_record_selection(const std::string& studio_host_path) {
-    namespace fs = std::filesystem;
-
-    const fs::path temp_root =
-        fs::temp_directory_path() / "copperfin_studio_host_label_section_delete_json_tests";
-    std::error_code ignored;
-    fs::remove_all(temp_root, ignored);
-    fs::create_directories(temp_root);
-
-    const fs::path label_path = temp_root / "mailing.lbx";
-    write_synthetic_report_table_for_layout_reorder_json(label_path);
-
-    const auto delete_process = run_process_capture(
-        studio_host_path,
-        {
-            "--path", label_path.string(),
-            "--delete-object",
-            "--record", "1",
-            "--json"
-        },
-        temp_root);
-
-    if (delete_process.exit_code != 0) {
-        std::cerr << "studio host label section delete stdout:\n" << delete_process.stdout_text << "\n";
-        std::cerr << "studio host label section delete stderr:\n" << delete_process.stderr_text << "\n";
-        std::cerr << "fixture root: " << temp_root << "\n";
-    }
-
-    expect(delete_process.exit_code == 0,
-           "#1492: label section delete should exit successfully");
-    expect(dbf_record_deleted(label_path, 1U),
-           "#1492: label section delete should mark the LBX section record deleted");
-    expect_contains(delete_process.stdout_text, "\"isLabel\": true",
-                    "#1492: deleted label section JSON should retain label identity");
-    expect_contains(delete_process.stdout_text, "\"sectionCount\": 0",
-                    "#1492: deleted label section JSON should remove the section from live section counts");
-    expect_contains(delete_process.stdout_text, "\"deletedSectionCount\": 1",
-                    "#1492: deleted label section JSON should expose deleted section counts");
-    expect_contains(delete_process.stdout_text, "\"previewBoundsAvailable\": true",
-                    "#2273: deleted label section JSON should preserve live preview availability");
-    expect_contains(delete_process.stdout_text, "\"previewBoundsLeft\": 100",
-                    "#2273: deleted label section JSON should preserve live preview left bounds");
-    expect_contains(delete_process.stdout_text, "\"previewBoundsTop\": 2600",
-                    "#2273: deleted label section JSON should preserve live preview top bounds");
-    expect_contains(delete_process.stdout_text, "\"previewBoundsRight\": 150",
-                    "#2273: deleted label section JSON should preserve live preview right bounds");
-    expect_contains(delete_process.stdout_text, "\"previewBoundsBottom\": 2800",
-                    "#2273: deleted label section JSON should preserve live preview bottom bounds");
-    expect_contains(delete_process.stdout_text, "\"previewBoundsWidth\": 50",
-                    "#2273: deleted label section JSON should preserve live preview widths");
-    expect_contains(delete_process.stdout_text, "\"previewBoundsHeight\": 200",
-                    "#2273: deleted label section JSON should preserve live preview heights");
-    expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
-                    "#2273: deleted label section JSON should expose deleted preview availability");
-    expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
-                    "#2273: deleted label section JSON should preserve deleted preview left bounds");
-    expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsTop\": 2000",
-                    "#2273: deleted label section JSON should preserve deleted preview top bounds");
-    expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
-                    "#2273: deleted label section JSON should preserve deleted preview right bounds");
-    expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsBottom\": 7000",
-                    "#2273: deleted label section JSON should preserve deleted preview bottom bounds");
-    expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
-                    "#2273: deleted label section JSON should preserve deleted preview widths");
-    expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsHeight\": 5000",
-                    "#2273: deleted label section JSON should preserve deleted preview heights");
-    expect_contains_in_order(
-        delete_process.stdout_text,
-        {
-            "\"deletedSections\": [",
-            "\"recordIndex\": 1",
-            "\"deleted\": true",
-            "\"sectionIndex\": null",
-            "\"sectionCount\": 0",
-            "\"bandKind\": \"detail\""
-        },
-        "#1492: label layout JSON should move the section into deleted-section metadata");
-    expect_contains(delete_process.stdout_text, "\"selectedReportSectionAvailable\": true",
-                    "#1492: deleted label section selections should advertise selected-section availability");
-    expect_contains(delete_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
-                    "#1492: deleted label section selections should expose section selection kind");
-    expect_contains_in_order(
-        delete_process.stdout_text,
-        {
-            "\"selectedReportSection\": {",
-            "\"bandKind\": \"detail\"",
-            "\"recordIndex\": 1",
-            "\"deleted\": true",
-            "\"sectionIndex\": null",
-            "\"sectionCount\": 0"
-        },
-        "#1492: deleted label section selections should expose deleted selected-section metadata");
-    expect_contains(delete_process.stdout_text, "\"unplacedObjectCount\": 3",
-                    "#1492: deleting the only live label section should leave former section objects unplaced");
-    expect_contains(delete_process.stdout_text, "\"containingSectionId\": \"\"",
-                    "#1492: former label section objects should not fabricate containing-section ids");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -124167,8 +124008,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_report_column_width_fields_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_column_width_fields_by_stable_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_column_width_fields_by_stable_selection(argv[1]);
-    test_studio_host_json_deletes_report_sections_by_record_selection(argv[1]);
-    test_studio_host_json_deletes_label_sections_by_record_selection(argv[1]);
     test_studio_host_json_deletes_report_sections_by_stable_selection(argv[1]);
     test_studio_host_json_restores_report_sections_by_record_selection(argv[1]);
     test_studio_host_json_restores_label_sections_by_record_selection(argv[1]);
