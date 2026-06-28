@@ -885,8 +885,20 @@ void test_generated_launcher_forwards_manifest_and_debug_flag() {
             launcher_source.find("string.Equals(arg, \"/debug\", StringComparison.OrdinalIgnoreCase)") != std::string::npos,
             "generated launcher should preserve debug command-line forwarding");
         expect(
+            launcher_source.find("string.Equals(args[index], \"--locale\", StringComparison.OrdinalIgnoreCase)") != std::string::npos &&
+            launcher_source.find("Environment.GetEnvironmentVariable(\"COPPERFIN_LOCALE\")") != std::string::npos,
+            "generated launcher should resolve locale from forwarded arguments and COPPERFIN_LOCALE");
+        expect(
             launcher_source.find("forwarded.Add(Quote(arg));") != std::string::npos,
             "generated launcher should preserve ordinary application arguments instead of dropping them");
+        expect(
+            launcher_source.find("Runtime.Package.Launcher.Error.RuntimeHostMissing") != std::string::npos &&
+            launcher_source.find("Runtime.Package.Launcher.Error.ManifestMissing") != std::string::npos &&
+            launcher_source.find("Runtime.Package.Launcher.Error.RuntimeHostStartFailed") != std::string::npos,
+            "generated launcher should route launcher failure text through localization keys");
+        expect(
+            launcher_source.find("[\"qps-ploc\"] = new(StringComparer.OrdinalIgnoreCase)") != std::string::npos,
+            "generated launcher should embed a qps-ploc locale bucket for pseudo-localized runtime use");
         expect(
             launcher_source.find("WorkingDirectory = baseDir") != std::string::npos,
             "generated launcher should run the runtime host from the package directory");
@@ -5679,6 +5691,9 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
     const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
     const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
     const std::vector<std::string_view> keys{
+        "Runtime.Package.Launcher.Error.ManifestMissing",
+        "Runtime.Package.Launcher.Error.RuntimeHostMissing",
+        "Runtime.Package.Launcher.Error.RuntimeHostStartFailed",
         "Runtime.Package.Error.CopyFileFailed",
         "Runtime.Package.Error.CreateContentRootFailed",
         "Runtime.Package.Error.CreateDirectoryFailed",
@@ -5703,8 +5718,28 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
         "Runtime.Package.Error.WriteFileFailed"};
 
     expect(
+        english_catalog.translate("Runtime.Package.Launcher.Error.RuntimeHostMissing") ==
+            "Copperfin runtime host was not found beside the launcher.",
+        "#2725: generated launcher runtime-host-missing diagnostics should resolve through the en-US catalog");
+    expect(
+        spanish_catalog.translate("Runtime.Package.Launcher.Error.ManifestMissing") ==
+            "No se encontro el manifiesto de Copperfin junto al iniciador.",
+        "#2725: generated launcher manifest-missing diagnostics should resolve through the es-419 catalog");
+    expect(
+        portuguese_catalog.translate("Runtime.Package.Launcher.Error.RuntimeHostStartFailed") ==
+            "Nao foi possivel iniciar o host de runtime do Copperfin.",
+        "#2725: generated launcher runtime-host-start diagnostics should resolve through the pt-BR catalog");
+    expect(
+        pseudo_catalog.translate("Runtime.Package.Launcher.Error.RuntimeHostMissing") ==
+            copperfin::localization::pseudo_localize("Copperfin runtime host was not found beside the launcher."),
+        "#2725: generated launcher qps-ploc runtime-host-missing diagnostics should route through the pseudo-localization transform");
+    expect(
         english_catalog.translate("Runtime.Package.Error.PlanInvalid") == "Package plan is not valid.",
         "#2390: runtime package invalid-plan diagnostics should resolve through the en-US catalog");
+    expect(
+        pseudo_catalog.translate("Runtime.Package.Launcher.Error.RuntimeHostMissing") !=
+            english_catalog.translate("Runtime.Package.Launcher.Error.RuntimeHostMissing"),
+        "#2725: generated launcher diagnostics should be pseudo-localizable");
     expect(
         english_catalog.translate("Runtime.Package.Error.PrimaryOutputRequiresLibraryOutput") ==
             "Primary-output builds are only supported for library-output packages.",

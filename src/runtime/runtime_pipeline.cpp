@@ -1,5 +1,6 @@
 #include "copperfin/runtime/runtime_pipeline.h"
 #include "localized_text.h"
+#include "copperfin/localization/localization.h"
 #include "copperfin/runtime/xasset_methods.h"
 #include "prg_engine_internal.h"
 #include "copperfin/security/sha256.h"
@@ -283,6 +284,115 @@ std::string json_escape(std::string_view value) {
         }
     }
     return escaped;
+}
+
+std::map<std::string, std::map<std::string, std::string>> build_generated_launcher_localized_messages() {
+    static const std::vector<std::string_view> locales{
+        "en-US",
+        "es-419",
+        "pt-BR",
+        "qps-ploc"
+    };
+    static const std::vector<std::string_view> keys{
+        "Runtime.Package.Launcher.Error.RuntimeHostMissing",
+        "Runtime.Package.Launcher.Error.ManifestMissing",
+        "Runtime.Package.Launcher.Error.RuntimeHostStartFailed"
+    };
+
+    const std::filesystem::path catalog_root = copperfin::localization::resolve_catalog_root();
+    std::map<std::string, std::map<std::string, std::string>> localized_messages;
+    for (const auto locale : locales) {
+        const auto catalog = copperfin::localization::load_catalogs(catalog_root, locale);
+        auto& locale_messages = localized_messages[std::string(locale)];
+        for (const auto key : keys) {
+            locale_messages[std::string(key)] = catalog.translate(key);
+        }
+    }
+    return localized_messages;
+}
+
+void append_generated_launcher_localization_helpers(std::ostringstream& stream) {
+    const auto localized_messages = build_generated_launcher_localized_messages();
+    stream << "    private static readonly Dictionary<string, Dictionary<string, string>> LocalizedMessages =\n";
+    stream << "        new(StringComparer.OrdinalIgnoreCase)\n";
+    stream << "        {\n";
+    for (const auto& [locale, messages] : localized_messages) {
+        stream << "            [\"" << json_escape(locale) << "\"] = new(StringComparer.OrdinalIgnoreCase)\n";
+        stream << "            {\n";
+        for (const auto& [key, value] : messages) {
+            stream << "                [\"" << json_escape(key) << "\"] = \"" << json_escape(value) << "\",\n";
+        }
+        stream << "            },\n";
+    }
+    stream << "        };\n\n";
+
+    stream << "    private static string SelectLocale(string[] args)\n";
+    stream << "    {\n";
+    stream << "        for (var index = 0; index + 1 < args.Length; ++index)\n";
+    stream << "        {\n";
+    stream << "            if (string.Equals(args[index], \"--locale\", StringComparison.OrdinalIgnoreCase) ||\n";
+    stream << "                string.Equals(args[index], \"/locale\", StringComparison.OrdinalIgnoreCase))\n";
+    stream << "            {\n";
+    stream << "                return NormalizeLocale(args[index + 1]);\n";
+    stream << "            }\n";
+    stream << "        }\n\n";
+    stream << "        var configured = Environment.GetEnvironmentVariable(\"COPPERFIN_LOCALE\");\n";
+    stream << "        if (!string.IsNullOrWhiteSpace(configured))\n";
+    stream << "        {\n";
+    stream << "            return NormalizeLocale(configured);\n";
+    stream << "        }\n";
+    stream << "        return \"en-US\";\n";
+    stream << "    }\n\n";
+
+    stream << "    private static string NormalizeLocale(string value)\n";
+    stream << "    {\n";
+    stream << "        if (string.IsNullOrWhiteSpace(value))\n";
+    stream << "        {\n";
+    stream << "            return \"en-US\";\n";
+    stream << "        }\n\n";
+    stream << "        var parts = value.Trim().Replace('_', '-').Split('-', StringSplitOptions.RemoveEmptyEntries);\n";
+    stream << "        if (parts.Length == 0)\n";
+    stream << "        {\n";
+    stream << "            return \"en-US\";\n";
+    stream << "        }\n\n";
+    stream << "        for (var index = 0; index < parts.Length; ++index)\n";
+    stream << "        {\n";
+    stream << "            parts[index] = index == 0\n";
+    stream << "                ? parts[index].ToLowerInvariant()\n";
+    stream << "                : (string.Equals(parts[index], \"419\", StringComparison.Ordinal) ? \"419\" : parts[index].ToUpperInvariant());\n";
+    stream << "        }\n";
+    stream << "        return string.Join(\"-\", parts);\n";
+    stream << "    }\n\n";
+
+    stream << "    private static IEnumerable<string> LocaleFallbackChain(string locale)\n";
+    stream << "    {\n";
+    stream << "        var normalized = NormalizeLocale(locale);\n";
+    stream << "        yield return normalized;\n";
+    stream << "        if (normalized.StartsWith(\"es-\", StringComparison.OrdinalIgnoreCase) &&\n";
+    stream << "            !string.Equals(normalized, \"es-419\", StringComparison.OrdinalIgnoreCase))\n";
+    stream << "        {\n";
+    stream << "            yield return \"es-419\";\n";
+    stream << "        }\n\n";
+    stream << "        var separator = normalized.IndexOf('-');\n";
+    stream << "        if (separator >= 0)\n";
+    stream << "        {\n";
+    stream << "            yield return normalized.Substring(0, separator);\n";
+    stream << "        }\n";
+    stream << "        yield return \"en-US\";\n";
+    stream << "    }\n\n";
+
+    stream << "    private static string Translate(string key, string locale)\n";
+    stream << "    {\n";
+    stream << "        foreach (var candidate in LocaleFallbackChain(locale))\n";
+    stream << "        {\n";
+    stream << "            if (LocalizedMessages.TryGetValue(candidate, out var localeMessages) &&\n";
+    stream << "                localeMessages.TryGetValue(key, out var value))\n";
+    stream << "            {\n";
+    stream << "                return value;\n";
+    stream << "            }\n";
+    stream << "        }\n";
+    stream << "        return key;\n";
+    stream << "    }\n\n";
 }
 
 std::vector<std::string> collect_library_exported_symbols(const RuntimePackagePlan& plan) {
@@ -3976,17 +4086,18 @@ std::string build_launcher_program_source(const RuntimePackagePlan&) {
     stream << "{\n";
     stream << "    private static int Main(string[] args)\n";
     stream << "    {\n";
+    stream << "        var locale = SelectLocale(args);\n";
     stream << "        var baseDir = AppContext.BaseDirectory;\n";
     stream << "        var runtimeHost = Path.Combine(baseDir, \"copperfin_runtime_host.exe\");\n";
     stream << "        var manifest = Path.Combine(baseDir, \"app.cfmanifest\");\n";
     stream << "        if (!File.Exists(runtimeHost))\n";
     stream << "        {\n";
-    stream << "            Console.Error.WriteLine(\"Copperfin runtime host was not found beside the launcher.\");\n";
+    stream << "            Console.Error.WriteLine(Translate(\"Runtime.Package.Launcher.Error.RuntimeHostMissing\", locale));\n";
     stream << "            return 3;\n";
     stream << "        }\n";
     stream << "        if (!File.Exists(manifest))\n";
     stream << "        {\n";
-    stream << "            Console.Error.WriteLine(\"Copperfin manifest was not found beside the launcher.\");\n";
+    stream << "            Console.Error.WriteLine(Translate(\"Runtime.Package.Launcher.Error.ManifestMissing\", locale));\n";
     stream << "            return 4;\n";
     stream << "        }\n\n";
     stream << "        var forwarded = new List<string> { \"--manifest\", Quote(manifest) };\n";
@@ -4010,12 +4121,13 @@ std::string build_launcher_program_source(const RuntimePackagePlan&) {
     stream << "        using var process = Process.Start(startInfo);\n";
     stream << "        if (process is null)\n";
     stream << "        {\n";
-    stream << "            Console.Error.WriteLine(\"Copperfin runtime host could not be started.\");\n";
+    stream << "            Console.Error.WriteLine(Translate(\"Runtime.Package.Launcher.Error.RuntimeHostStartFailed\", locale));\n";
     stream << "            return 5;\n";
     stream << "        }\n";
     stream << "        process.WaitForExit();\n";
     stream << "        return process.ExitCode;\n";
     stream << "    }\n\n";
+    append_generated_launcher_localization_helpers(stream);
     stream << "    private static string Quote(string value)\n";
     stream << "    {\n";
     stream << "        return \"\\\"\" + value.Replace(\"\\\"\", \"\\\"\\\"\") + \"\\\"\";\n";
