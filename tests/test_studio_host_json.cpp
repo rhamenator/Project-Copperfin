@@ -101037,10 +101037,10 @@ void test_studio_host_json_clears_deleted_report_visual_properties_by_stable_sel
                         "#1871: deleted report/label stable visual-property clear should preserve deleted object counts");
         expect_contains(reopen_process.stdout_text, "\"selectedReportObjectAvailable\": true",
                         "#1871: deleted report/label stable visual-property clear should select the cleared deleted row");
-        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1871: deleted report/label stable visual-property clear should not fabricate containing sections");
-        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1871: deleted report/label stable visual-property clear should serialize null containing-section metadata");
+        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1871: deleted report/label stable visual-property clear should preserve containing-section availability");
+        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1871: deleted report/label stable visual-property clear should serialize containing-section metadata");
         expect_contains(reopen_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1871: deleted report/label stable visual-property clear should preserve report object selection kind");
         expect_contains(reopen_process.stdout_text, "\"recordIndex\": 3",
@@ -101055,8 +101055,37 @@ void test_studio_host_json_clears_deleted_report_visual_properties_by_stable_sel
                             "#1871: deleted report/label stable visual-property clear should not expose stale expressions");
         expect_contains(reopen_process.stdout_text, "\"uniqueId\": \"middle-field-guid\"",
                         "#1871: deleted report/label stable visual-property clear should preserve stable identities");
-        expect_contains(reopen_process.stdout_text, "\"containingSectionRecordIndex\": null",
-                        "#1871: deleted report/label stable visual-property clear should keep deleted rows uncontained");
+        expect_contains_in_order(
+            reopen_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"detail_1\"",
+                "\"containingSectionRecordIndex\": 1",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 800",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 2",
+                "\"objectKind\": \"field\"",
+                "\"expression\": \"\"",
+                "\"uniqueId\": \"middle-field-guid\""
+            },
+            "#1871: deleted report/label stable visual-property clear should refresh selected deleted-row section metadata");
+        expect_contains_in_order(
+            reopen_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"detail_1\"",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"sectionIndex\": 0",
+                "\"sectionCount\": 1",
+                "\"objectCount\": 1",
+                "\"deletedObjectCount\": 2"
+            },
+            "#1871: deleted report/label stable visual-property clear should expose containing detail-band metadata");
 
         const auto geometry_clear_process = run_process_capture(
             studio_host_path,
