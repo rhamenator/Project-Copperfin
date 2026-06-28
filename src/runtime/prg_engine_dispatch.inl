@@ -5027,7 +5027,7 @@
                 CursorState *cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
                 if (cursor == nullptr)
                 {
-                    last_error_message = "APPEND FROM: no current work area";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.AppendFromNoCurrentWorkArea");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -5080,7 +5080,8 @@
                     if (append_from_sdf || append_from_dif || append_from_sylk ||
                         append_from_tab || append_from_xls)
                     {
-                        last_error_message = "APPEND FROM: selected SQL/result cursor does not support this source type";
+                        last_error_message =
+                            runtime_text("Runtime.Prg.Dispatch.Error.AppendFromSelectedSqlResultCursorUnsupportedSourceType");
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -5313,7 +5314,11 @@
                     const auto source_result = vfp::parse_dbf_table_from_file(src_path.string(), 1000000U);
                     if (!source_result.ok)
                     {
-                        last_error_message = "APPEND FROM: " + source_result.error;
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromFailed",
+                            {
+                                {"errorMessage", source_result.error},
+                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -5332,7 +5337,8 @@
                     }
                     if (filtered_target_fields.empty())
                     {
-                        last_error_message = "APPEND FROM: no fields match the FIELDS clause";
+                        last_error_message =
+                            runtime_text("Runtime.Prg.Dispatch.Error.AppendFromNoFieldsMatchFieldsClause");
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -6021,7 +6027,11 @@
                     src_path.string(), std::numeric_limits<std::size_t>::max());
                 if (!src_result.ok)
                 {
-                    last_error_message = "APPEND FROM: " + src_result.error;
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.AppendFromFailed",
+                        {
+                            {"errorMessage", src_result.error},
+                        });
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -6045,7 +6055,11 @@
                     const auto blank_result = vfp::append_blank_record_to_file(cursor->source_path);
                     if (!blank_result.ok)
                     {
-                        last_error_message = "APPEND FROM: " + blank_result.error;
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromFailed",
+                            {
+                                {"errorMessage", blank_result.error},
+                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};

@@ -1,3 +1,4 @@
+#include "copperfin/localization/localization.h"
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "prg_engine_test_support.h"
@@ -12,6 +13,42 @@
 namespace {
 
 using namespace copperfin::test_support;
+
+void set_env_value(const std::string& name, const std::string& value, bool has_value) {
+#ifdef _WIN32
+    if (has_value) {
+        _putenv_s(name.c_str(), value.c_str());
+    } else {
+        _putenv_s(name.c_str(), "");
+    }
+#else
+    if (has_value) {
+        setenv(name.c_str(), value.c_str(), 1);
+    } else {
+        unsetenv(name.c_str());
+    }
+#endif
+}
+
+struct ScopedEnvironmentValue {
+    std::string name;
+    std::string original_value;
+    bool had_value;
+
+    explicit ScopedEnvironmentValue(std::string environment_name)
+        : name(std::move(environment_name)),
+          original_value(),
+          had_value(false) {
+        if (const char* current = std::getenv(name.c_str())) {
+            original_value = current;
+            had_value = true;
+        }
+    }
+
+    ~ScopedEnvironmentValue() {
+        set_env_value(name, original_value, had_value);
+    }
+};
 
 void test_sqlprimarykeys_and_sqlforeignkeys_metadata_cursors() {
     namespace fs = std::filesystem;
@@ -4247,6 +4284,59 @@ void test_append_from_csv_mutates_selected_sql_result_cursor() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_append_from_selected_sql_result_cursor_runtime_errors_localize() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_append_from_localization";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+
+    const fs::path main_path = temp_root / "sql_append_from_localization.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "SELECT sqlcust\n"
+        "APPEND FROM '" + (temp_root / "unsupported.xls").string() + "' TYPE XLS\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path, temp_root));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!state.completed, "#2709: qps-ploc APPEND FROM TYPE XLS against a selected SQL result cursor should fail");
+    expect(
+        state.message ==
+            copperfin::localization::pseudo_localize("APPEND FROM: selected SQL/result cursor does not support this source type"),
+        "#2709: qps-ploc APPEND FROM SQL/result source-type error should route through the pseudo-localization transform");
+
+    write_people_dbf(temp_root / "source.dbf", {{"Alpha", 1}});
+
+    const fs::path fields_main_path = temp_root / "sql_append_from_fields_localization.prg";
+    write_text(
+        fields_main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "SELECT sqlcust\n"
+        "APPEND FROM '" + (temp_root / "source.dbf").string() + "' FIELDS MissingField\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession fields_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(fields_main_path, temp_root));
+
+    const auto fields_state = fields_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!fields_state.completed, "#2709: qps-ploc APPEND FROM selected SQL result cursor with no matching fields should fail");
+    expect(
+        fields_state.message ==
+            copperfin::localization::pseudo_localize("APPEND FROM: no fields match the FIELDS clause"),
+        "#2709: qps-ploc APPEND FROM empty-fields error should route through the pseudo-localization transform");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_sql_plain_temporary_order_in_target_honors_collate_and_preserves_selection() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_plain_temp_order_collate_in_target";
@@ -4424,6 +4514,7 @@ int main() {
     test_append_from_json_mutates_selected_sql_result_cursor();
     test_append_from_json_for_filters_selected_sql_result_cursor();
     test_append_from_csv_mutates_selected_sql_result_cursor();
+    test_append_from_selected_sql_result_cursor_runtime_errors_localize();
     test_sql_result_cursor_mutation_commands();
     test_targeted_sql_result_cursor_mutations_preserve_selected_alias_and_pointer();
     test_sql_result_cursors_are_isolated_by_data_session();

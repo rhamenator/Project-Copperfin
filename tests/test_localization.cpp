@@ -2122,6 +2122,67 @@ void test_runtime_append_from_array_errors_route_through_catalog() {
         "#2708: qps-ploc APPEND FROM ARRAY wrapper error should pseudo-localize prose while preserving downstream error text");
 }
 
+void test_runtime_append_from_errors_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const copperfin::localization::PlaceholderMap error_placeholders{{"errorMessage", "open table failed"}};
+    const std::vector<std::string> keys{
+        "Runtime.Prg.Dispatch.Error.AppendFromFailed",
+        "Runtime.Prg.Dispatch.Error.AppendFromNoCurrentWorkArea",
+        "Runtime.Prg.Dispatch.Error.AppendFromNoFieldsMatchFieldsClause",
+        "Runtime.Prg.Dispatch.Error.AppendFromSelectedSqlResultCursorUnsupportedSourceType"
+    };
+
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.AppendFromFailed", error_placeholders) ==
+            "APPEND FROM: open table failed",
+        "#2709: APPEND FROM wrapper error should preserve downstream error text");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.AppendFromNoCurrentWorkArea") ==
+            "APPEND FROM: no current work area",
+        "#2709: APPEND FROM no-work-area error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.AppendFromNoFieldsMatchFieldsClause") ==
+            "APPEND FROM: no fields match the FIELDS clause",
+        "#2709: APPEND FROM empty-fields error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.AppendFromSelectedSqlResultCursorUnsupportedSourceType") ==
+            "APPEND FROM: selected SQL/result cursor does not support this source type",
+        "#2709: APPEND FROM SQL/result source-type error should localize through the runtime catalog");
+
+    for (const std::string& key : keys) {
+        expect(
+            spanish.catalogs.contains("es-419") && spanish.catalogs.at("es-419").contains(key),
+            "#2709: es-419 should define every shared APPEND FROM runtime dispatch key");
+        expect(
+            portuguese.catalogs.contains("pt-BR") && portuguese.catalogs.at("pt-BR").contains(key),
+            "#2709: pt-BR should define every shared APPEND FROM runtime dispatch key");
+        expect(
+            pseudo.catalogs.contains("qps-ploc") && pseudo.catalogs.at("qps-ploc").contains(key),
+            "#2709: qps-ploc should define every shared APPEND FROM runtime dispatch key");
+    }
+
+    expect(
+        spanish.translate("Runtime.Prg.Dispatch.Error.AppendFromNoCurrentWorkArea")
+                .find("no current work area") == std::string::npos,
+        "#2709: es-419 APPEND FROM no-work-area error should not fall back to raw English");
+    expect(
+        portuguese.translate("Runtime.Prg.Dispatch.Error.AppendFromSelectedSqlResultCursorUnsupportedSourceType")
+                .find("selected SQL/result cursor does not support this source type") == std::string::npos,
+        "#2709: pt-BR APPEND FROM SQL/result source-type error should not fall back to raw English");
+
+    const std::string pseudo_wrapper =
+        pseudo.translate("Runtime.Prg.Dispatch.Error.AppendFromFailed", error_placeholders);
+    expect(
+        pseudo_wrapper.find("[!! ") == 0U &&
+            pseudo_wrapper.find("open table failed") != std::string::npos &&
+            pseudo_wrapper.find("APPEND FROM:") == std::string::npos,
+        "#2709: qps-ploc APPEND FROM wrapper error should pseudo-localize prose while preserving downstream error text");
+}
+
 void test_inspect_usage_routes_through_localization(const std::string& inspect_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_inspect_usage_tests";
@@ -2283,6 +2344,7 @@ int main(int argc, char** argv) {
     test_runtime_file_operation_errors_route_through_catalog();
     test_runtime_copy_to_errors_route_through_catalog();
     test_runtime_append_from_array_errors_route_through_catalog();
+    test_runtime_append_from_errors_route_through_catalog();
     test_runtime_package_warnings_pseudo_localize();
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);

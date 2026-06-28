@@ -2401,6 +2401,51 @@ void test_append_from_array_runtime_errors_localize() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_append_from_runtime_errors_localize() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_localization";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+
+    const fs::path no_area_path = temp_root / "append_from_no_area.prg";
+    write_text(
+        no_area_path,
+        "APPEND FROM 'missing.dbf'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession no_area_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(no_area_path.string(), temp_root.string(), false));
+    const auto no_area_state = no_area_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!no_area_state.completed, "#2709: qps-ploc APPEND FROM without a work area should fail");
+    expect(
+        no_area_state.message == copperfin::localization::pseudo_localize("APPEND FROM: no current work area"),
+        "#2709: qps-ploc APPEND FROM no-work-area error should route through the pseudo-localization transform");
+
+    write_simple_dbf(temp_root / "target.dbf", {"Alice"});
+
+    const fs::path wrapper_fail_path = temp_root / "append_from_wrapper_fail.prg";
+    write_text(
+        wrapper_fail_path,
+        "USE '" + (temp_root / "target.dbf").string() + "'\n"
+        "APPEND FROM '" + (temp_root / "missing.dbf").string() + "'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession wrapper_fail_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(wrapper_fail_path.string(), temp_root.string(), false));
+    const auto wrapper_fail_state = wrapper_fail_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!wrapper_fail_state.completed, "#2709: qps-ploc APPEND FROM missing-source script should fail");
+    expect(
+        wrapper_fail_state.message.find("[!! ") == 0U &&
+            wrapper_fail_state.message.find("APPEND FROM:") == std::string::npos,
+        "#2709: qps-ploc APPEND FROM wrapper error should pseudo-localize the command prefix");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_restore_from_additive_merges_variables() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_restore_additive";
@@ -6130,6 +6175,7 @@ int main() {
     test_save_restore_runtime_errors_localize();
     test_copy_to_runtime_errors_localize();
     test_append_from_array_runtime_errors_localize();
+    test_append_from_runtime_errors_localize();
     test_restore_from_additive_merges_variables();
     test_save_to_like_pattern_filters_variables();
     test_save_to_except_pattern_filters_variables();
