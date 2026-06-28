@@ -3036,7 +3036,7 @@
                     CursorState *cursor = resolve_cursor_target(resolved_filter_target);
                     if (cursor == nullptr)
                     {
-                        last_error_message = "SET FILTER requires a selected work area";
+                        last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.SetFilterRequiresSelectedWorkArea");
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -3510,7 +3510,7 @@
                 {
                     if (!declare_array(name, frame))
                     {
-                        last_error_message = "DIMENSION/DECLARE requires array dimensions";
+                        last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.DimensionDeclareRequiresArrayDimensions");
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -7021,7 +7021,7 @@
                     const double evaluated_delay = value_as_number(evaluate_expression(statement.expression, frame));
                     if (!std::isfinite(evaluated_delay) || evaluated_delay < 0.0)
                     {
-                        last_error_message = "SLEEP: invalid duration";
+                        last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.SleepInvalidDuration");
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};

@@ -2636,6 +2636,64 @@ void test_scatter_gather_runtime_errors_localize() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_set_filter_dimension_sleep_runtime_errors_localize() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_filter_dimension_sleep_localization";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+
+    const fs::path set_filter_path = temp_root / "set_filter_no_area.prg";
+    write_text(
+        set_filter_path,
+        "SET FILTER TO AGE >= 25\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession set_filter_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(set_filter_path.string(), temp_root.string(), false));
+    const auto set_filter_state = set_filter_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!set_filter_state.completed, "#2714: qps-ploc SET FILTER without a selected work area should fail");
+    expect(
+        set_filter_state.message ==
+            copperfin::localization::pseudo_localize("SET FILTER requires a selected work area"),
+        "#2714: qps-ploc SET FILTER selected-work-area error should route through the pseudo-localization transform");
+
+    const fs::path dimension_path = temp_root / "dimension_no_dims.prg";
+    write_text(
+        dimension_path,
+        "DIMENSION aRows\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession dimension_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(dimension_path.string(), temp_root.string(), false));
+    const auto dimension_state = dimension_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!dimension_state.completed, "#2714: qps-ploc DIMENSION without dimensions should fail");
+    expect(
+        dimension_state.message ==
+            copperfin::localization::pseudo_localize("DIMENSION/DECLARE requires array dimensions"),
+        "#2714: qps-ploc DIMENSION array-dimensions error should route through the pseudo-localization transform");
+
+    const fs::path sleep_path = temp_root / "sleep_invalid_duration.prg";
+    write_text(
+        sleep_path,
+        "SLEEP -1\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession sleep_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(sleep_path.string(), temp_root.string(), false));
+    const auto sleep_state = sleep_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!sleep_state.completed, "#2714: qps-ploc SLEEP with a negative duration should fail");
+    expect(
+        sleep_state.message ==
+            copperfin::localization::pseudo_localize("SLEEP: invalid duration"),
+        "#2714: qps-ploc SLEEP invalid-duration error should route through the pseudo-localization transform");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_restore_from_additive_merges_variables() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_restore_additive";
@@ -6368,6 +6426,7 @@ int main() {
     test_append_from_runtime_errors_localize();
     test_append_from_type_runtime_errors_localize();
     test_scatter_gather_runtime_errors_localize();
+    test_set_filter_dimension_sleep_runtime_errors_localize();
     test_restore_from_additive_merges_variables();
     test_save_to_like_pattern_filters_variables();
     test_save_to_except_pattern_filters_variables();
