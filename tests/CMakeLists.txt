@@ -881,6 +881,22 @@ add_test(
     COMMAND $<TARGET_FILE:test_studio_host_settings_memo_stable> $<TARGET_FILE:copperfin_studio_host>
 )
 
+add_executable(test_studio_host_settings_memo_record
+    test_studio_host_settings_memo_record.cpp
+)
+target_link_libraries(test_studio_host_settings_memo_record PRIVATE cf_vfp_assets)
+
+if(MSVC)
+    target_compile_options(test_studio_host_settings_memo_record PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_settings_memo_record PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_settings_memo_record
+    COMMAND $<TARGET_FILE:test_studio_host_settings_memo_record> $<TARGET_FILE:copperfin_studio_host>
+)
+
 add_executable(test_studio_host_subtree_deleted_state_errors
     test_studio_host_subtree_deleted_state_errors.cpp
 )
