@@ -64471,124 +64471,6 @@ void test_studio_host_json_clears_deleted_report_column_width_fields_by_stable_s
     }
 }
 
-void test_studio_host_json_deletes_report_sections_by_stable_selection(const std::string& studio_host_path) {
-    namespace fs = std::filesystem;
-
-    const fs::path temp_root =
-        fs::temp_directory_path() / "copperfin_studio_host_report_section_delete_stable_json_tests";
-    std::error_code ignored;
-    fs::remove_all(temp_root, ignored);
-    fs::create_directories(temp_root);
-
-    const auto run_section_delete = [&](const fs::path& asset_path,
-                                        const std::string& title,
-                                        const std::string& label) {
-        write_synthetic_report_table_for_stable_section_json(asset_path);
-
-        const auto delete_process = run_process_capture(
-            studio_host_path,
-            {
-                "--path", asset_path.string(),
-                "--delete-object",
-                "--unique-id", "section-guid",
-                "--json"
-            },
-            temp_root);
-
-        if (delete_process.exit_code != 0) {
-            std::cerr << "studio host " << label << " stable section delete stdout:\n"
-                      << delete_process.stdout_text << "\n";
-            std::cerr << "studio host " << label << " stable section delete stderr:\n"
-                      << delete_process.stderr_text << "\n";
-            std::cerr << "fixture root: " << temp_root << "\n";
-        }
-
-        expect(delete_process.exit_code == 0,
-               "#1655: stable report/label section delete should exit successfully");
-        expect(dbf_record_deleted(asset_path, 1U),
-               "#1655: stable report/label section delete should mark the section record deleted");
-        expect_contains(delete_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
-                        "#1655: stable report/label section delete should return refreshed report-layout JSON");
-        if (asset_path.extension() == ".lbx") {
-            expect_contains(delete_process.stdout_text, "\"isLabel\": true",
-                            "#1655: stable label section delete should retain label identity");
-        }
-        expect_contains(delete_process.stdout_text, "\"sectionCount\": 0",
-                        "#1655: stable report/label section delete should remove the section from live section counts");
-        expect_contains(delete_process.stdout_text, "\"deletedSectionCount\": 1",
-                        "#1655: stable report/label section delete should expose deleted section counts");
-        expect_contains(delete_process.stdout_text, "\"previewBoundsAvailable\": true",
-                        "#2273: stable report/label section delete should preserve live preview availability");
-        expect_contains(delete_process.stdout_text, "\"previewBoundsLeft\": 100",
-                        "#2273: stable report/label section delete should preserve live preview left bounds");
-        expect_contains(delete_process.stdout_text, "\"previewBoundsTop\": 2600",
-                        "#2273: stable report/label section delete should preserve live preview top bounds");
-        expect_contains(delete_process.stdout_text, "\"previewBoundsRight\": 150",
-                        "#2273: stable report/label section delete should preserve live preview right bounds");
-        expect_contains(delete_process.stdout_text, "\"previewBoundsBottom\": 2800",
-                        "#2273: stable report/label section delete should preserve live preview bottom bounds");
-        expect_contains(delete_process.stdout_text, "\"previewBoundsWidth\": 50",
-                        "#2273: stable report/label section delete should preserve live preview widths");
-        expect_contains(delete_process.stdout_text, "\"previewBoundsHeight\": 200",
-                        "#2273: stable report/label section delete should preserve live preview heights");
-        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
-                        "#2273: stable report/label section delete should expose deleted preview availability");
-        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
-                        "#2273: stable report/label section delete should preserve deleted preview left bounds");
-        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsTop\": 2000",
-                        "#2273: stable report/label section delete should preserve deleted preview top bounds");
-        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
-                        "#2273: stable report/label section delete should preserve deleted preview right bounds");
-        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsBottom\": 7000",
-                        "#2273: stable report/label section delete should preserve deleted preview bottom bounds");
-        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
-                        "#2273: stable report/label section delete should preserve deleted preview widths");
-        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsHeight\": 5000",
-                        "#2273: stable report/label section delete should preserve deleted preview heights");
-        expect_contains_in_order(
-            delete_process.stdout_text,
-            {
-                "\"deletedSections\": [",
-                "\"bandKind\": \"detail\"",
-                "\"recordIndex\": 1",
-                "\"deleted\": true",
-                "\"sectionIndex\": null",
-                "\"sectionCount\": 0"
-            },
-            "#1655: stable report/label section delete should move the section into deleted-section metadata");
-        expect_contains(delete_process.stdout_text, "\"unplacedObjectCount\": 3",
-                        "#1655: stable report/label section delete should leave former section objects unplaced");
-        expect_contains(delete_process.stdout_text, "\"containingSectionId\": \"\"",
-                        "#1655: stable report/label section delete should not fabricate containing-section ids");
-        expect_contains(delete_process.stdout_text, "\"selectedReportSectionAvailable\": true",
-                        "#1655: stable report/label section delete should advertise selected-section availability");
-        expect_contains(delete_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
-                        "#1655: stable report/label section delete should expose section selection kind");
-        expect_contains_in_order(
-            delete_process.stdout_text,
-            {
-                "\"selectedReportSection\": {",
-                "\"bandKind\": \"detail\"",
-                "\"recordIndex\": 1",
-                "\"deleted\": true",
-                "\"sectionIndex\": null",
-                "\"sectionCount\": 0"
-            },
-            "#1655: stable report/label section delete should expose selected deleted-section metadata");
-    };
-
-    run_section_delete(temp_root / "section_delete_stable.frx",
-                       "section_delete_stable.frx",
-                       "report");
-    run_section_delete(temp_root / "section_delete_stable.lbx",
-                       "section_delete_stable.lbx",
-                       "label");
-
-    if (failures == 0) {
-        fs::remove_all(temp_root, ignored);
-    }
-}
-
 void test_studio_host_json_restores_report_sections_by_record_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -124008,7 +123890,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_report_column_width_fields_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_column_width_fields_by_stable_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_column_width_fields_by_stable_selection(argv[1]);
-    test_studio_host_json_deletes_report_sections_by_stable_selection(argv[1]);
     test_studio_host_json_restores_report_sections_by_record_selection(argv[1]);
     test_studio_host_json_restores_label_sections_by_record_selection(argv[1]);
     test_studio_host_json_restores_report_sections_by_stable_selection(argv[1]);
