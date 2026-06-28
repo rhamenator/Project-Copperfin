@@ -1,3 +1,4 @@
+#include "copperfin/localization/localization.h"
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "prg_engine_test_support.h"
@@ -27,6 +28,40 @@
 namespace {
 
 using namespace copperfin::test_support;
+
+void set_env_value(const std::string& name, const std::string& value, bool has_value) {
+#ifdef _WIN32
+    if (has_value) {
+        _putenv_s(name.c_str(), value.c_str());
+    } else {
+        _putenv_s(name.c_str(), "");
+    }
+#else
+    if (has_value) {
+        setenv(name.c_str(), value.c_str(), 1);
+    } else {
+        unsetenv(name.c_str());
+    }
+#endif
+}
+
+struct ScopedEnvironmentValue {
+    std::string name;
+    bool had_value = false;
+    std::string original_value;
+
+    explicit ScopedEnvironmentValue(std::string environment_name)
+        : name(std::move(environment_name)) {
+        if (const char* current = std::getenv(name.c_str())) {
+            had_value = true;
+            original_value = current;
+        }
+    }
+
+    ~ScopedEnvironmentValue() {
+        set_env_value(name, original_value, had_value);
+    }
+};
 
 void test_scatter_memvar_from_current_record() {
     namespace fs = std::filesystem;
@@ -2241,6 +2276,47 @@ void test_restore_from_loads_variables_from_file() {
         expect(copperfin::runtime::format_value(restored_n->second) == "42",
             "RESTORE FROM should keep nVal value");
     }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_save_restore_runtime_errors_localize() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_save_restore_localization";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+
+    const fs::path save_path = temp_root / "save_error.prg";
+    write_text(
+        save_path,
+        "SAVE TO ''\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession save_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(save_path.string(), temp_root.string(), false));
+    const auto save_state = save_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!save_state.completed, "#2705: qps-ploc SAVE TO missing-filename script should fail");
+    expect(
+        save_state.message == copperfin::localization::pseudo_localize("SAVE TO: filename required"),
+        "#2705: qps-ploc SAVE TO runtime error should route through the pseudo-localization transform");
+
+    const fs::path restore_path = temp_root / "restore_error.prg";
+    write_text(
+        restore_path,
+        "RESTORE FROM 'missing.mem'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession restore_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(restore_path.string(), temp_root.string(), false));
+    const auto restore_state = restore_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!restore_state.completed, "#2705: qps-ploc RESTORE FROM missing-file script should fail");
+    expect(
+        restore_state.message == copperfin::localization::pseudo_localize("RESTORE FROM: unable to open source file"),
+        "#2705: qps-ploc RESTORE FROM runtime error should route through the pseudo-localization transform");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -5971,6 +6047,7 @@ int main() {
     test_runtime_array_mutator_functions();
     test_save_to_writes_variables_to_file();
     test_restore_from_loads_variables_from_file();
+    test_save_restore_runtime_errors_localize();
     test_restore_from_additive_merges_variables();
     test_save_to_like_pattern_filters_variables();
     test_save_to_except_pattern_filters_variables();

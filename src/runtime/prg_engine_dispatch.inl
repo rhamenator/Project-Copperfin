@@ -4007,7 +4007,7 @@
                     value_as_string(evaluate_expression(statement.expression, frame))));
                 if (destination.empty())
                 {
-                    last_error_message = "SAVE TO: filename required";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.SaveToFilenameRequired");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -4065,7 +4065,7 @@
                 std::ofstream output(destination_path, std::ios::binary);
                 if (!output.good())
                 {
-                    last_error_message = "SAVE TO: unable to open output file";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.SaveToOpenFailed");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -4141,7 +4141,7 @@
                 output.close();
                 if (!output.good())
                 {
-                    last_error_message = "SAVE TO: unable to write output file";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.SaveToWriteFailed");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -4249,7 +4249,7 @@
                     value_as_string(evaluate_expression(statement.expression, frame))));
                 if (source.empty())
                 {
-                    last_error_message = "RESTORE FROM: filename required";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.RestoreFromFilenameRequired");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -4269,7 +4269,7 @@
                 std::ifstream input(source_path, std::ios::binary);
                 if (!input.good())
                 {
-                    last_error_message = "RESTORE FROM: unable to open source file";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.RestoreFromOpenFailed");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};

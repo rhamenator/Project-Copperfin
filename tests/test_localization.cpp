@@ -1849,6 +1849,69 @@ void test_runtime_surface_errors_route_through_catalog() {
         "#2545: qps-ploc cursor XML warning should pseudo-localize prose while preserving placeholders");
 }
 
+void test_runtime_save_restore_errors_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const std::vector<std::string> keys{
+        "Runtime.Prg.Dispatch.Error.SaveToFilenameRequired",
+        "Runtime.Prg.Dispatch.Error.SaveToOpenFailed",
+        "Runtime.Prg.Dispatch.Error.SaveToWriteFailed",
+        "Runtime.Prg.Dispatch.Error.RestoreFromFilenameRequired",
+        "Runtime.Prg.Dispatch.Error.RestoreFromOpenFailed"
+    };
+
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.SaveToFilenameRequired") == "SAVE TO: filename required",
+        "#2705: SAVE TO missing-filename error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.SaveToOpenFailed") == "SAVE TO: unable to open output file",
+        "#2705: SAVE TO open-failure error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.SaveToWriteFailed") == "SAVE TO: unable to write output file",
+        "#2705: SAVE TO write-failure error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.RestoreFromFilenameRequired") ==
+            "RESTORE FROM: filename required",
+        "#2705: RESTORE FROM missing-filename error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.RestoreFromOpenFailed") ==
+            "RESTORE FROM: unable to open source file",
+        "#2705: RESTORE FROM open-failure error should localize through the runtime catalog");
+
+    for (const std::string& key : keys) {
+        expect(
+            spanish.catalogs.contains("es-419") && spanish.catalogs.at("es-419").contains(key),
+            "#2705: es-419 should define every SAVE/RESTORE runtime dispatch key");
+        expect(
+            portuguese.catalogs.contains("pt-BR") && portuguese.catalogs.at("pt-BR").contains(key),
+            "#2705: pt-BR should define every SAVE/RESTORE runtime dispatch key");
+        expect(
+            pseudo.catalogs.contains("qps-ploc") && pseudo.catalogs.at("qps-ploc").contains(key),
+            "#2705: qps-ploc should define every SAVE/RESTORE runtime dispatch key");
+    }
+
+    expect(
+        spanish.translate("Runtime.Prg.Dispatch.Error.SaveToFilenameRequired").find("filename required") ==
+            std::string::npos,
+        "#2705: es-419 SAVE TO missing-filename error should not fall back to raw English");
+    expect(
+        portuguese.translate("Runtime.Prg.Dispatch.Error.RestoreFromOpenFailed").find("unable to open source file") ==
+            std::string::npos,
+        "#2705: pt-BR RESTORE FROM open-failure error should not fall back to raw English");
+
+    expect(
+        pseudo.translate("Runtime.Prg.Dispatch.Error.SaveToFilenameRequired") ==
+            copperfin::localization::pseudo_localize("SAVE TO: filename required"),
+        "#2705: qps-ploc SAVE TO missing-filename error should match the pseudo-localization transform");
+    expect(
+        pseudo.translate("Runtime.Prg.Dispatch.Error.RestoreFromOpenFailed") ==
+            copperfin::localization::pseudo_localize("RESTORE FROM: unable to open source file"),
+        "#2705: qps-ploc RESTORE FROM open-failure error should match the pseudo-localization transform");
+}
+
 void test_inspect_usage_routes_through_localization(const std::string& inspect_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_inspect_usage_tests";
@@ -2006,6 +2069,7 @@ int main(int argc, char** argv) {
     test_runtime_watch_errors_route_through_catalog();
     test_runtime_dispatch_errors_route_through_catalog();
     test_runtime_surface_errors_route_through_catalog();
+    test_runtime_save_restore_errors_route_through_catalog();
     test_runtime_package_warnings_pseudo_localize();
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);
