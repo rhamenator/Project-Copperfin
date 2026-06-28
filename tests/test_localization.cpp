@@ -2647,6 +2647,86 @@ void test_runtime_object_helper_dispatch_errors_route_through_catalog() {
         "#2718: qps-ploc OLE property-assignment miss should pseudo-localize prose while preserving the member path");
 }
 
+void test_runtime_ole_invocation_and_property_read_errors_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const copperfin::localization::PlaceholderMap missing_method_placeholders{
+        {"targetIdentifier", "missingOle.NoSuchMethod"}
+    };
+    const copperfin::localization::PlaceholderMap missing_member_method_placeholders{
+        {"memberIdentifier", "Scripting.Dictionary.NoSuchMethod"}
+    };
+    const copperfin::localization::PlaceholderMap missing_property_placeholders{
+        {"propertyPath", "missingOle.SomeProperty"}
+    };
+    const copperfin::localization::PlaceholderMap missing_member_property_placeholders{
+        {"memberIdentifier", "Scripting.Dictionary.SomeProperty"}
+    };
+    const std::vector<std::string> keys{
+        "Runtime.Prg.Core.Error.OleObjectNotFoundForMethodInvocation",
+        "Runtime.Prg.Core.Error.OleMemberNotFoundForMethodInvocation",
+        "Runtime.Prg.Core.Error.OleObjectNotFoundForPropertyRead",
+        "Runtime.Prg.Core.Error.OleMemberNotFoundForPropertyRead"
+    };
+
+    expect(
+        english.translate("Runtime.Prg.Core.Error.OleObjectNotFoundForMethodInvocation", missing_method_placeholders) ==
+            "OLE object not found for method invocation: missingOle.NoSuchMethod",
+        "#2719: OLE object-missing method invocation fault should preserve the missing target identifier");
+    expect(
+        english.translate("Runtime.Prg.Core.Error.OleMemberNotFoundForMethodInvocation", missing_member_method_placeholders) ==
+            "OLE member not found for method invocation: Scripting.Dictionary.NoSuchMethod",
+        "#2719: OLE member-missing method invocation fault should preserve the automation member identifier");
+    expect(
+        english.translate("Runtime.Prg.Core.Error.OleObjectNotFoundForPropertyRead", missing_property_placeholders) ==
+            "OLE object not found for property read: missingOle.SomeProperty",
+        "#2719: OLE object-missing property-read fault should preserve the missing property path");
+    expect(
+        english.translate("Runtime.Prg.Core.Error.OleMemberNotFoundForPropertyRead", missing_member_property_placeholders) ==
+            "OLE member not found for property read: Scripting.Dictionary.SomeProperty",
+        "#2719: OLE member-missing property-read fault should preserve the automation member identifier");
+
+    for (const std::string& key : keys) {
+        expect(
+            spanish.catalogs.contains("es-419") && spanish.catalogs.at("es-419").contains(key),
+            "#2719: es-419 should define every residual OLE invocation/read runtime key");
+        expect(
+            portuguese.catalogs.contains("pt-BR") && portuguese.catalogs.at("pt-BR").contains(key),
+            "#2719: pt-BR should define every residual OLE invocation/read runtime key");
+        expect(
+            pseudo.catalogs.contains("qps-ploc") && pseudo.catalogs.at("qps-ploc").contains(key),
+            "#2719: qps-ploc should define every residual OLE invocation/read runtime key");
+    }
+
+    expect(
+        spanish.translate("Runtime.Prg.Core.Error.OleObjectNotFoundForMethodInvocation", missing_method_placeholders)
+                .find("OLE object not found for method invocation") == std::string::npos,
+        "#2719: es-419 OLE object-missing method invocation fault should not fall back to raw English");
+    expect(
+        portuguese.translate("Runtime.Prg.Core.Error.OleMemberNotFoundForPropertyRead", missing_member_property_placeholders)
+                .find("OLE member not found for property read") == std::string::npos,
+        "#2719: pt-BR OLE member-missing property-read fault should not fall back to raw English");
+
+    const std::string pseudo_missing_method =
+        pseudo.translate("Runtime.Prg.Core.Error.OleObjectNotFoundForMethodInvocation", missing_method_placeholders);
+    expect(
+        pseudo_missing_method.find("[!! ") == 0U &&
+            pseudo_missing_method.find("missingOle.NoSuchMethod") != std::string::npos &&
+            pseudo_missing_method.find("OLE object not found for method invocation") == std::string::npos,
+        "#2719: qps-ploc OLE object-missing method invocation fault should pseudo-localize prose while preserving the target identifier");
+
+    const std::string pseudo_missing_property =
+        pseudo.translate("Runtime.Prg.Core.Error.OleMemberNotFoundForPropertyRead", missing_member_property_placeholders);
+    expect(
+        pseudo_missing_property.find("[!! ") == 0U &&
+            pseudo_missing_property.find("Scripting.Dictionary.SomeProperty") != std::string::npos &&
+            pseudo_missing_property.find("OLE member not found for property read") == std::string::npos,
+        "#2719: qps-ploc OLE member-missing property-read fault should pseudo-localize prose while preserving the member identifier");
+}
+
 void test_inspect_usage_routes_through_localization(const std::string& inspect_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_inspect_usage_tests";
@@ -2816,6 +2896,7 @@ int main(int argc, char** argv) {
     test_runtime_declare_dispatch_errors_route_through_catalog();
     test_runtime_residual_command_dispatch_errors_route_through_catalog();
     test_runtime_object_helper_dispatch_errors_route_through_catalog();
+    test_runtime_ole_invocation_and_property_read_errors_route_through_catalog();
     test_runtime_package_warnings_pseudo_localize();
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);

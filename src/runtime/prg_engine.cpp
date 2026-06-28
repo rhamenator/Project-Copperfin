@@ -743,7 +743,9 @@ namespace copperfin::runtime
                 {
                     return raise_ole_fault(base_name + "." + member_path + "()",
                                            base_name,
-                                           "OLE object not found for method invocation: " + base_name + "." + member_path);
+                                           runtime_text(
+                                               "Runtime.Prg.Core.Error.OleObjectNotFoundForMethodInvocation",
+                                               {{"targetIdentifier", base_name + "." + member_path}}));
                 }
 
                 RuntimeOleObjectState *runtime_object = *object;
@@ -821,7 +823,9 @@ namespace copperfin::runtime
 
                     return raise_ole_fault(runtime_object->prog_id + "." + member_path + "()",
                                            base_name,
-                                           "OLE member not found for method invocation: " + runtime_object->prog_id + "." + member_path);
+                                           runtime_text(
+                                               "Runtime.Prg.Core.Error.OleMemberNotFoundForMethodInvocation",
+                                               {{"memberIdentifier", runtime_object->prog_id + "." + member_path}}));
                 }
 
                 if (leaf == "add" || leaf == "create" || leaf == "open" || leaf == "item")
@@ -862,7 +866,9 @@ namespace copperfin::runtime
                 {
                     return raise_ole_fault(property_path,
                                            object_name,
-                                           "OLE object not found for property read: " + property_path);
+                                           runtime_text(
+                                               "Runtime.Prg.Core.Error.OleObjectNotFoundForPropertyRead",
+                                               {{"propertyPath", property_path}}));
                 }
 
                 RuntimeOleObjectState *runtime_object = *object;
@@ -881,7 +887,9 @@ namespace copperfin::runtime
                 {
                     return raise_ole_fault(runtime_object->prog_id + "." + property_path.substr(separator + 1U),
                                            object_name,
-                                           "OLE member not found for property read: " + runtime_object->prog_id + "." + property_path.substr(separator + 1U));
+                                           runtime_text(
+                                               "Runtime.Prg.Core.Error.OleMemberNotFoundForPropertyRead",
+                                               {{"memberIdentifier", runtime_object->prog_id + "." + property_path.substr(separator + 1U)}}));
                 }
                 return make_string_value("ole:" + runtime_object->prog_id + "." + property_path.substr(separator + 1U));
             },

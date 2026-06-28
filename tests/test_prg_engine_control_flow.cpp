@@ -5395,6 +5395,106 @@ void test_ole_property_assignment_runtime_errors_localize() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_ole_invocation_and_property_read_runtime_errors_localize() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_ole_read_localization";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+
+    const fs::path main_path = temp_root / "ole_read_localization.prg";
+    write_text(
+        main_path,
+        "oDict = CREATEOBJECT('Scripting.Dictionary')\n"
+        "oDict.Add('Alpha', 41)\n"
+        "TRY\n"
+        "  missingOle.NoSuchMethod()\n"
+        "CATCH TO cMissingMethod\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  xMissingObjectProperty = missingOle.SomeProperty\n"
+        "CATCH TO cMissingProperty\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  oDict.NoSuchMethod(7)\n"
+        "CATCH TO cMissingMemberMethod\n"
+        "ENDTRY\n"
+        "TRY\n"
+        "  xMissingMemberProperty = oDict.NoSuchProperty\n"
+        "CATCH TO cMissingMemberProperty\n"
+        "ENDTRY\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#2719: qps-ploc OLE invocation/property-read localization script should complete");
+
+    const auto missing_method = state.globals.find("cmissingmethod");
+    const auto missing_property = state.globals.find("cmissingproperty");
+    const auto missing_member_method = state.globals.find("cmissingmembermethod");
+    const auto missing_member_property = state.globals.find("cmissingmemberproperty");
+
+    expect(missing_method != state.globals.end(), "#2719: qps-ploc missing OLE method invocation should populate CATCH text");
+    expect(missing_property != state.globals.end(), "#2719: qps-ploc missing OLE property read should populate CATCH text");
+    expect(missing_member_method != state.globals.end(), "#2719: qps-ploc missing OLE member method should populate CATCH text");
+    expect(missing_member_property != state.globals.end(), "#2719: qps-ploc missing OLE member property should populate CATCH text");
+
+    if (missing_method != state.globals.end()) {
+        std::string localized_message = copperfin::runtime::format_value(missing_method->second);
+        std::string folded_message = localized_message;
+        std::transform(folded_message.begin(), folded_message.end(), folded_message.begin(), [](unsigned char ch) {
+            return static_cast<char>(std::tolower(ch));
+        });
+        expect(
+            localized_message.find("[!! ") != std::string::npos &&
+                folded_message.find("missingole.nosuchmethod") != std::string::npos &&
+                folded_message.find("ole object not found for method invocation") == std::string::npos,
+            "#2719: qps-ploc missing OLE method invocation should pseudo-localize prose while preserving the target identifier");
+    }
+    if (missing_property != state.globals.end()) {
+        std::string localized_message = copperfin::runtime::format_value(missing_property->second);
+        std::string folded_message = localized_message;
+        std::transform(folded_message.begin(), folded_message.end(), folded_message.begin(), [](unsigned char ch) {
+            return static_cast<char>(std::tolower(ch));
+        });
+        expect(
+            localized_message.find("[!! ") != std::string::npos &&
+                folded_message.find("missingole.someproperty") != std::string::npos &&
+                folded_message.find("ole object not found for property read") == std::string::npos,
+            "#2719: qps-ploc missing OLE property read should pseudo-localize prose while preserving the property path");
+    }
+    if (missing_member_method != state.globals.end()) {
+        std::string localized_message = copperfin::runtime::format_value(missing_member_method->second);
+        std::string folded_message = localized_message;
+        std::transform(folded_message.begin(), folded_message.end(), folded_message.begin(), [](unsigned char ch) {
+            return static_cast<char>(std::tolower(ch));
+        });
+        expect(
+            localized_message.find("[!! ") != std::string::npos &&
+                folded_message.find("scripting.dictionary.nosuchmethod") != std::string::npos &&
+                folded_message.find("ole member not found for method invocation") == std::string::npos,
+            "#2719: qps-ploc missing OLE member method should pseudo-localize prose while preserving the member identifier");
+    }
+    if (missing_member_property != state.globals.end()) {
+        std::string localized_message = copperfin::runtime::format_value(missing_member_property->second);
+        std::string folded_message = localized_message;
+        std::transform(folded_message.begin(), folded_message.end(), folded_message.begin(), [](unsigned char ch) {
+            return static_cast<char>(std::tolower(ch));
+        });
+        expect(
+            localized_message.find("[!! ") != std::string::npos &&
+                folded_message.find("scripting.dictionary.nosuchproperty") != std::string::npos &&
+                folded_message.find("ole member not found for property read") == std::string::npos,
+            "#2719: qps-ploc missing OLE member property should pseudo-localize prose while preserving the member identifier");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_yield_is_explicit_policy_exception_in_enter_critical() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_enter_critical_yield_policy_exception";
@@ -7320,6 +7420,7 @@ int main() {
     test_critical_section_blocking_policy_rejects_sleep_inside_section();
     test_residual_dispatch_runtime_errors_localize();
     test_ole_property_assignment_runtime_errors_localize();
+    test_ole_invocation_and_property_read_runtime_errors_localize();
     test_yield_allowed_in_enter_critical_regression_minimal();
     test_yield_is_explicit_policy_exception_in_enter_critical();
     test_yield_in_enter_critical_has_no_blocking_violation();
