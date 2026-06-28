@@ -1,0 +1,533 @@
+#include "copperfin/vfp/dbf_table.h"
+
+#include <cstdlib>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <vector>
+
+#if !defined(_WIN32)
+#include <sys/wait.h>
+#endif
+
+namespace {
+
+int failures = 0;
+
+std::string getenv_value(const std::string& name) {
+#ifdef _WIN32
+    char* value = nullptr;
+    std::size_t value_size = 0;
+    if (_dupenv_s(&value, &value_size, name.c_str()) != 0 || value == nullptr) {
+        return {};
+    }
+    std::string result(value);
+    std::free(value);
+    return result;
+#else
+    const char* value = std::getenv(name.c_str());
+    if (value == nullptr) {
+        return {};
+    }
+    return value;
+#endif
+}
+
+void set_env_value(const std::string& name, const std::string& value, bool has_value) {
+#ifdef _WIN32
+    if (has_value) {
+        _putenv_s(name.c_str(), value.c_str());
+    } else {
+        _putenv_s((name + "=").c_str(), "");
+    }
+#else
+    if (has_value) {
+        setenv(name.c_str(), value.c_str(), 1);
+    } else {
+        unsetenv(name.c_str());
+    }
+#endif
+}
+
+struct ScopedEnvironmentValue {
+    std::string name;
+    std::string original;
+    bool had_original = false;
+
+    explicit ScopedEnvironmentValue(const std::string& environment_name)
+        : name(environment_name),
+          original(getenv_value(name)) {
+        had_original = !original.empty();
+        set_env_value(name, "", false);
+    }
+
+    ~ScopedEnvironmentValue() {
+        set_env_value(name, original, had_original);
+    }
+};
+
+struct ScopedDefaultLocaleCatalogEnvironment {
+    ScopedEnvironmentValue locale;
+    ScopedEnvironmentValue locale_dir;
+
+    ScopedDefaultLocaleCatalogEnvironment()
+        : locale("COPPERFIN_LOCALE"),
+          locale_dir("COPPERFIN_LOCALE_DIR") {
+        set_env_value("COPPERFIN_LOCALE", "en-US", true);
+        set_env_value(
+            "COPPERFIN_LOCALE_DIR",
+            std::filesystem::absolute("resources/locales").lexically_normal().string(),
+            true);
+    }
+};
+
+void expect(bool condition, const std::string& message) {
+    if (!condition) {
+        std::cerr << "FAIL: " << message << "\n";
+        ++failures;
+    }
+}
+
+void expect_contains(const std::string& text, const std::string& needle, const std::string& message) {
+    expect(text.find(needle) != std::string::npos, message);
+}
+
+void expect_contains_in_order(
+    const std::string& text,
+    const std::vector<std::string>& needles,
+    const std::string& message) {
+    std::size_t offset = 0U;
+    for (const auto& needle : needles) {
+        const std::size_t position = text.find(needle, offset);
+        if (position == std::string::npos) {
+            expect(false, message);
+            return;
+        }
+        offset = position + needle.size();
+    }
+}
+
+std::string quote_command_argument(const std::string& value) {
+    std::string quoted = "\"";
+    quoted.reserve(value.size() + 2U);
+    for (const char ch : value) {
+        if (ch == '"') {
+            quoted += "\\\"";
+        } else {
+            quoted.push_back(ch);
+        }
+    }
+    quoted.push_back('"');
+    return quoted;
+}
+
+std::string read_text(const std::filesystem::path& path) {
+    std::ifstream input(path, std::ios::binary);
+    return {
+        std::istreambuf_iterator<char>(input),
+        std::istreambuf_iterator<char>()
+    };
+}
+
+struct ProcessResult {
+    int exit_code = -1;
+    std::string stdout_text;
+    std::string stderr_text;
+};
+
+ProcessResult run_process_capture(
+    const std::string& executable_path,
+    const std::vector<std::string>& arguments,
+    const std::filesystem::path& working_directory) {
+    namespace fs = std::filesystem;
+
+    const fs::path resolved_executable_path = fs::absolute(executable_path);
+    const fs::path stdout_path = working_directory / "studio_host_stdout.log";
+    const fs::path stderr_path = working_directory / "studio_host_stderr.log";
+
+    std::string command = quote_command_argument(resolved_executable_path.string());
+    for (const auto& argument : arguments) {
+        command += " ";
+        command += quote_command_argument(argument);
+    }
+    command += " > ";
+    command += quote_command_argument(stdout_path.string());
+    command += " 2> ";
+    command += quote_command_argument(stderr_path.string());
+
+    const fs::path original_directory = fs::current_path();
+    fs::current_path(working_directory);
+    const int raw_exit_code = std::system(command.c_str());
+    fs::current_path(original_directory);
+
+    ProcessResult result;
+    if (fs::exists(stdout_path)) {
+        result.stdout_text = read_text(stdout_path);
+    }
+    if (fs::exists(stderr_path)) {
+        result.stderr_text = read_text(stderr_path);
+    }
+
+#if defined(_WIN32)
+    result.exit_code = raw_exit_code;
+#else
+    if (raw_exit_code != -1 && WIFEXITED(raw_exit_code)) {
+        result.exit_code = WEXITSTATUS(raw_exit_code);
+    } else {
+        result.exit_code = raw_exit_code;
+    }
+#endif
+    return result;
+}
+
+void write_synthetic_report_table_for_stable_summary_object_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", "", "", ""},
+        {"9", "4", "", "", "0", "", "3200", ""},
+        {"9", "8", "", "", "3200", "", "700", "summary-section-guid"},
+        {"5", "", "\"Summary label\"", "400", "3300", "1500", "250", "summary-label-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#2803: stable summary object fixture should be created");
+}
+
+void write_synthetic_report_table_for_deleted_summary_object_json(
+    const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_stable_summary_object_json(report_path);
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 3U, true);
+    expect(delete_result.ok, "#2803: deleted summary object fixture should mark summary object deleted");
+}
+
+void run_summary_object_selection(
+    const std::string& studio_host_path,
+    const std::filesystem::path& temp_root,
+    const std::string& file_name,
+    const std::string& label,
+    const std::string& issue_prefix) {
+    const std::filesystem::path asset_path = temp_root / file_name;
+    write_synthetic_report_table_for_stable_summary_object_json(asset_path);
+
+    const auto object_process = run_process_capture(
+        studio_host_path,
+        {"--path", asset_path.string(), "--unique-id", "summary-label-guid", "--json"},
+        temp_root);
+
+    if (object_process.exit_code != 0) {
+        std::cerr << "studio host " << label << " stable selected summary object stdout:\n"
+                  << object_process.stdout_text << "\n";
+        std::cerr << "studio host " << label << " stable selected summary object stderr:\n"
+                  << object_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(object_process.exit_code == 0, issue_prefix + " should exit successfully");
+    expect_contains(object_process.stdout_text, "\"documentTitle\": \"" + file_name + "\"",
+                    issue_prefix + " should preserve document titles");
+    if (asset_path.extension() == ".lbx") {
+        expect_contains(object_process.stdout_text, "\"isLabel\": true",
+                        issue_prefix + " should retain label identity");
+    }
+    expect_contains(object_process.stdout_text, "\"previewBoundsAvailable\": true",
+                    issue_prefix + " should expose live preview availability");
+    expect_contains(object_process.stdout_text, "\"previewBoundsLeft\": 0",
+                    issue_prefix + " should preserve live preview left bounds");
+    expect_contains(object_process.stdout_text, "\"previewBoundsTop\": 0",
+                    issue_prefix + " should preserve live preview top bounds");
+    expect_contains(object_process.stdout_text, "\"previewBoundsRight\": 1900",
+                    issue_prefix + " should preserve live preview right bounds");
+    expect_contains(object_process.stdout_text, "\"previewBoundsBottom\": 3900",
+                    issue_prefix + " should preserve live preview bottom bounds");
+    expect_contains(object_process.stdout_text, "\"previewBoundsWidth\": 1900",
+                    issue_prefix + " should preserve live preview width");
+    expect_contains(object_process.stdout_text, "\"previewBoundsHeight\": 3900",
+                    issue_prefix + " should preserve live preview height");
+    expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                    issue_prefix + " should not fabricate deleted preview availability");
+    expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                    issue_prefix + " should preserve zero deleted preview left bounds");
+    expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsTop\": 0",
+                    issue_prefix + " should preserve zero deleted preview top bounds");
+    expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                    issue_prefix + " should preserve zero deleted preview right bounds");
+    expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsBottom\": 0",
+                    issue_prefix + " should preserve zero deleted preview bottom bounds");
+    expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                    issue_prefix + " should preserve zero deleted preview width");
+    expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsHeight\": 0",
+                    issue_prefix + " should preserve zero deleted preview height");
+    expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                    issue_prefix + " should advertise selected-object availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                    issue_prefix + " should advertise report-selection availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                    issue_prefix + " should expose object selection kind");
+    expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                    issue_prefix + " should not advertise selected-section availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportSection\": null",
+                    issue_prefix + " should serialize null selected sections");
+    expect_contains(object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                    issue_prefix + " should not advertise selected-settings availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportSettings\": null",
+                    issue_prefix + " should serialize null selected settings");
+    expect_contains(object_process.stdout_text, "\"sectionCount\": 2",
+                    issue_prefix + " should preserve live section counts");
+    expect_contains(object_process.stdout_text, "\"deletedSectionCount\": 0",
+                    issue_prefix + " should preserve deleted section counts");
+    expect_contains(object_process.stdout_text, "\"liveObjectCount\": 1",
+                    issue_prefix + " should preserve live object counts");
+    expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 0",
+                    issue_prefix + " should preserve deleted object counts");
+    expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                    issue_prefix + " should advertise containing-section availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": {",
+                    issue_prefix + " should expose containing-section JSON");
+    expect_contains_in_order(
+        object_process.stdout_text,
+        {
+            "\"selectedReportObject\": {",
+            "\"recordIndex\": 3",
+            "\"deleted\": false",
+            "\"containingSectionId\": \"summary-section-guid\"",
+            "\"containingSectionRecordIndex\": 2",
+            "\"sectionRelativeTop\": 100",
+            "\"sectionRelativeBottom\": 350",
+            "\"sectionObjectIndex\": 0",
+            "\"sectionObjectCount\": 1",
+            "\"objectTypeCode\": 5",
+            "\"objectKind\": \"label\"",
+            "\"expression\": \"\\\"Summary label\\\"\""
+        },
+        issue_prefix + " should expose selected object metadata");
+    expect_contains(object_process.stdout_text, "\"left\": 400",
+                    issue_prefix + " should expose selected-object left bounds");
+    expect_contains(object_process.stdout_text, "\"top\": 3300",
+                    issue_prefix + " should expose selected-object top bounds");
+    expect_contains(object_process.stdout_text, "\"width\": 1500",
+                    issue_prefix + " should expose selected-object widths");
+    expect_contains(object_process.stdout_text, "\"right\": 1900",
+                    issue_prefix + " should expose selected-object right bounds");
+    expect_contains(object_process.stdout_text, "\"height\": 250",
+                    issue_prefix + " should expose selected-object heights");
+    expect_contains(object_process.stdout_text, "\"bottom\": 3550",
+                    issue_prefix + " should expose selected-object bottom bounds");
+    expect_contains_in_order(
+        object_process.stdout_text,
+        {
+            "\"selectedReportObjectSection\": {",
+            "\"id\": \"summary-section-guid\"",
+            "\"bandKind\": \"summary\"",
+            "\"recordIndex\": 2",
+            "\"deleted\": false",
+            "\"sectionIndex\": 1",
+            "\"sectionCount\": 2",
+            "\"top\": 3200",
+            "\"height\": 700",
+            "\"bottom\": 3900",
+            "\"objectCount\": 1"
+        },
+        issue_prefix + " should expose the containing summary metadata");
+}
+
+void run_deleted_summary_object_selection(
+    const std::string& studio_host_path,
+    const std::filesystem::path& temp_root,
+    const std::string& file_name,
+    const std::string& label,
+    const std::string& issue_prefix) {
+    const std::filesystem::path asset_path = temp_root / file_name;
+    write_synthetic_report_table_for_deleted_summary_object_json(asset_path);
+
+    const auto object_process = run_process_capture(
+        studio_host_path,
+        {"--path", asset_path.string(), "--unique-id", "summary-label-guid", "--json"},
+        temp_root);
+
+    if (object_process.exit_code != 0) {
+        std::cerr << "studio host " << label << " stable selected deleted summary object stdout:\n"
+                  << object_process.stdout_text << "\n";
+        std::cerr << "studio host " << label << " stable selected deleted summary object stderr:\n"
+                  << object_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(object_process.exit_code == 0, issue_prefix + " should exit successfully");
+    expect_contains(object_process.stdout_text, "\"documentTitle\": \"" + file_name + "\"",
+                    issue_prefix + " should preserve document titles");
+    if (asset_path.extension() == ".lbx") {
+        expect_contains(object_process.stdout_text, "\"isLabel\": true",
+                        issue_prefix + " should retain label identity");
+    }
+    expect_contains(object_process.stdout_text, "\"previewBoundsAvailable\": true",
+                    issue_prefix + " should expose live preview availability");
+    expect_contains(object_process.stdout_text, "\"previewBoundsLeft\": 0",
+                    issue_prefix + " should preserve live preview left bounds");
+    expect_contains(object_process.stdout_text, "\"previewBoundsTop\": 0",
+                    issue_prefix + " should preserve live preview top bounds");
+    expect_contains(object_process.stdout_text, "\"previewBoundsRight\": 0",
+                    issue_prefix + " should preserve live preview right bounds");
+    expect_contains(object_process.stdout_text, "\"previewBoundsBottom\": 3900",
+                    issue_prefix + " should preserve live preview bottom bounds");
+    expect_contains(object_process.stdout_text, "\"previewBoundsWidth\": 0",
+                    issue_prefix + " should preserve live preview width");
+    expect_contains(object_process.stdout_text, "\"previewBoundsHeight\": 3900",
+                    issue_prefix + " should preserve live preview height");
+    expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                    issue_prefix + " should expose deleted preview availability");
+    expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsLeft\": 400",
+                    issue_prefix + " should preserve deleted preview left bounds");
+    expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsTop\": 3300",
+                    issue_prefix + " should preserve deleted preview top bounds");
+    expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsRight\": 1900",
+                    issue_prefix + " should preserve deleted preview right bounds");
+    expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsBottom\": 3550",
+                    issue_prefix + " should preserve deleted preview bottom bounds");
+    expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1500",
+                    issue_prefix + " should preserve deleted preview width");
+    expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsHeight\": 250",
+                    issue_prefix + " should preserve deleted preview height");
+    expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                    issue_prefix + " should advertise selected-object availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                    issue_prefix + " should advertise report-selection availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                    issue_prefix + " should expose object selection kind");
+    expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                    issue_prefix + " should not advertise selected-section availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportSection\": null",
+                    issue_prefix + " should serialize null selected sections");
+    expect_contains(object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                    issue_prefix + " should not advertise selected-settings availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportSettings\": null",
+                    issue_prefix + " should serialize null selected settings");
+    expect_contains(object_process.stdout_text, "\"sectionCount\": 2",
+                    issue_prefix + " should preserve live section counts");
+    expect_contains(object_process.stdout_text, "\"deletedSectionCount\": 0",
+                    issue_prefix + " should preserve deleted section counts");
+    expect_contains(object_process.stdout_text, "\"liveObjectCount\": 0",
+                    issue_prefix + " should clear live object counts");
+    expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 1",
+                    issue_prefix + " should preserve deleted object counts");
+    expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                    issue_prefix + " should preserve containing-section availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": {",
+                    issue_prefix + " should expose containing-section JSON");
+    expect_contains_in_order(
+        object_process.stdout_text,
+        {
+            "\"selectedReportObject\": {",
+            "\"recordIndex\": 3",
+            "\"deleted\": true",
+            "\"containingSectionId\": \"summary-section-guid\"",
+            "\"containingSectionRecordIndex\": 2",
+            "\"sectionRelativeTop\": 100",
+            "\"sectionRelativeBottom\": 350",
+            "\"sectionObjectIndex\": 0",
+            "\"sectionObjectCount\": 1",
+            "\"objectTypeCode\": 5",
+            "\"objectKind\": \"label\"",
+            "\"expression\": \"\\\"Summary label\\\"\""
+        },
+        issue_prefix + " should expose selected deleted-object metadata");
+    expect_contains(object_process.stdout_text, "\"left\": 400",
+                    issue_prefix + " should expose selected-object left bounds");
+    expect_contains(object_process.stdout_text, "\"top\": 3300",
+                    issue_prefix + " should expose selected-object top bounds");
+    expect_contains(object_process.stdout_text, "\"width\": 1500",
+                    issue_prefix + " should expose selected-object widths");
+    expect_contains(object_process.stdout_text, "\"right\": 1900",
+                    issue_prefix + " should expose selected-object right bounds");
+    expect_contains(object_process.stdout_text, "\"height\": 250",
+                    issue_prefix + " should expose selected-object heights");
+    expect_contains(object_process.stdout_text, "\"bottom\": 3550",
+                    issue_prefix + " should expose selected-object bottom bounds");
+    expect_contains_in_order(
+        object_process.stdout_text,
+        {
+            "\"selectedReportObjectSection\": {",
+            "\"id\": \"summary-section-guid\"",
+            "\"bandKind\": \"summary\"",
+            "\"recordIndex\": 2",
+            "\"deleted\": false",
+            "\"sectionIndex\": 1",
+            "\"sectionCount\": 2",
+            "\"top\": 3200",
+            "\"height\": 700",
+            "\"bottom\": 3900",
+            "\"objectCount\": 0",
+            "\"deletedObjectCount\": 1"
+        },
+        issue_prefix + " should expose the containing summary metadata");
+}
+
+void test_studio_host_json_preserves_selected_summary_objects_stable_selection(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selected_summary_objects_stable_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
+    run_summary_object_selection(
+        studio_host_path,
+        temp_root,
+        "selected_summary_object_stable.frx",
+        "report",
+        "#2803: stable live report summary object selection");
+    run_summary_object_selection(
+        studio_host_path,
+        temp_root,
+        "selected_summary_object_stable.lbx",
+        "label",
+        "#2803: stable live label summary object selection");
+    run_deleted_summary_object_selection(
+        studio_host_path,
+        temp_root,
+        "selected_deleted_summary_object_stable.frx",
+        "report",
+        "#2803: stable deleted report summary object selection");
+    run_deleted_summary_object_selection(
+        studio_host_path,
+        temp_root,
+        "selected_deleted_summary_object_stable.lbx",
+        "label",
+        "#2803: stable deleted label summary object selection");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+}  // namespace
+
+int main(int argc, char** argv) {
+    if (argc < 2) {
+        std::cerr << "Usage: test_studio_host_selected_summary_objects_stable <studio_host_path>\n";
+        return 1;
+    }
+
+    test_studio_host_json_preserves_selected_summary_objects_stable_selection(argv[1]);
+
+    if (failures != 0) {
+        std::cerr << failures << " test(s) failed.\n";
+        return 1;
+    }
+
+    std::cout << "All tests passed.\n";
+    return 0;
+}
