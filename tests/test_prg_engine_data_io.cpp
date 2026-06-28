@@ -2321,6 +2321,53 @@ void test_save_restore_runtime_errors_localize() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_copy_to_runtime_errors_localize() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to_localization";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+
+    const fs::path no_area_path = temp_root / "copy_to_no_area.prg";
+    write_text(
+        no_area_path,
+        "COPY TO 'missing.dbf'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession no_area_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(no_area_path.string(), temp_root.string(), false));
+    const auto no_area_state = no_area_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!no_area_state.completed, "#2707: qps-ploc COPY TO without a work area should fail");
+    expect(
+        no_area_state.message == copperfin::localization::pseudo_localize("COPY TO: no current work area"),
+        "#2707: qps-ploc COPY TO precondition error should route through the pseudo-localization transform");
+
+    write_simple_dbf(temp_root / "source.dbf", {"Alice"});
+    fs::create_directories(temp_root / "busy.json");
+
+    const fs::path open_fail_path = temp_root / "copy_to_open_fail.prg";
+    write_text(
+        open_fail_path,
+        "USE '" + (temp_root / "source.dbf").string() + "'\n"
+        "COPY TO '" + (temp_root / "busy.json").string() + "' TYPE JSON\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession open_fail_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(open_fail_path.string(), temp_root.string(), false));
+    const auto open_fail_state = open_fail_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!open_fail_state.completed, "#2707: qps-ploc COPY TO TYPE JSON directory-target script should fail");
+    expect(
+        open_fail_state.message.find("[!! ") == 0U &&
+            open_fail_state.message.find("JSON") != std::string::npos &&
+            open_fail_state.message.find("unable to open output file") == std::string::npos,
+        "#2707: qps-ploc COPY TO TYPE open-failure should pseudo-localize prose while preserving the type");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_restore_from_additive_merges_variables() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_restore_additive";
@@ -6048,6 +6095,7 @@ int main() {
     test_save_to_writes_variables_to_file();
     test_restore_from_loads_variables_from_file();
     test_save_restore_runtime_errors_localize();
+    test_copy_to_runtime_errors_localize();
     test_restore_from_additive_merges_variables();
     test_save_to_like_pattern_filters_variables();
     test_save_to_except_pattern_filters_variables();

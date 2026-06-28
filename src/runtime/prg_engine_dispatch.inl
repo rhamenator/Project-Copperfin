@@ -4444,7 +4444,7 @@
                     CursorState *cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
                     if (cursor == nullptr)
                     {
-                        last_error_message = "COPY TO ARRAY: no current work area";
+                        last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.CopyToArrayNoCurrentWorkArea");
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -4534,7 +4534,7 @@
                 CursorState *cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
                 if (cursor == nullptr)
                 {
-                    last_error_message = "COPY TO: no current work area";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.CopyToNoCurrentWorkArea");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -4582,7 +4582,7 @@
                 std::vector<vfp::DbfFieldDescriptor> source_fields = cursor_field_descriptors(*cursor);
                 if (source_fields.empty())
                 {
-                    last_error_message = "COPY TO: source cursor schema is unavailable";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.CopyToSourceCursorSchemaUnavailable");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -4603,7 +4603,7 @@
                 }
                 if (out_fields.empty())
                 {
-                    last_error_message = "COPY TO: no fields match the FIELDS clause";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.CopyToNoFieldsMatchFieldsClause");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -4654,7 +4654,9 @@
                     std::ofstream output(dest_path, std::ios::binary);
                     if (!output.good())
                     {
-                        last_error_message = "COPY TO TYPE SDF: unable to open output file";
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CopyToTypeOpenOutputFailed",
+                            {{"type", "SDF"}});
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -4670,7 +4672,9 @@
                     output.close();
                     if (!output.good())
                     {
-                        last_error_message = "COPY TO TYPE SDF: unable to write output file";
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CopyToTypeWriteOutputFailed",
+                            {{"type", "SDF"}});
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -4691,7 +4695,9 @@
                     std::ofstream output(dest_path, std::ios::binary);
                     if (!output.good())
                     {
-                        last_error_message = "COPY TO TYPE JSON: unable to open output file";
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CopyToTypeOpenOutputFailed",
+                            {{"type", "JSON"}});
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -4700,7 +4706,9 @@
                     output.close();
                     if (!output.good())
                     {
-                        last_error_message = "COPY TO TYPE JSON: unable to write output file";
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CopyToTypeWriteOutputFailed",
+                            {{"type", "JSON"}});
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -4721,7 +4729,9 @@
                     std::ofstream output(dest_path, std::ios::binary);
                     if (!output.good())
                     {
-                        last_error_message = "COPY TO TYPE DIF: unable to open output file";
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CopyToTypeOpenOutputFailed",
+                            {{"type", "DIF"}});
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -4730,7 +4740,9 @@
                     output.close();
                     if (!output.good())
                     {
-                        last_error_message = "COPY TO TYPE DIF: unable to write output file";
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CopyToTypeWriteOutputFailed",
+                            {{"type", "DIF"}});
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -4751,7 +4763,9 @@
                     std::ofstream output(dest_path, std::ios::binary);
                     if (!output.good())
                     {
-                        last_error_message = "COPY TO TYPE SYLK: unable to open output file";
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CopyToTypeOpenOutputFailed",
+                            {{"type", "SYLK"}});
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -4760,7 +4774,9 @@
                     output.close();
                     if (!output.good())
                     {
-                        last_error_message = "COPY TO TYPE SYLK: unable to write output file";
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CopyToTypeWriteOutputFailed",
+                            {{"type", "SYLK"}});
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -4781,7 +4797,9 @@
                     std::ofstream output(dest_path, std::ios::binary);
                     if (!output.good())
                     {
-                        last_error_message = "COPY TO TYPE XLS: unable to open output file";
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CopyToTypeOpenOutputFailed",
+                            {{"type", "XLS"}});
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -4790,7 +4808,9 @@
                     output.close();
                     if (!output.good())
                     {
-                        last_error_message = "COPY TO TYPE XLS: unable to write output file";
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CopyToTypeWriteOutputFailed",
+                            {{"type", "XLS"}});
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -4811,7 +4831,9 @@
                     std::ofstream output(dest_path, std::ios::binary);
                     if (!output.good())
                     {
-                        last_error_message = "COPY TO TYPE DELIMITED: unable to open output file";
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CopyToTypeOpenOutputFailed",
+                            {{"type", "DELIMITED"}});
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -4847,7 +4869,9 @@
                     output.close();
                     if (!output.good())
                     {
-                        last_error_message = "COPY TO TYPE DELIMITED: unable to write output file";
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.CopyToTypeWriteOutputFailed",
+                            {{"type", "DELIMITED"}});
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -4862,7 +4886,9 @@
                     dest_path.string(), out_fields, out_rows);
                 if (!write_result.ok)
                 {
-                    last_error_message = "COPY TO: " + write_result.error;
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CopyToWriteFailed",
+                        {{"errorMessage", write_result.error}});
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};

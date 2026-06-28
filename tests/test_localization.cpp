@@ -1987,6 +1987,90 @@ void test_runtime_file_operation_errors_route_through_catalog() {
         "#2706: qps-ploc RENAME failure should pseudo-localize prose while preserving the OS error text");
 }
 
+void test_runtime_copy_to_errors_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const copperfin::localization::PlaceholderMap type_placeholders{{"type", "JSON"}};
+    const copperfin::localization::PlaceholderMap error_placeholders{{"errorMessage", "table write failed"}};
+    const std::vector<std::string> keys{
+        "Runtime.Prg.Dispatch.Error.CopyToArrayNoCurrentWorkArea",
+        "Runtime.Prg.Dispatch.Error.CopyToNoCurrentWorkArea",
+        "Runtime.Prg.Dispatch.Error.CopyToNoFieldsMatchFieldsClause",
+        "Runtime.Prg.Dispatch.Error.CopyToSourceCursorSchemaUnavailable",
+        "Runtime.Prg.Dispatch.Error.CopyToTypeOpenOutputFailed",
+        "Runtime.Prg.Dispatch.Error.CopyToTypeWriteOutputFailed",
+        "Runtime.Prg.Dispatch.Error.CopyToWriteFailed"
+    };
+
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CopyToArrayNoCurrentWorkArea") ==
+            "COPY TO ARRAY: no current work area",
+        "#2707: COPY TO ARRAY precondition error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CopyToNoCurrentWorkArea") ==
+            "COPY TO: no current work area",
+        "#2707: COPY TO precondition error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CopyToSourceCursorSchemaUnavailable") ==
+            "COPY TO: source cursor schema is unavailable",
+        "#2707: COPY TO schema-unavailable error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CopyToNoFieldsMatchFieldsClause") ==
+            "COPY TO: no fields match the FIELDS clause",
+        "#2707: COPY TO empty-fields error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CopyToTypeOpenOutputFailed", type_placeholders) ==
+            "COPY TO TYPE JSON: unable to open output file",
+        "#2707: COPY TO TYPE open-failure error should preserve the type placeholder");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CopyToTypeWriteOutputFailed", type_placeholders) ==
+            "COPY TO TYPE JSON: unable to write output file",
+        "#2707: COPY TO TYPE write-failure error should preserve the type placeholder");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CopyToWriteFailed", error_placeholders) ==
+            "COPY TO: table write failed",
+        "#2707: COPY TO wrapper error should preserve downstream error text");
+
+    for (const std::string& key : keys) {
+        expect(
+            spanish.catalogs.contains("es-419") && spanish.catalogs.at("es-419").contains(key),
+            "#2707: es-419 should define every COPY TO runtime dispatch key");
+        expect(
+            portuguese.catalogs.contains("pt-BR") && portuguese.catalogs.at("pt-BR").contains(key),
+            "#2707: pt-BR should define every COPY TO runtime dispatch key");
+        expect(
+            pseudo.catalogs.contains("qps-ploc") && pseudo.catalogs.at("qps-ploc").contains(key),
+            "#2707: qps-ploc should define every COPY TO runtime dispatch key");
+    }
+
+    expect(
+        spanish.translate("Runtime.Prg.Dispatch.Error.CopyToNoCurrentWorkArea").find("no current work area") ==
+            std::string::npos,
+        "#2707: es-419 COPY TO precondition error should not fall back to raw English");
+    expect(
+        portuguese.translate("Runtime.Prg.Dispatch.Error.CopyToTypeOpenOutputFailed", type_placeholders)
+                .find("unable to open output file") == std::string::npos,
+        "#2707: pt-BR COPY TO TYPE open-failure error should not fall back to raw English");
+
+    const std::string pseudo_type =
+        pseudo.translate("Runtime.Prg.Dispatch.Error.CopyToTypeOpenOutputFailed", type_placeholders);
+    expect(
+        pseudo_type.find("[!! ") == 0U &&
+            pseudo_type.find("JSON") != std::string::npos &&
+            pseudo_type.find("unable to open output file") == std::string::npos,
+        "#2707: qps-ploc COPY TO TYPE open-failure error should pseudo-localize prose while preserving the type");
+    const std::string pseudo_wrapper =
+        pseudo.translate("Runtime.Prg.Dispatch.Error.CopyToWriteFailed", error_placeholders);
+    expect(
+        pseudo_wrapper.find("[!! ") == 0U &&
+            pseudo_wrapper.find("table write failed") != std::string::npos &&
+            pseudo_wrapper.find("COPY TO:") == std::string::npos,
+        "#2707: qps-ploc COPY TO wrapper error should pseudo-localize prose while preserving downstream error text");
+}
+
 void test_inspect_usage_routes_through_localization(const std::string& inspect_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_inspect_usage_tests";
@@ -2146,6 +2230,7 @@ int main(int argc, char** argv) {
     test_runtime_surface_errors_route_through_catalog();
     test_runtime_save_restore_errors_route_through_catalog();
     test_runtime_file_operation_errors_route_through_catalog();
+    test_runtime_copy_to_errors_route_through_catalog();
     test_runtime_package_warnings_pseudo_localize();
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);
