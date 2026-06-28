@@ -104863,24 +104863,37 @@ void test_studio_host_json_reorders_deleted_report_visual_object_batches_by_stab
                         "#1861: deleted report/label stable visual-object reorder-batch should preserve deleted object counts");
         expect_contains(reopen_process.stdout_text, "\"selectedReportObjectAvailable\": true",
                         "#1861: deleted report/label stable visual-object reorder-batch should select the moved deleted row");
-        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1861: deleted report/label stable visual-object reorder-batch should not fabricate containing sections");
-        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1861: deleted report/label stable visual-object reorder-batch should serialize null containing-section metadata");
+        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1861: deleted report/label stable visual-object reorder-batch should preserve containing sections");
         expect_contains(reopen_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1861: deleted report/label stable visual-object reorder-batch should preserve report object selection kind");
-        expect_contains(reopen_process.stdout_text, "\"recordIndex\": 2",
-                        "#1861: deleted report/label stable visual-object reorder-batch should expose moved record indexes");
-        expect_contains(reopen_process.stdout_text, "\"deleted\": true",
-                        "#1861: deleted report/label stable visual-object reorder-batch should preserve moved deleted state");
-        expect_contains(reopen_process.stdout_text, "\"objectKind\": \"field\"",
-                        "#1861: deleted report/label stable visual-object reorder-batch should preserve moved object kind");
-        expect_contains(reopen_process.stdout_text, "\"expression\": \"right.value\"",
-                        "#1861: deleted report/label stable visual-object reorder-batch should preserve moved expressions");
-        expect_contains(reopen_process.stdout_text, "\"uniqueId\": \"right-field-guid\"",
-                        "#1861: deleted report/label stable visual-object reorder-batch should preserve moved stable identities");
-        expect_contains(reopen_process.stdout_text, "\"containingSectionRecordIndex\": null",
-                        "#1861: deleted report/label stable visual-object reorder-batch should keep deleted rows uncontained");
+        expect_contains_in_order(
+            reopen_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 2",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"detail_1\"",
+                "\"containingSectionRecordIndex\": 1",
+                "\"objectKind\": \"field\"",
+                "\"expression\": \"right.value\"",
+                "\"uniqueId\": \"right-field-guid\""
+            },
+            "#1861: deleted report/label stable visual-object reorder-batch should preserve selected moved-row containing-section metadata");
+        expect_contains_in_order(
+            reopen_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"detail_1\"",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"sectionIndex\": 0",
+                "\"sectionCount\": 1",
+                "\"objectCount\": 1",
+                "\"deletedObjectCount\": 2"
+            },
+            "#1861: deleted report/label stable visual-object reorder-batch should expose containing detail-band metadata");
     };
 
     const auto run_deleted_report_object_reorder_batch_rollback = [&](const fs::path& asset_path,
