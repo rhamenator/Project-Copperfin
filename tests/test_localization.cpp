@@ -1337,9 +1337,11 @@ void test_runtime_core_errors_route_through_catalog() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
     const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
     const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
     const copperfin::localization::PlaceholderMap detail_placeholders{{"detail", "disk full"}};
     const copperfin::localization::PlaceholderMap path_placeholders{{"path", "forms/customer.scx"}};
+    const copperfin::localization::PlaceholderMap guardrail_placeholders{{"limit", "37"}};
 
     expect(
         english.translate("Runtime.Prg.Core.Error.AsyncTaskCancelled") == "Async task cancelled.",
@@ -1367,11 +1369,31 @@ void test_runtime_core_errors_route_through_catalog() {
             "Unable to materialize xAsset bootstrap for: forms/customer.scx",
         "#2552: xAsset bootstrap error should preserve path placeholder");
     expect(
+        english.translate("Runtime.Prg.Core.Error.GuardrailCallDepthExceeded", guardrail_placeholders) ==
+            "Runtime guardrail: maximum call depth (37) exceeded.",
+        "#2720: call-depth guardrail fault should preserve the numeric limit placeholder");
+    expect(
+        english.translate("Runtime.Prg.Core.Error.GuardrailExecutedStatementsExceeded", guardrail_placeholders) ==
+            "Runtime guardrail: maximum executed statements (37) exceeded.",
+        "#2720: executed-statements guardrail fault should preserve the numeric limit placeholder");
+    expect(
+        english.translate("Runtime.Prg.Core.Error.GuardrailLoopIterationsExceeded", guardrail_placeholders) ==
+            "Runtime guardrail: maximum loop iterations (37) exceeded.",
+        "#2720: loop-iterations guardrail fault should preserve the numeric limit placeholder");
+    expect(
         spanish.translate("Runtime.Prg.Core.Error.RuntimeFault", detail_placeholders).find("disk full") !=
                 std::string::npos &&
             spanish.translate("Runtime.Prg.Core.Error.RuntimeFault", detail_placeholders).find("Runtime fault") ==
                 std::string::npos,
         "#2551: es-419 runtime fault should preserve detail without falling back to English");
+    expect(
+        spanish.translate("Runtime.Prg.Core.Error.GuardrailExecutedStatementsExceeded", guardrail_placeholders)
+                .find("maximum executed statements") == std::string::npos,
+        "#2720: es-419 executed-statements guardrail fault should not fall back to raw English");
+    expect(
+        portuguese.translate("Runtime.Prg.Core.Error.GuardrailLoopIterationsExceeded", guardrail_placeholders)
+                .find("maximum loop iterations") == std::string::npos,
+        "#2720: pt-BR loop-iterations guardrail fault should not fall back to raw English");
 
     const std::string pseudo_fault =
         pseudo.translate("Runtime.Prg.Core.Error.ResourceFilesystemFailure", detail_placeholders);
@@ -1387,6 +1409,13 @@ void test_runtime_core_errors_route_through_catalog() {
         pseudo_xasset.find("forms/customer.scx") != std::string::npos &&
             pseudo_xasset.find("{path}") == std::string::npos,
         "#2552: qps-ploc xAsset bootstrap error should pseudo-localize prose while preserving path");
+    const std::string pseudo_guardrail =
+        pseudo.translate("Runtime.Prg.Core.Error.GuardrailCallDepthExceeded", guardrail_placeholders);
+    expect(
+        pseudo_guardrail.find("[!! ") == 0U &&
+            pseudo_guardrail.find("37") != std::string::npos &&
+            pseudo_guardrail.find("maximum call depth") == std::string::npos,
+        "#2720: qps-ploc call-depth guardrail fault should pseudo-localize prose while preserving the numeric limit");
 }
 
 void test_runtime_pause_and_session_messages_route_through_catalog() {

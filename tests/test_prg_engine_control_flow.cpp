@@ -2215,6 +2215,120 @@ void test_runtime_guardrail_limits_statement_budget_without_crashing_host() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_runtime_guardrail_limits_loop_iterations_without_crashing_host() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_guard_loop_iterations";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "loop_limit.prg";
+    write_text(
+        main_path,
+        "nCounter = 0\n"
+        "DO WHILE .T.\n"
+        "nCounter = nCounter + 1\n"
+        "ENDDO\n");
+
+    auto session_options = make_runtime_session_options(main_path.string(), temp_root.string(), false);
+    session_options.max_executed_statements = 1000;
+    session_options.max_loop_iterations = 5;
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(session_options);
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error, "loop-iteration guardrail should pause with an error");
+    expect(
+        state.message.find("maximum loop iterations") != std::string::npos,
+        "loop-iteration guardrail should report a loop-iteration limit message");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_runtime_guardrail_errors_localize_without_changing_behavior() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_guardrail_localization";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+
+    const fs::path call_depth_path = temp_root / "call_depth.prg";
+    write_text(
+        call_depth_path,
+        "DO a\n"
+        "RETURN\n"
+        "PROCEDURE a\n"
+        "DO b\n"
+        "RETURN\n"
+        "PROCEDURE b\n"
+        "DO c\n"
+        "RETURN\n"
+        "PROCEDURE c\n"
+        "RETURN\n");
+
+    auto call_depth_options = make_runtime_session_options(call_depth_path.string(), temp_root.string(), false);
+    call_depth_options.max_call_depth = 2;
+    copperfin::runtime::PrgRuntimeSession call_depth_session =
+        copperfin::runtime::PrgRuntimeSession::create(call_depth_options);
+    const auto call_depth_state = call_depth_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(call_depth_state.reason == copperfin::runtime::DebugPauseReason::error,
+           "#2720: qps-ploc call-depth guardrail should still pause with an error");
+    expect(
+        call_depth_state.message.find("[!! ") == 0U &&
+            call_depth_state.message.find("2") != std::string::npos &&
+            call_depth_state.message.find("maximum call depth") == std::string::npos,
+        "#2720: qps-ploc call-depth guardrail should pseudo-localize prose while preserving the numeric limit");
+
+    const fs::path statement_budget_path = temp_root / "statement_budget.prg";
+    write_text(
+        statement_budget_path,
+        "DO WHILE .T.\n"
+        "x = 1\n"
+        "ENDDO\n");
+
+    auto statement_budget_options =
+        make_runtime_session_options(statement_budget_path.string(), temp_root.string(), false);
+    statement_budget_options.max_executed_statements = 12;
+    statement_budget_options.max_loop_iterations = 1000;
+    copperfin::runtime::PrgRuntimeSession statement_budget_session =
+        copperfin::runtime::PrgRuntimeSession::create(statement_budget_options);
+    const auto statement_budget_state = statement_budget_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(statement_budget_state.reason == copperfin::runtime::DebugPauseReason::error,
+           "#2720: qps-ploc executed-statements guardrail should still pause with an error");
+    expect(
+        statement_budget_state.message.find("[!! ") == 0U &&
+            statement_budget_state.message.find("12") != std::string::npos &&
+            statement_budget_state.message.find("maximum executed statements") == std::string::npos,
+        "#2720: qps-ploc executed-statements guardrail should pseudo-localize prose while preserving the numeric limit");
+
+    const fs::path loop_iterations_path = temp_root / "loop_iterations.prg";
+    write_text(
+        loop_iterations_path,
+        "nCounter = 0\n"
+        "DO WHILE .T.\n"
+        "nCounter = nCounter + 1\n"
+        "ENDDO\n");
+
+    auto loop_iterations_options =
+        make_runtime_session_options(loop_iterations_path.string(), temp_root.string(), false);
+    loop_iterations_options.max_executed_statements = 1000;
+    loop_iterations_options.max_loop_iterations = 4;
+    copperfin::runtime::PrgRuntimeSession loop_iterations_session =
+        copperfin::runtime::PrgRuntimeSession::create(loop_iterations_options);
+    const auto loop_iterations_state = loop_iterations_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(loop_iterations_state.reason == copperfin::runtime::DebugPauseReason::error,
+           "#2720: qps-ploc loop-iterations guardrail should still pause with an error");
+    expect(
+        loop_iterations_state.message.find("[!! ") == 0U &&
+            loop_iterations_state.message.find("4") != std::string::npos &&
+            loop_iterations_state.message.find("maximum loop iterations") == std::string::npos,
+        "#2720: qps-ploc loop-iterations guardrail should pseudo-localize prose while preserving the numeric limit");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_static_diagnostic_flags_likely_infinite_do_while_loop() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_static_diag";
@@ -7355,6 +7469,7 @@ int main() {
     test_runtime_guardrail_exactly_at_call_depth_limit_succeeds();
     test_runtime_guardrail_one_over_call_depth_limit_fails();
     test_runtime_guardrail_limits_statement_budget_without_crashing_host();
+    test_runtime_guardrail_limits_loop_iterations_without_crashing_host();
     test_static_diagnostic_flags_likely_infinite_do_while_loop();
     test_config_fpw_overrides_runtime_limits();
     test_config_fpw_custom_limit_is_enforced_at_boundary();
@@ -7419,6 +7534,7 @@ int main() {
     test_critical_section_blocking_policy_rejects_await_inside_section();
     test_critical_section_blocking_policy_rejects_sleep_inside_section();
     test_residual_dispatch_runtime_errors_localize();
+    test_runtime_guardrail_errors_localize_without_changing_behavior();
     test_ole_property_assignment_runtime_errors_localize();
     test_ole_invocation_and_property_read_runtime_errors_localize();
     test_yield_allowed_in_enter_critical_regression_minimal();

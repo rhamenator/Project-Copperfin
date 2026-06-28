@@ -1656,15 +1656,21 @@
 
         [[nodiscard]] std::string call_depth_limit_message() const
         {
-            return "Runtime guardrail: maximum call depth (" + std::to_string(max_call_depth) + ") exceeded.";
+            return runtime_text(
+                "Runtime.Prg.Core.Error.GuardrailCallDepthExceeded",
+                {{"limit", std::to_string(max_call_depth)}});
         }
 
         [[nodiscard]] std::string step_budget_limit_message() const
         {
-            return "Runtime guardrail: maximum executed statements (" + std::to_string(max_executed_statements) + ") exceeded.";
+            return runtime_text(
+                "Runtime.Prg.Core.Error.GuardrailExecutedStatementsExceeded",
+                {{"limit", std::to_string(max_executed_statements)}});
         }
 
         [[nodiscard]] std::string loop_iteration_limit_message() const
         {
-            return "Runtime guardrail: maximum loop iterations (" + std::to_string(max_loop_iterations) + ") exceeded.";
+            return runtime_text(
+                "Runtime.Prg.Core.Error.GuardrailLoopIterationsExceeded",
+                {{"limit", std::to_string(max_loop_iterations)}});
         }
