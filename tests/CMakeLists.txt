@@ -481,6 +481,22 @@ add_test(
     COMMAND $<TARGET_FILE:test_studio_host_subtree_deleted_state_errors> $<TARGET_FILE:copperfin_studio_host>
 )
 
+add_executable(test_studio_host_subtree_deleted_state
+    test_studio_host_subtree_deleted_state.cpp
+)
+target_link_libraries(test_studio_host_subtree_deleted_state PRIVATE cf_vfp_assets)
+
+if(MSVC)
+    target_compile_options(test_studio_host_subtree_deleted_state PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_subtree_deleted_state PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_subtree_deleted_state
+    COMMAND $<TARGET_FILE:test_studio_host_subtree_deleted_state> $<TARGET_FILE:copperfin_studio_host>
+)
+
 add_executable(test_studio_host_subtree_duplicate_errors
     test_studio_host_subtree_duplicate_errors.cpp
 )

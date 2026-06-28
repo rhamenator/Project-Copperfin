@@ -71877,28 +71877,45 @@ void test_studio_host_json_applies_report_object_subtree_deleted_state_by_stable
                         "#1857: report/label stable object subtree delete should remove the object from live counts");
         expect_contains(delete_process.stdout_text, "\"deletedObjectCount\": 1",
                         "#1857: report/label stable object subtree delete should expose deleted object counts");
+        expect_contains(delete_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                        "#1857: report/label stable object subtree delete should leave the report section selection empty");
+        expect_contains(delete_process.stdout_text, "\"selectedReportSection\": null",
+                        "#1857: report/label stable object subtree delete should serialize a null report section selection");
         expect_contains(delete_process.stdout_text, "\"selectedReportObjectAvailable\": true",
                         "#1857: report/label stable object subtree delete should preserve selected-object availability");
-        expect_contains(delete_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1857: report/label stable object subtree delete should clear selected containing-section metadata");
-        expect_contains(delete_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1857: report/label stable object subtree delete should serialize null containing-section metadata");
+        expect_contains(delete_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1857: report/label stable object subtree delete should preserve containing-section availability");
         expect_contains(delete_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1857: report/label stable object subtree delete should preserve report object selection kind");
-        expect_contains(delete_process.stdout_text, "\"selectedReportObject\": {",
-                        "#1857: report/label stable object subtree delete should serialize selected-object metadata");
-        expect_contains(delete_process.stdout_text, "\"recordIndex\": 3",
-                        "#1857: report/label stable object subtree delete should preserve selected record indexes");
-        expect_contains(delete_process.stdout_text, "\"deleted\": true",
-                        "#1857: report/label stable object subtree delete should expose selected deleted state");
-        expect_contains(delete_process.stdout_text, "\"objectKind\": \"field\"",
-                        "#1857: report/label stable object subtree delete should preserve selected object kind");
-        expect_contains(delete_process.stdout_text, "\"expression\": \"middle.value\"",
-                        "#1857: report/label stable object subtree delete should preserve selected expressions");
-        expect_contains(delete_process.stdout_text, "\"uniqueId\": \"middle-field-guid\"",
-                        "#1857: report/label stable object subtree delete should preserve selected stable identities");
-        expect_contains(delete_process.stdout_text, "\"containingSectionRecordIndex\": null",
-                        "#1857: report/label stable object subtree delete should clear containing section indexes");
+        expect_contains_in_order(
+            delete_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"detail_1\"",
+                "\"containingSectionRecordIndex\": 1",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 1",
+                "\"objectKind\": \"field\"",
+                "\"expression\": \"middle.value\"",
+                "\"uniqueId\": \"middle-field-guid\""
+            },
+            "#1857: report/label stable object subtree delete should serialize selected deleted-object metadata");
+        expect_contains_in_order(
+            delete_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"detail_1\"",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"sectionIndex\": 0",
+                "\"sectionCount\": 1",
+                "\"objectCount\": 2",
+                "\"deletedObjectCount\": 1"
+            },
+            "#1857: report/label stable object subtree delete should expose containing detail-band metadata");
 
         const auto restore_process = run_process_capture(
             studio_host_path,
