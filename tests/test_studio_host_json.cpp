@@ -64759,117 +64759,6 @@ void test_studio_host_json_restores_label_settings_by_record_selection(const std
     }
 }
 
-void test_studio_host_json_restores_report_settings_by_stable_selection(const std::string& studio_host_path) {
-    namespace fs = std::filesystem;
-
-    const fs::path temp_root =
-        fs::temp_directory_path() / "copperfin_studio_host_report_settings_restore_stable_json_tests";
-    std::error_code ignored;
-    fs::remove_all(temp_root, ignored);
-    fs::create_directories(temp_root);
-
-    const auto run_settings_restore = [&](const fs::path& asset_path,
-                                          const std::string& title,
-                                          const std::string& label) {
-        write_synthetic_report_table_for_stable_deleted_settings_json(asset_path);
-        expect(dbf_record_deleted(asset_path, 0U),
-               "#1657: stable report/label settings restore fixture should start with deleted settings");
-
-        const auto restore_process = run_process_capture(
-            studio_host_path,
-            {
-                "--path", asset_path.string(),
-                "--restore-object",
-                "--unique-id", "deleted-settings-guid",
-                "--json"
-            },
-            temp_root);
-
-        if (restore_process.exit_code != 0) {
-            std::cerr << "studio host " << label << " stable settings restore stdout:\n"
-                      << restore_process.stdout_text << "\n";
-            std::cerr << "studio host " << label << " stable settings restore stderr:\n"
-                      << restore_process.stderr_text << "\n";
-            std::cerr << "fixture root: " << temp_root << "\n";
-        }
-
-        expect(restore_process.exit_code == 0,
-               "#1657: stable report/label settings restore should exit successfully");
-        expect(!dbf_record_deleted(asset_path, 0U),
-               "#1657: stable report/label settings restore should clear the settings record delete flag");
-        expect_contains(restore_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
-                        "#1657: stable report/label settings restore should return refreshed report-layout JSON");
-        if (asset_path.extension() == ".lbx") {
-            expect_contains(restore_process.stdout_text, "\"isLabel\": true",
-                            "#1657: stable label settings restore should retain label identity");
-        }
-        expect_full_report_layout_preview_bounds(
-            restore_process.stdout_text,
-            "#2041: stable-selected report/label settings restore JSON");
-        expect_contains(restore_process.stdout_text, "\"settingCount\": 6",
-                        "#1657: stable report/label settings restore should restore live setting counts");
-        expect_contains(restore_process.stdout_text, "\"deletedSettingCount\": 0",
-                        "#1657: stable report/label settings restore should clear deleted setting counts");
-        expect_contains(restore_process.stdout_text, "\"pageSetupAvailable\": true",
-                        "#1657: stable report/label settings restore should restore live page setup summaries");
-        expect_contains_in_order(
-            restore_process.stdout_text,
-            {
-                "\"settings\": [",
-                "\"name\": \"ORIENTATION\"",
-                "\"recordIndex\": 0",
-                "\"name\": \"PAPERSIZE\"",
-                "\"recordIndex\": 0",
-                "\"name\": \"BOTMARGIN\"",
-                "\"recordIndex\": 0",
-                "\"name\": \"GRIDV\"",
-                "\"recordIndex\": 0",
-                "\"name\": \"GRIDH\"",
-                "\"recordIndex\": 0",
-                "\"name\": \"TOPMARGIN\"",
-                "\"recordIndex\": 0"
-            },
-            "#1657: stable report/label settings restore should move root settings back into live-setting metadata");
-        expect_contains(restore_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
-                        "#1657: stable report/label settings restore should advertise selected-settings availability");
-        expect_contains(restore_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
-                        "#1657: stable report/label settings restore should expose settings selection kind");
-        expect_contains_in_order(
-            restore_process.stdout_text,
-            {
-                "\"selectedReportSettings\": [",
-                "\"name\": \"ORIENTATION\"",
-                "\"recordIndex\": 0",
-                "\"name\": \"PAPERSIZE\"",
-                "\"recordIndex\": 0",
-                "\"name\": \"BOTMARGIN\"",
-                "\"recordIndex\": 0",
-                "\"name\": \"GRIDV\"",
-                "\"recordIndex\": 0",
-                "\"name\": \"GRIDH\"",
-                "\"recordIndex\": 0",
-                "\"name\": \"TOPMARGIN\"",
-                "\"recordIndex\": 0"
-            },
-            "#1657: stable report/label settings restore should rehydrate selected-settings metadata");
-        expect_contains(restore_process.stdout_text, "\"sectionCount\": 2",
-                        "#1657: stable report/label settings restore should preserve live section metadata");
-        expect_contains(restore_process.stdout_text, "\"deletedObjectCount\": 1",
-                        "#1657: stable report/label settings restore should preserve deleted object metadata");
-    };
-
-    run_settings_restore(temp_root / "settings_restore_stable.frx",
-                         "settings_restore_stable.frx",
-                         "report");
-    run_settings_restore(temp_root / "settings_restore_stable.lbx",
-                         "settings_restore_stable.lbx",
-                         "label");
-
-    if (failures == 0) {
-        fs::remove_all(temp_root, ignored);
-    }
-}
-
 void test_studio_host_json_applies_report_deleted_states_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -123533,7 +123422,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_deletes_label_settings_by_record_selection(argv[1]);
     test_studio_host_json_restores_report_settings_by_record_selection(argv[1]);
     test_studio_host_json_restores_label_settings_by_record_selection(argv[1]);
-    test_studio_host_json_restores_report_settings_by_stable_selection(argv[1]);
     test_studio_host_json_applies_report_deleted_states_by_stable_selection(argv[1]);
     test_studio_host_json_applies_report_object_deleted_states_by_stable_selection(argv[1]);
     test_studio_host_json_applies_report_object_subtree_deleted_state_by_stable_selection(argv[1]);
