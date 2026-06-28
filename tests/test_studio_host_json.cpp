@@ -27521,6 +27521,7 @@ void test_studio_host_json_reorders_deleted_detail_header_footer_objects_by_stab
 void test_studio_host_json_aligns_detail_header_footer_objects_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path temp_root =
         fs::temp_directory_path() / "copperfin_studio_host_detail_header_footer_object_align_json_tests";
@@ -27738,6 +27739,7 @@ void test_studio_host_json_aligns_detail_header_footer_objects_by_stable_selecti
 void test_studio_host_json_aligns_deleted_detail_header_footer_objects_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path temp_root =
         fs::temp_directory_path() / "copperfin_studio_host_deleted_detail_header_footer_object_align_json_tests";
@@ -27806,10 +27808,8 @@ void test_studio_host_json_aligns_deleted_detail_header_footer_objects_by_stable
                             "#1790: deleted detail-header object align should preserve selected object availability");
             expect_contains(align_header_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                             "#1790: deleted detail-header object align should preserve object selection kind");
-            expect_contains(align_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                            "#1790: deleted detail-header object align should not fabricate containing sections");
-            expect_contains(align_header_process.stdout_text, "\"selectedReportObjectSection\": null",
-                            "#1790: deleted detail-header object align should serialize null containing-section JSON");
+            expect_contains(align_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                            "#1790: deleted detail-header object align should preserve containing sections");
             expect_contains(align_header_process.stdout_text, "\"previewBoundsAvailable\": true",
                             "#2296: deleted detail-header object align should preserve live preview availability");
             expect_contains(align_header_process.stdout_text, "\"previewBoundsTop\": 0",
@@ -27840,12 +27840,12 @@ void test_studio_host_json_aligns_deleted_detail_header_footer_objects_by_stable
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 1",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"\"",
-                    "\"containingSectionRecordIndex\": null",
-                    "\"sectionRelativeTop\": 0",
-                    "\"sectionRelativeBottom\": 0",
-                    "\"sectionObjectIndex\": null",
-                    "\"sectionObjectCount\": 0",
+                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionRecordIndex\": 0",
+                    "\"sectionRelativeTop\": 50",
+                    "\"sectionRelativeBottom\": 170",
+                    "\"sectionObjectIndex\": 0",
+                    "\"sectionObjectCount\": 1",
                     "\"objectKind\": \"label\"",
                     "\"expression\": \"\\\"Header label\\\"\"",
                     "\"left\": 140",
@@ -27856,6 +27856,16 @@ void test_studio_host_json_aligns_deleted_detail_header_footer_objects_by_stable
                     "\"bottom\": 170"
                 },
                 "#1790: deleted detail-header object align should refresh selected deleted-object metadata");
+            expect_contains_in_order(
+                align_header_process.stdout_text,
+                {
+                    "\"selectedReportObjectSection\": {",
+                    "\"id\": \"detail_header_0\"",
+                    "\"recordIndex\": 0",
+                    "\"sectionCount\": 2",
+                    "\"deletedObjectCount\": 1"
+                },
+                "#1790: deleted detail-header object align should preserve containing-section metadata");
 
             const auto align_footer_process = run_process_capture(
                 studio_host_path,
@@ -27901,10 +27911,8 @@ void test_studio_host_json_aligns_deleted_detail_header_footer_objects_by_stable
                             "#1790: deleted detail-footer object align should preserve selected object availability");
             expect_contains(align_footer_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                             "#1790: deleted detail-footer object align should preserve object selection kind");
-            expect_contains(align_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                            "#1790: deleted detail-footer object align should not fabricate containing sections");
-            expect_contains(align_footer_process.stdout_text, "\"selectedReportObjectSection\": null",
-                            "#1790: deleted detail-footer object align should serialize null containing-section JSON");
+            expect_contains(align_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                            "#1790: deleted detail-footer object align should preserve containing sections");
             expect_contains(align_footer_process.stdout_text, "\"previewBoundsAvailable\": true",
                             "#2296: deleted detail-footer object align should preserve live preview availability");
             expect_contains(align_footer_process.stdout_text, "\"previewBoundsTop\": 0",
@@ -27935,12 +27943,12 @@ void test_studio_host_json_aligns_deleted_detail_header_footer_objects_by_stable
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 3",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"\"",
-                    "\"containingSectionRecordIndex\": null",
-                    "\"sectionRelativeTop\": 0",
-                    "\"sectionRelativeBottom\": 0",
-                    "\"sectionObjectIndex\": null",
-                    "\"sectionObjectCount\": 0",
+                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionRecordIndex\": 2",
+                    "\"sectionRelativeTop\": 60",
+                    "\"sectionRelativeBottom\": 160",
+                    "\"sectionObjectIndex\": 0",
+                    "\"sectionObjectCount\": 1",
                     "\"objectKind\": \"field\"",
                     "\"expression\": \"footer.total\"",
                     "\"left\": 100",
@@ -27951,6 +27959,16 @@ void test_studio_host_json_aligns_deleted_detail_header_footer_objects_by_stable
                     "\"bottom\": 460"
                 },
                 "#1790: deleted detail-footer object align should refresh selected deleted-object metadata");
+            expect_contains_in_order(
+                align_footer_process.stdout_text,
+                {
+                    "\"selectedReportObjectSection\": {",
+                    "\"id\": \"detail_footer_2\"",
+                    "\"recordIndex\": 2",
+                    "\"sectionCount\": 2",
+                    "\"deletedObjectCount\": 1"
+                },
+                "#1790: deleted detail-footer object align should preserve containing-section metadata");
         };
 
     run_deleted_detail_header_footer_object_align(
@@ -27972,6 +27990,7 @@ void test_studio_host_json_aligns_deleted_detail_header_footer_objects_by_stable
 void test_studio_host_json_resizes_detail_header_footer_objects_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path temp_root =
         fs::temp_directory_path() / "copperfin_studio_host_detail_header_footer_object_resize_json_tests";
@@ -28195,6 +28214,7 @@ void test_studio_host_json_resizes_detail_header_footer_objects_by_stable_select
 void test_studio_host_json_resizes_deleted_detail_header_footer_objects_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path temp_root =
         fs::temp_directory_path() / "copperfin_studio_host_deleted_detail_header_footer_object_resize_json_tests";
@@ -28266,10 +28286,8 @@ void test_studio_host_json_resizes_deleted_detail_header_footer_objects_by_stabl
                             "#1792: deleted detail-header object resize should preserve selected object availability");
             expect_contains(resize_header_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                             "#1792: deleted detail-header object resize should preserve object selection kind");
-            expect_contains(resize_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                            "#1792: deleted detail-header object resize should not fabricate containing sections");
-            expect_contains(resize_header_process.stdout_text, "\"selectedReportObjectSection\": null",
-                            "#1792: deleted detail-header object resize should serialize null containing-section JSON");
+            expect_contains(resize_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                            "#1792: deleted detail-header object resize should preserve containing sections");
             expect_contains(resize_header_process.stdout_text, "\"previewBoundsAvailable\": true",
                             "#2298: deleted detail-header object resize should preserve live preview availability");
             expect_contains(resize_header_process.stdout_text, "\"previewBoundsTop\": 0",
@@ -28300,12 +28318,12 @@ void test_studio_host_json_resizes_deleted_detail_header_footer_objects_by_stabl
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 1",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"\"",
-                    "\"containingSectionRecordIndex\": null",
-                    "\"sectionRelativeTop\": 0",
-                    "\"sectionRelativeBottom\": 0",
-                    "\"sectionObjectIndex\": null",
-                    "\"sectionObjectCount\": 0",
+                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionRecordIndex\": 0",
+                    "\"sectionRelativeTop\": 50",
+                    "\"sectionRelativeBottom\": 150",
+                    "\"sectionObjectIndex\": 0",
+                    "\"sectionObjectCount\": 1",
                     "\"objectKind\": \"label\"",
                     "\"expression\": \"\\\"Header label\\\"\"",
                     "\"left\": 100",
@@ -28316,6 +28334,16 @@ void test_studio_host_json_resizes_deleted_detail_header_footer_objects_by_stabl
                     "\"bottom\": 150"
                 },
                 "#1792: deleted detail-header object resize should refresh selected deleted-object metadata");
+            expect_contains_in_order(
+                resize_header_process.stdout_text,
+                {
+                    "\"selectedReportObjectSection\": {",
+                    "\"id\": \"detail_header_0\"",
+                    "\"recordIndex\": 0",
+                    "\"sectionCount\": 2",
+                    "\"deletedObjectCount\": 1"
+                },
+                "#1792: deleted detail-header object resize should preserve containing-section metadata");
 
             const auto resize_footer_process = run_process_capture(
                 studio_host_path,
@@ -28364,10 +28392,8 @@ void test_studio_host_json_resizes_deleted_detail_header_footer_objects_by_stabl
                             "#1792: deleted detail-footer object resize should preserve selected object availability");
             expect_contains(resize_footer_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                             "#1792: deleted detail-footer object resize should preserve object selection kind");
-            expect_contains(resize_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                            "#1792: deleted detail-footer object resize should not fabricate containing sections");
-            expect_contains(resize_footer_process.stdout_text, "\"selectedReportObjectSection\": null",
-                            "#1792: deleted detail-footer object resize should serialize null containing-section JSON");
+            expect_contains(resize_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                            "#1792: deleted detail-footer object resize should preserve containing sections");
             expect_contains(resize_footer_process.stdout_text, "\"previewBoundsAvailable\": true",
                             "#2298: deleted detail-footer object resize should preserve live preview availability");
             expect_contains(resize_footer_process.stdout_text, "\"previewBoundsTop\": 0",
@@ -28398,12 +28424,12 @@ void test_studio_host_json_resizes_deleted_detail_header_footer_objects_by_stabl
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 3",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"\"",
-                    "\"containingSectionRecordIndex\": null",
-                    "\"sectionRelativeTop\": 0",
-                    "\"sectionRelativeBottom\": 0",
-                    "\"sectionObjectIndex\": null",
-                    "\"sectionObjectCount\": 0",
+                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionRecordIndex\": 2",
+                    "\"sectionRelativeTop\": 60",
+                    "\"sectionRelativeBottom\": 180",
+                    "\"sectionObjectIndex\": 0",
+                    "\"sectionObjectCount\": 1",
                     "\"objectKind\": \"field\"",
                     "\"expression\": \"footer.total\"",
                     "\"left\": 140",
@@ -28414,6 +28440,16 @@ void test_studio_host_json_resizes_deleted_detail_header_footer_objects_by_stabl
                     "\"bottom\": 480"
                 },
                 "#1792: deleted detail-footer object resize should refresh selected deleted-object metadata");
+            expect_contains_in_order(
+                resize_footer_process.stdout_text,
+                {
+                    "\"selectedReportObjectSection\": {",
+                    "\"id\": \"detail_footer_2\"",
+                    "\"recordIndex\": 2",
+                    "\"sectionCount\": 2",
+                    "\"deletedObjectCount\": 1"
+                },
+                "#1792: deleted detail-footer object resize should preserve containing-section metadata");
         };
 
     run_deleted_detail_header_footer_object_resize(
@@ -28435,6 +28471,7 @@ void test_studio_host_json_resizes_deleted_detail_header_footer_objects_by_stabl
 void test_studio_host_json_snaps_detail_header_footer_objects_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path temp_root =
         fs::temp_directory_path() / "copperfin_studio_host_detail_header_footer_object_snap_json_tests";
@@ -28654,6 +28691,7 @@ void test_studio_host_json_snaps_detail_header_footer_objects_by_stable_selectio
 void test_studio_host_json_snaps_deleted_detail_header_footer_objects_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path temp_root =
         fs::temp_directory_path() / "copperfin_studio_host_deleted_detail_header_footer_object_snap_json_tests";
@@ -28723,10 +28761,8 @@ void test_studio_host_json_snaps_deleted_detail_header_footer_objects_by_stable_
                             "#1794: deleted detail-header object snap should preserve selected object availability");
             expect_contains(snap_header_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                             "#1794: deleted detail-header object snap should preserve object selection kind");
-            expect_contains(snap_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                            "#1794: deleted detail-header object snap should not fabricate containing sections");
-            expect_contains(snap_header_process.stdout_text, "\"selectedReportObjectSection\": null",
-                            "#1794: deleted detail-header object snap should serialize null containing-section JSON");
+            expect_contains(snap_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                            "#1794: deleted detail-header object snap should preserve containing sections");
             expect_contains(snap_header_process.stdout_text, "\"previewBoundsAvailable\": true",
                             "#2300: deleted detail-header object snap should preserve live preview availability");
             expect_contains(snap_header_process.stdout_text, "\"previewBoundsTop\": 0",
@@ -28757,12 +28793,12 @@ void test_studio_host_json_snaps_deleted_detail_header_footer_objects_by_stable_
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 1",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"\"",
-                    "\"containingSectionRecordIndex\": null",
-                    "\"sectionRelativeTop\": 0",
-                    "\"sectionRelativeBottom\": 0",
-                    "\"sectionObjectIndex\": null",
-                    "\"sectionObjectCount\": 0",
+                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionRecordIndex\": 0",
+                    "\"sectionRelativeTop\": 70",
+                    "\"sectionRelativeBottom\": 190",
+                    "\"sectionObjectIndex\": 0",
+                    "\"sectionObjectCount\": 1",
                     "\"objectKind\": \"label\"",
                     "\"expression\": \"\\\"Header label\\\"\"",
                     "\"left\": 80",
@@ -28773,6 +28809,16 @@ void test_studio_host_json_snaps_deleted_detail_header_footer_objects_by_stable_
                     "\"bottom\": 190"
                 },
                 "#1794: deleted detail-header object snap should refresh selected deleted-object metadata");
+            expect_contains_in_order(
+                snap_header_process.stdout_text,
+                {
+                    "\"selectedReportObjectSection\": {",
+                    "\"id\": \"detail_header_0\"",
+                    "\"recordIndex\": 0",
+                    "\"sectionCount\": 2",
+                    "\"deletedObjectCount\": 1"
+                },
+                "#1794: deleted detail-header object snap should preserve containing-section metadata");
 
             const auto snap_footer_process = run_process_capture(
                 studio_host_path,
@@ -28819,10 +28865,8 @@ void test_studio_host_json_snaps_deleted_detail_header_footer_objects_by_stable_
                             "#1794: deleted detail-footer object snap should preserve selected object availability");
             expect_contains(snap_footer_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                             "#1794: deleted detail-footer object snap should preserve object selection kind");
-            expect_contains(snap_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                            "#1794: deleted detail-footer object snap should not fabricate containing sections");
-            expect_contains(snap_footer_process.stdout_text, "\"selectedReportObjectSection\": null",
-                            "#1794: deleted detail-footer object snap should serialize null containing-section JSON");
+            expect_contains(snap_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                            "#1794: deleted detail-footer object snap should preserve containing sections");
             expect_contains(snap_footer_process.stdout_text, "\"previewBoundsAvailable\": true",
                             "#2300: deleted detail-footer object snap should preserve live preview availability");
             expect_contains(snap_footer_process.stdout_text, "\"previewBoundsTop\": 0",
@@ -28853,12 +28897,12 @@ void test_studio_host_json_snaps_deleted_detail_header_footer_objects_by_stable_
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 3",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"\"",
-                    "\"containingSectionRecordIndex\": null",
-                    "\"sectionRelativeTop\": 0",
-                    "\"sectionRelativeBottom\": 0",
-                    "\"sectionObjectIndex\": null",
-                    "\"sectionObjectCount\": 0",
+                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionRecordIndex\": 2",
+                    "\"sectionRelativeTop\": 50",
+                    "\"sectionRelativeBottom\": 150",
+                    "\"sectionObjectIndex\": 0",
+                    "\"sectionObjectCount\": 1",
                     "\"objectKind\": \"field\"",
                     "\"expression\": \"footer.total\"",
                     "\"left\": 160",
@@ -28869,6 +28913,16 @@ void test_studio_host_json_snaps_deleted_detail_header_footer_objects_by_stable_
                     "\"bottom\": 450"
                 },
                 "#1794: deleted detail-footer object snap should refresh selected deleted-object metadata");
+            expect_contains_in_order(
+                snap_footer_process.stdout_text,
+                {
+                    "\"selectedReportObjectSection\": {",
+                    "\"id\": \"detail_footer_2\"",
+                    "\"recordIndex\": 2",
+                    "\"sectionCount\": 2",
+                    "\"deletedObjectCount\": 1"
+                },
+                "#1794: deleted detail-footer object snap should preserve containing-section metadata");
         };
 
     run_deleted_detail_header_footer_object_snap(
