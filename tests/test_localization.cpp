@@ -2445,6 +2445,75 @@ void test_runtime_set_filter_dimension_sleep_errors_route_through_catalog() {
         "#2714: qps-ploc DIMENSION/DECLARE error should pseudo-localize prose");
 }
 
+void test_runtime_declare_dispatch_errors_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const copperfin::localization::PlaceholderMap load_placeholders{
+        {"path", "kernel32.dll"},
+        {"errorMessage", "Access is denied."}
+    };
+    const copperfin::localization::PlaceholderMap function_placeholders{
+        {"functionName", "MissingSymbol"},
+        {"path", "kernel32.dll"}
+    };
+    const std::vector<std::string> keys{
+        "Runtime.Prg.Dispatch.Error.DeclareCannotLoadDll",
+        "Runtime.Prg.Dispatch.Error.DeclareDllOnlySupportedOnWindows",
+        "Runtime.Prg.Dispatch.Error.DeclareFunctionNotFoundInDll",
+        "Runtime.Prg.Dispatch.Error.DeclareMissingFunctionNameOrDllPath"
+    };
+
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.DeclareMissingFunctionNameOrDllPath") ==
+            "DECLARE: missing function name or DLL path.",
+        "#2715: DECLARE missing-name/path error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.DeclareCannotLoadDll", load_placeholders) ==
+            "DECLARE: cannot load 'kernel32.dll': Access is denied.",
+        "#2715: DECLARE load-failure error should preserve path and downstream error text");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.DeclareFunctionNotFoundInDll", function_placeholders) ==
+            "DECLARE: function 'MissingSymbol' not found in 'kernel32.dll'.",
+        "#2715: DECLARE function-not-found error should preserve function and path placeholders");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.DeclareDllOnlySupportedOnWindows") ==
+            "DECLARE DLL is only supported on Windows.",
+        "#2715: DECLARE Windows-only guard should localize through the runtime catalog");
+
+    for (const std::string& key : keys) {
+        expect(
+            spanish.catalogs.contains("es-419") && spanish.catalogs.at("es-419").contains(key),
+            "#2715: es-419 should define every DECLARE runtime dispatch key");
+        expect(
+            portuguese.catalogs.contains("pt-BR") && portuguese.catalogs.at("pt-BR").contains(key),
+            "#2715: pt-BR should define every DECLARE runtime dispatch key");
+        expect(
+            pseudo.catalogs.contains("qps-ploc") && pseudo.catalogs.at("qps-ploc").contains(key),
+            "#2715: qps-ploc should define every DECLARE runtime dispatch key");
+    }
+
+    expect(
+        spanish.translate("Runtime.Prg.Dispatch.Error.DeclareMissingFunctionNameOrDllPath")
+                .find("missing function name or DLL path") == std::string::npos,
+        "#2715: es-419 DECLARE missing-name/path error should not fall back to raw English");
+    expect(
+        portuguese.translate("Runtime.Prg.Dispatch.Error.DeclareDllOnlySupportedOnWindows")
+                .find("only supported on Windows") == std::string::npos,
+        "#2715: pt-BR DECLARE Windows-only guard should not fall back to raw English");
+
+    const std::string pseudo_load =
+        pseudo.translate("Runtime.Prg.Dispatch.Error.DeclareCannotLoadDll", load_placeholders);
+    expect(
+        pseudo_load.find("[!! ") == 0U &&
+            pseudo_load.find("kernel32.dll") != std::string::npos &&
+            pseudo_load.find("Access is denied.") != std::string::npos &&
+            pseudo_load.find("cannot load") == std::string::npos,
+        "#2715: qps-ploc DECLARE load-failure error should pseudo-localize prose while preserving path and downstream error text");
+}
+
 void test_inspect_usage_routes_through_localization(const std::string& inspect_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_inspect_usage_tests";
@@ -2611,6 +2680,7 @@ int main(int argc, char** argv) {
     test_runtime_scatter_gather_errors_route_through_catalog();
     test_runtime_table_structure_errors_route_through_catalog();
     test_runtime_set_filter_dimension_sleep_errors_route_through_catalog();
+    test_runtime_declare_dispatch_errors_route_through_catalog();
     test_runtime_package_warnings_pseudo_localize();
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);

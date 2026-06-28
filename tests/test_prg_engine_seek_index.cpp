@@ -1,3 +1,4 @@
+#include "copperfin/localization/localization.h"
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "prg_engine_test_support.h"
@@ -27,6 +28,42 @@
 namespace {
 
 using namespace copperfin::test_support;
+
+void set_env_value(const std::string& name, const std::string& value, bool has_value) {
+#ifdef _WIN32
+    if (has_value) {
+        _putenv_s(name.c_str(), value.c_str());
+    } else {
+        _putenv_s(name.c_str(), "");
+    }
+#else
+    if (has_value) {
+        setenv(name.c_str(), value.c_str(), 1);
+    } else {
+        unsetenv(name.c_str());
+    }
+#endif
+}
+
+struct ScopedEnvironmentValue {
+    std::string name;
+    std::string original_value;
+    bool had_value;
+
+    explicit ScopedEnvironmentValue(std::string environment_name)
+        : name(std::move(environment_name)),
+          original_value(),
+          had_value(false) {
+        if (const char* current = std::getenv(name.c_str())) {
+            original_value = current;
+            had_value = true;
+        }
+    }
+
+    ~ScopedEnvironmentValue() {
+        set_env_value(name, original_value, had_value);
+    }
+};
 
 void test_set_order_and_seek_for_local_tables() {
     namespace fs = std::filesystem;
@@ -2374,6 +2411,50 @@ void test_declared_dll_string_byref_argument_writeback() {
 #endif
 }
 
+void test_declare_dll_runtime_errors_localize() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_declare_localization";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+
+    const fs::path main_path = temp_root / "declare_localization.prg";
+#if defined(_WIN32)
+    write_text(
+        main_path,
+        "DECLARE INTEGER MissingSymbol() IN 'kernel32.dll'\n"
+        "RETURN\n");
+#else
+    write_text(
+        main_path,
+        "DECLARE INTEGER lstrcpyA(STRING @, STRING) IN 'kernel32.dll'\n"
+        "RETURN\n");
+#endif
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!state.completed, "#2715: qps-ploc DECLARE error script should fail");
+#if defined(_WIN32)
+    expect(
+        state.message.find("[!! ") == 0U &&
+            state.message.find("MissingSymbol") != std::string::npos &&
+            state.message.find("kernel32.dll") != std::string::npos &&
+            state.message.find("function 'MissingSymbol' not found") == std::string::npos,
+        "#2715: qps-ploc DECLARE function-not-found error should pseudo-localize prose while preserving function and path");
+#else
+    expect(
+        state.message == copperfin::localization::pseudo_localize("DECLARE DLL is only supported on Windows."),
+        "#2715: qps-ploc DECLARE Windows-only guard should route through the pseudo-localization transform");
+#endif
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_set_exact_affects_comparisons_and_seek() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_exact";
@@ -2943,6 +3024,7 @@ int main() {
     test_foxtools_registration_and_call_bridge();
     test_foxtools_registration_is_scoped_by_data_session();
     test_declared_dll_string_byref_argument_writeback();
+    test_declare_dll_runtime_errors_localize();
     test_set_exact_affects_comparisons_and_seek();
     test_use_again_and_alias_collision_semantics();
     test_use_again_without_in_allocates_new_area_and_preserves_alias_selection();

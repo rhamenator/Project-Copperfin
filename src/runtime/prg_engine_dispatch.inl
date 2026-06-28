@@ -3208,7 +3208,7 @@
 
                 if (fn_name.empty() || dll_path_raw.empty())
                 {
-                    last_error_message = "DECLARE: missing function name or DLL path.";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.DeclareMissingFunctionNameOrDllPath");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -3276,7 +3276,12 @@
                         char msg_buf[256]{};
                         FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr,
                                        err, 0, msg_buf, sizeof(msg_buf) - 1U, nullptr);
-                        last_error_message = "DECLARE: cannot load '" + declfn.dll_path + "': " + std::string(msg_buf);
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.DeclareCannotLoadDll",
+                            {
+                                {"path", declfn.dll_path},
+                                {"errorMessage", std::string(msg_buf)},
+                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         if (dispatch_error_handler())
@@ -3311,7 +3316,12 @@
                     }
                     if (!declfn.proc_address)
                     {
-                        last_error_message = "DECLARE: function '" + fn_name + "' not found in '" + declfn.dll_path + "'.";
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.DeclareFunctionNotFoundInDll",
+                            {
+                                {"functionName", fn_name},
+                                {"path", declfn.dll_path},
+                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         FreeLibrary(hmod);
@@ -3327,7 +3337,7 @@
                                   .location = statement.location});
                 return {};
 #else
-                last_error_message = "DECLARE DLL is only supported on Windows.";
+                last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.DeclareDllOnlySupportedOnWindows");
                 last_fault_location = statement.location;
                 last_fault_statement = statement.text;
                 if (dispatch_error_handler())
