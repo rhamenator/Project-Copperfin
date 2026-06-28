@@ -1595,6 +1595,87 @@ void test_build_report_layout_includes_direct_paper_size_settings() {
     }
 }
 
+void test_build_report_layout_preserves_band_unique_ids_for_section_identity() {
+    copperfin::studio::StudioDocumentModel document;
+    document.display_name = "detail-ids.frx";
+    document.kind = copperfin::studio::StudioAssetKind::report;
+    document.table_preview_available = true;
+
+    document.table_preview.records = {
+        {
+            .record_index = 0U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "9"),
+                value("VPOS", "0.000"),
+                value("HEIGHT", "300.000"),
+                value("UNIQUEID", "detail-header-guid")
+            }
+        },
+        {
+            .record_index = 1U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "10"),
+                value("VPOS", "300.000"),
+                value("HEIGHT", "250.000"),
+                value("UNIQUEID", "detail-footer-guid")
+            }
+        },
+        {
+            .record_index = 2U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "5"),
+                value("EXPR", "\"Header label\"", 51U),
+                value("HPOS", "100.000"),
+                value("VPOS", "50.000"),
+                value("WIDTH", "700.000"),
+                value("HEIGHT", "120.000"),
+                value("UNIQUEID", "detail-header-label-guid")
+            }
+        },
+        {
+            .record_index = 3U,
+            .deleted = true,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "10"),
+                value("VPOS", "550.000"),
+                value("HEIGHT", "200.000"),
+                value("UNIQUEID", "deleted-detail-footer-guid")
+            }
+        }
+    };
+
+    const auto layout = copperfin::studio::build_report_layout(document);
+    expect(layout.available, "#2727: report layout should be available for section UNIQUEID fixtures");
+    expect(layout.sections.size() == 2U, "#2727: live detail header/footer sections should be detected");
+    expect(layout.deleted_sections.size() == 1U, "#2727: deleted detail footer sections should be detected");
+    expect(layout.sections[0].id == "detail-header-guid",
+        "#2727: live detail-header sections should preserve UNIQUEID values as section ids");
+    expect(layout.sections[0].id_field_index == 4U,
+        "#2727: live detail-header section ids should retain UNIQUEID field provenance");
+    expect(layout.sections[0].id_memo_block_number == 0U,
+        "#2727: live detail-header section ids should expose memo block zero for character UNIQUEID fields");
+    expect(layout.sections[1].id == "detail-footer-guid",
+        "#2727: live detail-footer sections should preserve UNIQUEID values as section ids");
+    expect(layout.deleted_sections[0].id == "deleted-detail-footer-guid",
+        "#2727: deleted detail-footer sections should preserve UNIQUEID values as section ids");
+    expect(layout.deleted_sections[0].id_field_index == 4U,
+        "#2727: deleted detail-footer section ids should retain UNIQUEID field provenance");
+    expect(layout.sections[0].objects.size() == 1U,
+        "#2727: detail-header sections should continue to own placed objects");
+    if (!layout.sections[0].objects.empty()) {
+        expect(layout.sections[0].objects[0].containing_section_id == "detail-header-guid",
+            "#2727: placed report objects should expose stable containing-section ids from band UNIQUEID values");
+        expect(layout.sections[0].objects[0].containing_section_record_index == 0U,
+            "#2727: placed report objects should preserve containing-section record indexes");
+    }
+}
+
 }  // namespace
 
 int main() {
@@ -1613,6 +1694,7 @@ int main() {
     test_build_report_layout_reports_missing_title_provenance_when_unavailable();
     test_build_report_layout_includes_direct_orientation_settings();
     test_build_report_layout_includes_direct_paper_size_settings();
+    test_build_report_layout_preserves_band_unique_ids_for_section_identity();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

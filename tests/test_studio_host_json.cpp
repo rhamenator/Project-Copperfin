@@ -22342,7 +22342,7 @@ void test_studio_host_json_exposes_detail_header_footer_object_containment(
         expect_selected_object("detail-header-label-guid",
                                "1",
                                "label",
-                               "detail_header_0",
+                               "detail-header-guid",
                                "0",
                                "50",
                                "170",
@@ -22350,7 +22350,7 @@ void test_studio_host_json_exposes_detail_header_footer_object_containment(
         expect_selected_object("detail-footer-field-guid",
                                "3",
                                "field",
-                               "detail_footer_2",
+                               "detail-footer-guid",
                                "2",
                                "60",
                                "160",
@@ -22616,7 +22616,7 @@ void test_studio_host_json_deletes_and_restores_detail_header_footer_sections_by
                            0U,
                            "Detail Header",
                            "detail_header",
-                           "detail_header_0",
+                           "detail-header-guid",
                            "Detail Footer",
                            "detail_footer",
                            "2",
@@ -22627,7 +22627,7 @@ void test_studio_host_json_deletes_and_restores_detail_header_footer_sections_by
                            2U,
                            "Detail Footer",
                            "detail_footer",
-                           "detail_footer_2",
+                           "detail-footer-guid",
                            "Detail Header",
                            "detail_header",
                            "0",
@@ -22639,7 +22639,7 @@ void test_studio_host_json_deletes_and_restores_detail_header_footer_sections_by
                             "Detail Header",
                             "detail_header",
                             "0",
-                            "detail_header_0",
+                            "detail-header-guid",
                             "1",
                             "stable detail-header section restore");
             restore_section(footer_restore_path,
@@ -22648,7 +22648,7 @@ void test_studio_host_json_deletes_and_restores_detail_header_footer_sections_by
                             "Detail Footer",
                             "detail_footer",
                             "1",
-                            "detail_footer_2",
+                            "detail-footer-guid",
                             "3",
                             "stable detail-footer section restore");
         };
@@ -22776,7 +22776,7 @@ void test_studio_host_json_refreshes_detail_header_footer_section_delete_restore
                     "\"objects\": [",
                     "\"recordIndex\": 1",
                     "\"deleted\": false",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionObjectIndex\": 0",
                     "\"sectionObjectCount\": 1"
@@ -22862,7 +22862,7 @@ void test_studio_host_json_refreshes_detail_header_footer_section_delete_restore
                     "\"objects\": [",
                     "\"recordIndex\": 1",
                     "\"deleted\": false",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionObjectIndex\": 0",
                     "\"sectionObjectCount\": 1"
@@ -22962,7 +22962,7 @@ void test_studio_host_json_refreshes_detail_header_footer_section_delete_restore
                     "\"objects\": [",
                     "\"recordIndex\": 3",
                     "\"deleted\": false",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionObjectIndex\": 0",
                     "\"sectionObjectCount\": 1"
@@ -23048,7 +23048,7 @@ void test_studio_host_json_refreshes_detail_header_footer_section_delete_restore
                     "\"objects\": [",
                     "\"recordIndex\": 3",
                     "\"deleted\": false",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionObjectIndex\": 0",
                     "\"sectionObjectCount\": 1"
@@ -24322,7 +24322,7 @@ void test_studio_host_json_exposes_detail_header_footer_object_expressions_by_st
             expect_selected_object_expression("detail-header-label-guid",
                                               "1",
                                               "label",
-                                              "detail_header_0",
+                                              "detail-header-guid",
                                               "0",
                                               "50",
                                               "170",
@@ -24332,7 +24332,7 @@ void test_studio_host_json_exposes_detail_header_footer_object_expressions_by_st
             expect_selected_object_expression("detail-footer-field-guid",
                                               "3",
                                               "field",
-                                              "detail_footer_2",
+                                              "detail-footer-guid",
                                               "2",
                                               "60",
                                               "160",
@@ -24475,7 +24475,7 @@ void test_studio_host_json_exposes_detail_header_footer_object_font_metadata_by_
             expect_selected_object_font("detail-header-label-guid",
                                         "1",
                                         "label",
-                                        "detail_header_0",
+                                        "detail-header-guid",
                                         "0",
                                         "50",
                                         "170",
@@ -24489,7 +24489,7 @@ void test_studio_host_json_exposes_detail_header_footer_object_font_metadata_by_
             expect_selected_object_font("detail-footer-field-guid",
                                         "3",
                                         "field",
-                                        "detail_footer_2",
+                                        "detail-footer-guid",
                                         "2",
                                         "60",
                                         "160",
@@ -24675,7 +24675,7 @@ void test_studio_host_json_exposes_deleted_detail_header_footer_object_font_meta
             expect_deleted_selected_object_font("detail-header-label-guid",
                                                 "1",
                                                 "label",
-                                                "detail_header_0",
+                                                "detail-header-guid",
                                                 "0",
                                                 "50",
                                                 "170",
@@ -24689,7 +24689,7 @@ void test_studio_host_json_exposes_deleted_detail_header_footer_object_font_meta
             expect_deleted_selected_object_font("detail-footer-field-guid",
                                                 "3",
                                                 "field",
-                                                "detail_footer_2",
+                                                "detail-footer-guid",
                                                 "2",
                                                 "60",
                                                 "160",
@@ -24786,7 +24786,7 @@ void test_studio_host_json_updates_detail_header_footer_object_font_metadata_by_
                 {
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 1",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 50",
                     "\"sectionRelativeBottom\": 170",
@@ -24801,7 +24801,7 @@ void test_studio_host_json_updates_detail_header_footer_object_font_metadata_by_
                 update_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_header_0\"",
+                    "\"id\": \"detail-header-guid\"",
                     "\"recordIndex\": 0",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 1"
@@ -24859,7 +24859,7 @@ void test_studio_host_json_updates_detail_header_footer_object_font_metadata_by_
                 {
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 3",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 160",
@@ -24874,7 +24874,7 @@ void test_studio_host_json_updates_detail_header_footer_object_font_metadata_by_
                 clear_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_footer_2\"",
+                    "\"id\": \"detail-footer-guid\"",
                     "\"recordIndex\": 2",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 1"
@@ -24984,7 +24984,7 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_font_meta
                     "\"deletedObjects\": [",
                     "\"recordIndex\": 1",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 50",
                     "\"sectionRelativeBottom\": 170",
@@ -25002,7 +25002,7 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_font_meta
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 1",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 50",
                     "\"sectionRelativeBottom\": 170",
@@ -25018,7 +25018,7 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_font_meta
                 update_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_header_0\"",
+                    "\"id\": \"detail-header-guid\"",
                     "\"bandKind\": \"detail_header\"",
                     "\"recordIndex\": 0",
                     "\"deleted\": false",
@@ -25092,7 +25092,7 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_font_meta
                     "\"deletedObjects\": [",
                     "\"recordIndex\": 3",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 160",
@@ -25108,7 +25108,7 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_font_meta
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 3",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 160",
@@ -25122,7 +25122,7 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_font_meta
                 clear_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_footer_2\"",
+                    "\"id\": \"detail-footer-guid\"",
                     "\"bandKind\": \"detail_footer\"",
                     "\"recordIndex\": 2",
                     "\"deleted\": false",
@@ -25223,7 +25223,7 @@ void test_studio_host_json_updates_detail_header_footer_object_font_options_by_s
                 {
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 1",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 50",
                     "\"sectionRelativeBottom\": 170",
@@ -25238,7 +25238,7 @@ void test_studio_host_json_updates_detail_header_footer_object_font_options_by_s
                 update_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_header_0\"",
+                    "\"id\": \"detail-header-guid\"",
                     "\"recordIndex\": 0",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 1"
@@ -25296,7 +25296,7 @@ void test_studio_host_json_updates_detail_header_footer_object_font_options_by_s
                 {
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 3",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 160",
@@ -25311,7 +25311,7 @@ void test_studio_host_json_updates_detail_header_footer_object_font_options_by_s
                 clear_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_footer_2\"",
+                    "\"id\": \"detail-footer-guid\"",
                     "\"recordIndex\": 2",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 1"
@@ -25423,7 +25423,7 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_font_opti
                     "\"deletedObjects\": [",
                     "\"recordIndex\": 1",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 50",
                     "\"sectionRelativeBottom\": 170",
@@ -25441,7 +25441,7 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_font_opti
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 1",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 50",
                     "\"sectionRelativeBottom\": 170",
@@ -25457,7 +25457,7 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_font_opti
                 update_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_header_0\"",
+                    "\"id\": \"detail-header-guid\"",
                     "\"recordIndex\": 0",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 0",
@@ -25529,7 +25529,7 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_font_opti
                     "\"deletedObjects\": [",
                     "\"recordIndex\": 3",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 160",
@@ -25545,7 +25545,7 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_font_opti
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 3",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 160",
@@ -25559,7 +25559,7 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_font_opti
                 clear_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_footer_2\"",
+                    "\"id\": \"detail-footer-guid\"",
                     "\"recordIndex\": 2",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 0",
@@ -25656,7 +25656,7 @@ void test_studio_host_json_updates_detail_header_footer_object_geometry_by_stabl
                 {
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 1",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 90",
                     "\"sectionRelativeBottom\": 210",
@@ -25675,7 +25675,7 @@ void test_studio_host_json_updates_detail_header_footer_object_geometry_by_stabl
                 update_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_header_0\"",
+                    "\"id\": \"detail-header-guid\"",
                     "\"recordIndex\": 0",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 1"
@@ -25733,7 +25733,7 @@ void test_studio_host_json_updates_detail_header_footer_object_geometry_by_stabl
                 {
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 3",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 60",
@@ -25752,7 +25752,7 @@ void test_studio_host_json_updates_detail_header_footer_object_geometry_by_stabl
                 clear_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_footer_2\"",
+                    "\"id\": \"detail-footer-guid\"",
                     "\"recordIndex\": 2",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 1"
@@ -25863,7 +25863,7 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_geometry_
                     "\"deletedObjects\": [",
                     "\"recordIndex\": 1",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 90",
                     "\"sectionRelativeBottom\": 210",
@@ -25884,7 +25884,7 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_geometry_
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 1",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 90",
                     "\"sectionRelativeBottom\": 210",
@@ -25903,7 +25903,7 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_geometry_
                 update_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_header_0\"",
+                    "\"id\": \"detail-header-guid\"",
                     "\"recordIndex\": 0",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 0",
@@ -25975,7 +25975,7 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_geometry_
                     "\"deletedObjects\": [",
                     "\"recordIndex\": 3",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 60",
@@ -25996,7 +25996,7 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_geometry_
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 3",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 60",
@@ -26015,7 +26015,7 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_geometry_
                 clear_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_footer_2\"",
+                    "\"id\": \"detail-footer-guid\"",
                     "\"recordIndex\": 2",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 0",
@@ -26114,7 +26114,7 @@ void test_studio_host_json_deletes_and_restores_detail_header_footer_objects_by_
                     "\"deletedObjects\": [",
                     "\"recordIndex\": 1",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 50",
                     "\"sectionRelativeBottom\": 170",
@@ -26135,7 +26135,7 @@ void test_studio_host_json_deletes_and_restores_detail_header_footer_objects_by_
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 1",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 50",
                     "\"sectionRelativeBottom\": 170",
@@ -26154,7 +26154,7 @@ void test_studio_host_json_deletes_and_restores_detail_header_footer_objects_by_
                 delete_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_header_0\"",
+                    "\"id\": \"detail-header-guid\"",
                     "\"recordIndex\": 0",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 0",
@@ -26233,7 +26233,7 @@ void test_studio_host_json_deletes_and_restores_detail_header_footer_objects_by_
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 3",
                     "\"deleted\": false",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 160",
@@ -26252,7 +26252,7 @@ void test_studio_host_json_deletes_and_restores_detail_header_footer_objects_by_
                 restore_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_footer_2\"",
+                    "\"id\": \"detail-footer-guid\"",
                     "\"recordIndex\": 2",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 1"
@@ -26344,7 +26344,7 @@ void test_studio_host_json_duplicates_detail_header_footer_objects_by_stable_sel
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 4",
                     "\"deleted\": false",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 50",
                     "\"sectionRelativeBottom\": 170",
@@ -26364,7 +26364,7 @@ void test_studio_host_json_duplicates_detail_header_footer_objects_by_stable_sel
                 duplicate_header_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_header_0\"",
+                    "\"id\": \"detail-header-guid\"",
                     "\"recordIndex\": 0",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 2"
@@ -26428,7 +26428,7 @@ void test_studio_host_json_duplicates_detail_header_footer_objects_by_stable_sel
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 5",
                     "\"deleted\": false",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 160",
@@ -26448,7 +26448,7 @@ void test_studio_host_json_duplicates_detail_header_footer_objects_by_stable_sel
                 duplicate_footer_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_footer_2\"",
+                    "\"id\": \"detail-footer-guid\"",
                     "\"recordIndex\": 2",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 2"
@@ -26558,7 +26558,7 @@ void test_studio_host_json_duplicates_deleted_detail_header_footer_objects_by_st
                     "\"deletedObjects\": [",
                     "\"recordIndex\": 4",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 50",
                     "\"sectionRelativeBottom\": 170",
@@ -26580,7 +26580,7 @@ void test_studio_host_json_duplicates_deleted_detail_header_footer_objects_by_st
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 4",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 50",
                     "\"sectionRelativeBottom\": 170",
@@ -26600,7 +26600,7 @@ void test_studio_host_json_duplicates_deleted_detail_header_footer_objects_by_st
                 duplicate_header_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_header_0\"",
+                    "\"id\": \"detail-header-guid\"",
                     "\"recordIndex\": 0",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 0",
@@ -26677,7 +26677,7 @@ void test_studio_host_json_duplicates_deleted_detail_header_footer_objects_by_st
                     "\"deletedObjects\": [",
                     "\"recordIndex\": 5",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 160",
@@ -26699,7 +26699,7 @@ void test_studio_host_json_duplicates_deleted_detail_header_footer_objects_by_st
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 5",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 160",
@@ -26719,7 +26719,7 @@ void test_studio_host_json_duplicates_deleted_detail_header_footer_objects_by_st
                 duplicate_footer_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_footer_2\"",
+                    "\"id\": \"detail-footer-guid\"",
                     "\"recordIndex\": 2",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 0",
@@ -26812,7 +26812,7 @@ void test_studio_host_json_renames_detail_header_footer_objects_by_stable_select
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 1",
                     "\"deleted\": false",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 50",
                     "\"sectionRelativeBottom\": 170",
@@ -26832,7 +26832,7 @@ void test_studio_host_json_renames_detail_header_footer_objects_by_stable_select
                 rename_header_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_header_0\"",
+                    "\"id\": \"detail-header-guid\"",
                     "\"recordIndex\": 0",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 1"
@@ -26894,7 +26894,7 @@ void test_studio_host_json_renames_detail_header_footer_objects_by_stable_select
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 3",
                     "\"deleted\": false",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 160",
@@ -26914,7 +26914,7 @@ void test_studio_host_json_renames_detail_header_footer_objects_by_stable_select
                 rename_footer_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_footer_2\"",
+                    "\"id\": \"detail-footer-guid\"",
                     "\"recordIndex\": 2",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 1"
@@ -27024,7 +27024,7 @@ void test_studio_host_json_renames_deleted_detail_header_footer_objects_by_stabl
                     "\"deletedObjects\": [",
                     "\"recordIndex\": 1",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"objectKind\": \"label\"",
                     "\"expression\": \"\\\"Header label\\\"\""
                 },
@@ -27035,7 +27035,7 @@ void test_studio_host_json_renames_deleted_detail_header_footer_objects_by_stabl
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 1",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 50",
                     "\"sectionRelativeBottom\": 170",
@@ -27055,7 +27055,7 @@ void test_studio_host_json_renames_deleted_detail_header_footer_objects_by_stabl
                 rename_header_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_header_0\"",
+                    "\"id\": \"detail-header-guid\"",
                     "\"recordIndex\": 0",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 0",
@@ -27132,7 +27132,7 @@ void test_studio_host_json_renames_deleted_detail_header_footer_objects_by_stabl
                     "\"deletedObjects\": [",
                     "\"recordIndex\": 3",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"objectKind\": \"field\"",
                     "\"expression\": \"footer.total\""
                 },
@@ -27143,7 +27143,7 @@ void test_studio_host_json_renames_deleted_detail_header_footer_objects_by_stabl
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 3",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 160",
@@ -27163,7 +27163,7 @@ void test_studio_host_json_renames_deleted_detail_header_footer_objects_by_stabl
                 rename_footer_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_footer_2\"",
+                    "\"id\": \"detail-footer-guid\"",
                     "\"recordIndex\": 2",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 0",
@@ -27278,7 +27278,7 @@ void test_studio_host_json_reorders_detail_header_footer_objects_by_stable_selec
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 1",
                     "\"deleted\": false",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 50",
                     "\"sectionRelativeBottom\": 170",
@@ -27298,7 +27298,7 @@ void test_studio_host_json_reorders_detail_header_footer_objects_by_stable_selec
                 reorder_header_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_header_0\"",
+                    "\"id\": \"detail-header-guid\"",
                     "\"recordIndex\": 0",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 2"
@@ -27364,7 +27364,7 @@ void test_studio_host_json_reorders_detail_header_footer_objects_by_stable_selec
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 5",
                     "\"deleted\": false",
-                    "\"containingSectionId\": \"detail_footer_3\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 3",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 160",
@@ -27384,7 +27384,7 @@ void test_studio_host_json_reorders_detail_header_footer_objects_by_stable_selec
                 reorder_footer_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_footer_3\"",
+                    "\"id\": \"detail-footer-guid\"",
                     "\"recordIndex\": 3",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 2"
@@ -27393,7 +27393,7 @@ void test_studio_host_json_reorders_detail_header_footer_objects_by_stable_selec
             expect_contains_in_order(
                 reorder_footer_process.stdout_text,
                 {
-                    "\"containingSectionId\": \"detail_footer_3\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"sectionObjectIndex\": 0",
                     "\"expression\": \"footer.total\"",
                     "\"sectionObjectIndex\": 1",
@@ -27527,7 +27527,7 @@ void test_studio_host_json_reorders_deleted_detail_header_footer_objects_by_stab
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 1",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 50",
                     "\"sectionRelativeBottom\": 170",
@@ -27547,7 +27547,7 @@ void test_studio_host_json_reorders_deleted_detail_header_footer_objects_by_stab
                 reorder_header_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_header_0\"",
+                    "\"id\": \"detail-header-guid\"",
                     "\"recordIndex\": 0",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 0",
@@ -27619,7 +27619,7 @@ void test_studio_host_json_reorders_deleted_detail_header_footer_objects_by_stab
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 5",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_footer_3\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 3",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 160",
@@ -27639,7 +27639,7 @@ void test_studio_host_json_reorders_deleted_detail_header_footer_objects_by_stab
                 reorder_footer_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_footer_3\"",
+                    "\"id\": \"detail-footer-guid\"",
                     "\"recordIndex\": 3",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 0",
@@ -27745,7 +27745,7 @@ void test_studio_host_json_aligns_detail_header_footer_objects_by_stable_selecti
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 1",
                     "\"deleted\": false",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 50",
                     "\"sectionRelativeBottom\": 170",
@@ -27765,7 +27765,7 @@ void test_studio_host_json_aligns_detail_header_footer_objects_by_stable_selecti
                 align_header_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_header_0\"",
+                    "\"id\": \"detail-header-guid\"",
                     "\"recordIndex\": 0",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 1"
@@ -27836,7 +27836,7 @@ void test_studio_host_json_aligns_detail_header_footer_objects_by_stable_selecti
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 3",
                     "\"deleted\": false",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 160",
@@ -27856,7 +27856,7 @@ void test_studio_host_json_aligns_detail_header_footer_objects_by_stable_selecti
                 align_footer_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_footer_2\"",
+                    "\"id\": \"detail-footer-guid\"",
                     "\"recordIndex\": 2",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 1"
@@ -27984,7 +27984,7 @@ void test_studio_host_json_aligns_deleted_detail_header_footer_objects_by_stable
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 1",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 50",
                     "\"sectionRelativeBottom\": 170",
@@ -28004,7 +28004,7 @@ void test_studio_host_json_aligns_deleted_detail_header_footer_objects_by_stable
                 align_header_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_header_0\"",
+                    "\"id\": \"detail-header-guid\"",
                     "\"recordIndex\": 0",
                     "\"sectionCount\": 2",
                     "\"deletedObjectCount\": 1"
@@ -28087,7 +28087,7 @@ void test_studio_host_json_aligns_deleted_detail_header_footer_objects_by_stable
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 3",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 160",
@@ -28107,7 +28107,7 @@ void test_studio_host_json_aligns_deleted_detail_header_footer_objects_by_stable
                 align_footer_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_footer_2\"",
+                    "\"id\": \"detail-footer-guid\"",
                     "\"recordIndex\": 2",
                     "\"sectionCount\": 2",
                     "\"deletedObjectCount\": 1"
@@ -28217,7 +28217,7 @@ void test_studio_host_json_resizes_detail_header_footer_objects_by_stable_select
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 1",
                     "\"deleted\": false",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 50",
                     "\"sectionRelativeBottom\": 150",
@@ -28237,7 +28237,7 @@ void test_studio_host_json_resizes_detail_header_footer_objects_by_stable_select
                 resize_header_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_header_0\"",
+                    "\"id\": \"detail-header-guid\"",
                     "\"recordIndex\": 0",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 1"
@@ -28311,7 +28311,7 @@ void test_studio_host_json_resizes_detail_header_footer_objects_by_stable_select
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 3",
                     "\"deleted\": false",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 180",
@@ -28331,7 +28331,7 @@ void test_studio_host_json_resizes_detail_header_footer_objects_by_stable_select
                 resize_footer_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_footer_2\"",
+                    "\"id\": \"detail-footer-guid\"",
                     "\"recordIndex\": 2",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 1"
@@ -28462,7 +28462,7 @@ void test_studio_host_json_resizes_deleted_detail_header_footer_objects_by_stabl
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 1",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 50",
                     "\"sectionRelativeBottom\": 150",
@@ -28482,7 +28482,7 @@ void test_studio_host_json_resizes_deleted_detail_header_footer_objects_by_stabl
                 resize_header_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_header_0\"",
+                    "\"id\": \"detail-header-guid\"",
                     "\"recordIndex\": 0",
                     "\"sectionCount\": 2",
                     "\"deletedObjectCount\": 1"
@@ -28568,7 +28568,7 @@ void test_studio_host_json_resizes_deleted_detail_header_footer_objects_by_stabl
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 3",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 180",
@@ -28588,7 +28588,7 @@ void test_studio_host_json_resizes_deleted_detail_header_footer_objects_by_stabl
                 resize_footer_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_footer_2\"",
+                    "\"id\": \"detail-footer-guid\"",
                     "\"recordIndex\": 2",
                     "\"sectionCount\": 2",
                     "\"deletedObjectCount\": 1"
@@ -28696,7 +28696,7 @@ void test_studio_host_json_snaps_detail_header_footer_objects_by_stable_selectio
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 1",
                     "\"deleted\": false",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 70",
                     "\"sectionRelativeBottom\": 190",
@@ -28716,7 +28716,7 @@ void test_studio_host_json_snaps_detail_header_footer_objects_by_stable_selectio
                 snap_header_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_header_0\"",
+                    "\"id\": \"detail-header-guid\"",
                     "\"recordIndex\": 0",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 1"
@@ -28788,7 +28788,7 @@ void test_studio_host_json_snaps_detail_header_footer_objects_by_stable_selectio
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 3",
                     "\"deleted\": false",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionRelativeTop\": 50",
                     "\"sectionRelativeBottom\": 150",
@@ -28808,7 +28808,7 @@ void test_studio_host_json_snaps_detail_header_footer_objects_by_stable_selectio
                 snap_footer_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_footer_2\"",
+                    "\"id\": \"detail-footer-guid\"",
                     "\"recordIndex\": 2",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 1"
@@ -28937,7 +28937,7 @@ void test_studio_host_json_snaps_deleted_detail_header_footer_objects_by_stable_
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 1",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 70",
                     "\"sectionRelativeBottom\": 190",
@@ -28957,7 +28957,7 @@ void test_studio_host_json_snaps_deleted_detail_header_footer_objects_by_stable_
                 snap_header_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_header_0\"",
+                    "\"id\": \"detail-header-guid\"",
                     "\"recordIndex\": 0",
                     "\"sectionCount\": 2",
                     "\"deletedObjectCount\": 1"
@@ -29041,7 +29041,7 @@ void test_studio_host_json_snaps_deleted_detail_header_footer_objects_by_stable_
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 3",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionRelativeTop\": 50",
                     "\"sectionRelativeBottom\": 150",
@@ -29061,7 +29061,7 @@ void test_studio_host_json_snaps_deleted_detail_header_footer_objects_by_stable_
                 snap_footer_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_footer_2\"",
+                    "\"id\": \"detail-footer-guid\"",
                     "\"recordIndex\": 2",
                     "\"sectionCount\": 2",
                     "\"deletedObjectCount\": 1"
@@ -29169,7 +29169,7 @@ void test_studio_host_json_nudges_detail_header_footer_objects_by_stable_selecti
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 1",
                     "\"deleted\": false",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 30",
                     "\"sectionRelativeBottom\": 150",
@@ -29189,7 +29189,7 @@ void test_studio_host_json_nudges_detail_header_footer_objects_by_stable_selecti
                 nudge_header_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_header_0\"",
+                    "\"id\": \"detail-header-guid\"",
                     "\"recordIndex\": 0",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 1"
@@ -29261,7 +29261,7 @@ void test_studio_host_json_nudges_detail_header_footer_objects_by_stable_selecti
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 3",
                     "\"deleted\": false",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionRelativeTop\": 40",
                     "\"sectionRelativeBottom\": 140",
@@ -29281,7 +29281,7 @@ void test_studio_host_json_nudges_detail_header_footer_objects_by_stable_selecti
                 nudge_footer_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_footer_2\"",
+                    "\"id\": \"detail-footer-guid\"",
                     "\"recordIndex\": 2",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 1"
@@ -29410,7 +29410,7 @@ void test_studio_host_json_nudges_deleted_detail_header_footer_objects_by_stable
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 1",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 30",
                     "\"sectionRelativeBottom\": 150",
@@ -29430,7 +29430,7 @@ void test_studio_host_json_nudges_deleted_detail_header_footer_objects_by_stable
                 nudge_header_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_header_0\"",
+                    "\"id\": \"detail-header-guid\"",
                     "\"recordIndex\": 0",
                     "\"sectionCount\": 2",
                     "\"deletedObjectCount\": 1"
@@ -29514,7 +29514,7 @@ void test_studio_host_json_nudges_deleted_detail_header_footer_objects_by_stable
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 3",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionRelativeTop\": 40",
                     "\"sectionRelativeBottom\": 140",
@@ -29534,7 +29534,7 @@ void test_studio_host_json_nudges_deleted_detail_header_footer_objects_by_stable
                 nudge_footer_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_footer_2\"",
+                    "\"id\": \"detail-footer-guid\"",
                     "\"recordIndex\": 2",
                     "\"sectionCount\": 2",
                     "\"deletedObjectCount\": 1"
@@ -29641,7 +29641,7 @@ void test_studio_host_json_distributes_detail_header_footer_objects_by_stable_se
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 2",
                     "\"deleted\": false",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 160",
@@ -29661,7 +29661,7 @@ void test_studio_host_json_distributes_detail_header_footer_objects_by_stable_se
                 distribute_header_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_header_0\"",
+                    "\"id\": \"detail-header-guid\"",
                     "\"recordIndex\": 0",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 3"
@@ -29736,7 +29736,7 @@ void test_studio_host_json_distributes_detail_header_footer_objects_by_stable_se
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 6",
                     "\"deleted\": false",
-                    "\"containingSectionId\": \"detail_footer_4\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 4",
                     "\"sectionRelativeTop\": 70",
                     "\"sectionRelativeBottom\": 170",
@@ -29756,7 +29756,7 @@ void test_studio_host_json_distributes_detail_header_footer_objects_by_stable_se
                 distribute_footer_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_footer_4\"",
+                    "\"id\": \"detail-footer-guid\"",
                     "\"recordIndex\": 4",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 3"
@@ -29878,7 +29878,7 @@ void test_studio_host_json_distributes_deleted_detail_header_footer_objects_by_s
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 2",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 160",
@@ -29898,7 +29898,7 @@ void test_studio_host_json_distributes_deleted_detail_header_footer_objects_by_s
                 distribute_header_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_header_0\"",
+                    "\"id\": \"detail-header-guid\"",
                     "\"recordIndex\": 0",
                     "\"sectionCount\": 2",
                     "\"deletedObjectCount\": 3"
@@ -29985,7 +29985,7 @@ void test_studio_host_json_distributes_deleted_detail_header_footer_objects_by_s
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 6",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_footer_4\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 4",
                     "\"sectionRelativeTop\": 70",
                     "\"sectionRelativeBottom\": 170",
@@ -30005,7 +30005,7 @@ void test_studio_host_json_distributes_deleted_detail_header_footer_objects_by_s
                 distribute_footer_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_footer_4\"",
+                    "\"id\": \"detail-footer-guid\"",
                     "\"recordIndex\": 4",
                     "\"sectionCount\": 2",
                     "\"deletedObjectCount\": 3"
@@ -30110,7 +30110,7 @@ void test_studio_host_json_distributes_detail_header_footer_objects_vertically_b
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 2",
                     "\"deleted\": false",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 65",
                     "\"sectionRelativeBottom\": 165",
@@ -30130,7 +30130,7 @@ void test_studio_host_json_distributes_detail_header_footer_objects_vertically_b
                 distribute_header_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_header_0\"",
+                    "\"id\": \"detail-header-guid\"",
                     "\"recordIndex\": 0",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 3"
@@ -30205,7 +30205,7 @@ void test_studio_host_json_distributes_detail_header_footer_objects_vertically_b
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 6",
                     "\"deleted\": false",
-                    "\"containingSectionId\": \"detail_footer_4\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 4",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 160",
@@ -30225,7 +30225,7 @@ void test_studio_host_json_distributes_detail_header_footer_objects_vertically_b
                 distribute_footer_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_footer_4\"",
+                    "\"id\": \"detail-footer-guid\"",
                     "\"recordIndex\": 4",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 3"
@@ -30349,7 +30349,7 @@ void test_studio_host_json_distributes_deleted_detail_header_footer_objects_vert
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 2",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 65",
                     "\"sectionRelativeBottom\": 165",
@@ -30369,7 +30369,7 @@ void test_studio_host_json_distributes_deleted_detail_header_footer_objects_vert
                 distribute_header_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_header_0\"",
+                    "\"id\": \"detail-header-guid\"",
                     "\"recordIndex\": 0",
                     "\"sectionCount\": 2",
                     "\"deletedObjectCount\": 3"
@@ -30456,7 +30456,7 @@ void test_studio_host_json_distributes_deleted_detail_header_footer_objects_vert
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 6",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_footer_4\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 4",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 160",
@@ -30476,7 +30476,7 @@ void test_studio_host_json_distributes_deleted_detail_header_footer_objects_vert
                 distribute_footer_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_footer_4\"",
+                    "\"id\": \"detail-footer-guid\"",
                     "\"recordIndex\": 4",
                     "\"sectionCount\": 2",
                     "\"deletedObjectCount\": 3"
@@ -30579,7 +30579,7 @@ void test_studio_host_json_updates_detail_header_footer_object_expressions_by_st
                 {
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 1",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 50",
                     "\"sectionRelativeBottom\": 170",
@@ -30594,7 +30594,7 @@ void test_studio_host_json_updates_detail_header_footer_object_expressions_by_st
                 update_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_header_0\"",
+                    "\"id\": \"detail-header-guid\"",
                     "\"recordIndex\": 0",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 1"
@@ -30660,7 +30660,7 @@ void test_studio_host_json_updates_detail_header_footer_object_expressions_by_st
                 {
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 3",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 160",
@@ -30676,7 +30676,7 @@ void test_studio_host_json_updates_detail_header_footer_object_expressions_by_st
                 clear_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_footer_2\"",
+                    "\"id\": \"detail-footer-guid\"",
                     "\"recordIndex\": 2",
                     "\"sectionCount\": 2",
                     "\"objectCount\": 1"
@@ -30861,7 +30861,7 @@ void test_studio_host_json_exposes_deleted_detail_header_footer_object_expressio
             expect_deleted_selected_object_expression("detail-header-label-guid",
                                                       "1",
                                                       "label",
-                                                      "detail_header_0",
+                                                      "detail-header-guid",
                                                       "0",
                                                       "50",
                                                       "170",
@@ -30877,7 +30877,7 @@ void test_studio_host_json_exposes_deleted_detail_header_footer_object_expressio
             expect_deleted_selected_object_expression("detail-footer-field-guid",
                                                       "3",
                                                       "field",
-                                                      "detail_footer_2",
+                                                      "detail-footer-guid",
                                                       "2",
                                                       "60",
                                                       "160",
@@ -31005,7 +31005,7 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_expressio
                     "\"deletedObjects\": [",
                     "\"recordIndex\": 1",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 50",
                     "\"sectionRelativeBottom\": 170",
@@ -31022,7 +31022,7 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_expressio
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 1",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionId\": \"detail-header-guid\"",
                     "\"containingSectionRecordIndex\": 0",
                     "\"sectionRelativeTop\": 50",
                     "\"sectionRelativeBottom\": 170",
@@ -31037,7 +31037,7 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_expressio
                 update_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_header_0\"",
+                    "\"id\": \"detail-header-guid\"",
                     "\"recordIndex\": 0",
                     "\"sectionCount\": 2",
                     "\"deletedObjectCount\": 1"
@@ -31116,7 +31116,7 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_expressio
                     "\"deletedObjects\": [",
                     "\"recordIndex\": 3",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 160",
@@ -31133,7 +31133,7 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_expressio
                     "\"selectedReportObject\": {",
                     "\"recordIndex\": 3",
                     "\"deleted\": true",
-                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionId\": \"detail-footer-guid\"",
                     "\"containingSectionRecordIndex\": 2",
                     "\"sectionRelativeTop\": 60",
                     "\"sectionRelativeBottom\": 160",
@@ -31148,7 +31148,7 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_expressio
                 clear_process.stdout_text,
                 {
                     "\"selectedReportObjectSection\": {",
-                    "\"id\": \"detail_footer_2\"",
+                    "\"id\": \"detail-footer-guid\"",
                     "\"recordIndex\": 2",
                     "\"sectionCount\": 2",
                     "\"deletedObjectCount\": 1"

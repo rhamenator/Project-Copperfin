@@ -729,13 +729,14 @@ StudioReportSectionSnapshot build_report_section(
     const int objcode = parse_scaled_int_or_default(record, "OBJCODE");
     const std::size_t objcode_field_index = field_index_or_missing(record, "OBJCODE");
     const std::uint32_t objcode_memo_block_number = memo_block_number_or_zero(record, "OBJCODE");
+    const FieldSelection unique_id = first_non_empty_selection(record, {"UNIQUEID"});
     const FieldSelection expression = first_non_empty_selection(record, {"EXPR"});
     const int top = parse_scaled_int_or_default(record, "VPOS");
     const int height = std::max(0, parse_scaled_int_or_default(record, "HEIGHT"));
     return {
-        .id = make_section_id(record.record_index, objcode),
-        .id_field_index = StudioReportMissingFieldIndex,
-        .id_memo_block_number = 0U,
+        .id = unique_id.value.empty() ? make_section_id(record.record_index, objcode) : unique_id.value,
+        .id_field_index = unique_id.value.empty() ? StudioReportMissingFieldIndex : unique_id.field_index,
+        .id_memo_block_number = unique_id.value.empty() ? 0U : unique_id.memo_block_number,
         .title = band_title(objcode, catalog),
         .title_field_index = objcode_field_index,
         .title_memo_block_number = objcode_memo_block_number,
