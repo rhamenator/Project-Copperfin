@@ -1485,7 +1485,7 @@
             {
                 if (statement.identifier.empty())
                 {
-                    last_error_message = "TEXT requires TO <variable> in the current runtime slice";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.TextRequiresToVariableInCurrentRuntimeSlice");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -1988,7 +1988,7 @@
                 const TryClauseTargets targets = find_try_clause_targets(frame, frame.pc - 1U);
                 if (!targets.endtry_statement_index.has_value())
                 {
-                    last_error_message = "TRY block is missing ENDTRY";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.TryBlockMissingEndtry");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -2266,7 +2266,7 @@
                 const std::vector<ReplaceAssignment> assignments = parse_replace_assignments(statement.expression);
                 if (assignments.empty())
                 {
-                    last_error_message = "REPLACE requires at least one FIELD WITH expression assignment";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.ReplaceRequiresFieldWithExpressionAssignment");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -2313,7 +2313,7 @@
                 const std::vector<ReplaceAssignment> assignments = parse_update_set_assignments(statement.expression);
                 if (assignments.empty())
                 {
-                    last_error_message = "UPDATE requires SET field = expression assignments";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.UpdateRequiresSetFieldExpressionAssignments");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -2471,7 +2471,7 @@
                 }
                 if (trim_copy(statement.secondary_expression).empty())
                 {
-                    last_error_message = "INSERT INTO requires a VALUES clause";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.InsertIntoRequiresValuesClause");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -2601,7 +2601,7 @@
                         std::max<double>(0.0, std::llround(value_as_number(evaluate_expression(statement.identifier, frame)))));
                     if (recno == 0U || recno > cursor->record_count)
                     {
-                        last_error_message = "UNLOCK RECORD target record not found";
+                        last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.UnlockRecordTargetRecordNotFound");
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -7058,7 +7058,7 @@
                     {
                         if (task_cancel_requested != nullptr && task_cancel_requested->load(std::memory_order_relaxed))
                         {
-                            last_error_message = "SLEEP cancelled.";
+                            last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.SleepCancelled");
                             last_fault_location = statement.location;
                             last_fault_statement = statement.text;
                             return {.ok = false, .message = last_error_message};

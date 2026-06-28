@@ -5198,6 +5198,148 @@ void test_critical_section_blocking_policy_rejects_sleep_inside_section() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_residual_dispatch_runtime_errors_localize() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_residual_dispatch_localization";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}});
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+
+    const fs::path text_path = temp_root / "text_missing_target.prg";
+    write_text(
+        text_path,
+        "TEXT\n"
+        "Hello\n"
+        "ENDTEXT\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession text_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(text_path.string(), temp_root.string(), false));
+    const auto text_state = text_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!text_state.completed, "#2717: qps-ploc TEXT without TO target should fail");
+    expect(
+        text_state.message ==
+            copperfin::localization::pseudo_localize("TEXT requires TO <variable> in the current runtime slice"),
+        "#2717: qps-ploc TEXT missing-target error should route through the pseudo-localization transform");
+
+    const fs::path try_path = temp_root / "try_missing_endtry.prg";
+    write_text(
+        try_path,
+        "TRY\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession try_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(try_path.string(), temp_root.string(), false));
+    const auto try_state = try_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!try_state.completed, "#2717: qps-ploc TRY without ENDTRY should fail");
+    expect(
+        try_state.message ==
+            copperfin::localization::pseudo_localize("TRY block is missing ENDTRY"),
+        "#2717: qps-ploc TRY missing-ENDTRY error should route through the pseudo-localization transform");
+
+    const fs::path replace_path = temp_root / "replace_missing_assignments.prg";
+    write_text(
+        replace_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "REPLACE FOR .T.\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession replace_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(replace_path.string(), temp_root.string(), false));
+    const auto replace_state = replace_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!replace_state.completed, "#2717: qps-ploc REPLACE without assignments should fail");
+    expect(
+        replace_state.message ==
+            copperfin::localization::pseudo_localize("REPLACE requires at least one FIELD WITH expression assignment"),
+        "#2717: qps-ploc REPLACE assignment error should route through the pseudo-localization transform");
+
+    const fs::path update_path = temp_root / "update_missing_assignments.prg";
+    write_text(
+        update_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "UPDATE People\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession update_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(update_path.string(), temp_root.string(), false));
+    const auto update_state = update_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!update_state.completed, "#2717: qps-ploc UPDATE without SET assignments should fail");
+    expect(
+        update_state.message ==
+            copperfin::localization::pseudo_localize("UPDATE requires SET field = expression assignments"),
+        "#2717: qps-ploc UPDATE assignment error should route through the pseudo-localization transform");
+
+    const fs::path insert_path = temp_root / "insert_missing_values.prg";
+    write_text(
+        insert_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "INSERT INTO People\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession insert_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(insert_path.string(), temp_root.string(), false));
+    const auto insert_state = insert_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!insert_state.completed, "#2717: qps-ploc INSERT INTO without VALUES should fail");
+    expect(
+        insert_state.message ==
+            copperfin::localization::pseudo_localize("INSERT INTO requires a VALUES clause"),
+        "#2717: qps-ploc INSERT INTO VALUES-clause error should route through the pseudo-localization transform");
+
+    const fs::path unlock_path = temp_root / "unlock_missing_record.prg";
+    write_text(
+        unlock_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "UNLOCK RECORD 99 IN People\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession unlock_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(unlock_path.string(), temp_root.string(), false));
+    const auto unlock_state = unlock_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!unlock_state.completed, "#2717: qps-ploc UNLOCK RECORD with a missing record should fail");
+    expect(
+        unlock_state.message ==
+            copperfin::localization::pseudo_localize("UNLOCK RECORD target record not found"),
+        "#2717: qps-ploc UNLOCK RECORD target-record error should route through the pseudo-localization transform");
+
+    const fs::path sleep_cancel_path = temp_root / "sleep_cancelled_task.prg";
+    write_text(
+        sleep_cancel_path,
+        "PROCEDURE worker\n"
+        "    SLEEP 50\n"
+        "    RETURN\n"
+        "ENDPROC\n"
+        "PROCEDURE canceler\n"
+        "    SLEEP 1\n"
+        "    CANCEL\n"
+        "ENDPROC\n"
+        "SPAWN worker TO nWorker\n"
+        "SPAWN canceler TO nCancel\n"
+        "AWAIT nCancel TO lCancelDone\n"
+        "AWAIT nWorker TO lWorkerDone\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession sleep_cancel_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(sleep_cancel_path.string(), temp_root.string(), false));
+    const auto sleep_cancel_state = sleep_cancel_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(sleep_cancel_state.completed, "#2717: qps-ploc spawned-task cancellation script should complete");
+    const auto sleep_cancel_event = std::find_if(
+        sleep_cancel_state.events.begin(),
+        sleep_cancel_state.events.end(),
+        [](const auto& event) {
+            return event.category == "runtime.task.await" &&
+                   event.detail.find("state=error") != std::string::npos &&
+                   event.detail.find(copperfin::localization::pseudo_localize("SLEEP cancelled.")) != std::string::npos;
+        });
+    expect(sleep_cancel_event != sleep_cancel_state.events.end(),
+           "#2717: qps-ploc spawned-task cancellation should report an errored AWAIT event");
+    if (sleep_cancel_event != sleep_cancel_state.events.end()) {
+        expect(
+            sleep_cancel_event->detail.find(copperfin::localization::pseudo_localize("SLEEP cancelled.")) != std::string::npos,
+            "#2717: qps-ploc spawned-task cancellation should preserve the localized SLEEP cancellation text");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_yield_is_explicit_policy_exception_in_enter_critical() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_enter_critical_yield_policy_exception";
@@ -7121,6 +7263,7 @@ int main() {
     test_critical_section_reentrant_enter_same_section_is_allowed();
     test_critical_section_blocking_policy_rejects_await_inside_section();
     test_critical_section_blocking_policy_rejects_sleep_inside_section();
+    test_residual_dispatch_runtime_errors_localize();
     test_yield_allowed_in_enter_critical_regression_minimal();
     test_yield_is_explicit_policy_exception_in_enter_critical();
     test_yield_in_enter_critical_has_no_blocking_violation();

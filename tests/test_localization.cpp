@@ -2514,6 +2514,81 @@ void test_runtime_declare_dispatch_errors_route_through_catalog() {
         "#2715: qps-ploc DECLARE load-failure error should pseudo-localize prose while preserving path and downstream error text");
 }
 
+void test_runtime_residual_command_dispatch_errors_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const std::vector<std::string> keys{
+        "Runtime.Prg.Dispatch.Error.TextRequiresToVariableInCurrentRuntimeSlice",
+        "Runtime.Prg.Dispatch.Error.TryBlockMissingEndtry",
+        "Runtime.Prg.Dispatch.Error.ReplaceRequiresFieldWithExpressionAssignment",
+        "Runtime.Prg.Dispatch.Error.UpdateRequiresSetFieldExpressionAssignments",
+        "Runtime.Prg.Dispatch.Error.InsertIntoRequiresValuesClause",
+        "Runtime.Prg.Dispatch.Error.UnlockRecordTargetRecordNotFound",
+        "Runtime.Prg.Dispatch.Error.SleepCancelled"
+    };
+
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.TextRequiresToVariableInCurrentRuntimeSlice") ==
+            "TEXT requires TO <variable> in the current runtime slice",
+        "#2717: TEXT missing-target error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.TryBlockMissingEndtry") ==
+            "TRY block is missing ENDTRY",
+        "#2717: TRY missing-ENDTRY error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.ReplaceRequiresFieldWithExpressionAssignment") ==
+            "REPLACE requires at least one FIELD WITH expression assignment",
+        "#2717: REPLACE assignment error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.UpdateRequiresSetFieldExpressionAssignments") ==
+            "UPDATE requires SET field = expression assignments",
+        "#2717: UPDATE assignment error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.InsertIntoRequiresValuesClause") ==
+            "INSERT INTO requires a VALUES clause",
+        "#2717: INSERT INTO VALUES-clause error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.UnlockRecordTargetRecordNotFound") ==
+            "UNLOCK RECORD target record not found",
+        "#2717: UNLOCK RECORD target-record error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.SleepCancelled") ==
+            "SLEEP cancelled.",
+        "#2717: SLEEP cancellation error should localize through the runtime catalog");
+
+    for (const std::string& key : keys) {
+        expect(
+            spanish.catalogs.contains("es-419") && spanish.catalogs.at("es-419").contains(key),
+            "#2717: es-419 should define every residual command runtime dispatch key");
+        expect(
+            portuguese.catalogs.contains("pt-BR") && portuguese.catalogs.at("pt-BR").contains(key),
+            "#2717: pt-BR should define every residual command runtime dispatch key");
+        expect(
+            pseudo.catalogs.contains("qps-ploc") && pseudo.catalogs.at("qps-ploc").contains(key),
+            "#2717: qps-ploc should define every residual command runtime dispatch key");
+    }
+
+    expect(
+        spanish.translate("Runtime.Prg.Dispatch.Error.TryBlockMissingEndtry").find("missing ENDTRY") ==
+            std::string::npos,
+        "#2717: es-419 TRY missing-ENDTRY error should not fall back to raw English");
+    expect(
+        portuguese.translate("Runtime.Prg.Dispatch.Error.SleepCancelled").find("cancelled") ==
+            std::string::npos,
+        "#2717: pt-BR SLEEP cancellation error should not fall back to raw English");
+
+    const std::string pseudo_text =
+        pseudo.translate("Runtime.Prg.Dispatch.Error.TextRequiresToVariableInCurrentRuntimeSlice");
+    expect(
+        pseudo_text.find("[!! ") == 0U &&
+            pseudo_text.find("TEXT requires TO <variable> in the current runtime slice") == std::string::npos &&
+            pseudo_text.find("<") != std::string::npos,
+        "#2717: qps-ploc TEXT missing-target error should pseudo-localize prose while preserving syntax markers");
+}
+
 void test_inspect_usage_routes_through_localization(const std::string& inspect_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_inspect_usage_tests";
@@ -2681,6 +2756,7 @@ int main(int argc, char** argv) {
     test_runtime_table_structure_errors_route_through_catalog();
     test_runtime_set_filter_dimension_sleep_errors_route_through_catalog();
     test_runtime_declare_dispatch_errors_route_through_catalog();
+    test_runtime_residual_command_dispatch_errors_route_through_catalog();
     test_runtime_package_warnings_pseudo_localize();
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);
