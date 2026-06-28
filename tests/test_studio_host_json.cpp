@@ -101608,10 +101608,10 @@ void test_studio_host_json_copies_deleted_report_visual_properties_by_stable_sel
                         "#1869: deleted report/label stable visual-property copy should preserve deleted object counts");
         expect_contains(target_reopen_process.stdout_text, "\"selectedReportObjectAvailable\": true",
                         "#1869: deleted report/label stable visual-property copy should select the copied target row");
-        expect_contains(target_reopen_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1869: deleted report/label stable visual-property copy should not fabricate containing sections");
-        expect_contains(target_reopen_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1869: deleted report/label stable visual-property copy should serialize null containing-section metadata");
+        expect_contains(target_reopen_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1869: deleted report/label stable visual-property copy should preserve containing-section availability");
+        expect_contains(target_reopen_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1869: deleted report/label stable visual-property copy should serialize containing-section metadata");
         expect_contains(target_reopen_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1869: deleted report/label stable visual-property copy should preserve report object selection kind");
         expect_contains(target_reopen_process.stdout_text, "\"recordIndex\": 4",
@@ -101624,8 +101624,37 @@ void test_studio_host_json_copies_deleted_report_visual_properties_by_stable_sel
                         "#1869: deleted report/label stable visual-property copy should refresh copied target expressions");
         expect_contains(target_reopen_process.stdout_text, "\"uniqueId\": \"right-field-guid\"",
                         "#1869: deleted report/label stable visual-property copy should preserve target stable identities");
-        expect_contains(target_reopen_process.stdout_text, "\"containingSectionRecordIndex\": null",
-                        "#1869: deleted report/label stable visual-property copy should keep deleted rows uncontained");
+        expect_contains_in_order(
+            target_reopen_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 4",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"detail_1\"",
+                "\"containingSectionRecordIndex\": 1",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 800",
+                "\"sectionObjectIndex\": 1",
+                "\"sectionObjectCount\": 2",
+                "\"objectKind\": \"field\"",
+                "\"expression\": \"middle.value\"",
+                "\"uniqueId\": \"right-field-guid\""
+            },
+            "#1869: deleted report/label stable visual-property copy should refresh target deleted-row section metadata");
+        expect_contains_in_order(
+            target_reopen_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"detail_1\"",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"sectionIndex\": 0",
+                "\"sectionCount\": 1",
+                "\"objectCount\": 1",
+                "\"deletedObjectCount\": 2"
+            },
+            "#1869: deleted report/label stable visual-property copy should expose containing detail-band metadata");
 
         const auto source_reopen_process = run_process_capture(
             studio_host_path,
