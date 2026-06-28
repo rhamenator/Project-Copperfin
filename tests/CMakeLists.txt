@@ -145,6 +145,22 @@ add_test(
     COMMAND $<TARGET_FILE:test_studio_host_deleted_update_batch_sections> $<TARGET_FILE:copperfin_studio_host>
 )
 
+add_executable(test_studio_host_deleted_update_batch
+    test_studio_host_deleted_update_batch.cpp
+)
+target_link_libraries(test_studio_host_deleted_update_batch PRIVATE cf_vfp_assets)
+
+if(MSVC)
+    target_compile_options(test_studio_host_deleted_update_batch PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_deleted_update_batch PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_deleted_update_batch
+    COMMAND $<TARGET_FILE:test_studio_host_deleted_update_batch> $<TARGET_FILE:copperfin_studio_host>
+)
+
 add_executable(test_studio_host_deleted_property_clear_sections
     test_studio_host_deleted_property_clear_sections.cpp
 )
