@@ -3873,9 +3873,11 @@
                         declaration = parse_table_field_declaration(statement.expression);
                         if (!declaration.has_value())
                         {
-                            last_error_message = action == "add"
-                                                     ? "ALTER TABLE ADD COLUMN requires a supported field declaration"
-                                                     : "ALTER TABLE ALTER COLUMN requires a supported field declaration";
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.AlterTableRequiresSupportedFieldDeclaration",
+                                {{"command", action == "add"
+                                                 ? "ALTER TABLE ADD COLUMN"
+                                                 : "ALTER TABLE ALTER COLUMN"}});
                             return false;
                         }
                         affected_field = declaration->descriptor.name;

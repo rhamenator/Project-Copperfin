@@ -2481,7 +2481,9 @@ void test_runtime_table_structure_errors_route_through_catalog() {
     const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
     const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
     const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const copperfin::localization::PlaceholderMap alter_add_placeholders{{"command", "ALTER TABLE ADD COLUMN"}};
     const std::vector<std::string> keys{
+        "Runtime.Prg.Dispatch.Error.AlterTableRequiresSupportedFieldDeclaration",
         "Runtime.Prg.Dispatch.Error.AlterTableRequiresTargetTableName",
         "Runtime.Prg.Dispatch.Error.AlterTableSupportsAddDropAlterColumnOnly",
         "Runtime.Prg.Dispatch.Error.CreateCursorRequiresNonEmptyAlias",
@@ -2494,6 +2496,12 @@ void test_runtime_table_structure_errors_route_through_catalog() {
         english.translate("Runtime.Prg.Dispatch.Error.CreateCursorRequiresSupportedFieldDeclaration") ==
             "CREATE CURSOR requires at least one supported field declaration",
         "#2713: CREATE CURSOR field-declaration error should localize through the runtime catalog");
+    expect(
+        english.translate(
+            "Runtime.Prg.Dispatch.Error.AlterTableRequiresSupportedFieldDeclaration",
+            alter_add_placeholders) ==
+            "ALTER TABLE ADD COLUMN requires a supported field declaration",
+        "#2723: ALTER TABLE ADD COLUMN field-declaration error should localize through the runtime catalog");
     expect(
         english.translate("Runtime.Prg.Dispatch.Error.CreateTableRequiresTargetTableName") ==
             "CREATE TABLE requires a target table name",
@@ -2523,6 +2531,12 @@ void test_runtime_table_structure_errors_route_through_catalog() {
         portuguese.translate("Runtime.Prg.Dispatch.Error.AlterTableSupportsAddDropAlterColumnOnly")
                 .find("currently supports ADD COLUMN, DROP COLUMN, and ALTER COLUMN only") == std::string::npos,
         "#2713: pt-BR ALTER TABLE action-support error should not fall back to raw English");
+    expect(
+        spanish.translate(
+            "Runtime.Prg.Dispatch.Error.AlterTableRequiresSupportedFieldDeclaration",
+            alter_add_placeholders)
+                .find("requires a supported field declaration") == std::string::npos,
+        "#2723: es-419 ALTER TABLE field-declaration error should not fall back to raw English");
 
     const std::string pseudo_create_table =
         pseudo.translate("Runtime.Prg.Dispatch.Error.CreateTableRequiresSupportedFieldDeclaration");
@@ -2530,6 +2544,15 @@ void test_runtime_table_structure_errors_route_through_catalog() {
         pseudo_create_table.find("[!! ") == 0U &&
             pseudo_create_table.find("requires at least one supported field declaration") == std::string::npos,
         "#2713: qps-ploc CREATE TABLE field-declaration error should pseudo-localize prose");
+    const std::string pseudo_alter_add =
+        pseudo.translate(
+            "Runtime.Prg.Dispatch.Error.AlterTableRequiresSupportedFieldDeclaration",
+            alter_add_placeholders);
+    expect(
+        pseudo_alter_add.find("[!! ") == 0U &&
+            pseudo_alter_add.find("ALTER TABLE ADD COLUMN") != std::string::npos &&
+            pseudo_alter_add.find("requires a supported field declaration") == std::string::npos,
+        "#2723: qps-ploc ALTER TABLE field-declaration error should pseudo-localize prose while preserving command tokens");
 }
 
 void test_runtime_set_filter_dimension_sleep_errors_route_through_catalog() {

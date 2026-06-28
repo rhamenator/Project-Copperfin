@@ -1269,6 +1269,7 @@
   "Runtime.Prg.Dispatch.Error.DeclareDllOnlySupportedOnWindows": "DECLARE DLL so e compativel com Windows.",
   "Runtime.Prg.Dispatch.Error.DeclareFunctionNotFoundInDll": "DECLARE: a funcao '{functionName}' nao foi encontrada em '{path}'.",
   "Runtime.Prg.Dispatch.Error.DeclareMissingFunctionNameOrDllPath": "DECLARE: falta o nome da funcao ou o caminho do DLL.",
+  "Runtime.Prg.Dispatch.Error.AlterTableRequiresSupportedFieldDeclaration": "{command} exige uma declaracao de campo compativel",
   "Runtime.Prg.Dispatch.Error.AlterTableRequiresTargetTableName": "ALTER TABLE exige um nome de tabela de destino",
   "Runtime.Prg.Dispatch.Error.AlterTableSupportsAddDropAlterColumnOnly": "ALTER TABLE atualmente oferece suporte apenas a ADD COLUMN, DROP COLUMN e ALTER COLUMN",
   "Runtime.Prg.Dispatch.Error.DimensionDeclareRequiresArrayDimensions": "DIMENSION/DECLARE exige dimensoes de matriz",

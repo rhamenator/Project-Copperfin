@@ -465,6 +465,38 @@ void test_table_structure_runtime_errors_localize() {
             copperfin::localization::pseudo_localize("ALTER TABLE currently supports ADD COLUMN, DROP COLUMN, and ALTER COLUMN only"),
         "#2713: qps-ploc ALTER TABLE action-support error should route through the pseudo-localization transform");
 
+    const fs::path alter_table_add_path = temp_root / "alter_table_add_field_fail.prg";
+    write_text(
+        alter_table_add_path,
+        "ALTER TABLE '" + (temp_root / "people.dbf").string() + "' ADD COLUMN BAD\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession alter_table_add_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(alter_table_add_path.string(), temp_root.string()));
+    const auto alter_table_add_state = alter_table_add_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!alter_table_add_state.completed, "#2723: qps-ploc ALTER TABLE ADD COLUMN with an invalid declaration should fail");
+    expect(
+        alter_table_add_state.message.find("[!! ") == 0U &&
+            alter_table_add_state.message.find("ALTER TABLE ADD COLUMN") != std::string::npos &&
+            alter_table_add_state.message.find("requires a supported field declaration") == std::string::npos,
+        "#2723: qps-ploc ALTER TABLE ADD COLUMN field-declaration error should pseudo-localize prose while preserving command tokens");
+
+    const fs::path alter_table_alter_path = temp_root / "alter_table_alter_field_fail.prg";
+    write_text(
+        alter_table_alter_path,
+        "ALTER TABLE '" + (temp_root / "people.dbf").string() + "' ALTER COLUMN BAD\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession alter_table_alter_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(alter_table_alter_path.string(), temp_root.string()));
+    const auto alter_table_alter_state = alter_table_alter_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!alter_table_alter_state.completed, "#2723: qps-ploc ALTER TABLE ALTER COLUMN with an invalid declaration should fail");
+    expect(
+        alter_table_alter_state.message.find("[!! ") == 0U &&
+            alter_table_alter_state.message.find("ALTER TABLE ALTER COLUMN") != std::string::npos &&
+            alter_table_alter_state.message.find("requires a supported field declaration") == std::string::npos,
+        "#2723: qps-ploc ALTER TABLE ALTER COLUMN field-declaration error should pseudo-localize prose while preserving command tokens");
+
     fs::remove_all(temp_root, ignored);
 }
 
