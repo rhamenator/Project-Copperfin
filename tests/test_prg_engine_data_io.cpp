@@ -2523,6 +2523,119 @@ void test_append_from_type_runtime_errors_localize() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_scatter_gather_runtime_errors_localize() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_gather_localization";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+
+    const fs::path scatter_no_area_path = temp_root / "scatter_no_area.prg";
+    write_text(
+        scatter_no_area_path,
+        "SCATTER MEMVAR\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession scatter_no_area_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(scatter_no_area_path.string(), temp_root.string(), false));
+    const auto scatter_no_area_state = scatter_no_area_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!scatter_no_area_state.completed, "#2712: qps-ploc SCATTER without a work area should fail");
+    expect(
+        scatter_no_area_state.message == copperfin::localization::pseudo_localize("SCATTER: no current work area"),
+        "#2712: qps-ploc SCATTER no-work-area error should route through the pseudo-localization transform");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 8U},
+    };
+    const auto empty_create =
+        copperfin::vfp::create_dbf_table_file((temp_root / "empty.dbf").string(), fields, {});
+    expect(empty_create.ok, "#2712: empty SCATTER/GATHER fixture should be created");
+    const auto one_row_create =
+        copperfin::vfp::create_dbf_table_file((temp_root / "one_row.dbf").string(), fields, {{"Alice"}});
+    expect(one_row_create.ok, "#2712: one-row SCATTER/GATHER fixture should be created");
+
+    const fs::path scatter_no_record_path = temp_root / "scatter_no_record.prg";
+    write_text(
+        scatter_no_record_path,
+        "USE '" + (temp_root / "empty.dbf").string() + "'\n"
+        "SCATTER MEMVAR\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession scatter_no_record_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(scatter_no_record_path.string(), temp_root.string(), false));
+    const auto scatter_no_record_state = scatter_no_record_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!scatter_no_record_state.completed, "#2712: qps-ploc SCATTER without a current record should fail");
+    expect(
+        scatter_no_record_state.message == copperfin::localization::pseudo_localize("SCATTER: no current record"),
+        "#2712: qps-ploc SCATTER no-current-record error should route through the pseudo-localization transform");
+
+    const fs::path scatter_fields_path = temp_root / "scatter_fields_fail.prg";
+    write_text(
+        scatter_fields_path,
+        "USE '" + (temp_root / "one_row.dbf").string() + "'\n"
+        "SCATTER FIELDS MissingField MEMVAR\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession scatter_fields_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(scatter_fields_path.string(), temp_root.string(), false));
+    const auto scatter_fields_state = scatter_fields_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!scatter_fields_state.completed, "#2712: qps-ploc SCATTER with no matching fields should fail");
+    expect(
+        scatter_fields_state.message ==
+            copperfin::localization::pseudo_localize("SCATTER: no fields match the FIELDS clause"),
+        "#2712: qps-ploc SCATTER empty-fields error should route through the pseudo-localization transform");
+
+    const fs::path gather_no_area_path = temp_root / "gather_no_area.prg";
+    write_text(
+        gather_no_area_path,
+        "GATHER MEMVAR\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession gather_no_area_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(gather_no_area_path.string(), temp_root.string(), false));
+    const auto gather_no_area_state = gather_no_area_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!gather_no_area_state.completed, "#2712: qps-ploc GATHER without a work area should fail");
+    expect(
+        gather_no_area_state.message == copperfin::localization::pseudo_localize("GATHER: no current work area"),
+        "#2712: qps-ploc GATHER no-work-area error should route through the pseudo-localization transform");
+
+    const fs::path gather_no_record_path = temp_root / "gather_no_record.prg";
+    write_text(
+        gather_no_record_path,
+        "USE '" + (temp_root / "empty.dbf").string() + "'\n"
+        "GATHER MEMVAR\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession gather_no_record_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(gather_no_record_path.string(), temp_root.string(), false));
+    const auto gather_no_record_state = gather_no_record_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!gather_no_record_state.completed, "#2712: qps-ploc GATHER without a current record should fail");
+    expect(
+        gather_no_record_state.message == copperfin::localization::pseudo_localize("GATHER: no current record"),
+        "#2712: qps-ploc GATHER no-current-record error should route through the pseudo-localization transform");
+
+    const fs::path gather_name_path = temp_root / "gather_name_missing_object.prg";
+    write_text(
+        gather_name_path,
+        "USE '" + (temp_root / "one_row.dbf").string() + "'\n"
+        "GATHER NAME oMissing FIELDS NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession gather_name_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(gather_name_path.string(), temp_root.string(), false));
+    const auto gather_name_state = gather_name_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!gather_name_state.completed, "#2712: qps-ploc GATHER NAME with a missing object variable should fail");
+    expect(
+        gather_name_state.message ==
+            copperfin::localization::pseudo_localize("GATHER NAME: object variable not found"),
+        "#2712: qps-ploc GATHER NAME missing-object error should route through the pseudo-localization transform");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_restore_from_additive_merges_variables() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_restore_additive";
@@ -6254,6 +6367,7 @@ int main() {
     test_append_from_array_runtime_errors_localize();
     test_append_from_runtime_errors_localize();
     test_append_from_type_runtime_errors_localize();
+    test_scatter_gather_runtime_errors_localize();
     test_restore_from_additive_merges_variables();
     test_save_to_like_pattern_filters_variables();
     test_save_to_except_pattern_filters_variables();

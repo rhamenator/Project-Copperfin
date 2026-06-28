@@ -6264,7 +6264,7 @@
                 CursorState *cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
                 if (cursor == nullptr)
                 {
-                    last_error_message = "SCATTER: no current work area";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.ScatterNoCurrentWorkArea");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -6272,7 +6272,7 @@
                 const auto rec = current_record(*cursor);
                 if (!rec.has_value() && !blank)
                 {
-                    last_error_message = "SCATTER: no current record";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.ScatterNoCurrentRecord");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -6451,7 +6451,8 @@
                 {
                     if (matched_field_count == 0U)
                     {
-                        last_error_message = "SCATTER: no fields match the FIELDS clause";
+                        last_error_message =
+                            runtime_text("Runtime.Prg.Dispatch.Error.ScatterNoFieldsMatchFieldsClause");
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -6474,7 +6475,7 @@
                 CursorState *cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
                 if (cursor == nullptr)
                 {
-                    last_error_message = "GATHER: no current work area";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.GatherNoCurrentWorkArea");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -6482,7 +6483,7 @@
                 const auto rec = current_record(*cursor);
                 if (!rec.has_value())
                 {
-                    last_error_message = "GATHER: no current record";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.GatherNoCurrentRecord");
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -6528,7 +6529,7 @@
                     source_object = resolve_existing_object_target(*object_target_path);
                     if (source_object == nullptr)
                     {
-                        last_error_message = "GATHER NAME: object variable not found";
+                        last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.GatherNameObjectVariableNotFound");
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};

@@ -2259,6 +2259,81 @@ void test_runtime_append_from_type_errors_route_through_catalog() {
         "#2711: qps-ploc APPEND FROM TYPE wrapper error should pseudo-localize prose while preserving type and downstream error text");
 }
 
+void test_runtime_scatter_gather_errors_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const std::vector<std::string> keys{
+        "Runtime.Prg.Dispatch.Error.GatherNameObjectVariableNotFound",
+        "Runtime.Prg.Dispatch.Error.GatherNoCurrentRecord",
+        "Runtime.Prg.Dispatch.Error.GatherNoCurrentWorkArea",
+        "Runtime.Prg.Dispatch.Error.ScatterNoCurrentRecord",
+        "Runtime.Prg.Dispatch.Error.ScatterNoCurrentWorkArea",
+        "Runtime.Prg.Dispatch.Error.ScatterNoFieldsMatchFieldsClause"
+    };
+
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.ScatterNoCurrentWorkArea") ==
+            "SCATTER: no current work area",
+        "#2712: SCATTER no-work-area error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.ScatterNoCurrentRecord") ==
+            "SCATTER: no current record",
+        "#2712: SCATTER no-current-record error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.ScatterNoFieldsMatchFieldsClause") ==
+            "SCATTER: no fields match the FIELDS clause",
+        "#2712: SCATTER empty-fields error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.GatherNoCurrentWorkArea") ==
+            "GATHER: no current work area",
+        "#2712: GATHER no-work-area error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.GatherNoCurrentRecord") ==
+            "GATHER: no current record",
+        "#2712: GATHER no-current-record error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.GatherNameObjectVariableNotFound") ==
+            "GATHER NAME: object variable not found",
+        "#2712: GATHER NAME missing-object error should localize through the runtime catalog");
+
+    for (const std::string& key : keys) {
+        expect(
+            spanish.catalogs.contains("es-419") && spanish.catalogs.at("es-419").contains(key),
+            "#2712: es-419 should define every SCATTER/GATHER runtime dispatch key");
+        expect(
+            portuguese.catalogs.contains("pt-BR") && portuguese.catalogs.at("pt-BR").contains(key),
+            "#2712: pt-BR should define every SCATTER/GATHER runtime dispatch key");
+        expect(
+            pseudo.catalogs.contains("qps-ploc") && pseudo.catalogs.at("qps-ploc").contains(key),
+            "#2712: qps-ploc should define every SCATTER/GATHER runtime dispatch key");
+    }
+
+    expect(
+        spanish.translate("Runtime.Prg.Dispatch.Error.ScatterNoCurrentWorkArea")
+                .find("no current work area") == std::string::npos,
+        "#2712: es-419 SCATTER no-work-area error should not fall back to raw English");
+    expect(
+        portuguese.translate("Runtime.Prg.Dispatch.Error.GatherNameObjectVariableNotFound")
+                .find("object variable not found") == std::string::npos,
+        "#2712: pt-BR GATHER NAME missing-object error should not fall back to raw English");
+
+    const std::string pseudo_scatter =
+        pseudo.translate("Runtime.Prg.Dispatch.Error.ScatterNoFieldsMatchFieldsClause");
+    expect(
+        pseudo_scatter.find("[!! ") == 0U &&
+            pseudo_scatter.find("no fields match the FIELDS clause") == std::string::npos,
+        "#2712: qps-ploc SCATTER empty-fields error should pseudo-localize prose");
+    const std::string pseudo_gather =
+        pseudo.translate("Runtime.Prg.Dispatch.Error.GatherNameObjectVariableNotFound");
+    expect(
+        pseudo_gather.find("[!! ") == 0U &&
+            pseudo_gather.find("object variable not found") == std::string::npos,
+        "#2712: qps-ploc GATHER NAME missing-object error should pseudo-localize prose");
+}
+
 void test_inspect_usage_routes_through_localization(const std::string& inspect_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_inspect_usage_tests";
@@ -2422,6 +2497,7 @@ int main(int argc, char** argv) {
     test_runtime_append_from_array_errors_route_through_catalog();
     test_runtime_append_from_errors_route_through_catalog();
     test_runtime_append_from_type_errors_route_through_catalog();
+    test_runtime_scatter_gather_errors_route_through_catalog();
     test_runtime_package_warnings_pseudo_localize();
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);
