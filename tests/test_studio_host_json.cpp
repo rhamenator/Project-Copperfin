@@ -103955,6 +103955,7 @@ void test_studio_host_json_renames_deleted_report_visual_object_batches_by_stabl
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto mark_deleted = [](const fs::path& asset_path, const std::string& unique_id) {
         const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
