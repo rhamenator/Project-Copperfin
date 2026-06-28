@@ -1246,6 +1246,8 @@
   "Runtime.Prg.Dispatch.Error.AppendFromNoCurrentWorkArea": "APPEND FROM: nao ha area de trabalho atual",
   "Runtime.Prg.Dispatch.Error.AppendFromNoFieldsMatchFieldsClause": "APPEND FROM: nenhum campo corresponde a clausula FIELDS",
   "Runtime.Prg.Dispatch.Error.AppendFromSelectedSqlResultCursorUnsupportedSourceType": "APPEND FROM: o cursor SQL/de resultados selecionado nao oferece suporte a este tipo de origem",
+  "Runtime.Prg.Dispatch.Error.AppendFromTypeNoFieldsMatchFieldsClause": "APPEND FROM TYPE {type}: nenhum campo corresponde a clausula FIELDS",
+  "Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed": "APPEND FROM TYPE {type}: nao conseguiu abrir o arquivo de origem",
   "Runtime.Prg.Dispatch.Error.EraseFailed": "ERASE falhou: {errorMessage} ({path})",
   "Runtime.Prg.Dispatch.Error.RenameFileFailed": "RENAME falhou: {errorMessage}",
   "Runtime.Prg.Dispatch.Error.RestoreFromFilenameRequired": "RESTORE FROM exige um nome de arquivo",

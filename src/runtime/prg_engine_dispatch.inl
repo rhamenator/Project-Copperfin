@@ -5092,7 +5092,11 @@
                         std::ifstream json_input(src_path, std::ios::binary);
                         if (!json_input.good())
                         {
-                            last_error_message = "APPEND FROM TYPE JSON: unable to open source file";
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed",
+                                {
+                                    {"type", "JSON"},
+                                });
                             last_fault_location = statement.location;
                             last_fault_statement = statement.text;
                             return {.ok = false, .message = last_error_message};
@@ -5113,7 +5117,11 @@
                         }
                         if (filtered_target_fields.empty())
                         {
-                            last_error_message = "APPEND FROM TYPE JSON: no fields match the FIELDS clause";
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.AppendFromTypeNoFieldsMatchFieldsClause",
+                                {
+                                    {"type", "JSON"},
+                                });
                             last_fault_location = statement.location;
                             last_fault_statement = statement.text;
                             return {.ok = false, .message = last_error_message};
@@ -5191,7 +5199,11 @@
                         std::ifstream csv_input(src_path, std::ios::binary);
                         if (!csv_input.good())
                         {
-                            last_error_message = "APPEND FROM TYPE DELIMITED: unable to open source file";
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed",
+                                {
+                                    {"type", "DELIMITED"},
+                                });
                             last_fault_location = statement.location;
                             last_fault_statement = statement.text;
                             return {.ok = false, .message = last_error_message};
@@ -5212,7 +5224,11 @@
                         }
                         if (filtered_target_fields.empty())
                         {
-                            last_error_message = "APPEND FROM TYPE DELIMITED: no fields match the FIELDS clause";
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.AppendFromTypeNoFieldsMatchFieldsClause",
+                                {
+                                    {"type", "DELIMITED"},
+                                });
                             last_fault_location = statement.location;
                             last_fault_statement = statement.text;
                             return {.ok = false, .message = last_error_message};
@@ -5427,7 +5443,11 @@
                     std::ifstream input(src_path, std::ios::binary);
                     if (!input.good())
                     {
-                        last_error_message = "APPEND FROM TYPE SDF: unable to open source file";
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed",
+                            {
+                                {"type", "SDF"},
+                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -5455,7 +5475,11 @@
                     }
                     if (target_fields.empty())
                     {
-                        last_error_message = "APPEND FROM TYPE SDF: no fields match the FIELDS clause";
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromTypeNoFieldsMatchFieldsClause",
+                            {
+                                {"type", "SDF"},
+                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -5517,7 +5541,11 @@
                     std::ifstream input(src_path, std::ios::binary);
                     if (!input.good())
                     {
-                        last_error_message = "APPEND FROM TYPE JSON: unable to open source file";
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed",
+                            {
+                                {"type", "JSON"},
+                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -5545,7 +5573,11 @@
                     }
                     if (target_fields.empty())
                     {
-                        last_error_message = "APPEND FROM TYPE JSON: no fields match the FIELDS clause";
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromTypeNoFieldsMatchFieldsClause",
+                            {
+                                {"type", "JSON"},
+                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -5608,7 +5640,11 @@
                     std::ifstream input(src_path, std::ios::binary);
                     if (!input.good())
                     {
-                        last_error_message = "APPEND FROM TYPE DIF: unable to open source file";
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed",
+                            {
+                                {"type", "DIF"},
+                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -5636,7 +5672,11 @@
                     }
                     if (target_fields.empty())
                     {
-                        last_error_message = "APPEND FROM TYPE DIF: no fields match the FIELDS clause";
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromTypeNoFieldsMatchFieldsClause",
+                            {
+                                {"type", "DIF"},
+                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -5711,7 +5751,11 @@
                     std::ifstream input(src_path, std::ios::binary);
                     if (!input.good())
                     {
-                        last_error_message = "APPEND FROM TYPE SYLK: unable to open source file";
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed",
+                            {
+                                {"type", "SYLK"},
+                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -5739,7 +5783,11 @@
                     }
                     if (target_fields.empty())
                     {
-                        last_error_message = "APPEND FROM TYPE SYLK: no fields match the FIELDS clause";
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromTypeNoFieldsMatchFieldsClause",
+                            {
+                                {"type", "SYLK"},
+                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -5814,7 +5862,11 @@
                     std::ifstream input(src_path, std::ios::binary);
                     if (!input.good())
                     {
-                        last_error_message = "APPEND FROM TYPE XLS: unable to open source file";
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed",
+                            {
+                                {"type", "XLS"},
+                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -5842,7 +5894,11 @@
                     }
                     if (target_fields.empty())
                     {
-                        last_error_message = "APPEND FROM TYPE XLS: no fields match the FIELDS clause";
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromTypeNoFieldsMatchFieldsClause",
+                            {
+                                {"type", "XLS"},
+                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -5917,7 +5973,11 @@
                     std::ifstream input(src_path, std::ios::binary);
                     if (!input.good())
                     {
-                        last_error_message = "APPEND FROM TYPE DELIMITED: unable to open source file";
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed",
+                            {
+                                {"type", "DELIMITED"},
+                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -5945,7 +6005,11 @@
                     }
                     if (target_fields.empty())
                     {
-                        last_error_message = "APPEND FROM TYPE DELIMITED: no fields match the FIELDS clause";
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.AppendFromTypeNoFieldsMatchFieldsClause",
+                            {
+                                {"type", "DELIMITED"},
+                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};

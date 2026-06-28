@@ -4334,6 +4334,26 @@ void test_append_from_selected_sql_result_cursor_runtime_errors_localize() {
             copperfin::localization::pseudo_localize("APPEND FROM: no fields match the FIELDS clause"),
         "#2709: qps-ploc APPEND FROM empty-fields error should route through the pseudo-localization transform");
 
+    const fs::path type_open_main_path = temp_root / "sql_append_from_type_open_localization.prg";
+    write_text(
+        type_open_main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "SELECT sqlcust\n"
+        "APPEND FROM '" + (temp_root / "missing.json").string() + "' TYPE JSON\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession type_open_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(type_open_main_path, temp_root));
+
+    const auto type_open_state = type_open_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!type_open_state.completed, "#2710: qps-ploc APPEND FROM TYPE JSON missing-source selected SQL result cursor script should fail");
+    expect(
+        type_open_state.message.find("[!! ") == 0U &&
+            type_open_state.message.find("JSON") != std::string::npos &&
+            type_open_state.message.find("unable to open source file") == std::string::npos,
+        "#2710: qps-ploc APPEND FROM TYPE open-source error should pseudo-localize prose while preserving the type");
+
     fs::remove_all(temp_root, ignored);
 }
 

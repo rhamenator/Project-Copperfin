@@ -2183,6 +2183,57 @@ void test_runtime_append_from_errors_route_through_catalog() {
         "#2709: qps-ploc APPEND FROM wrapper error should pseudo-localize prose while preserving downstream error text");
 }
 
+void test_runtime_append_from_type_errors_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const copperfin::localization::PlaceholderMap type_placeholders{{"type", "JSON"}};
+    const std::vector<std::string> keys{
+        "Runtime.Prg.Dispatch.Error.AppendFromTypeNoFieldsMatchFieldsClause",
+        "Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed"
+    };
+
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed", type_placeholders) ==
+            "APPEND FROM TYPE JSON: unable to open source file",
+        "#2710: APPEND FROM TYPE open-source error should preserve the type placeholder");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.AppendFromTypeNoFieldsMatchFieldsClause", type_placeholders) ==
+            "APPEND FROM TYPE JSON: no fields match the FIELDS clause",
+        "#2710: APPEND FROM TYPE empty-fields error should preserve the type placeholder");
+
+    for (const std::string& key : keys) {
+        expect(
+            spanish.catalogs.contains("es-419") && spanish.catalogs.at("es-419").contains(key),
+            "#2710: es-419 should define every APPEND FROM TYPE runtime dispatch key");
+        expect(
+            portuguese.catalogs.contains("pt-BR") && portuguese.catalogs.at("pt-BR").contains(key),
+            "#2710: pt-BR should define every APPEND FROM TYPE runtime dispatch key");
+        expect(
+            pseudo.catalogs.contains("qps-ploc") && pseudo.catalogs.at("qps-ploc").contains(key),
+            "#2710: qps-ploc should define every APPEND FROM TYPE runtime dispatch key");
+    }
+
+    expect(
+        spanish.translate("Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed", type_placeholders)
+                .find("unable to open source file") == std::string::npos,
+        "#2710: es-419 APPEND FROM TYPE open-source error should not fall back to raw English");
+    expect(
+        portuguese.translate("Runtime.Prg.Dispatch.Error.AppendFromTypeNoFieldsMatchFieldsClause", type_placeholders)
+                .find("no fields match the FIELDS clause") == std::string::npos,
+        "#2710: pt-BR APPEND FROM TYPE empty-fields error should not fall back to raw English");
+
+    const std::string pseudo_open =
+        pseudo.translate("Runtime.Prg.Dispatch.Error.AppendFromTypeOpenSourceFailed", type_placeholders);
+    expect(
+        pseudo_open.find("[!! ") == 0U &&
+            pseudo_open.find("JSON") != std::string::npos &&
+            pseudo_open.find("unable to open source file") == std::string::npos,
+        "#2710: qps-ploc APPEND FROM TYPE open-source error should pseudo-localize prose while preserving the type");
+}
+
 void test_inspect_usage_routes_through_localization(const std::string& inspect_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_inspect_usage_tests";
@@ -2345,6 +2396,7 @@ int main(int argc, char** argv) {
     test_runtime_copy_to_errors_route_through_catalog();
     test_runtime_append_from_array_errors_route_through_catalog();
     test_runtime_append_from_errors_route_through_catalog();
+    test_runtime_append_from_type_errors_route_through_catalog();
     test_runtime_package_warnings_pseudo_localize();
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);
