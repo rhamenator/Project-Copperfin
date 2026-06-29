@@ -62,7 +62,7 @@ void test_launch_parse_errors_resolve_through_localization_catalog() {
         "#2653: es-419 should localize request-selector launch-parse errors");
     expect(
         portuguese_catalog.translate("StudioHost.LaunchParse.Error.SelectionContextValueRequired") ==
-            "Um valor de contexto de selecao e obrigatorio.",
+            "O valor de {option} deve ser {allowedValues}.",
         "#2653: pt-BR should localize selection-context launch-parse errors");
     expect(
         portuguese_catalog.translate("StudioHost.LaunchParse.Error.ObjectActionRequiresTargetSelector") ==
@@ -95,7 +95,10 @@ void test_launch_parse_errors_resolve_through_localization_catalog() {
         !selection_context_result.ok,
         "#2653: parse_launch_arguments should reject missing selection-context values");
     expect(
-        selection_context_result.error == "A selection context value is required.",
+        selection_context_result.error ==
+            "The --selection-context value must be visual_object, visual_method, container_object, "
+            "class_designer, report_expression, label_expression, menu_item, project_item, or "
+            "data_environment.",
         "#2653: parse_launch_arguments should preserve selection-context diagnostics");
 }
 

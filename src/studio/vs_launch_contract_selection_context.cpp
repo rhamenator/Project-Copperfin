@@ -16,7 +16,7 @@ if (argument == "--clear-parent") {
 
 if (argument == "--selection-context") {
             if ((index + 1U) >= args.size()) {
-                result = {.ok = false, .error = localized_missing_value_after_option(catalog, "--selection-context")}; return {true, true};
+                result = {.ok = false, .error = localized_selection_context_error(catalog)}; return {true, true};
             }
             const auto selection_context = parse_selection_context_token(args[++index]);
             if (!selection_context.has_value()) {

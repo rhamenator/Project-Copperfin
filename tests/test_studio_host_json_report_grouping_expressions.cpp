@@ -130,6 +130,7 @@ void test_studio_host_json_exposes_report_group_section_expressions_by_stable_se
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_group_expression_json = [&](const fs::path& asset_path,
                                                const std::string& title,
@@ -251,6 +252,7 @@ void test_studio_host_json_exposes_nested_report_group_section_ordering_by_stabl
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_nested_group_expression_json = [&](const fs::path& asset_path,
                                                       const std::string& title,
@@ -361,6 +363,7 @@ void test_studio_host_json_exposes_report_groupings_in_layout_summary(
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_groupings_summary_json = [&](const fs::path& asset_path,
                                                 const std::string& title,
@@ -437,6 +440,7 @@ void test_studio_host_json_exposes_nested_mixed_state_groupings_in_layout_summar
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_nested_groupings_summary_json = [&](const fs::path& asset_path,
                                                        const std::string& title,
@@ -520,6 +524,7 @@ void test_studio_host_json_exposes_resolved_grouping_expression_for_blank_footer
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_blank_footer_grouping_expression_json = [&](const fs::path& asset_path,
                                                                const std::string& title,
@@ -640,6 +645,7 @@ void test_studio_host_json_updates_nested_report_group_section_expressions_by_re
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_nested_group_expression_update = [&](const fs::path& asset_path,
                                                         const std::string& title,
@@ -765,6 +771,7 @@ void test_studio_host_json_clears_nested_report_group_section_expressions_by_rec
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_nested_group_expression_clear = [&](const fs::path& asset_path,
                                                        const std::string& title,
@@ -881,6 +888,7 @@ void test_studio_host_json_updates_deleted_nested_report_group_section_expressio
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_deleted_nested_group_expression_update = [&](const fs::path& asset_path,
                                                                 const std::string& title,
@@ -1021,6 +1029,7 @@ void test_studio_host_json_clears_deleted_nested_report_group_section_expression
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_deleted_nested_group_expression_clear = [&](const fs::path& asset_path,
                                                                const std::string& title,
@@ -1151,6 +1160,7 @@ void test_studio_host_json_updates_nested_report_group_section_expressions_by_st
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_nested_group_expression_stable_edits =
         [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
@@ -1352,6 +1362,7 @@ void test_studio_host_json_updates_deleted_nested_report_group_section_expressio
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_deleted_nested_group_expression_stable_edits =
         [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
@@ -1574,6 +1585,7 @@ void test_studio_host_json_exposes_report_group_footer_expressions_by_stable_sel
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_group_footer_expression_json = [&](const fs::path& asset_path,
                                                       const std::string& title,
@@ -1695,6 +1707,7 @@ void test_studio_host_json_exposes_deleted_report_group_section_expressions_by_s
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_deleted_group_expression_json = [&](const fs::path& asset_path,
                                                        const std::string& title,
@@ -1839,6 +1852,7 @@ void test_studio_host_json_exposes_deleted_report_group_footer_expressions_by_st
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_deleted_group_footer_expression_json = [&](const fs::path& asset_path,
                                                               const std::string& title,
@@ -1983,6 +1997,7 @@ void test_studio_host_json_updates_group_section_expressions_by_stable_selection
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_group_section_expression_stable_edits =
         [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
@@ -2310,6 +2325,7 @@ void test_studio_host_json_updates_deleted_group_section_expressions_by_stable_s
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_deleted_group_section_expression_stable_edits =
         [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
@@ -2640,6 +2656,7 @@ void test_studio_host_json_updates_report_group_section_expressions_by_record_se
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_group_expression_update = [&](const fs::path& asset_path,
                                                  const std::string& title,
@@ -2741,6 +2758,7 @@ void test_studio_host_json_clears_report_group_section_expressions_by_record_sel
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_group_expression_clear = [&](const fs::path& asset_path,
                                                 const std::string& title,
@@ -2832,6 +2850,7 @@ void test_studio_host_json_updates_report_group_footer_expressions_by_record_sel
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_group_footer_expression_update = [&](const fs::path& asset_path,
                                                         const std::string& title,
@@ -2933,6 +2952,7 @@ void test_studio_host_json_clears_report_group_footer_expressions_by_record_sele
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_group_footer_expression_clear = [&](const fs::path& asset_path,
                                                        const std::string& title,
@@ -3024,6 +3044,7 @@ void test_studio_host_json_exposes_deleted_report_group_section_expressions(
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_deleted_group_expression_json = [&](const fs::path& asset_path,
                                                        const std::string& title,
@@ -3142,6 +3163,7 @@ void test_studio_host_json_exposes_deleted_report_group_footer_expressions(
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_deleted_group_footer_expression_json = [&](const fs::path& asset_path,
                                                               const std::string& title,
@@ -3260,6 +3282,7 @@ void test_studio_host_json_updates_deleted_report_group_section_expressions(
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_deleted_group_expression_update = [&](const fs::path& asset_path,
                                                          const std::string& title,
@@ -3390,6 +3413,7 @@ void test_studio_host_json_clears_deleted_report_group_section_expressions(
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_deleted_group_expression_clear = [&](const fs::path& asset_path,
                                                         const std::string& title,
@@ -3510,6 +3534,7 @@ void test_studio_host_json_updates_deleted_report_group_footer_expressions(
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_deleted_group_footer_expression_update = [&](const fs::path& asset_path,
                                                                 const std::string& title,
@@ -3644,6 +3669,7 @@ void test_studio_host_json_clears_deleted_report_group_footer_expressions(
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_deleted_group_footer_expression_clear = [&](const fs::path& asset_path,
                                                                const std::string& title,
@@ -3763,6 +3789,7 @@ void test_studio_host_json_exposes_report_group_section_expressions(const std::s
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_group_expression_json = [&](const fs::path& asset_path,
                                                const std::string& title,

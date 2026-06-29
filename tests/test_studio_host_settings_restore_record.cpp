@@ -77,7 +77,23 @@ struct ScopedDefaultLocaleCatalogEnvironment {
         set_env_value("COPPERFIN_LOCALE", "en-US", true);
         set_env_value(
             "COPPERFIN_LOCALE_DIR",
-            std::filesystem::absolute("resources/locales").lexically_normal().string(),
+            [] {
+                // COPPERFIN_LOCALE_DIR must resolve to the repo's resources/locales
+                // tree regardless of the test process's cwd (ctest runs tests from
+                // the build directory, not the repo root).
+                std::filesystem::path ancestor = std::filesystem::absolute(std::filesystem::current_path());
+                for (;;) {
+                    const auto candidate = ancestor / "resources" / "locales";
+                    if (std::filesystem::exists(candidate)) {
+                        return candidate.lexically_normal().string();
+                    }
+                    const auto parent = ancestor.parent_path();
+                    if (parent == ancestor) {
+                        return candidate.lexically_normal().string();
+                    }
+                    ancestor = parent;
+                }
+            }(),
             true);
     }
 };

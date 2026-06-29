@@ -8,6 +8,7 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "customer.scx";
     write_synthetic_form_asset(form_path);
@@ -908,6 +909,7 @@ void test_studio_host_json_exposes_designer_launch_surfaces(const std::string& s
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto visual_process = run_process_capture(
         studio_host_path,
@@ -1060,6 +1062,7 @@ void test_studio_host_json_exposes_designer_invocation_admission(const std::stri
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto visual_process = run_process_capture(
         studio_host_path,
@@ -1239,6 +1242,7 @@ void test_studio_host_json_exposes_designer_dispatch(const std::string& studio_h
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto visual_process = run_process_capture(
         studio_host_path,
@@ -1418,6 +1422,7 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto visual_process = run_process_capture(
         studio_host_path,
@@ -1975,6 +1980,7 @@ void test_studio_host_json_exposes_designer_dispatch_catalog(const std::string& 
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto catalog_process = run_process_capture(
         studio_host_path,
@@ -2114,6 +2120,7 @@ void test_studio_host_json_exposes_designer_dispatch_execution_catalog(const std
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto catalog_process = run_process_capture(
         studio_host_path,
@@ -2264,6 +2271,7 @@ void test_studio_host_json_exposes_designer_launch_surface_catalog(const std::st
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto catalog_process = run_process_capture(
         studio_host_path,
@@ -2365,6 +2373,7 @@ void test_studio_host_json_exposes_designer_invocation_admission_catalog(const s
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto catalog_process = run_process_capture(
         studio_host_path,

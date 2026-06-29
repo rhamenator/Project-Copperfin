@@ -8,6 +8,7 @@ void test_studio_host_json_exposes_visual_object_list(const std::string& studio_
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "outline.scx";
     write_synthetic_form_table_for_visual_object_list(form_path);
@@ -141,6 +142,7 @@ void test_studio_host_json_exposes_visual_object_children(const std::string& stu
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "children.scx";
     write_synthetic_form_table_for_visual_object_list(form_path);
@@ -274,6 +276,7 @@ void test_studio_host_json_exposes_visual_object_descendants(const std::string& 
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "descendants.scx";
     write_synthetic_form_table_for_visual_object_list(form_path);
@@ -397,6 +400,7 @@ void test_studio_host_json_exposes_visual_object_ancestors(const std::string& st
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "ancestors.scx";
     write_synthetic_form_table_for_visual_object_list(form_path);
@@ -518,6 +522,7 @@ void test_studio_host_json_updates_visual_object_batches(const std::string& stud
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "object_update_batch.scx";
     write_synthetic_form_table_for_toolbox_creation(form_path);
@@ -719,6 +724,7 @@ void test_studio_host_json_duplicates_visual_object_batches(const std::string& s
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "duplicate_batch.scx";
     write_synthetic_form_table_for_toolbox_creation(form_path);
@@ -880,6 +886,7 @@ void test_studio_host_json_renames_visual_object_batches(const std::string& stud
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "rename_batch.scx";
     write_synthetic_form_table_for_toolbox_creation(form_path);
@@ -1067,6 +1074,7 @@ void test_studio_host_json_reparents_visual_object_batches(const std::string& st
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "reparent_batch.scx";
     write_synthetic_form_table_for_object_reparent(form_path);
@@ -1258,6 +1266,7 @@ void test_studio_host_json_reorders_visual_object_batches(const std::string& stu
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path reorder_path = temp_root / "reorder_batch.scx";
     write_synthetic_form_table_for_object_reorder(reorder_path);

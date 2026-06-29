@@ -497,7 +497,7 @@
   "StudioHost.LaunchParse.Error.RequestItemRequiresOptionAfterTargetSelector": "A {requestName} item requires {option} after a target selector.",
   "StudioHost.LaunchParse.Error.RequestRequiresOption": "A {requestName} request requires {option}.",
   "StudioHost.LaunchParse.Error.RequestRequiresSelector": "A {requestName} request requires at least one selector.",
-  "StudioHost.LaunchParse.Error.SelectionContextValueRequired": "A selection context value is required.",
+  "StudioHost.LaunchParse.Error.SelectionContextValueRequired": "The {option} value must be {allowedValues}.",
   "StudioHost.LaunchParse.Error.SingleObjectCommand": "Only one object command can be specified.",
   "StudioHost.LaunchParse.Error.SinglePropertyCommand": "Only one property command can be specified.",
   "StudioHost.LaunchParse.Error.TrueFalseValueRequired": "The {option} value must be true or false.",

@@ -8,6 +8,7 @@ void test_studio_host_json_exposes_visual_property_filter(const std::string& stu
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path direct_path = temp_root / "direct.scx";
     write_synthetic_form_table_for_toolbox_creation(direct_path);
@@ -138,6 +139,7 @@ void test_studio_host_json_exposes_visual_property_query(const std::string& stud
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path direct_path = temp_root / "direct.scx";
     write_synthetic_form_table_for_toolbox_creation(direct_path);
@@ -269,6 +271,7 @@ void test_studio_host_json_clears_visual_properties(const std::string& studio_ho
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path direct_path = temp_root / "direct_clear.scx";
     write_synthetic_form_table_for_toolbox_creation(direct_path);
@@ -410,6 +413,7 @@ void test_studio_host_json_clears_visual_property_batches(const std::string& stu
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = write_synthetic_form_table_for_property_rename(temp_root, "clear_batch.scx");
 
@@ -557,6 +561,7 @@ void test_studio_host_json_copies_visual_properties(const std::string& studio_ho
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = write_synthetic_form_table_for_property_rename(temp_root, "copy.scx");
 
@@ -763,6 +768,7 @@ void test_studio_host_json_copies_visual_property_batches(const std::string& stu
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = write_synthetic_form_table_for_property_rename(temp_root, "copy_batch.scx");
 
@@ -1015,6 +1021,7 @@ void test_studio_host_json_moves_visual_properties(const std::string& studio_hos
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = write_synthetic_form_table_for_property_rename(temp_root, "move.scx");
 
@@ -1265,6 +1272,7 @@ void test_studio_host_json_moves_visual_property_batches(const std::string& stud
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = write_synthetic_form_table_for_property_rename(temp_root, "move_batch.scx");
 
@@ -1556,6 +1564,7 @@ void test_studio_host_json_renames_visual_properties(const std::string& studio_h
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = write_synthetic_form_table_for_property_rename(temp_root, "rename.scx");
 
@@ -1765,6 +1774,7 @@ void test_studio_host_json_renames_visual_property_batches(const std::string& st
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = write_synthetic_form_table_for_property_rename(temp_root, "rename_batch.scx");
 
@@ -2016,6 +2026,7 @@ void test_studio_host_json_reorders_visual_properties(const std::string& studio_
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = write_synthetic_form_table_for_property_rename(temp_root, "reorder.scx");
 
@@ -2253,6 +2264,7 @@ void test_studio_host_json_reorders_visual_property_batches(const std::string& s
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = write_synthetic_form_table_for_property_rename(temp_root, "reorder_batch.scx");
 
@@ -2514,6 +2526,7 @@ void test_studio_host_json_exposes_visual_property_list(const std::string& studi
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = write_synthetic_form_table_for_property_rename(temp_root, "list.scx");
     const auto list_process = run_process_capture(
@@ -2619,6 +2632,7 @@ void test_studio_host_json_updates_visual_property_batches(const std::string& st
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "update_batch.scx";
     write_synthetic_form_table_for_toolbox_creation(form_path);
@@ -2796,6 +2810,7 @@ void test_studio_host_json_clears_properties_by_stable_selectors(const std::stri
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "customer.scx";
     write_synthetic_form_table_for_toolbox_creation(form_path);

@@ -561,22 +561,22 @@ namespace
 
         const auto log_state = run_fault("log_domain.prg", "n = LOG(0)\nRETURN\n");
         expect(!log_state.completed, "LOG(0) should pause with a runtime error");
-        expect(log_state.message == "LOG() requires a positive argument (got 0.000000)",
+        expect(log_state.message == "Runtime fault: LOG() requires a positive argument (got 0.000000)",
                "#2540: LOG() domain error should route through the default locale catalog");
 
         const auto log10_state = run_fault("log10_domain.prg", "n = LOG10(-1)\nRETURN\n");
         expect(!log10_state.completed, "LOG10(-1) should pause with a runtime error");
-        expect(log10_state.message == "LOG10() requires a positive argument (got -1.000000)",
+        expect(log10_state.message == "Runtime fault: LOG10() requires a positive argument (got -1.000000)",
                "#2540: LOG10() domain error should preserve function and value placeholders");
 
         const auto asin_state = run_fault("asin_domain.prg", "n = ASIN(2)\nRETURN\n");
         expect(!asin_state.completed, "ASIN(2) should pause with a runtime error");
-        expect(asin_state.message == "ASIN() requires an argument between -1 and 1 (got 2.000000)",
+        expect(asin_state.message == "Runtime fault: ASIN() requires an argument between -1 and 1 (got 2.000000)",
                "#2540: ASIN() domain error should route through the default locale catalog");
 
         const auto acos_state = run_fault("acos_domain.prg", "n = ACOS(-2)\nRETURN\n");
         expect(!acos_state.completed, "ACOS(-2) should pause with a runtime error");
-        expect(acos_state.message == "ACOS() requires an argument between -1 and 1 (got -2.000000)",
+        expect(acos_state.message == "Runtime fault: ACOS() requires an argument between -1 and 1 (got -2.000000)",
                "#2540: ACOS() domain error should preserve function and value placeholders");
 
         fs::remove_all(temp_root, ignored);

@@ -10,6 +10,7 @@ void test_studio_host_json_exposes_selected_group_header_label_sections_by_recor
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "selected_group_header_section_record.lbx";
     write_synthetic_report_table_for_stable_group_section_expression_json(label_path);
@@ -121,6 +122,7 @@ void test_studio_host_json_exposes_selected_group_footer_label_sections_by_recor
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "selected_group_footer_section_record.lbx";
     write_synthetic_report_table_for_stable_group_section_expression_json(label_path);
@@ -232,6 +234,7 @@ void test_studio_host_json_exposes_selected_deleted_group_header_label_sections_
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "selected_deleted_group_header_section_record.lbx";
     write_synthetic_report_table_for_stable_group_section_expression_json(label_path);
@@ -365,6 +368,7 @@ void test_studio_host_json_exposes_selected_deleted_group_footer_label_sections_
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "selected_deleted_group_footer_section_record.lbx";
     write_synthetic_report_table_for_stable_group_section_expression_json(label_path);
@@ -498,6 +502,7 @@ void test_studio_host_json_exposes_selected_summary_label_sections_by_record_sel
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "selected_summary_section_record.lbx";
     write_synthetic_report_table_for_stable_summary_section_json(label_path);
@@ -601,6 +606,7 @@ void test_studio_host_json_exposes_selected_deleted_summary_label_sections_by_re
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "selected_deleted_summary_section_record.lbx";
     write_synthetic_report_table_for_stable_summary_section_json(label_path);
@@ -726,6 +732,7 @@ void test_studio_host_json_exposes_selected_title_label_sections_by_record_selec
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "selected_title_section_record.lbx";
     write_synthetic_report_table_for_stable_title_section_json(label_path);
@@ -830,6 +837,7 @@ void test_studio_host_json_exposes_selected_deleted_title_label_sections_by_reco
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "selected_deleted_title_section_record.lbx";
     write_synthetic_report_table_for_stable_title_section_json(label_path);
@@ -957,6 +965,7 @@ void test_studio_host_json_exposes_selected_page_footer_label_sections_by_record
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "selected_page_footer_section_record.lbx";
     write_synthetic_report_table_for_stable_title_section_json(label_path);
@@ -1061,6 +1070,7 @@ void test_studio_host_json_exposes_selected_deleted_page_footer_label_sections_b
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "selected_deleted_page_footer_section_record.lbx";
     write_synthetic_report_table_for_stable_title_section_json(label_path);
@@ -1188,6 +1198,7 @@ void test_studio_host_json_exposes_selected_column_header_label_sections_by_reco
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "selected_column_header_section_record.lbx";
     write_synthetic_report_table_for_stable_column_section_json(label_path);
@@ -1292,6 +1303,7 @@ void test_studio_host_json_exposes_selected_deleted_column_header_label_sections
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "selected_deleted_column_header_section_record.lbx";
     write_synthetic_report_table_for_stable_column_section_json(label_path);
@@ -1419,6 +1431,7 @@ void test_studio_host_json_exposes_selected_column_footer_label_sections_by_reco
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "selected_column_footer_section_record.lbx";
     write_synthetic_report_table_for_stable_column_section_json(label_path);
@@ -1523,6 +1536,7 @@ void test_studio_host_json_exposes_selected_deleted_column_footer_label_sections
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "selected_deleted_column_footer_section_record.lbx";
     write_synthetic_report_table_for_stable_column_section_json(label_path);
@@ -1650,6 +1664,7 @@ void test_studio_host_json_exposes_selected_page_header_label_sections_by_record
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "selected_page_header_section_record.lbx";
     write_synthetic_report_table_for_stable_page_header_section_json(label_path);
@@ -1754,6 +1769,7 @@ void test_studio_host_json_exposes_selected_deleted_page_header_label_sections_b
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "selected_deleted_page_header_section_record.lbx";
     write_synthetic_report_table_for_stable_page_header_section_json(label_path);
@@ -1880,6 +1896,7 @@ void test_studio_host_json_exposes_label_layout_parity(const std::string& studio
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "mailing.lbx";
     write_synthetic_report_table_for_layout_json(label_path);
@@ -2692,6 +2709,7 @@ void test_studio_host_json_nudges_label_layout_objects_by_stable_selectors(const
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "mailing.lbx";
     write_synthetic_report_table_for_layout_json(label_path);
@@ -2753,6 +2771,7 @@ void test_studio_host_json_aligns_label_layout_objects_by_stable_selectors(const
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "mailing.lbx";
     write_synthetic_report_table_for_layout_json(label_path);
@@ -2813,6 +2832,7 @@ void test_studio_host_json_resizes_label_layout_objects_by_stable_selectors(cons
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "mailing.lbx";
     write_synthetic_report_table_for_layout_json(label_path);
@@ -2880,6 +2900,7 @@ void test_studio_host_json_snaps_label_layout_objects_by_stable_selectors(const 
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "mailing.lbx";
     write_synthetic_report_table_for_layout_json(label_path);
@@ -2948,6 +2969,7 @@ void test_studio_host_json_deletes_label_layout_objects_by_stable_selectors(cons
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "mailing.lbx";
     write_synthetic_report_table_for_layout_json(label_path);
@@ -3005,6 +3027,7 @@ void test_studio_host_json_restores_label_layout_objects_by_stable_selectors(con
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "mailing.lbx";
     write_synthetic_report_table_for_layout_json(label_path);
@@ -3073,6 +3096,7 @@ void test_studio_host_json_distributes_label_layout_objects_by_stable_selectors(
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "mailing.lbx";
     write_synthetic_report_table_for_layout_distribution_json(label_path);
@@ -3137,6 +3161,7 @@ void test_studio_host_json_reorders_label_layout_objects_by_stable_selectors(con
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "mailing.lbx";
     write_synthetic_report_table_for_layout_reorder_json(label_path);
@@ -3197,6 +3222,7 @@ void test_studio_host_json_duplicates_label_layout_objects_by_stable_selectors(c
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "mailing.lbx";
     write_synthetic_report_table_for_layout_reorder_json(label_path);
@@ -3256,6 +3282,7 @@ void test_studio_host_json_renames_label_layout_object_identity_by_stable_select
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "mailing.lbx";
     write_synthetic_report_table_for_layout_reorder_json(label_path);
@@ -3315,6 +3342,7 @@ void test_studio_host_json_exposes_selected_summary_label_objects_by_record_sele
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "selected_summary_object_record.lbx";
     write_synthetic_report_table_for_stable_summary_object_json(label_path);
@@ -3436,6 +3464,7 @@ void test_studio_host_json_exposes_selected_deleted_summary_label_objects_by_rec
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "selected_deleted_summary_object_record.lbx";
     write_synthetic_report_table_for_deleted_summary_object_json(label_path);
@@ -3553,6 +3582,7 @@ void test_studio_host_json_exposes_selected_label_settings(const std::string& st
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path label_path = temp_root / "mailing.lbx";
     write_synthetic_report_table_for_layout_json(label_path);

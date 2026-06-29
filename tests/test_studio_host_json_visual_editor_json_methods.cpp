@@ -8,6 +8,7 @@ void test_studio_host_json_exposes_visual_method_list(const std::string& studio_
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "methods.scx";
     write_synthetic_form_table_for_visual_object_list(form_path);
@@ -135,6 +136,7 @@ void test_studio_host_json_exposes_visual_method_query(const std::string& studio
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "method-query.scx";
     write_synthetic_form_table_for_visual_object_list(form_path);
@@ -270,6 +272,7 @@ void test_studio_host_json_updates_visual_methods(const std::string& studio_host
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "method-update.scx";
     write_synthetic_form_table_for_visual_object_list(form_path);
@@ -461,6 +464,7 @@ void test_studio_host_json_deletes_visual_methods(const std::string& studio_host
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "method-delete.scx";
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -625,6 +629,7 @@ void test_studio_host_json_deletes_visual_method_batches(const std::string& stud
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "method-delete-batch.scx";
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -827,6 +832,7 @@ void test_studio_host_json_renames_visual_method_batches(const std::string& stud
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "method-rename-batch.scx";
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -1076,6 +1082,7 @@ void test_studio_host_json_renames_visual_methods(const std::string& studio_host
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "method-rename.scx";
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -1272,6 +1279,7 @@ void test_studio_host_json_copies_visual_methods(const std::string& studio_host_
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "method-copy.scx";
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -1524,6 +1532,7 @@ void test_studio_host_json_copies_visual_method_batches(const std::string& studi
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "method-copy-batch.scx";
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -1769,6 +1778,7 @@ void test_studio_host_json_moves_visual_method_batches(const std::string& studio
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "method-move-batch.scx";
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -2021,6 +2031,7 @@ void test_studio_host_json_moves_visual_methods(const std::string& studio_host_p
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "method-move.scx";
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -2263,6 +2274,7 @@ void test_studio_host_json_reorders_visual_methods(const std::string& studio_hos
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "method-reorder.scx";
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -2505,6 +2517,7 @@ void test_studio_host_json_reorders_visual_method_batches(const std::string& stu
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "method-reorder-batch.scx";
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{

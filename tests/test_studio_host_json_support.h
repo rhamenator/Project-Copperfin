@@ -22,6 +22,8 @@
 
 
 
+
+
 namespace cf_test_studio_host_json {
 
 #if defined(__APPLE__)
@@ -113,7 +115,23 @@ struct ScopedDefaultLocaleCatalogEnvironment {
         set_env_value("COPPERFIN_LOCALE", "en-US", true);
         set_env_value(
             "COPPERFIN_LOCALE_DIR",
-            std::filesystem::absolute("resources/locales").lexically_normal().string(),
+            [] {
+                // COPPERFIN_LOCALE_DIR must resolve to the repo's resources/locales
+                // tree regardless of the test process's cwd (ctest runs tests from
+                // the build directory, not the repo root).
+                std::filesystem::path ancestor = std::filesystem::absolute(std::filesystem::current_path());
+                for (;;) {
+                    const auto candidate = ancestor / "resources" / "locales";
+                    if (std::filesystem::exists(candidate)) {
+                        return candidate.lexically_normal().string();
+                    }
+                    const auto parent = ancestor.parent_path();
+                    if (parent == ancestor) {
+                        return candidate.lexically_normal().string();
+                    }
+                    ancestor = parent;
+                }
+            }(),
             true);
     }
 };
@@ -153,35 +171,7 @@ void test_studio_host_launch_font_target_selector_value_diagnostics_localize(
 void test_studio_host_launch_marker_sizing_zorder_target_selector_value_diagnostics_localize(
     const std::string& studio_host_path);
 
-// ==== CLI launch-flag diagnostics localization tests: structural values and selectors ====
-void test_studio_host_launch_object_metadata_diagnostics_localize(const std::string& studio_host_path);
-void test_studio_host_launch_layout_action_diagnostics_localize(const std::string& studio_host_path);
-void test_studio_host_launch_tab_visibility_diagnostics_localize(const std::string& studio_host_path);
-void test_studio_host_launch_basic_visual_property_diagnostics_localize(const std::string& studio_host_path);
-void test_studio_host_launch_list_grid_property_diagnostics_localize(const std::string& studio_host_path);
-void test_studio_host_launch_text_binding_diagnostics_localize(const std::string& studio_host_path);
-void test_studio_host_launch_row_list_diagnostics_localize(const std::string& studio_host_path);
-void test_studio_host_launch_deleted_state_diagnostics_localize(const std::string& studio_host_path);
-void test_studio_host_launch_bound_list_numeric_diagnostics_localize(const std::string& studio_host_path);
-void test_studio_host_launch_window_flag_diagnostics_localize(const std::string& studio_host_path);
-void test_studio_host_launch_form_bounds_style_diagnostics_localize(const std::string& studio_host_path);
-void test_studio_host_launch_dynamic_expression_diagnostics_localize(const std::string& studio_host_path);
-void test_studio_host_launch_max_auto_diagnostics_localize(const std::string& studio_host_path);
-void test_studio_host_launch_selection_marker_diagnostics_localize(const std::string& studio_host_path);
-void test_studio_host_launch_sizing_zorder_diagnostics_localize(const std::string& studio_host_path);
-void test_studio_host_launch_command_mode_diagnostics_localize(const std::string& studio_host_path);
-void test_studio_host_launch_core_value_diagnostics_localize(const std::string& studio_host_path);
-void test_studio_host_launch_layout_state_value_diagnostics_localize(const std::string& studio_host_path);
-void test_studio_host_launch_text_media_list_value_diagnostics_localize(const std::string& studio_host_path);
-void test_studio_host_launch_list_scalar_value_diagnostics_localize(const std::string& studio_host_path);
-void test_studio_host_launch_grid_value_diagnostics_localize(const std::string& studio_host_path);
-void test_studio_host_launch_record_list_value_diagnostics_localize(const std::string& studio_host_path);
-void test_studio_host_launch_window_flag_value_diagnostics_localize(const std::string& studio_host_path);
-void test_studio_host_launch_bounds_border_value_diagnostics_localize(const std::string& studio_host_path);
-void test_studio_host_launch_dynamic_expression_value_diagnostics_localize(
-    const std::string& studio_host_path);
-void test_studio_host_launch_max_auto_selection_value_diagnostics_localize(
-    const std::string& studio_host_path);
+// ==== CLI launch-flag diagnostics localization tests: target-selector values ====
 void test_studio_host_launch_layout_target_selector_value_diagnostics_localize(
     const std::string& studio_host_path);
 void test_studio_host_launch_state_target_selector_value_diagnostics_localize(
@@ -200,8 +190,6 @@ void test_studio_host_launch_row_source_list_target_selector_value_diagnostics_l
     const std::string& studio_host_path);
 void test_studio_host_launch_row_source_type_list_index_target_selector_value_diagnostics_localize(
     const std::string& studio_host_path);
-void test_studio_host_launch_deleted_state_value_diagnostics_localize(
-    const std::string& studio_host_path);
 void test_studio_host_launch_form_boolean_target_selector_value_diagnostics_localize(
     const std::string& studio_host_path);
 void test_studio_host_launch_dimension_border_target_selector_value_diagnostics_localize(
@@ -210,6 +198,40 @@ void test_studio_host_launch_dynamic_target_selector_value_diagnostics_localize(
     const std::string& studio_host_path);
 void test_studio_host_launch_max_selection_target_selector_value_diagnostics_localize(
     const std::string& studio_host_path);
+
+// ==== CLI launch-flag diagnostics localization tests: non-selector values ====
+void test_studio_host_launch_core_value_diagnostics_localize(const std::string& studio_host_path);
+void test_studio_host_launch_layout_state_value_diagnostics_localize(const std::string& studio_host_path);
+void test_studio_host_launch_text_media_list_value_diagnostics_localize(const std::string& studio_host_path);
+void test_studio_host_launch_list_scalar_value_diagnostics_localize(const std::string& studio_host_path);
+void test_studio_host_launch_grid_value_diagnostics_localize(const std::string& studio_host_path);
+void test_studio_host_launch_record_list_value_diagnostics_localize(const std::string& studio_host_path);
+void test_studio_host_launch_window_flag_value_diagnostics_localize(const std::string& studio_host_path);
+void test_studio_host_launch_bounds_border_value_diagnostics_localize(const std::string& studio_host_path);
+void test_studio_host_launch_dynamic_expression_value_diagnostics_localize(
+    const std::string& studio_host_path);
+void test_studio_host_launch_max_auto_selection_value_diagnostics_localize(
+    const std::string& studio_host_path);
+void test_studio_host_launch_deleted_state_value_diagnostics_localize(
+    const std::string& studio_host_path);
+
+// ==== CLI launch-flag diagnostics localization tests: general/structural ====
+void test_studio_host_launch_object_metadata_diagnostics_localize(const std::string& studio_host_path);
+void test_studio_host_launch_layout_action_diagnostics_localize(const std::string& studio_host_path);
+void test_studio_host_launch_tab_visibility_diagnostics_localize(const std::string& studio_host_path);
+void test_studio_host_launch_basic_visual_property_diagnostics_localize(const std::string& studio_host_path);
+void test_studio_host_launch_list_grid_property_diagnostics_localize(const std::string& studio_host_path);
+void test_studio_host_launch_text_binding_diagnostics_localize(const std::string& studio_host_path);
+void test_studio_host_launch_row_list_diagnostics_localize(const std::string& studio_host_path);
+void test_studio_host_launch_deleted_state_diagnostics_localize(const std::string& studio_host_path);
+void test_studio_host_launch_bound_list_numeric_diagnostics_localize(const std::string& studio_host_path);
+void test_studio_host_launch_window_flag_diagnostics_localize(const std::string& studio_host_path);
+void test_studio_host_launch_form_bounds_style_diagnostics_localize(const std::string& studio_host_path);
+void test_studio_host_launch_dynamic_expression_diagnostics_localize(const std::string& studio_host_path);
+void test_studio_host_launch_max_auto_diagnostics_localize(const std::string& studio_host_path);
+void test_studio_host_launch_selection_marker_diagnostics_localize(const std::string& studio_host_path);
+void test_studio_host_launch_sizing_zorder_diagnostics_localize(const std::string& studio_host_path);
+void test_studio_host_launch_command_mode_diagnostics_localize(const std::string& studio_host_path);
 
 // ==== Toolbox subsystem parse-diagnostics localization tests ====
 void test_studio_host_toolbox_palette_parse_diagnostics_localize(const std::string& studio_host_path);
@@ -257,10 +279,7 @@ void test_studio_host_editor_action_parse_diagnostics_localize(const std::string
 void test_studio_host_designer_parse_diagnostics_localize(const std::string& studio_host_path);
 void test_studio_host_execution_fallback_errors_localize(const std::string& studio_host_path);
 
-// ==== Toolbox subsystem dispatch/catalog/execution/object-creation JSON exposure tests ====
-void test_studio_host_json_exposes_toolbox_palette_launch_plans(const std::string& studio_host_path);
-void test_studio_host_json_exposes_toolbox_palette_launch_catalog(const std::string& studio_host_path);
-void test_studio_host_json_exposes_toolbox_palette_query_filters(const std::string& studio_host_path);
+// ==== Toolbox subsystem dispatch/catalog/execution/invocation-admission JSON exposure tests ====
 void test_studio_host_json_exposes_toolbox_invocation_admission(const std::string& studio_host_path);
 void test_studio_host_json_exposes_toolbox_invocation_admission_catalog(const std::string& studio_host_path);
 void test_studio_host_json_exposes_selection_toolbox_invocation_admission_catalog(
@@ -272,10 +291,11 @@ void test_studio_host_json_exposes_toolbox_dispatch_execution_catalog(const std:
 void test_studio_host_json_exposes_selection_toolbox_dispatch_catalog(const std::string& studio_host_path);
 void test_studio_host_json_exposes_selection_toolbox_dispatch_execution_catalog(
     const std::string& studio_host_path);
-void test_studio_host_json_plans_toolbox_object_creation(const std::string& studio_host_path);
-void test_studio_host_json_plans_selection_toolbox_object_creation(const std::string& studio_host_path);
-void test_studio_host_json_plans_toolbox_object_creation_dispatch(const std::string& studio_host_path);
-void test_studio_host_json_plans_selection_toolbox_object_creation_dispatch(const std::string& studio_host_path);
+
+// ==== Toolbox subsystem palette launch/query JSON exposure tests ====
+void test_studio_host_json_exposes_toolbox_palette_launch_plans(const std::string& studio_host_path);
+void test_studio_host_json_exposes_toolbox_palette_launch_catalog(const std::string& studio_host_path);
+void test_studio_host_json_exposes_toolbox_palette_query_filters(const std::string& studio_host_path);
 void test_studio_host_json_plans_toolbox_object_creation_from_palette_dispatch(
     const std::string& studio_host_path);
 void test_studio_host_json_creates_toolbox_object_from_palette_dispatch(
@@ -288,6 +308,12 @@ void test_studio_host_json_creates_toolbox_object_batches_from_palette_dispatch(
     const std::string& studio_host_path);
 void test_studio_host_json_plans_toolbox_object_creation_batch_dispatches_from_palette_dispatch(
     const std::string& studio_host_path);
+
+// ==== Toolbox subsystem object-creation plan JSON exposure tests ====
+void test_studio_host_json_plans_toolbox_object_creation(const std::string& studio_host_path);
+void test_studio_host_json_plans_selection_toolbox_object_creation(const std::string& studio_host_path);
+void test_studio_host_json_plans_toolbox_object_creation_dispatch(const std::string& studio_host_path);
+void test_studio_host_json_plans_selection_toolbox_object_creation_dispatch(const std::string& studio_host_path);
 void test_studio_host_json_plans_toolbox_object_creation_catalog(const std::string& studio_host_path);
 void test_studio_host_json_plans_selection_toolbox_object_creation_catalog(
     const std::string& studio_host_path);
@@ -927,7 +953,7 @@ void test_studio_host_json_exposes_unknown_report_band_codes(const std::string& 
 void test_studio_host_json_ignores_invalid_direct_report_page_setup_fields(
     const std::string& studio_host_path);
 
-// ==== Report layout JSON tests: object geometry, preview bounds, font metadata ====
+// ==== Report layout JSON tests: object preview-bounds geometry ====
 void expect_full_report_layout_preview_bounds(const std::string& text, const std::string& prefix);
 void expect_empty_report_layout_preview_bounds(const std::string& text, const std::string& prefix);
 void expect_fractional_geometry_preview_bounds(const std::string& text, const std::string& prefix);
@@ -945,7 +971,46 @@ void expect_missing_section_objcode_preview_bounds(const std::string& text, cons
 void expect_missing_object_objcode_preview_bounds(const std::string& text, const std::string& prefix);
 void expect_missing_object_expr_preview_bounds(const std::string& text, const std::string& prefix);
 void expect_missing_object_title_preview_bounds(const std::string& text, const std::string& prefix);
-void write_synthetic_report_table_for_layout_font_options_json(const std::filesystem::path& report_path);
+void test_studio_host_json_refreshes_detail_header_footer_section_preview_bounds_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_report_layout_object_width_preview_bounds_by_record_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_report_layout_object_width_preview_bounds_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_clears_report_layout_object_width_preview_bounds_by_record_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_clears_report_layout_object_width_preview_bounds_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_report_layout_object_left_preview_bounds_by_record_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_report_layout_object_left_preview_bounds_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_clears_report_layout_object_left_preview_bounds_by_record_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_clears_report_layout_object_left_preview_bounds_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_report_layout_object_height_preview_bounds_by_record_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_clears_report_layout_object_height_preview_bounds_by_record_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_report_layout_object_height_preview_bounds_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_clears_report_layout_object_height_preview_bounds_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_report_layout_object_top_preview_bounds_by_record_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_clears_report_layout_object_top_preview_bounds_by_record_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_report_layout_object_top_preview_bounds_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_clears_report_layout_object_top_preview_bounds_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_refreshes_deleted_detail_header_footer_section_preview_bounds_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_refreshes_detail_header_footer_section_delete_restore_preview_bounds_by_stable_selection(
+    const std::string& studio_host_path);
+
+// ==== Report layout JSON tests: object height/left/top/width geometry ====
 void write_synthetic_report_table_for_negative_dimension_layout_json(
     const std::filesystem::path& report_path);
 void write_synthetic_report_table_for_missing_geometry_layout_json(
@@ -954,62 +1019,9 @@ void write_synthetic_report_table_for_unresolved_geometry_memo_layout_json(
     const std::filesystem::path& report_path);
 void write_synthetic_report_table_for_missing_section_geometry_layout_json(
     const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_column_width_field_json(const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_deleted_column_width_field_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_stable_column_width_field_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_stable_deleted_column_width_field_json(
-    const std::filesystem::path& report_path);
-void test_studio_host_json_refreshes_detail_header_footer_section_preview_bounds_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_nudges_live_edited_report_layout_object_geometry_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_aligns_live_edited_report_layout_object_geometry_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_resizes_live_edited_report_layout_object_geometry_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_snaps_live_edited_report_layout_object_geometry_by_stable_selection(
-    const std::string& studio_host_path);
 void test_studio_host_json_deletes_edited_report_layout_object_geometry_by_record_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_deletes_edited_unplaced_report_layout_object_geometry_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_restores_live_edited_then_deleted_report_layout_object_geometry_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_restores_live_edited_unplaced_then_deleted_report_layout_object_geometry_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_distributes_live_edited_report_layout_object_geometry_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_reorders_live_edited_report_layout_object_geometry_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_reorders_live_edited_unplaced_report_layout_object_geometry_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_duplicates_live_edited_report_layout_object_geometry_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_duplicates_live_edited_unplaced_report_layout_object_geometry_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_renames_live_edited_report_layout_object_geometry_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_renames_live_edited_unplaced_report_layout_object_geometry_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_report_layout_object_font_metadata_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_report_layout_object_font_metadata_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_deleted_report_layout_object_font_metadata_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_report_layout_object_font_metadata_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_report_layout_object_font_metadata_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_deleted_report_layout_object_font_metadata_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_report_layout_object_font_options_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_report_layout_object_font_options_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_deleted_report_layout_object_font_options_by_record_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_updates_deleted_report_layout_object_width_by_record_selection(
     const std::string& studio_host_path);
@@ -1047,62 +1059,6 @@ void test_studio_host_json_restores_edited_deleted_report_layout_object_geometry
     const std::string& studio_host_path);
 void test_studio_host_json_restores_edited_deleted_report_layout_object_geometry_by_stable_selection(
     const std::string& studio_host_path);
-void test_studio_host_json_updates_report_layout_object_width_preview_bounds_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_report_layout_object_width_preview_bounds_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_report_layout_object_width_preview_bounds_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_report_layout_object_width_preview_bounds_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_report_layout_object_left_preview_bounds_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_report_layout_object_left_preview_bounds_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_report_layout_object_left_preview_bounds_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_report_layout_object_left_preview_bounds_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_report_layout_object_height_preview_bounds_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_report_layout_object_height_preview_bounds_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_report_layout_object_height_preview_bounds_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_report_layout_object_height_preview_bounds_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_report_layout_object_top_preview_bounds_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_report_layout_object_top_preview_bounds_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_report_layout_object_top_preview_bounds_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_report_layout_object_top_preview_bounds_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_report_column_width_fields_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_report_column_width_fields_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_deleted_report_column_width_fields_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_deleted_report_column_width_fields_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_refreshes_deleted_detail_header_footer_section_preview_bounds_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_refreshes_detail_header_footer_section_delete_restore_preview_bounds_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_exposes_detail_header_footer_object_font_metadata_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_exposes_deleted_detail_header_footer_object_font_metadata_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_detail_header_footer_object_font_metadata_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_deleted_detail_header_footer_object_font_metadata_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_detail_header_footer_object_font_options_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_deleted_detail_header_footer_object_font_options_by_stable_selection(
-    const std::string& studio_host_path);
 void test_studio_host_json_updates_detail_header_footer_object_geometry_by_stable_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_updates_deleted_detail_header_footer_object_geometry_by_stable_selection(
@@ -1118,65 +1074,86 @@ void test_studio_host_json_defaults_unresolved_report_geometry_memo_placeholders
 void test_studio_host_json_defaults_report_sections_without_geometry_schema(
     const std::string& studio_host_path);
 
-// ==== Report layout JSON tests: margin/column/grid/orientation/paper-size settings ====
-void write_synthetic_report_table_for_invalid_direct_column_setup_layout_json(
+// ==== Report layout JSON tests: object font metadata and options ====
+void write_synthetic_report_table_for_layout_font_options_json(const std::filesystem::path& report_path);
+void test_studio_host_json_updates_report_layout_object_font_metadata_by_record_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_report_layout_object_font_metadata_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_deleted_report_layout_object_font_metadata_by_record_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_clears_report_layout_object_font_metadata_by_record_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_clears_report_layout_object_font_metadata_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_clears_deleted_report_layout_object_font_metadata_by_record_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_report_layout_object_font_options_by_record_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_report_layout_object_font_options_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_deleted_report_layout_object_font_options_by_record_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_exposes_detail_header_footer_object_font_metadata_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_exposes_deleted_detail_header_footer_object_font_metadata_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_detail_header_footer_object_font_metadata_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_deleted_detail_header_footer_object_font_metadata_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_detail_header_footer_object_font_options_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_deleted_detail_header_footer_object_font_options_by_stable_selection(
+    const std::string& studio_host_path);
+
+// ==== Report layout JSON tests: live-edited object geometry actions ====
+void test_studio_host_json_nudges_live_edited_report_layout_object_geometry_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_aligns_live_edited_report_layout_object_geometry_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_resizes_live_edited_report_layout_object_geometry_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_snaps_live_edited_report_layout_object_geometry_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_restores_live_edited_then_deleted_report_layout_object_geometry_by_record_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_restores_live_edited_unplaced_then_deleted_report_layout_object_geometry_by_record_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_distributes_live_edited_report_layout_object_geometry_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_reorders_live_edited_report_layout_object_geometry_by_record_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_reorders_live_edited_unplaced_report_layout_object_geometry_by_record_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_duplicates_live_edited_report_layout_object_geometry_by_record_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_duplicates_live_edited_unplaced_report_layout_object_geometry_by_record_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_renames_live_edited_report_layout_object_geometry_by_record_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_renames_live_edited_unplaced_report_layout_object_geometry_by_record_selection(
+    const std::string& studio_host_path);
+
+// ==== Report layout JSON tests: column-width geometry fields ====
+void write_synthetic_report_table_for_column_width_field_json(const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_deleted_column_width_field_json(
     const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_stable_column_width_field_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_stable_deleted_column_width_field_json(
+    const std::filesystem::path& report_path);
+void test_studio_host_json_updates_report_column_width_fields_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_clears_report_column_width_fields_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_deleted_report_column_width_fields_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_clears_deleted_report_column_width_fields_by_stable_selection(
+    const std::string& studio_host_path);
+
+// ==== Report layout JSON tests: page setup fields (margins/grid/orientation/paper size) ====
 void write_synthetic_report_table_for_invalid_direct_margin_grid_layout_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_unresolved_direct_setting_memo_layout_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_mixed_direct_setting_memo_layout_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_blank_direct_setting_layout_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_mixed_invalid_direct_setting_layout_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_trimmed_direct_setting_layout_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_fractional_direct_setting_layout_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_oversized_direct_setting_layout_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_dot_leading_direct_setting_layout_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_invalid_setting_memo_layout_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_fractional_setting_memo_layout_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_blank_setting_memo_layout_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_malformed_setting_memo_layout_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_duplicate_setting_precedence_layout_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_cr_only_setting_memo_layout_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_mixed_case_setting_memo_layout_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_ambiguous_settings_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_live_deleted_ambiguous_settings_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_padded_stable_settings_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_deep_stable_settings_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_deep_ambiguous_stable_settings_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_deep_live_deleted_ambiguous_stable_settings_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_deleted_settings_json(const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_stable_settings_and_section_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_stable_deleted_settings_and_section_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_column_setup_json(const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_column_setup_field_json(const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_deleted_column_setup_field_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_stable_column_setup_field_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_stable_deleted_column_setup_field_json(
     const std::filesystem::path& report_path);
 void write_synthetic_report_table_for_bottom_margin_field_json(const std::filesystem::path& report_path);
 void write_synthetic_report_table_for_deleted_bottom_margin_field_json(
@@ -1213,7 +1190,6 @@ void write_synthetic_report_table_for_stable_paper_size_field_json(
     const std::filesystem::path& report_path);
 void write_synthetic_report_table_for_stable_deleted_paper_size_field_json(
     const std::filesystem::path& report_path);
-void test_studio_host_json_exposes_report_layout_column_setup(const std::string& studio_host_path);
 void test_studio_host_json_updates_report_bottom_margin_fields_by_stable_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_clears_report_bottom_margin_fields_by_stable_selection(
@@ -1254,26 +1230,56 @@ void test_studio_host_json_updates_deleted_report_paper_size_fields_by_stable_se
     const std::string& studio_host_path);
 void test_studio_host_json_clears_deleted_report_paper_size_fields_by_stable_selection(
     const std::string& studio_host_path);
-void test_studio_host_json_updates_report_column_count_fields_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_report_column_count_fields_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_deleted_report_column_count_fields_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_deleted_report_column_count_fields_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_deletes_report_settings_by_record_selection(const std::string& studio_host_path);
-void test_studio_host_json_exposes_selected_report_settings(const std::string& studio_host_path);
-void test_studio_host_json_preserves_report_settings_without_root_objcode_schema(
-    const std::string& studio_host_path);
-void test_studio_host_json_ignores_invalid_direct_report_column_setup_fields(
-    const std::string& studio_host_path);
 void test_studio_host_json_ignores_invalid_direct_report_margin_grid_fields(
     const std::string& studio_host_path);
+
+// ==== Report layout JSON tests: settings-memo parsing ====
+void write_synthetic_report_table_for_unresolved_direct_setting_memo_layout_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_mixed_direct_setting_memo_layout_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_invalid_setting_memo_layout_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_fractional_setting_memo_layout_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_blank_setting_memo_layout_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_malformed_setting_memo_layout_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_cr_only_setting_memo_layout_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_mixed_case_setting_memo_layout_json(
+    const std::filesystem::path& report_path);
 void test_studio_host_json_suppresses_unresolved_report_direct_setting_memo_placeholders(
     const std::string& studio_host_path);
 void test_studio_host_json_preserves_mixed_report_direct_setting_memo_placeholders(
     const std::string& studio_host_path);
+void test_studio_host_json_ignores_invalid_report_setting_memo_values(
+    const std::string& studio_host_path);
+void test_studio_host_json_preserves_fractional_report_setting_memo_values(
+    const std::string& studio_host_path);
+void test_studio_host_json_ignores_blank_report_setting_memo_values(
+    const std::string& studio_host_path);
+void test_studio_host_json_ignores_malformed_report_setting_memo_lines(
+    const std::string& studio_host_path);
+void test_studio_host_json_parses_cr_only_report_setting_memo_lines(
+    const std::string& studio_host_path);
+void test_studio_host_json_parses_mixed_case_report_setting_memo_names(
+    const std::string& studio_host_path);
+
+// ==== Report layout JSON tests: direct-setting field validation ====
+void write_synthetic_report_table_for_blank_direct_setting_layout_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_mixed_invalid_direct_setting_layout_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_trimmed_direct_setting_layout_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_fractional_direct_setting_layout_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_oversized_direct_setting_layout_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_dot_leading_direct_setting_layout_json(
+    const std::filesystem::path& report_path);
 void test_studio_host_json_skips_blank_report_direct_setting_fields(
     const std::string& studio_host_path);
 void test_studio_host_json_preserves_mixed_invalid_report_direct_setting_fields(
@@ -1286,69 +1292,62 @@ void test_studio_host_json_ignores_oversized_report_direct_setting_fields(
     const std::string& studio_host_path);
 void test_studio_host_json_ignores_dot_leading_report_direct_setting_fields(
     const std::string& studio_host_path);
-void test_studio_host_json_ignores_invalid_report_setting_memo_values(
+
+// ==== Report layout JSON tests: column setup/count fields ====
+void write_synthetic_report_table_for_invalid_direct_column_setup_layout_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_column_setup_json(const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_column_setup_field_json(const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_deleted_column_setup_field_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_stable_column_setup_field_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_stable_deleted_column_setup_field_json(
+    const std::filesystem::path& report_path);
+void test_studio_host_json_exposes_report_layout_column_setup(const std::string& studio_host_path);
+void test_studio_host_json_updates_report_column_count_fields_by_stable_selection(
     const std::string& studio_host_path);
-void test_studio_host_json_preserves_fractional_report_setting_memo_values(
+void test_studio_host_json_clears_report_column_count_fields_by_stable_selection(
     const std::string& studio_host_path);
-void test_studio_host_json_ignores_blank_report_setting_memo_values(
+void test_studio_host_json_updates_deleted_report_column_count_fields_by_stable_selection(
     const std::string& studio_host_path);
-void test_studio_host_json_ignores_malformed_report_setting_memo_lines(
+void test_studio_host_json_clears_deleted_report_column_count_fields_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_ignores_invalid_direct_report_column_setup_fields(
+    const std::string& studio_host_path);
+
+// ==== Report layout JSON tests: settings exposure and precedence diagnostics ====
+void write_synthetic_report_table_for_duplicate_setting_precedence_layout_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_ambiguous_settings_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_live_deleted_ambiguous_settings_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_padded_stable_settings_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_deep_stable_settings_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_deep_ambiguous_stable_settings_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_deep_live_deleted_ambiguous_stable_settings_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_deleted_settings_json(const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_stable_settings_and_section_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_stable_deleted_settings_and_section_json(
+    const std::filesystem::path& report_path);
+void test_studio_host_json_deletes_report_settings_by_record_selection(const std::string& studio_host_path);
+void test_studio_host_json_exposes_selected_report_settings(const std::string& studio_host_path);
+void test_studio_host_json_preserves_report_settings_without_root_objcode_schema(
     const std::string& studio_host_path);
 void test_studio_host_json_preserves_duplicate_report_setting_precedence(
     const std::string& studio_host_path);
 void test_studio_host_json_preserves_invalid_first_duplicate_report_setting_precedence(
     const std::string& studio_host_path);
-void test_studio_host_json_parses_cr_only_report_setting_memo_lines(
-    const std::string& studio_host_path);
-void test_studio_host_json_parses_mixed_case_report_setting_memo_names(
-    const std::string& studio_host_path);
 void test_studio_host_json_preserves_report_settings_without_root_expr_schema(
     const std::string& studio_host_path);
 
-// ==== Report layout JSON tests: section exposure, selection, and lifecycle ====
-void write_synthetic_report_table_for_detail_header_footer_section_kind_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_deleted_detail_header_footer_section_expression_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_missing_section_objcode_layout_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_unresolved_section_memo_layout_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_missing_section_expr_layout_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_stable_summary_section_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_ambiguous_summary_section_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_live_deleted_ambiguous_summary_section_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_padded_stable_section_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_deep_stable_section_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_deep_ambiguous_stable_section_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_deep_live_deleted_ambiguous_stable_section_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_stable_title_section_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_stable_page_header_section_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_stable_column_section_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_stable_section_json(const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_deleted_section_json(const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_section_deleted_object_count_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_stable_deleted_section_json(const std::filesystem::path& report_path);
-void test_studio_host_json_exposes_detail_header_footer_section_kinds(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_detail_header_footer_section_heights_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_detail_header_footer_section_heights_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_deleted_detail_header_footer_section_heights_by_stable_selection(
-    const std::string& studio_host_path);
+// ==== Report layout JSON tests: section band exposure by selector ====
 void test_studio_host_json_exposes_deleted_object_counts_per_section(
     const std::string& studio_host_path);
 void test_studio_host_json_exposes_record_selected_nested_group_sections(
@@ -1408,14 +1407,111 @@ void test_studio_host_json_exposes_report_column_footer_sections_by_stable_selec
 void test_studio_host_json_exposes_deleted_report_column_footer_sections_by_stable_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_exposes_selected_report_sections(const std::string& studio_host_path);
-void test_studio_host_json_moves_report_layout_objects_from_unplaced_to_sections_by_record_selection(
+void test_studio_host_json_exposes_selected_page_header_report_objects_orphaned_by_deleted_sections(
     const std::string& studio_host_path);
-void test_studio_host_json_moves_report_layout_objects_from_unplaced_to_sections_by_stable_selection(
+void test_studio_host_json_exposes_selected_detail_report_objects_orphaned_by_deleted_sections(
     const std::string& studio_host_path);
-void test_studio_host_json_moves_report_layout_objects_from_sections_to_unplaced_by_record_selection(
+void test_studio_host_json_exposes_selected_deleted_detail_report_objects_orphaned_by_deleted_sections(
     const std::string& studio_host_path);
-void test_studio_host_json_moves_report_layout_objects_from_sections_to_unplaced_by_stable_selection(
+
+// ==== Report layout JSON tests: detail/header/footer section lifecycle ====
+void test_studio_host_json_deletes_and_restores_detail_header_footer_sections_by_stable_selection(
     const std::string& studio_host_path);
+void test_studio_host_json_duplicates_detail_header_footer_sections_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_duplicates_deleted_detail_header_footer_sections_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_renames_detail_header_footer_sections_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_renames_deleted_detail_header_footer_sections_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_reorders_detail_header_footer_sections_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_reorders_deleted_detail_header_footer_sections_by_stable_selection(
+    const std::string& studio_host_path);
+
+// ==== Report layout JSON tests: detail/header/footer section expressions and exposure ====
+void write_synthetic_report_table_for_detail_header_footer_section_kind_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_deleted_detail_header_footer_section_expression_json(
+    const std::filesystem::path& report_path);
+void test_studio_host_json_exposes_detail_header_footer_section_kinds(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_detail_header_footer_section_heights_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_clears_detail_header_footer_section_heights_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_deleted_detail_header_footer_section_heights_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_clears_deleted_detail_header_footer_section_heights_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_detail_header_footer_section_tops_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_clears_detail_header_footer_section_tops_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_deleted_detail_header_footer_section_tops_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_clears_deleted_detail_header_footer_section_tops_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_detail_header_footer_section_expressions(
+    const std::string& studio_host_path);
+void test_studio_host_json_exposes_detail_header_footer_section_expressions_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_detail_header_footer_section_expressions_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_deleted_detail_header_footer_section_expressions(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_deleted_detail_header_footer_section_expressions_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_exposes_deleted_detail_header_footer_sections_by_stable_selection(
+    const std::string& studio_host_path);
+
+// ==== Report layout JSON tests: section schema and selection diagnostics ====
+void write_synthetic_report_table_for_missing_section_objcode_layout_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_unresolved_section_memo_layout_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_missing_section_expr_layout_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_stable_summary_section_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_ambiguous_summary_section_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_live_deleted_ambiguous_summary_section_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_padded_stable_section_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_deep_stable_section_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_deep_ambiguous_stable_section_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_deep_live_deleted_ambiguous_stable_section_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_stable_title_section_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_stable_page_header_section_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_stable_column_section_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_stable_section_json(const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_deleted_section_json(const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_section_deleted_object_count_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_stable_deleted_section_json(const std::filesystem::path& report_path);
+void test_studio_host_json_clears_report_section_and_settings_selection_for_ambiguous_stable_selectors(
+    const std::string& studio_host_path);
+void test_studio_host_json_selects_deep_report_sections_and_settings_by_stable_selector(
+    const std::string& studio_host_path);
+void test_studio_host_json_clears_report_selection_for_deep_ambiguous_section_and_settings_selectors(
+    const std::string& studio_host_path);
+void test_studio_host_json_defaults_missing_report_section_objcode_schema(
+    const std::string& studio_host_path);
+void test_studio_host_json_suppresses_unresolved_report_section_memo_placeholders(
+    const std::string& studio_host_path);
+void test_studio_host_json_preserves_report_sections_without_expr_schema(
+    const std::string& studio_host_path);
+
+// ==== Report layout JSON tests: section height/top geometry ====
 void test_studio_host_json_updates_report_section_heights_by_record_selection(const std::string& studio_host_path);
 void test_studio_host_json_updates_deleted_report_section_heights_by_record_selection(
     const std::string& studio_host_path);
@@ -1436,71 +1532,19 @@ void test_studio_host_json_updates_deleted_report_section_heights_and_tops_by_st
     const std::string& studio_host_path);
 void test_studio_host_json_clears_deleted_report_section_heights_and_tops_by_stable_selection(
     const std::string& studio_host_path);
-void test_studio_host_json_clears_report_section_and_settings_selection_for_ambiguous_stable_selectors(
+
+// ==== Report layout JSON tests: moving objects between sections and unplaced ====
+void test_studio_host_json_moves_report_layout_objects_from_unplaced_to_sections_by_record_selection(
     const std::string& studio_host_path);
-void test_studio_host_json_selects_deep_report_sections_and_settings_by_stable_selector(
+void test_studio_host_json_moves_report_layout_objects_from_unplaced_to_sections_by_stable_selection(
     const std::string& studio_host_path);
-void test_studio_host_json_clears_report_selection_for_deep_ambiguous_section_and_settings_selectors(
+void test_studio_host_json_moves_report_layout_objects_from_sections_to_unplaced_by_record_selection(
     const std::string& studio_host_path);
-void test_studio_host_json_exposes_selected_page_header_report_objects_orphaned_by_deleted_sections(
-    const std::string& studio_host_path);
-void test_studio_host_json_exposes_selected_detail_report_objects_orphaned_by_deleted_sections(
-    const std::string& studio_host_path);
-void test_studio_host_json_exposes_selected_deleted_detail_report_objects_orphaned_by_deleted_sections(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_deleted_detail_header_footer_section_heights_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_detail_header_footer_section_tops_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_detail_header_footer_section_tops_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_deleted_detail_header_footer_section_tops_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_deleted_detail_header_footer_section_tops_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_deletes_and_restores_detail_header_footer_sections_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_duplicates_detail_header_footer_sections_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_duplicates_deleted_detail_header_footer_sections_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_renames_detail_header_footer_sections_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_renames_deleted_detail_header_footer_sections_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_reorders_detail_header_footer_sections_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_reorders_deleted_detail_header_footer_sections_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_detail_header_footer_section_expressions(
-    const std::string& studio_host_path);
-void test_studio_host_json_exposes_detail_header_footer_section_expressions_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_detail_header_footer_section_expressions_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_deleted_detail_header_footer_section_expressions(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_deleted_detail_header_footer_section_expressions_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_exposes_deleted_detail_header_footer_sections_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_defaults_missing_report_section_objcode_schema(
-    const std::string& studio_host_path);
-void test_studio_host_json_suppresses_unresolved_report_section_memo_placeholders(
-    const std::string& studio_host_path);
-void test_studio_host_json_preserves_report_sections_without_expr_schema(
+void test_studio_host_json_moves_report_layout_objects_from_sections_to_unplaced_by_stable_selection(
     const std::string& studio_host_path);
 
-// ==== Report layout JSON tests: object exposure, selection, and lifecycle ====
+// ==== Report layout JSON tests: object schema and deleted-state diagnostics ====
 void write_synthetic_report_table_for_extended_object_kind_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_detail_header_footer_object_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_detail_header_footer_object_distribution_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_detail_header_footer_object_vertical_distribution_json(
-    const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_detail_header_footer_object_font_json(
     const std::filesystem::path& report_path);
 void write_synthetic_report_table_for_missing_object_objcode_layout_json(
     const std::filesystem::path& report_path);
@@ -1557,46 +1601,89 @@ void write_synthetic_report_table_for_layout_subtree_deleted_state_json(
 void test_studio_host_json_exposes_report_layout_provenance(const std::string& studio_host_path);
 void test_studio_host_json_exposes_extended_report_object_kinds(
     const std::string& studio_host_path);
-void test_studio_host_json_exposes_selected_report_objects(const std::string& studio_host_path);
-void test_studio_host_json_nudges_report_layout_objects_by_stable_selectors(const std::string& studio_host_path);
-void test_studio_host_json_aligns_report_layout_objects_by_stable_selectors(const std::string& studio_host_path);
-void test_studio_host_json_resizes_report_layout_objects_by_stable_selectors(const std::string& studio_host_path);
-void test_studio_host_json_snaps_report_layout_objects_by_stable_selectors(const std::string& studio_host_path);
-void test_studio_host_json_deletes_report_layout_objects_by_stable_selectors(const std::string& studio_host_path);
-void test_studio_host_json_restores_report_layout_objects_by_stable_selectors(const std::string& studio_host_path);
-void test_studio_host_json_distributes_report_layout_objects_by_stable_selectors(const std::string& studio_host_path);
-void test_studio_host_json_reorders_report_layout_objects_by_stable_selectors(const std::string& studio_host_path);
-void test_studio_host_json_duplicates_report_layout_objects_by_stable_selectors(const std::string& studio_host_path);
-void test_studio_host_json_renames_report_layout_object_identity_by_stable_selectors(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_report_layout_object_expressions_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_report_layout_object_expression_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_deleted_report_layout_object_expressions_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_report_layout_object_expressions_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_report_layout_object_expression_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_deleted_report_layout_object_expressions_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_restores_edited_deleted_report_layout_object_as_unplaced_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_restores_edited_deleted_report_layout_object_as_unplaced_by_stable_selection(
-    const std::string& studio_host_path);
 void test_studio_host_json_applies_report_deleted_states_by_stable_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_applies_report_object_deleted_states_by_stable_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_applies_report_object_subtree_deleted_state_by_stable_selection(
     const std::string& studio_host_path);
-void test_studio_host_json_duplicates_report_visual_object_subtrees_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_duplicates_deleted_report_visual_object_subtrees_by_stable_selection(
-    const std::string& studio_host_path);
 void test_studio_host_json_applies_mixed_report_deleted_states_by_stable_selection(
     const std::string& studio_host_path);
+void test_studio_host_json_defaults_missing_report_object_objcode_schema(
+    const std::string& studio_host_path);
+void test_studio_host_json_suppresses_unresolved_deleted_report_object_memo_placeholders(
+    const std::string& studio_host_path);
+void test_studio_host_json_suppresses_unresolved_unplaced_report_object_memo_placeholders(
+    const std::string& studio_host_path);
+void test_studio_host_json_preserves_report_objects_without_expr_schema(
+    const std::string& studio_host_path);
+void test_studio_host_json_synthesizes_report_object_titles_without_title_schema(
+    const std::string& studio_host_path);
+
+// ==== Report layout JSON tests: detail/header/footer object layout actions ====
+void test_studio_host_json_aligns_detail_header_footer_objects_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_aligns_deleted_detail_header_footer_objects_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_resizes_detail_header_footer_objects_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_resizes_deleted_detail_header_footer_objects_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_snaps_detail_header_footer_objects_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_snaps_deleted_detail_header_footer_objects_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_nudges_detail_header_footer_objects_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_nudges_deleted_detail_header_footer_objects_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_distributes_detail_header_footer_objects_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_distributes_deleted_detail_header_footer_objects_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_distributes_detail_header_footer_objects_vertically_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_distributes_deleted_detail_header_footer_objects_vertically_by_stable_selection(
+    const std::string& studio_host_path);
+
+// ==== Report layout JSON tests: detail/header/footer object lifecycle ====
+void test_studio_host_json_deletes_and_restores_detail_header_footer_objects_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_duplicates_detail_header_footer_objects_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_duplicates_deleted_detail_header_footer_objects_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_renames_detail_header_footer_objects_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_renames_deleted_detail_header_footer_objects_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_reorders_detail_header_footer_objects_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_reorders_deleted_detail_header_footer_objects_by_stable_selection(
+    const std::string& studio_host_path);
+
+// ==== Report layout JSON tests: detail/header/footer object expressions and exposure ====
+void write_synthetic_report_table_for_detail_header_footer_object_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_detail_header_footer_object_distribution_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_detail_header_footer_object_vertical_distribution_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_detail_header_footer_object_font_json(
+    const std::filesystem::path& report_path);
+void test_studio_host_json_exposes_detail_header_footer_object_containment(
+    const std::string& studio_host_path);
+void test_studio_host_json_exposes_detail_header_footer_object_expressions_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_exposes_deleted_detail_header_footer_object_expressions_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_deleted_detail_header_footer_object_expressions_by_stable_selection(
+    const std::string& studio_host_path);
+
+// ==== Report layout JSON tests: band object exposure by selector ====
+void test_studio_host_json_exposes_selected_report_objects(const std::string& studio_host_path);
 void test_studio_host_json_exposes_selected_summary_report_objects_by_record_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_exposes_selected_deleted_summary_report_objects_by_record_selection(
@@ -1633,6 +1720,41 @@ void test_studio_host_json_exposes_selected_page_header_report_objects_by_stable
     const std::string& studio_host_path);
 void test_studio_host_json_exposes_selected_deleted_page_header_report_objects_by_stable_selection(
     const std::string& studio_host_path);
+
+// ==== Report layout JSON tests: report-layout object actions and expressions ====
+void test_studio_host_json_nudges_report_layout_objects_by_stable_selectors(const std::string& studio_host_path);
+void test_studio_host_json_aligns_report_layout_objects_by_stable_selectors(const std::string& studio_host_path);
+void test_studio_host_json_resizes_report_layout_objects_by_stable_selectors(const std::string& studio_host_path);
+void test_studio_host_json_snaps_report_layout_objects_by_stable_selectors(const std::string& studio_host_path);
+void test_studio_host_json_deletes_report_layout_objects_by_stable_selectors(const std::string& studio_host_path);
+void test_studio_host_json_restores_report_layout_objects_by_stable_selectors(const std::string& studio_host_path);
+void test_studio_host_json_distributes_report_layout_objects_by_stable_selectors(const std::string& studio_host_path);
+void test_studio_host_json_reorders_report_layout_objects_by_stable_selectors(const std::string& studio_host_path);
+void test_studio_host_json_duplicates_report_layout_objects_by_stable_selectors(const std::string& studio_host_path);
+void test_studio_host_json_renames_report_layout_object_identity_by_stable_selectors(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_report_layout_object_expressions_by_record_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_report_layout_object_expression_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_deleted_report_layout_object_expressions_by_record_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_clears_report_layout_object_expressions_by_record_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_clears_report_layout_object_expression_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_clears_deleted_report_layout_object_expressions_by_record_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_restores_edited_deleted_report_layout_object_as_unplaced_by_record_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_restores_edited_deleted_report_layout_object_as_unplaced_by_stable_selection(
+    const std::string& studio_host_path);
+
+// ==== Report layout JSON tests: visual-object batch/subtree lifecycle ====
+void test_studio_host_json_duplicates_report_visual_object_subtrees_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_duplicates_deleted_report_visual_object_subtrees_by_stable_selection(
+    const std::string& studio_host_path);
 void test_studio_host_json_updates_report_visual_object_batches_by_stable_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_updates_deleted_report_visual_object_batches_by_stable_selection(
@@ -1648,64 +1770,6 @@ void test_studio_host_json_duplicates_deleted_report_visual_object_batches_by_st
 void test_studio_host_json_reorders_report_visual_object_batches_by_stable_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_reorders_deleted_report_visual_object_batches_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_exposes_detail_header_footer_object_containment(
-    const std::string& studio_host_path);
-void test_studio_host_json_exposes_detail_header_footer_object_expressions_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_deletes_and_restores_detail_header_footer_objects_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_duplicates_detail_header_footer_objects_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_duplicates_deleted_detail_header_footer_objects_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_renames_detail_header_footer_objects_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_renames_deleted_detail_header_footer_objects_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_reorders_detail_header_footer_objects_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_reorders_deleted_detail_header_footer_objects_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_aligns_detail_header_footer_objects_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_aligns_deleted_detail_header_footer_objects_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_resizes_detail_header_footer_objects_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_resizes_deleted_detail_header_footer_objects_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_snaps_detail_header_footer_objects_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_snaps_deleted_detail_header_footer_objects_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_nudges_detail_header_footer_objects_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_nudges_deleted_detail_header_footer_objects_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_distributes_detail_header_footer_objects_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_distributes_deleted_detail_header_footer_objects_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_distributes_detail_header_footer_objects_vertically_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_distributes_deleted_detail_header_footer_objects_vertically_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_exposes_deleted_detail_header_footer_object_expressions_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_deleted_detail_header_footer_object_expressions_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_defaults_missing_report_object_objcode_schema(
-    const std::string& studio_host_path);
-void test_studio_host_json_suppresses_unresolved_deleted_report_object_memo_placeholders(
-    const std::string& studio_host_path);
-void test_studio_host_json_suppresses_unresolved_unplaced_report_object_memo_placeholders(
-    const std::string& studio_host_path);
-void test_studio_host_json_preserves_report_objects_without_expr_schema(
-    const std::string& studio_host_path);
-void test_studio_host_json_synthesizes_report_object_titles_without_title_schema(
     const std::string& studio_host_path);
 
 // ==== Report layout JSON tests: selector resolution and ambiguity ====

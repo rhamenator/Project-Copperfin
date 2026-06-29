@@ -8,6 +8,7 @@ void test_studio_host_json_exposes_builder_launch_plans(const std::string& studi
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto valid_process = run_process_capture(
         studio_host_path,
@@ -257,6 +258,7 @@ void test_studio_host_json_exposes_builder_launch_catalog(const std::string& stu
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto control_process = run_process_capture(
         studio_host_path,
@@ -402,6 +404,7 @@ void test_studio_host_json_exposes_selection_builder_launch_catalog(const std::s
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto visual_process = run_process_capture(
         studio_host_path,
@@ -547,6 +550,7 @@ void test_studio_host_json_exposes_builder_invocation_admission(const std::strin
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto admitted_process = run_process_capture(
         studio_host_path,
@@ -697,6 +701,7 @@ void test_studio_host_json_exposes_builder_invocation_admission_catalog(
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto admitted_process = run_process_capture(
         studio_host_path,
@@ -848,6 +853,7 @@ void test_studio_host_json_exposes_selection_builder_invocation_admission_catalo
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto visual_process = run_process_capture(
         studio_host_path,
@@ -1001,6 +1007,7 @@ void test_studio_host_json_exposes_selection_builder_dispatch_catalog(
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto visual_process = run_process_capture(
         studio_host_path,
@@ -1171,6 +1178,7 @@ void test_studio_host_json_exposes_selection_builder_dispatch_execution_catalog(
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto visual_process = run_process_capture(
         studio_host_path,
@@ -1268,6 +1276,7 @@ void test_studio_host_json_exposes_builder_dispatch(const std::string& studio_ho
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto admitted_process = run_process_capture(
         studio_host_path,
@@ -1461,6 +1470,7 @@ void test_studio_host_json_exposes_builder_execution(const std::string& studio_h
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto admitted_process = run_process_capture(
         studio_host_path,
@@ -1647,6 +1657,7 @@ void test_studio_host_json_exposes_builder_dispatch_catalog(const std::string& s
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto control_process = run_process_capture(
         studio_host_path,
@@ -1810,6 +1821,7 @@ void test_studio_host_json_exposes_builder_dispatch_execution_catalog(const std:
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto admitted_process = run_process_capture(
         studio_host_path,

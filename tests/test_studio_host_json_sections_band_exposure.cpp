@@ -1,1143 +1,6 @@
 #include "test_studio_host_json_support.h"
 
 namespace cf_test_studio_host_json {
-void write_synthetic_report_table_for_detail_header_footer_section_kind_json(
-    const std::filesystem::path& report_path) {
-    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
-        {.name = "OBJTYPE", .type = 'N', .length = 8U},
-        {.name = "OBJCODE", .type = 'N', .length = 8U},
-        {.name = "EXPR", .type = 'M', .length = 4U},
-        {.name = "VPOS", .type = 'N', .length = 10U},
-        {.name = "HEIGHT", .type = 'N', .length = 10U},
-        {.name = "UNIQUEID", .type = 'C', .length = 32U}
-    };
-    const std::vector<std::vector<std::string>> records{
-        {"9", "9", "detail header expression", "0", "300", "detail-header-guid"},
-        {"9", "10", "detail footer expression", "300", "250", "detail-footer-guid"},
-        {"9", "10", "deleted detail footer expression", "550", "200", "deleted-detail-footer-guid"}
-    };
-
-    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
-    expect(create_result.ok, "#1763: synthetic report table for detail header/footer section JSON should be created");
-
-    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 2U, true);
-    expect(delete_result.ok, "#1763: synthetic report table should mark deleted detail footer section");
-}
-
-void write_synthetic_report_table_for_deleted_detail_header_footer_section_expression_json(
-    const std::filesystem::path& report_path) {
-    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
-        {.name = "OBJTYPE", .type = 'N', .length = 8U},
-        {.name = "OBJCODE", .type = 'N', .length = 8U},
-        {.name = "EXPR", .type = 'M', .length = 4U},
-        {.name = "VPOS", .type = 'N', .length = 10U},
-        {.name = "HEIGHT", .type = 'N', .length = 10U},
-        {.name = "UNIQUEID", .type = 'C', .length = 32U}
-    };
-    const std::vector<std::vector<std::string>> records{
-        {"9", "4", "live detail expression", "0", "500", "live-detail-guid"},
-        {"9", "9", "deleted detail header expression", "500", "300", "deleted-detail-header-guid"},
-        {"9", "10", "deleted detail footer expression", "800", "250", "deleted-detail-footer-guid"}
-    };
-
-    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
-    expect(create_result.ok,
-           "#1766: synthetic report table for deleted detail header/footer expression JSON should be created");
-
-    const auto delete_header_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
-    expect(delete_header_result.ok, "#1766: synthetic report table should mark deleted detail header section");
-    const auto delete_footer_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 2U, true);
-    expect(delete_footer_result.ok, "#1766: synthetic report table should mark deleted detail footer section");
-}
-
-void write_synthetic_report_table_for_missing_section_objcode_layout_json(
-    const std::filesystem::path& report_path) {
-    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
-        {.name = "OBJTYPE", .type = 'N', .length = 8U},
-        {.name = "EXPR", .type = 'M', .length = 4U},
-        {.name = "VPOS", .type = 'N', .length = 10U},
-        {.name = "HEIGHT", .type = 'N', .length = 10U},
-        {.name = "UNIQUEID", .type = 'C', .length = 48U}
-    };
-    const std::vector<std::vector<std::string>> records{
-        {"9", "missing.objcode.live", "150", "450", "missing-objcode-live-section-guid"},
-        {"9", "missing.objcode.deleted", "900", "250", "missing-objcode-deleted-section-guid"}
-    };
-
-    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
-    expect(create_result.ok, "#1728: synthetic report table without section OBJCODE schema should be created");
-    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
-    expect(delete_result.ok, "#1728: synthetic report table should mark the no-OBJCODE section deleted");
-}
-
-void write_synthetic_report_table_for_unresolved_section_memo_layout_json(
-    const std::filesystem::path& report_path) {
-    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
-        {.name = "OBJTYPE", .type = 'N', .length = 8U},
-        {.name = "OBJCODE", .type = 'N', .length = 8U},
-        {.name = "EXPR", .type = 'M', .length = 4U},
-        {.name = "VPOS", .type = 'N', .length = 10U},
-        {.name = "HEIGHT", .type = 'N', .length = 10U}
-    };
-    const std::vector<std::vector<std::string>> records{
-        {"9", "3", "<memo block 40>", "100", "500"},
-        {"9", "5", "<memo block 41>", "900", "300"}
-    };
-
-    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
-    expect(create_result.ok, "#1737: synthetic report table with unresolved section memo placeholders should be created");
-    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
-    expect(delete_result.ok, "#1737: synthetic report table should mark unresolved section memo deleted");
-}
-
-void write_synthetic_report_table_for_missing_section_expr_layout_json(
-    const std::filesystem::path& report_path) {
-    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
-        {.name = "OBJTYPE", .type = 'N', .length = 8U},
-        {.name = "OBJCODE", .type = 'N', .length = 8U},
-        {.name = "VPOS", .type = 'N', .length = 10U},
-        {.name = "HEIGHT", .type = 'N', .length = 10U},
-        {.name = "UNIQUEID", .type = 'C', .length = 48U}
-    };
-    const std::vector<std::vector<std::string>> records{
-        {"9", "3", "100", "500", "missing-expr-live-section-guid"},
-        {"9", "5", "900", "300", "missing-expr-deleted-section-guid"}
-    };
-
-    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
-    expect(create_result.ok, "#1724: synthetic report table without section EXPR schema should be created");
-    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
-    expect(delete_result.ok, "#1724: synthetic report table should mark the no-EXPR section deleted");
-}
-
-void write_synthetic_report_table_for_stable_summary_section_json(
-    const std::filesystem::path& report_path) {
-    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
-        {.name = "OBJTYPE", .type = 'N', .length = 8U},
-        {.name = "OBJCODE", .type = 'N', .length = 8U},
-        {.name = "EXPR", .type = 'M', .length = 4U},
-        {.name = "VPOS", .type = 'N', .length = 10U},
-        {.name = "HEIGHT", .type = 'N', .length = 10U},
-        {.name = "UNIQUEID", .type = 'C', .length = 24U}
-    };
-    const std::vector<std::vector<std::string>> records{
-        {"1", "53", "ORIENTATION=0", "", "", ""},
-        {"9", "4", "", "0", "3200", ""},
-        {"9", "8", "", "3200", "700", "summary-section-guid"}
-    };
-
-    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
-    expect(create_result.ok, "#1694: synthetic report table for stable summary section JSON should be created");
-}
-
-void write_synthetic_report_table_for_ambiguous_summary_section_json(
-    const std::filesystem::path& report_path) {
-    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
-        {.name = "OBJTYPE", .type = 'N', .length = 8U},
-        {.name = "OBJCODE", .type = 'N', .length = 8U},
-        {.name = "EXPR", .type = 'M', .length = 4U},
-        {.name = "VPOS", .type = 'N', .length = 10U},
-        {.name = "HEIGHT", .type = 'N', .length = 10U},
-        {.name = "UNIQUEID", .type = 'C', .length = 32U}
-    };
-    const std::vector<std::vector<std::string>> records{
-        {"1", "53", "ORIENTATION=0", "", "", ""},
-        {"9", "4", "", "0", "3200", ""},
-        {"9", "8", "summary one", "3200", "700", "duplicate-section-guid"},
-        {"9", "8", "summary two", "3900", "500", "DUPLICATE-SECTION-GUID"}
-    };
-
-    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
-    expect(create_result.ok, "#1701: synthetic report table for ambiguous stable summary section JSON should be created");
-}
-
-void write_synthetic_report_table_for_live_deleted_ambiguous_summary_section_json(
-    const std::filesystem::path& report_path) {
-    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
-        {.name = "OBJTYPE", .type = 'N', .length = 8U},
-        {.name = "OBJCODE", .type = 'N', .length = 8U},
-        {.name = "EXPR", .type = 'M', .length = 4U},
-        {.name = "VPOS", .type = 'N', .length = 10U},
-        {.name = "HEIGHT", .type = 'N', .length = 10U},
-        {.name = "UNIQUEID", .type = 'C', .length = 32U}
-    };
-    const std::vector<std::vector<std::string>> records{
-        {"1", "53", "ORIENTATION=0", "", "", ""},
-        {"9", "4", "", "0", "3200", ""},
-        {"9", "8", "live summary", "3200", "700", "duplicate-live-deleted-guid"},
-        {"9", "8", "deleted summary", "3900", "500", "DUPLICATE-LIVE-DELETED-GUID"}
-    };
-
-    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
-    expect(create_result.ok, "#1702: synthetic report table for live/deleted ambiguous section JSON should be created");
-    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 3U, true);
-    expect(delete_result.ok, "#1702: synthetic report table should mark duplicate section deleted");
-}
-
-void write_synthetic_report_table_for_padded_stable_section_json(
-    const std::filesystem::path& report_path) {
-    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
-        {.name = "OBJTYPE", .type = 'N', .length = 8U},
-        {.name = "OBJCODE", .type = 'N', .length = 8U},
-        {.name = "EXPR", .type = 'M', .length = 4U},
-        {.name = "VPOS", .type = 'N', .length = 10U},
-        {.name = "HEIGHT", .type = 'N', .length = 10U},
-        {.name = "UNIQUEID", .type = 'C', .length = 32U}
-    };
-    const std::vector<std::vector<std::string>> records{
-        {"1", "53", "ORIENTATION=0", "", "", ""},
-        {"9", "4", "", "0", "3200", "  padded-section-guid  "}
-    };
-
-    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
-    expect(create_result.ok, "#1703: synthetic report table for padded stable section JSON should be created");
-}
-
-void write_synthetic_report_table_for_deep_stable_section_json(
-    const std::filesystem::path& report_path) {
-    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
-        {.name = "OBJTYPE", .type = 'N', .length = 8U},
-        {.name = "OBJCODE", .type = 'N', .length = 8U},
-        {.name = "EXPR", .type = 'M', .length = 4U},
-        {.name = "HPOS", .type = 'N', .length = 10U},
-        {.name = "VPOS", .type = 'N', .length = 10U},
-        {.name = "WIDTH", .type = 'N', .length = 10U},
-        {.name = "HEIGHT", .type = 'N', .length = 10U},
-        {.name = "UNIQUEID", .type = 'C', .length = 32U}
-    };
-    const std::vector<std::vector<std::string>> records{
-        {"1", "53", "ORIENTATION=0", "", "", "", "", ""},
-        {"9", "4", "", "", "0", "", "3200", ""},
-        {"5", "", "\"Preview object 2\"", "100", "200", "1000", "200", ""},
-        {"5", "", "\"Preview object 3\"", "100", "500", "1000", "200", ""},
-        {"5", "", "\"Preview object 4\"", "100", "800", "1000", "200", ""},
-        {"5", "", "\"Preview object 5\"", "100", "1100", "1000", "200", ""},
-        {"5", "", "\"Preview object 6\"", "100", "1400", "1000", "200", ""},
-        {"5", "", "\"Preview object 7\"", "100", "1700", "1000", "200", ""},
-        {"5", "", "\"Preview object 8\"", "100", "2000", "1000", "200", ""},
-        {"5", "", "\"Preview object 9\"", "100", "2300", "1000", "200", ""},
-        {"9", "8", "deep summary", "", "3200", "", "700", "deep-section-guid"}
-    };
-
-    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
-    expect(create_result.ok, "#1707: synthetic report table for deep stable section JSON should be created");
-}
-
-void write_synthetic_report_table_for_deep_ambiguous_stable_section_json(
-    const std::filesystem::path& report_path) {
-    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
-        {.name = "OBJTYPE", .type = 'N', .length = 8U},
-        {.name = "OBJCODE", .type = 'N', .length = 8U},
-        {.name = "EXPR", .type = 'M', .length = 4U},
-        {.name = "HPOS", .type = 'N', .length = 10U},
-        {.name = "VPOS", .type = 'N', .length = 10U},
-        {.name = "WIDTH", .type = 'N', .length = 10U},
-        {.name = "HEIGHT", .type = 'N', .length = 10U},
-        {.name = "UNIQUEID", .type = 'C', .length = 32U}
-    };
-    const std::vector<std::vector<std::string>> records{
-        {"1", "53", "ORIENTATION=0", "", "", "", "", ""},
-        {"9", "4", "", "", "0", "", "3200", "deep-duplicate-section-guid"},
-        {"5", "", "\"Preview object 2\"", "100", "200", "1000", "200", ""},
-        {"5", "", "\"Preview object 3\"", "100", "500", "1000", "200", ""},
-        {"5", "", "\"Preview object 4\"", "100", "800", "1000", "200", ""},
-        {"5", "", "\"Preview object 5\"", "100", "1100", "1000", "200", ""},
-        {"5", "", "\"Preview object 6\"", "100", "1400", "1000", "200", ""},
-        {"5", "", "\"Preview object 7\"", "100", "1700", "1000", "200", ""},
-        {"5", "", "\"Preview object 8\"", "100", "2000", "1000", "200", ""},
-        {"5", "", "\"Preview object 9\"", "100", "2300", "1000", "200", ""},
-        {"9", "8", "deep summary", "", "3200", "", "700", "DEEP-DUPLICATE-SECTION-GUID"}
-    };
-
-    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
-    expect(create_result.ok,
-           "#1708: synthetic report table for deep ambiguous stable section JSON should be created");
-}
-
-void write_synthetic_report_table_for_deep_live_deleted_ambiguous_stable_section_json(
-    const std::filesystem::path& report_path) {
-    write_synthetic_report_table_for_deep_ambiguous_stable_section_json(report_path);
-    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 10U, true);
-    expect(delete_result.ok,
-           "#1709: synthetic report table should mark the deep duplicate section deleted");
-}
-
-void write_synthetic_report_table_for_stable_title_section_json(
-    const std::filesystem::path& report_path) {
-    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
-        {.name = "OBJTYPE", .type = 'N', .length = 8U},
-        {.name = "OBJCODE", .type = 'N', .length = 8U},
-        {.name = "VPOS", .type = 'N', .length = 10U},
-        {.name = "HEIGHT", .type = 'N', .length = 10U},
-        {.name = "UNIQUEID", .type = 'C', .length = 24U}
-    };
-    const std::vector<std::vector<std::string>> records{
-        {"1", "53", "", "", ""},
-        {"9", "0", "0", "700", "title-section-guid"},
-        {"9", "4", "700", "2500", ""},
-        {"9", "7", "3200", "500", "page-footer-section-guid"}
-    };
-
-    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
-    expect(create_result.ok, "#1674: synthetic report table for stable title section JSON should be created");
-}
-
-void write_synthetic_report_table_for_stable_page_header_section_json(
-    const std::filesystem::path& report_path) {
-    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
-        {.name = "OBJTYPE", .type = 'N', .length = 8U},
-        {.name = "OBJCODE", .type = 'N', .length = 8U},
-        {.name = "VPOS", .type = 'N', .length = 10U},
-        {.name = "HEIGHT", .type = 'N', .length = 10U},
-        {.name = "UNIQUEID", .type = 'C', .length = 24U}
-    };
-    const std::vector<std::vector<std::string>> records{
-        {"1", "53", "", "", ""},
-        {"9", "1", "0", "700", "page-header-section-guid"},
-        {"9", "4", "700", "2500", ""},
-        {"9", "7", "3200", "500", "page-footer-section-guid"}
-    };
-
-    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
-    expect(create_result.ok, "#2008: synthetic report table for stable page-header section JSON should be created");
-}
-
-void write_synthetic_report_table_for_stable_column_section_json(
-    const std::filesystem::path& report_path) {
-    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
-        {.name = "OBJTYPE", .type = 'N', .length = 8U},
-        {.name = "OBJCODE", .type = 'N', .length = 8U},
-        {.name = "VPOS", .type = 'N', .length = 10U},
-        {.name = "HEIGHT", .type = 'N', .length = 10U},
-        {.name = "UNIQUEID", .type = 'C', .length = 32U}
-    };
-    const std::vector<std::vector<std::string>> records{
-        {"1", "53", "", "", ""},
-        {"9", "2", "0", "450", "column-header-section-guid"},
-        {"9", "4", "450", "2600", ""},
-        {"9", "6", "3050", "400", "column-footer-section-guid"}
-    };
-
-    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
-    expect(create_result.ok, "#1676: synthetic report table for stable column section JSON should be created");
-}
-
-void write_synthetic_report_table_for_stable_section_json(const std::filesystem::path& report_path) {
-    write_synthetic_report_table_for_layout_reorder_json(report_path);
-    const auto unique_id_result = copperfin::vfp::update_visual_object_property({
-        .path = report_path.string(),
-        .record_index = 1U,
-        .object_name = {},
-        .unique_id = {},
-        .property_name = "UNIQUEID",
-        .property_value = "section-guid"
-    });
-    expect(unique_id_result.ok, "#1655: stable section fixture should seed a section unique id");
-    expect(!dbf_record_deleted(report_path, 1U),
-           "#1655: stable section fixture should preserve the live section state");
-}
-
-void write_synthetic_report_table_for_deleted_section_json(const std::filesystem::path& report_path) {
-    write_synthetic_report_table_for_layout_reorder_json(report_path);
-    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
-    expect(delete_result.ok, "#1474: synthetic FRX table should mark report section deleted");
-}
-
-void write_synthetic_report_table_for_section_deleted_object_count_json(
-    const std::filesystem::path& report_path) {
-    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
-        {.name = "OBJTYPE", .type = 'N', .length = 8U},
-        {.name = "OBJCODE", .type = 'N', .length = 8U},
-        {.name = "EXPR", .type = 'M', .length = 4U},
-        {.name = "HPOS", .type = 'N', .length = 10U},
-        {.name = "VPOS", .type = 'N', .length = 10U},
-        {.name = "WIDTH", .type = 'N', .length = 10U},
-        {.name = "HEIGHT", .type = 'N', .length = 10U},
-        {.name = "UNIQUEID", .type = 'C', .length = 32U}
-    };
-    const std::vector<std::vector<std::string>> records{
-        {"1", "53", "ORIENTATION=0", "", "", "", "", ""},
-        {"9", "4", "", "", "0", "", "1000", "detail-section-guid"},
-        {"9", "8", "", "", "2000", "", "500", "deleted-summary-section-guid"},
-        {"8", "0", "detail.value", "100", "200", "400", "100", "detail-field-guid"},
-        {"5", "", "\"Deleted detail\"", "150", "300", "200", "100", "deleted-detail-label-guid"},
-        {"5", "", "\"Deleted summary\"", "200", "2100", "250", "100", "deleted-summary-label-guid"},
-        {"6", "", "", "50", "5000", "100", "100", "deleted-unplaced-line-guid"}
-    };
-
-    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
-    expect(create_result.ok,
-           "#2688: synthetic report table for section deleted-object counts should be created");
-
-    for (const auto record_index : {2U, 4U, 5U, 6U}) {
-        const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), record_index, true);
-        expect(delete_result.ok,
-               "#2688: synthetic report table should mark deleted sections and deleted objects");
-    }
-}
-
-void write_synthetic_report_table_for_stable_deleted_section_json(const std::filesystem::path& report_path) {
-    write_synthetic_report_table_for_deleted_section_json(report_path);
-    const auto unique_id_result = copperfin::vfp::update_visual_object_property({
-        .path = report_path.string(),
-        .record_index = 1U,
-        .object_name = {},
-        .unique_id = {},
-        .property_name = "UNIQUEID",
-        .property_value = "deleted-section-guid"
-    });
-    expect(unique_id_result.ok, "#1654: stable deleted section fixture should seed a deleted section unique id");
-    expect(dbf_record_deleted(report_path, 1U),
-           "#1654: stable deleted section fixture should preserve the deleted section state");
-}
-
-void test_studio_host_json_exposes_detail_header_footer_section_kinds(
-    const std::string& studio_host_path) {
-    namespace fs = std::filesystem;
-
-    const fs::path temp_root =
-        fs::temp_directory_path() / "copperfin_studio_host_detail_header_footer_section_kind_json_tests";
-    std::error_code ignored;
-    fs::remove_all(temp_root, ignored);
-    fs::create_directories(temp_root);
-
-    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
-
-    const auto run_detail_header_footer_sections = [&](const fs::path& asset_path,
-                                                       const std::string& title,
-                                                       const std::string& label) {
-        write_synthetic_report_table_for_detail_header_footer_section_kind_json(asset_path);
-
-        const auto process = run_process_capture(
-            studio_host_path,
-            {"--path", asset_path.string(), "--json"},
-            temp_root);
-
-        if (process.exit_code != 0) {
-            std::cerr << "studio host " << label << " detail header/footer section summary stdout:\n"
-                      << process.stdout_text << "\n";
-            std::cerr << "studio host " << label << " detail header/footer section summary stderr:\n"
-                      << process.stderr_text << "\n";
-            std::cerr << "fixture root: " << temp_root << "\n";
-        }
-
-        expect(process.exit_code == 0,
-               "#1763: detail header/footer report/label section-kind JSON should exit successfully");
-        expect_contains(process.stdout_text, "\"documentTitle\": \"" + title + "\"",
-                        "#1763: detail header/footer section-kind JSON should return report-layout JSON");
-        if (asset_path.extension() == ".lbx") {
-            expect_contains(process.stdout_text, "\"isLabel\": true",
-                            "#1763: detail header/footer label layouts should retain label identity");
-        }
-        expect_contains(process.stdout_text, "\"sectionCount\": 2",
-                        "#1763: detail header/footer section-kind JSON should summarize live sections");
-        expect_contains(process.stdout_text, "\"deletedSectionCount\": 1",
-                        "#1763: detail header/footer section-kind JSON should summarize deleted sections");
-        expect_contains(process.stdout_text, "\"sectionKindCount\": 2",
-                        "#1763: detail header/footer section-kind JSON should expose live kind bucket count");
-        expect_contains(process.stdout_text,
-                        "\"sectionKindCounts\": [\n"
-                        "        {\"kind\": \"detail_footer\", \"count\": 1},\n"
-                        "        {\"kind\": \"detail_header\", \"count\": 1}\n"
-                        "      ]",
-                        "#1763: detail header/footer section-kind JSON should count live detail header/footer buckets");
-        expect_contains(process.stdout_text, "\"deletedSectionKindCount\": 1",
-                        "#1763: detail header/footer section-kind JSON should expose deleted kind bucket count");
-        expect_contains(process.stdout_text,
-                        "\"deletedSectionKindCounts\": [\n"
-                        "        {\"kind\": \"detail_footer\", \"count\": 1}\n"
-                        "      ]",
-                        "#1763: detail header/footer section-kind JSON should count deleted detail footer buckets");
-        expect_contains(process.stdout_text, "\"sectionHeightTotal\": 550",
-                        "#1763: detail header/footer section-kind JSON should sum live section heights");
-        expect_contains(process.stdout_text, "\"deletedSectionHeightTotal\": 200",
-                        "#1763: detail header/footer section-kind JSON should sum deleted section heights");
-
-        const auto expect_selected_section = [&](const std::string& unique_id,
-                                                 const std::string& record_index,
-                                                 const std::string& object_code,
-                                                 const std::string& band_title,
-                                                 const std::string& band_kind,
-                                                 const std::string& selection_label) {
-            const auto section_process = run_process_capture(
-                studio_host_path,
-                {"--path", asset_path.string(), "--unique-id", unique_id, "--json"},
-                temp_root);
-
-            if (section_process.exit_code != 0) {
-                std::cerr << "studio host " << label << " selected " << selection_label
-                          << " stdout:\n" << section_process.stdout_text << "\n";
-                std::cerr << "studio host " << label << " selected " << selection_label
-                          << " stderr:\n" << section_process.stderr_text << "\n";
-                std::cerr << "fixture root: " << temp_root << "\n";
-            }
-
-            expect(section_process.exit_code == 0,
-                   "#1763: selected detail header/footer section JSON should exit successfully");
-            expect_contains(section_process.stdout_text, "\"selectedReportSectionAvailable\": true",
-                            "#1763: selected detail header/footer JSON should advertise selected sections");
-            expect_contains(section_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
-                            "#1763: selected detail header/footer JSON should expose section selection kind");
-            expect_contains(section_process.stdout_text, "\"previewBoundsAvailable\": true",
-                            "#2275: selected detail header/footer section JSON should preserve live preview availability");
-            expect_contains(section_process.stdout_text, "\"previewBoundsLeft\": 0",
-                            "#2275: selected detail header/footer section JSON should preserve live preview left bounds");
-            expect_contains(section_process.stdout_text, "\"previewBoundsTop\": 0",
-                            "#2275: selected detail header/footer section JSON should preserve live preview top bounds");
-            expect_contains(section_process.stdout_text, "\"previewBoundsRight\": 0",
-                            "#2275: selected detail header/footer section JSON should preserve live preview right bounds");
-            expect_contains(section_process.stdout_text, "\"previewBoundsBottom\": 550",
-                            "#2275: selected detail header/footer section JSON should preserve live preview bottom bounds");
-            expect_contains(section_process.stdout_text, "\"previewBoundsWidth\": 0",
-                            "#2275: selected detail header/footer section JSON should preserve live preview widths");
-            expect_contains(section_process.stdout_text, "\"previewBoundsHeight\": 550",
-                            "#2275: selected detail header/footer section JSON should preserve live preview heights");
-            expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
-                            "#2275: selected detail header/footer section JSON should preserve deleted preview availability");
-            expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
-                            "#2275: selected detail header/footer section JSON should preserve deleted preview left bounds");
-            expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsTop\": 550",
-                            "#2275: selected detail header/footer section JSON should preserve deleted preview top bounds");
-            expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
-                            "#2275: selected detail header/footer section JSON should preserve deleted preview right bounds");
-            expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsBottom\": 750",
-                            "#2275: selected detail header/footer section JSON should preserve deleted preview bottom bounds");
-            expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
-                            "#2275: selected detail header/footer section JSON should preserve deleted preview widths");
-            expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsHeight\": 200",
-                            "#2275: selected detail header/footer section JSON should preserve deleted preview heights");
-            expect_contains_in_order(
-                section_process.stdout_text,
-                {
-                    "\"selectedReportSection\": {",
-                    "\"title\": \"" + band_title + "\"",
-                    "\"bandKind\": \"" + band_kind + "\"",
-                    "\"recordIndex\": " + record_index,
-                    "\"objectCode\": " + object_code
-                },
-                "#1763: selected " + selection_label + " JSON should expose detail header/footer band metadata");
-        };
-
-        expect_selected_section("detail-header-guid", "0", "9", "Detail Header", "detail_header", "detail header");
-        expect_selected_section("detail-footer-guid", "1", "10", "Detail Footer", "detail_footer", "detail footer");
-        expect_selected_section("deleted-detail-footer-guid",
-                                "2",
-                                "10",
-                                "Detail Footer",
-                                "detail_footer",
-                                "deleted detail footer");
-    };
-
-    run_detail_header_footer_sections(temp_root / "detail_header_footer_sections.frx",
-                                      "detail_header_footer_sections.frx",
-                                      "report");
-    run_detail_header_footer_sections(temp_root / "detail_header_footer_sections.lbx",
-                                      "detail_header_footer_sections.lbx",
-                                      "label");
-
-    if (failures == 0) {
-        fs::remove_all(temp_root, ignored);
-    }
-}
-
-void test_studio_host_json_updates_detail_header_footer_section_heights_by_stable_selection(
-    const std::string& studio_host_path) {
-    namespace fs = std::filesystem;
-
-    const fs::path temp_root =
-        fs::temp_directory_path() / "copperfin_studio_host_detail_header_footer_section_height_stable_json_tests";
-    std::error_code ignored;
-    fs::remove_all(temp_root, ignored);
-    fs::create_directories(temp_root);
-
-    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
-
-    const auto run_detail_header_footer_section_height_update =
-        [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
-            write_synthetic_report_table_for_detail_header_footer_section_kind_json(asset_path);
-
-            const auto update_header_process = run_process_capture(
-                studio_host_path,
-                {
-                    "--path", asset_path.string(),
-                    "--set-property",
-                    "--unique-id", "detail-header-guid",
-                    "--property-name", "HEIGHT",
-                    "--property-value", "420",
-                    "--json"
-                },
-                temp_root);
-
-            if (update_header_process.exit_code != 0) {
-                std::cerr << "studio host " << label << " detail-header section height update stdout:\n"
-                          << update_header_process.stdout_text << "\n";
-                std::cerr << "studio host " << label << " detail-header section height update stderr:\n"
-                          << update_header_process.stderr_text << "\n";
-                std::cerr << "fixture root: " << temp_root << "\n";
-            }
-
-            expect(update_header_process.exit_code == 0,
-                   "#1802: detail-header section height update by stable selection should exit successfully");
-            const auto header_height_property = copperfin::vfp::query_visual_object_property({
-                .path = asset_path.string(),
-                .record_index = 0U,
-                .object_name = {},
-                .unique_id = "detail-header-guid",
-                .property_name = "HEIGHT"
-            });
-            expect(header_height_property.ok && header_height_property.exists &&
-                       header_height_property.value == "420",
-                   "#1802: detail-header section height update should persist the HEIGHT field");
-            expect_contains(update_header_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
-                            "#1802: detail-header section height update should return refreshed layout JSON");
-            if (asset_path.extension() == ".lbx") {
-                expect_contains(update_header_process.stdout_text, "\"isLabel\": true",
-                                "#1802: detail-header label section height update should retain label identity");
-            }
-            expect_contains(update_header_process.stdout_text, "\"sectionHeightTotal\": 670",
-                            "#1802: detail-header section height update should refresh live section height totals");
-            expect_contains(update_header_process.stdout_text, "\"deletedSectionHeightTotal\": 200",
-                            "#1802: detail-header section height update should preserve deleted section height totals");
-            expect_contains(update_header_process.stdout_text, "\"previewBoundsAvailable\": true",
-                            "#2276: detail-header section height update should preserve live preview availability");
-            expect_contains(update_header_process.stdout_text, "\"previewBoundsTop\": 0",
-                            "#2276: detail-header section height update should preserve live preview top bounds");
-            expect_contains(update_header_process.stdout_text, "\"previewBoundsBottom\": 550",
-                            "#2276: detail-header section height update should preserve live preview bottom bounds");
-            expect_contains(update_header_process.stdout_text, "\"previewBoundsHeight\": 550",
-                            "#2276: detail-header section height update should preserve live preview heights");
-            expect_contains(update_header_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
-                            "#2276: detail-header section height update should preserve deleted preview availability");
-            expect_contains(update_header_process.stdout_text, "\"deletedPreviewBoundsTop\": 550",
-                            "#2276: detail-header section height update should preserve deleted preview top bounds");
-            expect_contains(update_header_process.stdout_text, "\"deletedPreviewBoundsBottom\": 750",
-                            "#2276: detail-header section height update should preserve deleted preview bottom bounds");
-            expect_contains(update_header_process.stdout_text, "\"selectedReportSectionAvailable\": true",
-                            "#1802: detail-header section height update should preserve selected section availability");
-            expect_contains(update_header_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
-                            "#1802: detail-header section height update should preserve selection kind");
-            expect_contains(update_header_process.stdout_text, "\"dryRun\": false",
-                            "#2232: detail-header section height update JSON should expose committed state");
-            expect_contains(update_header_process.stdout_text, "\"mutatesAsset\": true",
-                            "#2232: detail-header section height update JSON should expose mutation state");
-            expect_contains(update_header_process.stdout_text, "\"undoAvailable\": true",
-                            "#2232: detail-header section height update JSON should expose undo availability");
-            expect_contains(update_header_process.stdout_text, "\"undoLabel\": \"Property HEIGHT\"",
-                            "#2232: detail-header section height update JSON should expose height undo labels");
-            expect_contains_in_order(
-                update_header_process.stdout_text,
-                {
-                    "\"selectedReportSection\": {",
-                    "\"title\": \"Detail Header\"",
-                    "\"bandKind\": \"detail_header\"",
-                    "\"recordIndex\": 0",
-                    "\"objectCode\": 9",
-                    "\"top\": 0",
-                    "\"height\": 420",
-                    "\"bottom\": 420"
-                },
-                "#1802: detail-header section height update should refresh selected-section geometry");
-
-            const auto update_footer_process = run_process_capture(
-                studio_host_path,
-                {
-                    "--path", asset_path.string(),
-                    "--set-property",
-                    "--unique-id", "detail-footer-guid",
-                    "--property-name", "HEIGHT",
-                    "--property-value", "280",
-                    "--json"
-                },
-                temp_root);
-
-            if (update_footer_process.exit_code != 0) {
-                std::cerr << "studio host " << label << " detail-footer section height update stdout:\n"
-                          << update_footer_process.stdout_text << "\n";
-                std::cerr << "studio host " << label << " detail-footer section height update stderr:\n"
-                          << update_footer_process.stderr_text << "\n";
-                std::cerr << "fixture root: " << temp_root << "\n";
-            }
-
-            expect(update_footer_process.exit_code == 0,
-                   "#1802: detail-footer section height update by stable selection should exit successfully");
-            const auto footer_height_property = copperfin::vfp::query_visual_object_property({
-                .path = asset_path.string(),
-                .record_index = 1U,
-                .object_name = {},
-                .unique_id = "detail-footer-guid",
-                .property_name = "HEIGHT"
-            });
-            expect(footer_height_property.ok && footer_height_property.exists &&
-                       footer_height_property.value == "280",
-                   "#1802: detail-footer section height update should persist the HEIGHT field");
-            expect_contains(update_footer_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
-                            "#1802: detail-footer section height update should return refreshed layout JSON");
-            if (asset_path.extension() == ".lbx") {
-                expect_contains(update_footer_process.stdout_text, "\"isLabel\": true",
-                                "#1802: detail-footer label section height update should retain label identity");
-            }
-            expect_contains(update_footer_process.stdout_text, "\"sectionHeightTotal\": 700",
-                            "#1802: detail-footer section height update should refresh live section height totals");
-            expect_contains(update_footer_process.stdout_text, "\"deletedSectionHeightTotal\": 200",
-                            "#1802: detail-footer section height update should preserve deleted section height totals");
-            expect_contains(update_footer_process.stdout_text, "\"previewBoundsAvailable\": true",
-                            "#2276: detail-footer section height update should preserve live preview availability");
-            expect_contains(update_footer_process.stdout_text, "\"previewBoundsTop\": 0",
-                            "#2276: detail-footer section height update should preserve live preview top bounds");
-            expect_contains(update_footer_process.stdout_text, "\"previewBoundsBottom\": 580",
-                            "#2276: detail-footer section height update should refresh live preview bottom bounds");
-            expect_contains(update_footer_process.stdout_text, "\"previewBoundsHeight\": 580",
-                            "#2276: detail-footer section height update should refresh live preview heights");
-            expect_contains(update_footer_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
-                            "#2276: detail-footer section height update should preserve deleted preview availability");
-            expect_contains(update_footer_process.stdout_text, "\"deletedPreviewBoundsTop\": 550",
-                            "#2276: detail-footer section height update should preserve deleted preview top bounds");
-            expect_contains(update_footer_process.stdout_text, "\"deletedPreviewBoundsBottom\": 750",
-                            "#2276: detail-footer section height update should preserve deleted preview bottom bounds");
-            expect_contains(update_footer_process.stdout_text, "\"selectedReportSectionAvailable\": true",
-                            "#1802: detail-footer section height update should preserve selected section availability");
-            expect_contains(update_footer_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
-                            "#1802: detail-footer section height update should preserve selection kind");
-            expect_contains(update_footer_process.stdout_text, "\"dryRun\": false",
-                            "#2232: detail-footer section height update JSON should expose committed state");
-            expect_contains(update_footer_process.stdout_text, "\"mutatesAsset\": true",
-                            "#2232: detail-footer section height update JSON should expose mutation state");
-            expect_contains(update_footer_process.stdout_text, "\"undoAvailable\": true",
-                            "#2232: detail-footer section height update JSON should expose undo availability");
-            expect_contains(update_footer_process.stdout_text, "\"undoLabel\": \"Property HEIGHT\"",
-                            "#2232: detail-footer section height update JSON should expose height undo labels");
-            expect_contains_in_order(
-                update_footer_process.stdout_text,
-                {
-                    "\"selectedReportSection\": {",
-                    "\"title\": \"Detail Footer\"",
-                    "\"bandKind\": \"detail_footer\"",
-                    "\"recordIndex\": 1",
-                    "\"objectCode\": 10",
-                    "\"top\": 300",
-                    "\"height\": 280",
-                    "\"bottom\": 580"
-                },
-                "#1802: detail-footer section height update should refresh selected-section geometry");
-        };
-
-    run_detail_header_footer_section_height_update(
-        temp_root / "detail_header_footer_section_height_stable.frx",
-        "detail_header_footer_section_height_stable.frx",
-        "report");
-    run_detail_header_footer_section_height_update(
-        temp_root / "detail_header_footer_section_height_stable.lbx",
-        "detail_header_footer_section_height_stable.lbx",
-        "label");
-
-    if (failures == 0) {
-        fs::remove_all(temp_root, ignored);
-    }
-}
-
-void test_studio_host_json_clears_detail_header_footer_section_heights_by_stable_selection(
-    const std::string& studio_host_path) {
-    namespace fs = std::filesystem;
-
-    const fs::path temp_root =
-        fs::temp_directory_path() / "copperfin_studio_host_detail_header_footer_section_height_clear_stable_json_tests";
-    std::error_code ignored;
-    fs::remove_all(temp_root, ignored);
-    fs::create_directories(temp_root);
-
-    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
-
-    const auto run_detail_header_footer_section_height_clear =
-        [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
-            write_synthetic_report_table_for_detail_header_footer_section_kind_json(asset_path);
-
-            const auto clear_header_process = run_process_capture(
-                studio_host_path,
-                {
-                    "--path", asset_path.string(),
-                    "--clear-property",
-                    "--unique-id", "detail-header-guid",
-                    "--property-name", "HEIGHT",
-                    "--json"
-                },
-                temp_root);
-
-            if (clear_header_process.exit_code != 0) {
-                std::cerr << "studio host " << label << " detail-header section height clear stdout:\n"
-                          << clear_header_process.stdout_text << "\n";
-                std::cerr << "studio host " << label << " detail-header section height clear stderr:\n"
-                          << clear_header_process.stderr_text << "\n";
-                std::cerr << "fixture root: " << temp_root << "\n";
-            }
-
-            expect(clear_header_process.exit_code == 0,
-                   "#1803: detail-header section height clear by stable selection should exit successfully");
-            const auto header_height_property = copperfin::vfp::query_visual_object_property({
-                .path = asset_path.string(),
-                .record_index = 0U,
-                .object_name = {},
-                .unique_id = "detail-header-guid",
-                .property_name = "HEIGHT"
-            });
-            expect(header_height_property.ok && header_height_property.exists &&
-                       header_height_property.direct_field && header_height_property.value.empty(),
-                   "#1803: detail-header section height clear should blank the HEIGHT field");
-            expect_contains(clear_header_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
-                            "#1803: detail-header section height clear should return refreshed layout JSON");
-            if (asset_path.extension() == ".lbx") {
-                expect_contains(clear_header_process.stdout_text, "\"isLabel\": true",
-                                "#1803: detail-header label section height clear should retain label identity");
-            }
-            expect_contains(clear_header_process.stdout_text, "\"sectionHeightTotal\": 250",
-                            "#1803: detail-header section height clear should refresh live section height totals");
-            expect_contains(clear_header_process.stdout_text, "\"deletedSectionHeightTotal\": 200",
-                            "#1803: detail-header section height clear should preserve deleted section height totals");
-            expect_contains(clear_header_process.stdout_text, "\"previewBoundsAvailable\": true",
-                            "#1822: detail-header section height clear should preserve live preview availability");
-            expect_contains(clear_header_process.stdout_text, "\"previewBoundsTop\": 0",
-                            "#1822: detail-header section height clear should preserve live preview top bounds");
-            expect_contains(clear_header_process.stdout_text, "\"previewBoundsBottom\": 550",
-                            "#1822: detail-header section height clear should preserve live preview bottom bounds");
-            expect_contains(clear_header_process.stdout_text, "\"previewBoundsHeight\": 550",
-                            "#1822: detail-header section height clear should preserve live preview heights");
-            expect_contains(clear_header_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
-                            "#1822: detail-header section height clear should preserve deleted preview availability");
-            expect_contains(clear_header_process.stdout_text, "\"deletedPreviewBoundsTop\": 550",
-                            "#1822: detail-header section height clear should preserve deleted preview top bounds");
-            expect_contains(clear_header_process.stdout_text, "\"deletedPreviewBoundsBottom\": 750",
-                            "#1822: detail-header section height clear should preserve deleted preview bottom bounds");
-            expect_contains(clear_header_process.stdout_text, "\"selectedReportSectionAvailable\": true",
-                            "#1803: detail-header section height clear should preserve selected section availability");
-            expect_contains(clear_header_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
-                            "#1803: detail-header section height clear should preserve selection kind");
-            expect_contains(clear_header_process.stdout_text, "\"dryRun\": false",
-                            "#2234: detail-header section height clear JSON should expose committed state");
-            expect_contains(clear_header_process.stdout_text, "\"mutatesAsset\": true",
-                            "#2234: detail-header section height clear JSON should expose mutation state");
-            expect_contains(clear_header_process.stdout_text, "\"undoAvailable\": true",
-                            "#2234: detail-header section height clear JSON should expose undo availability");
-            expect_contains(clear_header_process.stdout_text, "\"undoLabel\": \"Property HEIGHT\"",
-                            "#2234: detail-header section height clear JSON should expose height undo labels");
-            expect_contains_in_order(
-                clear_header_process.stdout_text,
-                {
-                    "\"selectedReportSection\": {",
-                    "\"title\": \"Detail Header\"",
-                    "\"bandKind\": \"detail_header\"",
-                    "\"recordIndex\": 0",
-                    "\"objectCode\": 9",
-                    "\"top\": 0",
-                    "\"height\": 0",
-                    "\"bottom\": 0"
-                },
-                "#1803: detail-header section height clear should refresh selected-section geometry");
-
-            const auto clear_footer_process = run_process_capture(
-                studio_host_path,
-                {
-                    "--path", asset_path.string(),
-                    "--clear-property",
-                    "--unique-id", "detail-footer-guid",
-                    "--property-name", "HEIGHT",
-                    "--json"
-                },
-                temp_root);
-
-            if (clear_footer_process.exit_code != 0) {
-                std::cerr << "studio host " << label << " detail-footer section height clear stdout:\n"
-                          << clear_footer_process.stdout_text << "\n";
-                std::cerr << "studio host " << label << " detail-footer section height clear stderr:\n"
-                          << clear_footer_process.stderr_text << "\n";
-                std::cerr << "fixture root: " << temp_root << "\n";
-            }
-
-            expect(clear_footer_process.exit_code == 0,
-                   "#1803: detail-footer section height clear by stable selection should exit successfully");
-            const auto footer_height_property = copperfin::vfp::query_visual_object_property({
-                .path = asset_path.string(),
-                .record_index = 1U,
-                .object_name = {},
-                .unique_id = "detail-footer-guid",
-                .property_name = "HEIGHT"
-            });
-            expect(footer_height_property.ok && footer_height_property.exists &&
-                       footer_height_property.direct_field && footer_height_property.value.empty(),
-                   "#1803: detail-footer section height clear should blank the HEIGHT field");
-            expect_contains(clear_footer_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
-                            "#1803: detail-footer section height clear should return refreshed layout JSON");
-            if (asset_path.extension() == ".lbx") {
-                expect_contains(clear_footer_process.stdout_text, "\"isLabel\": true",
-                                "#1803: detail-footer label section height clear should retain label identity");
-            }
-            expect_contains(clear_footer_process.stdout_text, "\"sectionHeightTotal\": 0",
-                            "#1803: detail-footer section height clear should refresh live section height totals");
-            expect_contains(clear_footer_process.stdout_text, "\"deletedSectionHeightTotal\": 200",
-                            "#1803: detail-footer section height clear should preserve deleted section height totals");
-            expect_contains(clear_footer_process.stdout_text, "\"previewBoundsAvailable\": true",
-                            "#1822: detail-footer section height clear should preserve live preview availability");
-            expect_contains(clear_footer_process.stdout_text, "\"previewBoundsTop\": 0",
-                            "#1822: detail-footer section height clear should preserve live preview top bounds");
-            expect_contains(clear_footer_process.stdout_text, "\"previewBoundsBottom\": 300",
-                            "#1822: detail-footer section height clear should shrink live preview bottom bounds");
-            expect_contains(clear_footer_process.stdout_text, "\"previewBoundsHeight\": 300",
-                            "#1822: detail-footer section height clear should shrink live preview heights");
-            expect_contains(clear_footer_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
-                            "#1822: detail-footer section height clear should preserve deleted preview availability");
-            expect_contains(clear_footer_process.stdout_text, "\"deletedPreviewBoundsTop\": 550",
-                            "#1822: detail-footer section height clear should preserve deleted preview top bounds");
-            expect_contains(clear_footer_process.stdout_text, "\"deletedPreviewBoundsBottom\": 750",
-                            "#1822: detail-footer section height clear should preserve deleted preview bottom bounds");
-            expect_contains(clear_footer_process.stdout_text, "\"selectedReportSectionAvailable\": true",
-                            "#1803: detail-footer section height clear should preserve selected section availability");
-            expect_contains(clear_footer_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
-                            "#1803: detail-footer section height clear should preserve selection kind");
-            expect_contains(clear_footer_process.stdout_text, "\"dryRun\": false",
-                            "#2234: detail-footer section height clear JSON should expose committed state");
-            expect_contains(clear_footer_process.stdout_text, "\"mutatesAsset\": true",
-                            "#2234: detail-footer section height clear JSON should expose mutation state");
-            expect_contains(clear_footer_process.stdout_text, "\"undoAvailable\": true",
-                            "#2234: detail-footer section height clear JSON should expose undo availability");
-            expect_contains(clear_footer_process.stdout_text, "\"undoLabel\": \"Property HEIGHT\"",
-                            "#2234: detail-footer section height clear JSON should expose height undo labels");
-            expect_contains_in_order(
-                clear_footer_process.stdout_text,
-                {
-                    "\"selectedReportSection\": {",
-                    "\"title\": \"Detail Footer\"",
-                    "\"bandKind\": \"detail_footer\"",
-                    "\"recordIndex\": 1",
-                    "\"objectCode\": 10",
-                    "\"top\": 300",
-                    "\"height\": 0",
-                    "\"bottom\": 300"
-                },
-                "#1803: detail-footer section height clear should refresh selected-section geometry");
-        };
-
-    run_detail_header_footer_section_height_clear(
-        temp_root / "detail_header_footer_section_height_clear_stable.frx",
-        "detail_header_footer_section_height_clear_stable.frx",
-        "report");
-    run_detail_header_footer_section_height_clear(
-        temp_root / "detail_header_footer_section_height_clear_stable.lbx",
-        "detail_header_footer_section_height_clear_stable.lbx",
-        "label");
-
-    if (failures == 0) {
-        fs::remove_all(temp_root, ignored);
-    }
-}
-
-void test_studio_host_json_updates_deleted_detail_header_footer_section_heights_by_stable_selection(
-    const std::string& studio_host_path) {
-    namespace fs = std::filesystem;
-
-    const fs::path temp_root =
-        fs::temp_directory_path() /
-        "copperfin_studio_host_deleted_detail_header_footer_section_height_stable_json_tests";
-    std::error_code ignored;
-    fs::remove_all(temp_root, ignored);
-    fs::create_directories(temp_root);
-
-    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
-
-    const auto run_deleted_detail_header_footer_section_height_update =
-        [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
-            write_synthetic_report_table_for_deleted_detail_header_footer_section_expression_json(asset_path);
-
-            const auto update_header_process = run_process_capture(
-                studio_host_path,
-                {
-                    "--path", asset_path.string(),
-                    "--set-property",
-                    "--unique-id", "deleted-detail-header-guid",
-                    "--property-name", "HEIGHT",
-                    "--property-value", "360",
-                    "--json"
-                },
-                temp_root);
-
-            if (update_header_process.exit_code != 0) {
-                std::cerr << "studio host " << label << " deleted detail-header section height update stdout:\n"
-                          << update_header_process.stdout_text << "\n";
-                std::cerr << "studio host " << label << " deleted detail-header section height update stderr:\n"
-                          << update_header_process.stderr_text << "\n";
-                std::cerr << "fixture root: " << temp_root << "\n";
-            }
-
-            expect(update_header_process.exit_code == 0,
-                   "#1804: deleted detail-header section height update by stable selection should exit successfully");
-            const auto header_height_property = copperfin::vfp::query_visual_object_property({
-                .path = asset_path.string(),
-                .record_index = 1U,
-                .object_name = {},
-                .unique_id = "deleted-detail-header-guid",
-                .property_name = "HEIGHT"
-            });
-            expect(header_height_property.ok && header_height_property.exists &&
-                       header_height_property.value == "360",
-                   "#1804: deleted detail-header section height update should persist the HEIGHT field");
-            expect_contains(update_header_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
-                            "#1804: deleted detail-header section height update should return refreshed layout JSON");
-            if (asset_path.extension() == ".lbx") {
-                expect_contains(update_header_process.stdout_text, "\"isLabel\": true",
-                                "#1804: deleted detail-header label section height update should retain label identity");
-            }
-            expect_contains(update_header_process.stdout_text, "\"sectionCount\": 1",
-                            "#1804: deleted detail-header section height update should preserve live section count");
-            expect_contains(update_header_process.stdout_text, "\"deletedSectionCount\": 2",
-                            "#1804: deleted detail-header section height update should preserve deleted section count");
-            expect_contains(update_header_process.stdout_text, "\"sectionHeightTotal\": 500",
-                            "#1804: deleted detail-header section height update should preserve live section heights");
-            expect_contains(update_header_process.stdout_text, "\"deletedSectionHeightTotal\": 610",
-                            "#1804: deleted detail-header section height update should refresh deleted section heights");
-            expect_contains(update_header_process.stdout_text, "\"previewBoundsAvailable\": true",
-                            "#2236: deleted detail-header section height update should preserve live preview availability");
-            expect_contains(update_header_process.stdout_text, "\"previewBoundsTop\": 0",
-                            "#2236: deleted detail-header section height update should preserve live preview top bounds");
-            expect_contains(update_header_process.stdout_text, "\"previewBoundsBottom\": 500",
-                            "#2236: deleted detail-header section height update should preserve live preview bottom bounds");
-            expect_contains(update_header_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
-                            "#2236: deleted detail-header section height update should preserve deleted preview availability");
-            expect_contains(update_header_process.stdout_text, "\"deletedPreviewBoundsTop\": 500",
-                            "#2236: deleted detail-header section height update should preserve deleted preview top bounds");
-            expect_contains(update_header_process.stdout_text, "\"deletedPreviewBoundsBottom\": 1050",
-                            "#2236: deleted detail-header section height update should preserve deleted preview bottom bounds");
-            expect_contains(update_header_process.stdout_text, "\"deletedPreviewBoundsHeight\": 550",
-                            "#2236: deleted detail-header section height update should preserve deleted preview heights");
-            expect_contains(update_header_process.stdout_text, "\"selectedReportSectionAvailable\": true",
-                            "#1804: deleted detail-header section height update should preserve selected section availability");
-            expect_contains(update_header_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
-                            "#1804: deleted detail-header section height update should preserve selection kind");
-            expect_contains(update_header_process.stdout_text, "\"dryRun\": false",
-                            "#2236: deleted detail-header section height update JSON should expose committed state");
-            expect_contains(update_header_process.stdout_text, "\"mutatesAsset\": true",
-                            "#2236: deleted detail-header section height update JSON should expose mutation state");
-            expect_contains(update_header_process.stdout_text, "\"undoAvailable\": true",
-                            "#2236: deleted detail-header section height update JSON should expose undo availability");
-            expect_contains(update_header_process.stdout_text, "\"undoLabel\": \"Property HEIGHT\"",
-                            "#2236: deleted detail-header section height update JSON should expose height undo labels");
-            expect_contains_in_order(
-                update_header_process.stdout_text,
-                {
-                    "\"selectedReportSection\": {",
-                    "\"title\": \"Detail Header\"",
-                    "\"bandKind\": \"detail_header\"",
-                    "\"recordIndex\": 1",
-                    "\"deleted\": true",
-                    "\"sectionIndex\": null",
-                    "\"sectionCount\": 0",
-                    "\"objectCode\": 9",
-                    "\"top\": 500",
-                    "\"height\": 360",
-                    "\"bottom\": 860"
-                },
-                "#1804: deleted detail-header section height update should refresh selected-section geometry");
-
-            const auto update_footer_process = run_process_capture(
-                studio_host_path,
-                {
-                    "--path", asset_path.string(),
-                    "--set-property",
-                    "--unique-id", "deleted-detail-footer-guid",
-                    "--property-name", "HEIGHT",
-                    "--property-value", "290",
-                    "--json"
-                },
-                temp_root);
-
-            if (update_footer_process.exit_code != 0) {
-                std::cerr << "studio host " << label << " deleted detail-footer section height update stdout:\n"
-                          << update_footer_process.stdout_text << "\n";
-                std::cerr << "studio host " << label << " deleted detail-footer section height update stderr:\n"
-                          << update_footer_process.stderr_text << "\n";
-                std::cerr << "fixture root: " << temp_root << "\n";
-            }
-
-            expect(update_footer_process.exit_code == 0,
-                   "#1804: deleted detail-footer section height update by stable selection should exit successfully");
-            const auto footer_height_property = copperfin::vfp::query_visual_object_property({
-                .path = asset_path.string(),
-                .record_index = 2U,
-                .object_name = {},
-                .unique_id = "deleted-detail-footer-guid",
-                .property_name = "HEIGHT"
-            });
-            expect(footer_height_property.ok && footer_height_property.exists &&
-                       footer_height_property.value == "290",
-                   "#1804: deleted detail-footer section height update should persist the HEIGHT field");
-            expect_contains(update_footer_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
-                            "#1804: deleted detail-footer section height update should return refreshed layout JSON");
-            if (asset_path.extension() == ".lbx") {
-                expect_contains(update_footer_process.stdout_text, "\"isLabel\": true",
-                                "#1804: deleted detail-footer label section height update should retain label identity");
-            }
-            expect_contains(update_footer_process.stdout_text, "\"sectionCount\": 1",
-                            "#1804: deleted detail-footer section height update should preserve live section count");
-            expect_contains(update_footer_process.stdout_text, "\"deletedSectionCount\": 2",
-                            "#1804: deleted detail-footer section height update should preserve deleted section count");
-            expect_contains(update_footer_process.stdout_text, "\"sectionHeightTotal\": 500",
-                            "#1804: deleted detail-footer section height update should preserve live section heights");
-            expect_contains(update_footer_process.stdout_text, "\"deletedSectionHeightTotal\": 650",
-                            "#1804: deleted detail-footer section height update should refresh deleted section heights");
-            expect_contains(update_footer_process.stdout_text, "\"previewBoundsAvailable\": true",
-                            "#2236: deleted detail-footer section height update should preserve live preview availability");
-            expect_contains(update_footer_process.stdout_text, "\"previewBoundsTop\": 0",
-                            "#2236: deleted detail-footer section height update should preserve live preview top bounds");
-            expect_contains(update_footer_process.stdout_text, "\"previewBoundsBottom\": 500",
-                            "#2236: deleted detail-footer section height update should preserve live preview bottom bounds");
-            expect_contains(update_footer_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
-                            "#2236: deleted detail-footer section height update should preserve deleted preview availability");
-            expect_contains(update_footer_process.stdout_text, "\"deletedPreviewBoundsTop\": 500",
-                            "#2236: deleted detail-footer section height update should preserve deleted preview top bounds");
-            expect_contains(update_footer_process.stdout_text, "\"deletedPreviewBoundsBottom\": 1090",
-                            "#2236: deleted detail-footer section height update should refresh deleted preview bottom bounds");
-            expect_contains(update_footer_process.stdout_text, "\"deletedPreviewBoundsHeight\": 590",
-                            "#2236: deleted detail-footer section height update should refresh deleted preview heights");
-            expect_contains(update_footer_process.stdout_text, "\"selectedReportSectionAvailable\": true",
-                            "#1804: deleted detail-footer section height update should preserve selected section availability");
-            expect_contains(update_footer_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
-                            "#1804: deleted detail-footer section height update should preserve selection kind");
-            expect_contains(update_footer_process.stdout_text, "\"dryRun\": false",
-                            "#2236: deleted detail-footer section height update JSON should expose committed state");
-            expect_contains(update_footer_process.stdout_text, "\"mutatesAsset\": true",
-                            "#2236: deleted detail-footer section height update JSON should expose mutation state");
-            expect_contains(update_footer_process.stdout_text, "\"undoAvailable\": true",
-                            "#2236: deleted detail-footer section height update JSON should expose undo availability");
-            expect_contains(update_footer_process.stdout_text, "\"undoLabel\": \"Property HEIGHT\"",
-                            "#2236: deleted detail-footer section height update JSON should expose height undo labels");
-            expect_contains_in_order(
-                update_footer_process.stdout_text,
-                {
-                    "\"selectedReportSection\": {",
-                    "\"title\": \"Detail Footer\"",
-                    "\"bandKind\": \"detail_footer\"",
-                    "\"recordIndex\": 2",
-                    "\"deleted\": true",
-                    "\"sectionIndex\": null",
-                    "\"sectionCount\": 0",
-                    "\"objectCode\": 10",
-                    "\"top\": 800",
-                    "\"height\": 290",
-                    "\"bottom\": 1090"
-                },
-                "#1804: deleted detail-footer section height update should refresh selected-section geometry");
-        };
-
-    run_deleted_detail_header_footer_section_height_update(
-        temp_root / "deleted_detail_header_footer_section_height_stable.frx",
-        "deleted_detail_header_footer_section_height_stable.frx",
-        "report");
-    run_deleted_detail_header_footer_section_height_update(
-        temp_root / "deleted_detail_header_footer_section_height_stable.lbx",
-        "deleted_detail_header_footer_section_height_stable.lbx",
-        "label");
-
-    if (failures == 0) {
-        fs::remove_all(temp_root, ignored);
-    }
-}
-
 void test_studio_host_json_exposes_deleted_object_counts_per_section(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -1147,6 +10,7 @@ void test_studio_host_json_exposes_deleted_object_counts_per_section(
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_section_deleted_object_count_json = [&](const fs::path& asset_path,
                                                            const std::string& title,
@@ -1319,6 +183,7 @@ void test_studio_host_json_exposes_record_selected_nested_group_sections(
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_nested_group_section_json = [&](const fs::path& asset_path,
                                                    const std::string& title,
@@ -1476,6 +341,7 @@ void test_studio_host_json_exposes_record_selected_deleted_nested_group_sections
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_deleted_nested_group_section_json = [&](const fs::path& asset_path,
                                                            const std::string& title,
@@ -1649,6 +515,7 @@ void test_studio_host_json_exposes_selected_group_header_report_sections_by_reco
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path report_path = temp_root / "selected_group_header_section_record.frx";
     write_synthetic_report_table_for_stable_group_section_expression_json(report_path);
@@ -1758,6 +625,7 @@ void test_studio_host_json_exposes_selected_group_footer_report_sections_by_reco
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path report_path = temp_root / "selected_group_footer_section_record.frx";
     write_synthetic_report_table_for_stable_group_section_expression_json(report_path);
@@ -1867,6 +735,7 @@ void test_studio_host_json_exposes_selected_deleted_group_header_report_sections
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path report_path = temp_root / "selected_deleted_group_header_section_record.frx";
     write_synthetic_report_table_for_stable_group_section_expression_json(report_path);
@@ -1998,6 +867,7 @@ void test_studio_host_json_exposes_selected_deleted_group_footer_report_sections
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path report_path = temp_root / "selected_deleted_group_footer_section_record.frx";
     write_synthetic_report_table_for_stable_group_section_expression_json(report_path);
@@ -2129,6 +999,7 @@ void test_studio_host_json_exposes_selected_summary_report_sections_by_record_se
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path report_path = temp_root / "selected_summary_section_record.frx";
     write_synthetic_report_table_for_stable_summary_section_json(report_path);
@@ -2230,6 +1101,7 @@ void test_studio_host_json_exposes_selected_deleted_summary_report_sections_by_r
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path report_path = temp_root / "selected_deleted_summary_section_record.frx";
     write_synthetic_report_table_for_stable_summary_section_json(report_path);
@@ -2353,6 +1225,7 @@ void test_studio_host_json_exposes_selected_title_report_sections_by_record_sele
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path report_path = temp_root / "selected_title_section_record.frx";
     write_synthetic_report_table_for_stable_title_section_json(report_path);
@@ -2455,6 +1328,7 @@ void test_studio_host_json_exposes_selected_deleted_title_report_sections_by_rec
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path report_path = temp_root / "selected_deleted_title_section_record.frx";
     write_synthetic_report_table_for_stable_title_section_json(report_path);
@@ -2580,6 +1454,7 @@ void test_studio_host_json_exposes_selected_page_footer_report_sections_by_recor
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path report_path = temp_root / "selected_page_footer_section_record.frx";
     write_synthetic_report_table_for_stable_title_section_json(report_path);
@@ -2682,6 +1557,7 @@ void test_studio_host_json_exposes_selected_deleted_page_footer_report_sections_
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path report_path = temp_root / "selected_deleted_page_footer_section_record.frx";
     write_synthetic_report_table_for_stable_title_section_json(report_path);
@@ -2807,6 +1683,7 @@ void test_studio_host_json_exposes_selected_column_header_report_sections_by_rec
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path report_path = temp_root / "selected_column_header_section_record.frx";
     write_synthetic_report_table_for_stable_column_section_json(report_path);
@@ -2909,6 +1786,7 @@ void test_studio_host_json_exposes_selected_deleted_column_header_report_section
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path report_path = temp_root / "selected_deleted_column_header_section_record.frx";
     write_synthetic_report_table_for_stable_column_section_json(report_path);
@@ -3034,6 +1912,7 @@ void test_studio_host_json_exposes_selected_column_footer_report_sections_by_rec
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path report_path = temp_root / "selected_column_footer_section_record.frx";
     write_synthetic_report_table_for_stable_column_section_json(report_path);
@@ -3136,6 +2015,7 @@ void test_studio_host_json_exposes_selected_deleted_column_footer_report_section
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path report_path = temp_root / "selected_deleted_column_footer_section_record.frx";
     write_synthetic_report_table_for_stable_column_section_json(report_path);
@@ -3261,6 +2141,7 @@ void test_studio_host_json_exposes_selected_page_header_report_sections_by_recor
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path report_path = temp_root / "selected_page_header_section_record.frx";
     write_synthetic_report_table_for_stable_page_header_section_json(report_path);
@@ -3363,6 +2244,7 @@ void test_studio_host_json_exposes_selected_deleted_page_header_report_sections_
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path report_path = temp_root / "selected_deleted_page_header_section_record.frx";
     write_synthetic_report_table_for_stable_page_header_section_json(report_path);
@@ -3488,6 +2370,7 @@ void test_studio_host_json_exposes_selected_summary_report_sections_by_stable_se
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_summary_section_selection = [&](const fs::path& asset_path,
                                                    const std::string& title,
@@ -3602,6 +2485,7 @@ void test_studio_host_json_exposes_selected_deleted_summary_report_sections_by_s
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_deleted_summary_section_selection = [&](const fs::path& asset_path,
                                                            const std::string& title,
@@ -3738,6 +2622,7 @@ void test_studio_host_json_exposes_report_title_sections_by_stable_selection(
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_title_section_json = [&](const fs::path& asset_path,
                                             const std::string& title,
@@ -3852,6 +2737,7 @@ void test_studio_host_json_exposes_deleted_report_title_sections_by_stable_selec
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_deleted_title_section_json = [&](const fs::path& asset_path,
                                                     const std::string& title,
@@ -3990,6 +2876,7 @@ void test_studio_host_json_exposes_deleted_report_page_footer_sections_by_stable
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_deleted_page_footer_section_json = [&](const fs::path& asset_path,
                                                           const std::string& title,
@@ -4128,6 +3015,7 @@ void test_studio_host_json_exposes_report_page_footer_sections_by_stable_selecti
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_page_footer_section_json = [&](const fs::path& asset_path,
                                                   const std::string& title,
@@ -4242,6 +3130,7 @@ void test_studio_host_json_exposes_report_column_header_sections_by_stable_selec
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_column_header_section_json = [&](const fs::path& asset_path,
                                                     const std::string& title,
@@ -4356,6 +3245,7 @@ void test_studio_host_json_exposes_deleted_report_column_header_sections_by_stab
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_deleted_column_header_section_json = [&](const fs::path& asset_path,
                                                             const std::string& title,
@@ -4494,6 +3384,7 @@ void test_studio_host_json_exposes_report_column_footer_sections_by_stable_selec
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto run_column_footer_section_json = [&](const fs::path& asset_path,
                                                     const std::string& title,
@@ -4593,6 +3484,843 @@ void test_studio_host_json_exposes_report_column_footer_sections_by_stable_selec
     run_column_footer_section_json(temp_root / "stable_column_footer_sections.lbx",
                                    "stable_column_footer_sections.lbx",
                                    "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_exposes_deleted_report_column_footer_sections_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_column_footer_section_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
+    const auto run_deleted_column_footer_section_json = [&](const fs::path& asset_path,
+                                                            const std::string& title,
+                                                            const std::string& label) {
+        write_synthetic_report_table_for_stable_column_section_json(asset_path);
+        const auto delete_result = copperfin::vfp::set_record_deleted_flag(asset_path.string(), 3U, true);
+        expect(delete_result.ok && dbf_record_deleted(asset_path, 3U),
+               "#1681: stable deleted column-footer fixture should mark the column-footer section deleted");
+
+        const auto process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "column-footer-section-guid", "--json"},
+            temp_root);
+
+        if (process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted column-footer section stdout:\n"
+                      << process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted column-footer section stderr:\n"
+                      << process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(process.exit_code == 0,
+               "#1681: stable selected deleted report/label column-footer section JSON should exit successfully");
+        expect_contains(process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1681: stable selected deleted column-footer section JSON should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(process.stdout_text, "\"isLabel\": true",
+                            "#1681: stable selected deleted column-footer label section JSON should retain label identity");
+        }
+        expect_contains(process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1681: stable selected deleted column-footer sections should advertise selected-section availability");
+        expect_contains(process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                        "#1681: stable selected deleted column-footer sections should advertise report-selection availability");
+        expect_contains(process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#1681: stable selected deleted column-footer sections should preserve section selection classification");
+        expect_contains(process.stdout_text, "\"sectionCount\": 2",
+                        "#1681: stable selected deleted column-footer section JSON should preserve live sibling section counts");
+        expect_contains(process.stdout_text, "\"deletedSectionCount\": 1",
+                        "#1681: stable selected deleted column-footer section JSON should expose deleted section counts");
+        expect_contains(process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1940: stable selected deleted column-footer section JSON should preserve live preview availability");
+        expect_contains(process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1940: stable selected deleted column-footer section JSON should preserve live preview left bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1940: stable selected deleted column-footer section JSON should preserve live preview top bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsRight\": 0",
+                        "#1940: stable selected deleted column-footer section JSON should preserve live preview right bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsBottom\": 3050",
+                        "#1940: stable selected deleted column-footer section JSON should refresh live preview bottom bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#1940: stable selected deleted column-footer section JSON should preserve live preview widths");
+        expect_contains(process.stdout_text, "\"previewBoundsHeight\": 3050",
+                        "#1940: stable selected deleted column-footer section JSON should refresh live preview heights");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1940: stable selected deleted column-footer section JSON should expose deleted preview availability");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                        "#1940: stable selected deleted column-footer section JSON should preserve deleted preview left bounds");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsTop\": 3050",
+                        "#1940: stable selected deleted column-footer section JSON should preserve deleted preview top bounds");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                        "#1940: stable selected deleted column-footer section JSON should preserve deleted preview right bounds");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsBottom\": 3450",
+                        "#1940: stable selected deleted column-footer section JSON should preserve deleted preview bottom bounds");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                        "#1940: stable selected deleted column-footer section JSON should preserve deleted preview widths");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsHeight\": 400",
+                        "#1940: stable selected deleted column-footer section JSON should preserve deleted preview heights");
+        expect_contains(process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                        "#1681: stable selected deleted column-footer sections should not advertise selected-object availability");
+        expect_contains(process.stdout_text, "\"selectedReportObject\": null",
+                        "#1681: stable selected deleted column-footer sections should serialize null selected objects");
+        expect_contains(process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1681: stable selected deleted column-footer sections should not advertise selected object-section availability");
+        expect_contains(process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1681: stable selected deleted column-footer sections should serialize null selected object sections");
+        expect_contains(process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1681: stable selected deleted column-footer sections should not advertise selected-settings availability");
+        expect_contains(process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1681: stable selected deleted column-footer sections should serialize null selected settings");
+        expect_contains_in_order(
+            process.stdout_text,
+            {
+                "\"deletedSections\": [",
+                "\"id\": \"column_footer_3\"",
+                "\"bandKind\": \"column_footer\"",
+                "\"recordIndex\": 3",
+                "\"deleted\": true"
+            },
+            "#1681: stable selected deleted column-footer section JSON should expose deleted section metadata");
+        expect_contains_in_order(
+            process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"id\": \"column_footer_3\"",
+                "\"bandKind\": \"column_footer\"",
+                "\"recordIndex\": 3",
+                "\"deleted\": true",
+                "\"sectionIndex\": null",
+                "\"sectionCount\": 0",
+                "\"top\": 3050",
+                "\"height\": 400",
+                "\"bottom\": 3450"
+            },
+            "#1681: stable selected deleted column-footer sections should expose selected section metadata");
+        expect_contains_in_order(
+            process.stdout_text,
+            {
+                "\"sections\": [",
+                "\"bandKind\": \"column_header\"",
+                "\"recordIndex\": 1",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 2"
+            },
+            "#1681: stable selected deleted column-footer section JSON should preserve live sibling metadata");
+    };
+
+    run_deleted_column_footer_section_json(temp_root / "stable_deleted_column_footer_sections.frx",
+                                           "stable_deleted_column_footer_sections.frx",
+                                           "report");
+    run_deleted_column_footer_section_json(temp_root / "stable_deleted_column_footer_sections.lbx",
+                                           "stable_deleted_column_footer_sections.lbx",
+                                           "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_exposes_selected_report_sections(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selected_report_section_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
+    const fs::path report_path = temp_root / "summary.frx";
+    write_synthetic_report_table_for_layout_json(report_path);
+
+    const auto section_process = run_process_capture(
+        studio_host_path,
+        {"--path", report_path.string(), "--record", "1", "--json"},
+        temp_root);
+
+    if (section_process.exit_code != 0) {
+        std::cerr << "studio host selected report section stdout:\n" << section_process.stdout_text << "\n";
+        std::cerr << "studio host selected report section stderr:\n" << section_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(section_process.exit_code == 0,
+           "#1453: selected report section JSON smoke should exit successfully");
+    expect_contains(section_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                    "#1453: report section selections should advertise selected-section availability");
+    expect_contains(section_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                    "#1457: report section selections should advertise report-selection availability");
+    expect_contains(section_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                    "#1457: report section selections should expose section selection kind");
+    expect_contains(section_process.stdout_text, "\"selectedReportSection\": {",
+                    "#1453: report section selections should expose selected-section JSON");
+    expect_contains(section_process.stdout_text, "\"previewBoundsAvailable\": true",
+                    "#1960: selected report section JSON should expose live preview availability");
+    expect_contains(section_process.stdout_text, "\"previewBoundsLeft\": 0",
+                    "#1960: selected report section JSON should preserve live preview left bounds");
+    expect_contains(section_process.stdout_text, "\"previewBoundsTop\": 0",
+                    "#1960: selected report section JSON should preserve live preview top bounds");
+    expect_contains(section_process.stdout_text, "\"previewBoundsRight\": 5200",
+                    "#1960: selected report section JSON should preserve live preview right bounds");
+    expect_contains(section_process.stdout_text, "\"previewBoundsBottom\": 8100",
+                    "#1960: selected report section JSON should preserve live preview bottom bounds");
+    expect_contains(section_process.stdout_text, "\"previewBoundsWidth\": 5200",
+                    "#1960: selected report section JSON should preserve live preview widths");
+    expect_contains(section_process.stdout_text, "\"previewBoundsHeight\": 8100",
+                    "#1960: selected report section JSON should preserve live preview heights");
+    expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                    "#1960: selected report section JSON should expose deleted preview availability");
+    expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsLeft\": 1000",
+                    "#1960: selected report section JSON should preserve deleted preview left bounds");
+    expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+                    "#1960: selected report section JSON should preserve deleted preview top bounds");
+    expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
+                    "#1960: selected report section JSON should preserve deleted preview right bounds");
+    expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2900",
+                    "#1960: selected report section JSON should preserve deleted preview bottom bounds");
+    expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1200",
+                    "#1960: selected report section JSON should preserve deleted preview widths");
+    expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
+                    "#1960: selected report section JSON should preserve deleted preview heights");
+    expect_contains(section_process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                    "#1512: selected report sections should not advertise selected-object availability");
+    expect_contains(section_process.stdout_text, "\"selectedReportObject\": null",
+                    "#1512: selected report sections should serialize null selected objects");
+    expect_contains(section_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                    "#1512: selected report sections should not advertise containing-object-section availability");
+    expect_contains(section_process.stdout_text, "\"selectedReportObjectSection\": null",
+                    "#1512: selected report sections should serialize null containing-object sections");
+    expect_contains(section_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                    "#1512: selected report sections should not advertise selected-settings availability");
+    expect_contains(section_process.stdout_text, "\"selectedReportSettings\": null",
+                    "#1512: selected report sections should serialize null selected settings");
+    expect_contains(section_process.stdout_text, "\"id\": \"page_header_1\"",
+                    "#1453: selected report section JSON should expose the selected section id");
+    expect_contains(section_process.stdout_text, "\"bandKind\": \"page_header\"",
+                    "#1453: selected report section JSON should expose the selected band kind");
+    expect_contains(section_process.stdout_text, "\"recordIndex\": 1",
+                    "#1453: selected report section JSON should expose the selected section record index");
+    expect_contains(section_process.stdout_text, "\"sectionIndex\": 0",
+                    "#1460: selected report section JSON should expose section order");
+    expect_contains(section_process.stdout_text, "\"sectionCount\": 2",
+                    "#1460: selected report section JSON should expose live section counts");
+    expect_contains(section_process.stdout_text, "\"objectCode\": 1",
+                    "#1453: selected report section JSON should preserve raw section object codes");
+    expect_contains(section_process.stdout_text, "\"bottom\": 2000",
+                    "#1461: selected report section JSON should expose section bottom-edge coordinates");
+    expect_contains(section_process.stdout_text, "\"objectCount\": 1",
+                    "#1453: selected report section JSON should preserve selected section object counts");
+    expect_contains(section_process.stdout_text, "\"objectKind\": \"label\"",
+                    "#1453: selected report section JSON should include selected section objects");
+
+    const fs::path deleted_section_path = temp_root / "deleted_section.frx";
+    write_synthetic_report_table_for_deleted_section_json(deleted_section_path);
+    const auto deleted_section_process = run_process_capture(
+        studio_host_path,
+        {"--path", deleted_section_path.string(), "--record", "1", "--json"},
+        temp_root);
+
+    if (deleted_section_process.exit_code != 0) {
+        std::cerr << "studio host selected deleted report section stdout:\n"
+                  << deleted_section_process.stdout_text << "\n";
+        std::cerr << "studio host selected deleted report section stderr:\n"
+                  << deleted_section_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(deleted_section_process.exit_code == 0,
+           "#1478: selected deleted report section JSON should exit successfully");
+    expect_contains(deleted_section_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                    "#1478: deleted report section selections should advertise selected-section availability");
+    expect_contains(deleted_section_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                    "#1478: deleted report section selections should advertise report-selection availability");
+    expect_contains(deleted_section_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                    "#1478: deleted report section selections should expose section selection kind");
+    expect_contains(deleted_section_process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                    "#1513: selected deleted report sections should not advertise selected-object availability");
+    expect_contains(deleted_section_process.stdout_text, "\"selectedReportObject\": null",
+                    "#1513: selected deleted report sections should serialize null selected objects");
+    expect_contains(deleted_section_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                    "#1513: selected deleted report sections should not advertise containing-object-section availability");
+    expect_contains(deleted_section_process.stdout_text, "\"selectedReportObjectSection\": null",
+                    "#1513: selected deleted report sections should serialize null containing-object sections");
+    expect_contains(deleted_section_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                    "#1513: selected deleted report sections should not advertise selected-settings availability");
+    expect_contains(deleted_section_process.stdout_text, "\"selectedReportSettings\": null",
+                    "#1513: selected deleted report sections should serialize null selected settings");
+    expect_contains(deleted_section_process.stdout_text, "\"sectionCount\": 0",
+                    "#1478: deleted selected report section JSON should not expose live sections");
+    expect_contains(deleted_section_process.stdout_text, "\"deletedSectionCount\": 1",
+                    "#1478: deleted selected report section JSON should expose deleted section counts");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsAvailable\": true",
+                    "#1961: deleted selected report section JSON should preserve live preview availability");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsLeft\": 100",
+                    "#1961: deleted selected report section JSON should preserve remaining live preview left bounds");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsTop\": 2600",
+                    "#1961: deleted selected report section JSON should preserve remaining live preview top bounds");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsRight\": 150",
+                    "#1961: deleted selected report section JSON should preserve remaining live preview right bounds");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsBottom\": 2800",
+                    "#1961: deleted selected report section JSON should preserve remaining live preview bottom bounds");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsWidth\": 50",
+                    "#1961: deleted selected report section JSON should preserve remaining live preview widths");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsHeight\": 200",
+                    "#1961: deleted selected report section JSON should preserve remaining live preview heights");
+    expect_contains(deleted_section_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                    "#1524: deleted selected report section JSON should expose deleted preview bounds availability");
+    expect_contains(deleted_section_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                    "#1524: deleted selected report section JSON should expose deleted section preview left bounds");
+    expect_contains(deleted_section_process.stdout_text, "\"deletedPreviewBoundsTop\": 2000",
+                    "#1524: deleted selected report section JSON should expose deleted section preview top bounds");
+    expect_contains(deleted_section_process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                    "#1524: deleted selected report section JSON should expose deleted section preview right bounds");
+    expect_contains(deleted_section_process.stdout_text, "\"deletedPreviewBoundsBottom\": 7000",
+                    "#1524: deleted selected report section JSON should expose deleted section preview bottom bounds");
+    expect_contains(deleted_section_process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                    "#1524: deleted selected report section JSON should expose deleted section preview width");
+    expect_contains(deleted_section_process.stdout_text, "\"deletedPreviewBoundsHeight\": 5000",
+                    "#1524: deleted selected report section JSON should expose deleted section preview height");
+    expect_contains(deleted_section_process.stdout_text, "\"placedObjectCount\": 0",
+                    "#1522: deleted selected report section JSON should not fabricate placed object counts");
+    expect_contains(deleted_section_process.stdout_text, "\"deletedPlacedObjectCount\": 0",
+                    "#1523: deleted selected report section JSON should not fabricate deleted placed object counts");
+    expect_contains(deleted_section_process.stdout_text, "\"deletedUnplacedObjectCount\": 0",
+                    "#1523: deleted selected report section JSON should not fabricate deleted unplaced object counts");
+    expect_contains(deleted_section_process.stdout_text, "\"sectionKindCount\": 0",
+                    "#1520: deleted selected report section JSON should not fabricate live section band-kind buckets");
+    expect_contains(deleted_section_process.stdout_text, "\"deletedSectionKindCount\": 1",
+                    "#1520: deleted selected report section JSON should summarize deleted section band-kind buckets");
+    expect_contains(deleted_section_process.stdout_text, "\"deletedSectionKindCounts\": [\n        {\"kind\": \"detail\", \"count\": 1}\n      ]",
+                    "#1520: deleted selected report section JSON should count deleted detail sections");
+    expect_contains(deleted_section_process.stdout_text, "\"sectionHeightTotal\": 0",
+                    "#1521: deleted selected report section JSON should not fabricate live section heights");
+    expect_contains(deleted_section_process.stdout_text, "\"deletedSectionHeightTotal\": 5000",
+                    "#1521: deleted selected report section JSON should summarize deleted section heights");
+    expect_contains_in_order(
+        deleted_section_process.stdout_text,
+        {
+            "\"selectedReportSection\": {",
+            "\"bandKind\": \"detail\"",
+            "\"recordIndex\": 1",
+            "\"deleted\": true",
+            "\"sectionIndex\": null",
+            "\"sectionCount\": 0"
+        },
+        "#1478: deleted report section selections should expose deleted selected-section metadata");
+
+    const auto object_process = run_process_capture(
+        studio_host_path,
+        {"--path", report_path.string(), "--record", "3", "--json"},
+        temp_root);
+
+    if (object_process.exit_code != 0) {
+        std::cerr << "studio host selected report object stdout:\n" << object_process.stdout_text << "\n";
+        std::cerr << "studio host selected report object stderr:\n" << object_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(object_process.exit_code == 0,
+           "#1453: selected report object JSON smoke should exit successfully");
+    expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                    "#1453: non-section report selections should not advertise selected-section availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportSection\": null",
+                    "#1453: non-section report selections should serialize null selected sections");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_exposes_selected_page_header_report_objects_orphaned_by_deleted_sections(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selected_orphaned_page_header_report_objects_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
+    const auto run_orphaned_page_header_object_selection = [&](const fs::path& asset_path,
+                                                               const std::string& title,
+                                                               const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto delete_section_result =
+            copperfin::vfp::set_record_deleted_flag(asset_path.string(), 1U, true);
+        expect(delete_section_result.ok && dbf_record_deleted(asset_path, 1U),
+               "#1671: report/label orphaned page-header object fixture should mark the containing section deleted");
+
+        const auto object_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "label-guid", "--json"},
+            temp_root);
+
+        if (object_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable selected orphaned page-header object stdout:\n"
+                      << object_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable selected orphaned page-header object stderr:\n"
+                      << object_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(object_process.exit_code == 0,
+               "#1671: stable selected orphaned page-header report/label object JSON should exit successfully");
+        expect_contains(object_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1671: stable selected orphaned page-header report/label object JSON should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(object_process.stdout_text, "\"isLabel\": true",
+                            "#1671: stable selected orphaned page-header label object JSON should retain label identity");
+        }
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1671: stable orphaned page-header object selections should advertise selected-object availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                        "#1671: stable orphaned page-header object selections should advertise report-selection availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1671: stable orphaned page-header object selections should expose object selection kind");
+        expect_contains(object_process.stdout_text, "\"sectionCount\": 1",
+                        "#1671: stable orphaned page-header object selections should update live section counts");
+        expect_contains(object_process.stdout_text, "\"deletedSectionCount\": 1",
+                        "#1671: stable orphaned page-header object selections should expose deleted section counts");
+        expect_contains(object_process.stdout_text, "\"liveObjectCount\": 3",
+                        "#1671: stable orphaned page-header object selections should preserve live object counts");
+        expect_contains(object_process.stdout_text, "\"placedObjectCount\": 2",
+                        "#2690: live objects inside deleted page-header sections should remain placed");
+        expect_contains(object_process.stdout_text, "\"unplacedObjectCount\": 1",
+                        "#2690: live objects inside deleted page-header sections should not be counted as unplaced");
+        expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1671: stable orphaned page-header object selections should preserve deleted object counts");
+        expect_contains(object_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1953: stable orphaned page-header object JSON should preserve live preview availability");
+        expect_contains(object_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1953: stable orphaned page-header object JSON should preserve live preview left bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsTop\": 2000",
+                        "#2690: live deleted-section page-header objects should drop out of live preview top bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsRight\": 5200",
+                        "#1953: stable orphaned page-header object JSON should preserve live preview right bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsBottom\": 8100",
+                        "#1953: stable orphaned page-header object JSON should preserve live preview bottom bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsWidth\": 5200",
+                        "#1953: stable orphaned page-header object JSON should preserve live preview widths");
+        expect_contains(object_process.stdout_text, "\"previewBoundsHeight\": 6100",
+                        "#2690: live deleted-section page-header objects should shrink live preview heights");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1953: stable orphaned page-header object JSON should expose deleted preview availability");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                        "#1953: stable orphaned page-header object JSON should preserve deleted preview left bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsTop\": 0",
+                        "#1953: stable orphaned page-header object JSON should preserve deleted preview top bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsRight\": 2700",
+                        "#2690: live deleted-section page-header objects should expand deleted preview right bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2900",
+                        "#1953: stable orphaned page-header object JSON should preserve deleted preview bottom bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsWidth\": 2700",
+                        "#2690: live deleted-section page-header objects should expand deleted preview widths");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsHeight\": 2900",
+                        "#1953: stable orphaned page-header object JSON should preserve deleted preview heights");
+        expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                        "#1671: stable orphaned page-header object selections should not advertise selected-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSection\": null",
+                        "#1671: stable orphaned page-header object selections should serialize null selected sections");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1671: stable orphaned page-header object selections should not advertise selected-settings availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1671: stable orphaned page-header object selections should serialize null selected settings");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#2690: live objects inside deleted page-header sections should advertise containing-section availability");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"page_header_1\"",
+                "\"bandKind\": \"page_header\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": true",
+                "\"objectCount\": 1"
+            },
+            "#2690: live objects inside deleted page-header sections should expose deleted containing-section JSON");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 4",
+                "\"deleted\": false",
+                "\"containingSectionId\": \"page_header_1\"",
+                "\"containingSectionRecordIndex\": 1",
+                "\"sectionRelativeTop\": 100",
+                "\"sectionRelativeBottom\": 450",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 1",
+                "\"objectTypeCode\": 5",
+                "\"objectKind\": \"label\"",
+                "\"expression\": \"\\\"Invoice\\\"\"",
+                "\"expressionFieldIndex\": 2"
+            },
+            "#2690: live objects inside deleted page-header sections should expose selected object metadata with deleted-section membership");
+        expect_contains(object_process.stdout_text, "\"left\": 900",
+                        "#1671: stable orphaned page-header object selections should expose selected-object left bounds");
+        expect_contains(object_process.stdout_text, "\"top\": 100",
+                        "#1671: stable orphaned page-header object selections should expose selected-object top bounds");
+        expect_contains(object_process.stdout_text, "\"width\": 1800",
+                        "#1671: stable orphaned page-header object selections should expose selected-object widths");
+        expect_contains(object_process.stdout_text, "\"right\": 2700",
+                        "#1671: stable orphaned page-header object selections should expose selected-object right bounds");
+        expect_contains(object_process.stdout_text, "\"height\": 350",
+                        "#1671: stable orphaned page-header object selections should expose selected-object heights");
+        expect_contains(object_process.stdout_text, "\"bottom\": 450",
+                        "#1671: stable orphaned page-header object selections should expose selected-object bottom bounds");
+        expect_contains(object_process.stdout_text,
+                        "\"name\": \"EXPR\", \"recordIndex\": 4, \"fieldIndex\": 2, \"sourceLineIndex\": null, \"memoBlockNumber\": 4, \"value\": \"\\\"Invoice\\\"\"",
+                        "#1671: stable orphaned page-header object selections should expose selected-object expression provenance");
+    };
+
+    run_orphaned_page_header_object_selection(temp_root / "selected_orphaned_page_header_object_stable.frx",
+                                              "selected_orphaned_page_header_object_stable.frx",
+                                              "report");
+    run_orphaned_page_header_object_selection(temp_root / "selected_orphaned_page_header_object_stable.lbx",
+                                              "selected_orphaned_page_header_object_stable.lbx",
+                                              "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_exposes_selected_detail_report_objects_orphaned_by_deleted_sections(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selected_orphaned_detail_report_objects_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
+    const auto run_orphaned_detail_object_selection = [&](const fs::path& asset_path,
+                                                          const std::string& title,
+                                                          const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto delete_section_result =
+            copperfin::vfp::set_record_deleted_flag(asset_path.string(), 2U, true);
+        expect(delete_section_result.ok && dbf_record_deleted(asset_path, 2U),
+               "#1672: report/label orphaned detail object fixture should mark the containing section deleted");
+
+        const auto object_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "field-guid", "--json"},
+            temp_root);
+
+        if (object_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable selected orphaned detail object stdout:\n"
+                      << object_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable selected orphaned detail object stderr:\n"
+                      << object_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(object_process.exit_code == 0,
+               "#1672: stable selected orphaned detail report/label object JSON should exit successfully");
+        expect_contains(object_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1672: stable selected orphaned detail report/label object JSON should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(object_process.stdout_text, "\"isLabel\": true",
+                            "#1672: stable selected orphaned detail label object JSON should retain label identity");
+        }
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1672: stable orphaned detail object selections should advertise selected-object availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                        "#1672: stable orphaned detail object selections should advertise report-selection availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1672: stable orphaned detail object selections should expose object selection kind");
+        expect_contains(object_process.stdout_text, "\"sectionCount\": 1",
+                        "#1672: stable orphaned detail object selections should update live section counts");
+        expect_contains(object_process.stdout_text, "\"deletedSectionCount\": 1",
+                        "#1672: stable orphaned detail object selections should expose deleted section counts");
+        expect_contains(object_process.stdout_text, "\"liveObjectCount\": 3",
+                        "#1672: stable orphaned detail object selections should preserve live object counts");
+        expect_contains(object_process.stdout_text, "\"placedObjectCount\": 2",
+                        "#2690: live objects inside deleted detail sections should remain placed");
+        expect_contains(object_process.stdout_text, "\"unplacedObjectCount\": 1",
+                        "#2690: live objects inside deleted detail sections should not be counted as unplaced");
+        expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1672: stable orphaned detail object selections should preserve deleted object counts");
+        expect_contains(object_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1954: stable orphaned detail object JSON should preserve live preview availability");
+        expect_contains(object_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1954: stable orphaned detail object JSON should preserve live preview left bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1954: stable orphaned detail object JSON should preserve live preview top bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsRight\": 2700",
+                        "#2690: live deleted-section detail objects should drop out of live preview right bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsBottom\": 8100",
+                        "#1954: stable orphaned detail object JSON should preserve live preview bottom bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsWidth\": 5200",
+                        "#1954: stable orphaned detail object JSON should preserve live preview widths");
+        expect_contains(object_process.stdout_text, "\"previewBoundsHeight\": 8100",
+                        "#1954: stable orphaned detail object JSON should preserve live preview heights");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1954: stable orphaned detail object JSON should expose deleted preview availability");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                        "#1954: stable orphaned detail object JSON should preserve deleted preview left bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsTop\": 2000",
+                        "#1954: stable orphaned detail object JSON should preserve deleted preview top bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsRight\": 5200",
+                        "#2690: live deleted-section detail objects should expand deleted preview right bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsBottom\": 7000",
+                        "#1954: stable orphaned detail object JSON should preserve deleted preview bottom bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsWidth\": 2200",
+                        "#1954: stable orphaned detail object JSON should preserve deleted preview widths");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsHeight\": 5000",
+                        "#1954: stable orphaned detail object JSON should preserve deleted preview heights");
+        expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                        "#1672: stable orphaned detail object selections should not advertise selected-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSection\": null",
+                        "#1672: stable orphaned detail object selections should serialize null selected sections");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1672: stable orphaned detail object selections should not advertise selected-settings availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1672: stable orphaned detail object selections should serialize null selected settings");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#2690: live objects inside deleted detail sections should advertise containing-section availability");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"detail_2\"",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 2",
+                "\"deleted\": true",
+                "\"objectCount\": 1"
+            },
+            "#2690: live objects inside deleted detail sections should expose deleted containing-section JSON");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"deleted\": false",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 1050",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 1",
+                "\"objectTypeCode\": 8",
+                "\"objectKind\": \"field\"",
+                "\"expression\": \"customer.company\"",
+                "\"expressionFieldIndex\": 2",
+                "\"highlightCount\": 2"
+            },
+            "#2690: live objects inside deleted detail sections should expose selected object metadata with deleted-section membership");
+        expect_contains(object_process.stdout_text, "\"left\": 1200",
+                        "#1672: stable orphaned detail object selections should expose selected-object left bounds");
+        expect_contains(object_process.stdout_text, "\"top\": 2600",
+                        "#1672: stable orphaned detail object selections should expose selected-object top bounds");
+        expect_contains(object_process.stdout_text, "\"width\": 4000",
+                        "#1672: stable orphaned detail object selections should expose selected-object widths");
+        expect_contains(object_process.stdout_text, "\"right\": 5200",
+                        "#1672: stable orphaned detail object selections should expose selected-object right bounds");
+        expect_contains(object_process.stdout_text, "\"height\": 450",
+                        "#1672: stable orphaned detail object selections should expose selected-object heights");
+        expect_contains(object_process.stdout_text, "\"bottom\": 3050",
+                        "#1672: stable orphaned detail object selections should expose selected-object bottom bounds");
+        expect_contains(object_process.stdout_text,
+                        "\"name\": \"FONTFACE\", \"recordIndex\": 3, \"fieldIndex\": 7, \"sourceLineIndex\": null, \"memoBlockNumber\": 3, \"value\": \"Segoe UI\"",
+                        "#1672: stable orphaned detail object selections should expose selected-object field provenance");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"sections\": [",
+                "\"id\": \"page_header_1\"",
+                "\"bandKind\": \"page_header\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": false"
+            },
+            "#1672: stable orphaned detail object selections should preserve sibling page-header metadata");
+    };
+
+    run_orphaned_detail_object_selection(temp_root / "selected_orphaned_detail_object_stable.frx",
+                                         "selected_orphaned_detail_object_stable.frx",
+                                         "report");
+    run_orphaned_detail_object_selection(temp_root / "selected_orphaned_detail_object_stable.lbx",
+                                         "selected_orphaned_detail_object_stable.lbx",
+                                         "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_exposes_selected_deleted_detail_report_objects_orphaned_by_deleted_sections(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selected_deleted_orphaned_detail_report_objects_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
+    const auto run_deleted_orphaned_detail_object_selection = [&](const fs::path& asset_path,
+                                                                  const std::string& title,
+                                                                  const std::string& label) {
+        write_synthetic_report_table_for_stable_deleted_layout_json(asset_path);
+        const auto delete_section_result =
+            copperfin::vfp::set_record_deleted_flag(asset_path.string(), 2U, true);
+        expect(delete_section_result.ok && dbf_record_deleted(asset_path, 2U),
+               "#1673: report/label deleted orphaned detail object fixture should mark the containing section deleted");
+        expect(dbf_record_deleted(asset_path, 6U),
+               "#1673: report/label deleted orphaned detail object fixture should preserve deleted object state");
+
+        const auto object_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "deleted-label-guid", "--json"},
+            temp_root);
+
+        if (object_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable selected deleted orphaned detail object stdout:\n"
+                      << object_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable selected deleted orphaned detail object stderr:\n"
+                      << object_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(object_process.exit_code == 0,
+               "#1673: stable selected deleted orphaned detail report/label object JSON should exit successfully");
+        expect_contains(object_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1673: stable selected deleted orphaned detail report/label object JSON should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(object_process.stdout_text, "\"isLabel\": true",
+                            "#1673: stable selected deleted orphaned detail label object JSON should retain label identity");
+        }
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1673: stable deleted orphaned detail object selections should advertise selected-object availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                        "#1673: stable deleted orphaned detail object selections should advertise report-selection availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1673: stable deleted orphaned detail object selections should expose object selection kind");
+        expect_contains(object_process.stdout_text, "\"sectionCount\": 1",
+                        "#1673: stable deleted orphaned detail object selections should update live section counts");
+        expect_contains(object_process.stdout_text, "\"deletedSectionCount\": 1",
+                        "#1673: stable deleted orphaned detail object selections should expose deleted section counts");
+        expect_contains(object_process.stdout_text, "\"liveObjectCount\": 3",
+                        "#1673: stable deleted orphaned detail object selections should preserve live object counts");
+        expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1673: stable deleted orphaned detail object selections should preserve deleted object counts");
+        expect_contains(object_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1955: stable deleted orphaned detail object JSON should preserve live preview availability");
+        expect_contains(object_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1955: stable deleted orphaned detail object JSON should preserve live preview left bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1955: stable deleted orphaned detail object JSON should preserve live preview top bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsRight\": 5200",
+                        "#1955: stable deleted orphaned detail object JSON should preserve live preview right bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsBottom\": 8100",
+                        "#1955: stable deleted orphaned detail object JSON should preserve live preview bottom bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsWidth\": 5200",
+                        "#1955: stable deleted orphaned detail object JSON should preserve live preview widths");
+        expect_contains(object_process.stdout_text, "\"previewBoundsHeight\": 8100",
+                        "#1955: stable deleted orphaned detail object JSON should preserve live preview heights");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1955: stable deleted orphaned detail object JSON should expose deleted preview availability");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                        "#1955: stable deleted orphaned detail object JSON should preserve deleted preview left bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsTop\": 2000",
+                        "#1955: stable deleted orphaned detail object JSON should preserve deleted preview top bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
+                        "#1955: stable deleted orphaned detail object JSON should preserve deleted preview right bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsBottom\": 7000",
+                        "#1955: stable deleted orphaned detail object JSON should preserve deleted preview bottom bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsWidth\": 2200",
+                        "#1955: stable deleted orphaned detail object JSON should preserve deleted preview widths");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsHeight\": 5000",
+                        "#1955: stable deleted orphaned detail object JSON should preserve deleted preview heights");
+        expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                        "#1673: stable deleted orphaned detail object selections should not advertise selected-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSection\": null",
+                        "#1673: stable deleted orphaned detail object selections should serialize null selected sections");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1673: stable deleted orphaned detail object selections should not advertise selected-settings availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1673: stable deleted orphaned detail object selections should serialize null selected settings");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#2689: deleted objects inside deleted detail sections should advertise containing-section availability");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"detail_2\"",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 2",
+                "\"deleted\": true",
+                "\"objectCount\": 1",
+                "\"deletedObjectCount\": 1"
+            },
+            "#2689: deleted objects inside deleted detail sections should expose deleted containing-section JSON");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 6",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 900",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 1",
+                "\"objectTypeCode\": 5",
+                "\"objectKind\": \"label\"",
+                "\"expression\": \"\\\"Deleted label\\\"\"",
+                "\"expressionFieldIndex\": 2"
+            },
+            "#2689: deleted objects inside deleted detail sections should expose selected object metadata with deleted-section membership");
+        expect_contains(object_process.stdout_text, "\"left\": 1000",
+                        "#1673: stable deleted orphaned detail object selections should expose selected-object left bounds");
+        expect_contains(object_process.stdout_text, "\"top\": 2600",
+                        "#1673: stable deleted orphaned detail object selections should expose selected-object top bounds");
+        expect_contains(object_process.stdout_text, "\"width\": 1200",
+                        "#1673: stable deleted orphaned detail object selections should expose selected-object widths");
+        expect_contains(object_process.stdout_text, "\"right\": 2200",
+                        "#1673: stable deleted orphaned detail object selections should expose selected-object right bounds");
+        expect_contains(object_process.stdout_text, "\"height\": 300",
+                        "#1673: stable deleted orphaned detail object selections should expose selected-object heights");
+        expect_contains(object_process.stdout_text, "\"bottom\": 2900",
+                        "#1673: stable deleted orphaned detail object selections should expose selected-object bottom bounds");
+        expect_contains(object_process.stdout_text,
+                        "\"name\": \"EXPR\", \"recordIndex\": 6, \"fieldIndex\": 2, \"sourceLineIndex\": null, \"memoBlockNumber\": 5, \"value\": \"\\\"Deleted label\\\"\"",
+                        "#1673: stable deleted orphaned detail object selections should expose selected-object expression provenance");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"sections\": [",
+                "\"id\": \"page_header_1\"",
+                "\"bandKind\": \"page_header\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": false"
+            },
+            "#1673: stable deleted orphaned detail object selections should preserve sibling page-header metadata");
+    };
+
+    run_deleted_orphaned_detail_object_selection(
+        temp_root / "selected_deleted_orphaned_detail_object_stable.frx",
+        "selected_deleted_orphaned_detail_object_stable.frx",
+        "report");
+    run_deleted_orphaned_detail_object_selection(
+        temp_root / "selected_deleted_orphaned_detail_object_stable.lbx",
+        "selected_deleted_orphaned_detail_object_stable.lbx",
+        "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);

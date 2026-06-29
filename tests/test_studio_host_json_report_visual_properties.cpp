@@ -10,6 +10,7 @@ void test_studio_host_json_clears_deleted_report_visual_properties_by_stable_sel
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto mark_deleted = [](const fs::path& asset_path, const std::string& unique_id) {
         const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
@@ -321,6 +322,7 @@ void test_studio_host_json_clears_deleted_report_visual_property_batches_by_stab
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto mark_deleted = [](const fs::path& asset_path, const std::string& unique_id) {
         const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
@@ -577,6 +579,7 @@ void test_studio_host_json_copies_deleted_report_visual_properties_by_stable_sel
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto mark_deleted = [](const fs::path& asset_path, const std::string& unique_id) {
         const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
@@ -908,6 +911,7 @@ void test_studio_host_json_copies_deleted_report_visual_property_batches_by_stab
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto mark_deleted = [](const fs::path& asset_path, const std::string& unique_id) {
         const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
@@ -1285,6 +1289,7 @@ void test_studio_host_json_moves_deleted_report_visual_properties_by_stable_sele
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto mark_deleted = [](const fs::path& asset_path, const std::string& unique_id) {
         const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
@@ -1615,6 +1620,7 @@ void test_studio_host_json_moves_deleted_report_visual_property_batches_by_stabl
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto mark_deleted = [](const fs::path& asset_path, const std::string& unique_id) {
         const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
@@ -1991,6 +1997,7 @@ void test_studio_host_json_rejects_deleted_report_visual_property_rename_by_stab
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto mark_deleted = [](const fs::path& asset_path, const std::string& unique_id) {
         const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
@@ -2210,6 +2217,7 @@ void test_studio_host_json_rejects_deleted_report_visual_property_rename_batches
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto mark_deleted = [](const fs::path& asset_path, const std::string& unique_id) {
         const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
@@ -2435,6 +2443,7 @@ void test_studio_host_json_rejects_deleted_report_visual_property_reorder_by_sta
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto mark_deleted = [](const fs::path& asset_path, const std::string& unique_id) {
         const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
@@ -2652,6 +2661,7 @@ void test_studio_host_json_rejects_deleted_report_visual_property_reorder_batche
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const auto mark_deleted = [](const fs::path& asset_path, const std::string& unique_id) {
         const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({

@@ -84,13 +84,15 @@ add_executable(test_studio_host_json
     test_studio_host_json.cpp
     test_studio_host_json_shared_test_helpers.cpp
     test_studio_host_json_diagnostics_appearance_and_drawing.cpp
-    test_studio_host_json_diagnostics_structure_and_selectors_1.cpp
-    test_studio_host_json_diagnostics_structure_and_selectors_2.cpp
+    test_studio_host_json_diagnostics_target_selectors.cpp
+    test_studio_host_json_diagnostics_values.cpp
+    test_studio_host_json_diagnostics_general.cpp
     test_studio_host_json_parse_diagnostics_toolbox.cpp
     test_studio_host_json_parse_diagnostics_visual.cpp
     test_studio_host_json_parse_diagnostics_core.cpp
-    test_studio_host_json_dispatch_toolbox_1.cpp
-    test_studio_host_json_dispatch_toolbox_2.cpp
+    test_studio_host_json_dispatch_toolbox_catalog_and_admission.cpp
+    test_studio_host_json_dispatch_toolbox_palette.cpp
+    test_studio_host_json_dispatch_toolbox_object_creation_plans.cpp
     test_studio_host_json_dispatch_builder.cpp
     test_studio_host_json_dispatch_designer.cpp
     test_studio_host_json_dispatch_editor_action.cpp
@@ -111,18 +113,29 @@ add_executable(test_studio_host_json
     test_studio_host_json_report_grouping_expressions.cpp
     test_studio_host_json_report_visual_properties.cpp
     test_studio_host_json_report_layout_classifications.cpp
-    test_studio_host_json_report_object_geometry_1.cpp
-    test_studio_host_json_report_object_geometry_2.cpp
-    test_studio_host_json_report_object_geometry_3.cpp
-    test_studio_host_json_report_settings_fields_1.cpp
-    test_studio_host_json_report_settings_fields_2.cpp
-    test_studio_host_json_report_sections_1.cpp
-    test_studio_host_json_report_sections_2.cpp
-    test_studio_host_json_report_sections_3.cpp
-    test_studio_host_json_report_objects_1.cpp
-    test_studio_host_json_report_objects_2.cpp
-    test_studio_host_json_report_objects_3.cpp
-    test_studio_host_json_report_objects_4.cpp
+    test_studio_host_json_geometry_preview_bounds.cpp
+    test_studio_host_json_geometry_dimensions.cpp
+    test_studio_host_json_geometry_font_metadata.cpp
+    test_studio_host_json_geometry_live_edit_actions.cpp
+    test_studio_host_json_geometry_column_width.cpp
+    test_studio_host_json_settings_page_layout_fields.cpp
+    test_studio_host_json_settings_memo_parsing.cpp
+    test_studio_host_json_settings_direct_field_validation.cpp
+    test_studio_host_json_settings_column_setup.cpp
+    test_studio_host_json_settings_diagnostics_and_misc.cpp
+    test_studio_host_json_sections_band_exposure.cpp
+    test_studio_host_json_sections_dhf_lifecycle.cpp
+    test_studio_host_json_sections_dhf_expressions_and_exposure.cpp
+    test_studio_host_json_sections_diagnostics_and_misc.cpp
+    test_studio_host_json_sections_geometry.cpp
+    test_studio_host_json_sections_move_and_placement.cpp
+    test_studio_host_json_objects_diagnostics_and_misc.cpp
+    test_studio_host_json_objects_dhf_layout_actions.cpp
+    test_studio_host_json_objects_dhf_lifecycle.cpp
+    test_studio_host_json_objects_dhf_expressions_and_exposure.cpp
+    test_studio_host_json_objects_band_exposure.cpp
+    test_studio_host_json_objects_layout_and_expressions.cpp
+    test_studio_host_json_objects_visual_batches.cpp
     test_studio_host_json_report_selection_resolution.cpp
     test_studio_host_json_report_memo_and_placeholders.cpp
     test_studio_host_json_report_shared_fixtures.cpp

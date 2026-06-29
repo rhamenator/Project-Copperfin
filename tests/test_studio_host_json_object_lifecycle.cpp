@@ -189,6 +189,7 @@ void test_studio_host_json_creates_toolbox_object_batches(const std::string& stu
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "customer.scx";
     write_synthetic_form_table_for_toolbox_creation(form_path);
@@ -423,6 +424,7 @@ void test_studio_host_json_creates_selection_toolbox_object_batches(const std::s
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "customer.scx";
     write_synthetic_form_table_for_toolbox_creation(form_path);
@@ -808,6 +810,7 @@ void test_studio_host_json_creates_selection_toolbox_objects(const std::string& 
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "customer.scx";
     write_synthetic_form_table_for_toolbox_creation(form_path);
@@ -1169,6 +1172,7 @@ void test_studio_host_json_creates_toolbox_objects(const std::string& studio_hos
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "customer.scx";
     write_synthetic_form_table_for_toolbox_creation(form_path);
@@ -1343,6 +1347,7 @@ void test_studio_host_json_sets_properties_by_stable_selectors(const std::string
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path form_path = temp_root / "customer.scx";
     write_synthetic_form_table_for_toolbox_creation(form_path);
@@ -1437,6 +1442,7 @@ void test_studio_host_json_renames_properties_by_stable_selectors(const std::str
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path object_name_path = write_synthetic_form_table_for_property_rename(temp_root, "object_name.scx");
     const auto object_name_process = run_process_capture(
@@ -1556,6 +1562,7 @@ void test_studio_host_json_applies_deleted_states_by_stable_selectors(const std:
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path batch_path = temp_root / "batch.scx";
     write_synthetic_form_table_for_deleted_states(batch_path);
@@ -1683,6 +1690,7 @@ void test_studio_host_json_applies_subtree_deleted_state_by_stable_selectors(con
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path unique_id_path = temp_root / "unique_id.scx";
     write_synthetic_form_table_for_subtree_deleted_state(unique_id_path);
@@ -1827,6 +1835,7 @@ void test_studio_host_json_duplicates_visual_object_subtrees(const std::string& 
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path subtree_path = temp_root / "subtree_duplicate.scx";
     write_synthetic_form_table_for_subtree_deleted_state(subtree_path);
@@ -2080,6 +2089,7 @@ void test_studio_host_json_deletes_objects_by_stable_selectors(const std::string
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path object_name_path = temp_root / "object_name.scx";
     write_synthetic_form_table_for_toolbox_creation(object_name_path);
@@ -2158,6 +2168,7 @@ void test_studio_host_json_restores_objects_by_stable_selectors(const std::strin
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path object_name_path = temp_root / "object_name.scx";
     write_synthetic_form_table_for_toolbox_creation(object_name_path);
@@ -2244,6 +2255,7 @@ void test_studio_host_json_duplicates_objects_by_stable_selectors(const std::str
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path object_name_path = temp_root / "object_name.scx";
     write_synthetic_form_table_for_toolbox_creation(object_name_path);
@@ -2338,6 +2350,7 @@ void test_studio_host_json_renames_objects_by_stable_selectors(const std::string
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path object_name_path = temp_root / "object_name.scx";
     write_synthetic_form_table_for_toolbox_creation(object_name_path);
@@ -2451,6 +2464,7 @@ void test_studio_host_json_reparents_objects_by_stable_selectors(const std::stri
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path object_name_path = temp_root / "object_name.scx";
     write_synthetic_form_table_for_object_reparent(object_name_path);
@@ -2568,6 +2582,7 @@ void test_studio_host_json_reorders_objects_by_stable_selectors(const std::strin
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path reorder_path = temp_root / "reorder.scx";
     write_synthetic_form_table_for_object_reorder(reorder_path);
@@ -2694,6 +2709,7 @@ void test_studio_host_json_groups_objects_by_stable_child_selectors(const std::s
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path group_path = temp_root / "group.scx";
     write_synthetic_form_table_for_object_group(group_path);
@@ -2807,6 +2823,7 @@ void test_studio_host_json_assigns_delete_mark_by_stable_selectors(const std::st
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path delete_mark_path = temp_root / "delete_mark.scx";
     write_synthetic_form_table_for_object_delete_mark(delete_mark_path);
@@ -2930,6 +2947,7 @@ void test_studio_host_json_ungroups_objects_by_stable_selectors(const std::strin
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
     const fs::path object_name_path = temp_root / "object_name.scx";
     write_synthetic_form_table_for_object_ungroup(object_name_path);
