@@ -1117,6 +1117,22 @@ add_test(
     COMMAND $<TARGET_FILE:test_studio_host_selected_title_objects_stable> $<TARGET_FILE:copperfin_studio_host>
 )
 
+add_executable(test_studio_host_selected_page_footer_objects_stable
+    test_studio_host_selected_page_footer_objects_stable.cpp
+)
+target_link_libraries(test_studio_host_selected_page_footer_objects_stable PRIVATE cf_vfp_assets)
+
+if(MSVC)
+    target_compile_options(test_studio_host_selected_page_footer_objects_stable PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_selected_page_footer_objects_stable PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_selected_page_footer_objects_stable
+    COMMAND $<TARGET_FILE:test_studio_host_selected_page_footer_objects_stable> $<TARGET_FILE:copperfin_studio_host>
+)
+
 add_executable(test_studio_host_selected_summary_objects_record
     test_studio_host_selected_summary_objects_record.cpp
 )
