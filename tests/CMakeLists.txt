@@ -82,6 +82,53 @@ add_test(
 
 add_executable(test_studio_host_json
     test_studio_host_json.cpp
+    test_studio_host_json_shared_test_helpers.cpp
+    test_studio_host_json_diagnostics_appearance_and_drawing.cpp
+    test_studio_host_json_diagnostics_structure_and_selectors_1.cpp
+    test_studio_host_json_diagnostics_structure_and_selectors_2.cpp
+    test_studio_host_json_parse_diagnostics_toolbox.cpp
+    test_studio_host_json_parse_diagnostics_visual.cpp
+    test_studio_host_json_parse_diagnostics_core.cpp
+    test_studio_host_json_dispatch_toolbox_1.cpp
+    test_studio_host_json_dispatch_toolbox_2.cpp
+    test_studio_host_json_dispatch_builder.cpp
+    test_studio_host_json_dispatch_designer.cpp
+    test_studio_host_json_dispatch_editor_action.cpp
+    test_studio_host_json_object_lifecycle.cpp
+    test_studio_host_json_layout_actions.cpp
+    test_studio_host_json_behavior_window_chrome.cpp
+    test_studio_host_json_behavior_grid_and_selection.cpp
+    test_studio_host_json_behavior_data_and_control.cpp
+    test_studio_host_json_behavior_general_state.cpp
+    test_studio_host_json_appearance_colors.cpp
+    test_studio_host_json_appearance_fonts.cpp
+    test_studio_host_json_appearance_pictures_and_icons.cpp
+    test_studio_host_json_appearance_borders_fill_draw.cpp
+    test_studio_host_json_appearance_window_and_display.cpp
+    test_studio_host_json_appearance_ole_and_drag.cpp
+    test_studio_host_json_setters_data.cpp
+    test_studio_host_json_report_labels.cpp
+    test_studio_host_json_report_grouping_expressions.cpp
+    test_studio_host_json_report_visual_properties.cpp
+    test_studio_host_json_report_layout_classifications.cpp
+    test_studio_host_json_report_object_geometry_1.cpp
+    test_studio_host_json_report_object_geometry_2.cpp
+    test_studio_host_json_report_object_geometry_3.cpp
+    test_studio_host_json_report_settings_fields_1.cpp
+    test_studio_host_json_report_settings_fields_2.cpp
+    test_studio_host_json_report_sections_1.cpp
+    test_studio_host_json_report_sections_2.cpp
+    test_studio_host_json_report_sections_3.cpp
+    test_studio_host_json_report_objects_1.cpp
+    test_studio_host_json_report_objects_2.cpp
+    test_studio_host_json_report_objects_3.cpp
+    test_studio_host_json_report_objects_4.cpp
+    test_studio_host_json_report_selection_resolution.cpp
+    test_studio_host_json_report_memo_and_placeholders.cpp
+    test_studio_host_json_report_shared_fixtures.cpp
+    test_studio_host_json_visual_editor_json_methods.cpp
+    test_studio_host_json_visual_editor_json_objects.cpp
+    test_studio_host_json_visual_editor_json_properties.cpp
 )
 target_link_libraries(test_studio_host_json PRIVATE cf_vfp_assets)
 
@@ -1335,6 +1382,24 @@ copperfin_add_test(test_vfp_assets cf_vfp_assets
 
 copperfin_add_test(test_studio_host cf_design_model
     test_studio_host.cpp
+    test_studio_host_shared_test_helpers.cpp
+    test_studio_host_document_and_snapshot.cpp
+    test_studio_host_diagnostics_and_session.cpp
+    test_studio_host_selection_context.cpp
+    test_studio_host_property_commands.cpp
+    test_studio_host_object_lifecycle.cpp
+    test_studio_host_layout_actions.cpp
+    test_studio_host_behavior_window_chrome.cpp
+    test_studio_host_behavior_grid_and_selection.cpp
+    test_studio_host_behavior_data_and_control.cpp
+    test_studio_host_behavior_general_state.cpp
+    test_studio_host_appearance_colors.cpp
+    test_studio_host_appearance_fonts.cpp
+    test_studio_host_appearance_pictures_and_icons.cpp
+    test_studio_host_appearance_borders_fill_draw.cpp
+    test_studio_host_appearance_window_and_display.cpp
+    test_studio_host_appearance_ole_and_drag.cpp
+    test_studio_host_setters_data.cpp
 )
 
 copperfin_add_test(test_dbf_table cf_vfp_assets
@@ -1343,6 +1408,20 @@ copperfin_add_test(test_dbf_table cf_vfp_assets
 
 copperfin_add_test(test_visual_asset_editor cf_vfp_assets
     test_visual_asset_editor.cpp
+    test_visual_asset_editor_shared_test_helpers.cpp
+    test_visual_asset_editor_object_lifecycle.cpp
+    test_visual_asset_editor_methods.cpp
+    test_visual_asset_editor_properties.cpp
+    test_visual_asset_editor_hierarchy_and_listing.cpp
+    test_visual_asset_editor_update_batch.cpp
+    test_visual_asset_editor_setters_behavior.cpp
+    test_visual_asset_editor_appearance_colors.cpp
+    test_visual_asset_editor_appearance_fonts.cpp
+    test_visual_asset_editor_appearance_pictures_and_icons.cpp
+    test_visual_asset_editor_appearance_borders_fill_draw.cpp
+    test_visual_asset_editor_appearance_window_and_display.cpp
+    test_visual_asset_editor_appearance_ole_and_drag.cpp
+    test_visual_asset_editor_setters_data.cpp
 )
 if(MSVC)
     target_compile_options(test_visual_asset_editor PRIVATE /bigobj)
@@ -1394,6 +1473,10 @@ copperfin_add_test(test_federation_execution cf_platform_profile
 
 copperfin_add_test(test_runtime_pipeline cf_runtime_pipeline
     test_runtime_pipeline.cpp
+    test_runtime_pipeline_shared_test_helpers.cpp
+    test_runtime_pipeline_output_packaging.cpp
+    test_runtime_pipeline_startup_and_staging.cpp
+    test_runtime_pipeline_launcher_and_security.cpp
 )
 
 copperfin_add_test(test_security_controls cf_security
@@ -1427,11 +1510,25 @@ copperfin_add_test(test_prg_engine_rushmore_optimization cf_xbase_runtime
 
 copperfin_add_test(test_prg_engine_control_flow cf_xbase_runtime
     test_prg_engine_control_flow.cpp
+    test_prg_engine_control_flow_shared_test_helpers.cpp
+    test_prg_engine_control_flow_control_flow_basics.cpp
+    test_prg_engine_control_flow_variables_and_scope.cpp
+    test_prg_engine_control_flow_aggregate_and_total_commands.cpp
+    test_prg_engine_control_flow_concurrency_and_critical_sections.cpp
+    test_prg_engine_control_flow_error_handling_and_faults.cpp
+    test_prg_engine_control_flow_runtime_guardrails_and_lifecycle.cpp
+    test_prg_engine_control_flow_routine_calls.cpp
     prg_engine_test_support.cpp
 )
 
 copperfin_add_test(test_prg_engine_data_io cf_xbase_runtime
     test_prg_engine_data_io.cpp
+    test_prg_engine_data_io_shared_test_helpers.cpp
+    test_prg_engine_data_io_scatter_gather.cpp
+    test_prg_engine_data_io_import_export.cpp
+    test_prg_engine_data_io_save_restore.cpp
+    test_prg_engine_data_io_display_and_list.cpp
+    test_prg_engine_data_io_interactive_io_commands.cpp
     prg_engine_test_support.cpp
 )
 

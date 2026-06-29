@@ -1,4 +1,6 @@
 /build/
+/build2/
+/build_baseline/
 /artifacts/
 /.vs/
 /.vscode/

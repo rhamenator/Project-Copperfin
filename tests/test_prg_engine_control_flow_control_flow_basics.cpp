@@ -1,0 +1,941 @@
+#include "test_prg_engine_control_flow_support.h"
+
+namespace cf_test_prg_engine_control_flow {
+void test_command_keyword_scanner_ignores_nested_text() {
+    using copperfin::runtime::extract_command_clause;
+    using copperfin::runtime::find_keyword_top_level;
+    using copperfin::runtime::split_csv_like;
+
+    const std::string quoted_to = "VALUE \"not the TO keyword\" TO cTarget";
+    const std::size_t quoted_to_position = find_keyword_top_level(quoted_to, "TO");
+    expect(quoted_to_position == quoted_to.rfind("TO"),
+           "top-level keyword scanner should ignore double-quoted keyword text");
+
+    const std::string bracketed_in = "FOR aValues[ASCAN(aWords, 'IN')] IN People";
+    const std::size_t bracketed_in_position = find_keyword_top_level(bracketed_in, "IN");
+    expect(bracketed_in_position == bracketed_in.rfind("IN"),
+           "top-level keyword scanner should ignore bracketed keyword text");
+
+    const std::string braced_to = "VALUE {|x| x = TO} TO cBlock";
+    const std::size_t braced_to_position = find_keyword_top_level(braced_to, "TO");
+    expect(braced_to_position == braced_to.rfind("TO"),
+           "top-level keyword scanner should ignore braced keyword text");
+
+    const std::string clause_text = "TO \"literal IN value\" IN WorkArea";
+    expect(extract_command_clause(clause_text, "TO", {"IN"}) == "\"literal IN value\"",
+           "clause extraction should ignore stop keywords inside double-quoted strings");
+
+    const std::vector<std::string> parts = split_csv_like("first, {|x| x, y}, second[1,2]");
+    expect(parts.size() == 3U,
+           "CSV-like splitter should keep commas inside braced blocks and bracketed expressions together");
+}
+
+void test_do_while_and_loop_control_flow() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_do_while";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 21}, {"BRAVO", 28}, {"CHARLIE", 33}, {"DELTA", 44}});
+
+    const fs::path main_path = temp_root / "control.prg";
+    write_text(
+        main_path,
+        "nWhile = 0\n"
+        "i = 0\n"
+        "DO WHILE i < 5\n"
+        "    i = i + 1\n"
+        "    IF i = 2\n"
+        "        CONTINUE\n"
+        "    ENDIF\n"
+        "    nWhile = nWhile + i\n"
+        "    IF i = 4\n"
+        "        EXIT\n"
+        "    ENDIF\n"
+        "ENDDO\n"
+        "nNested = 0\n"
+        "outer = 0\n"
+        "DO WHILE outer < 2\n"
+        "    outer = outer + 1\n"
+        "    inner = 0\n"
+        "    DO WHILE inner < 3\n"
+        "        inner = inner + 1\n"
+        "        IF inner = 2\n"
+        "            CONTINUE\n"
+        "        ENDIF\n"
+        "        nNested = nNested + 1\n"
+        "    ENDDO\n"
+        "ENDDO\n"
+        "nFor = 0\n"
+        "FOR j = 1 TO 5\n"
+        "    IF j = 2\n"
+        "        LOOP\n"
+        "    ENDIF\n"
+        "    nFor = nFor + j\n"
+        "    IF j = 4\n"
+        "        EXIT\n"
+        "    ENDIF\n"
+        "ENDFOR\n"
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SELECT People\n"
+        "nScan = 0\n"
+        "SCAN\n"
+        "    IF NAME = 'BRAVO'\n"
+        "        LOOP\n"
+        "    ENDIF\n"
+        "    nScan = nScan + 1\n"
+        "    IF NAME = 'CHARLIE'\n"
+        "        EXIT\n"
+        "    ENDIF\n"
+        "ENDSCAN\n"
+        "cAfterScan = NAME\n"
+        "nAfterWhileIndex = i\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "DO WHILE/loop control script should complete");
+
+    const auto while_total = state.globals.find("nwhile");
+    const auto nested_total = state.globals.find("nnested");
+    const auto for_total = state.globals.find("nfor");
+    const auto scan_total = state.globals.find("nscan");
+    const auto after_scan = state.globals.find("cafterscan");
+    const auto after_while_index = state.globals.find("nafterwhileindex");
+
+    expect(while_total != state.globals.end(), "DO WHILE should leave its accumulator in globals");
+    expect(nested_total != state.globals.end(), "nested DO WHILE loops should leave their accumulator in globals");
+    expect(for_total != state.globals.end(), "FOR with LOOP/EXIT should leave its accumulator in globals");
+    expect(scan_total != state.globals.end(), "SCAN with LOOP/EXIT should leave its accumulator in globals");
+    expect(after_scan != state.globals.end(), "SCAN EXIT should leave the current record available");
+    expect(after_while_index != state.globals.end(), "DO WHILE EXIT should preserve the exiting iteration state");
+
+    if (while_total != state.globals.end()) {
+        expect(copperfin::runtime::format_value(while_total->second) == "8", "DO WHILE should honor CONTINUE and EXIT");
+    }
+    if (nested_total != state.globals.end()) {
+        expect(copperfin::runtime::format_value(nested_total->second) == "4", "nested DO WHILE loops should reevaluate each loop independently");
+    }
+    if (for_total != state.globals.end()) {
+        expect(copperfin::runtime::format_value(for_total->second) == "8", "LOOP and EXIT should apply to FOR loops");
+    }
+    if (scan_total != state.globals.end()) {
+        expect(copperfin::runtime::format_value(scan_total->second) == "2", "LOOP and EXIT should apply to SCAN loops");
+    }
+    if (after_scan != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_scan->second) == "CHARLIE", "EXIT inside SCAN should leave the cursor on the exiting record");
+    }
+    if (after_while_index != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_while_index->second) == "4", "EXIT inside DO WHILE should leave the current iteration state intact");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_do_case_control_flow() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_do_case";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}, {"DELTA", 40}});
+
+    const fs::path main_path = temp_root / "do_case.prg";
+    write_text(
+        main_path,
+        "nValue = 2\n"
+        "cBranch = ''\n"
+        "DO CASE\n"
+        "    CASE nValue = 1\n"
+        "        cBranch = 'ONE'\n"
+        "    CASE nValue = 2\n"
+        "        cBranch = 'TWO'\n"
+        "    OTHERWISE\n"
+        "        cBranch = 'OTHER'\n"
+        "ENDCASE\n"
+        "nNoMatch = 0\n"
+        "DO CASE\n"
+        "    CASE .F.\n"
+        "        nNoMatch = 1\n"
+        "ENDCASE\n"
+        "cNested = ''\n"
+        "DO CASE\n"
+        "    CASE .T.\n"
+        "        DO CASE\n"
+        "            CASE 1 = 2\n"
+        "                cNested = 'BAD'\n"
+        "            CASE 2 = 2\n"
+        "                cNested = 'INNER'\n"
+        "            OTHERWISE\n"
+        "                cNested = 'MISS'\n"
+        "        ENDCASE\n"
+        "    OTHERWISE\n"
+        "        cNested = 'OUTER'\n"
+        "ENDCASE\n"
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SELECT People\n"
+        "nTagged = 0\n"
+        "SCAN\n"
+        "    DO CASE\n"
+        "        CASE AGE < 20\n"
+        "            cTag = 'YOUNG'\n"
+        "        CASE AGE < 35\n"
+        "            cTag = 'MID'\n"
+        "        OTHERWISE\n"
+        "            cTag = 'SENIOR'\n"
+        "    ENDCASE\n"
+        "    IF cTag = 'MID'\n"
+        "        nTagged = nTagged + 1\n"
+        "    ENDIF\n"
+        "ENDSCAN\n"
+        "cAfterScan = cTag\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "DO CASE script should complete");
+
+    const auto branch = state.globals.find("cbranch");
+    const auto no_match = state.globals.find("nnomatch");
+    const auto nested = state.globals.find("cnested");
+    const auto tagged = state.globals.find("ntagged");
+    const auto after_scan = state.globals.find("cafterscan");
+
+    expect(branch != state.globals.end(), "DO CASE should expose the selected branch result");
+    expect(no_match != state.globals.end(), "DO CASE without OTHERWISE should complete without mutating unmatched state");
+    expect(nested != state.globals.end(), "nested DO CASE blocks should execute correctly");
+    expect(tagged != state.globals.end(), "DO CASE inside SCAN should participate in cursor-backed logic");
+    expect(after_scan != state.globals.end(), "DO CASE inside SCAN should leave the last computed branch value");
+
+    if (branch != state.globals.end()) {
+        expect(copperfin::runtime::format_value(branch->second) == "TWO", "DO CASE should execute the first matching CASE branch only");
+    }
+    if (no_match != state.globals.end()) {
+        expect(copperfin::runtime::format_value(no_match->second) == "0", "DO CASE with no match and no OTHERWISE should fall through cleanly");
+    }
+    if (nested != state.globals.end()) {
+        expect(copperfin::runtime::format_value(nested->second) == "INNER", "nested DO CASE blocks should honor inner matching semantics");
+    }
+    if (tagged != state.globals.end()) {
+        expect(copperfin::runtime::format_value(tagged->second) == "2", "DO CASE inside SCAN should classify matching rows without fall-through");
+    }
+    if (after_scan != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_scan->second) == "SENIOR", "DO CASE should preserve the last branch result inside loop-driven execution");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_push_pop_key_menu_popup_stack_commands() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_push_pop_stack_commands";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "push_pop_stack_commands.prg";
+    write_text(
+        main_path,
+        "PUSH KEY CTRL+F\n"
+        "PUSH KEY ALT+G\n"
+        "POP KEY\n"
+        "POP KEY\n"
+        "POP KEY\n"
+        "PUSH MENU _MSYSMENU\n"
+        "PUSH MENU _MFILE PAD 1\n"
+        "POP MENU\n"
+        "POP MENU\n"
+        "POP MENU\n"
+        "PUSH POPUP ShortcutMenu\n"
+        "PUSH POPUP ContextMenu\n"
+        "POP POPUP\n"
+        "POP POPUP\n"
+        "POP POPUP\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "PUSH/POP stack command script should complete");
+
+    const auto push_key_count = static_cast<int>(std::count_if(state.events.begin(), state.events.end(), [](const auto &event) {
+        return event.category == "runtime.push_key";
+    }));
+    const auto pop_key_count = static_cast<int>(std::count_if(state.events.begin(), state.events.end(), [](const auto &event) {
+        return event.category == "runtime.pop_key";
+    }));
+    const auto push_menu_count = static_cast<int>(std::count_if(state.events.begin(), state.events.end(), [](const auto &event) {
+        return event.category == "runtime.push_menu";
+    }));
+    const auto pop_menu_count = static_cast<int>(std::count_if(state.events.begin(), state.events.end(), [](const auto &event) {
+        return event.category == "runtime.pop_menu";
+    }));
+    const auto push_popup_count = static_cast<int>(std::count_if(state.events.begin(), state.events.end(), [](const auto &event) {
+        return event.category == "runtime.push_popup";
+    }));
+    const auto pop_popup_count = static_cast<int>(std::count_if(state.events.begin(), state.events.end(), [](const auto &event) {
+        return event.category == "runtime.pop_popup";
+    }));
+
+    expect(push_key_count == 2, "PUSH KEY should emit runtime.push_key per command");
+    expect(pop_key_count == 3, "POP KEY should emit runtime.pop_key per command");
+    expect(push_menu_count == 2, "PUSH MENU should emit runtime.push_menu per command");
+    expect(pop_menu_count == 3, "POP MENU should emit runtime.pop_menu per command");
+    expect(push_popup_count == 2, "PUSH POPUP should emit runtime.push_popup per command");
+    expect(pop_popup_count == 3, "POP POPUP should emit runtime.pop_popup per command");
+
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto &event) {
+            return event.category == "runtime.push_key" && event.detail.find("depth=2") != std::string::npos &&
+                   event.detail.find("target=ALT+G") != std::string::npos;
+        }),
+        "PUSH KEY should increment stack depth and include the pushed key marker");
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto &event) {
+            return event.category == "runtime.pop_key" && event.detail.find("depth=0") != std::string::npos &&
+                   event.detail.find("empty=true") != std::string::npos;
+        }),
+        "POP KEY on an empty stack should be a safe no-op and report empty stack detail");
+
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto &event) {
+            return event.category == "runtime.push_menu" && event.detail.find("depth=2") != std::string::npos &&
+                   event.detail.find("target=_MFILE PAD 1") != std::string::npos;
+        }),
+        "PUSH MENU should increment stack depth and include the pushed menu marker");
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto &event) {
+            return event.category == "runtime.pop_menu" && event.detail.find("depth=0") != std::string::npos &&
+                   event.detail.find("empty=true") != std::string::npos;
+        }),
+        "POP MENU on an empty stack should be a safe no-op and report empty stack detail");
+
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto &event) {
+            return event.category == "runtime.push_popup" && event.detail.find("depth=2") != std::string::npos &&
+                   event.detail.find("target=ContextMenu") != std::string::npos;
+        }),
+        "PUSH POPUP should increment stack depth and include the pushed popup marker");
+    expect(
+        std::any_of(state.events.begin(), state.events.end(), [](const auto &event) {
+            return event.category == "runtime.pop_popup" && event.detail.find("depth=0") != std::string::npos &&
+                   event.detail.find("empty=true") != std::string::npos;
+        }),
+        "POP POPUP on an empty stack should be a safe no-op and report empty stack detail");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_text_endtext_literal_blocks() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_text_blocks";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "text_blocks.prg";
+    write_text(
+        main_path,
+        "cName = 'Copperfin'\n"
+        "nCount = 3\n"
+        "TEXT TO cBody NOSHOW\n"
+        "Alpha\n"
+        "\n"
+        "* literal star line\n"
+        "&& literal ampersand line\n"
+        "ENDTEXT\n"
+        "TEXT TO cBody ADDITIVE NOSHOW\n"
+        "Bravo\n"
+        "ENDTEXT\n"
+        "TEXT TO cMerged TEXTMERGE NOSHOW\n"
+        "Name=<<cName>>; Count=<<nCount>>\n"
+        "ENDTEXT\n"
+        "cNameExpr = 'LEFT(cName, 9)'\n"
+        "cNameExprHolder = 'cNameExpr'\n"
+        "cNameExprDeepHolder = 'cNameExprHolder'\n"
+        "cFieldExpr = 'cName'\n"
+        "cFieldExprHolder = 'cFieldExpr'\n"
+        "cFieldExprDeepHolder = 'cFieldExprHolder'\n"
+        "cRecursiveExpr = '<<EVAL(&cNameExprDeepHolder)>>'\n"
+        "cRecursiveExprHolder = 'cRecursiveExpr'\n"
+        "cRecursiveExprDeepHolder = 'cRecursiveExprHolder'\n"
+        "TEXT TO cMergedNested TEXTMERGE NOSHOW\n"
+        "Eval=<<EVAL(cNameExpr)>>; Macro=<<&cFieldExpr>>\n"
+        "ENDTEXT\n"
+        "TEXT TO cMergedSecondHop TEXTMERGE NOSHOW\n"
+        "Eval=<<EVAL(&cNameExprDeepHolder)>>; Macro=<<&cFieldExprDeepHolder>>\n"
+        "ENDTEXT\n"
+        "TEXT TO cMergedRecursiveSecondHop TEXTMERGE NOSHOW\n"
+        "Recursive=<<&cRecursiveExprDeepHolder>>\n"
+        "ENDTEXT\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "TEXT/ENDTEXT script should complete");
+
+    const auto body = state.globals.find("cbody");
+    expect(body != state.globals.end(), "TEXT TO should assign the captured block into the target variable");
+    if (body != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(body->second) == "Alpha\n\n* literal star line\n&& literal ampersand line\nBravo\n",
+            "TEXT/ENDTEXT should preserve literal lines and ADDITIVE should append the next block");
+    }
+
+    const auto merged = state.globals.find("cmerged");
+    expect(merged != state.globals.end(), "TEXT TEXTMERGE should assign merged block content");
+    if (merged != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(merged->second) == "Name=Copperfin; Count=3\n",
+            "TEXT TEXTMERGE should interpolate <<expression>> segments using runtime expression evaluation");
+    }
+
+    const auto merged_nested = state.globals.find("cmergednested");
+    expect(merged_nested != state.globals.end(), "TEXT TEXTMERGE should assign nested eval/macro merged block content");
+    if (merged_nested != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(merged_nested->second) == "Eval=Copperfin; Macro=Copperfin\n",
+            "TEXT TEXTMERGE should preserve nested EVAL() and &macro interpolation inside merged expressions");
+    }
+
+    const auto merged_second_hop = state.globals.find("cmergedsecondhop");
+    expect(merged_second_hop != state.globals.end(), "TEXT TEXTMERGE should assign second-hop nested eval/macro merged block content");
+    if (merged_second_hop != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(merged_second_hop->second) == "Eval=Copperfin; Macro=Copperfin\n",
+            "TEXT TEXTMERGE should preserve second-hop nested EVAL() and &macro interpolation inside merged expressions");
+    }
+
+    const auto merged_recursive_second_hop = state.globals.find("cmergedrecursivesecondhop");
+    expect(merged_recursive_second_hop != state.globals.end(), "TEXT TEXTMERGE should assign recursive second-hop merged block content");
+    if (merged_recursive_second_hop != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(merged_recursive_second_hop->second) == "Recursive=Copperfin\n",
+            "TEXT TEXTMERGE should preserve recursive second-hop nested merged expressions");
+    }
+
+    const auto text_events = static_cast<int>(std::count_if(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.text";
+    }));
+    expect(text_events == 6, "each TEXT block should emit a runtime.text event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_scan_on_empty_table_does_not_execute_body() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_scan_empty_table";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "empty_people.dbf";
+    write_people_dbf(table_path, {});
+
+    const fs::path main_path = temp_root / "scan_empty.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS EmptyPeople IN 0\n"
+        "nScanHits = 0\n"
+        "SCAN\n"
+        "    nScanHits = nScanHits + 1\n"
+        "ENDSCAN\n"
+        "lAfterScanEof = EOF()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SCAN over an empty table should complete");
+
+    const auto scan_hits = state.globals.find("nscanhits");
+    const auto after_scan_eof = state.globals.find("lafterscaneof");
+    expect(scan_hits != state.globals.end(), "empty-table SCAN should still expose the scan counter");
+    expect(after_scan_eof != state.globals.end(), "empty-table SCAN should expose EOF() state after scan");
+
+    if (scan_hits != state.globals.end()) {
+        expect(copperfin::runtime::format_value(scan_hits->second) == "0",
+               "SCAN body should not execute for an empty table");
+    }
+    if (after_scan_eof != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_scan_eof->second) == "true",
+               "EOF() should remain true after scanning an empty table");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_locate_on_empty_table_sets_eof() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_locate_empty_table";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "empty_people.dbf";
+    write_people_dbf(table_path, {});
+
+    const fs::path main_path = temp_root / "locate_empty.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS EmptyPeople IN 0\n"
+        "LOCATE FOR .T.\n"
+        "lFoundAfterLocate = FOUND()\n"
+        "lEofAfterLocate = EOF()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "LOCATE on an empty table should complete");
+
+    const auto found_after_locate = state.globals.find("lfoundafterlocate");
+    const auto eof_after_locate = state.globals.find("leofafterlocate");
+    expect(found_after_locate != state.globals.end(), "LOCATE on an empty table should expose FOUND()");
+    expect(eof_after_locate != state.globals.end(), "LOCATE on an empty table should expose EOF()");
+
+    if (found_after_locate != state.globals.end()) {
+        expect(copperfin::runtime::format_value(found_after_locate->second) == "false",
+               "LOCATE on an empty table should leave FOUND() false");
+    }
+    if (eof_after_locate != state.globals.end()) {
+        expect(copperfin::runtime::format_value(eof_after_locate->second) == "true",
+               "LOCATE on an empty table should leave EOF() true");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_go_top_bottom_on_empty_table_does_not_crash() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_go_topbottom_empty";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "empty_tbl.dbf";
+    write_people_dbf(table_path, {});
+
+    const fs::path main_path = temp_root / "go_topbottom_empty.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS EmptyTbl IN 0\n"
+        "GO TOP\n"
+        "lBofAfterTop = BOF()\n"
+        "lEofAfterTop = EOF()\n"
+        "GO BOTTOM\n"
+        "lBofAfterBottom = BOF()\n"
+        "lEofAfterBottom = EOF()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "GO TOP/BOTTOM on empty table should not crash");
+
+    const auto bof_after_top    = state.globals.find("lbofaftertop");
+    const auto eof_after_top    = state.globals.find("leofaftertop");
+    const auto bof_after_bottom = state.globals.find("lbofafterbottom");
+    const auto eof_after_bottom = state.globals.find("leofafterbottom");
+
+    expect(bof_after_top    != state.globals.end(), "GO TOP on empty table should expose BOF()");
+    expect(eof_after_top    != state.globals.end(), "GO TOP on empty table should expose EOF()");
+    expect(bof_after_bottom != state.globals.end(), "GO BOTTOM on empty table should expose BOF()");
+    expect(eof_after_bottom != state.globals.end(), "GO BOTTOM on empty table should expose EOF()");
+
+    if (bof_after_top != state.globals.end()) {
+        expect(copperfin::runtime::format_value(bof_after_top->second) == "true",
+               "GO TOP on empty table should leave BOF() true");
+    }
+    if (eof_after_top != state.globals.end()) {
+        expect(copperfin::runtime::format_value(eof_after_top->second) == "true",
+               "GO TOP on empty table should leave EOF() true");
+    }
+    if (bof_after_bottom != state.globals.end()) {
+        expect(copperfin::runtime::format_value(bof_after_bottom->second) == "true",
+               "GO BOTTOM on empty table should leave BOF() true");
+    }
+    if (eof_after_bottom != state.globals.end()) {
+        expect(copperfin::runtime::format_value(eof_after_bottom->second) == "true",
+               "GO BOTTOM on empty table should leave EOF() true");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_static_diagnostic_flags_likely_infinite_do_while_loop() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_static_diag";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const std::vector<std::string_view> keys{
+        "Runtime.PrgStaticAnalysis.Diagnostic.PRG0001.Message",
+        "Runtime.PrgStaticAnalysis.Diagnostic.PRG1001.Message",
+        "Runtime.PrgStaticAnalysis.Diagnostic.PRG1002.Message"};
+
+    expect(
+        english_catalog.translate("Runtime.PrgStaticAnalysis.Diagnostic.PRG1001.Message") ==
+            "Likely infinite loop: DO WHILE condition is always true and no EXIT/RETURN path was found.",
+        "#2605: PRG1001 should preserve the en-US catalog text");
+    expect(
+        spanish_catalog.translate("Runtime.PrgStaticAnalysis.Diagnostic.PRG1002.Message") ==
+            "Al bloque DO WHILE le falta ENDDO.",
+        "#2605: PRG1002 should resolve through the es-419 catalog");
+    expect(
+        portuguese_catalog.translate("Runtime.PrgStaticAnalysis.Diagnostic.PRG0001.Message") ==
+            "Falha ao analisar o codigo-fonte PRG: nao foi possivel abrir o arquivo.",
+        "#2605: PRG0001 should resolve through the pt-BR catalog");
+    expect(
+        pseudo_catalog.translate("Runtime.PrgStaticAnalysis.Diagnostic.PRG1002.Message") ==
+            copperfin::localization::pseudo_localize("DO WHILE block is missing ENDDO."),
+        "#2605: qps-ploc static-analysis diagnostics should route through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", keys) == 0U,
+        "#2605: es-419 should define every remaining Runtime.PrgStaticAnalysis localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", keys) == 0U,
+        "#2605: pt-BR should define every remaining Runtime.PrgStaticAnalysis localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", keys) == 0U,
+        "#2605: qps-ploc should define every remaining Runtime.PrgStaticAnalysis localization key");
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "en-US", true);
+
+    const fs::path flagged_path = temp_root / "flagged.prg";
+    write_text(
+        flagged_path,
+        "DO WHILE .T.\n"
+        "x = 1\n"
+        "ENDDO\n");
+
+    const auto diagnostics = copperfin::runtime::analyze_prg_file(flagged_path.string());
+    expect(!diagnostics.empty(), "analyzer should emit diagnostics for likely infinite loops");
+    const auto infinite_loop_warning = std::find_if(
+        diagnostics.begin(),
+        diagnostics.end(),
+        [](const copperfin::runtime::PrgStaticDiagnostic& diagnostic) {
+            return diagnostic.code == "PRG1001";
+        });
+    expect(infinite_loop_warning != diagnostics.end(), "analyzer should emit PRG1001 for DO WHILE .T. without exit path");
+    if (infinite_loop_warning != diagnostics.end()) {
+        expect(infinite_loop_warning->severity == copperfin::runtime::DiagnosticSeverity::warning,
+            "PRG1001 severity should remain warning");
+        expect(
+            infinite_loop_warning->message ==
+                "Likely infinite loop: DO WHILE condition is always true and no EXIT/RETURN path was found.",
+            "PRG1001 message should route through the default locale catalog");
+    }
+
+    set_env_value("COPPERFIN_LOCALE", "es-419", true);
+    const auto spanish_diagnostics = copperfin::runtime::analyze_prg_file(flagged_path.string());
+    const auto spanish_infinite_loop_warning = std::find_if(
+        spanish_diagnostics.begin(),
+        spanish_diagnostics.end(),
+        [](const copperfin::runtime::PrgStaticDiagnostic& diagnostic) {
+            return diagnostic.code == "PRG1001";
+        });
+    expect(
+        spanish_infinite_loop_warning != spanish_diagnostics.end() &&
+            spanish_infinite_loop_warning->message ==
+                "Bucle probablemente infinito: la condicion DO WHILE siempre es verdadera y no se encontro ninguna ruta EXIT/RETURN.",
+        "#2605: PRG1001 should refresh to es-419 when the runtime locale changes in-process");
+    set_env_value("COPPERFIN_LOCALE", "en-US", true);
+
+    const fs::path missing_enddo_path = temp_root / "missing_enddo.prg";
+    write_text(
+        missing_enddo_path,
+        "DO WHILE .T.\n"
+        "x = 1\n");
+    const auto missing_enddo_diagnostics = copperfin::runtime::analyze_prg_file(missing_enddo_path.string());
+    const auto missing_enddo_error = std::find_if(
+        missing_enddo_diagnostics.begin(),
+        missing_enddo_diagnostics.end(),
+        [](const copperfin::runtime::PrgStaticDiagnostic& diagnostic) {
+            return diagnostic.code == "PRG1002";
+        });
+    expect(missing_enddo_error != missing_enddo_diagnostics.end(), "analyzer should emit PRG1002 for unterminated DO WHILE");
+    if (missing_enddo_error != missing_enddo_diagnostics.end()) {
+        expect(missing_enddo_error->severity == copperfin::runtime::DiagnosticSeverity::error,
+            "PRG1002 severity should remain error");
+        expect(missing_enddo_error->message == "DO WHILE block is missing ENDDO.",
+            "PRG1002 message should route through the default locale catalog");
+    }
+
+    set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
+    const auto portuguese_missing_enddo_diagnostics =
+        copperfin::runtime::analyze_prg_file(missing_enddo_path.string());
+    const auto portuguese_missing_enddo_error = std::find_if(
+        portuguese_missing_enddo_diagnostics.begin(),
+        portuguese_missing_enddo_diagnostics.end(),
+        [](const copperfin::runtime::PrgStaticDiagnostic& diagnostic) {
+            return diagnostic.code == "PRG1002";
+        });
+    expect(
+        portuguese_missing_enddo_error != portuguese_missing_enddo_diagnostics.end() &&
+            portuguese_missing_enddo_error->message == "O bloco DO WHILE esta sem ENDDO.",
+        "#2605: PRG1002 should refresh to pt-BR when the runtime locale changes in-process");
+    set_env_value("COPPERFIN_LOCALE", "en-US", true);
+
+    const fs::path missing_path = temp_root / "missing.prg";
+    const auto missing_file_diagnostics = copperfin::runtime::analyze_prg_file(missing_path.string());
+    expect(missing_file_diagnostics.size() == 1U, "missing PRG source should emit exactly one diagnostic");
+    if (!missing_file_diagnostics.empty()) {
+        expect(missing_file_diagnostics.front().code == "PRG0001",
+            "missing PRG source diagnostic code should remain stable");
+        expect(missing_file_diagnostics.front().severity == copperfin::runtime::DiagnosticSeverity::error,
+            "PRG0001 severity should remain error");
+        expect(
+            missing_file_diagnostics.front().message == "Failed to analyze PRG source: file could not be opened.",
+            "PRG0001 message should route through the default locale catalog");
+    }
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    const auto pseudo_missing_file_diagnostics = copperfin::runtime::analyze_prg_file(missing_path.string());
+    expect(
+        pseudo_missing_file_diagnostics.size() == 1U &&
+            pseudo_missing_file_diagnostics.front().message ==
+                copperfin::localization::pseudo_localize(
+                    "Failed to analyze PRG source: file could not be opened."),
+        "#2605: PRG0001 should refresh to qps-ploc when the runtime locale changes in-process");
+
+    set_env_value("COPPERFIN_LOCALE", "en-US", true);
+
+    const fs::path safe_path = temp_root / "safe.prg";
+    write_text(
+        safe_path,
+        "DO WHILE .T.\n"
+        "EXIT\n"
+        "ENDDO\n");
+    const auto safe_diagnostics = copperfin::runtime::analyze_prg_file(safe_path.string());
+    const bool safe_has_warning = std::any_of(
+        safe_diagnostics.begin(),
+        safe_diagnostics.end(),
+        [](const copperfin::runtime::PrgStaticDiagnostic& diagnostic) {
+            return diagnostic.code == "PRG1001";
+        });
+    expect(!safe_has_warning, "analyzer should not emit PRG1001 when an explicit EXIT path exists");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_elseif_control_flow_executes_matching_branch() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_elseif";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "elseif_test.prg";
+    write_text(
+        main_path,
+        "x = 2\n"
+        "IF x = 1\n"
+        "  outcome = 'if'\n"
+        "ELSEIF x = 2\n"
+        "  outcome = 'elseif'\n"
+        "ELSE\n"
+        "  outcome = 'else'\n"
+        "ENDIF\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "ELSEIF script should complete");
+    const auto outcome = state.globals.find("outcome");
+    expect(outcome != state.globals.end(), "ELSEIF script should assign outcome");
+    if (outcome != state.globals.end()) {
+        expect(copperfin::runtime::format_value(outcome->second) == "elseif", "ELSEIF branch should be selected");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_with_endwith_resolves_leading_dot_member_access() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_with";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "with_block.prg";
+    write_text(
+        main_path,
+        "obj = CREATEOBJECT('Sample.Object')\n"
+        "WITH obj\n"
+        "  .Caption = 'Hello'\n"
+        "  prop_value = .Caption\n"
+        "  call_value = .Add('World')\n"
+        "ENDWITH\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "WITH/ENDWITH script should complete");
+
+    const auto prop_value = state.globals.find("prop_value");
+    const auto call_value = state.globals.find("call_value");
+    expect(prop_value != state.globals.end(), "WITH should resolve leading-dot property reads");
+    expect(call_value != state.globals.end(), "WITH should resolve leading-dot method calls");
+    if (prop_value != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(prop_value->second) == "Hello",
+            "WITH property access should bind to the target object");
+    }
+    if (call_value != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(call_value->second).find("object:Sample.Object.add#") == 0U,
+            "WITH method calls should bind to the target object");
+    }
+
+    const bool has_with_event = std::any_of(
+        state.events.begin(),
+        state.events.end(),
+        [](const copperfin::runtime::RuntimeEvent& event) {
+            return event.category == "runtime.with";
+        });
+    expect(has_with_event, "runtime should emit a WITH event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_print_command_emits_event() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_print_cmd";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "print_test.prg";
+    write_text(
+        main_path,
+        "? 'hello world'\n"
+        "? 1 + 2\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "? print command script should complete");
+
+    expect(has_runtime_event(state.events, "runtime.print", "hello world"),
+        "? 'hello world' should emit a runtime.print event with detail 'hello world'");
+
+    const bool has_three = std::any_of(state.events.begin(), state.events.end(), [](const copperfin::runtime::RuntimeEvent& ev) {
+        return ev.category == "runtime.print" && ev.detail == "3";
+    });
+    expect(has_three, "? 1 + 2 should emit a runtime.print event with detail '3'");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_erase_copy_rename_file_commands() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_file_ops";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    // Write a file to erase
+    write_text(temp_root / "to_erase.txt", "data");
+    // Write a file to copy/rename
+    write_text(temp_root / "original.txt", "content");
+
+    const fs::path main_path = temp_root / "file_ops.prg";
+    write_text(
+        main_path,
+        "ERASE 'to_erase.txt'\n"
+        "COPY FILE 'original.txt' TO 'copied.txt'\n"
+        "RENAME 'copied.txt' TO 'renamed.txt'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "file ops script should complete");
+
+    expect(!fs::exists(temp_root / "to_erase.txt"), "ERASE should have deleted to_erase.txt");
+    expect(fs::exists(temp_root / "original.txt"), "COPY FILE should leave original.txt intact");
+    expect(fs::exists(temp_root / "renamed.txt"), "RENAME should create renamed.txt");
+    expect(!fs::exists(temp_root / "copied.txt"), "RENAME should remove the old file name copied.txt");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_for_each_iterates_array_elements() {
+    namespace fs = std::filesystem;
+    const fs::path tmp = fs::temp_directory_path() / "copperfin_for_each_array";
+    std::error_code ign;
+    fs::remove_all(tmp, ign);
+    fs::create_directories(tmp);
+    const fs::path prg = tmp / "test.prg";
+    write_text(prg,
+        "DIMENSION fruits(3)\n"
+        "fruits(1) = 'apple'\n"
+        "fruits(2) = 'banana'\n"
+        "fruits(3) = 'cherry'\n"
+        "result = ''\n"
+        "FOR EACH elem IN fruits\n"
+        "    result = result + elem + ','\n"
+        "ENDFOR\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg.string(), tmp.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "FOR EACH over array should complete");
+    const auto it = state.globals.find("result");
+    expect(it != state.globals.end(), "result should be set after FOR EACH");
+    expect(it->second.string_value == "apple,banana,cherry,", "FOR EACH should iterate all array elements");
+    fs::remove_all(tmp, ign);
+}
+
+void test_for_each_single_element_expression() {
+    namespace fs = std::filesystem;
+    const fs::path tmp = fs::temp_directory_path() / "copperfin_for_each_scalar";
+    std::error_code ign;
+    fs::remove_all(tmp, ign);
+    fs::create_directories(tmp);
+    const fs::path prg = tmp / "test.prg";
+    write_text(prg,
+        "result = ''\n"
+        "FOR EACH item IN 'hello'\n"
+        "    result = item\n"
+        "ENDFOR\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(prg.string(), tmp.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "FOR EACH over scalar should complete");
+    const auto it = state.globals.find("result");
+    expect(it != state.globals.end(), "result should be set");
+    expect(it->second.string_value == "hello", "FOR EACH scalar treats expression as single element");
+    fs::remove_all(tmp, ign);
+}
+
+}  // namespace cf_test_prg_engine_control_flow

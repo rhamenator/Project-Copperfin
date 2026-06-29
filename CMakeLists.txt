@@ -82,7 +82,15 @@ add_library(cf_vfp_assets
     src/vfp/dbf_header.cpp
     src/vfp/dbf_table.cpp
     src/vfp/index_probe.cpp
-    src/vfp/visual_asset_editor.cpp
+    src/vfp/visual_asset_editor_shared_helpers.cpp
+    src/vfp/visual_asset_editor_method_blobs.cpp
+    src/vfp/visual_asset_editor_property_blobs.cpp
+    src/vfp/visual_asset_editor_record_and_snapshot.cpp
+    src/vfp/visual_asset_editor_undo.cpp
+    src/vfp/visual_asset_editor_object_lifecycle.cpp
+    src/vfp/visual_asset_editor_property_setters_behavior.cpp
+    src/vfp/visual_asset_editor_property_setters_appearance.cpp
+    src/vfp/visual_asset_editor_property_setters_data.cpp
 )
 
 target_include_directories(cf_vfp_assets
@@ -118,6 +126,26 @@ add_library(cf_design_model
     src/studio/toolbox_invocation_admission.cpp
     src/studio/toolbox_palette.cpp
     src/studio/vs_launch_contract.cpp
+    src/studio/vs_launch_contract_helpers_value_parsing.cpp
+    src/studio/vs_launch_contract_helpers_error_messages.cpp
+    src/studio/vs_launch_contract_helpers_argument_parsers.cpp
+    src/studio/vs_launch_contract_helpers_request_validators.cpp
+    src/studio/vs_launch_contract_diagnostics_and_session.cpp
+    src/studio/vs_launch_contract_diagnostics_and_session_validate.cpp
+    src/studio/vs_launch_contract_selection_context.cpp
+    src/studio/vs_launch_contract_property_commands.cpp
+    src/studio/vs_launch_contract_property_commands_validate.cpp
+    src/studio/vs_launch_contract_object_lifecycle.cpp
+    src/studio/vs_launch_contract_object_lifecycle_validate.cpp
+    src/studio/vs_launch_contract_layout_actions.cpp
+    src/studio/vs_launch_contract_layout_actions_validate.cpp
+    src/studio/vs_launch_contract_setters_behavior.cpp
+    src/studio/vs_launch_contract_setters_behavior_validate.cpp
+    src/studio/vs_launch_contract_setters_appearance.cpp
+    src/studio/vs_launch_contract_setters_appearance_validate.cpp
+    src/studio/vs_launch_contract_setters_data.cpp
+    src/studio/vs_launch_contract_setters_data_validate.cpp
+    src/studio/vs_launch_contract_positional_and_fallback.cpp
 )
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -134,7 +162,13 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 endif()
 
 add_library(cf_runtime_pipeline
-    src/runtime/runtime_pipeline.cpp
+    src/runtime/runtime_pipeline_text_and_identifier_utils.cpp
+    src/runtime/runtime_pipeline_file_io_and_classification.cpp
+    src/runtime/runtime_pipeline_library_export_manifest.cpp
+    src/runtime/runtime_pipeline_fxp_and_archive_manifest.cpp
+    src/runtime/runtime_pipeline_ast_ir_manifest.cpp
+    src/runtime/runtime_pipeline_csharp_and_launcher.cpp
+    src/runtime/runtime_pipeline_public_api.cpp
 )
 
 add_library(cf_prg_analysis
@@ -251,6 +285,19 @@ endif()
 
 add_executable(copperfin_studio_host
     apps/copperfin_studio_host/main.cpp
+    apps/copperfin_studio_host/studio_host_main_shared_cli_infra.cpp
+    apps/copperfin_studio_host/studio_host_main_builder.cpp
+    apps/copperfin_studio_host/studio_host_main_designer.cpp
+    apps/copperfin_studio_host/studio_host_main_editor_action.cpp
+    apps/copperfin_studio_host/studio_host_main_toolbox_shared_helpers.cpp
+    apps/copperfin_studio_host/studio_host_main_toolbox_create.cpp
+    apps/copperfin_studio_host/studio_host_main_toolbox_create_batch.cpp
+    apps/copperfin_studio_host/studio_host_main_toolbox_dispatch_and_admission.cpp
+    apps/copperfin_studio_host/studio_host_main_toolbox_palette.cpp
+    apps/copperfin_studio_host/studio_host_main_visual_methods.cpp
+    apps/copperfin_studio_host/studio_host_main_visual_objects.cpp
+    apps/copperfin_studio_host/studio_host_main_visual_properties.cpp
+    apps/copperfin_studio_host/studio_host_main_selection_and_report.cpp
 )
 
 target_link_libraries(copperfin_studio_host PRIVATE cf_design_model cf_security cf_platform_profile)

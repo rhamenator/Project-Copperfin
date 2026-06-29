@@ -1,0 +1,1326 @@
+#include "visual_asset_editor_support.h"
+
+namespace copperfin::vfp {
+VisualAssetEditResult find_unique_visual_property_assignment_index(
+    const std::vector<VisualPropertyAssignment>& assignments,
+    const std::string& property_name,
+    const std::string& missing_error,
+    const std::string& ambiguous_error,
+    std::size_t& property_index) {
+    const std::string normalized_property_name = normalize_visual_property_name(property_name);
+    std::vector<std::size_t> matches;
+    for (std::size_t index = 0U; index < assignments.size(); ++index) {
+        if (normalize_visual_property_name(assignments[index].name) == normalized_property_name) {
+            matches.push_back(index);
+        }
+    }
+    if (matches.empty()) {
+        return {.ok = false, .error = missing_error};
+    }
+    if (matches.size() > 1U) {
+        return {.ok = false, .error = ambiguous_error};
+    }
+    property_index = matches.front();
+    return {.ok = true, .error = {}};
+}
+
+VisualAssetEditResult reorder_visual_property_assignments(
+    std::vector<VisualPropertyAssignment>& assignments,
+    const std::string& requested_property_name,
+    const std::string& placement,
+    const std::string& relative_property_name) {
+    std::size_t source_index = 0U;
+    const auto source_result = find_unique_visual_property_assignment_index(
+        assignments,
+        requested_property_name,
+        visual_asset_text("VisualAssetEditor.Property.NotFound"),
+        visual_asset_text("VisualAssetEditor.Property.Ambiguous"),
+        source_index);
+    if (!source_result.ok) {
+        return source_result;
+    }
+
+    const std::string normalized_placement = normalize_visual_property_name(placement);
+    const auto moving_property = assignments[source_index];
+    assignments.erase(assignments.begin() + static_cast<std::ptrdiff_t>(source_index));
+
+    std::size_t insert_index = assignments.size();
+    if (normalized_placement == "first") {
+        insert_index = 0U;
+    } else if (normalized_placement == "last") {
+        insert_index = assignments.size();
+    } else if (normalized_placement == "before" || normalized_placement == "after") {
+        if (trim_both(relative_property_name).empty()) {
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.RelativeNameRequired")};
+        }
+        if (normalize_visual_property_name(relative_property_name) == normalize_visual_property_name(requested_property_name)) {
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.SourceRelativeToSelf")};
+        }
+
+        std::size_t relative_index = 0U;
+        const auto relative_result = find_unique_visual_property_assignment_index(
+            assignments,
+            relative_property_name,
+            visual_asset_text("VisualAssetEditor.Property.RelativeNotFound"),
+            visual_asset_text("VisualAssetEditor.Property.RelativeAmbiguous"),
+            relative_index);
+        if (!relative_result.ok) {
+            return relative_result;
+        }
+        insert_index = normalized_placement == "before" ? relative_index : relative_index + 1U;
+    } else {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.PlacementUnsupported")};
+    }
+
+    assignments.insert(
+        assignments.begin() + static_cast<std::ptrdiff_t>(insert_index),
+        moving_property);
+    return {.ok = true, .error = {}};
+}
+
+std::optional<VisualPropertyState> read_current_visual_property_state(
+    const std::string& path,
+    std::size_t record_index,
+    const std::string& property_name) {
+    const auto table_result = parse_dbf_table_from_file(path, record_index + 1U);
+    if (!table_result.ok || record_index >= table_result.table.records.size()) {
+        return std::nullopt;
+    }
+
+    const auto& record = table_result.table.records[record_index];
+    const std::string requested_property_name = normalize_visual_property_name(property_name);
+    const auto* direct_field_value = find_direct_visual_property_value(record.values, property_name);
+    if (direct_field_value != nullptr) {
+        return VisualPropertyState{
+            .exists = true,
+            .direct_field = true,
+            .property_name = direct_field_value->field_name,
+            .value = direct_field_value->display_value,
+            .record_deleted = record.deleted
+        };
+    }
+
+    if (!is_property_blob_asset_path(path)) {
+        return std::nullopt;
+    }
+
+    const auto properties_field = std::find_if(record.values.begin(), record.values.end(), [](const DbfRecordValue& value) {
+        return value.field_name == "PROPERTIES";
+    });
+    if (properties_field == record.values.end()) {
+        return std::nullopt;
+    }
+
+    const auto assignments = parse_visual_property_blob(properties_field->display_value);
+    const auto property = std::find_if(assignments.begin(), assignments.end(), [&](const VisualPropertyAssignment& assignment) {
+        return normalize_visual_property_name(assignment.name) == requested_property_name;
+    });
+    if (property == assignments.end()) {
+        return VisualPropertyState{
+            .exists = false,
+            .direct_field = false,
+            .property_name = trim_both(property_name),
+            .value = {},
+            .record_deleted = record.deleted
+        };
+    }
+
+    return VisualPropertyState{
+        .exists = true,
+        .direct_field = false,
+        .property_name = property->name,
+        .value = property->value,
+        .record_deleted = record.deleted
+    };
+}
+
+VisualAssetEditResult apply_visual_object_property_change(
+    const VisualObjectEditRequest& request,
+    bool record_undo_entry,
+    bool remove_property_if_missing) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
+    }
+    if (trim_both(request.property_name).empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.NameRequired")};
+    }
+
+    std::size_t record_index = 0U;
+    const auto resolution = resolve_visual_object_record_index(request, record_index);
+    if (!resolution.ok) {
+        return resolution;
+    }
+
+    const auto table_result = parse_dbf_table_from_file(request.path, record_index + 1U);
+    if (!table_result.ok) {
+        return {.ok = false, .error = table_result.error};
+    }
+    if (record_index >= table_result.table.records.size()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.RecordUnavailable")};
+    }
+
+    const auto table_bytes = read_binary_file(request.path);
+    if (table_bytes.empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed")};
+    }
+
+    const auto fields = read_raw_field_descriptors(table_bytes);
+    const auto direct_field_it = find_direct_visual_property_field(fields, request.property_name);
+    if (direct_field_it != fields.end()) {
+        if (record_undo_entry) {
+            const auto property_state = read_current_visual_property_state(request.path, record_index, request.property_name);
+            if (!property_state.has_value()) {
+                return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Undo.CurrentPropertyReadFailed")};
+            }
+            if (!property_state->direct_field) {
+                return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Undo.PropertyLookupMismatch")};
+            }
+            if (property_state->exists && property_state->value == request.property_value) {
+                return {.ok = true, .error = {}};
+            }
+
+            std::string error;
+            if (!record_visual_asset_undo_entry(request.path, {
+                    .record_index = record_index,
+                    .property_name = request.property_name,
+                    .prior_value = property_state->value,
+                    .prior_value_exists = property_state->exists,
+                    .label = visual_asset_text("VisualAssetEditor.Undo.PropertyLabel", {{"propertyName", request.property_name}})
+                }, error)) {
+                return {.ok = false, .error = error};
+            }
+        }
+
+        return replace_field_value(request.path, record_index, *direct_field_it, request.property_value);
+    }
+
+    if (!is_property_blob_asset_path(request.path)) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.NotWritableField")};
+    }
+
+    const auto& record = table_result.table.records[record_index];
+    auto properties_it = std::find_if(record.values.begin(), record.values.end(), [](const DbfRecordValue& value) {
+        return value.field_name == "PROPERTIES";
+    });
+    if (properties_it == record.values.end()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.MemoFieldMissing", {{"fieldName", "PROPERTIES"}})};
+    }
+
+    auto assignments = parse_visual_property_blob(properties_it->display_value);
+    const std::string requested_property_name = normalize_visual_property_name(request.property_name);
+    auto assignment_it = std::find_if(assignments.begin(), assignments.end(), [&](const VisualPropertyAssignment& property) {
+        return normalize_visual_property_name(property.name) == requested_property_name;
+    });
+
+    if (record_undo_entry) {
+        const bool exists = assignment_it != assignments.end();
+        const std::string prior_value = exists ? assignment_it->value : std::string{};
+        if (!exists && remove_property_if_missing) {
+            return {.ok = true, .error = {}};
+        }
+        if (exists && prior_value == request.property_value) {
+            return {.ok = true, .error = {}};
+        }
+
+        std::string error;
+        if (!record_visual_asset_undo_entry(request.path, {
+                .record_index = record_index,
+                .property_name = request.property_name,
+                .prior_value = prior_value,
+                .prior_value_exists = exists,
+                .label = visual_asset_text("VisualAssetEditor.Undo.PropertyLabel", {{"propertyName", request.property_name}})
+            }, error)) {
+            return {.ok = false, .error = error};
+        }
+    }
+
+    if (assignment_it == assignments.end()) {
+        if (!remove_property_if_missing) {
+            assignments.push_back({.name = request.property_name, .value = request.property_value});
+        }
+    } else if (remove_property_if_missing) {
+        assignments.erase(assignment_it);
+    } else {
+        assignment_it->value = request.property_value;
+    }
+
+    return replace_memo_field_value(
+        request.path,
+        record_index,
+        "PROPERTIES",
+        serialize_visual_property_blob(assignments));
+}
+
+VisualAssetEditResult set_visual_object_text_property(
+    const std::string& path,
+    const std::vector<VisualObjectAlignmentTarget>& objects,
+    const std::string& property_name,
+    const std::string& property_label,
+    const std::string& text) {
+    if (path.empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
+    }
+    if (objects.empty()) {
+        return {.ok = false, .error = visual_asset_text(
+            "VisualAssetEditor.Object.PropertyAssignmentSelectionRequired",
+            {{"propertyLabel", property_label}})};
+    }
+
+    std::vector<std::size_t> resolved_record_indexes;
+    resolved_record_indexes.reserve(objects.size());
+    std::vector<VisualObjectBatchEditItem> edits;
+    edits.reserve(objects.size());
+    for (const auto& object : objects) {
+        const auto property_result = query_visual_object_property({
+            .path = path,
+            .record_index = object.record_index,
+            .object_name = object.object_name,
+            .unique_id = object.unique_id,
+            .property_name = property_name
+        });
+        if (!property_result.ok) {
+            return {.ok = false, .error = property_result.error};
+        }
+        if (std::find(resolved_record_indexes.begin(), resolved_record_indexes.end(), property_result.record_index) !=
+            resolved_record_indexes.end()) {
+            return {.ok = false, .error = visual_asset_text(
+                "VisualAssetEditor.Object.PropertyAssignmentDuplicate",
+                {{"propertyLabel", property_label}})};
+        }
+        resolved_record_indexes.push_back(property_result.record_index);
+
+        edits.push_back({
+            .record_index = object.record_index,
+            .object_name = object.object_name,
+            .unique_id = object.unique_id,
+            .properties = {
+                {
+                    .property_name = property_name,
+                    .property_value = property_result.direct_field
+                        ? text
+                        : format_visual_string_property_value(text)
+                }
+            }
+        });
+    }
+
+    return update_visual_object_batch({
+        .path = path,
+        .objects = edits
+    });
+}
+
+VisualAssetEditResult set_visual_object_scalar_property(
+    const std::string& path,
+    const std::vector<VisualObjectAlignmentTarget>& objects,
+    const std::string& property_name,
+    const std::string& property_label,
+    const std::string& property_value) {
+    if (path.empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
+    }
+    if (objects.empty()) {
+        return {.ok = false, .error = visual_asset_text(
+            "VisualAssetEditor.Object.PropertyAssignmentSelectionRequired",
+            {{"propertyLabel", property_label}})};
+    }
+
+    std::vector<std::size_t> resolved_record_indexes;
+    resolved_record_indexes.reserve(objects.size());
+    std::vector<VisualObjectBatchEditItem> edits;
+    edits.reserve(objects.size());
+    for (const auto& object : objects) {
+        const auto property_result = query_visual_object_property({
+            .path = path,
+            .record_index = object.record_index,
+            .object_name = object.object_name,
+            .unique_id = object.unique_id,
+            .property_name = property_name
+        });
+        if (!property_result.ok) {
+            return {.ok = false, .error = property_result.error};
+        }
+        if (std::find(resolved_record_indexes.begin(), resolved_record_indexes.end(), property_result.record_index) !=
+            resolved_record_indexes.end()) {
+            return {.ok = false, .error = visual_asset_text(
+                "VisualAssetEditor.Object.PropertyAssignmentDuplicate",
+                {{"propertyLabel", property_label}})};
+        }
+        resolved_record_indexes.push_back(property_result.record_index);
+
+        edits.push_back({
+            .record_index = object.record_index,
+            .object_name = object.object_name,
+            .unique_id = object.unique_id,
+            .properties = {
+                {
+                    .property_name = property_name,
+                    .property_value = property_value
+                }
+            }
+        });
+    }
+
+    return update_visual_object_batch({
+        .path = path,
+        .objects = edits
+    });
+}
+
+std::vector<VisualPropertyAssignment> parse_visual_property_blob(const std::string& text) {
+    std::vector<VisualPropertyAssignment> properties;
+    std::stringstream stream(text);
+    std::string line;
+    std::size_t line_index = 0U;
+    while (std::getline(stream, line)) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+
+        const auto equals = line.find('=');
+        if (equals == std::string::npos) {
+            if (!trim_both(line).empty()) {
+                properties.push_back({.name = trim_both(line), .value = {}, .source_line_index = line_index});
+            }
+            ++line_index;
+            continue;
+        }
+
+        properties.push_back({
+            .name = trim_both(line.substr(0U, equals)),
+            .value = trim_both(line.substr(equals + 1U)),
+            .source_line_index = line_index
+        });
+        ++line_index;
+    }
+    return properties;
+}
+
+std::string serialize_visual_property_blob(const std::vector<VisualPropertyAssignment>& properties) {
+    std::ostringstream stream;
+    for (const auto& property : properties) {
+        if (property.name.empty()) {
+            continue;
+        }
+
+        stream << property.name;
+        if (!property.value.empty()) {
+            stream << " = " << property.value;
+        }
+        stream << "\r\n";
+    }
+    return stream.str();
+}
+
+bool is_property_blob_asset_path(const std::string& path) {
+    std::string ext = std::filesystem::path(path).extension().string();
+    std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
+    return ext == ".scx" || ext == ".vcx";
+}
+
+VisualAssetEditResult update_visual_object_property(const VisualObjectEditRequest& request) {
+    auto update_result = apply_visual_object_property_change(request, true, false);
+    if (update_result.ok) {
+        update_result.affected_object_count = 1U;
+    }
+    return update_result;
+}
+
+VisualAssetEditResult clear_visual_object_property(const VisualObjectPropertyClearRequest& request) {
+    auto clear_result = apply_visual_object_property_change({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .property_name = request.property_name,
+        .property_value = {}
+    }, true, true);
+    if (clear_result.ok) {
+        clear_result.affected_object_count = 1U;
+    }
+    return clear_result;
+}
+
+VisualAssetEditResult clear_visual_object_properties(const VisualObjectPropertyClearBatchRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
+    }
+    if (request.properties.empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.ClearBatchRequired")};
+    }
+
+    const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
+    const auto rollback_batch_clears = [&]() -> VisualAssetEditResult {
+        while (list_visual_asset_undo_entry_files(request.path).size() > initial_undo_depth) {
+            const auto rollback_result = undo_visual_object_property(request.path);
+            if (!rollback_result.ok) {
+                return rollback_result;
+            }
+        }
+        return {.ok = true, .error = {}};
+    };
+
+    for (const auto& property : request.properties) {
+        if (trim_both(property.property_name).empty()) {
+            const auto rollback_result = rollback_batch_clears();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Property.NameRequired"), rollback_result.error)
+                };
+            }
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.NameRequired")};
+        }
+
+        const auto result = clear_visual_object_property({
+            .path = request.path,
+            .record_index = property.record_index,
+            .object_name = property.object_name,
+            .unique_id = property.unique_id,
+            .property_name = property.property_name
+        });
+        if (!result.ok) {
+            const auto rollback_result = rollback_batch_clears();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = visual_asset_rollback_failed_text(result.error, rollback_result.error)
+                };
+            }
+            return result;
+        }
+    }
+
+    return {.ok = true, .error = {}, .affected_object_count = request.properties.size()};
+}
+
+VisualAssetEditResult copy_visual_object_property(const VisualObjectPropertyCopyRequest& request) {
+    if (!request.target_property_name.empty() && trim_both(request.target_property_name).empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.TargetNameRequired")};
+    }
+
+    const auto source_property = query_visual_object_property({
+        .path = request.path,
+        .record_index = request.source_record_index,
+        .object_name = request.source_object_name,
+        .unique_id = request.source_unique_id,
+        .property_name = request.source_property_name
+    });
+    if (!source_property.ok) {
+        return {.ok = false, .error = source_property.error};
+    }
+    if (!source_property.exists) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.SourceNotFound")};
+    }
+
+    const std::string target_property_name = request.target_property_name.empty()
+        ? source_property.property_name
+        : trim_both(request.target_property_name);
+    const auto target_property = query_visual_object_property({
+        .path = request.path,
+        .record_index = request.target_record_index,
+        .object_name = request.target_object_name,
+        .unique_id = request.target_unique_id,
+        .property_name = target_property_name
+    });
+    if (!target_property.ok) {
+        return {.ok = false, .error = target_property.error};
+    }
+    if (target_property.exists && !request.replace_existing) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.TargetObjectAlreadyHasProperty")};
+    }
+
+    auto copy_result = update_visual_object_property({
+        .path = request.path,
+        .record_index = request.target_record_index,
+        .object_name = request.target_object_name,
+        .unique_id = request.target_unique_id,
+        .property_name = target_property_name,
+        .property_value = source_property.value
+    });
+    if (copy_result.ok) {
+        copy_result.affected_object_count = 1U;
+    }
+    return copy_result;
+}
+
+VisualAssetEditResult copy_visual_object_properties(const VisualObjectPropertyCopyBatchRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
+    }
+    if (request.properties.empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.CopyBatchRequired")};
+    }
+
+    const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
+    const auto rollback_batch_copies = [&]() -> VisualAssetEditResult {
+        while (list_visual_asset_undo_entry_files(request.path).size() > initial_undo_depth) {
+            const auto rollback_result = undo_visual_object_property(request.path);
+            if (!rollback_result.ok) {
+                return rollback_result;
+            }
+        }
+        return {.ok = true, .error = {}};
+    };
+
+    for (const auto& property : request.properties) {
+        if (trim_both(property.source_property_name).empty()) {
+            const auto rollback_result = rollback_batch_copies();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Property.NameRequired"), rollback_result.error)
+                };
+            }
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.NameRequired")};
+        }
+        if (!property.target_property_name.empty() && trim_both(property.target_property_name).empty()) {
+            const auto rollback_result = rollback_batch_copies();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Property.TargetNameRequired"), rollback_result.error)
+                };
+            }
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.TargetNameRequired")};
+        }
+
+        const auto result = copy_visual_object_property({
+            .path = request.path,
+            .source_record_index = property.source_record_index,
+            .source_object_name = property.source_object_name,
+            .source_unique_id = property.source_unique_id,
+            .source_property_name = property.source_property_name,
+            .target_record_index = property.target_record_index,
+            .target_object_name = property.target_object_name,
+            .target_unique_id = property.target_unique_id,
+            .target_property_name = property.target_property_name,
+            .replace_existing = property.replace_existing
+        });
+        if (!result.ok) {
+            const auto rollback_result = rollback_batch_copies();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = visual_asset_rollback_failed_text(result.error, rollback_result.error)
+                };
+            }
+            return result;
+        }
+    }
+
+    return {.ok = true, .error = {}, .affected_object_count = request.properties.size()};
+}
+
+VisualAssetEditResult move_visual_object_property(const VisualObjectPropertyMoveRequest& request) {
+    if (!request.target_property_name.empty() && trim_both(request.target_property_name).empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.TargetNameRequired")};
+    }
+
+    const auto source_property = query_visual_object_property({
+        .path = request.path,
+        .record_index = request.source_record_index,
+        .object_name = request.source_object_name,
+        .unique_id = request.source_unique_id,
+        .property_name = request.source_property_name
+    });
+    if (!source_property.ok) {
+        return {.ok = false, .error = source_property.error};
+    }
+    if (!source_property.exists) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.SourceNotFound")};
+    }
+
+    const std::string target_property_name = request.target_property_name.empty()
+        ? source_property.property_name
+        : trim_both(request.target_property_name);
+    const auto target_property = query_visual_object_property({
+        .path = request.path,
+        .record_index = request.target_record_index,
+        .object_name = request.target_object_name,
+        .unique_id = request.target_unique_id,
+        .property_name = target_property_name
+    });
+    if (!target_property.ok) {
+        return {.ok = false, .error = target_property.error};
+    }
+    if (target_property.record_index == source_property.record_index &&
+        normalize_visual_property_name(target_property_name) == normalize_visual_property_name(source_property.property_name)) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.SourceMoveToSelf")};
+    }
+    if (target_property.exists && !request.replace_existing) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.TargetObjectAlreadyHasProperty")};
+    }
+
+    const auto copy_result = copy_visual_object_property({
+        .path = request.path,
+        .source_record_index = request.source_record_index,
+        .source_object_name = request.source_object_name,
+        .source_unique_id = request.source_unique_id,
+        .source_property_name = request.source_property_name,
+        .target_record_index = request.target_record_index,
+        .target_object_name = request.target_object_name,
+        .target_unique_id = request.target_unique_id,
+        .target_property_name = request.target_property_name,
+        .replace_existing = request.replace_existing
+    });
+    if (!copy_result.ok) {
+        return copy_result;
+    }
+
+    const auto clear_result = clear_visual_object_property({
+        .path = request.path,
+        .record_index = request.source_record_index,
+        .object_name = request.source_object_name,
+        .unique_id = request.source_unique_id,
+        .property_name = request.source_property_name
+    });
+    if (!clear_result.ok) {
+        const auto rollback_result = undo_visual_object_property(request.path);
+        if (!rollback_result.ok) {
+            return {.ok = false, .error = visual_asset_target_rollback_failed_text(clear_result.error, rollback_result.error)};
+        }
+        return {.ok = false, .error = clear_result.error};
+    }
+
+    return {.ok = true, .error = {}, .affected_object_count = 1U};
+}
+
+VisualAssetEditResult move_visual_object_properties(const VisualObjectPropertyMoveBatchRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
+    }
+    if (request.properties.empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.MoveBatchRequired")};
+    }
+
+    const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
+    const auto rollback_batch_moves = [&]() -> VisualAssetEditResult {
+        while (list_visual_asset_undo_entry_files(request.path).size() > initial_undo_depth) {
+            const auto rollback_result = undo_visual_object_property(request.path);
+            if (!rollback_result.ok) {
+                return rollback_result;
+            }
+        }
+        return {.ok = true, .error = {}};
+    };
+
+    for (const auto& property : request.properties) {
+        if (trim_both(property.source_property_name).empty()) {
+            const auto rollback_result = rollback_batch_moves();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Property.NameRequired"), rollback_result.error)
+                };
+            }
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.NameRequired")};
+        }
+        if (!property.target_property_name.empty() && trim_both(property.target_property_name).empty()) {
+            const auto rollback_result = rollback_batch_moves();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Property.TargetNameRequired"), rollback_result.error)
+                };
+            }
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.TargetNameRequired")};
+        }
+
+        const auto result = move_visual_object_property({
+            .path = request.path,
+            .source_record_index = property.source_record_index,
+            .source_object_name = property.source_object_name,
+            .source_unique_id = property.source_unique_id,
+            .source_property_name = property.source_property_name,
+            .target_record_index = property.target_record_index,
+            .target_object_name = property.target_object_name,
+            .target_unique_id = property.target_unique_id,
+            .target_property_name = property.target_property_name,
+            .replace_existing = property.replace_existing
+        });
+        if (!result.ok) {
+            const auto rollback_result = rollback_batch_moves();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = visual_asset_rollback_failed_text(result.error, rollback_result.error)
+                };
+            }
+            return result;
+        }
+    }
+
+    return {.ok = true, .error = {}, .affected_object_count = request.properties.size()};
+}
+
+VisualAssetEditResult rename_visual_object_property(const VisualObjectPropertyRenameRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
+    }
+
+    const std::string source_property_name = trim_both(request.property_name);
+    const std::string target_property_name = trim_both(request.new_property_name);
+    if (source_property_name.empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.NameRequired")};
+    }
+    if (target_property_name.empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.TargetNameRequired")};
+    }
+    if (normalize_visual_property_name(source_property_name) == normalize_visual_property_name(target_property_name)) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.SourceRenameToSelf")};
+    }
+
+    std::size_t record_index = 0U;
+    const auto resolution = resolve_visual_object_record_index({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .property_name = source_property_name,
+        .property_value = {}
+    }, record_index);
+    if (!resolution.ok) {
+        return resolution;
+    }
+
+    const auto table_result = parse_dbf_table_from_file(request.path, record_index + 1U);
+    if (!table_result.ok) {
+        return {.ok = false, .error = table_result.error};
+    }
+    if (record_index >= table_result.table.records.size()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.RecordUnavailable")};
+    }
+
+    const auto table_bytes = read_binary_file(request.path);
+    if (table_bytes.empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed")};
+    }
+
+    const std::string normalized_source = normalize_visual_property_name(source_property_name);
+    const auto fields = read_raw_field_descriptors(table_bytes);
+    const auto direct_field_it = std::find_if(fields.begin(), fields.end(), [&](const RawFieldDescriptor& field) {
+        return normalize_visual_property_name(field.name) == normalized_source;
+    });
+    if (direct_field_it != fields.end()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.DirectFieldRenameUnsupported")};
+    }
+
+    if (!is_property_blob_asset_path(request.path)) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.NotRenameableMemo")};
+    }
+
+    const auto& record = table_result.table.records[record_index];
+    const auto properties_it = std::find_if(record.values.begin(), record.values.end(), [](const DbfRecordValue& value) {
+        return value.field_name == "PROPERTIES";
+    });
+    if (properties_it == record.values.end()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.SelectedMemoFieldMissing", {{"fieldName", "PROPERTIES"}})};
+    }
+
+    auto assignments = parse_visual_property_blob(properties_it->display_value);
+    const std::string normalized_target = normalize_visual_property_name(target_property_name);
+    std::size_t source_count = 0U;
+    std::size_t source_index = 0U;
+    bool target_exists = false;
+    for (std::size_t index = 0U; index < assignments.size(); ++index) {
+        const std::string normalized_name = normalize_visual_property_name(assignments[index].name);
+        if (normalized_name == normalized_source) {
+            ++source_count;
+            source_index = index;
+        }
+        if (normalized_name == normalized_target) {
+            target_exists = true;
+        }
+    }
+
+    if (source_count == 0U) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.SourceNotFound")};
+    }
+    if (source_count > 1U) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.SourceAmbiguousInObject")};
+    }
+    if (target_exists) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.TargetExistsInObject")};
+    }
+
+    std::string error;
+    if (!record_visual_asset_undo_entry(request.path, {
+            .record_index = record_index,
+            .property_name = "PROPERTIES",
+            .prior_value = properties_it->display_value,
+            .prior_value_exists = true,
+            .label = visual_asset_text("VisualAssetEditor.Undo.RenamePropertyLabel", {{"propertyName", source_property_name}})
+        }, error)) {
+        return {.ok = false, .error = error};
+    }
+
+    assignments[source_index].name = target_property_name;
+    auto rename_result = replace_memo_field_value(
+        request.path,
+        record_index,
+        "PROPERTIES",
+        serialize_visual_property_blob(assignments));
+    if (rename_result.ok) {
+        rename_result.affected_object_count = 1U;
+    }
+    return rename_result;
+}
+
+VisualAssetEditResult rename_visual_object_properties(const VisualObjectPropertyRenameBatchRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
+    }
+    if (request.properties.empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.RenameBatchRequired")};
+    }
+
+    const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
+    const auto rollback_batch_renames = [&]() -> VisualAssetEditResult {
+        while (list_visual_asset_undo_entry_files(request.path).size() > initial_undo_depth) {
+            const auto rollback_result = undo_visual_object_property(request.path);
+            if (!rollback_result.ok) {
+                return rollback_result;
+            }
+        }
+        return {.ok = true, .error = {}};
+    };
+
+    for (const auto& property : request.properties) {
+        if (trim_both(property.property_name).empty()) {
+            const auto rollback_result = rollback_batch_renames();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Property.NameRequired"), rollback_result.error)
+                };
+            }
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.NameRequired")};
+        }
+        if (trim_both(property.new_property_name).empty()) {
+            const auto rollback_result = rollback_batch_renames();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Property.TargetNameRequired"), rollback_result.error)
+                };
+            }
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.TargetNameRequired")};
+        }
+
+        const auto result = rename_visual_object_property({
+            .path = request.path,
+            .record_index = property.record_index,
+            .object_name = property.object_name,
+            .unique_id = property.unique_id,
+            .property_name = property.property_name,
+            .new_property_name = property.new_property_name
+        });
+        if (!result.ok) {
+            const auto rollback_result = rollback_batch_renames();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = visual_asset_rollback_failed_text(result.error, rollback_result.error)
+                };
+            }
+            return result;
+        }
+    }
+
+    return {.ok = true, .error = {}, .affected_object_count = request.properties.size()};
+}
+
+VisualAssetEditResult reorder_visual_object_property(const VisualObjectPropertyReorderRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
+    }
+    if (trim_both(request.property_name).empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.NameRequired")};
+    }
+
+    const std::string placement = normalize_visual_property_name(request.placement);
+    if (placement != "first" && placement != "last" && placement != "before" && placement != "after") {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.PlacementUnsupported")};
+    }
+
+    std::size_t record_index = 0U;
+    const auto resolution = resolve_visual_object_record_index({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .property_name = request.property_name,
+        .property_value = {}
+    }, record_index);
+    if (!resolution.ok) {
+        return resolution;
+    }
+
+    const auto table_result = parse_dbf_table_from_file(request.path, record_index + 1U);
+    if (!table_result.ok) {
+        return {.ok = false, .error = table_result.error};
+    }
+    if (record_index >= table_result.table.records.size()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.RecordUnavailable")};
+    }
+
+    const auto table_bytes = read_binary_file(request.path);
+    if (table_bytes.empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed")};
+    }
+
+    const auto fields = read_raw_field_descriptors(table_bytes);
+    const auto is_direct_field_name = [&](const std::string& property_name) {
+        const std::string normalized_property_name = normalize_visual_property_name(property_name);
+        return std::any_of(fields.begin(), fields.end(), [&](const RawFieldDescriptor& field) {
+            return normalize_visual_property_name(field.name) == normalized_property_name;
+        });
+    };
+    if (is_direct_field_name(request.property_name)) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.DirectFieldReorderUnsupported")};
+    }
+    if ((placement == "before" || placement == "after") &&
+        !trim_both(request.relative_property_name).empty() &&
+        is_direct_field_name(request.relative_property_name)) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.DirectFieldReorderUnsupported")};
+    }
+
+    if (!is_property_blob_asset_path(request.path)) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.NotReorderableMemo")};
+    }
+
+    const auto* properties_field = find_record_value(table_result.table.records[record_index], "PROPERTIES");
+    if (properties_field == nullptr) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.SelectedMemoFieldMissing", {{"fieldName", "PROPERTIES"}})};
+    }
+
+    auto assignments = parse_visual_property_blob(properties_field->display_value);
+    const auto reorder_result = reorder_visual_property_assignments(
+        assignments,
+        request.property_name,
+        request.placement,
+        request.relative_property_name);
+    if (!reorder_result.ok) {
+        return reorder_result;
+    }
+
+    auto update_result = update_visual_object_property({
+        .path = request.path,
+        .record_index = record_index,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "PROPERTIES",
+        .property_value = serialize_visual_property_blob(assignments)
+    });
+    if (update_result.ok) {
+        update_result.affected_object_count = 1U;
+    }
+    return update_result;
+}
+
+VisualAssetEditResult reorder_visual_object_properties(const VisualObjectPropertyReorderBatchRequest& request) {
+    if (request.path.empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
+    }
+    if (request.properties.empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.ReorderBatchRequired")};
+    }
+
+    const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
+    const auto rollback_batch_reorders = [&]() -> VisualAssetEditResult {
+        while (list_visual_asset_undo_entry_files(request.path).size() > initial_undo_depth) {
+            const auto rollback_result = undo_visual_object_property(request.path);
+            if (!rollback_result.ok) {
+                return rollback_result;
+            }
+        }
+        return {.ok = true, .error = {}};
+    };
+
+    for (const auto& property : request.properties) {
+        if (trim_both(property.property_name).empty()) {
+            const auto rollback_result = rollback_batch_reorders();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Property.NameRequired"), rollback_result.error)
+                };
+            }
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.NameRequired")};
+        }
+
+        const std::string placement = normalize_visual_property_name(property.placement);
+        if ((placement == "before" || placement == "after") &&
+            trim_both(property.relative_property_name).empty()) {
+            const auto rollback_result = rollback_batch_reorders();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Property.RelativeNameRequired"), rollback_result.error)
+                };
+            }
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.RelativeNameRequired")};
+        }
+
+        const auto result = reorder_visual_object_property({
+            .path = request.path,
+            .record_index = property.record_index,
+            .object_name = property.object_name,
+            .unique_id = property.unique_id,
+            .property_name = property.property_name,
+            .placement = property.placement,
+            .relative_property_name = property.relative_property_name
+        });
+        if (!result.ok) {
+            const auto rollback_result = rollback_batch_reorders();
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = visual_asset_rollback_failed_text(result.error, rollback_result.error)
+                };
+            }
+            return result;
+        }
+    }
+
+    return {.ok = true, .error = {}, .affected_object_count = request.properties.size()};
+}
+
+VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectPropertyQueryRequest& request) {
+    if (request.path.empty()) {
+        return {
+            .ok = false,
+            .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired"),
+            .exists = false,
+            .direct_field = false,
+            .record_index = 0U,
+            .record_deleted = false,
+            .property_name = {},
+            .value = {}
+        };
+    }
+    if (trim_both(request.property_name).empty()) {
+        return {
+            .ok = false,
+            .error = visual_asset_text("VisualAssetEditor.Property.NameRequired"),
+            .exists = false,
+            .direct_field = false,
+            .record_index = 0U,
+            .record_deleted = false,
+            .property_name = {},
+            .value = {}
+        };
+    }
+
+    std::size_t record_index = 0U;
+    const auto resolution = resolve_visual_object_record_index({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .property_name = request.property_name,
+        .property_value = {}
+    }, record_index);
+    if (!resolution.ok) {
+        return {
+            .ok = false,
+            .error = resolution.error,
+            .exists = false,
+            .direct_field = false,
+            .record_index = 0U,
+            .record_deleted = false,
+            .property_name = {},
+            .value = {}
+        };
+    }
+
+    const auto property_state = read_current_visual_property_state(
+        request.path,
+        record_index,
+        request.property_name);
+    if (!property_state.has_value()) {
+        return {
+            .ok = false,
+            .error = visual_asset_text("VisualAssetEditor.Property.ReadFailed"),
+            .exists = false,
+            .direct_field = false,
+            .record_index = 0U,
+            .record_deleted = false,
+            .property_name = {},
+            .value = {}
+        };
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .exists = property_state->exists,
+        .direct_field = property_state->direct_field,
+        .record_index = record_index,
+        .record_deleted = property_state->record_deleted,
+        .property_name = property_state->property_name,
+        .value = property_state->value
+    };
+}
+
+VisualObjectPropertyListResult list_visual_object_properties(const VisualObjectPropertyListRequest& request) {
+    if (request.path.empty()) {
+        return {
+            .ok = false,
+            .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired"),
+            .record_index = 0U,
+            .record_deleted = false,
+            .properties = {}
+        };
+    }
+
+    std::size_t record_index = 0U;
+    const auto resolution = resolve_visual_object_record_index({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .property_name = {},
+        .property_value = {}
+    }, record_index);
+    if (!resolution.ok) {
+        return {
+            .ok = false,
+            .error = resolution.error,
+            .record_index = 0U,
+            .record_deleted = false,
+            .properties = {}
+        };
+    }
+
+    const auto table_result = parse_dbf_table_from_file(request.path, record_index + 1U);
+    if (!table_result.ok) {
+        return {
+            .ok = false,
+            .error = table_result.error,
+            .record_index = 0U,
+            .record_deleted = false,
+            .properties = {}
+        };
+    }
+    if (record_index >= table_result.table.records.size()) {
+        return {
+            .ok = false,
+            .error = visual_asset_text("VisualAssetEditor.Object.RecordUnavailable"),
+            .record_index = 0U,
+            .record_deleted = false,
+            .properties = {}
+        };
+    }
+
+    std::vector<VisualObjectPropertySnapshot> properties;
+    const auto& record = table_result.table.records[record_index];
+    for (const auto& value : record.values) {
+        if (normalize_visual_property_name(value.field_name) == "properties") {
+            continue;
+        }
+        properties.push_back({
+            .property_name = value.field_name,
+            .value = value.display_value,
+            .direct_field = true,
+            .field_type = value.field_type,
+            .source_line_index = static_cast<std::size_t>(-1)
+        });
+    }
+
+    const auto properties_field = std::find_if(record.values.begin(), record.values.end(), [](const DbfRecordValue& value) {
+        return normalize_visual_property_name(value.field_name) == "properties";
+    });
+    if (properties_field != record.values.end()) {
+        for (const auto& assignment : parse_visual_property_blob(properties_field->display_value)) {
+            properties.push_back({
+                .property_name = assignment.name,
+                .value = assignment.value,
+                .direct_field = false,
+                .field_type = '\0',
+                .source_line_index = assignment.source_line_index
+            });
+        }
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .record_index = record_index,
+        .record_deleted = record.deleted,
+        .properties = std::move(properties)
+    };
+}
+
+bool matches_property_filter(const VisualObjectPropertySnapshot& property, const std::string& lowered_search_text) {
+    if (lowered_search_text.empty()) {
+        return true;
+    }
+
+    std::string field_type_text;
+    if (property.field_type != '\0') {
+        field_type_text.push_back(property.field_type);
+    }
+
+    const std::string source_line_text = property.source_line_index == static_cast<std::size_t>(-1)
+        ? std::string{}
+        : std::to_string(property.source_line_index);
+    const std::string backing_kind = property.direct_field ? "direct field" : "memo property";
+
+    return contains_case_insensitive(property.property_name, lowered_search_text) ||
+        contains_case_insensitive(property.value, lowered_search_text) ||
+        contains_case_insensitive(field_type_text, lowered_search_text) ||
+        contains_case_insensitive(source_line_text, lowered_search_text) ||
+        contains_case_insensitive(backing_kind, lowered_search_text);
+}
+
+VisualObjectPropertyListFilterResult filter_visual_object_properties(
+    const VisualObjectPropertyListFilterRequest& request) {
+    const auto list_result = list_visual_object_properties({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id
+    });
+    if (!list_result.ok) {
+        return {
+            .ok = false,
+            .error = list_result.error,
+            .record_index = 0U,
+            .record_deleted = false,
+            .search_text = request.search_text,
+            .property_count = 0U,
+            .dry_run = true,
+            .mutates_asset = false,
+            .properties = {}
+        };
+    }
+
+    const std::string lowered_search_text = lowercase_copy(request.search_text);
+    std::vector<VisualObjectPropertySnapshot> filtered;
+    std::copy_if(
+        list_result.properties.begin(),
+        list_result.properties.end(),
+        std::back_inserter(filtered),
+        [&](const VisualObjectPropertySnapshot& property) {
+            return matches_property_filter(property, lowered_search_text);
+        });
+
+    const auto property_count = filtered.size();
+    return {
+        .ok = true,
+        .error = {},
+        .record_index = list_result.record_index,
+        .record_deleted = list_result.record_deleted,
+        .search_text = request.search_text,
+        .property_count = property_count,
+        .dry_run = true,
+        .mutates_asset = false,
+        .properties = std::move(filtered)
+    };
+}
+
+}  // namespace copperfin::vfp

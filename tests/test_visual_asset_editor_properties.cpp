@@ -1,0 +1,1580 @@
+#include "test_visual_asset_editor_support.h"
+
+namespace cf_test_visual_asset_editor {
+void test_query_visual_object_property_reads_selected_values() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_query_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path memo_table_path = temp_dir / "query.scx";
+    const fs::path memo_path = temp_dir / "query.sct";
+    write_synthetic_named_object_asset(memo_table_path, memo_path, {
+        {
+            .objname = "cmdSave",
+            .name = "saveButton",
+            .unique_id = "save-guid",
+            .properties = "Caption = \"Save\"\r\nLeft = 10\r\n"
+        },
+        {
+            .objname = "txtName",
+            .name = "nameBox",
+            .unique_id = "target-guid",
+            .properties = "Caption = \"Name\"\r\nLeft = 30\r\n"
+        }
+    });
+
+    auto query_result = copperfin::vfp::query_visual_object_property({
+        .path = memo_table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = " TARGET-GUID ",
+        .property_name = "caption"
+    });
+    expect(query_result.ok, "#736: visual property queries should support UNIQUEID selectors");
+    expect(query_result.exists, "#736: visual property queries should report existing memo-backed properties");
+    expect(!query_result.direct_field, "#736: visual property queries should identify memo-backed properties");
+    expect(query_result.record_index == 1U, "#739: UNIQUEID property queries should report the resolved record index");
+    expect(query_result.property_name == "Caption", "#736: visual property queries should return the stored memo property name");
+    expect(query_result.value == "\"Name\"", "#736: visual property queries should return the selected memo property value");
+    expect(!copperfin::vfp::query_visual_object_undo(memo_table_path.string()).available,
+        "#736: visual property queries should not create undo history");
+
+    query_result = copperfin::vfp::query_visual_object_property({
+        .path = memo_table_path.string(),
+        .record_index = 0U,
+        .object_name = "cmdSave",
+        .unique_id = {},
+        .property_name = "MissingProp"
+    });
+    expect(query_result.ok, "#736: missing memo-backed property queries should report cleanly");
+    expect(!query_result.exists, "#736: missing memo-backed property queries should not be marked existing");
+    expect(!query_result.direct_field, "#736: missing memo-backed property queries should not be direct fields");
+    expect(query_result.property_name == "MissingProp", "#736: missing property queries should echo the requested property name");
+    expect(query_result.value.empty(), "#736: missing property queries should return an empty value");
+
+    const fs::path direct_table_path = temp_dir / "query_geometry.scx";
+    const fs::path direct_memo_path = temp_dir / "query_geometry.sct";
+    write_synthetic_named_geometry_asset(direct_table_path, direct_memo_path);
+    query_result = copperfin::vfp::query_visual_object_property({
+        .path = direct_table_path.string(),
+        .record_index = 0U,
+        .object_name = "txtName",
+        .unique_id = {},
+        .property_name = "hpos"
+    });
+    expect(query_result.ok, "#736: visual property queries should support object-name selectors");
+    expect(query_result.exists, "#736: visual property queries should report existing direct fields");
+    expect(query_result.direct_field, "#736: visual property queries should identify direct fields");
+    expect(query_result.record_index == 1U, "#739: object-name property queries should report the resolved record index");
+    expect(query_result.property_name == "HPOS", "#736: visual property queries should return the stored direct field name");
+    expect(std::abs(parse_number(query_result.value) - 222.0) < 0.001,
+        "#736: visual property queries should return the selected direct-field value");
+    expect(!copperfin::vfp::query_visual_object_undo(direct_table_path.string()).available,
+        "#736: direct-field queries should not create undo history");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_clear_visual_object_property_resets_selected_values() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_clear_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "clear.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "NAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U},
+        {.name = "HPOS", .type = 'C', .length = 10U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSave", "saveButton", "save-guid", "111", "Caption = \"Save\"\r\nLeft = 10\r\n"},
+        {"txtName", "nameBox", "name-guid", "222", "Caption = \"Name\"\r\nLeft = 30\r\n"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#766: property-clear fixture should be writable");
+
+    auto clear_result = copperfin::vfp::clear_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "txtName",
+        .unique_id = {},
+        .property_name = "MissingProp"
+    });
+    expect(clear_result.ok, "#766: clearing missing memo-backed properties should succeed as a no-op");
+    expect(clear_result.affected_object_count == 1U,
+        "#1005: successful property clear should report one affected object");
+    expect(!copperfin::vfp::query_visual_object_undo(table_path.string()).available,
+        "#766: missing memo-backed property clears should not create undo history");
+
+    clear_result = copperfin::vfp::clear_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 1U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "hpos"
+    });
+    expect(clear_result.ok, "#766: property clear should support record-index direct-field selection");
+
+    clear_result = copperfin::vfp::clear_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "caption"
+    });
+    expect(clear_result.ok, "#766: property clear should support UNIQUEID memo-backed selection");
+
+    auto hpos_query = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "txtName",
+        .unique_id = {},
+        .property_name = "HPOS"
+    });
+    expect(hpos_query.ok && hpos_query.exists && hpos_query.direct_field && hpos_query.value.empty(),
+        "#766: direct-field clears should write an empty value through the direct field path");
+
+    auto caption_query = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "Caption"
+    });
+    expect(caption_query.ok && !caption_query.exists,
+        "#766: memo-backed clears should remove the assignment instead of leaving an empty value");
+
+    auto left_query = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "Left"
+    });
+    auto other_caption_query = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "txtName",
+        .unique_id = {},
+        .property_name = "Caption"
+    });
+    expect(left_query.ok && left_query.exists && left_query.value == "10" &&
+            other_caption_query.ok && other_caption_query.exists && other_caption_query.value == "\"Name\"",
+        "#766: property clear should preserve unrelated memo assignments and unrelated objects");
+
+    clear_result = copperfin::vfp::clear_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = " "
+    });
+    expect(!clear_result.ok, "#766: property clear should reject empty property names");
+    expect(clear_result.affected_object_count == 0U,
+        "#1005: failed property clear should report zero affected objects");
+
+    clear_result = copperfin::vfp::clear_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "missing-guid",
+        .property_name = "Caption"
+    });
+    expect(!clear_result.ok, "#766: property clear should reject missing selected objects");
+
+    const fs::path no_properties_path = temp_dir / "clear_no_properties.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> no_properties_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U}
+    };
+    const std::vector<std::vector<std::string>> no_properties_records{
+        {"cmdNoProps", "no-props-guid"}
+    };
+    const auto no_properties_create = copperfin::vfp::create_dbf_table_file(
+        no_properties_path.string(),
+        no_properties_fields,
+        no_properties_records);
+    expect(no_properties_create.ok, "#766: missing-PROPERTIES fixture should be writable");
+    clear_result = copperfin::vfp::clear_visual_object_property({
+        .path = no_properties_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "no-props-guid",
+        .property_name = "Caption"
+    });
+    expect(!clear_result.ok, "#766: property clear should reject missing PROPERTIES fields for memo-backed clears");
+
+    const fs::path unsupported_path = temp_dir / "clear_unsupported.dbf";
+    const auto unsupported_create = copperfin::vfp::create_dbf_table_file(
+        unsupported_path.string(),
+        no_properties_fields,
+        no_properties_records);
+    expect(unsupported_create.ok, "#766: unsupported asset fixture should be writable");
+    clear_result = copperfin::vfp::clear_visual_object_property({
+        .path = unsupported_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "no-props-guid",
+        .property_name = "Caption"
+    });
+    expect(!clear_result.ok, "#766: property clear should reject unsupported asset paths for memo-backed clears");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#766: undo should restore cleared memo-backed assignments");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#766: undo should restore cleared direct fields");
+
+    caption_query = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "Caption"
+    });
+    hpos_query = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "txtName",
+        .unique_id = {},
+        .property_name = "HPOS"
+    });
+    expect(caption_query.ok && caption_query.exists && caption_query.value == "\"Save\"" &&
+            hpos_query.ok && hpos_query.exists && hpos_query.value == "222",
+        "#766: undo should restore direct and memo-backed cleared property values");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_clear_visual_object_properties_rolls_back_failed_batches() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_clear_batch_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "clear_batch.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "NAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U},
+        {.name = "HPOS", .type = 'C', .length = 10U},
+        {.name = "VPOS", .type = 'C', .length = 10U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSave", "saveButton", "save-guid", "111", "211", "Caption = \"Save\"\r\nLeft = 10\r\n"},
+        {"txtName", "nameBox", "name-guid", "222", "322", "Caption = \"Name\"\r\nLeft = 30\r\n"},
+        {"lblStatus", "statusLabel", "status-guid", "333", "433", "Caption = \"Status\"\r\nLeft = 50\r\n"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#771: property-clear-batch fixture should be writable");
+
+    const auto property_state = [&](const std::string& unique_id, const std::string& property_name) {
+        return copperfin::vfp::query_visual_object_property({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = property_name
+        });
+    };
+
+    auto batch_result = copperfin::vfp::clear_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "save-guid",
+                .property_name = "hpos"
+            },
+            {
+                .record_index = 0U,
+                .object_name = "txtName",
+                .unique_id = {},
+                .property_name = "Caption"
+            },
+            {
+                .record_index = 2U,
+                .object_name = {},
+                .unique_id = {},
+                .property_name = "MissingMemo"
+            }
+        }
+    });
+    expect(batch_result.ok, "#771: batch property clears should support mixed selectors and missing memo no-ops");
+    expect(batch_result.affected_object_count == 3U,
+        "#1005: successful batch property clear should report affected item count");
+
+    auto save_hpos = property_state("save-guid", "HPOS");
+    auto name_caption = property_state("name-guid", "Caption");
+    auto status_left = property_state("status-guid", "Left");
+    expect(save_hpos.ok && save_hpos.exists && save_hpos.direct_field && save_hpos.value.empty() &&
+            name_caption.ok && !name_caption.exists &&
+            status_left.ok && status_left.exists && status_left.value == "50",
+        "#771: batch clears should clear direct fields, remove memo assignments, and preserve unrelated assignments");
+
+    const auto undo_before_failure = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(undo_before_failure.available,
+        "#771: successful batch clears should leave normal visual undo history available");
+
+    batch_result = copperfin::vfp::clear_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "status-guid",
+                .property_name = "VPOS"
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "missing-guid",
+                .property_name = "Caption"
+            }
+        }
+    });
+    expect(!batch_result.ok, "#771: batch property clears should fail when a later selection is missing");
+    expect(batch_result.affected_object_count == 0U,
+        "#1005: failed batch property clear should report zero affected objects");
+    auto status_vpos = property_state("status-guid", "VPOS");
+    expect(status_vpos.ok && status_vpos.exists && status_vpos.value == "433",
+        "#771: failed batch clears should roll back earlier direct-field clears");
+    const auto undo_after_failure = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(undo_after_failure.available == undo_before_failure.available &&
+            undo_after_failure.label == undo_before_failure.label,
+        "#771: failed batch rollback should clean up undo entries created by the failed batch");
+
+    batch_result = copperfin::vfp::clear_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "status-guid",
+                .property_name = "Left"
+            },
+            {
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "status-guid",
+                .property_name = " "
+            }
+        }
+    });
+    expect(!batch_result.ok, "#771: batch property clears should reject empty property names");
+    status_left = property_state("status-guid", "Left");
+    expect(status_left.ok && status_left.exists && status_left.value == "50",
+        "#771: empty-name batch failures should roll back earlier memo clears");
+
+    batch_result = copperfin::vfp::clear_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {}
+    });
+    expect(!batch_result.ok, "#771: empty batch clear requests should fail explicitly");
+    expect(batch_result.affected_object_count == 0U,
+        "#1005: empty batch property clear should report zero affected objects");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#771: undo should restore memo clears from successful batches");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#771: undo should restore direct-field clears from successful batches");
+
+    save_hpos = property_state("save-guid", "HPOS");
+    name_caption = property_state("name-guid", "Caption");
+    expect(save_hpos.ok && save_hpos.exists && save_hpos.value == "111" &&
+            name_caption.ok && name_caption.exists && name_caption.value == "\"Name\"",
+        "#771: successful batch clear undo should restore original direct and memo-backed values");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_copy_visual_object_property_between_selected_objects() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_property_copy_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "property_copy.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "NAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U},
+        {.name = "HPOS", .type = 'C', .length = 10U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSave", "saveButton", "save-guid", "111", "Caption = \"Save\"\r\nLeft = 10\r\n"},
+        {"txtName", "nameBox", "name-guid", "222", "Caption = \"Name\"\r\nTop = 30\r\n"},
+        {"lblOther", "otherLabel", "other-guid", "333", "Caption = \"Other\"\r\n"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#767: property-copy fixture should be writable");
+
+    auto copy_result = copperfin::vfp::copy_visual_object_property({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "save-guid",
+        .source_property_name = "hpos",
+        .target_record_index = 0U,
+        .target_object_name = "txtName",
+        .target_unique_id = {},
+        .target_property_name = {},
+        .replace_existing = true
+    });
+    expect(copy_result.ok, "#767: property copy should support UNIQUEID source, object-name target, and direct-field replacement");
+    expect(copy_result.affected_object_count == 1U,
+        "#1005: successful property copy should report one affected object");
+
+    copy_result = copperfin::vfp::copy_visual_object_property({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = "cmdSave",
+        .source_unique_id = {},
+        .source_property_name = "caption",
+        .target_record_index = 1U,
+        .target_object_name = {},
+        .target_unique_id = {},
+        .target_property_name = "CopiedCaption",
+        .replace_existing = false
+    });
+    expect(copy_result.ok, "#767: property copy should support object-name source, record-index target, and target renames");
+
+    auto target_hpos = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "txtName",
+        .unique_id = {},
+        .property_name = "HPOS"
+    });
+    auto target_copied_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "name-guid",
+        .property_name = "CopiedCaption"
+    });
+    expect(target_hpos.ok && target_hpos.exists && target_hpos.value == "111" &&
+            target_copied_caption.ok && target_copied_caption.exists && target_copied_caption.value == "\"Save\"",
+        "#767: property copy should persist direct-field and memo-backed target values");
+
+    auto source_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "Caption"
+    });
+    auto target_top = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "name-guid",
+        .property_name = "Top"
+    });
+    auto other_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "other-guid",
+        .property_name = "Caption"
+    });
+    expect(source_caption.ok && source_caption.exists && source_caption.value == "\"Save\"" &&
+            target_top.ok && target_top.exists && target_top.value == "30" &&
+            other_caption.ok && other_caption.exists && other_caption.value == "\"Other\"",
+        "#767: property copy should preserve source values, unrelated target assignments, and unrelated objects");
+
+    copy_result = copperfin::vfp::copy_visual_object_property({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "save-guid",
+        .source_property_name = "Caption",
+        .target_record_index = 0U,
+        .target_object_name = {},
+        .target_unique_id = "name-guid",
+        .target_property_name = "Caption",
+        .replace_existing = false
+    });
+    expect(!copy_result.ok, "#767: property copy should reject target collisions without replacement");
+    expect(copy_result.affected_object_count == 0U,
+        "#1005: failed property copy should report zero affected objects");
+
+    copy_result = copperfin::vfp::copy_visual_object_property({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "save-guid",
+        .source_property_name = "MissingProp",
+        .target_record_index = 0U,
+        .target_object_name = {},
+        .target_unique_id = "name-guid",
+        .target_property_name = "MissingCopy",
+        .replace_existing = false
+    });
+    expect(!copy_result.ok, "#767: property copy should reject missing source properties");
+
+    copy_result = copperfin::vfp::copy_visual_object_property({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "save-guid",
+        .source_property_name = " ",
+        .target_record_index = 0U,
+        .target_object_name = {},
+        .target_unique_id = "name-guid",
+        .target_property_name = "EmptySource",
+        .replace_existing = false
+    });
+    expect(!copy_result.ok, "#767: property copy should reject empty source property names");
+
+    copy_result = copperfin::vfp::copy_visual_object_property({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "save-guid",
+        .source_property_name = "Caption",
+        .target_record_index = 0U,
+        .target_object_name = {},
+        .target_unique_id = "name-guid",
+        .target_property_name = " ",
+        .replace_existing = false
+    });
+    expect(!copy_result.ok, "#767: property copy should reject empty requested target property names");
+
+    const fs::path unsupported_path = temp_dir / "property_copy_unsupported.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> unsupported_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U},
+        {.name = "HPOS", .type = 'C', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> unsupported_records{
+        {"cmdSource", "source-guid", "111"},
+        {"txtTarget", "target-guid", "222"}
+    };
+    const auto unsupported_create = copperfin::vfp::create_dbf_table_file(
+        unsupported_path.string(),
+        unsupported_fields,
+        unsupported_records);
+    expect(unsupported_create.ok, "#767: unsupported property-copy fixture should be writable");
+    copy_result = copperfin::vfp::copy_visual_object_property({
+        .path = unsupported_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "source-guid",
+        .source_property_name = "HPOS",
+        .target_record_index = 0U,
+        .target_object_name = {},
+        .target_unique_id = "target-guid",
+        .target_property_name = "Caption",
+        .replace_existing = false
+    });
+    expect(!copy_result.ok, "#767: property copy should reject unsupported target property paths");
+
+    auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#767: undo should restore copied memo-backed properties");
+    undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "#767: undo should restore copied direct fields");
+
+    target_hpos = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "txtName",
+        .unique_id = {},
+        .property_name = "HPOS"
+    });
+    target_copied_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "name-guid",
+        .property_name = "CopiedCaption"
+    });
+    expect(target_hpos.ok && target_hpos.exists && target_hpos.value == "222" &&
+            target_copied_caption.ok && !target_copied_caption.exists,
+        "#767: undo should restore direct fields and remove copied memo-backed assignments");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_copy_visual_object_properties_rolls_back_failed_batches() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_property_copy_batch_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "property_copy_batch.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "NAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U},
+        {.name = "HPOS", .type = 'C', .length = 10U},
+        {.name = "VPOS", .type = 'C', .length = 10U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSave", "saveButton", "save-guid", "111", "211", "Caption = \"Save\"\r\nLeft = 10\r\n"},
+        {"txtName", "nameBox", "name-guid", "222", "322", "Caption = \"Name\"\r\nTop = 30\r\n"},
+        {"lblStatus", "statusLabel", "status-guid", "333", "433", "Caption = \"Status\"\r\nLeft = 50\r\n"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#774: property-copy-batch fixture should be writable");
+
+    const auto property_state = [&](const std::string& unique_id, const std::string& property_name) {
+        return copperfin::vfp::query_visual_object_property({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = property_name
+        });
+    };
+
+    auto batch_result = copperfin::vfp::copy_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "save-guid",
+                .source_property_name = "hpos",
+                .target_record_index = 0U,
+                .target_object_name = "txtName",
+                .target_unique_id = {},
+                .target_property_name = {},
+                .replace_existing = true
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = "cmdSave",
+                .source_unique_id = {},
+                .source_property_name = "Caption",
+                .target_record_index = 2U,
+                .target_object_name = {},
+                .target_unique_id = {},
+                .target_property_name = "CopiedCaption",
+                .replace_existing = false
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "status-guid",
+                .source_property_name = "Left",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "name-guid",
+                .target_property_name = "StatusLeft",
+                .replace_existing = false
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "save-guid",
+                .source_property_name = "VPOS",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "status-guid",
+                .target_property_name = "VPOS",
+                .replace_existing = true
+            }
+        }
+    });
+    expect(batch_result.ok, "#774: batch property copy should support mixed selectors, direct fields, memo properties, target renames, and replacement");
+    expect(batch_result.affected_object_count == 4U,
+        "#1005: successful batch property copy should report affected item count");
+
+    auto name_hpos = property_state("name-guid", "HPOS");
+    auto status_copied_caption = property_state("status-guid", "CopiedCaption");
+    auto name_status_left = property_state("name-guid", "StatusLeft");
+    auto status_vpos = property_state("status-guid", "VPOS");
+    auto save_caption = property_state("save-guid", "Caption");
+    expect(name_hpos.ok && name_hpos.exists && name_hpos.value == "111" &&
+            status_copied_caption.ok && status_copied_caption.exists && status_copied_caption.value == "\"Save\"" &&
+            name_status_left.ok && name_status_left.exists && name_status_left.value == "50" &&
+            status_vpos.ok && status_vpos.exists && status_vpos.value == "211" &&
+            save_caption.ok && save_caption.exists && save_caption.value == "\"Save\"",
+        "#774: batch property copy should persist target values while preserving sources and unrelated assignments");
+
+    const auto undo_before_failure = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(undo_before_failure.available,
+        "#774: successful batch copies should leave normal visual undo history available");
+
+    batch_result = copperfin::vfp::copy_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "save-guid",
+                .source_property_name = "Left",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "status-guid",
+                .target_property_name = "TempLeft",
+                .replace_existing = false
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "save-guid",
+                .source_property_name = "Caption",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "name-guid",
+                .target_property_name = "Caption",
+                .replace_existing = false
+            }
+        }
+    });
+    expect(!batch_result.ok, "#774: batch property copy should reject target collisions");
+    expect(batch_result.affected_object_count == 0U,
+        "#1005: failed batch property copy should report zero affected objects");
+    auto status_temp_left = property_state("status-guid", "TempLeft");
+    expect(status_temp_left.ok && !status_temp_left.exists,
+        "#774: target-collision failures should roll back earlier memo copy targets");
+
+    batch_result = copperfin::vfp::copy_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "save-guid",
+                .source_property_name = "Left",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "status-guid",
+                .target_property_name = "TempLeft",
+                .replace_existing = false
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "save-guid",
+                .source_property_name = "Missing",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "name-guid",
+                .target_property_name = "MissingCopy",
+                .replace_existing = false
+            }
+        }
+    });
+    expect(!batch_result.ok, "#774: batch property copy should reject missing source properties");
+    status_temp_left = property_state("status-guid", "TempLeft");
+    expect(status_temp_left.ok && !status_temp_left.exists,
+        "#774: missing-source failures should roll back earlier memo copy targets");
+
+    batch_result = copperfin::vfp::copy_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "save-guid",
+                .source_property_name = "Left",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "status-guid",
+                .target_property_name = "TempLeft",
+                .replace_existing = false
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "save-guid",
+                .source_property_name = " ",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "name-guid",
+                .target_property_name = "EmptySource",
+                .replace_existing = false
+            }
+        }
+    });
+    expect(!batch_result.ok, "#774: batch property copy should reject empty source names");
+    status_temp_left = property_state("status-guid", "TempLeft");
+    expect(status_temp_left.ok && !status_temp_left.exists,
+        "#774: empty-source failures should roll back earlier memo copy targets");
+
+    batch_result = copperfin::vfp::copy_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "save-guid",
+                .source_property_name = "Left",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "status-guid",
+                .target_property_name = "TempLeft",
+                .replace_existing = false
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "save-guid",
+                .source_property_name = "Caption",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "name-guid",
+                .target_property_name = " ",
+                .replace_existing = false
+            }
+        }
+    });
+    expect(!batch_result.ok, "#774: batch property copy should reject empty target names");
+    status_temp_left = property_state("status-guid", "TempLeft");
+    expect(status_temp_left.ok && !status_temp_left.exists,
+        "#774: empty-target failures should roll back earlier memo copy targets");
+
+    const auto undo_after_failures = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(undo_after_failures.available == undo_before_failure.available &&
+            undo_after_failures.label == undo_before_failure.label,
+        "#774: failed batch copy rollbacks should preserve prior undo history");
+
+    batch_result = copperfin::vfp::copy_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {}
+    });
+    expect(!batch_result.ok, "#774: empty batch copy requests should fail explicitly");
+    expect(batch_result.affected_object_count == 0U,
+        "#1005: empty batch property copy should report zero affected objects");
+
+    for (int index = 0; index < 4; ++index) {
+        const auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+        expect(undo_result.ok, "#774: undo should restore each successful batch copy target");
+    }
+
+    name_hpos = property_state("name-guid", "HPOS");
+    status_copied_caption = property_state("status-guid", "CopiedCaption");
+    name_status_left = property_state("name-guid", "StatusLeft");
+    status_vpos = property_state("status-guid", "VPOS");
+    expect(name_hpos.ok && name_hpos.exists && name_hpos.value == "222" &&
+            status_copied_caption.ok && !status_copied_caption.exists &&
+            name_status_left.ok && !name_status_left.exists &&
+            status_vpos.ok && status_vpos.exists && status_vpos.value == "433",
+        "#774: successful batch copy undo should restore original target state");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_move_visual_object_property_between_selected_objects() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_property_move_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "property_move.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "NAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U},
+        {.name = "HPOS", .type = 'C', .length = 10U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSave", "saveButton", "save-guid", "111", "Caption = \"Save\"\r\nLeft = 10\r\n"},
+        {"txtName", "nameBox", "name-guid", "222", "Caption = \"Name\"\r\nTop = 30\r\n"},
+        {"lblOther", "otherLabel", "other-guid", "333", "Caption = \"Other\"\r\n"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#768: property-move fixture should be writable");
+
+    auto move_result = copperfin::vfp::move_visual_object_property({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "save-guid",
+        .source_property_name = "hpos",
+        .target_record_index = 0U,
+        .target_object_name = "txtName",
+        .target_unique_id = {},
+        .target_property_name = {},
+        .replace_existing = true
+    });
+    expect(move_result.ok, "#768: property move should support UNIQUEID source, object-name target, and direct-field replacement");
+    expect(move_result.affected_object_count == 1U,
+        "#1005: successful property move should report one affected object");
+
+    move_result = copperfin::vfp::move_visual_object_property({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = "cmdSave",
+        .source_unique_id = {},
+        .source_property_name = "caption",
+        .target_record_index = 1U,
+        .target_object_name = {},
+        .target_unique_id = {},
+        .target_property_name = "MovedCaption",
+        .replace_existing = false
+    });
+    expect(move_result.ok, "#768: property move should support object-name source, record-index target, and target renames");
+
+    auto source_hpos = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "HPOS"
+    });
+    auto target_hpos = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "txtName",
+        .unique_id = {},
+        .property_name = "HPOS"
+    });
+    auto source_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "Caption"
+    });
+    auto moved_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "name-guid",
+        .property_name = "MovedCaption"
+    });
+    expect(source_hpos.ok && source_hpos.exists && source_hpos.value.empty() &&
+            target_hpos.ok && target_hpos.exists && target_hpos.value == "111",
+        "#768: direct-field moves should write target value and clear source value");
+    expect(source_caption.ok && !source_caption.exists &&
+            moved_caption.ok && moved_caption.exists && moved_caption.value == "\"Save\"",
+        "#768: memo-backed moves should create target assignment and remove source assignment");
+
+    auto target_top = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "name-guid",
+        .property_name = "Top"
+    });
+    auto other_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "other-guid",
+        .property_name = "Caption"
+    });
+    expect(target_top.ok && target_top.exists && target_top.value == "30" &&
+            other_caption.ok && other_caption.exists && other_caption.value == "\"Other\"",
+        "#768: property move should preserve unrelated target assignments and unrelated objects");
+
+    move_result = copperfin::vfp::move_visual_object_property({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "name-guid",
+        .source_property_name = "Caption",
+        .target_record_index = 0U,
+        .target_object_name = {},
+        .target_unique_id = "other-guid",
+        .target_property_name = "Caption",
+        .replace_existing = false
+    });
+    expect(!move_result.ok, "#768: property move should reject target collisions without replacement");
+    expect(move_result.affected_object_count == 0U,
+        "#1005: failed property move should report zero affected objects");
+    auto target_caption_after_failed_copy = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "name-guid",
+        .property_name = "Caption"
+    });
+    expect(target_caption_after_failed_copy.ok &&
+            target_caption_after_failed_copy.exists &&
+            target_caption_after_failed_copy.value == "\"Name\"",
+        "#768: failed target copies should leave the source property intact");
+
+    move_result = copperfin::vfp::move_visual_object_property({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "name-guid",
+        .source_property_name = "Caption",
+        .target_record_index = 0U,
+        .target_object_name = {},
+        .target_unique_id = "name-guid",
+        .target_property_name = {},
+        .replace_existing = true
+    });
+    expect(!move_result.ok, "#768: property move should reject same-object same-property moves");
+
+    move_result = copperfin::vfp::move_visual_object_property({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "name-guid",
+        .source_property_name = "MissingProp",
+        .target_record_index = 0U,
+        .target_object_name = {},
+        .target_unique_id = "other-guid",
+        .target_property_name = "MissingCopy",
+        .replace_existing = false
+    });
+    expect(!move_result.ok, "#768: property move should reject missing source properties");
+
+    move_result = copperfin::vfp::move_visual_object_property({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "name-guid",
+        .source_property_name = " ",
+        .target_record_index = 0U,
+        .target_object_name = {},
+        .target_unique_id = "other-guid",
+        .target_property_name = "EmptySource",
+        .replace_existing = false
+    });
+    expect(!move_result.ok, "#768: property move should reject empty source property names");
+
+    move_result = copperfin::vfp::move_visual_object_property({
+        .path = table_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "name-guid",
+        .source_property_name = "Caption",
+        .target_record_index = 0U,
+        .target_object_name = {},
+        .target_unique_id = "other-guid",
+        .target_property_name = " ",
+        .replace_existing = false
+    });
+    expect(!move_result.ok, "#768: property move should reject empty requested target property names");
+
+    const fs::path unsupported_path = temp_dir / "property_move_unsupported.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> unsupported_fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U},
+        {.name = "HPOS", .type = 'C', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> unsupported_records{
+        {"cmdSource", "source-guid", "111"},
+        {"txtTarget", "target-guid", "222"}
+    };
+    const auto unsupported_create = copperfin::vfp::create_dbf_table_file(
+        unsupported_path.string(),
+        unsupported_fields,
+        unsupported_records);
+    expect(unsupported_create.ok, "#768: unsupported property-move fixture should be writable");
+    move_result = copperfin::vfp::move_visual_object_property({
+        .path = unsupported_path.string(),
+        .source_record_index = 0U,
+        .source_object_name = {},
+        .source_unique_id = "source-guid",
+        .source_property_name = "HPOS",
+        .target_record_index = 0U,
+        .target_object_name = {},
+        .target_unique_id = "target-guid",
+        .target_property_name = "Caption",
+        .replace_existing = false
+    });
+    expect(!move_result.ok, "#768: property move should reject unsupported target property paths");
+
+    for (int index = 0; index < 4; ++index) {
+        const auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+        expect(undo_result.ok, "#768: undo should restore each copy/clear step from successful moves");
+    }
+
+    source_hpos = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "HPOS"
+    });
+    target_hpos = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "txtName",
+        .unique_id = {},
+        .property_name = "HPOS"
+    });
+    source_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .property_name = "Caption"
+    });
+    moved_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "name-guid",
+        .property_name = "MovedCaption"
+    });
+    expect(source_hpos.ok && source_hpos.exists && source_hpos.value == "111" &&
+            target_hpos.ok && target_hpos.exists && target_hpos.value == "222" &&
+            source_caption.ok && source_caption.exists && source_caption.value == "\"Save\"" &&
+            moved_caption.ok && !moved_caption.exists,
+        "#768: undo should restore moved source and target property state");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_move_visual_object_properties_rolls_back_failed_batches() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_property_move_batch_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "property_move_batch.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 16U},
+        {.name = "NAME", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 16U},
+        {.name = "HPOS", .type = 'C', .length = 10U},
+        {.name = "VPOS", .type = 'C', .length = 10U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSave", "saveButton", "save-guid", "111", "211", "Caption = \"Save\"\r\nLeft = 10\r\n"},
+        {"txtName", "nameBox", "name-guid", "222", "322", "Caption = \"Name\"\r\nTop = 30\r\n"},
+        {"lblStatus", "statusLabel", "status-guid", "333", "433", "Caption = \"Status\"\r\nLeft = 50\r\n"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#775: property-move-batch fixture should be writable");
+
+    const auto property_state = [&](const std::string& unique_id, const std::string& property_name) {
+        return copperfin::vfp::query_visual_object_property({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .property_name = property_name
+        });
+    };
+
+    auto batch_result = copperfin::vfp::move_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "save-guid",
+                .source_property_name = "hpos",
+                .target_record_index = 0U,
+                .target_object_name = "txtName",
+                .target_unique_id = {},
+                .target_property_name = {},
+                .replace_existing = true
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = "cmdSave",
+                .source_unique_id = {},
+                .source_property_name = "Caption",
+                .target_record_index = 2U,
+                .target_object_name = {},
+                .target_unique_id = {},
+                .target_property_name = "MovedCaption",
+                .replace_existing = false
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "status-guid",
+                .source_property_name = "Left",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "name-guid",
+                .target_property_name = "StatusLeft",
+                .replace_existing = false
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "save-guid",
+                .source_property_name = "VPOS",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "status-guid",
+                .target_property_name = "VPOS",
+                .replace_existing = true
+            }
+        }
+    });
+    expect(batch_result.ok, "#775: batch property move should support mixed selectors, direct fields, memo properties, target renames, and replacement");
+    expect(batch_result.affected_object_count == 4U,
+        "#1005: successful batch property move should report affected item count");
+
+    auto save_hpos = property_state("save-guid", "HPOS");
+    auto save_vpos = property_state("save-guid", "VPOS");
+    auto name_hpos = property_state("name-guid", "HPOS");
+    auto status_vpos = property_state("status-guid", "VPOS");
+    auto save_caption = property_state("save-guid", "Caption");
+    auto status_moved_caption = property_state("status-guid", "MovedCaption");
+    auto status_left = property_state("status-guid", "Left");
+    auto name_status_left = property_state("name-guid", "StatusLeft");
+    auto name_top = property_state("name-guid", "Top");
+    expect(save_hpos.ok && save_hpos.exists && save_hpos.value.empty() &&
+            save_vpos.ok && save_vpos.exists && save_vpos.value.empty() &&
+            name_hpos.ok && name_hpos.exists && name_hpos.value == "111" &&
+            status_vpos.ok && status_vpos.exists && status_vpos.value == "211",
+        "#775: direct-field batch moves should write target values and clear source values");
+    expect(save_caption.ok && !save_caption.exists &&
+            status_moved_caption.ok && status_moved_caption.exists && status_moved_caption.value == "\"Save\"" &&
+            status_left.ok && !status_left.exists &&
+            name_status_left.ok && name_status_left.exists && name_status_left.value == "50" &&
+            name_top.ok && name_top.exists && name_top.value == "30",
+        "#775: memo-backed batch moves should create renamed targets, clear sources, and preserve unrelated assignments");
+
+    const auto undo_before_failure = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(undo_before_failure.available,
+        "#775: successful batch moves should leave normal visual undo history available");
+
+    batch_result = copperfin::vfp::move_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "save-guid",
+                .source_property_name = "Left",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "status-guid",
+                .target_property_name = "TempLeft",
+                .replace_existing = false
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "name-guid",
+                .source_property_name = "Caption",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "status-guid",
+                .target_property_name = "Caption",
+                .replace_existing = false
+            }
+        }
+    });
+    expect(!batch_result.ok, "#775: batch property move should reject target collisions");
+    expect(batch_result.affected_object_count == 0U,
+        "#1005: failed batch property move should report zero affected objects");
+    auto status_temp_left = property_state("status-guid", "TempLeft");
+    auto save_left = property_state("save-guid", "Left");
+    expect(status_temp_left.ok && !status_temp_left.exists &&
+            save_left.ok && save_left.exists && save_left.value == "10",
+        "#775: target-collision failures should roll back earlier moved memo targets and source clears");
+
+    batch_result = copperfin::vfp::move_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "save-guid",
+                .source_property_name = "Left",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "status-guid",
+                .target_property_name = "TempLeft",
+                .replace_existing = false
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "save-guid",
+                .source_property_name = "Missing",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "name-guid",
+                .target_property_name = "MissingMove",
+                .replace_existing = false
+            }
+        }
+    });
+    expect(!batch_result.ok, "#775: batch property move should reject missing source properties");
+    status_temp_left = property_state("status-guid", "TempLeft");
+    save_left = property_state("save-guid", "Left");
+    expect(status_temp_left.ok && !status_temp_left.exists &&
+            save_left.ok && save_left.exists && save_left.value == "10",
+        "#775: missing-source failures should roll back earlier moved memo targets and source clears");
+
+    batch_result = copperfin::vfp::move_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "save-guid",
+                .source_property_name = "Left",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "status-guid",
+                .target_property_name = "TempLeft",
+                .replace_existing = false
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "save-guid",
+                .source_property_name = " ",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "name-guid",
+                .target_property_name = "EmptySource",
+                .replace_existing = false
+            }
+        }
+    });
+    expect(!batch_result.ok, "#775: batch property move should reject empty source names");
+    status_temp_left = property_state("status-guid", "TempLeft");
+    save_left = property_state("save-guid", "Left");
+    expect(status_temp_left.ok && !status_temp_left.exists &&
+            save_left.ok && save_left.exists && save_left.value == "10",
+        "#775: empty-source failures should roll back earlier moved memo targets and source clears");
+
+    batch_result = copperfin::vfp::move_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "save-guid",
+                .source_property_name = "Left",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "status-guid",
+                .target_property_name = "TempLeft",
+                .replace_existing = false
+            },
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "name-guid",
+                .source_property_name = "Caption",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "status-guid",
+                .target_property_name = " ",
+                .replace_existing = false
+            }
+        }
+    });
+    expect(!batch_result.ok, "#775: batch property move should reject empty target names");
+    status_temp_left = property_state("status-guid", "TempLeft");
+    save_left = property_state("save-guid", "Left");
+    expect(status_temp_left.ok && !status_temp_left.exists &&
+            save_left.ok && save_left.exists && save_left.value == "10",
+        "#775: empty-target failures should roll back earlier moved memo targets and source clears");
+
+    batch_result = copperfin::vfp::move_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {
+            {
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = "name-guid",
+                .source_property_name = "Caption",
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = "name-guid",
+                .target_property_name = {},
+                .replace_existing = true
+            }
+        }
+    });
+    expect(!batch_result.ok, "#775: batch property move should reject same-object same-property moves");
+    auto name_caption = property_state("name-guid", "Caption");
+    expect(name_caption.ok && name_caption.exists && name_caption.value == "\"Name\"",
+        "#775: same-object same-property failures should preserve the source property");
+
+    const auto undo_after_failures = copperfin::vfp::query_visual_object_undo(table_path.string());
+    expect(undo_after_failures.available == undo_before_failure.available &&
+            undo_after_failures.label == undo_before_failure.label,
+        "#775: failed batch move rollbacks should preserve prior undo history");
+
+    batch_result = copperfin::vfp::move_visual_object_properties({
+        .path = table_path.string(),
+        .properties = {}
+    });
+    expect(!batch_result.ok, "#775: empty batch move requests should fail explicitly");
+    expect(batch_result.affected_object_count == 0U,
+        "#1005: empty batch property move should report zero affected objects");
+
+    for (int index = 0; index < 8; ++index) {
+        const auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+        expect(undo_result.ok, "#775: undo should restore each copy/clear step from successful batch moves");
+    }
+
+    save_hpos = property_state("save-guid", "HPOS");
+    save_vpos = property_state("save-guid", "VPOS");
+    save_caption = property_state("save-guid", "Caption");
+    save_left = property_state("save-guid", "Left");
+    name_hpos = property_state("name-guid", "HPOS");
+    name_status_left = property_state("name-guid", "StatusLeft");
+    status_vpos = property_state("status-guid", "VPOS");
+    status_moved_caption = property_state("status-guid", "MovedCaption");
+    status_left = property_state("status-guid", "Left");
+    expect(save_hpos.ok && save_hpos.exists && save_hpos.value == "111" &&
+            save_vpos.ok && save_vpos.exists && save_vpos.value == "211" &&
+            save_caption.ok && save_caption.exists && save_caption.value == "\"Save\"" &&
+            save_left.ok && save_left.exists && save_left.value == "10" &&
+            name_hpos.ok && name_hpos.exists && name_hpos.value == "222" &&
+            name_status_left.ok && !name_status_left.exists &&
+            status_vpos.ok && status_vpos.exists && status_vpos.value == "433" &&
+            status_moved_caption.ok && !status_moved_caption.exists &&
+            status_left.ok && status_left.exists && status_left.value == "50",
+        "#775: successful batch move undo should restore original source and target state");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_list_visual_object_properties_reads_selected_surface() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_list_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "list.scx";
+    const fs::path memo_path = temp_dir / "list.sct";
+    write_synthetic_named_object_asset(table_path, memo_path, {
+        {
+            .objname = "cmdSave",
+            .name = "saveButton",
+            .unique_id = "save-guid",
+            .properties = "Caption = \"Save\"\r\nLeft = 10\r\n"
+        },
+        {
+            .objname = "txtName",
+            .name = "nameBox",
+            .unique_id = "target-guid",
+            .properties = "Caption = \"Name\"\r\nLeft = 30\r\n"
+        }
+    });
+
+    const auto list_result = copperfin::vfp::list_visual_object_properties({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "target-guid"
+    });
+    expect(list_result.ok, "#737: visual property lists should support selected-object UNIQUEID selectors");
+    expect(list_result.record_index == 1U, "#739: visual property lists should report the resolved selected record index");
+
+    const auto* name = find_property_snapshot(list_result.properties, "NAME");
+    const auto* unique_id = find_property_snapshot(list_result.properties, "UNIQUEID");
+    const auto* properties = find_property_snapshot(list_result.properties, "PROPERTIES");
+    const auto* caption = find_property_snapshot(list_result.properties, "Caption");
+    const auto* left = find_property_snapshot(list_result.properties, "Left");
+    expect(name != nullptr && name->direct_field && name->value == "nameBox",
+        "#737: visual property lists should include selected direct DBF fields");
+    expect(name != nullptr && name->field_type == 'C' && name->source_line_index == static_cast<std::size_t>(-1),
+        "#738: direct property list entries should expose DBF field type and missing source-line metadata");
+    expect(unique_id != nullptr && unique_id->direct_field && unique_id->value == "target-guid",
+        "#737: visual property lists should include selected memo-backed DBF identity fields as direct entries");
+    expect(unique_id != nullptr && unique_id->field_type == 'M',
+        "#738: memo-backed direct DBF fields should preserve their DBF field type in property listings");
+    expect(properties == nullptr,
+        "#737: visual property lists should not duplicate the raw PROPERTIES carrier field");
+    expect(caption != nullptr && !caption->direct_field && caption->value == "\"Name\"",
+        "#737: visual property lists should include parsed memo-backed Caption assignments");
+    expect(caption != nullptr && caption->field_type == '\0' && caption->source_line_index == 0U,
+        "#738: memo-backed property list entries should expose parsed source-line metadata without DBF field type");
+    expect(left != nullptr && !left->direct_field && left->value == "30",
+        "#737: visual property lists should include parsed memo-backed Left assignments");
+    expect(left != nullptr && left->source_line_index == 1U,
+        "#738: later memo-backed property list entries should retain their parsed source line index");
+
+    const auto unfiltered_search = copperfin::vfp::filter_visual_object_properties({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "target-guid",
+        .search_text = {}
+    });
+    expect(unfiltered_search.ok &&
+            unfiltered_search.record_index == list_result.record_index &&
+            unfiltered_search.property_count == list_result.properties.size() &&
+            unfiltered_search.properties.size() == list_result.properties.size() &&
+            unfiltered_search.dry_run &&
+            !unfiltered_search.mutates_asset,
+        "#1412: unfiltered visual property searches should preserve the selected property list without mutation");
+
+    const auto name_search = copperfin::vfp::filter_visual_object_properties({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "target-guid",
+        .search_text = "caption"
+    });
+    expect(name_search.ok &&
+            name_search.property_count == 1U &&
+            find_property_snapshot(name_search.properties, "Caption") != nullptr,
+        "#1412: visual property searches should match property names case-insensitively");
+
+    const auto value_search = copperfin::vfp::filter_visual_object_properties({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "target-guid",
+        .search_text = "namebox"
+    });
+    expect(value_search.ok &&
+            value_search.property_count == 1U &&
+            find_property_snapshot(value_search.properties, "NAME") != nullptr,
+        "#1412: visual property searches should match direct property values case-insensitively");
+
+    const auto memo_search = copperfin::vfp::filter_visual_object_properties({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "target-guid",
+        .search_text = "memo"
+    });
+    expect(memo_search.ok &&
+            find_property_snapshot(memo_search.properties, "Caption") != nullptr &&
+            find_property_snapshot(memo_search.properties, "Left") != nullptr &&
+            find_property_snapshot(memo_search.properties, "NAME") == nullptr,
+        "#1412: visual property searches should match memo-backed property metadata without direct fields");
+
+    const auto empty_search = copperfin::vfp::filter_visual_object_properties({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "target-guid",
+        .search_text = "does-not-exist"
+    });
+    expect(empty_search.ok &&
+            empty_search.property_count == 0U &&
+            empty_search.properties.empty(),
+        "#1412: visual property searches should return empty successful results for unmatched text");
+
+    expect(!copperfin::vfp::query_visual_object_undo(table_path.string()).available,
+        "#737: visual property lists should not create undo history");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+}  // namespace cf_test_visual_asset_editor

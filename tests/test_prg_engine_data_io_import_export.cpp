@@ -1,0 +1,1494 @@
+#include "test_prg_engine_data_io_support.h"
+
+namespace cf_test_prg_engine_data_io {
+void test_copy_to_runtime_errors_localize() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to_localization";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+
+    const fs::path no_area_path = temp_root / "copy_to_no_area.prg";
+    write_text(
+        no_area_path,
+        "COPY TO 'missing.dbf'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession no_area_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(no_area_path.string(), temp_root.string(), false));
+    const auto no_area_state = no_area_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!no_area_state.completed, "#2707: qps-ploc COPY TO without a work area should fail");
+    expect(
+        no_area_state.message == copperfin::localization::pseudo_localize("COPY TO: no current work area"),
+        "#2707: qps-ploc COPY TO precondition error should route through the pseudo-localization transform");
+
+    write_simple_dbf(temp_root / "source.dbf", {"Alice"});
+    fs::create_directories(temp_root / "busy.json");
+
+    const fs::path open_fail_path = temp_root / "copy_to_open_fail.prg";
+    write_text(
+        open_fail_path,
+        "USE '" + (temp_root / "source.dbf").string() + "'\n"
+        "COPY TO '" + (temp_root / "busy.json").string() + "' TYPE JSON\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession open_fail_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(open_fail_path.string(), temp_root.string(), false));
+    const auto open_fail_state = open_fail_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!open_fail_state.completed, "#2707: qps-ploc COPY TO TYPE JSON directory-target script should fail");
+    expect(
+        open_fail_state.message.find("[!! ") == 0U &&
+            open_fail_state.message.find("JSON") != std::string::npos &&
+            open_fail_state.message.find("unable to open output file") == std::string::npos,
+        "#2707: qps-ploc COPY TO TYPE open-failure should pseudo-localize prose while preserving the type");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_append_from_array_runtime_errors_localize() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_array_localization";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+
+    write_simple_dbf(temp_root / "target.dbf", {"Alice"});
+
+    const fs::path fields_fail_path = temp_root / "append_from_array_fields_fail.prg";
+    write_text(
+        fields_fail_path,
+        "USE '" + (temp_root / "target.dbf").string() + "'\n"
+        "DIMENSION aRows[1,1]\n"
+        "aRows[1,1] = 'Bob'\n"
+        "APPEND FROM ARRAY aRows FIELDS MissingField\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession fields_fail_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(fields_fail_path.string(), temp_root.string(), false));
+    const auto fields_fail_state = fields_fail_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!fields_fail_state.completed, "#2708: qps-ploc APPEND FROM ARRAY with no matching fields should fail");
+    expect(
+        fields_fail_state.message ==
+            copperfin::localization::pseudo_localize("APPEND FROM ARRAY: no fields match the FIELDS clause"),
+        "#2708: qps-ploc APPEND FROM ARRAY empty-fields error should route through the pseudo-localization transform");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_append_from_runtime_errors_localize() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_localization";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+
+    const fs::path no_area_path = temp_root / "append_from_no_area.prg";
+    write_text(
+        no_area_path,
+        "APPEND FROM 'missing.dbf'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession no_area_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(no_area_path.string(), temp_root.string(), false));
+    const auto no_area_state = no_area_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!no_area_state.completed, "#2709: qps-ploc APPEND FROM without a work area should fail");
+    expect(
+        no_area_state.message == copperfin::localization::pseudo_localize("APPEND FROM: no current work area"),
+        "#2709: qps-ploc APPEND FROM no-work-area error should route through the pseudo-localization transform");
+
+    write_simple_dbf(temp_root / "target.dbf", {"Alice"});
+
+    const fs::path wrapper_fail_path = temp_root / "append_from_wrapper_fail.prg";
+    write_text(
+        wrapper_fail_path,
+        "USE '" + (temp_root / "target.dbf").string() + "'\n"
+        "APPEND FROM '" + (temp_root / "missing.dbf").string() + "'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession wrapper_fail_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(wrapper_fail_path.string(), temp_root.string(), false));
+    const auto wrapper_fail_state = wrapper_fail_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!wrapper_fail_state.completed, "#2709: qps-ploc APPEND FROM missing-source script should fail");
+    expect(
+        wrapper_fail_state.message.find("[!! ") == 0U &&
+            wrapper_fail_state.message.find("APPEND FROM:") == std::string::npos,
+        "#2709: qps-ploc APPEND FROM wrapper error should pseudo-localize the command prefix");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_append_from_type_runtime_errors_localize() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_type_localization";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+
+    write_simple_dbf(temp_root / "target.dbf", {"Alice"});
+
+    const fs::path open_fail_path = temp_root / "append_from_type_sdf_open_fail.prg";
+    write_text(
+        open_fail_path,
+        "USE '" + (temp_root / "target.dbf").string() + "'\n"
+        "APPEND FROM '" + (temp_root / "missing.txt").string() + "' TYPE SDF\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession open_fail_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(open_fail_path.string(), temp_root.string(), false));
+    const auto open_fail_state = open_fail_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!open_fail_state.completed, "#2710: qps-ploc APPEND FROM TYPE SDF missing-source script should fail");
+    expect(
+        open_fail_state.message.find("[!! ") == 0U &&
+            open_fail_state.message.find("SDF") != std::string::npos &&
+            open_fail_state.message.find("unable to open source file") == std::string::npos,
+        "#2710: qps-ploc APPEND FROM TYPE open-source error should pseudo-localize prose while preserving the type");
+
+    const fs::path json_path = temp_root / "rows.json";
+    write_text(json_path, "[{\"NAME\":\"Bob\"}]\n");
+
+    const fs::path fields_fail_path = temp_root / "append_from_type_json_fields_fail.prg";
+    write_text(
+        fields_fail_path,
+        "USE '" + (temp_root / "target.dbf").string() + "'\n"
+        "APPEND FROM '" + json_path.string() + "' TYPE JSON FIELDS MissingField\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession fields_fail_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(fields_fail_path.string(), temp_root.string(), false));
+    const auto fields_fail_state = fields_fail_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!fields_fail_state.completed, "#2710: qps-ploc APPEND FROM TYPE JSON with no matching fields should fail");
+    expect(
+        fields_fail_state.message.find("[!! ") == 0U &&
+            fields_fail_state.message.find("JSON") != std::string::npos &&
+            fields_fail_state.message.find("no fields match the FIELDS clause") == std::string::npos,
+        "#2710: qps-ploc APPEND FROM TYPE empty-fields error should pseudo-localize prose while preserving the type");
+
+    const fs::path strict_target_path = temp_root / "strict_target.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> strict_fields{
+        {.name = "NAME", .type = 'C', .length = 1U},
+    };
+    const auto strict_create =
+        copperfin::vfp::create_dbf_table_file(strict_target_path.string(), strict_fields, {});
+    expect(strict_create.ok, "#2711: strict APPEND FROM TYPE destination fixture should be created");
+
+    const fs::path wrapper_fail_path = temp_root / "append_from_type_json_wrapper_fail.prg";
+    write_text(
+        wrapper_fail_path,
+        "USE '" + strict_target_path.string() + "'\n"
+        "APPEND FROM '" + json_path.string() + "' TYPE JSON\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession wrapper_fail_session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(wrapper_fail_path.string(), temp_root.string(), false));
+    const auto wrapper_fail_state = wrapper_fail_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!wrapper_fail_state.completed, "#2711: qps-ploc APPEND FROM TYPE JSON oversized field script should fail");
+    expect(
+        wrapper_fail_state.message.find("[!! ") == 0U &&
+            wrapper_fail_state.message.find("JSON") != std::string::npos &&
+            wrapper_fail_state.message.find("APPEND FROM TYPE JSON:") == std::string::npos,
+        "#2711: qps-ploc APPEND FROM TYPE wrapper error should pseudo-localize prose while preserving the type");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_copy_to_emits_event() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_simple_dbf(temp_root / "source.dbf", {"row1", "row2"});
+
+    const fs::path main_path = temp_root / "copy_to_test.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "source.dbf").string() + "'\n"
+        "COPY TO 'dest'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO script should complete");
+
+    const bool has_event = std::any_of(state.events.begin(), state.events.end(),
+        [](const copperfin::runtime::RuntimeEvent& ev) {
+            return ev.category == "runtime.copy_to";
+        });
+    expect(has_event, "COPY TO should emit a runtime.copy_to event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_copy_to_creates_destination_dbf() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to_full";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_simple_dbf(temp_root / "source.dbf", {"Alice", "Bob", "Carol"});
+
+    const fs::path main_path = temp_root / "copy_to_full.prg";
+    const std::string dest_path = (temp_root / "dest.dbf").string();
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "source.dbf").string() + "'\n"
+        "COPY TO '" + dest_path + "'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO full script should complete");
+    expect(fs::exists(dest_path), "COPY TO should create destination DBF file");
+
+    if (fs::exists(dest_path)) {
+        const auto result = copperfin::vfp::parse_dbf_table_from_file(dest_path, 100U);
+        expect(result.ok, "COPY TO destination DBF should be readable");
+        expect(result.table.records.size() == 3U,
+            "COPY TO should copy all 3 records (got " + std::to_string(result.table.records.size()) + ")");
+        if (result.table.records.size() >= 1U) {
+            const auto& first = result.table.records[0U].values;
+            const bool has_alice = !first.empty() && first[0U].display_value.find("Alice") != std::string::npos;
+            expect(has_alice, "COPY TO first record should contain Alice");
+        }
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_copy_structure_to_creates_empty_schema() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_struct";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_simple_dbf(temp_root / "source.dbf", {"Alice", "Bob"});
+
+    const fs::path main_path = temp_root / "copy_struct.prg";
+    const std::string dest_path = (temp_root / "schema.dbf").string();
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "source.dbf").string() + "'\n"
+        "COPY STRUCTURE TO '" + dest_path + "'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY STRUCTURE TO script should complete");
+    expect(fs::exists(dest_path), "COPY STRUCTURE TO should create destination DBF");
+
+    if (fs::exists(dest_path)) {
+        const auto result = copperfin::vfp::parse_dbf_table_from_file(dest_path, 100U);
+        expect(result.ok, "COPY STRUCTURE TO destination DBF should be readable");
+        expect(result.table.records.empty(), "COPY STRUCTURE TO should produce zero rows");
+        expect(!result.table.fields.empty(), "COPY STRUCTURE TO should preserve field descriptors");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_copy_to_from_empty_table_produces_valid_empty_dbf() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_copy_empty_table";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    // Source is an empty table (zero records, but has a field definition)
+    write_simple_dbf(temp_root / "empty_src.dbf", {});
+
+    const fs::path main_path = temp_root / "copy_empty.prg";
+    const std::string dest_path = (temp_root / "empty_dest.dbf").string();
+    const std::string recv_path = (temp_root / "recv.dbf").string();
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "empty_src.dbf").string() + "' ALIAS EmptySrc IN 0\n"
+        "COPY TO '" + dest_path + "'\n"
+        "USE '" + recv_path + "' ALIAS Recv IN 0\n"
+        "APPEND FROM '" + dest_path + "'\n"
+        "nRecvCount = RECCOUNT()\n"
+        "RETURN\n");
+
+    // Pre-create the receiver as an empty table so USE opens it
+    write_simple_dbf(temp_root / "recv.dbf", {});
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO/FROM empty table script should complete");
+    expect(fs::exists(dest_path), "COPY TO of empty table should create destination DBF file");
+
+    if (fs::exists(dest_path)) {
+        const auto result = copperfin::vfp::parse_dbf_table_from_file(dest_path, 100U);
+        expect(result.ok, "COPY TO empty source should produce a readable DBF");
+        expect(result.table.records.empty(), "COPY TO empty source should produce zero records");
+    }
+
+    const auto recv_count = state.globals.find("nrecvcount");
+    expect(recv_count != state.globals.end(), "APPEND FROM empty DBF should expose RECCOUNT()");
+    if (recv_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(recv_count->second) == "0",
+               "APPEND FROM empty DBF should leave receiver with zero records");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_append_from_copies_records_into_current_table() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    // Create destination with one row; source with two rows
+    write_simple_dbf(temp_root / "dest.dbf", {"Alice"});
+    write_simple_dbf(temp_root / "source.dbf", {"Bob", "Carol"});
+
+    const fs::path main_path = temp_root / "append_from.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "dest.dbf").string() + "'\n"
+        "APPEND FROM '" + (temp_root / "source.dbf").string() + "'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "APPEND FROM script should complete");
+
+    const bool has_event = std::any_of(state.events.begin(), state.events.end(),
+        [](const copperfin::runtime::RuntimeEvent& ev) {
+            return ev.category == "runtime.append_from";
+        });
+    expect(has_event, "APPEND FROM should emit a runtime.append_from event");
+
+    // Verify destination now has 3 records (1 original + 2 from source)
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(
+        (temp_root / "dest.dbf").string(), 100U);
+    expect(result.ok, "APPEND FROM destination DBF should be readable after append");
+    expect(result.table.records.size() == 3U,
+        "APPEND FROM should produce 3 records total (got " + std::to_string(result.table.records.size()) + ")");
+    if (result.table.records.size() >= 3U) {
+        const bool has_bob = result.table.records[1U].values[0U].display_value.find("Bob") != std::string::npos;
+        expect(has_bob, "APPEND FROM second record should be Bob");
+        const bool has_carol = result.table.records[2U].values[0U].display_value.find("Carol") != std::string::npos;
+        expect(has_carol, "APPEND FROM third record should be Carol");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_copy_to_type_sdf_writes_fixed_width_text_rows() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to_sdf";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_simple_dbf(temp_root / "source.dbf", {"Alice", "Bob"});
+
+    const fs::path main_path = temp_root / "copy_to_sdf.prg";
+    const std::string dest_path = (temp_root / "people.sdf").string();
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "source.dbf").string() + "'\n"
+        "COPY TO '" + dest_path + "' TYPE SDF\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO TYPE SDF script should complete");
+    expect(fs::exists(dest_path), "COPY TO TYPE SDF should create the destination text file");
+    if (fs::exists(dest_path)) {
+        const std::string contents = read_text(dest_path);
+        expect(contents == "Alice     \r\nBob       \r\n",
+            "COPY TO TYPE SDF should write fixed-width rows using DBF field lengths");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_append_from_type_sdf_imports_fixed_width_text_rows() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_sdf";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_simple_dbf(temp_root / "dest.dbf", {});
+    write_text(temp_root / "people.sdf", "Dora      \r\nEvan      \r\n");
+
+    const fs::path main_path = temp_root / "append_from_sdf.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "dest.dbf").string() + "'\n"
+        "APPEND FROM '" + (temp_root / "people.sdf").string() + "' TYPE SDF\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "APPEND FROM TYPE SDF script should complete");
+
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(
+        (temp_root / "dest.dbf").string(), 100U);
+    expect(result.ok, "APPEND FROM TYPE SDF destination DBF should be readable");
+    expect(result.table.records.size() == 2U,
+        "APPEND FROM TYPE SDF should append two rows");
+    if (result.table.records.size() >= 2U) {
+        expect(result.table.records[0U].values[0U].display_value == "Dora",
+            "first SDF row should import into the first DBF record");
+        expect(result.table.records[1U].values[0U].display_value == "Evan",
+            "second SDF row should import into the second DBF record");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_copy_to_type_csv_and_delimited_text_rows() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to_csv";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_people_dbf(temp_root / "people.dbf", {{"Ann,Lee", 7}, {"Bob", 42}});
+
+    const fs::path main_path = temp_root / "copy_to_csv.prg";
+    const std::string csv_path = (temp_root / "people.csv").string();
+    const std::string pipe_path = (temp_root / "people_pipe.txt").string();
+    const std::string custom_path = (temp_root / "people_custom.txt").string();
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "people.dbf").string() + "'\n"
+        "COPY TO '" + csv_path + "' TYPE CSV FIELDS NAME, AGE\n"
+        "COPY TO '" + pipe_path + "' DELIMITED WITH CHARACTER '|' FIELDS NAME, AGE FOR AGE > 10\n"
+        "COPY TO '" + custom_path + "' DELIMITED WITH '_' WITH CHARACTER ';' FIELDS NAME, AGE FOR AGE > 10\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO TYPE CSV/DELIMITED script should complete");
+    expect(fs::exists(csv_path), "COPY TO TYPE CSV should create destination text file");
+    expect(fs::exists(pipe_path), "COPY TO DELIMITED should create destination text file");
+    expect(fs::exists(custom_path), "COPY TO DELIMITED custom enclosure should create destination text file");
+
+    if (fs::exists(csv_path)) {
+        const std::string contents = read_text(csv_path);
+        expect(contents == "NAME,AGE\r\n\"Ann,Lee\",7\r\n\"Bob\",42\r\n",
+            "COPY TO TYPE CSV should write a field-name header and quote character fields");
+    }
+    if (fs::exists(pipe_path)) {
+        const std::string contents = read_text(pipe_path);
+        expect(contents == "\"Bob\"|42\r\n",
+            "COPY TO DELIMITED WITH CHARACTER should honor the delimiter and FOR clause");
+    }
+    if (fs::exists(custom_path)) {
+        const std::string contents = read_text(custom_path);
+        expect(contents == "_Bob_;42\r\n",
+            "COPY TO DELIMITED WITH enclosure plus WITH CHARACTER should honor both VFP options");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_append_from_type_csv_imports_delimited_rows() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_csv";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_people_dbf(temp_root / "dest.dbf", {});
+    write_text(temp_root / "people.csv", "NAME,AGE\r\n\"Ivy, Jr\",9\r\n\"Max\",44\r\n");
+    write_text(temp_root / "people_pipe.txt", "\"Nia\"|12\r\n");
+    write_text(temp_root / "people_custom.txt", "_Ora_;15\r\n");
+
+    const fs::path main_path = temp_root / "append_from_csv.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "dest.dbf").string() + "'\n"
+        "APPEND FROM '" + (temp_root / "people.csv").string() + "' TYPE CSV FIELDS NAME, AGE\n"
+        "APPEND FROM '" + (temp_root / "people_pipe.txt").string() + "' DELIMITED WITH CHARACTER '|' FIELDS NAME, AGE\n"
+        "APPEND FROM '" + (temp_root / "people_custom.txt").string() + "' DELIMITED WITH '_' WITH CHARACTER ';' FIELDS NAME, AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "APPEND FROM TYPE CSV/DELIMITED script should complete");
+
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(
+        (temp_root / "dest.dbf").string(), 100U);
+    expect(result.ok, "APPEND FROM TYPE CSV destination DBF should be readable");
+    expect(result.table.records.size() == 4U,
+        "APPEND FROM TYPE CSV/DELIMITED should append four rows");
+    if (result.table.records.size() >= 4U) {
+        expect(result.table.records[0U].values[0U].display_value == "Ivy, Jr",
+            "first CSV row should preserve comma inside quoted character field");
+        expect(result.table.records[0U].values[1U].display_value == "9",
+            "first CSV numeric field should import into AGE");
+        expect(result.table.records[1U].values[0U].display_value == "Max",
+            "second CSV row should import NAME");
+        expect(result.table.records[1U].values[1U].display_value == "44",
+            "second CSV row should import AGE");
+        expect(result.table.records[2U].values[0U].display_value == "Nia",
+            "DELIMITED WITH CHARACTER row should import NAME");
+        expect(result.table.records[2U].values[1U].display_value == "12",
+            "DELIMITED WITH CHARACTER row should import AGE");
+        expect(result.table.records[3U].values[0U].display_value == "Ora",
+            "DELIMITED custom enclosure row should import NAME");
+        expect(result.table.records[3U].values[1U].display_value == "15",
+            "DELIMITED custom enclosure row should import AGE");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_copy_to_type_tab_and_append_from_type_tab_round_trip() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_tab_round_trip";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> source_records{
+        {"Ava", "7"},
+        {"Ben", "42"},
+    };
+    const auto source_create = copperfin::vfp::create_dbf_table_file(source_path.string(), fields, source_records);
+    expect(source_create.ok, "TYPE TAB source fixture should be created");
+
+    const fs::path dest_path = temp_root / "dest.dbf";
+    const auto dest_create = copperfin::vfp::create_dbf_table_file(dest_path.string(), fields, {});
+    expect(dest_create.ok, "TYPE TAB destination fixture should be created");
+
+    const std::string tab_path = (temp_root / "people.txt").string();
+    const fs::path main_path = temp_root / "tab_round_trip.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "' ALIAS Source IN 0\n"
+        "SELECT Source\n"
+        "COPY TO '" + tab_path + "' TYPE TAB FIELDS NAME, AGE\n"
+        "USE '" + dest_path.string() + "' ALIAS Dest IN 0\n"
+        "SELECT Dest\n"
+        "APPEND FROM '" + tab_path + "' TYPE TAB FIELDS NAME, AGE\n"
+        "GO 1\n"
+        "cName1 = NAME\n"
+        "nAge1 = AGE\n"
+        "GO 2\n"
+        "cName2 = NAME\n"
+        "nAge2 = AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO/APPEND FROM TYPE TAB script should complete: " + state.message);
+    expect(fs::exists(tab_path), "COPY TO TYPE TAB should create the text file");
+
+    if (fs::exists(tab_path)) {
+        const std::string contents = read_text(tab_path);
+        expect(contents == "\"Ava\"\t7\r\n\"Ben\"\t42\r\n",
+            "COPY TO TYPE TAB should emit tab-delimited rows");
+    }
+
+    const auto check = [&](const std::string &name, const std::string &expected)
+    {
+        const auto it = state.globals.find(name);
+        expect(it != state.globals.end(), name + " should be captured after TYPE TAB round trip");
+        if (it != state.globals.end()) {
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        }
+    };
+
+    check("cname1", "Ava");
+    check("nage1", "7");
+    check("cname2", "Ben");
+    check("nage2", "42");
+
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(dest_path.string(), 10U);
+    expect(result.ok, "APPEND FROM TYPE TAB destination DBF should remain readable");
+    expect(result.table.records.size() == 2U, "APPEND FROM TYPE TAB should append both tab-delimited rows");
+    if (result.ok && result.table.records.size() == 2U) {
+        expect(result.table.records[0U].values[0U].display_value == "Ava",
+            "TYPE TAB row 1 should preserve NAME");
+        expect(result.table.records[0U].values[1U].display_value == "7",
+            "TYPE TAB row 1 should preserve AGE");
+        expect(result.table.records[1U].values[0U].display_value == "Ben",
+            "TYPE TAB row 2 should preserve NAME");
+        expect(result.table.records[1U].values[1U].display_value == "42",
+            "TYPE TAB row 2 should preserve AGE");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_copy_to_type_xls_and_append_from_type_xls_round_trip() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_xls_round_trip";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+        {.name = "ACTIVE", .type = 'L', .length = 1U},
+    };
+    const std::vector<std::vector<std::string>> source_records{
+        {"Ava", "7", "true"},
+        {"Ben", "42", "false"},
+    };
+    const auto source_create = copperfin::vfp::create_dbf_table_file(source_path.string(), fields, source_records);
+    expect(source_create.ok, "TYPE XLS source fixture should be created");
+
+    const fs::path dest_path = temp_root / "dest.dbf";
+    const auto dest_create = copperfin::vfp::create_dbf_table_file(dest_path.string(), fields, {});
+    expect(dest_create.ok, "TYPE XLS destination fixture should be created");
+
+    const std::string xls_path = (temp_root / "people.xls").string();
+    const fs::path main_path = temp_root / "xls_round_trip.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "' ALIAS Source IN 0\n"
+        "SELECT Source\n"
+        "COPY TO '" + xls_path + "' TYPE XLS FIELDS NAME, AGE, ACTIVE\n"
+        "USE '" + dest_path.string() + "' ALIAS Dest IN 0\n"
+        "SELECT Dest\n"
+        "APPEND FROM '" + xls_path + "' TYPE XLS FIELDS NAME, AGE, ACTIVE\n"
+        "GO 1\n"
+        "cName1 = NAME\n"
+        "nAge1 = AGE\n"
+        "lActive1 = ACTIVE\n"
+        "GO 2\n"
+        "cName2 = NAME\n"
+        "nAge2 = AGE\n"
+        "lActive2 = ACTIVE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO/APPEND FROM TYPE XLS script should complete: " + state.message);
+    expect(fs::exists(xls_path), "COPY TO TYPE XLS should create the workbook file");
+
+    if (fs::exists(xls_path)) {
+        const std::string xml_text = read_text(xls_path);
+        expect(xml_text.find("<Workbook") != std::string::npos && xml_text.find("<Worksheet") != std::string::npos,
+            "COPY TO TYPE XLS should emit SpreadsheetML workbook content");
+    }
+
+    const auto check = [&](const std::string &name, const std::string &expected)
+    {
+        const auto it = state.globals.find(name);
+        expect(it != state.globals.end(), name + " should be captured after TYPE XLS round trip");
+        if (it != state.globals.end()) {
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        }
+    };
+
+    check("cname1", "Ava");
+    check("nage1", "7");
+    check("lactive1", "true");
+    check("cname2", "Ben");
+    check("nage2", "42");
+    check("lactive2", "false");
+
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(dest_path.string(), 10U);
+    expect(result.ok, "APPEND FROM TYPE XLS destination DBF should remain readable");
+    expect(result.table.records.size() == 2U, "APPEND FROM TYPE XLS should append both workbook rows");
+    if (result.ok && result.table.records.size() == 2U) {
+        expect(result.table.records[0U].values[0U].display_value == "Ava",
+            "TYPE XLS row 1 should preserve NAME");
+        expect(result.table.records[0U].values[1U].display_value == "7",
+            "TYPE XLS row 1 should preserve AGE");
+        expect(result.table.records[0U].values[2U].display_value == "true",
+            "TYPE XLS row 1 should preserve ACTIVE");
+        expect(result.table.records[1U].values[0U].display_value == "Ben",
+            "TYPE XLS row 2 should preserve NAME");
+        expect(result.table.records[1U].values[1U].display_value == "42",
+            "TYPE XLS row 2 should preserve AGE");
+        expect(result.table.records[1U].values[2U].display_value == "false",
+            "TYPE XLS row 2 should preserve ACTIVE");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_copy_to_type_dif_and_append_from_type_dif_round_trip() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_dif_round_trip";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+        {.name = "ACTIVE", .type = 'L', .length = 1U},
+    };
+    const std::vector<std::vector<std::string>> source_records{
+        {"Ava", "7", "true"},
+        {"Ben", "42", "false"},
+    };
+    const auto source_create = copperfin::vfp::create_dbf_table_file(source_path.string(), fields, source_records);
+    expect(source_create.ok, "TYPE DIF source fixture should be created");
+
+    const fs::path dest_path = temp_root / "dest.dbf";
+    const auto dest_create = copperfin::vfp::create_dbf_table_file(dest_path.string(), fields, {});
+    expect(dest_create.ok, "TYPE DIF destination fixture should be created");
+
+    const std::string dif_path = (temp_root / "people.dif").string();
+    const fs::path main_path = temp_root / "dif_round_trip.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "' ALIAS Source IN 0\n"
+        "SELECT Source\n"
+        "COPY TO '" + dif_path + "' TYPE DIF FIELDS NAME, AGE, ACTIVE\n"
+        "USE '" + dest_path.string() + "' ALIAS Dest IN 0\n"
+        "SELECT Dest\n"
+        "APPEND FROM '" + dif_path + "' TYPE DIF FIELDS NAME, AGE, ACTIVE\n"
+        "GO 1\n"
+        "cName1 = NAME\n"
+        "nAge1 = AGE\n"
+        "lActive1 = ACTIVE\n"
+        "GO 2\n"
+        "cName2 = NAME\n"
+        "nAge2 = AGE\n"
+        "lActive2 = ACTIVE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO/APPEND FROM TYPE DIF script should complete: " + state.message);
+    expect(fs::exists(dif_path), "COPY TO TYPE DIF should create the interchange file");
+
+    if (fs::exists(dif_path)) {
+        const std::string dif_text = read_text(dif_path);
+        expect(dif_text.find("TABLE") != std::string::npos &&
+               dif_text.find("DATA") != std::string::npos &&
+               dif_text.find("EOD") != std::string::npos,
+            "COPY TO TYPE DIF should emit DIF-style table markers");
+    }
+
+    const auto check = [&](const std::string &name, const std::string &expected)
+    {
+        const auto it = state.globals.find(name);
+        expect(it != state.globals.end(), name + " should be captured after TYPE DIF round trip");
+        if (it != state.globals.end()) {
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        }
+    };
+
+    check("cname1", "Ava");
+    check("nage1", "7");
+    check("lactive1", "true");
+    check("cname2", "Ben");
+    check("nage2", "42");
+    check("lactive2", "false");
+
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(dest_path.string(), 10U);
+    expect(result.ok, "APPEND FROM TYPE DIF destination DBF should remain readable");
+    expect(result.table.records.size() == 2U, "APPEND FROM TYPE DIF should append both interchange rows");
+    if (result.ok && result.table.records.size() == 2U) {
+        expect(result.table.records[0U].values[0U].display_value == "Ava",
+            "TYPE DIF row 1 should preserve NAME");
+        expect(result.table.records[0U].values[1U].display_value == "7",
+            "TYPE DIF row 1 should preserve AGE");
+        expect(result.table.records[0U].values[2U].display_value == "true",
+            "TYPE DIF row 1 should preserve ACTIVE");
+        expect(result.table.records[1U].values[0U].display_value == "Ben",
+            "TYPE DIF row 2 should preserve NAME");
+        expect(result.table.records[1U].values[1U].display_value == "42",
+            "TYPE DIF row 2 should preserve AGE");
+        expect(result.table.records[1U].values[2U].display_value == "false",
+            "TYPE DIF row 2 should preserve ACTIVE");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_copy_to_type_sylk_and_append_from_type_sylk_round_trip() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sylk_round_trip";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+        {.name = "ACTIVE", .type = 'L', .length = 1U},
+    };
+    const std::vector<std::vector<std::string>> source_records{
+        {"Ava", "7", "true"},
+        {"Ben", "42", "false"},
+    };
+    const auto source_create = copperfin::vfp::create_dbf_table_file(source_path.string(), fields, source_records);
+    expect(source_create.ok, "TYPE SYLK source fixture should be created");
+
+    const fs::path dest_path = temp_root / "dest.dbf";
+    const auto dest_create = copperfin::vfp::create_dbf_table_file(dest_path.string(), fields, {});
+    expect(dest_create.ok, "TYPE SYLK destination fixture should be created");
+
+    const std::string sylk_path = (temp_root / "people.slk").string();
+    const fs::path main_path = temp_root / "sylk_round_trip.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "' ALIAS Source IN 0\n"
+        "SELECT Source\n"
+        "COPY TO '" + sylk_path + "' TYPE SYLK FIELDS NAME, AGE, ACTIVE\n"
+        "USE '" + dest_path.string() + "' ALIAS Dest IN 0\n"
+        "SELECT Dest\n"
+        "APPEND FROM '" + sylk_path + "' TYPE SYLK FIELDS NAME, AGE, ACTIVE\n"
+        "GO 1\n"
+        "cName1 = NAME\n"
+        "nAge1 = AGE\n"
+        "lActive1 = ACTIVE\n"
+        "GO 2\n"
+        "cName2 = NAME\n"
+        "nAge2 = AGE\n"
+        "lActive2 = ACTIVE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO/APPEND FROM TYPE SYLK script should complete: " + state.message);
+    expect(fs::exists(sylk_path), "COPY TO TYPE SYLK should create the interchange file");
+
+    if (fs::exists(sylk_path)) {
+        const std::string sylk_text = read_text(sylk_path);
+        expect(sylk_text.find("ID;P") != std::string::npos &&
+               sylk_text.find("B;Y") != std::string::npos &&
+               sylk_text.find("\nE\n") != std::string::npos,
+            "COPY TO TYPE SYLK should emit SYLK-style table markers");
+    }
+
+    const auto check = [&](const std::string &name, const std::string &expected)
+    {
+        const auto it = state.globals.find(name);
+        expect(it != state.globals.end(), name + " should be captured after TYPE SYLK round trip");
+        if (it != state.globals.end()) {
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        }
+    };
+
+    check("cname1", "Ava");
+    check("nage1", "7");
+    check("lactive1", "true");
+    check("cname2", "Ben");
+    check("nage2", "42");
+    check("lactive2", "false");
+
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(dest_path.string(), 10U);
+    expect(result.ok, "APPEND FROM TYPE SYLK destination DBF should remain readable");
+    expect(result.table.records.size() == 2U, "APPEND FROM TYPE SYLK should append both interchange rows");
+    if (result.ok && result.table.records.size() == 2U) {
+        expect(result.table.records[0U].values[0U].display_value == "Ava",
+            "TYPE SYLK row 1 should preserve NAME");
+        expect(result.table.records[0U].values[1U].display_value == "7",
+            "TYPE SYLK row 1 should preserve AGE");
+        expect(result.table.records[0U].values[2U].display_value == "true",
+            "TYPE SYLK row 1 should preserve ACTIVE");
+        expect(result.table.records[1U].values[0U].display_value == "Ben",
+            "TYPE SYLK row 2 should preserve NAME");
+        expect(result.table.records[1U].values[1U].display_value == "42",
+            "TYPE SYLK row 2 should preserve AGE");
+        expect(result.table.records[1U].values[2U].display_value == "false",
+            "TYPE SYLK row 2 should preserve ACTIVE");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_copy_to_type_json_and_append_from_type_json_round_trip() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_json_round_trip";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+        {.name = "ACTIVE", .type = 'L', .length = 1U},
+    };
+    const std::vector<std::vector<std::string>> source_records{
+        {"Ava", "7", "true"},
+        {"Ben", "42", "false"},
+    };
+    const auto source_create = copperfin::vfp::create_dbf_table_file(source_path.string(), fields, source_records);
+    expect(source_create.ok, "TYPE JSON source fixture should be created");
+
+    const fs::path dest_path = temp_root / "dest.dbf";
+    const auto dest_create = copperfin::vfp::create_dbf_table_file(dest_path.string(), fields, {});
+    expect(dest_create.ok, "TYPE JSON destination fixture should be created");
+
+    const std::string json_path = (temp_root / "people.json").string();
+    const fs::path main_path = temp_root / "json_round_trip.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "' ALIAS Source IN 0\n"
+        "SELECT Source\n"
+        "COPY TO '" + json_path + "' TYPE JSON FIELDS NAME, AGE, ACTIVE\n"
+        "USE '" + dest_path.string() + "' ALIAS Dest IN 0\n"
+        "SELECT Dest\n"
+        "APPEND FROM '" + json_path + "' TYPE JSON FIELDS NAME, AGE, ACTIVE\n"
+        "GO 1\n"
+        "cName1 = NAME\n"
+        "nAge1 = AGE\n"
+        "lActive1 = ACTIVE\n"
+        "GO 2\n"
+        "cName2 = NAME\n"
+        "nAge2 = AGE\n"
+        "lActive2 = ACTIVE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO/APPEND FROM TYPE JSON script should complete: " + state.message);
+    expect(fs::exists(json_path), "COPY TO TYPE JSON should create the interchange file");
+
+    if (fs::exists(json_path)) {
+        const std::string contents = read_text(json_path);
+        expect(contents.find("[") != std::string::npos &&
+               contents.find("\"NAME\": \"Ava\"") != std::string::npos &&
+               contents.find("\"ACTIVE\": true") != std::string::npos,
+            "COPY TO TYPE JSON should emit object-array JSON with typed logical values");
+    }
+
+    const auto check = [&](const std::string &name, const std::string &expected)
+    {
+        const auto it = state.globals.find(name);
+        expect(it != state.globals.end(), name + " should be captured after TYPE JSON round trip");
+        if (it != state.globals.end()) {
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        }
+    };
+
+    check("cname1", "Ava");
+    check("nage1", "7");
+    check("lactive1", "true");
+    check("cname2", "Ben");
+    check("nage2", "42");
+    check("lactive2", "false");
+
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(dest_path.string(), 10U);
+    expect(result.ok, "APPEND FROM TYPE JSON destination DBF should remain readable");
+    expect(result.table.records.size() == 2U, "APPEND FROM TYPE JSON should append both JSON rows");
+    if (result.ok && result.table.records.size() == 2U) {
+        expect(result.table.records[0U].values[0U].display_value == "Ava",
+            "TYPE JSON row 1 should preserve NAME");
+        expect(result.table.records[0U].values[1U].display_value == "7",
+            "TYPE JSON row 1 should preserve AGE");
+        expect(result.table.records[0U].values[2U].display_value == "true",
+            "TYPE JSON row 1 should preserve ACTIVE");
+        expect(result.table.records[1U].values[0U].display_value == "Ben",
+            "TYPE JSON row 2 should preserve NAME");
+        expect(result.table.records[1U].values[1U].display_value == "42",
+            "TYPE JSON row 2 should preserve AGE");
+        expect(result.table.records[1U].values[2U].display_value == "false",
+            "TYPE JSON row 2 should preserve ACTIVE");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_copy_to_array_fills_2d_runtime_array() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to_array";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_people_dbf(temp_root / "people.dbf", {{"Alice", 30}, {"Bob", 25}});
+
+    const fs::path main_path = temp_root / "copy_to_array.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "people.dbf").string() + "'\n"
+        "COPY TO ARRAY myarr\n"
+        "cMacroArray = 'macroarr'\n"
+        "cMacroArrayHolder = 'cMacroArray'\n"
+        "cMacroArrayDeepHolder = 'cMacroArrayHolder'\n"
+        "cMacroArraySecondHop = 'macroarr2'\n"
+        "cMacroArraySecondHopHolder = 'cMacroArraySecondHop'\n"
+        "cMacroArraySecondDeepHolder = 'cMacroArraySecondHopHolder'\n"
+        "COPY TO ARRAY &cMacroArrayDeepHolder\n"
+        "COPY TO ARRAY &cMacroArraySecondDeepHolder\n"
+        "row1_name = myarr[1, 1]\n"
+        "row1_age = myarr[1, 2]\n"
+        "row2_name = myarr[2, 1]\n"
+        "row2_age = myarr[2, 2]\n"
+        "arr_rows = ALEN(myarr, 1)\n"
+        "arr_cols = ALEN(myarr, 2)\n"
+        "macro_row1_name = &cMacroArrayDeepHolder[1, 1]\n"
+        "macro_rows = ALEN(&cMacroArrayDeepHolder, 1)\n"
+        "macro_row1_name_second_hop = &cMacroArraySecondHop[1, 1]\n"
+        "macro_rows_second_hop = ALEN(&cMacroArraySecondHop, 1)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO ARRAY script should complete");
+
+    const auto chk = [&](const std::string& var, const std::string& expected, const std::string& msg) {
+        const auto it = state.globals.find(var);
+        expect(it != state.globals.end(), var + " should exist in globals");
+        if (it != state.globals.end()) {
+            const std::string val = copperfin::runtime::format_value(it->second);
+            expect(val == expected, msg + " (got '" + val + "')");
+        }
+    };
+    chk("arr_rows",  "2",     "COPY TO ARRAY 2 records should give 2 rows");
+    chk("arr_cols",  "2",     "COPY TO ARRAY 2 fields should give 2 columns");
+    chk("row1_name", "Alice", "COPY TO ARRAY row 1 col 1 should be NAME");
+    chk("row1_age",  "30",    "COPY TO ARRAY row 1 col 2 should be AGE");
+    chk("row2_name", "Bob",   "COPY TO ARRAY row 2 col 1 should be NAME");
+    chk("row2_age",  "25",    "COPY TO ARRAY row 2 col 2 should be AGE");
+    chk("macro_row1_name", "Alice", "COPY TO ARRAY macro-expanded target row 1 col 1 should be NAME");
+    chk("macro_rows", "2", "COPY TO ARRAY macro-expanded target should give 2 rows");
+    chk("macro_row1_name_second_hop", "Alice", "COPY TO ARRAY second-hop macro-expanded target row 1 col 1 should be NAME");
+    chk("macro_rows_second_hop", "2", "COPY TO ARRAY second-hop macro-expanded target should give 2 rows");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_copy_to_array_fields_clause_allows_keyword_named_field() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to_array_keyword_field";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "TYPE", .type = 'C', .length = 12U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Primary", "30"},
+        {"Backup", "25"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "COPY TO ARRAY keyword-field fixture should be created");
+
+    const fs::path main_path = temp_root / "copy_to_array_keyword_field.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "'\n"
+        "COPY TO ARRAY aTypeOnly FIELDS TYPE\n"
+        "nRows = ALEN(aTypeOnly, 1)\n"
+        "nCols = ALEN(aTypeOnly, 2)\n"
+        "cRow1Type = aTypeOnly[1, 1]\n"
+        "cRow2Type = aTypeOnly[2, 1]\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO ARRAY FIELDS TYPE script should complete: " + state.message);
+
+    const auto chk = [&](const std::string& var, const std::string& expected, const std::string& msg) {
+        const auto it = state.globals.find(var);
+        expect(it != state.globals.end(), var + " should exist in globals");
+        if (it != state.globals.end()) {
+            const std::string val = copperfin::runtime::format_value(it->second);
+            expect(val == expected, msg + " (got '" + val + "')");
+        }
+    };
+
+    chk("nrows", "2", "COPY TO ARRAY FIELDS TYPE should preserve both qualifying records");
+    chk("ncols", "1", "COPY TO ARRAY FIELDS TYPE should preserve only the selected keyword-named field");
+    chk("crow1type", "Primary", "COPY TO ARRAY FIELDS TYPE should copy row 1 TYPE");
+    chk("crow2type", "Backup", "COPY TO ARRAY FIELDS TYPE should copy row 2 TYPE");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_append_from_array_writes_records_from_2d_array() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_array";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    // Source table has two records; dest table starts empty.
+    write_people_dbf(temp_root / "source.dbf", {{"Carol", 55}, {"Dave", 19}});
+    write_people_dbf(temp_root / "dest.dbf", {});
+
+    const fs::path main_path = temp_root / "append_from_array.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "source.dbf").string() + "'\n"
+        "cTempArray = 'tmparr'\n"
+        "cTempArrayHolder = 'cTempArray'\n"
+        "cTempArrayDeepHolder = 'cTempArrayHolder'\n"
+        "COPY TO ARRAY &cTempArrayDeepHolder\n"
+        "USE '" + (temp_root / "dest.dbf").string() + "'\n"
+        "APPEND FROM ARRAY &cTempArrayDeepHolder\n"
+        "GO 1\n"
+        "dest_name1 = NAME\n"
+        "dest_age1 = AGE\n"
+        "GO 2\n"
+        "dest_name2 = NAME\n"
+        "dest_age2 = AGE\n"
+        "dest_rc = RECCOUNT()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "APPEND FROM ARRAY script should complete");
+
+    const auto chk2 = [&](const std::string& var, const std::string& expected, const std::string& msg) {
+        const auto it = state.globals.find(var);
+        expect(it != state.globals.end(), var + " should exist in globals");
+        if (it != state.globals.end()) {
+            const std::string val = copperfin::runtime::format_value(it->second);
+            expect(val == expected, msg + " (got '" + val + "')");
+        }
+    };
+    chk2("dest_rc",    "2",     "APPEND FROM ARRAY should append 2 records");
+    chk2("dest_name1", "Carol", "APPEND FROM ARRAY record 1 NAME should match");
+    chk2("dest_age1",  "55",    "APPEND FROM ARRAY record 1 AGE should match");
+    chk2("dest_name2", "Dave",  "APPEND FROM ARRAY record 2 NAME should match");
+    chk2("dest_age2",  "19",    "APPEND FROM ARRAY record 2 AGE should match");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_append_from_array_fields_clause_allows_keyword_named_field() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_array_keyword_field";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "TYPE", .type = 'C', .length = 12U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> source_records{
+        {"Primary", "30"},
+        {"Backup", "25"},
+    };
+    const auto source_create = copperfin::vfp::create_dbf_table_file(source_path.string(), fields, source_records);
+    expect(source_create.ok, "APPEND FROM ARRAY keyword-field source fixture should be created");
+
+    const fs::path dest_path = temp_root / "dest.dbf";
+    const auto dest_create = copperfin::vfp::create_dbf_table_file(dest_path.string(), fields, {});
+    expect(dest_create.ok, "APPEND FROM ARRAY keyword-field destination fixture should be created");
+
+    const fs::path main_path = temp_root / "append_from_array_keyword_field.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "'\n"
+        "COPY TO ARRAY aTypeOnly FIELDS TYPE\n"
+        "USE '" + dest_path.string() + "'\n"
+        "APPEND FROM ARRAY aTypeOnly FIELDS TYPE\n"
+        "GO 1\n"
+        "cType1 = TYPE\n"
+        "nAge1 = AGE\n"
+        "GO 2\n"
+        "cType2 = TYPE\n"
+        "nAge2 = AGE\n"
+        "nRows = RECCOUNT()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "APPEND FROM ARRAY FIELDS TYPE script should complete: " + state.message);
+
+    const auto chk = [&](const std::string& var, const std::string& expected, const std::string& msg) {
+        const auto it = state.globals.find(var);
+        expect(it != state.globals.end(), var + " should exist in globals");
+        if (it != state.globals.end()) {
+            const std::string val = copperfin::runtime::format_value(it->second);
+            expect(val == expected, msg + " (got '" + val + "')");
+        }
+    };
+
+    chk("nrows", "2", "APPEND FROM ARRAY FIELDS TYPE should append both rows");
+    chk("ctype1", "Primary", "APPEND FROM ARRAY FIELDS TYPE should restore row 1 TYPE");
+    chk("nage1", "0", "APPEND FROM ARRAY FIELDS TYPE should leave omitted AGE at numeric blank");
+    chk("ctype2", "Backup", "APPEND FROM ARRAY FIELDS TYPE should restore row 2 TYPE");
+    chk("nage2", "0", "APPEND FROM ARRAY FIELDS TYPE should leave omitted AGE at numeric blank");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_copy_append_array_like_and_except_field_filters() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_append_array_like_except";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+        {.name = "NOTE", .type = 'C', .length = 12U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> source_records{
+        {"Alpha", "One", "30"},
+        {"Bravo", "Two", "25"},
+    };
+    const auto source_create = copperfin::vfp::create_dbf_table_file(source_path.string(), fields, source_records);
+    expect(source_create.ok, "COPY/APPEND ARRAY LIKE/EXCEPT source fixture should be created");
+
+    const fs::path dest_path = temp_root / "dest.dbf";
+    const auto dest_create = copperfin::vfp::create_dbf_table_file(dest_path.string(), fields, {});
+    expect(dest_create.ok, "COPY/APPEND ARRAY LIKE/EXCEPT destination fixture should be created");
+
+    const fs::path main_path = temp_root / "copy_append_array_like_except.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "'\n"
+        "COPY TO ARRAY aSelected FIELDS LIKE N*\n"
+        "USE '" + dest_path.string() + "'\n"
+        "APPEND FROM ARRAY aSelected FIELDS EXCEPT AGE\n"
+        "GO 1\n"
+        "cName1 = NAME\n"
+        "cNote1 = NOTE\n"
+        "nAge1 = AGE\n"
+        "GO 2\n"
+        "cName2 = NAME\n"
+        "cNote2 = NOTE\n"
+        "nAge2 = AGE\n"
+        "nRows = RECCOUNT()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO ARRAY FIELDS LIKE / APPEND FROM ARRAY FIELDS EXCEPT script should complete: " + state.message);
+
+    const auto chk = [&](const std::string& var, const std::string& expected, const std::string& msg) {
+        const auto it = state.globals.find(var);
+        expect(it != state.globals.end(), var + " should exist in globals");
+        if (it != state.globals.end()) {
+            const std::string val = copperfin::runtime::format_value(it->second);
+            expect(val == expected, msg + " (got '" + val + "')");
+        }
+    };
+
+    chk("nrows", "2", "APPEND FROM ARRAY FIELDS EXCEPT AGE should append both rows");
+    chk("cname1", "Alpha", "COPY TO ARRAY FIELDS LIKE N* should preserve keyword-heavy NAME for row 1");
+    chk("cnote1", "One", "COPY TO ARRAY FIELDS LIKE N* should preserve NOTE for row 1");
+    chk("nage1", "0", "APPEND FROM ARRAY FIELDS EXCEPT AGE should leave AGE blank for row 1");
+    chk("cname2", "Bravo", "COPY TO ARRAY FIELDS LIKE N* should preserve NAME for row 2");
+    chk("cnote2", "Two", "COPY TO ARRAY FIELDS LIKE N* should preserve NOTE for row 2");
+    chk("nage2", "0", "APPEND FROM ARRAY FIELDS EXCEPT AGE should leave AGE blank for row 2");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_copy_append_dbf_like_and_except_field_filters() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_append_dbf_like_except";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+        {.name = "NOTE", .type = 'C', .length = 12U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> source_records{{"Alpha", "One", "30"}, {"Bravo", "Two", "25"}};
+    const auto source_create = copperfin::vfp::create_dbf_table_file(source_path.string(), fields, source_records);
+    expect(source_create.ok, "COPY/APPEND DBF LIKE/EXCEPT source fixture should be created");
+
+    const fs::path dest_path = temp_root / "dest.dbf";
+    const auto dest_create = copperfin::vfp::create_dbf_table_file(dest_path.string(), fields, {});
+    expect(dest_create.ok, "COPY/APPEND DBF LIKE/EXCEPT destination fixture should be created");
+
+    const fs::path selected_path = temp_root / "selected.dbf";
+    const fs::path main_path = temp_root / "copy_append_dbf_like_except.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "'\n"
+        "COPY TO '" + selected_path.string() + "' FIELDS LIKE N*\n"
+        "USE '" + dest_path.string() + "'\n"
+        "APPEND FROM '" + selected_path.string() + "' FIELDS EXCEPT AGE\n"
+        "GO 1\n"
+        "cName1 = NAME\n"
+        "cNote1 = NOTE\n"
+        "nAge1 = AGE\n"
+        "GO 2\n"
+        "cName2 = NAME\n"
+        "cNote2 = NOTE\n"
+        "nAge2 = AGE\n"
+        "nRows = RECCOUNT()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "COPY TO/APPEND FROM DBF FIELDS LIKE/EXCEPT script should complete: " + state.message);
+
+    const auto chk = [&](const std::string& var, const std::string& expected, const std::string& msg) {
+        const auto it = state.globals.find(var);
+        expect(it != state.globals.end(), var + " should exist in globals");
+        if (it != state.globals.end()) {
+            const std::string val = copperfin::runtime::format_value(it->second);
+            expect(val == expected, msg + " (got '" + val + "')");
+        }
+    };
+
+    chk("nrows", "2", "APPEND FROM FIELDS EXCEPT AGE should append both rows");
+    chk("cname1", "Alpha", "COPY TO FIELDS LIKE N* should preserve keyword-heavy NAME for row 1");
+    chk("cnote1", "One", "COPY TO FIELDS LIKE N* should preserve NOTE for row 1");
+    chk("nage1", "0", "APPEND FROM FIELDS EXCEPT AGE should leave AGE blank for row 1");
+    chk("cname2", "Bravo", "COPY TO FIELDS LIKE N* should preserve NAME for row 2");
+    chk("cnote2", "Two", "COPY TO FIELDS LIKE N* should preserve NOTE for row 2");
+    chk("nage2", "0", "APPEND FROM FIELDS EXCEPT AGE should leave AGE blank for row 2");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_append_from_array_macro_source_preserves_date_and_datetime_fields() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_array_date_time";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "BIRTHDAY", .type = 'D', .length = 8U},
+        {.name = "STAMP", .type = 'T', .length = 8U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> source_records{
+        {"20240117", "julian:2459625 millis:37230000", "41"},
+    };
+    const auto source_create = copperfin::vfp::create_dbf_table_file(source_path.string(), fields, source_records);
+    expect(source_create.ok, "APPEND FROM ARRAY date/datetime source fixture should be created");
+
+    const fs::path dest_path = temp_root / "dest.dbf";
+    const auto dest_create = copperfin::vfp::create_dbf_table_file(dest_path.string(), fields, {});
+    expect(dest_create.ok, "APPEND FROM ARRAY date/datetime destination fixture should be created");
+
+    const fs::path main_path = temp_root / "append_from_array_date_time.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "'\n"
+        "cArrayName = 'aTemporal'\n"
+        "cArrayNameHolder = 'cArrayName'\n"
+        "cArrayNameDeepHolder = 'cArrayNameHolder'\n"
+        "COPY TO ARRAY &cArrayNameDeepHolder FIELDS BIRTHDAY, STAMP\n"
+        "USE '" + dest_path.string() + "'\n"
+        "APPEND FROM ARRAY &cArrayNameDeepHolder FIELDS BIRTHDAY, STAMP\n"
+        "GO 1\n"
+        "cBirthday = DTOC(BIRTHDAY, 1)\n"
+        "cStamp = TTOC(STAMP, 1)\n"
+        "nAge = AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "APPEND FROM ARRAY macro date/datetime script should complete: " + state.message);
+
+    const auto birthday = state.globals.find("cbirthday");
+    const auto stamp = state.globals.find("cstamp");
+    const auto age = state.globals.find("nage");
+    expect(birthday != state.globals.end(), "APPEND FROM ARRAY date/datetime script should capture BIRTHDAY");
+    expect(stamp != state.globals.end(), "APPEND FROM ARRAY date/datetime script should capture STAMP");
+    expect(age != state.globals.end(), "APPEND FROM ARRAY date/datetime script should capture AGE");
+    if (birthday != state.globals.end()) {
+        const std::string actual = copperfin::runtime::format_value(birthday->second);
+        expect(actual == "20240117",
+            "APPEND FROM ARRAY should serialize runtime date strings back into date fields (got '" + actual + "')");
+    }
+    if (stamp != state.globals.end()) {
+        const std::string actual = copperfin::runtime::format_value(stamp->second);
+        expect(actual == "20240117102030",
+            "APPEND FROM ARRAY should serialize runtime datetime strings back into datetime fields (got '" + actual + "')");
+    }
+    if (age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(age->second) == "0",
+            "APPEND FROM ARRAY FIELDS BIRTHDAY, STAMP should leave omitted numeric fields blank");
+    }
+
+    const auto persisted = copperfin::vfp::parse_dbf_table_from_file(dest_path.string(), 10U);
+    expect(persisted.ok, "APPEND FROM ARRAY date/datetime destination table should remain readable");
+    expect(persisted.table.records.size() == 1U, "APPEND FROM ARRAY date/datetime destination should have one row");
+    if (persisted.ok && persisted.table.records.size() == 1U) {
+        expect(persisted.table.records[0].values[0].display_value == "2024-01-17",
+            "APPEND FROM ARRAY should persist date storage strings through the DBF writer (got '" +
+                persisted.table.records[0].values[0].display_value + "')");
+        expect(persisted.table.records[0].values[1].display_value == "julian:2459625 millis:37230000",
+            "APPEND FROM ARRAY should persist datetime storage strings through the DBF writer");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+}  // namespace cf_test_prg_engine_data_io
