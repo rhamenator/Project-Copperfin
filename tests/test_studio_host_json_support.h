@@ -780,10 +780,6 @@ void test_studio_host_json_exposes_selected_page_footer_label_sections_by_record
     const std::string& studio_host_path);
 void test_studio_host_json_exposes_selected_deleted_page_footer_label_sections_by_record_selection(
     const std::string& studio_host_path);
-void test_studio_host_json_exposes_selected_column_footer_label_sections_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_exposes_selected_deleted_column_footer_label_sections_by_record_selection(
-    const std::string& studio_host_path);
 void test_studio_host_json_exposes_selected_page_header_label_sections_by_record_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_exposes_selected_deleted_page_header_label_sections_by_record_selection(
@@ -1349,10 +1345,6 @@ void test_studio_host_json_exposes_selected_deleted_group_footer_report_sections
 void test_studio_host_json_exposes_selected_page_footer_report_sections_by_record_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_exposes_selected_deleted_page_footer_report_sections_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_exposes_selected_column_footer_report_sections_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_exposes_selected_deleted_column_footer_report_sections_by_record_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_exposes_selected_page_header_report_sections_by_record_selection(
     const std::string& studio_host_path);

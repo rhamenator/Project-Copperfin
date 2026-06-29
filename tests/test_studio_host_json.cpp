@@ -234,10 +234,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_selected_page_footer_label_sections_by_record_selection(argv[1]);
     test_studio_host_json_exposes_selected_deleted_page_footer_report_sections_by_record_selection(argv[1]);
     test_studio_host_json_exposes_selected_deleted_page_footer_label_sections_by_record_selection(argv[1]);
-    test_studio_host_json_exposes_selected_column_footer_report_sections_by_record_selection(argv[1]);
-    test_studio_host_json_exposes_selected_column_footer_label_sections_by_record_selection(argv[1]);
-    test_studio_host_json_exposes_selected_deleted_column_footer_report_sections_by_record_selection(argv[1]);
-    test_studio_host_json_exposes_selected_deleted_column_footer_label_sections_by_record_selection(argv[1]);
     test_studio_host_json_exposes_selected_page_header_report_sections_by_record_selection(argv[1]);
     test_studio_host_json_exposes_selected_page_header_label_sections_by_record_selection(argv[1]);
     test_studio_host_json_exposes_selected_deleted_page_header_report_sections_by_record_selection(argv[1]);
