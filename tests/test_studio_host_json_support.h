@@ -776,10 +776,6 @@ void test_studio_host_json_exposes_selected_deleted_group_header_label_sections_
     const std::string& studio_host_path);
 void test_studio_host_json_exposes_selected_deleted_group_footer_label_sections_by_record_selection(
     const std::string& studio_host_path);
-void test_studio_host_json_exposes_selected_page_header_label_sections_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_exposes_selected_deleted_page_header_label_sections_by_record_selection(
-    const std::string& studio_host_path);
 void test_studio_host_json_exposes_label_layout_parity(const std::string& studio_host_path);
 void test_studio_host_json_nudges_label_layout_objects_by_stable_selectors(const std::string& studio_host_path);
 void test_studio_host_json_aligns_label_layout_objects_by_stable_selectors(const std::string& studio_host_path);
@@ -1337,10 +1333,6 @@ void test_studio_host_json_exposes_selected_group_footer_report_sections_by_reco
 void test_studio_host_json_exposes_selected_deleted_group_header_report_sections_by_record_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_exposes_selected_deleted_group_footer_report_sections_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_exposes_selected_page_header_report_sections_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_exposes_selected_deleted_page_header_report_sections_by_record_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_exposes_selected_report_sections(const std::string& studio_host_path);
 void test_studio_host_json_exposes_selected_page_header_report_objects_orphaned_by_deleted_sections(
