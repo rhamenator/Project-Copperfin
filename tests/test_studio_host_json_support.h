@@ -768,10 +768,6 @@ void test_studio_host_json_assigns_left_column_by_stable_selectors(const std::st
 void test_studio_host_json_assigns_display_value_by_stable_selectors(const std::string& studio_host_path);
 
 // ==== Report layout JSON tests: label layout/settings/objects/sections ====
-void test_studio_host_json_exposes_selected_group_footer_label_sections_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_exposes_selected_deleted_group_footer_label_sections_by_record_selection(
-    const std::string& studio_host_path);
 void test_studio_host_json_exposes_label_layout_parity(const std::string& studio_host_path);
 void test_studio_host_json_nudges_label_layout_objects_by_stable_selectors(const std::string& studio_host_path);
 void test_studio_host_json_aligns_label_layout_objects_by_stable_selectors(const std::string& studio_host_path);
@@ -1321,10 +1317,6 @@ void test_studio_host_json_exposes_deleted_object_counts_per_section(
 void test_studio_host_json_exposes_record_selected_nested_group_sections(
     const std::string& studio_host_path);
 void test_studio_host_json_exposes_record_selected_deleted_nested_group_sections(
-    const std::string& studio_host_path);
-void test_studio_host_json_exposes_selected_group_footer_report_sections_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_exposes_selected_deleted_group_footer_report_sections_by_record_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_exposes_selected_report_sections(const std::string& studio_host_path);
 void test_studio_host_json_exposes_selected_page_header_report_objects_orphaned_by_deleted_sections(

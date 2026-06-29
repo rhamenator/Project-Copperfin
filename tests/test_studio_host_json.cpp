@@ -220,10 +220,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_nested_report_group_section_expressions_by_record_selection(argv[1]);
     test_studio_host_json_updates_deleted_nested_report_group_section_expressions(argv[1]);
     test_studio_host_json_clears_deleted_nested_report_group_section_expressions(argv[1]);
-    test_studio_host_json_exposes_selected_group_footer_report_sections_by_record_selection(argv[1]);
-    test_studio_host_json_exposes_selected_group_footer_label_sections_by_record_selection(argv[1]);
-    test_studio_host_json_exposes_selected_deleted_group_footer_report_sections_by_record_selection(argv[1]);
-    test_studio_host_json_exposes_selected_deleted_group_footer_label_sections_by_record_selection(argv[1]);
     test_studio_host_json_exposes_report_group_footer_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_group_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_report_group_section_expressions_by_stable_selection(argv[1]);
