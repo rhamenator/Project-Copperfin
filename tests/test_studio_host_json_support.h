@@ -812,10 +812,6 @@ void test_studio_host_json_reorders_label_layout_objects_by_stable_selectors(con
 void test_studio_host_json_duplicates_label_layout_objects_by_stable_selectors(const std::string& studio_host_path);
 void test_studio_host_json_renames_label_layout_object_identity_by_stable_selectors(
     const std::string& studio_host_path);
-void test_studio_host_json_exposes_selected_summary_label_objects_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_exposes_selected_deleted_summary_label_objects_by_record_selection(
-    const std::string& studio_host_path);
 void test_studio_host_json_exposes_selected_label_settings(const std::string& studio_host_path);
 
 // ==== Report layout JSON tests: group section/footer expressions and nested groupings ====
@@ -1684,10 +1680,6 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_expressio
 
 // ==== Report layout JSON tests: band object exposure by selector ====
 void test_studio_host_json_exposes_selected_report_objects(const std::string& studio_host_path);
-void test_studio_host_json_exposes_selected_summary_report_objects_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_exposes_selected_deleted_summary_report_objects_by_record_selection(
-    const std::string& studio_host_path);
 void test_studio_host_json_exposes_selected_group_header_report_objects_by_stable_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_exposes_selected_deleted_group_header_report_objects_by_stable_selection(

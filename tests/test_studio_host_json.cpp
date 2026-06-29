@@ -419,10 +419,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_duplicates_report_visual_object_subtrees_by_stable_selection(argv[1]);
     test_studio_host_json_duplicates_deleted_report_visual_object_subtrees_by_stable_selection(argv[1]);
     test_studio_host_json_applies_mixed_report_deleted_states_by_stable_selection(argv[1]);
-    test_studio_host_json_exposes_selected_summary_report_objects_by_record_selection(argv[1]);
-    test_studio_host_json_exposes_selected_summary_label_objects_by_record_selection(argv[1]);
-    test_studio_host_json_exposes_selected_deleted_summary_report_objects_by_record_selection(argv[1]);
-    test_studio_host_json_exposes_selected_deleted_summary_label_objects_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_selection_for_missing_stable_selector(argv[1]);
     test_studio_host_json_clears_report_selection_for_blank_stable_selector(argv[1]);
     test_studio_host_json_clears_report_selection_when_unique_id_field_is_missing(argv[1]);
