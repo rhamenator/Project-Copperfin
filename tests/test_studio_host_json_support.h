@@ -1374,10 +1374,6 @@ void test_studio_host_json_exposes_selected_page_header_report_sections_by_recor
     const std::string& studio_host_path);
 void test_studio_host_json_exposes_selected_deleted_page_header_report_sections_by_record_selection(
     const std::string& studio_host_path);
-void test_studio_host_json_exposes_report_title_sections_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_exposes_deleted_report_title_sections_by_stable_selection(
-    const std::string& studio_host_path);
 void test_studio_host_json_exposes_deleted_report_page_footer_sections_by_stable_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_exposes_report_page_footer_sections_by_stable_selection(

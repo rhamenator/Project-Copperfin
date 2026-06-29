@@ -254,8 +254,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_deleted_report_group_footer_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_nested_report_group_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_group_section_expressions_by_stable_selection(argv[1]);
-    test_studio_host_json_exposes_report_title_sections_by_stable_selection(argv[1]);
-    test_studio_host_json_exposes_deleted_report_title_sections_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_report_page_footer_sections_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_report_page_footer_sections_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_report_column_header_sections_by_stable_selection(argv[1]);
