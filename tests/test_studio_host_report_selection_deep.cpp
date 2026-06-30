@@ -1,6 +1,200 @@
 #include "test_studio_host_json_support.h"
 
 namespace cf_test_studio_host_json {
+namespace {
+
+void write_deep_stable_object_fixture(const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", "", "", ""},
+        {"9", "4", "", "", "0", "", "3200", ""},
+        {"5", "", "\"Preview object 2\"", "100", "200", "1000", "200", ""},
+        {"5", "", "\"Preview object 3\"", "100", "500", "1000", "200", ""},
+        {"5", "", "\"Preview object 4\"", "100", "800", "1000", "200", ""},
+        {"5", "", "\"Preview object 5\"", "100", "1100", "1000", "200", ""},
+        {"5", "", "\"Preview object 6\"", "100", "1400", "1000", "200", ""},
+        {"5", "", "\"Preview object 7\"", "100", "1700", "1000", "200", ""},
+        {"5", "", "\"Preview object 8\"", "100", "2000", "1000", "200", ""},
+        {"5", "", "\"Preview object 9\"", "100", "2300", "1000", "200", ""},
+        {"5", "", "\"Deep label\"", "400", "2600", "1500", "250", "deep-object-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1705: synthetic report table for deep stable object JSON should be created");
+}
+
+void write_deep_stable_section_fixture(const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", "", "", ""},
+        {"9", "4", "", "", "0", "", "3200", ""},
+        {"5", "", "\"Preview object 2\"", "100", "200", "1000", "200", ""},
+        {"5", "", "\"Preview object 3\"", "100", "500", "1000", "200", ""},
+        {"5", "", "\"Preview object 4\"", "100", "800", "1000", "200", ""},
+        {"5", "", "\"Preview object 5\"", "100", "1100", "1000", "200", ""},
+        {"5", "", "\"Preview object 6\"", "100", "1400", "1000", "200", ""},
+        {"5", "", "\"Preview object 7\"", "100", "1700", "1000", "200", ""},
+        {"5", "", "\"Preview object 8\"", "100", "2000", "1000", "200", ""},
+        {"5", "", "\"Preview object 9\"", "100", "2300", "1000", "200", ""},
+        {"9", "8", "deep summary", "", "3200", "", "700", "deep-section-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1707: synthetic report table for deep stable section JSON should be created");
+}
+
+void write_deep_stable_settings_fixture(const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", "", "", ""},
+        {"9", "4", "", "", "0", "", "3200", ""},
+        {"5", "", "\"Preview object 2\"", "100", "200", "1000", "200", ""},
+        {"5", "", "\"Preview object 3\"", "100", "500", "1000", "200", ""},
+        {"5", "", "\"Preview object 4\"", "100", "800", "1000", "200", ""},
+        {"5", "", "\"Preview object 5\"", "100", "1100", "1000", "200", ""},
+        {"5", "", "\"Preview object 6\"", "100", "1400", "1000", "200", ""},
+        {"5", "", "\"Preview object 7\"", "100", "1700", "1000", "200", ""},
+        {"5", "", "\"Preview object 8\"", "100", "2000", "1000", "200", ""},
+        {"5", "", "\"Preview object 9\"", "100", "2300", "1000", "200", ""},
+        {"1", "53", "PAPERSIZE=9", "", "", "", "", "deep-settings-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1707: synthetic report table for deep stable settings JSON should be created");
+}
+
+void write_deep_ambiguous_stable_object_fixture(const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", "", "", ""},
+        {"9", "4", "", "", "0", "", "3200", ""},
+        {"5", "", "\"Preview object 2\"", "100", "200", "1000", "200", ""},
+        {"5", "", "\"Preview duplicate\"", "100", "500", "1000", "200", "deep-duplicate-guid"},
+        {"5", "", "\"Preview object 4\"", "100", "800", "1000", "200", ""},
+        {"5", "", "\"Preview object 5\"", "100", "1100", "1000", "200", ""},
+        {"5", "", "\"Preview object 6\"", "100", "1400", "1000", "200", ""},
+        {"5", "", "\"Preview object 7\"", "100", "1700", "1000", "200", ""},
+        {"5", "", "\"Preview object 8\"", "100", "2000", "1000", "200", ""},
+        {"5", "", "\"Preview object 9\"", "100", "2300", "1000", "200", ""},
+        {"5", "", "\"Deep duplicate\"", "400", "2600", "1500", "250", "DEEP-DUPLICATE-GUID"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok,
+           "#1706: synthetic report table for deep ambiguous stable object JSON should be created");
+}
+
+void write_deep_live_deleted_ambiguous_object_fixture(const std::filesystem::path& report_path) {
+    write_deep_ambiguous_stable_object_fixture(report_path);
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 10U, true);
+    expect(delete_result.ok,
+           "#1709: synthetic report table should mark the deep duplicate object deleted");
+}
+
+void write_deep_live_deleted_ambiguous_section_fixture(const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", "", "", ""},
+        {"9", "4", "", "", "0", "", "3200", "deep-duplicate-section-guid"},
+        {"5", "", "\"Preview object 2\"", "100", "200", "1000", "200", ""},
+        {"5", "", "\"Preview object 3\"", "100", "500", "1000", "200", ""},
+        {"5", "", "\"Preview object 4\"", "100", "800", "1000", "200", ""},
+        {"5", "", "\"Preview object 5\"", "100", "1100", "1000", "200", ""},
+        {"5", "", "\"Preview object 6\"", "100", "1400", "1000", "200", ""},
+        {"5", "", "\"Preview object 7\"", "100", "1700", "1000", "200", ""},
+        {"5", "", "\"Preview object 8\"", "100", "2000", "1000", "200", ""},
+        {"5", "", "\"Preview object 9\"", "100", "2300", "1000", "200", ""},
+        {"9", "8", "deep summary", "", "3200", "", "700", "DEEP-DUPLICATE-SECTION-GUID"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok,
+           "#1708: synthetic report table for deep ambiguous stable section JSON should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 10U, true);
+    expect(delete_result.ok,
+           "#1709: synthetic report table should mark the deep duplicate section deleted");
+}
+
+void write_deep_live_deleted_ambiguous_settings_fixture(const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", "", "", "deep-duplicate-settings-guid"},
+        {"9", "4", "", "", "0", "", "3200", ""},
+        {"5", "", "\"Preview object 2\"", "100", "200", "1000", "200", ""},
+        {"5", "", "\"Preview object 3\"", "100", "500", "1000", "200", ""},
+        {"5", "", "\"Preview object 4\"", "100", "800", "1000", "200", ""},
+        {"5", "", "\"Preview object 5\"", "100", "1100", "1000", "200", ""},
+        {"5", "", "\"Preview object 6\"", "100", "1400", "1000", "200", ""},
+        {"5", "", "\"Preview object 7\"", "100", "1700", "1000", "200", ""},
+        {"5", "", "\"Preview object 8\"", "100", "2000", "1000", "200", ""},
+        {"5", "", "\"Preview object 9\"", "100", "2300", "1000", "200", ""},
+        {"1", "53", "PAPERSIZE=9", "", "", "", "", "DEEP-DUPLICATE-SETTINGS-GUID"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok,
+           "#1708: synthetic report table for deep ambiguous stable settings JSON should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 10U, true);
+    expect(delete_result.ok,
+           "#1709: synthetic report table should mark the deep duplicate settings row deleted");
+}
+
+}  // namespace
+
 void test_studio_host_json_selects_deep_report_records_by_record_selector(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -40,7 +234,7 @@ void test_studio_host_json_selects_deep_report_records_by_record_selector(
     const auto run_deep_object_record_selection = [&](const fs::path& asset_path,
                                                       const std::string& title,
                                                       const std::string& label) {
-        write_synthetic_report_table_for_deep_stable_object_json(asset_path);
+        write_deep_stable_object_fixture(asset_path);
 
         const auto object_process = run_process_capture(
             studio_host_path,
@@ -80,7 +274,7 @@ void test_studio_host_json_selects_deep_report_records_by_record_selector(
     const auto run_deep_section_record_selection = [&](const fs::path& asset_path,
                                                        const std::string& title,
                                                        const std::string& label) {
-        write_synthetic_report_table_for_deep_stable_section_json(asset_path);
+        write_deep_stable_section_fixture(asset_path);
 
         const auto section_process = run_process_capture(
             studio_host_path,
@@ -112,7 +306,7 @@ void test_studio_host_json_selects_deep_report_records_by_record_selector(
     const auto run_deep_settings_record_selection = [&](const fs::path& asset_path,
                                                         const std::string& title,
                                                         const std::string& label) {
-        write_synthetic_report_table_for_deep_stable_settings_json(asset_path);
+        write_deep_stable_settings_fixture(asset_path);
 
         const auto settings_process = run_process_capture(
             studio_host_path,
@@ -178,7 +372,7 @@ void test_studio_host_json_selects_deep_report_records_by_stable_selector(
     const auto run_deep_object_selection = [&](const fs::path& asset_path,
                                                const std::string& title,
                                                const std::string& label) {
-        write_synthetic_report_table_for_deep_stable_object_json(asset_path);
+        write_deep_stable_object_fixture(asset_path);
 
         const auto object_process = run_process_capture(
             studio_host_path,
@@ -259,7 +453,7 @@ void test_studio_host_json_clears_report_selection_for_deep_ambiguous_stable_sel
     const auto run_deep_ambiguous_selection = [&](const fs::path& asset_path,
                                                   const std::string& title,
                                                   const std::string& label) {
-        write_synthetic_report_table_for_deep_ambiguous_stable_object_json(asset_path);
+        write_deep_ambiguous_stable_object_fixture(asset_path);
 
         const auto object_process = run_process_capture(
             studio_host_path,
@@ -380,7 +574,7 @@ void test_studio_host_json_clears_report_selection_for_deep_live_deleted_ambiguo
     const auto run_object_selector = [&](const fs::path& asset_path,
                                          const std::string& title,
                                          const std::string& label) {
-        write_synthetic_report_table_for_deep_live_deleted_ambiguous_stable_object_json(asset_path);
+        write_deep_live_deleted_ambiguous_object_fixture(asset_path);
 
         const auto object_process = run_process_capture(
             studio_host_path,
@@ -403,7 +597,7 @@ void test_studio_host_json_clears_report_selection_for_deep_live_deleted_ambiguo
     const auto run_section_selector = [&](const fs::path& asset_path,
                                           const std::string& title,
                                           const std::string& label) {
-        write_synthetic_report_table_for_deep_live_deleted_ambiguous_stable_section_json(asset_path);
+        write_deep_live_deleted_ambiguous_section_fixture(asset_path);
 
         const auto section_process = run_process_capture(
             studio_host_path,
@@ -426,7 +620,7 @@ void test_studio_host_json_clears_report_selection_for_deep_live_deleted_ambiguo
     const auto run_settings_selector = [&](const fs::path& asset_path,
                                            const std::string& title,
                                            const std::string& label) {
-        write_synthetic_report_table_for_deep_live_deleted_ambiguous_stable_settings_json(asset_path);
+        write_deep_live_deleted_ambiguous_settings_fixture(asset_path);
 
         const auto settings_process = run_process_capture(
             studio_host_path,
@@ -473,3 +667,16 @@ void test_studio_host_json_clears_report_selection_for_deep_live_deleted_ambiguo
 }
 
 }  // namespace cf_test_studio_host_json
+
+int main(int argc, char** argv) {
+    if (argc < 2) {
+        std::cerr << "usage: " << argv[0] << " <studio-host>\n";
+        return 1;
+    }
+
+    cf_test_studio_host_json::test_studio_host_json_selects_deep_report_records_by_record_selector(argv[1]);
+    cf_test_studio_host_json::test_studio_host_json_selects_deep_report_records_by_stable_selector(argv[1]);
+    cf_test_studio_host_json::test_studio_host_json_clears_report_selection_for_deep_ambiguous_stable_selector(argv[1]);
+    cf_test_studio_host_json::test_studio_host_json_clears_report_selection_for_deep_live_deleted_ambiguous_stable_selectors(argv[1]);
+    return cf_test_studio_host_json::failures == 0 ? 0 : 1;
+}

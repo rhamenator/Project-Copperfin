@@ -1630,15 +1630,6 @@ void test_studio_host_json_reorders_deleted_report_visual_object_batches_by_stab
     const std::string& studio_host_path);
 
 // ==== Report layout JSON tests: selector resolution and ambiguity ====
-void test_studio_host_json_selects_deep_report_records_by_record_selector(
-    const std::string& studio_host_path);
-void test_studio_host_json_selects_deep_report_records_by_stable_selector(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_report_selection_for_deep_ambiguous_stable_selector(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_report_selection_for_deep_live_deleted_ambiguous_stable_selectors(
-    const std::string& studio_host_path);
-
 // ==== Report layout JSON tests: memo placeholder resolution ====
 void write_synthetic_report_table_for_unresolved_memo_placeholder_layout_json(
     const std::filesystem::path& report_path);
