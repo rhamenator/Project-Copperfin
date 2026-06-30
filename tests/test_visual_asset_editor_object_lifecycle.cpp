@@ -887,8 +887,8 @@ void test_reorder_visual_object_memo_properties_rolls_back_failed_batches() {
         }
     });
     expect(batch_result.ok, "#773: batch property reorder should support mixed selectors and all placements");
-    expect(batch_result.affected_object_count == 4U,
-        "#1005: successful batch property reorder should report affected item count");
+    expect(batch_result.affected_object_count == 3U,
+        "#1005: successful batch property reorder should count only real mutations");
     expect(order_is(memo_property_order("save-guid"), {"Width", "Caption", "Left", "Top"}) &&
             order_is(memo_property_order("name-guid"), {"Left", "Caption", "Top"}) &&
             order_is(memo_property_order("status-guid"), {"Left", "Caption", "Width"}),
@@ -1055,7 +1055,7 @@ void test_reorder_visual_object_memo_properties_rolls_back_failed_batches() {
     expect(batch_result.affected_object_count == 0U,
         "#1005: empty batch property reorder should report zero affected objects");
 
-    for (int index = 0; index < 4; ++index) {
+    for (int index = 0; index < 3; ++index) {
         const auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
         expect(undo_result.ok, "#773: undo should restore each successful batch property reorder");
     }

@@ -1064,6 +1064,7 @@ VisualAssetEditResult reorder_visual_object_property(const VisualObjectPropertyR
     }
 
     auto assignments = parse_visual_property_blob(properties_field->display_value);
+    const std::string prior_blob = serialize_visual_property_blob(assignments);
     const auto reorder_result = reorder_visual_property_assignments(
         assignments,
         request.property_name,
@@ -1073,13 +1074,18 @@ VisualAssetEditResult reorder_visual_object_property(const VisualObjectPropertyR
         return reorder_result;
     }
 
+    const std::string updated_blob = serialize_visual_property_blob(assignments);
+    if (updated_blob == prior_blob) {
+        return {.ok = true, .error = {}, .affected_object_count = 0U};
+    }
+
     auto update_result = update_visual_object_property({
         .path = request.path,
         .record_index = record_index,
         .object_name = {},
         .unique_id = {},
         .property_name = "PROPERTIES",
-        .property_value = serialize_visual_property_blob(assignments)
+        .property_value = updated_blob
     });
     if (update_result.ok) {
         update_result.affected_object_count = 1U;
@@ -1106,6 +1112,7 @@ VisualAssetEditResult reorder_visual_object_properties(const VisualObjectPropert
         return {.ok = true, .error = {}};
     };
 
+    std::size_t affected_object_count = 0U;
     for (const auto& property : request.properties) {
         if (trim_both(property.property_name).empty()) {
             const auto rollback_result = rollback_batch_reorders();
@@ -1150,9 +1157,10 @@ VisualAssetEditResult reorder_visual_object_properties(const VisualObjectPropert
             }
             return result;
         }
+        affected_object_count += result.affected_object_count;
     }
 
-    return {.ok = true, .error = {}, .affected_object_count = request.properties.size()};
+    return {.ok = true, .error = {}, .affected_object_count = affected_object_count};
 }
 
 VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectPropertyQueryRequest& request) {
