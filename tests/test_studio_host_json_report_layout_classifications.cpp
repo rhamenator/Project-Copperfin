@@ -1,6 +1,7 @@
 #include "test_studio_host_json_support.h"
 
 namespace cf_test_studio_host_json {
+#if !defined(COPPERFIN_REPORT_LAYOUT_CLASSIFICATIONS_SKIP_HELPERS)
 void expect_normalized_classification_preview_bounds(const std::string& text, const std::string& prefix) {
     expect_contains(text, "\"previewBoundsAvailable\": true",
                     prefix + " should preserve live preview availability");
@@ -319,6 +320,7 @@ void write_synthetic_report_table_for_invalid_direct_page_setup_layout_json(
     const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
     expect(delete_result.ok, "#1733: synthetic report table should mark invalid direct settings deleted");
 }
+#endif
 
 #if !defined(COPPERFIN_REPORT_LAYOUT_CLASSIFICATIONS_SKIP_HOST_SMOKE)
 void test_studio_host_json_ignores_invalid_report_layout_classifications(
