@@ -115,7 +115,6 @@ add_executable(test_studio_host_json
     test_studio_host_json_report_settings_shared_fixtures.cpp
     test_studio_host_json_report_section_shared_fixtures.cpp
     test_studio_host_json_settings_page_layout_fields.cpp
-    test_studio_host_json_settings_column_setup.cpp
     test_studio_host_json_sections_band_exposure.cpp
     test_studio_host_json_sections_dhf_lifecycle.cpp
     test_studio_host_json_sections_dhf_expressions_and_exposure.cpp
@@ -360,6 +359,28 @@ endif()
 add_test(
     NAME test_studio_host_report_direct_setting_fields
     COMMAND $<TARGET_FILE:test_studio_host_report_direct_setting_fields> $<TARGET_FILE:copperfin_studio_host>
+)
+
+add_executable(test_studio_host_report_column_setup
+    test_studio_host_report_column_setup.cpp
+    test_studio_host_json_geometry_preview_bounds.cpp
+    test_studio_host_json_settings_column_setup.cpp
+    test_studio_host_json_shared_test_helpers.cpp
+)
+target_link_libraries(test_studio_host_report_column_setup PRIVATE cf_vfp_assets)
+target_compile_definitions(test_studio_host_report_column_setup PRIVATE
+    COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS
+)
+
+if(MSVC)
+    target_compile_options(test_studio_host_report_column_setup PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_report_column_setup PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_report_column_setup
+    COMMAND $<TARGET_FILE:test_studio_host_report_column_setup> $<TARGET_FILE:copperfin_studio_host>
 )
 
 add_executable(test_studio_host_report_settings_memo_parsing

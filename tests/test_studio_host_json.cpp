@@ -137,7 +137,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_defaults_malformed_report_layout_numerics(argv[1]);
     test_studio_host_json_defaults_oversized_report_layout_numerics(argv[1]);
-    test_studio_host_json_exposes_report_layout_column_setup(argv[1]);
     test_studio_host_json_exposes_label_layout_parity(argv[1]);
     test_studio_host_json_nudges_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_nudges_label_layout_objects_by_stable_selectors(argv[1]);
@@ -200,10 +199,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_report_paper_size_fields_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_paper_size_fields_by_stable_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_paper_size_fields_by_stable_selection(argv[1]);
-    test_studio_host_json_updates_report_column_count_fields_by_stable_selection(argv[1]);
-    test_studio_host_json_clears_report_column_count_fields_by_stable_selection(argv[1]);
-    test_studio_host_json_updates_deleted_report_column_count_fields_by_stable_selection(argv[1]);
-    test_studio_host_json_clears_deleted_report_column_count_fields_by_stable_selection(argv[1]);
     test_studio_host_json_updates_report_column_width_fields_by_stable_selection(argv[1]);
     test_studio_host_json_clears_report_column_width_fields_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_column_width_fields_by_stable_selection(argv[1]);
