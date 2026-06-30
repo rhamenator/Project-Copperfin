@@ -144,6 +144,7 @@ target_compile_definitions(test_studio_host_json PRIVATE
     COPPERFIN_OBJECT_LIFECYCLE_SKIP_TOOLBOX_CREATE
     COPPERFIN_OBJECT_LIFECYCLE_SKIP_STABLE_SELECTOR_MUTATION
     COPPERFIN_OBJECT_LIFECYCLE_SKIP_OBJECT_ACTION_LIFECYCLE
+    COPPERFIN_OBJECT_LIFECYCLE_SKIP_REMAINING_OBJECT_ACTIONS
 )
 
 if(MSVC)
@@ -222,6 +223,29 @@ endif()
 add_test(
     NAME test_studio_host_object_action_lifecycle
     COMMAND $<TARGET_FILE:test_studio_host_object_action_lifecycle> $<TARGET_FILE:copperfin_studio_host>
+)
+
+add_executable(test_studio_host_remaining_object_lifecycle
+    test_studio_host_remaining_object_lifecycle.cpp
+    test_studio_host_json_object_lifecycle.cpp
+    test_studio_host_json_shared_test_helpers.cpp
+)
+target_link_libraries(test_studio_host_remaining_object_lifecycle PRIVATE cf_vfp_assets)
+target_compile_definitions(test_studio_host_remaining_object_lifecycle PRIVATE
+    COPPERFIN_OBJECT_LIFECYCLE_SKIP_TOOLBOX_CREATE
+    COPPERFIN_OBJECT_LIFECYCLE_SKIP_STABLE_SELECTOR_MUTATION
+    COPPERFIN_OBJECT_LIFECYCLE_SKIP_OBJECT_ACTION_LIFECYCLE
+)
+
+if(MSVC)
+    target_compile_options(test_studio_host_remaining_object_lifecycle PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_remaining_object_lifecycle PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_remaining_object_lifecycle
+    COMMAND $<TARGET_FILE:test_studio_host_remaining_object_lifecycle> $<TARGET_FILE:copperfin_studio_host>
 )
 
 add_executable(test_studio_host_report_selection_none

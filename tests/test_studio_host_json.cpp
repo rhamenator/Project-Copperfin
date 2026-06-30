@@ -448,11 +448,8 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_duplicates_visual_object_batches(argv[1]);
     test_studio_host_json_renames_visual_object_batches(argv[1]);
-    test_studio_host_json_reparents_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_reparents_visual_object_batches(argv[1]);
-    test_studio_host_json_reorders_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_reorders_visual_object_batches(argv[1]);
-    test_studio_host_json_groups_objects_by_stable_child_selectors(argv[1]);
     test_studio_host_json_assigns_tab_order_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_tab_stop_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_visibility_by_stable_selectors(argv[1]);
@@ -604,7 +601,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_lock_screen_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_hide_selection_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_allow_cell_selection_by_stable_selectors(argv[1]);
-    test_studio_host_json_assigns_delete_mark_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_record_mark_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_split_bar_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_highlight_row_by_stable_selectors(argv[1]);
@@ -615,7 +611,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_add_line_feeds_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_always_on_top_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_always_on_bottom_by_stable_selectors(argv[1]);
-    test_studio_host_json_ungroups_objects_by_stable_selectors(argv[1]);
     test_studio_host_execution_fallback_errors_localize(argv[1]);
     return failures == 0 ? 0 : 1;
 }

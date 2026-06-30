@@ -2468,7 +2468,8 @@ void test_studio_host_json_renames_objects_by_stable_selectors(const std::string
 
 #if !defined(COPPERFIN_OBJECT_LIFECYCLE_ONLY_TOOLBOX_CREATE) && \
     !defined(COPPERFIN_OBJECT_LIFECYCLE_ONLY_STABLE_SELECTOR_MUTATION) && \
-    !defined(COPPERFIN_OBJECT_LIFECYCLE_ONLY_OBJECT_ACTION_LIFECYCLE)
+    !defined(COPPERFIN_OBJECT_LIFECYCLE_ONLY_OBJECT_ACTION_LIFECYCLE) && \
+    !defined(COPPERFIN_OBJECT_LIFECYCLE_SKIP_REMAINING_OBJECT_ACTIONS)
 void test_studio_host_json_reparents_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
