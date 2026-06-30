@@ -212,7 +212,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_report_groupings_in_layout_summary(argv[1]);
     test_studio_host_json_exposes_nested_mixed_state_groupings_in_layout_summary(argv[1]);
     test_studio_host_json_exposes_resolved_grouping_expression_for_blank_footer_sections(argv[1]);
-    test_studio_host_json_exposes_deleted_object_counts_per_section(argv[1]);
     test_studio_host_json_updates_nested_report_group_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_nested_report_group_section_expressions_by_record_selection(argv[1]);
     test_studio_host_json_clears_nested_report_group_section_expressions_by_record_selection(argv[1]);

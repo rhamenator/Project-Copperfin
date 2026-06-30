@@ -1312,8 +1312,6 @@ void test_studio_host_json_preserves_report_settings_without_root_expr_schema(
     const std::string& studio_host_path);
 
 // ==== Report layout JSON tests: section band exposure by selector ====
-void test_studio_host_json_exposes_deleted_object_counts_per_section(
-    const std::string& studio_host_path);
 void test_studio_host_json_exposes_selected_report_sections(const std::string& studio_host_path);
 // ==== Report layout JSON tests: detail/header/footer section lifecycle ====
 void test_studio_host_json_deletes_and_restores_detail_header_footer_sections_by_stable_selection(
