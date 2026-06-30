@@ -147,6 +147,19 @@ internal static class Program
                 expectedSectionCount: 4,
                 expectLabel: false,
                 expectUnplacedObject: true);
+            SmokeRealAssetHostBackedPlacementRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLE3V.FRX"),
+                recordIndex: 6,
+                propertyName: "VPOS",
+                originalValue: "11145.833",
+                updatedValue: "2400",
+                expectedObjectTitle: "wiz_general",
+                initialSectionTitle: "Unplaced objects",
+                updatedSectionTitle: "Page Header",
+                expectedSectionCount: 4,
+                expectLabel: false,
+                expectedOriginalUnplacedObjectCount: 3,
+                expectedUpdatedUnplacedObjectCount: 2);
             SmokeAssetEditorPropertyGridRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 7,
@@ -213,6 +226,23 @@ internal static class Program
                 expectedSectionCount: 4,
                 expectLabel: false,
                 expectUnplacedObject: true);
+            SmokeAssetEditorPlacementRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLE3V.FRX"),
+                recordIndex: 6,
+                initialSectionTitle: "Unplaced objects",
+                updatedSectionTitle: "Page Header",
+                updatedSectionRecordIndex: 2,
+                propertyName: "VPOS",
+                updatedPropertyValue: 2400,
+                expectedOriginalSelectionValue: null,
+                expectedUpdatedSelectionValue: "2400",
+                expectedUpdatedRawValue: "2400",
+                expectedOriginalRawValue: "11145.833",
+                expectedObjectTitle: "wiz_general",
+                expectedSectionCount: 4,
+                expectLabel: false,
+                expectedOriginalUnplacedObjectCount: 3,
+                expectedUpdatedUnplacedObjectCount: 2);
             SmokeProjectEditorWithRealAsset(
                 ResolveFirstExistingRealAssetPath(
                     TryResolveVfp9InstallAsset(@"Samples\Solution\solution.pjx"),
@@ -6924,6 +6954,164 @@ internal static class Program
         }
     }
 
+    private static void SmokeRealAssetHostBackedPlacementRoundTrip(
+        string? sourcePath,
+        int recordIndex,
+        string propertyName,
+        string originalValue,
+        string updatedValue,
+        string expectedObjectTitle,
+        string initialSectionTitle,
+        string updatedSectionTitle,
+        int expectedSectionCount,
+        bool expectLabel,
+        int expectedOriginalUnplacedObjectCount,
+        int expectedUpdatedUnplacedObjectCount)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(sourcePath) ? "real asset placement candidate" : sourcePath)} not found.");
+            return;
+        }
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmokeRealAssetPlacements-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateWritableAssetCopy(sourcePath!, tempRoot);
+
+        try
+        {
+            var loaded = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(loaded.Success && loaded.Document is not null,
+                $"real asset placement smoke should load snapshot data for {sourcePath}");
+            if (!loaded.Success || loaded.Document is null)
+            {
+                return;
+            }
+
+            AssertRealAssetRoundTripSnapshot(
+                loaded.Document,
+                recordIndex,
+                propertyName,
+                originalValue,
+                expectedObjectTitle,
+                initialSectionTitle,
+                expectedSectionCount,
+                expectLabel,
+                expectUnplacedObject: true,
+                $"initial real asset placement snapshot should preserve {propertyName}");
+            AssertRealAssetUnplacedObjectCount(
+                loaded.Document,
+                expectedOriginalUnplacedObjectCount,
+                $"initial real asset placement snapshot should preserve unplaced-object counts");
+
+            var updateResult = CopperfinStudioSnapshotClient.TryUpdateProperty(
+                assetPath,
+                recordIndex,
+                propertyName,
+                updatedValue);
+            Expect(updateResult.Success && updateResult.Document is not null,
+                $"real asset placement smoke should update {propertyName} for {sourcePath}");
+            if (!updateResult.Success || updateResult.Document is null)
+            {
+                return;
+            }
+
+            AssertRealAssetRoundTripSnapshot(
+                updateResult.Document,
+                recordIndex,
+                propertyName,
+                updatedValue,
+                expectedObjectTitle,
+                updatedSectionTitle,
+                expectedSectionCount,
+                expectLabel,
+                expectUnplacedObject: false,
+                $"updated real asset placement snapshot should preserve {propertyName}");
+            AssertRealAssetUnplacedObjectCount(
+                updateResult.Document,
+                expectedUpdatedUnplacedObjectCount,
+                $"updated real asset placement snapshot should preserve unplaced-object counts");
+            Expect(updateResult.Document.CommandUndoAvailable,
+                $"real asset placement smoke should expose undo after updating {propertyName} for {sourcePath}");
+
+            var reloadedAfterUpdate = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterUpdate.Success && reloadedAfterUpdate.Document is not null,
+                $"real asset placement smoke should reload updated snapshot data for {sourcePath}");
+            if (!reloadedAfterUpdate.Success || reloadedAfterUpdate.Document is null)
+            {
+                return;
+            }
+
+            AssertRealAssetRoundTripSnapshot(
+                reloadedAfterUpdate.Document,
+                recordIndex,
+                propertyName,
+                updatedValue,
+                expectedObjectTitle,
+                updatedSectionTitle,
+                expectedSectionCount,
+                expectLabel,
+                expectUnplacedObject: false,
+                $"reloaded updated real asset placement snapshot should preserve {propertyName}");
+            AssertRealAssetUnplacedObjectCount(
+                reloadedAfterUpdate.Document,
+                expectedUpdatedUnplacedObjectCount,
+                $"reloaded updated real asset placement snapshot should preserve unplaced-object counts");
+            Expect(reloadedAfterUpdate.Document.CommandUndoAvailable,
+                $"reloaded updated real asset placement snapshot should keep undo available for {sourcePath}");
+
+            var undoResult = CopperfinStudioSnapshotClient.TryUndoCommand(assetPath);
+            Expect(undoResult.Success && undoResult.Document is not null,
+                $"real asset placement smoke should undo {propertyName} for {sourcePath}");
+            if (!undoResult.Success || undoResult.Document is null)
+            {
+                return;
+            }
+
+            var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null,
+                $"real asset placement smoke should reload undone snapshot data for {sourcePath}");
+            if (!reloadedAfterUndo.Success || reloadedAfterUndo.Document is null)
+            {
+                return;
+            }
+
+            AssertRealAssetRoundTripSnapshot(
+                reloadedAfterUndo.Document,
+                recordIndex,
+                propertyName,
+                originalValue,
+                expectedObjectTitle,
+                initialSectionTitle,
+                expectedSectionCount,
+                expectLabel,
+                expectUnplacedObject: true,
+                $"reloaded undone real asset placement snapshot should preserve {propertyName}");
+            AssertRealAssetUnplacedObjectCount(
+                reloadedAfterUndo.Document,
+                expectedOriginalUnplacedObjectCount,
+                $"reloaded undone real asset placement snapshot should preserve unplaced-object counts");
+            Expect(!reloadedAfterUndo.Document.CommandUndoAvailable,
+                $"real asset placement smoke should clear undo after restoring {propertyName} for {sourcePath}");
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeAssetEditorPropertyGridRoundTripWithRealAsset(
         string? sourcePath,
         int recordIndex,
@@ -7129,6 +7317,242 @@ internal static class Program
                     expectLabel,
                     expectUnplacedObject,
                     $"reloaded undone editor real asset snapshot should preserve {propertyName}");
+            }
+
+            TearDownForm(hostForm);
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
+    private static void SmokeAssetEditorPlacementRoundTripWithRealAsset(
+        string? sourcePath,
+        int recordIndex,
+        string initialSectionTitle,
+        string updatedSectionTitle,
+        int updatedSectionRecordIndex,
+        string propertyName,
+        object updatedPropertyValue,
+        string? expectedOriginalSelectionValue,
+        string expectedUpdatedSelectionValue,
+        string expectedUpdatedRawValue,
+        string expectedOriginalRawValue,
+        string expectedObjectTitle,
+        int expectedSectionCount,
+        bool expectLabel,
+        int expectedOriginalUnplacedObjectCount,
+        int expectedUpdatedUnplacedObjectCount)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(sourcePath) ? "real asset editor placement candidate" : sourcePath)} not found.");
+            return;
+        }
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmokeRealAssetEditorPlacements-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateWritableAssetCopy(sourcePath!, tempRoot);
+
+        try
+        {
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+            control.LoadDocument(assetPath);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface for the real placement smoke.");
+
+            var loaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => sectionListView.Items.Count > 0);
+            Expect(loaded, $"real asset editor placement smoke should load section data for {sourcePath}");
+            if (!loaded)
+            {
+                return;
+            }
+
+            foreach (ListViewItem item in sectionListView.Items)
+            {
+                item.Selected = string.Equals(item.Text, initialSectionTitle, StringComparison.OrdinalIgnoreCase);
+            }
+
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            Application.DoEvents();
+
+            var objectLoaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => objectListView.Items.Cast<ListViewItem>()
+                    .Any(item => item.Tag is CopperfinStudioSnapshotObject snapshotObject &&
+                                 snapshotObject.RecordIndex == recordIndex));
+            Expect(objectLoaded, $"real asset editor placement smoke should surface object {recordIndex} for {sourcePath}");
+            if (!objectLoaded)
+            {
+                return;
+            }
+
+            foreach (ListViewItem item in objectListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioSnapshotObject snapshotObject &&
+                                snapshotObject.RecordIndex == recordIndex;
+            }
+
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == recordIndex,
+                $"real asset editor placement smoke should start from an object-rooted property-grid selection for {sourcePath}");
+
+            if (propertyGrid.SelectedObject is not CopperfinDesignerSelection objectSelection)
+            {
+                return;
+            }
+
+            var initialSelectionValue = TypeDescriptor.GetProperties(objectSelection)[propertyName]?.GetValue(objectSelection)?.ToString() ?? string.Empty;
+            var expectedUndoSelectionValue = expectedOriginalSelectionValue ?? initialSelectionValue;
+            if (expectedOriginalSelectionValue is not null)
+            {
+                Expect(string.Equals(initialSelectionValue, expectedOriginalSelectionValue, StringComparison.Ordinal),
+                    $"real asset editor placement smoke should expose original property-grid value {propertyName} for {sourcePath}");
+            }
+
+            TypeDescriptor.GetProperties(objectSelection)[propertyName]?.SetValue(objectSelection, updatedPropertyValue);
+            InvokeAssetEditorVoid(control, "ApplyPropertyGridChange", propertyName, 0);
+            Application.DoEvents();
+
+            var updatedSelection = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
+                {
+                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                        refreshedSelection.RecordIndex != recordIndex)
+                    {
+                        return false;
+                    }
+
+                    var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text;
+                    var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
+                    var propertyValue = TypeDescriptor.GetProperties(refreshedSelection)[propertyName]?.GetValue(refreshedSelection)?.ToString();
+                    return string.Equals(selectedSection, updatedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                           selectedObject?.RecordIndex == recordIndex &&
+                           string.Equals(ReadPrivateStringField(surface, "assetFamily"), "report", StringComparison.Ordinal) &&
+                           ReadPrivateNullableInt(surface, "selectedRecordIndex") == recordIndex &&
+                           ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == updatedSectionRecordIndex &&
+                           !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected") &&
+                           HasLabelTextContaining(control, $"Unplaced objects: {expectedUpdatedUnplacedObjectCount}") &&
+                           string.Equals(propertyValue, expectedUpdatedSelectionValue, StringComparison.Ordinal);
+                });
+            Expect(updatedSelection,
+                $"real asset editor placement smoke should preserve section/object continuity after editing {propertyName} for {sourcePath}");
+
+            Expect(control.CanHandleUndoCommand(),
+                $"real asset editor placement smoke should expose undo after editing {propertyName} for {sourcePath}");
+
+            var reloadedAfterUpdate = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterUpdate.Success && reloadedAfterUpdate.Document is not null,
+                $"real asset editor placement smoke should reload updated on-disk state for {sourcePath}");
+            if (reloadedAfterUpdate.Success && reloadedAfterUpdate.Document is not null)
+            {
+                AssertRealAssetRoundTripSnapshot(
+                    reloadedAfterUpdate.Document,
+                    recordIndex,
+                    propertyName,
+                    expectedUpdatedRawValue,
+                    expectedObjectTitle,
+                    updatedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectUnplacedObject: false,
+                    $"reloaded edited real asset placement snapshot should preserve {propertyName}");
+                AssertRealAssetUnplacedObjectCount(
+                    reloadedAfterUpdate.Document,
+                    expectedUpdatedUnplacedObjectCount,
+                    $"reloaded edited real asset placement snapshot should preserve unplaced-object counts");
+            }
+
+            var undoHandled = control.TryHandleUndoCommand();
+            Expect(undoHandled,
+                $"real asset editor placement smoke should execute undo after editing {propertyName} for {sourcePath}");
+            Application.DoEvents();
+
+            var undoneSelection = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
+                {
+                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                        refreshedSelection.RecordIndex != recordIndex)
+                    {
+                        return false;
+                    }
+
+                    var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text;
+                    var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
+                    var propertyValue = TypeDescriptor.GetProperties(refreshedSelection)[propertyName]?.GetValue(refreshedSelection)?.ToString();
+                    return string.Equals(selectedSection, initialSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                           selectedObject?.RecordIndex == recordIndex &&
+                           string.Equals(ReadPrivateStringField(surface, "assetFamily"), "report", StringComparison.Ordinal) &&
+                           ReadPrivateNullableInt(surface, "selectedRecordIndex") == recordIndex &&
+                           ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") is null &&
+                           ReadPrivateBoolField(surface, "unplacedReportObjectsSelected") &&
+                           HasLabelTextContaining(control, $"Unplaced objects: {expectedOriginalUnplacedObjectCount}") &&
+                           string.Equals(propertyValue, expectedUndoSelectionValue, StringComparison.Ordinal);
+                });
+            Expect(undoneSelection,
+                $"real asset editor placement smoke should preserve section/object continuity after undoing {propertyName} for {sourcePath}");
+            Expect(!control.CanHandleUndoCommand(),
+                $"real asset editor placement smoke should clear undo after restoring {propertyName} for {sourcePath}");
+
+            var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null,
+                $"real asset editor placement smoke should reload restored on-disk state for {sourcePath}");
+            if (reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null)
+            {
+                AssertRealAssetRoundTripSnapshot(
+                    reloadedAfterUndo.Document,
+                    recordIndex,
+                    propertyName,
+                    expectedOriginalRawValue,
+                    expectedObjectTitle,
+                    initialSectionTitle,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectUnplacedObject: true,
+                    $"reloaded undone editor real asset placement snapshot should preserve {propertyName}");
+                AssertRealAssetUnplacedObjectCount(
+                    reloadedAfterUndo.Document,
+                    expectedOriginalUnplacedObjectCount,
+                    $"reloaded undone editor real asset placement snapshot should preserve unplaced-object counts");
             }
 
             TearDownForm(hostForm);
@@ -7478,6 +7902,22 @@ internal static class Program
 
         Expect(string.Equals(property.Value, expectedPropertyValue, StringComparison.Ordinal),
             $"{failurePrefix} for {document.Path} should expose {propertyName}={expectedPropertyValue}");
+    }
+
+    private static void AssertRealAssetUnplacedObjectCount(
+        CopperfinStudioSnapshotDocument document,
+        int expectedUnplacedObjectCount,
+        string failurePrefix)
+    {
+        Expect(document.ReportLayout is not null,
+            $"{failurePrefix} for {document.Path} should include a report layout");
+        if (document.ReportLayout is null)
+        {
+            return;
+        }
+
+        Expect(document.ReportLayout.UnplacedObjects.Count == expectedUnplacedObjectCount,
+            $"{failurePrefix} for {document.Path} should expose {expectedUnplacedObjectCount} unplaced objects");
     }
 
     private static string CreateWritableAssetCopy(string sourcePath, string tempRoot)
