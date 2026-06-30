@@ -148,16 +148,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_defaults_missing_report_section_objcode_schema(argv[1]);
     test_studio_host_json_defaults_missing_report_object_objcode_schema(argv[1]);
     test_studio_host_json_preserves_report_settings_without_root_objcode_schema(argv[1]);
-    test_studio_host_json_suppresses_unresolved_report_direct_setting_memo_placeholders(argv[1]);
-    test_studio_host_json_preserves_mixed_report_direct_setting_memo_placeholders(argv[1]);
-    test_studio_host_json_ignores_invalid_report_setting_memo_values(argv[1]);
-    test_studio_host_json_preserves_fractional_report_setting_memo_values(argv[1]);
-    test_studio_host_json_ignores_blank_report_setting_memo_values(argv[1]);
-    test_studio_host_json_ignores_malformed_report_setting_memo_lines(argv[1]);
-    test_studio_host_json_preserves_duplicate_report_setting_precedence(argv[1]);
-    test_studio_host_json_preserves_invalid_first_duplicate_report_setting_precedence(argv[1]);
-    test_studio_host_json_parses_cr_only_report_setting_memo_lines(argv[1]);
-    test_studio_host_json_parses_mixed_case_report_setting_memo_names(argv[1]);
     test_studio_host_json_suppresses_unresolved_report_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_report_section_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_deleted_report_object_memo_placeholders(argv[1]);

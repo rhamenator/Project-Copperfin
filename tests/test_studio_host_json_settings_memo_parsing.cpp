@@ -276,6 +276,7 @@ void write_synthetic_report_table_for_mixed_case_setting_memo_layout_json(
     expect(delete_result.ok, "#1757: synthetic report table should mark mixed-case memo settings deleted");
 }
 
+#if !defined(COPPERFIN_REPORT_SETTINGS_MEMO_PARSING_SKIP_HOST_SMOKE)
 void test_studio_host_json_suppresses_unresolved_report_direct_setting_memo_placeholders(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -1571,5 +1572,6 @@ void test_studio_host_json_parses_mixed_case_report_setting_memo_names(
         fs::remove_all(temp_root, ignored);
     }
 }
+#endif
 
 }  // namespace cf_test_studio_host_json
