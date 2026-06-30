@@ -21,9 +21,11 @@ internal sealed class CopperfinDesignSurfaceControl : Control
     private sealed class ReportSectionVisual
     {
         public string Title { get; set; } = string.Empty;
+        public string HeaderTitle { get; set; } = string.Empty;
         public string BandKind { get; set; } = string.Empty;
         public int Top { get; set; }
         public int Height { get; set; }
+        public int DeletedObjectCount { get; set; }
         public Rectangle PixelBounds { get; set; }
         public Rectangle HeaderBounds { get; set; }
         public List<SurfaceObject> Objects { get; } = new();
@@ -31,6 +33,7 @@ internal sealed class CopperfinDesignSurfaceControl : Control
 
     private readonly List<SurfaceObject> objects = new();
     private readonly List<ReportSectionVisual> reportSections = new();
+    private readonly List<SurfaceObject> unplacedReportObjects = new();
     private string assetFamily = string.Empty;
     private int? selectedRecordIndex;
     private int? dragRecordIndex;
@@ -53,6 +56,7 @@ internal sealed class CopperfinDesignSurfaceControl : Control
         this.assetFamily = assetFamily ?? string.Empty;
         reportLayout = null;
         reportSections.Clear();
+        unplacedReportObjects.Clear();
         objects.Clear();
         foreach (var snapshotObject in snapshotObjects)
         {
@@ -78,6 +82,7 @@ internal sealed class CopperfinDesignSurfaceControl : Control
         assetFamily = layout.IsLabel ? "label" : "report";
         reportLayout = layout;
         reportSections.Clear();
+        unplacedReportObjects.Clear();
         objects.Clear();
 
         var lookup = snapshotObjects.ToDictionary(item => item.RecordIndex);
@@ -86,9 +91,11 @@ internal sealed class CopperfinDesignSurfaceControl : Control
             var visual = new ReportSectionVisual
             {
                 Title = section.Title,
+                HeaderTitle = BuildReportSectionHeaderTitle(section.Title, section.DeletedObjectCount),
                 BandKind = section.BandKind,
                 Top = section.Top,
-                Height = Math.Max(400, section.Height)
+                Height = Math.Max(400, section.Height),
+                DeletedObjectCount = section.DeletedObjectCount
             };
 
             foreach (var layoutObject in section.Objects)
@@ -121,6 +128,33 @@ internal sealed class CopperfinDesignSurfaceControl : Control
             reportSections.Add(visual);
         }
 
+        foreach (var layoutObject in layout.UnplacedObjects)
+        {
+            if (!lookup.TryGetValue(layoutObject.RecordIndex, out var snapshotObject))
+            {
+                continue;
+            }
+
+            var bounds = new RectangleF(
+                layoutObject.Left,
+                layoutObject.Top,
+                Math.Max(120, layoutObject.Width),
+                Math.Max(120, layoutObject.Height));
+
+            var surfaceObject = new SurfaceObject
+            {
+                Source = snapshotObject,
+                Bounds = bounds,
+                PixelBounds = Rectangle.Empty,
+                Caption = string.IsNullOrWhiteSpace(layoutObject.Title)
+                    ? ExtractCaption(assetFamily, snapshotObject)
+                    : layoutObject.Title
+            };
+
+            unplacedReportObjects.Add(surfaceObject);
+            objects.Add(surfaceObject);
+        }
+
         Invalidate();
     }
 
@@ -137,7 +171,7 @@ internal sealed class CopperfinDesignSurfaceControl : Control
         e.Graphics.Clear(BackColor);
         e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
-        if (reportLayout is not null && reportSections.Count > 0)
+        if (reportLayout is not null && (reportSections.Count > 0 || unplacedReportObjects.Count > 0))
         {
             PaintReportLayout(e);
             return;
@@ -276,14 +310,25 @@ internal sealed class CopperfinDesignSurfaceControl : Control
         const int sectionSpacing = 12;
         const int sectionInnerPadding = 12;
         const int leftGutter = 32;
+        const int unplacedMinimumHeight = 64;
 
         var maxRight = reportSections
             .SelectMany(section => section.Objects)
             .Select(item => item.Bounds.Right)
+            .Concat(unplacedReportObjects.Select(item => item.Bounds.Right))
             .DefaultIfEmpty(40000.0F)
             .Max();
+        var unplacedLogicalTop = unplacedReportObjects.Count == 0
+            ? 0
+            : unplacedReportObjects.Min(item => item.Bounds.Top);
+        var unplacedLogicalHeight = unplacedReportObjects.Count == 0
+            ? 0
+            : Math.Max(
+                unplacedMinimumHeight,
+                (int)Math.Round(unplacedReportObjects.Max(item => item.Bounds.Bottom) - unplacedLogicalTop));
         var totalSectionHeight = reportSections.Sum(section => Math.Max(400, section.Height)) +
-                                 (reportSections.Count * (headerHeight + sectionSpacing + sectionInnerPadding * 2));
+                                 (reportSections.Count * (headerHeight + sectionSpacing + sectionInnerPadding * 2)) +
+                                 (unplacedReportObjects.Count == 0 ? 0 : headerHeight + sectionSpacing + sectionInnerPadding * 2 + unplacedLogicalHeight);
 
         var availableWidth = Math.Max(400, Width - (outerPadding * 2) - leftGutter);
         var availableHeight = Math.Max(200, Height - (outerPadding * 2));
@@ -319,7 +364,7 @@ internal sealed class CopperfinDesignSurfaceControl : Control
             e.Graphics.FillRectangle(sectionHeaderFill, headerBounds);
             e.Graphics.DrawRectangle(sectionBorder, headerBounds);
 
-            e.Graphics.DrawString(section.Title, Font, sectionHeaderText, headerBounds.X + 10, headerBounds.Y + 6);
+            e.Graphics.DrawString(section.HeaderTitle, Font, sectionHeaderText, headerBounds.X + 10, headerBounds.Y + 6);
             using (var smallFont = new Font(Font.FontFamily, Math.Max(8.0F, Font.Size - 1.0F), FontStyle.Regular))
             {
                 e.Graphics.DrawString(
@@ -345,6 +390,42 @@ internal sealed class CopperfinDesignSurfaceControl : Control
             using var gutterBrush = new SolidBrush(Color.FromArgb(118, 128, 142));
             e.Graphics.DrawString($"{sectionIndex + 1}", Font, gutterBrush, outerPadding + 6, currentY + 6);
             currentY += sectionBounds.Height + sectionSpacing;
+        }
+
+        if (unplacedReportObjects.Count == 0)
+        {
+            return;
+        }
+
+        var unplacedScaledHeight = Math.Max(unplacedMinimumHeight, (int)Math.Round(unplacedLogicalHeight * scale));
+        var unplacedBounds = new Rectangle(
+            outerPadding + leftGutter,
+            currentY,
+            Math.Max(180, (int)Math.Round(maxRight * scale)),
+            headerHeight + (sectionInnerPadding * 2) + unplacedScaledHeight);
+        var unplacedHeaderBounds = new Rectangle(unplacedBounds.X, unplacedBounds.Y, unplacedBounds.Width, headerHeight);
+
+        e.Graphics.FillRectangle(sectionFill, unplacedBounds);
+        e.Graphics.DrawRectangle(sectionBorder, unplacedBounds);
+        e.Graphics.FillRectangle(sectionHeaderFill, unplacedHeaderBounds);
+        e.Graphics.DrawRectangle(sectionBorder, unplacedHeaderBounds);
+        e.Graphics.DrawString(
+            BuildUnplacedTrayTitle(unplacedReportObjects.Count),
+            Font,
+            sectionHeaderText,
+            unplacedHeaderBounds.X + 10,
+            unplacedHeaderBounds.Y + 6);
+
+        var unplacedBodyTop = unplacedHeaderBounds.Bottom + sectionInnerPadding;
+        foreach (var item in unplacedReportObjects)
+        {
+            var relativeTop = Math.Max(0, item.Bounds.Top - unplacedLogicalTop);
+            item.PixelBounds = new Rectangle(
+                unplacedBounds.X + 12 + (int)Math.Round(item.Bounds.Left * scale),
+                unplacedBodyTop + (int)Math.Round(relativeTop * scale),
+                Math.Max(30, (int)Math.Round(item.Bounds.Width * scale)),
+                Math.Max(18, (int)Math.Round(item.Bounds.Height * scale)));
+            DrawSurfaceObject(e.Graphics, item, selectedRecordIndex == item.Source.RecordIndex, assetFamily);
         }
     }
 
@@ -395,7 +476,7 @@ internal sealed class CopperfinDesignSurfaceControl : Control
 
     private float CalculateReportScale()
     {
-        if (reportSections.Count == 0)
+        if (reportSections.Count == 0 && unplacedReportObjects.Count == 0)
         {
             return 1.0F;
         }
@@ -405,19 +486,48 @@ internal sealed class CopperfinDesignSurfaceControl : Control
         const int headerHeight = 28;
         const int sectionSpacing = 12;
         const int sectionInnerPadding = 12;
+        const int unplacedMinimumHeight = 64;
 
         var maxRight = reportSections
             .SelectMany(section => section.Objects)
             .Select(item => item.Bounds.Right)
+            .Concat(unplacedReportObjects.Select(item => item.Bounds.Right))
             .DefaultIfEmpty(40000.0F)
             .Max();
+        var unplacedLogicalTop = unplacedReportObjects.Count == 0
+            ? 0
+            : unplacedReportObjects.Min(item => item.Bounds.Top);
+        var unplacedLogicalHeight = unplacedReportObjects.Count == 0
+            ? 0
+            : Math.Max(
+                unplacedMinimumHeight,
+                (int)Math.Round(unplacedReportObjects.Max(item => item.Bounds.Bottom) - unplacedLogicalTop));
         var totalSectionHeight = reportSections.Sum(section => Math.Max(400, section.Height)) +
-                                 (reportSections.Count * (headerHeight + sectionSpacing + sectionInnerPadding * 2));
+                                 (reportSections.Count * (headerHeight + sectionSpacing + sectionInnerPadding * 2)) +
+                                 (unplacedReportObjects.Count == 0 ? 0 : headerHeight + sectionSpacing + sectionInnerPadding * 2 + unplacedLogicalHeight);
         var availableWidth = Math.Max(400, Width - (outerPadding * 2) - leftGutter);
         var availableHeight = Math.Max(200, Height - (outerPadding * 2));
         var scaleX = availableWidth / Math.Max(1.0F, maxRight);
         var scaleY = availableHeight / Math.Max(1.0F, totalSectionHeight);
         return Math.Max(0.12F, Math.Min(scaleX, scaleY));
+    }
+
+    private string BuildReportSectionHeaderTitle(string title, int deletedObjectCount)
+    {
+        if (deletedObjectCount <= 0)
+        {
+            return title;
+        }
+
+        return this.localization.Format(
+            "AssetEditor.DesignSurface.ReportSectionDeletedObjects",
+            title,
+            deletedObjectCount);
+    }
+
+    private string BuildUnplacedTrayTitle(int count)
+    {
+        return this.localization.Format("AssetEditor.DesignSurface.UnplacedObjects", count);
     }
 
     private RectangleF CalculateLogicalBounds()

@@ -20,6 +20,7 @@ internal static class Program
         Application.SetCompatibleTextRenderingDefault(false);
 
         SmokeDesignSurfaceWithSyntheticReportLayout();
+        SmokeLocalizedReportDesignSurfaceContext();
         SmokeLocalizedAssetEditorChrome();
         SmokePseudoLocalizedAssetEditorChrome();
         SmokeLocalizedHostModeSubtitles();
@@ -78,6 +79,19 @@ internal static class Program
                     new() { Name = "HEIGHT", Value = "500" },
                     new() { Name = "EXPR", Value = "customer.company" }
                 }
+            },
+            new CopperfinStudioSnapshotObject
+            {
+                RecordIndex = 9,
+                Title = "orphan.note",
+                Properties = new List<CopperfinStudioSnapshotProperty>
+                {
+                    new() { Name = "HPOS", Value = "800" },
+                    new() { Name = "VPOS", Value = "700" },
+                    new() { Name = "WIDTH", Value = "2400" },
+                    new() { Name = "HEIGHT", Value = "450" },
+                    new() { Name = "EXPR", Value = "orphan.note" }
+                }
             }
         };
 
@@ -93,6 +107,7 @@ internal static class Program
                     RecordIndex = 1,
                     Top = 2000,
                     Height = 5000,
+                    DeletedObjectCount = 2,
                     Objects = new List<CopperfinStudioReportLayoutObject>
                     {
                         new()
@@ -108,13 +123,65 @@ internal static class Program
                         }
                     }
                 }
+            },
+            UnplacedObjects = new List<CopperfinStudioReportLayoutObject>
+            {
+                new()
+                {
+                    RecordIndex = 9,
+                    ObjectKind = "field",
+                    Title = "orphan.note",
+                    Expression = "orphan.note",
+                    Left = 800,
+                    Top = 700,
+                    Width = 2400,
+                    Height = 450
+                }
             }
         };
 
         surface.LoadReportLayout(layout, objects);
+        var surfaceObjects = ReadPrivateListCount(surface, "objects");
+        Expect(surfaceObjects == 2, "synthetic report layout should load placed and unplaced objects into the shared surface");
+        Expect(ReadReportSectionProperty(surface, 0, "DeletedObjectCount") == 2,
+            "synthetic report layout should preserve per-section deleted-object counts on the shared surface");
+        Expect(string.Equals(ReadReportSectionPropertyText(surface, 0, "HeaderTitle"), "Detail (2 deleted objects)", StringComparison.Ordinal),
+            "synthetic report layout should surface deleted-object counts in shared section headers");
         using var bitmap = new Bitmap(surface.Width, surface.Height);
         surface.DrawToBitmap(bitmap, new Rectangle(0, 0, bitmap.Width, bitmap.Height));
         Expect(CountNonWhitePixels(bitmap) > 5000, "synthetic report layout should render visible UI content");
+    }
+
+    private static void SmokeLocalizedReportDesignSurfaceContext()
+    {
+        using var spanishSurface = new CopperfinDesignSurfaceControl(new CopperfinLocalization("es-419"));
+        Expect(string.Equals(
+                InvokeDesignSurfaceString(spanishSurface, "BuildReportSectionHeaderTitle", "Detalle", 2),
+                "Detalle (2 objetos eliminados)",
+                StringComparison.Ordinal) &&
+               string.Equals(
+                   InvokeDesignSurfaceString(spanishSurface, "BuildUnplacedTrayTitle", 1),
+                   "Objetos sin sección (1)",
+                   StringComparison.Ordinal),
+            "Spanish design-surface report context should localize deleted-object and unplaced-object titles");
+
+        using var portugueseSurface = new CopperfinDesignSurfaceControl(new CopperfinLocalization("pt-BR"));
+        Expect(string.Equals(
+                InvokeDesignSurfaceString(portugueseSurface, "BuildReportSectionHeaderTitle", "Detalhe", 2),
+                "Detalhe (2 objetos excluídos)",
+                StringComparison.Ordinal) &&
+               string.Equals(
+                   InvokeDesignSurfaceString(portugueseSurface, "BuildUnplacedTrayTitle", 1),
+                   "Objetos sem seção (1)",
+                   StringComparison.Ordinal),
+            "Portuguese design-surface report context should localize deleted-object and unplaced-object titles");
+
+        var pseudoLocalization = new CopperfinLocalization("qps-ploc");
+        using var pseudoSurface = new CopperfinDesignSurfaceControl(pseudoLocalization);
+        Expect(
+            InvokeDesignSurfaceString(pseudoSurface, "BuildReportSectionHeaderTitle", "Detail", 2).StartsWith("[!! ", StringComparison.Ordinal) &&
+            InvokeDesignSurfaceString(pseudoSurface, "BuildUnplacedTrayTitle", 1).StartsWith("[!! ", StringComparison.Ordinal),
+            "Pseudo-localized design-surface report context should route new titles through the shared catalog");
     }
 
     private static void SmokeLocalizedAssetEditorChrome()
@@ -865,6 +932,63 @@ internal static class Program
         }
 
         return (string)(method.Invoke(control, args) ?? string.Empty);
+    }
+
+    private static string InvokeDesignSurfaceString(CopperfinDesignSurfaceControl surface, string methodName, params object[] args)
+    {
+        var method = typeof(CopperfinDesignSurfaceControl).GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic);
+        if (method is null)
+        {
+            throw new InvalidOperationException($"Could not find CopperfinDesignSurfaceControl smoke hook {methodName}.");
+        }
+
+        return (string)(method.Invoke(surface, args) ?? string.Empty);
+    }
+
+    private static int ReadPrivateListCount(object instance, string fieldName)
+    {
+        var field = instance.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+        if (field?.GetValue(instance) is not System.Collections.ICollection collection)
+        {
+            throw new InvalidOperationException($"Could not read private list field {fieldName}.");
+        }
+
+        return collection.Count;
+    }
+
+    private static int ReadReportSectionProperty(CopperfinDesignSurfaceControl surface, int index, string propertyName)
+    {
+        var section = ReadReportSectionVisual(surface, index);
+        var property = section.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        if (property?.GetValue(section) is not int value)
+        {
+            throw new InvalidOperationException($"Could not read report-section property {propertyName}.");
+        }
+
+        return value;
+    }
+
+    private static string ReadReportSectionPropertyText(CopperfinDesignSurfaceControl surface, int index, string propertyName)
+    {
+        var section = ReadReportSectionVisual(surface, index);
+        var property = section.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        if (property?.GetValue(section) is not string value)
+        {
+            throw new InvalidOperationException($"Could not read report-section text property {propertyName}.");
+        }
+
+        return value;
+    }
+
+    private static object ReadReportSectionVisual(CopperfinDesignSurfaceControl surface, int index)
+    {
+        var field = typeof(CopperfinDesignSurfaceControl).GetField("reportSections", BindingFlags.Instance | BindingFlags.NonPublic);
+        if (field?.GetValue(surface) is not System.Collections.IList sections || sections.Count <= index)
+        {
+            throw new InvalidOperationException("Could not read shared report-section visuals.");
+        }
+
+        return sections[index]!;
     }
 
     private static CopperfinDesignSurfaceControl? FindDesignSurface(Control root)
