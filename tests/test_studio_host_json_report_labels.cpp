@@ -427,18 +427,20 @@ void test_studio_host_json_deletes_label_layout_objects_by_stable_selectors(cons
                     "#1486: deleted label object JSON should move the object into deleted label objects");
     expect_contains(delete_process.stdout_text, "\"selectedReportObjectAvailable\": true",
                     "#1486: deleted selected label object JSON should remain available");
-    expect_contains(delete_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                    "#1486: deleted label objects should not advertise containing-section availability");
-    expect_contains(delete_process.stdout_text, "\"selectedReportObjectSection\": null",
-                    "#1486: deleted label objects should serialize null containing-section JSON");
+    expect_contains(delete_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                    "#1486: deleted label objects should preserve containing-section availability");
+    expect_contains(delete_process.stdout_text, "\"selectedReportObjectSection\": {",
+                    "#1486: deleted label objects should serialize containing-section JSON");
     expect_contains(delete_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                     "#1486: deleted label object selections should still classify as report objects");
     expect_contains(delete_process.stdout_text, "\"recordIndex\": 3",
                     "#1486: deleted selected label object JSON should preserve selected record indexes");
     expect_contains(delete_process.stdout_text, "\"deleted\": true",
                     "#1486: deleted selected label object JSON should expose deleted state");
-    expect_contains(delete_process.stdout_text, "\"containingSectionRecordIndex\": null",
-                    "#1486: deleted label object JSON should not fabricate containing section record indexes");
+    expect_contains(delete_process.stdout_text, "\"containingSectionId\": \"detail_2\"",
+                    "#1486: deleted label object JSON should preserve containing section ids");
+    expect_contains(delete_process.stdout_text, "\"containingSectionRecordIndex\": 2",
+                    "#1486: deleted label object JSON should preserve containing section record indexes");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);

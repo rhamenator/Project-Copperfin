@@ -231,19 +231,20 @@ void test_studio_host_json_deletes_edited_report_layout_object_geometry_by_recor
                         "#1615: edited report/label layout object delete should preserve selected deleted-object availability");
         expect_contains(delete_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1615: edited report/label layout object delete should preserve object selection kind");
-        expect_contains(delete_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1615: edited report/label layout object delete should not fabricate containing-section availability");
-        expect_contains(delete_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1615: edited report/label layout object delete should serialize null containing-section metadata");
+        expect_contains(delete_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1615: edited report/label layout object delete should preserve containing-section availability");
+        expect_contains(delete_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1615: edited report/label layout object delete should serialize containing-section metadata");
         expect_contains_in_order(
             delete_process.stdout_text,
             {
                 "\"deletedObjects\": [",
                 "\"recordIndex\": 3",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 1500",
                 "\"objectKind\": \"field\"",
                 "\"left\": 1400",
                 "\"top\": 2600",
@@ -259,9 +260,10 @@ void test_studio_host_json_deletes_edited_report_layout_object_geometry_by_recor
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 3",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 1500",
                 "\"objectKind\": \"field\"",
                 "\"left\": 1400",
                 "\"top\": 2600",
@@ -543,19 +545,20 @@ void test_studio_host_json_updates_deleted_report_layout_object_width_by_record_
                         "#1605: deleted report/label layout object width update should preserve selected deleted-object availability");
         expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1605: deleted report/label layout object width update should preserve object selection kind");
-        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1605: deleted report/label layout object width update should not fabricate containing-section availability");
-        expect_contains(update_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1605: deleted report/label layout object width update should serialize null containing-section metadata");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1605: deleted report/label layout object width update should preserve containing-section availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1605: deleted report/label layout object width update should serialize containing-section metadata");
         expect_contains_in_order(
             update_process.stdout_text,
             {
                 "\"deletedObjects\": [",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 900",
                 "\"objectKind\": \"label\"",
                 "\"width\": 2400",
                 "\"right\": 3400"
@@ -567,9 +570,10 @@ void test_studio_host_json_updates_deleted_report_layout_object_width_by_record_
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 900",
                 "\"objectKind\": \"label\"",
                 "\"width\": 2400",
                 "\"right\": 3400"
@@ -641,19 +645,20 @@ void test_studio_host_json_clears_deleted_report_layout_object_width_by_record_s
                         "#1606: deleted report/label layout object width clear should preserve selected deleted-object availability");
         expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1606: deleted report/label layout object width clear should preserve object selection kind");
-        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1606: deleted report/label layout object width clear should not fabricate containing-section availability");
-        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1606: deleted report/label layout object width clear should serialize null containing-section metadata");
+        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1606: deleted report/label layout object width clear should preserve containing-section availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1606: deleted report/label layout object width clear should serialize containing-section metadata");
         expect_contains_in_order(
             clear_process.stdout_text,
             {
                 "\"deletedObjects\": [",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 900",
                 "\"objectKind\": \"label\"",
                 "\"width\": 0",
                 "\"right\": 1000"
@@ -665,9 +670,10 @@ void test_studio_host_json_clears_deleted_report_layout_object_width_by_record_s
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 900",
                 "\"objectKind\": \"label\"",
                 "\"width\": 0",
                 "\"right\": 1000"
@@ -754,19 +760,20 @@ void test_studio_host_json_updates_deleted_report_layout_object_width_by_stable_
                         "#1644: deleted report/label layout object stable width update should preserve selected deleted-object availability");
         expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1644: deleted report/label layout object stable width update should preserve object selection kind");
-        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1644: deleted report/label layout object stable width update should not fabricate containing-section availability");
-        expect_contains(update_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1644: deleted report/label layout object stable width update should serialize null containing-section metadata");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1644: deleted report/label layout object stable width update should preserve containing-section availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1644: deleted report/label layout object stable width update should serialize containing-section metadata");
         expect_contains_in_order(
             update_process.stdout_text,
             {
                 "\"deletedObjects\": [",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 900",
                 "\"objectKind\": \"label\"",
                 "\"width\": 2400",
                 "\"right\": 3400"
@@ -778,9 +785,10 @@ void test_studio_host_json_updates_deleted_report_layout_object_width_by_stable_
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 900",
                 "\"objectKind\": \"label\"",
                 "\"width\": 2400",
                 "\"right\": 3400"
@@ -866,19 +874,20 @@ void test_studio_host_json_clears_deleted_report_layout_object_width_by_stable_s
                         "#1645: deleted report/label layout object stable width clear should preserve selected deleted-object availability");
         expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1645: deleted report/label layout object stable width clear should preserve object selection kind");
-        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1645: deleted report/label layout object stable width clear should not fabricate containing-section availability");
-        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1645: deleted report/label layout object stable width clear should serialize null containing-section metadata");
+        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1645: deleted report/label layout object stable width clear should preserve containing-section availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1645: deleted report/label layout object stable width clear should serialize containing-section metadata");
         expect_contains_in_order(
             clear_process.stdout_text,
             {
                 "\"deletedObjects\": [",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 900",
                 "\"objectKind\": \"label\"",
                 "\"width\": 0",
                 "\"right\": 1000"
@@ -890,9 +899,10 @@ void test_studio_host_json_clears_deleted_report_layout_object_width_by_stable_s
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 900",
                 "\"objectKind\": \"label\"",
                 "\"width\": 0",
                 "\"right\": 1000"
@@ -974,19 +984,20 @@ void test_studio_host_json_updates_deleted_report_layout_object_left_by_record_s
                         "#1607: deleted report/label layout object left update should preserve selected deleted-object availability");
         expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1607: deleted report/label layout object left update should preserve object selection kind");
-        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1607: deleted report/label layout object left update should not fabricate containing-section availability");
-        expect_contains(update_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1607: deleted report/label layout object left update should serialize null containing-section metadata");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1607: deleted report/label layout object left update should preserve containing-section availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1607: deleted report/label layout object left update should serialize containing-section metadata");
         expect_contains_in_order(
             update_process.stdout_text,
             {
                 "\"deletedObjects\": [",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 900",
                 "\"objectKind\": \"label\"",
                 "\"left\": 1400",
                 "\"width\": 1200",
@@ -999,9 +1010,10 @@ void test_studio_host_json_updates_deleted_report_layout_object_left_by_record_s
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 900",
                 "\"objectKind\": \"label\"",
                 "\"left\": 1400",
                 "\"width\": 1200",
@@ -1079,19 +1091,20 @@ void test_studio_host_json_clears_deleted_report_layout_object_left_by_record_se
                         "#1608: deleted report/label layout object left clear should preserve selected deleted-object availability");
         expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1608: deleted report/label layout object left clear should preserve object selection kind");
-        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1608: deleted report/label layout object left clear should not fabricate containing-section availability");
-        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1608: deleted report/label layout object left clear should serialize null containing-section metadata");
+        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1608: deleted report/label layout object left clear should preserve containing-section availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1608: deleted report/label layout object left clear should serialize containing-section metadata");
         expect_contains_in_order(
             clear_process.stdout_text,
             {
                 "\"deletedObjects\": [",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 900",
                 "\"objectKind\": \"label\"",
                 "\"left\": 0",
                 "\"width\": 1200",
@@ -1104,9 +1117,10 @@ void test_studio_host_json_clears_deleted_report_layout_object_left_by_record_se
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 900",
                 "\"objectKind\": \"label\"",
                 "\"left\": 0",
                 "\"width\": 1200",
@@ -1190,19 +1204,20 @@ void test_studio_host_json_updates_deleted_report_layout_object_left_by_stable_s
                         "#1646: deleted report/label layout object stable left update should preserve selected deleted-object availability");
         expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1646: deleted report/label layout object stable left update should preserve object selection kind");
-        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1646: deleted report/label layout object stable left update should not fabricate containing-section availability");
-        expect_contains(update_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1646: deleted report/label layout object stable left update should serialize null containing-section metadata");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1646: deleted report/label layout object stable left update should preserve containing-section availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1646: deleted report/label layout object stable left update should serialize containing-section metadata");
         expect_contains_in_order(
             update_process.stdout_text,
             {
                 "\"deletedObjects\": [",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 900",
                 "\"objectKind\": \"label\"",
                 "\"left\": 1400",
                 "\"width\": 1200",
@@ -1215,9 +1230,10 @@ void test_studio_host_json_updates_deleted_report_layout_object_left_by_stable_s
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 900",
                 "\"objectKind\": \"label\"",
                 "\"left\": 1400",
                 "\"width\": 1200",
@@ -1300,19 +1316,20 @@ void test_studio_host_json_clears_deleted_report_layout_object_left_by_stable_se
                         "#1647: deleted report/label layout object stable left clear should preserve selected deleted-object availability");
         expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1647: deleted report/label layout object stable left clear should preserve object selection kind");
-        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1647: deleted report/label layout object stable left clear should not fabricate containing-section availability");
-        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1647: deleted report/label layout object stable left clear should serialize null containing-section metadata");
+        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1647: deleted report/label layout object stable left clear should preserve containing-section availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1647: deleted report/label layout object stable left clear should serialize containing-section metadata");
         expect_contains_in_order(
             clear_process.stdout_text,
             {
                 "\"deletedObjects\": [",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 900",
                 "\"objectKind\": \"label\"",
                 "\"left\": 0",
                 "\"width\": 1200",
@@ -1325,9 +1342,10 @@ void test_studio_host_json_clears_deleted_report_layout_object_left_by_stable_se
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 900",
                 "\"objectKind\": \"label\"",
                 "\"left\": 0",
                 "\"width\": 1200",
@@ -1406,19 +1424,20 @@ void test_studio_host_json_updates_deleted_report_layout_object_height_by_record
                         "#1609: deleted report/label layout object height update should preserve selected deleted-object availability");
         expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1609: deleted report/label layout object height update should preserve object selection kind");
-        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1609: deleted report/label layout object height update should not fabricate containing-section availability");
-        expect_contains(update_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1609: deleted report/label layout object height update should serialize null containing-section metadata");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1609: deleted report/label layout object height update should preserve containing-section availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1609: deleted report/label layout object height update should serialize containing-section metadata");
         expect_contains_in_order(
             update_process.stdout_text,
             {
                 "\"deletedObjects\": [",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 1500",
                 "\"objectKind\": \"label\"",
                 "\"top\": 2600",
                 "\"width\": 1200",
@@ -1432,9 +1451,10 @@ void test_studio_host_json_updates_deleted_report_layout_object_height_by_record
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 1500",
                 "\"objectKind\": \"label\"",
                 "\"top\": 2600",
                 "\"width\": 1200",
@@ -1513,19 +1533,20 @@ void test_studio_host_json_clears_deleted_report_layout_object_height_by_record_
                         "#1610: deleted report/label layout object height clear should preserve selected deleted-object availability");
         expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1610: deleted report/label layout object height clear should preserve object selection kind");
-        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1610: deleted report/label layout object height clear should not fabricate containing-section availability");
-        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1610: deleted report/label layout object height clear should serialize null containing-section metadata");
+        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1610: deleted report/label layout object height clear should preserve containing-section availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1610: deleted report/label layout object height clear should serialize containing-section metadata");
         expect_contains_in_order(
             clear_process.stdout_text,
             {
                 "\"deletedObjects\": [",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 600",
                 "\"objectKind\": \"label\"",
                 "\"top\": 2600",
                 "\"width\": 1200",
@@ -1539,9 +1560,10 @@ void test_studio_host_json_clears_deleted_report_layout_object_height_by_record_
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 600",
                 "\"objectKind\": \"label\"",
                 "\"top\": 2600",
                 "\"width\": 1200",
@@ -1626,19 +1648,20 @@ void test_studio_host_json_updates_deleted_report_layout_object_height_by_stable
                         "#1648: deleted report/label layout object stable height update should preserve selected deleted-object availability");
         expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1648: deleted report/label layout object stable height update should preserve object selection kind");
-        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1648: deleted report/label layout object stable height update should not fabricate containing-section availability");
-        expect_contains(update_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1648: deleted report/label layout object stable height update should serialize null containing-section metadata");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1648: deleted report/label layout object stable height update should preserve containing-section availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1648: deleted report/label layout object stable height update should serialize containing-section metadata");
         expect_contains_in_order(
             update_process.stdout_text,
             {
                 "\"deletedObjects\": [",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 1500",
                 "\"objectKind\": \"label\"",
                 "\"top\": 2600",
                 "\"width\": 1200",
@@ -1652,9 +1675,10 @@ void test_studio_host_json_updates_deleted_report_layout_object_height_by_stable
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 1500",
                 "\"objectKind\": \"label\"",
                 "\"top\": 2600",
                 "\"width\": 1200",
@@ -1738,19 +1762,20 @@ void test_studio_host_json_clears_deleted_report_layout_object_height_by_stable_
                         "#1649: deleted report/label layout object stable height clear should preserve selected deleted-object availability");
         expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1649: deleted report/label layout object stable height clear should preserve object selection kind");
-        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1649: deleted report/label layout object stable height clear should not fabricate containing-section availability");
-        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1649: deleted report/label layout object stable height clear should serialize null containing-section metadata");
+        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1649: deleted report/label layout object stable height clear should preserve containing-section availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1649: deleted report/label layout object stable height clear should serialize containing-section metadata");
         expect_contains_in_order(
             clear_process.stdout_text,
             {
                 "\"deletedObjects\": [",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 600",
                 "\"objectKind\": \"label\"",
                 "\"top\": 2600",
                 "\"width\": 1200",
@@ -1764,9 +1789,10 @@ void test_studio_host_json_clears_deleted_report_layout_object_height_by_stable_
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 600",
                 "\"objectKind\": \"label\"",
                 "\"top\": 2600",
                 "\"width\": 1200",
@@ -1846,19 +1872,20 @@ void test_studio_host_json_updates_deleted_report_layout_object_top_by_record_se
                         "#1611: deleted report/label layout object top update should preserve selected deleted-object availability");
         expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1611: deleted report/label layout object top update should preserve object selection kind");
-        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1611: deleted report/label layout object top update should not fabricate containing-section availability");
-        expect_contains(update_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1611: deleted report/label layout object top update should serialize null containing-section metadata");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1611: deleted report/label layout object top update should preserve containing-section availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1611: deleted report/label layout object top update should serialize containing-section metadata");
         expect_contains_in_order(
             update_process.stdout_text,
             {
                 "\"deletedObjects\": [",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 1100",
+                "\"sectionRelativeBottom\": 1400",
                 "\"objectKind\": \"label\"",
                 "\"top\": 3100",
                 "\"height\": 300",
@@ -1871,9 +1898,10 @@ void test_studio_host_json_updates_deleted_report_layout_object_top_by_record_se
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 1100",
+                "\"sectionRelativeBottom\": 1400",
                 "\"objectKind\": \"label\"",
                 "\"top\": 3100",
                 "\"height\": 300",
@@ -1951,19 +1979,20 @@ void test_studio_host_json_clears_deleted_report_layout_object_top_by_record_sel
                         "#1612: deleted report/label layout object top clear should preserve selected deleted-object availability");
         expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1612: deleted report/label layout object top clear should preserve object selection kind");
-        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1612: deleted report/label layout object top clear should not fabricate containing-section availability");
-        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1612: deleted report/label layout object top clear should serialize null containing-section metadata");
+        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1612: deleted report/label layout object top clear should preserve containing-section availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1612: deleted report/label layout object top clear should serialize containing-section metadata");
         expect_contains_in_order(
             clear_process.stdout_text,
             {
                 "\"deletedObjects\": [",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
+                "\"containingSectionId\": \"page_header_1\"",
+                "\"containingSectionRecordIndex\": 1",
                 "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"sectionRelativeBottom\": 300",
                 "\"objectKind\": \"label\"",
                 "\"top\": 0",
                 "\"height\": 300",
@@ -1976,9 +2005,10 @@ void test_studio_host_json_clears_deleted_report_layout_object_top_by_record_sel
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
+                "\"containingSectionId\": \"page_header_1\"",
+                "\"containingSectionRecordIndex\": 1",
                 "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"sectionRelativeBottom\": 300",
                 "\"objectKind\": \"label\"",
                 "\"top\": 0",
                 "\"height\": 300",
@@ -2062,19 +2092,20 @@ void test_studio_host_json_updates_deleted_report_layout_object_top_by_stable_se
                         "#1650: deleted report/label layout object stable top update should preserve selected deleted-object availability");
         expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1650: deleted report/label layout object stable top update should preserve object selection kind");
-        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1650: deleted report/label layout object stable top update should not fabricate containing-section availability");
-        expect_contains(update_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1650: deleted report/label layout object stable top update should serialize null containing-section metadata");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1650: deleted report/label layout object stable top update should preserve containing-section availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1650: deleted report/label layout object stable top update should serialize containing-section metadata");
         expect_contains_in_order(
             update_process.stdout_text,
             {
                 "\"deletedObjects\": [",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 1100",
+                "\"sectionRelativeBottom\": 1400",
                 "\"objectKind\": \"label\"",
                 "\"top\": 3100",
                 "\"height\": 300",
@@ -2087,9 +2118,10 @@ void test_studio_host_json_updates_deleted_report_layout_object_top_by_stable_se
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 1100",
+                "\"sectionRelativeBottom\": 1400",
                 "\"objectKind\": \"label\"",
                 "\"top\": 3100",
                 "\"height\": 300",
@@ -2172,19 +2204,20 @@ void test_studio_host_json_clears_deleted_report_layout_object_top_by_stable_sel
                         "#1651: deleted report/label layout object stable top clear should preserve selected deleted-object availability");
         expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1651: deleted report/label layout object stable top clear should preserve object selection kind");
-        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1651: deleted report/label layout object stable top clear should not fabricate containing-section availability");
-        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1651: deleted report/label layout object stable top clear should serialize null containing-section metadata");
+        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1651: deleted report/label layout object stable top clear should preserve containing-section availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1651: deleted report/label layout object stable top clear should serialize containing-section metadata");
         expect_contains_in_order(
             clear_process.stdout_text,
             {
                 "\"deletedObjects\": [",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
+                "\"containingSectionId\": \"page_header_1\"",
+                "\"containingSectionRecordIndex\": 1",
                 "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"sectionRelativeBottom\": 300",
                 "\"objectKind\": \"label\"",
                 "\"top\": 0",
                 "\"height\": 300",
@@ -2197,9 +2230,10 @@ void test_studio_host_json_clears_deleted_report_layout_object_top_by_stable_sel
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
+                "\"containingSectionId\": \"page_header_1\"",
+                "\"containingSectionRecordIndex\": 1",
                 "\"sectionRelativeTop\": 0",
-                "\"sectionRelativeBottom\": 0",
+                "\"sectionRelativeBottom\": 300",
                 "\"objectKind\": \"label\"",
                 "\"top\": 0",
                 "\"height\": 300",

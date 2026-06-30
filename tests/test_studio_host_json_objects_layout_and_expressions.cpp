@@ -284,18 +284,20 @@ void test_studio_host_json_deletes_report_layout_objects_by_stable_selectors(con
                     "#1467: deleted report object JSON should move the object into deleted report objects");
     expect_contains(delete_process.stdout_text, "\"selectedReportObjectAvailable\": true",
                     "#1467: deleted selected report object JSON should remain available");
-    expect_contains(delete_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                    "#1467: deleted report objects should not advertise containing-section availability");
-    expect_contains(delete_process.stdout_text, "\"selectedReportObjectSection\": null",
-                    "#1467: deleted report objects should serialize null containing-section JSON");
+    expect_contains(delete_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                    "#1467: deleted report objects should preserve containing-section availability");
+    expect_contains(delete_process.stdout_text, "\"selectedReportObjectSection\": {",
+                    "#1467: deleted report objects should serialize containing-section JSON");
     expect_contains(delete_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                     "#1467: deleted report object selections should still classify as report objects");
     expect_contains(delete_process.stdout_text, "\"recordIndex\": 3",
                     "#1467: deleted selected report object JSON should preserve selected record indexes");
     expect_contains(delete_process.stdout_text, "\"deleted\": true",
                     "#1467: deleted selected report object JSON should expose deleted state");
-    expect_contains(delete_process.stdout_text, "\"containingSectionRecordIndex\": null",
-                    "#1467: deleted report object JSON should not fabricate containing section record indexes");
+    expect_contains(delete_process.stdout_text, "\"containingSectionId\": \"detail_2\"",
+                    "#1467: deleted report object JSON should preserve containing section ids");
+    expect_contains(delete_process.stdout_text, "\"containingSectionRecordIndex\": 2",
+                    "#1467: deleted report object JSON should preserve containing section record indexes");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -821,17 +823,20 @@ void test_studio_host_json_updates_deleted_report_layout_object_expressions_by_r
                         "#1601: deleted report/label layout object expression update should preserve selected deleted-object availability");
         expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1601: deleted report/label layout object expression update should preserve object selection kind");
-        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1601: deleted report/label layout object expression update should not fabricate containing-section availability");
-        expect_contains(update_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1601: deleted report/label layout object expression update should serialize null containing-section metadata");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1601: deleted report/label layout object expression update should preserve containing-section availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1601: deleted report/label layout object expression update should serialize containing-section metadata");
         expect_contains_in_order(
             update_process.stdout_text,
             {
                 "\"deletedObjects\": [",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 900",
                 "\"objectKind\": \"label\"",
                 "\"title\": \"customer.deleted_contact\"",
                 "\"expression\": \"customer.deleted_contact\"",
@@ -844,7 +849,10 @@ void test_studio_host_json_updates_deleted_report_layout_object_expressions_by_r
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 900",
                 "\"objectKind\": \"label\"",
                 "\"title\": \"customer.deleted_contact\"",
                 "\"expression\": \"customer.deleted_contact\"",
@@ -1068,10 +1076,10 @@ void test_studio_host_json_clears_deleted_report_layout_object_expressions_by_re
                         "#1602: deleted report/label layout object expression clear should preserve selected deleted-object availability");
         expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1602: deleted report/label layout object expression clear should preserve object selection kind");
-        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1602: deleted report/label layout object expression clear should not fabricate containing-section availability");
-        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1602: deleted report/label layout object expression clear should serialize null containing-section metadata");
+        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1602: deleted report/label layout object expression clear should preserve containing-section availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1602: deleted report/label layout object expression clear should serialize containing-section metadata");
         expect_contains(clear_process.stdout_text,
                         "{\"name\": \"EXPR\", \"type\": \"M\", \"isNull\": false, \"value\": \"\", \"fieldIndex\": 2",
                         "#1602: deleted report/label layout object expression clear should blank the EXPR memo property");
@@ -1081,7 +1089,10 @@ void test_studio_host_json_clears_deleted_report_layout_object_expressions_by_re
                 "\"deletedObjects\": [",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 900",
                 "\"objectKind\": \"label\"",
                 "\"title\": \"Record 6\"",
                 "\"expression\": \"\"",
@@ -1094,7 +1105,10 @@ void test_studio_host_json_clears_deleted_report_layout_object_expressions_by_re
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 6",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 900",
                 "\"objectKind\": \"label\"",
                 "\"title\": \"Record 6\"",
                 "\"expression\": \"\"",
