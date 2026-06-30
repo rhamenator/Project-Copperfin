@@ -62,6 +62,20 @@ internal sealed class CopperfinStudioReportLayout
 {
     public bool IsLabel { get; set; }
     public string DocumentTitle { get; set; } = string.Empty;
+    public bool PreviewBoundsAvailable { get; set; }
+    public int PreviewBoundsLeft { get; set; }
+    public int PreviewBoundsTop { get; set; }
+    public int PreviewBoundsRight { get; set; }
+    public int PreviewBoundsBottom { get; set; }
+    public int PreviewBoundsWidth { get; set; }
+    public int PreviewBoundsHeight { get; set; }
+    public bool DeletedPreviewBoundsAvailable { get; set; }
+    public int DeletedPreviewBoundsLeft { get; set; }
+    public int DeletedPreviewBoundsTop { get; set; }
+    public int DeletedPreviewBoundsRight { get; set; }
+    public int DeletedPreviewBoundsBottom { get; set; }
+    public int DeletedPreviewBoundsWidth { get; set; }
+    public int DeletedPreviewBoundsHeight { get; set; }
     public List<CopperfinStudioReportGrouping> Groupings { get; set; } = new();
     public List<CopperfinStudioNamedValue> Settings { get; set; } = new();
     public List<CopperfinStudioReportSection> Sections { get; set; } = new();

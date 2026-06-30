@@ -1560,12 +1560,38 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             return details;
         }
 
-        return details + Environment.NewLine + F(
+        details += Environment.NewLine + F(
             "AssetEditor.Details.ReportLayoutSummary",
             snapshot.ReportLayout.Sections.Count,
             snapshot.ReportLayout.Groupings.Count,
             snapshot.ReportLayout.Settings.Count,
             snapshot.ReportLayout.UnplacedObjects.Count);
+
+        if (snapshot.ReportLayout.PreviewBoundsAvailable)
+        {
+            details += Environment.NewLine + F(
+                "AssetEditor.Details.ReportPreviewBoundsSummary",
+                snapshot.ReportLayout.PreviewBoundsLeft,
+                snapshot.ReportLayout.PreviewBoundsTop,
+                snapshot.ReportLayout.PreviewBoundsRight,
+                snapshot.ReportLayout.PreviewBoundsBottom,
+                snapshot.ReportLayout.PreviewBoundsWidth,
+                snapshot.ReportLayout.PreviewBoundsHeight);
+        }
+
+        if (snapshot.ReportLayout.DeletedPreviewBoundsAvailable)
+        {
+            details += Environment.NewLine + F(
+                "AssetEditor.Details.DeletedReportPreviewBoundsSummary",
+                snapshot.ReportLayout.DeletedPreviewBoundsLeft,
+                snapshot.ReportLayout.DeletedPreviewBoundsTop,
+                snapshot.ReportLayout.DeletedPreviewBoundsRight,
+                snapshot.ReportLayout.DeletedPreviewBoundsBottom,
+                snapshot.ReportLayout.DeletedPreviewBoundsWidth,
+                snapshot.ReportLayout.DeletedPreviewBoundsHeight);
+        }
+
+        return details;
     }
 
     private string BuildReportSectionListTitle(CopperfinStudioReportSection section)

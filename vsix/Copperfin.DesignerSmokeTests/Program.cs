@@ -416,6 +416,20 @@ internal static class Program
                 AssetFamily = "report",
                 ReportLayout = new CopperfinStudioReportLayout
                 {
+                    PreviewBoundsAvailable = true,
+                    PreviewBoundsLeft = 0,
+                    PreviewBoundsTop = 2000,
+                    PreviewBoundsRight = 5200,
+                    PreviewBoundsBottom = 8100,
+                    PreviewBoundsWidth = 5200,
+                    PreviewBoundsHeight = 6100,
+                    DeletedPreviewBoundsAvailable = true,
+                    DeletedPreviewBoundsLeft = 0,
+                    DeletedPreviewBoundsTop = 9000,
+                    DeletedPreviewBoundsRight = 1900,
+                    DeletedPreviewBoundsBottom = 10400,
+                    DeletedPreviewBoundsWidth = 1900,
+                    DeletedPreviewBoundsHeight = 1400,
                     Sections = new List<CopperfinStudioReportSection> { new(), new(), new() },
                     Groupings = new List<CopperfinStudioReportGrouping> { new() },
                     Settings = new List<CopperfinStudioNamedValue> { new(), new() },
@@ -429,7 +443,9 @@ internal static class Program
                    spanishDetails.IndexOf("Secciones: 3", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Agrupaciones: 1", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Configuraciones: 2", StringComparison.Ordinal) >= 0 &&
-                   spanishDetails.IndexOf("Objetos sin sección: 1", StringComparison.Ordinal) >= 0,
+                   spanishDetails.IndexOf("Objetos sin sección: 1", StringComparison.Ordinal) >= 0 &&
+                   spanishDetails.IndexOf("Limites de vista previa:", StringComparison.Ordinal) >= 0 &&
+                   spanishDetails.IndexOf("Limites de vista previa eliminada:", StringComparison.Ordinal) >= 0,
                 "Spanish report layout shell summary should localize file details and report counts");
 
             using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
@@ -438,8 +454,17 @@ internal static class Program
                    portugueseDetails.IndexOf("Seções: 3", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Agrupamentos: 1", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Configurações: 2", StringComparison.Ordinal) >= 0 &&
-                   portugueseDetails.IndexOf("Objetos sem seção: 1", StringComparison.Ordinal) >= 0,
+                   portugueseDetails.IndexOf("Objetos sem seção: 1", StringComparison.Ordinal) >= 0 &&
+                   portugueseDetails.IndexOf("Limites da visualização:", StringComparison.Ordinal) >= 0 &&
+                   portugueseDetails.IndexOf("Limites da visualização excluída:", StringComparison.Ordinal) >= 0,
                 "Portuguese report layout shell summary should localize file details and report counts");
+
+            var pseudoLocalization = new CopperfinLocalization("qps-ploc");
+            using var pseudoControl = new CopperfinAssetEditorControl(pseudoLocalization);
+            var pseudoDetails = InvokeAssetEditorString(pseudoControl, "BuildSnapshotDetailsText", info, snapshot);
+            Expect(pseudoDetails.IndexOf(pseudoLocalization.Text("AssetEditor.Details.ReportPreviewBoundsSummary").Substring(0, 6), StringComparison.Ordinal) >= 0 &&
+                   pseudoDetails.IndexOf(pseudoLocalization.Text("AssetEditor.Details.DeletedReportPreviewBoundsSummary").Substring(0, 6), StringComparison.Ordinal) >= 0,
+                "Pseudo-localized report layout shell summary should route preview bounds through the shared catalog");
         }
         finally
         {
