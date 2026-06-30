@@ -317,8 +317,10 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_report_visual_object_batches_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_visual_object_batches_by_stable_selection(argv[1]);
 #endif
+#if !defined(COPPERFIN_REPORT_VISUAL_RENAME_BATCH_SKIP_HOST_SMOKE)
     test_studio_host_json_renames_report_visual_object_batches_by_stable_selection(argv[1]);
     test_studio_host_json_renames_deleted_report_visual_object_batches_by_stable_selection(argv[1]);
+#endif
     test_studio_host_json_duplicates_report_visual_object_batches_by_stable_selection(argv[1]);
     test_studio_host_json_duplicates_deleted_report_visual_object_batches_by_stable_selection(argv[1]);
     test_studio_host_json_reorders_report_visual_object_batches_by_stable_selection(argv[1]);

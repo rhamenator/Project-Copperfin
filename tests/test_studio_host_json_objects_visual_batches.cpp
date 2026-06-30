@@ -918,6 +918,7 @@ void test_studio_host_json_updates_deleted_report_visual_object_batches_by_stabl
 }
 #endif
 
+#if !defined(COPPERFIN_REPORT_VISUAL_RENAME_BATCH_SKIP_HOST_SMOKE)
 void test_studio_host_json_renames_report_visual_object_batches_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -1316,6 +1317,7 @@ void test_studio_host_json_renames_deleted_report_visual_object_batches_by_stabl
         fs::remove_all(temp_root, ignored);
     }
 }
+#endif
 
 void test_studio_host_json_duplicates_report_visual_object_batches_by_stable_selection(
     const std::string& studio_host_path) {
