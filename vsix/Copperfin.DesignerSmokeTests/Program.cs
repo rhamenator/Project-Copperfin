@@ -43,6 +43,7 @@ internal static class Program
         SmokeDeletedReportSectionExplorerSelection();
         SmokeReportSurfaceScopeSelection();
         SmokeReportSurfaceObjectScopeAlignment();
+        SmokeReportSurfaceObjectDragging();
         SmokeDeletedReportSectionDesignSurfaceRendering();
         SmokeAssetEditorWithRealAsset(
             @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx",
@@ -1913,6 +1914,180 @@ internal static class Program
         Expect(CountNonWhitePixels(bitmap) > 5000, "shared report surface should render visible deleted-section UI content");
     }
 
+    private static void SmokeReportSurfaceObjectDragging()
+    {
+        using var surface = new CopperfinDesignSurfaceControl
+        {
+            Size = new Size(1400, 1000)
+        };
+
+        var objects = new List<CopperfinStudioSnapshotObject>
+        {
+            new()
+            {
+                RecordIndex = 6,
+                Title = "customer.company",
+                Subtitle = "field",
+                Properties = new List<CopperfinStudioSnapshotProperty>
+                {
+                    new() { Name = "HPOS", Value = "1200" },
+                    new() { Name = "VPOS", Value = "2600" },
+                    new() { Name = "WIDTH", Value = "4000" },
+                    new() { Name = "HEIGHT", Value = "500" },
+                    new() { Name = "EXPR", Value = "customer.company" }
+                }
+            },
+            new()
+            {
+                RecordIndex = 13,
+                Deleted = true,
+                Title = "deleted.footer.total",
+                Subtitle = "field",
+                Properties = new List<CopperfinStudioSnapshotProperty>
+                {
+                    new() { Name = "HPOS", Value = "1400" },
+                    new() { Name = "VPOS", Value = "9400" },
+                    new() { Name = "WIDTH", Value = "3600" },
+                    new() { Name = "HEIGHT", Value = "600" },
+                    new() { Name = "EXPR", Value = "deleted.footer.total" }
+                }
+            },
+            new()
+            {
+                RecordIndex = 9,
+                Title = "orphan.note",
+                Subtitle = "field",
+                Properties = new List<CopperfinStudioSnapshotProperty>
+                {
+                    new() { Name = "HPOS", Value = "800" },
+                    new() { Name = "VPOS", Value = "700" },
+                    new() { Name = "WIDTH", Value = "2400" },
+                    new() { Name = "HEIGHT", Value = "450" },
+                    new() { Name = "EXPR", Value = "orphan.note" }
+                }
+            }
+        };
+
+        var layout = new CopperfinStudioReportLayout
+        {
+            Sections = new List<CopperfinStudioReportSection>
+            {
+                new()
+                {
+                    Id = "detail_1",
+                    Title = "Detail",
+                    BandKind = "detail",
+                    RecordIndex = 42,
+                    Top = 2000,
+                    Height = 5000,
+                    Objects = new List<CopperfinStudioReportLayoutObject>
+                    {
+                        new()
+                        {
+                            RecordIndex = 6,
+                            ObjectKind = "field",
+                            Title = "customer.company",
+                            Expression = "customer.company",
+                            Left = 1200,
+                            Top = 2600,
+                            Width = 4000,
+                            Height = 500
+                        }
+                    }
+                }
+            },
+            DeletedSections = new List<CopperfinStudioReportSection>
+            {
+                new()
+                {
+                    Id = "deleted_footer",
+                    Title = "Summary",
+                    BandKind = "summary",
+                    RecordIndex = 51,
+                    Deleted = true,
+                    Top = 9000,
+                    Height = 1400,
+                    Objects = new List<CopperfinStudioReportLayoutObject>
+                    {
+                        new()
+                        {
+                            RecordIndex = 13,
+                            ObjectKind = "field",
+                            Title = "deleted.footer.total",
+                            Expression = "deleted.footer.total",
+                            Left = 1400,
+                            Top = 9400,
+                            Width = 3600,
+                            Height = 600
+                        }
+                    }
+                }
+            },
+            UnplacedObjects = new List<CopperfinStudioReportLayoutObject>
+            {
+                new()
+                {
+                    RecordIndex = 9,
+                    ObjectKind = "field",
+                    Title = "orphan.note",
+                    Expression = "orphan.note",
+                    Left = 800,
+                    Top = 700,
+                    Width = 2400,
+                    Height = 450
+                }
+            }
+        };
+
+        surface.LoadReportLayout(layout, objects);
+        RenderDesignSurface(surface);
+
+        var scale = InvokeDesignSurfaceFloat(surface, "CalculateReportScale");
+        var moves = new List<(int RecordIndex, int Left, int Top)>();
+        surface.ObjectMoved += (recordIndex, left, top) => moves.Add((recordIndex, left, top));
+
+        DragDesignSurface(surface, GetCenter(ReadSurfaceObjectRectangle(surface, 0)), 18, 12);
+        var expectedLiveLeft = (int)Math.Round(1200 + (18 / Math.Max(0.2F, scale)));
+        var expectedLiveTop = (int)Math.Round(2600 + (12 / Math.Max(0.2F, scale)));
+        Expect(moves.Count == 1 &&
+               moves[0].RecordIndex == 6 &&
+               moves[0].Left == expectedLiveLeft &&
+               moves[0].Top == expectedLiveTop,
+            "Dragging a live report object on the shared surface should emit invariant HPOS/VPOS updates");
+        Expect(ReadPrivateNullableInt(surface, "selectedRecordIndex") == 6 &&
+               ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
+               !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+            "Dragging a live report object on the shared surface should keep the containing live section highlighted");
+
+        moves.Clear();
+        DragDesignSurface(surface, GetCenter(ReadSurfaceObjectRectangle(surface, 1)), 14, 10);
+        var expectedDeletedLeft = (int)Math.Round(1400 + (14 / Math.Max(0.2F, scale)));
+        var expectedDeletedTop = (int)Math.Round(9400 + (10 / Math.Max(0.2F, scale)));
+        Expect(moves.Count == 1 &&
+               moves[0].RecordIndex == 13 &&
+               moves[0].Left == expectedDeletedLeft &&
+               moves[0].Top == expectedDeletedTop,
+            "Dragging a deleted report object on the shared surface should emit invariant HPOS/VPOS updates");
+        Expect(ReadPrivateNullableInt(surface, "selectedRecordIndex") == 13 &&
+               ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 51 &&
+               !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+            "Dragging a deleted report object on the shared surface should keep the containing deleted section highlighted");
+
+        moves.Clear();
+        DragDesignSurface(surface, GetCenter(ReadSurfaceObjectRectangle(surface, 2)), 16, 9);
+        var expectedUnplacedLeft = (int)Math.Round(800 + (16 / Math.Max(0.2F, scale)));
+        var expectedUnplacedTop = (int)Math.Round(700 + (9 / Math.Max(0.2F, scale)));
+        Expect(moves.Count == 1 &&
+               moves[0].RecordIndex == 9 &&
+               moves[0].Left == expectedUnplacedLeft &&
+               moves[0].Top == expectedUnplacedTop,
+            "Dragging an unplaced report object on the shared surface should emit invariant HPOS/VPOS updates");
+        Expect(ReadPrivateNullableInt(surface, "selectedRecordIndex") == 9 &&
+               ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") is null &&
+               ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+            "Dragging an unplaced report object on the shared surface should keep the unplaced-object tray highlighted");
+    }
+
     private static void SmokeAssetEditorWithRealAsset(string path, string expectSection)
     {
         if (!File.Exists(path))
@@ -2355,6 +2530,19 @@ internal static class Program
         return (string)(method.Invoke(surface, args) ?? string.Empty);
     }
 
+    private static float InvokeDesignSurfaceFloat(CopperfinDesignSurfaceControl surface, string methodName, params object[] args)
+    {
+        var method = typeof(CopperfinDesignSurfaceControl).GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic);
+        if (method is null)
+        {
+            throw new InvalidOperationException($"Could not find CopperfinDesignSurfaceControl smoke hook {methodName}.");
+        }
+
+        return method.Invoke(surface, args) is float value
+            ? value
+            : throw new InvalidOperationException($"Could not read float result from CopperfinDesignSurfaceControl smoke hook {methodName}.");
+    }
+
     private static void ClickDesignSurface(CopperfinDesignSurfaceControl surface, Point location)
     {
         var method = typeof(CopperfinDesignSurfaceControl).GetMethod("OnMouseDown", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -2364,6 +2552,27 @@ internal static class Program
         }
 
         method.Invoke(surface, new object[] { new MouseEventArgs(MouseButtons.Left, 1, location.X, location.Y, 0) });
+    }
+
+    private static void DragDesignSurface(CopperfinDesignSurfaceControl surface, Point start, int deltaX, int deltaY)
+    {
+        var mouseDown = typeof(CopperfinDesignSurfaceControl).GetMethod("OnMouseDown", BindingFlags.Instance | BindingFlags.NonPublic);
+        var mouseMove = typeof(CopperfinDesignSurfaceControl).GetMethod("OnMouseMove", BindingFlags.Instance | BindingFlags.NonPublic);
+        var mouseUp = typeof(CopperfinDesignSurfaceControl).GetMethod("OnMouseUp", BindingFlags.Instance | BindingFlags.NonPublic);
+        if (mouseDown is null || mouseMove is null || mouseUp is null)
+        {
+            throw new InvalidOperationException("Could not find shared report design-surface drag hooks.");
+        }
+
+        mouseDown.Invoke(surface, new object[] { new MouseEventArgs(MouseButtons.Left, 1, start.X, start.Y, 0) });
+        mouseMove.Invoke(surface, new object[] { new MouseEventArgs(MouseButtons.Left, 0, start.X + deltaX, start.Y + deltaY, 0) });
+        mouseUp.Invoke(surface, new object[] { new MouseEventArgs(MouseButtons.Left, 1, start.X + deltaX, start.Y + deltaY, 0) });
+    }
+
+    private static void RenderDesignSurface(CopperfinDesignSurfaceControl surface)
+    {
+        using var bitmap = new Bitmap(surface.Width, surface.Height);
+        surface.DrawToBitmap(bitmap, new Rectangle(0, 0, bitmap.Width, bitmap.Height));
     }
 
     private static Rectangle ReadSurfaceObjectRectangle(CopperfinDesignSurfaceControl surface, int index)
