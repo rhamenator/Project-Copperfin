@@ -138,6 +138,10 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
 
         selection.AddReadOnlyString("TITLE", localization.Text("AssetEditor.Property.SectionTitle"), section.Title);
         selection.AddReadOnlyString("ID", localization.Text("AssetEditor.Property.SectionId"), section.Id);
+        selection.AddReadOnlyInt(
+            "RECORDINDEX",
+            localization.Text("AssetEditor.Column.Record"),
+            section.RecordIndex.ToString(CultureInfo.InvariantCulture));
         selection.AddReadOnlyString(
             "SECTIONSTATE",
             localization.Text("AssetEditor.Property.SectionState"),
