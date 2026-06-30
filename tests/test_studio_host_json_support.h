@@ -1596,10 +1596,6 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_expressio
 
 // ==== Report layout JSON tests: band object exposure by selector ====
 void test_studio_host_json_exposes_selected_report_objects(const std::string& studio_host_path);
-void test_studio_host_json_exposes_selected_unplaced_report_objects_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_exposes_selected_deleted_unplaced_report_objects_by_stable_selection(
-    const std::string& studio_host_path);
 void test_studio_host_json_exposes_selected_page_header_report_objects_by_stable_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_exposes_selected_deleted_page_header_report_objects_by_stable_selection(
