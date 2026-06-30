@@ -13,6 +13,8 @@ internal sealed class CopperfinDesignSurfaceControl : Control
     private sealed class SurfaceObject
     {
         public CopperfinStudioSnapshotObject Source { get; set; } = null!;
+        public int? ContainingReportSectionRecordIndex { get; set; }
+        public bool InUnplacedReportObjects { get; set; }
         public RectangleF Bounds { get; set; }
         public Rectangle PixelBounds { get; set; }
         public string Caption { get; set; } = string.Empty;
@@ -130,6 +132,7 @@ internal sealed class CopperfinDesignSurfaceControl : Control
             var surfaceObject = new SurfaceObject
             {
                 Source = snapshotObject,
+                InUnplacedReportObjects = true,
                 Bounds = bounds,
                 PixelBounds = Rectangle.Empty,
                 Caption = string.IsNullOrWhiteSpace(layoutObject.Title)
@@ -147,11 +150,17 @@ internal sealed class CopperfinDesignSurfaceControl : Control
     public void SelectRecord(int? recordIndex)
     {
         selectedRecordIndex = recordIndex;
-        if (recordIndex.HasValue)
+        if (!recordIndex.HasValue)
         {
             selectedReportSectionRecordIndex = null;
             unplacedReportObjectsSelected = false;
+            Invalidate();
+            return;
         }
+
+        var selectedObject = objects.FirstOrDefault(item => item.Source.RecordIndex == recordIndex.Value);
+        selectedReportSectionRecordIndex = selectedObject?.ContainingReportSectionRecordIndex;
+        unplacedReportObjectsSelected = selectedObject?.InUnplacedReportObjects == true;
         Invalidate();
     }
 
@@ -202,13 +211,10 @@ internal sealed class CopperfinDesignSurfaceControl : Control
             return;
         }
 
-        selectedReportSectionRecordIndex = null;
-        unplacedReportObjectsSelected = false;
-        selectedRecordIndex = hit.Source.RecordIndex;
+        SelectRecord(hit.Source.RecordIndex);
         dragRecordIndex = hit.Source.RecordIndex;
         lastMousePoint = e.Location;
         SelectedRecordChanged?.Invoke(hit.Source.RecordIndex);
-        Invalidate();
     }
 
     protected override void OnMouseMove(MouseEventArgs e)
@@ -615,6 +621,7 @@ internal sealed class CopperfinDesignSurfaceControl : Control
             var surfaceObject = new SurfaceObject
             {
                 Source = snapshotObject,
+                ContainingReportSectionRecordIndex = section.RecordIndex,
                 Bounds = bounds,
                 PixelBounds = Rectangle.Empty,
                 Caption = string.IsNullOrWhiteSpace(layoutObject.Title)

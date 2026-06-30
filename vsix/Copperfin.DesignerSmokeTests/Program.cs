@@ -1256,6 +1256,10 @@ internal static class Program
         Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection liveObjectSelection &&
                liveObjectSelection.RecordIndex == 6,
             "Clicking a live report object on the shared surface should produce an object-rooted property-grid selection");
+        Expect(ReadPrivateNullableInt(surface, "selectedRecordIndex") == 6 &&
+               ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
+               ReadPrivateBoolField(surface, "unplacedReportObjectsSelected") == false,
+            "Clicking a live report object on the shared surface should keep its containing live section highlighted");
 
         ClickDesignSurface(surface, GetCenter(ReadSurfaceObjectRectangle(surface, 1)));
         Application.DoEvents();
@@ -1266,6 +1270,10 @@ internal static class Program
         Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection deletedObjectSelection &&
                deletedObjectSelection.RecordIndex == 13,
             "Clicking a deleted report object on the shared surface should keep object-rooted property-grid selection");
+        Expect(ReadPrivateNullableInt(surface, "selectedRecordIndex") == 13 &&
+               ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 51 &&
+               ReadPrivateBoolField(surface, "unplacedReportObjectsSelected") == false,
+            "Clicking a deleted report object on the shared surface should keep its containing deleted section highlighted");
 
         ClickDesignSurface(surface, GetCenter(ReadSurfaceObjectRectangle(surface, 2)));
         Application.DoEvents();
@@ -1276,6 +1284,10 @@ internal static class Program
         Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection unplacedObjectSelection &&
                unplacedObjectSelection.RecordIndex == 9,
             "Clicking an unplaced report object on the shared surface should keep object-rooted property-grid selection");
+        Expect(ReadPrivateNullableInt(surface, "selectedRecordIndex") == 9 &&
+               ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") is null &&
+               ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+            "Clicking an unplaced report object on the shared surface should keep the unplaced-object tray highlighted");
     }
 
     private static void SmokeDeletedReportSectionDesignSurfaceRendering()
@@ -1873,6 +1885,28 @@ internal static class Program
         }
 
         return collection.Count;
+    }
+
+    private static int? ReadPrivateNullableInt(object instance, string fieldName)
+    {
+        var field = instance.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+        if (field is null)
+        {
+            throw new InvalidOperationException($"Could not read private nullable int field {fieldName}.");
+        }
+
+        return field.GetValue(instance) as int?;
+    }
+
+    private static bool ReadPrivateBoolField(object instance, string fieldName)
+    {
+        var field = instance.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+        if (field?.GetValue(instance) is not bool value)
+        {
+            throw new InvalidOperationException($"Could not read private bool field {fieldName}.");
+        }
+
+        return value;
     }
 
     private static int ReadReportSectionProperty(CopperfinDesignSurfaceControl surface, int index, string propertyName)
