@@ -161,6 +161,7 @@ target_compile_definitions(test_studio_host_json PRIVATE
     COPPERFIN_REPORT_LAYOUT_WIDTH_LEFT_PREVIEW_BOUNDS_SKIP_HOST_SMOKE
     COPPERFIN_REPORT_LAYOUT_HEIGHT_TOP_PREVIEW_BOUNDS_SKIP_HOST_SMOKE
     COPPERFIN_DETAIL_HEADER_FOOTER_SECTION_PREVIEW_BOUNDS_SKIP_HOST_SMOKE
+    COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_SKIP_UNRESOLVED_AND_MISSING_HELPERS
     COPPERFIN_DELETED_REPORT_VISUAL_PROPERTY_REJECTIONS_SKIP_HOST_SMOKE
     COPPERFIN_DELETED_REPORT_VISUAL_PROPERTY_CLEARS_SKIP_HOST_SMOKE
     COPPERFIN_DELETED_REPORT_VISUAL_PROPERTY_COPIES_SKIP_HOST_SMOKE
@@ -438,6 +439,7 @@ add_executable(test_studio_host_report_unresolved_memo_placeholders
 target_link_libraries(test_studio_host_report_unresolved_memo_placeholders PRIVATE cf_vfp_assets)
 target_compile_definitions(test_studio_host_report_unresolved_memo_placeholders PRIVATE
     COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS
+    COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_INCLUDE_UNRESOLVED_AND_MISSING_HELPERS
 )
 
 if(MSVC)
@@ -465,6 +467,7 @@ add_executable(test_studio_host_report_schema_fallbacks
 target_link_libraries(test_studio_host_report_schema_fallbacks PRIVATE cf_vfp_assets)
 target_compile_definitions(test_studio_host_report_schema_fallbacks PRIVATE
     COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS
+    COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_INCLUDE_UNRESOLVED_AND_MISSING_HELPERS
 )
 
 if(MSVC)
@@ -596,6 +599,7 @@ add_executable(test_studio_host_report_width_left_preview_bounds
 )
 target_link_libraries(test_studio_host_report_width_left_preview_bounds PRIVATE cf_vfp_assets)
 target_compile_definitions(test_studio_host_report_width_left_preview_bounds PRIVATE
+    COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_SKIP_UNRESOLVED_AND_MISSING_HELPERS
     COPPERFIN_REPORT_LAYOUT_WIDTH_LEFT_PREVIEW_BOUNDS_ONLY
 )
 
@@ -618,6 +622,7 @@ add_executable(test_studio_host_report_height_top_preview_bounds
 )
 target_link_libraries(test_studio_host_report_height_top_preview_bounds PRIVATE cf_vfp_assets)
 target_compile_definitions(test_studio_host_report_height_top_preview_bounds PRIVATE
+    COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_SKIP_UNRESOLVED_AND_MISSING_HELPERS
     COPPERFIN_REPORT_LAYOUT_HEIGHT_TOP_PREVIEW_BOUNDS_ONLY
 )
 
@@ -641,6 +646,7 @@ add_executable(test_studio_host_detail_header_footer_section_preview_bounds
 )
 target_link_libraries(test_studio_host_detail_header_footer_section_preview_bounds PRIVATE cf_vfp_assets)
 target_compile_definitions(test_studio_host_detail_header_footer_section_preview_bounds PRIVATE
+    COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_SKIP_UNRESOLVED_AND_MISSING_HELPERS
     COPPERFIN_DETAIL_HEADER_FOOTER_SECTION_PREVIEW_BOUNDS_ONLY
 )
 
@@ -814,6 +820,7 @@ add_executable(test_studio_host_report_layout_diagnostics
 target_link_libraries(test_studio_host_report_layout_diagnostics PRIVATE cf_vfp_assets)
 target_compile_definitions(test_studio_host_report_layout_diagnostics PRIVATE
     COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS
+    COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_INCLUDE_UNRESOLVED_AND_MISSING_HELPERS
     COPPERFIN_REPORT_DELETED_STATES_SKIP_HELPERS
     COPPERFIN_REPORT_OBJECT_FALLBACKS_SKIP_HELPERS
     COPPERFIN_REPORT_LAYOUT_DIAGNOSTICS_ONLY

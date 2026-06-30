@@ -156,6 +156,9 @@ void expect_zero_available_report_layout_preview_bounds(const std::string& text,
                     prefix + " should preserve zero deleted preview heights");
 }
 
+#if !defined(COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_SKIP_UNRESOLVED_AND_MISSING_HELPERS) && \
+    (!defined(COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS) || \
+     defined(COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_INCLUDE_UNRESOLVED_AND_MISSING_HELPERS))
 void expect_unresolved_memo_preview_bounds(const std::string& text, const std::string& prefix) {
     expect_contains(text, "\"previewBoundsAvailable\": true",
                     prefix + " should preserve live preview availability");
@@ -407,6 +410,7 @@ void expect_missing_object_title_preview_bounds(const std::string& text, const s
     expect_contains(text, "\"deletedPreviewBoundsHeight\": 110",
                     prefix + " should preserve deleted preview heights");
 }
+#endif
 
 #if !defined(COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS)
 #if !defined(COPPERFIN_REPORT_LAYOUT_WIDTH_LEFT_PREVIEW_BOUNDS_ONLY) && \
