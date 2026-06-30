@@ -1834,7 +1834,8 @@ void test_studio_host_json_applies_subtree_deleted_state_by_stable_selectors(con
 #endif
 
 #if !defined(COPPERFIN_OBJECT_LIFECYCLE_ONLY_TOOLBOX_CREATE) && \
-    !defined(COPPERFIN_OBJECT_LIFECYCLE_ONLY_STABLE_SELECTOR_MUTATION)
+    !defined(COPPERFIN_OBJECT_LIFECYCLE_ONLY_STABLE_SELECTOR_MUTATION) && \
+    !defined(COPPERFIN_OBJECT_LIFECYCLE_SKIP_OBJECT_ACTION_LIFECYCLE)
 void test_studio_host_json_duplicates_visual_object_subtrees(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -2463,7 +2464,11 @@ void test_studio_host_json_renames_objects_by_stable_selectors(const std::string
         fs::remove_all(temp_root, ignored);
     }
 }
+#endif
 
+#if !defined(COPPERFIN_OBJECT_LIFECYCLE_ONLY_TOOLBOX_CREATE) && \
+    !defined(COPPERFIN_OBJECT_LIFECYCLE_ONLY_STABLE_SELECTOR_MUTATION) && \
+    !defined(COPPERFIN_OBJECT_LIFECYCLE_ONLY_OBJECT_ACTION_LIFECYCLE)
 void test_studio_host_json_reparents_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 

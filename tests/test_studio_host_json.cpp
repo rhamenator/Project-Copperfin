@@ -446,12 +446,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_reorders_report_visual_object_batches_by_stable_selection(argv[1]);
     test_studio_host_json_reorders_deleted_report_visual_object_batches_by_stable_selection(argv[1]);
     test_studio_host_json_clears_properties_by_stable_selectors(argv[1]);
-    test_studio_host_json_duplicates_visual_object_subtrees(argv[1]);
-    test_studio_host_json_deletes_objects_by_stable_selectors(argv[1]);
-    test_studio_host_json_restores_objects_by_stable_selectors(argv[1]);
-    test_studio_host_json_duplicates_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_duplicates_visual_object_batches(argv[1]);
-    test_studio_host_json_renames_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_renames_visual_object_batches(argv[1]);
     test_studio_host_json_reparents_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_reparents_visual_object_batches(argv[1]);
