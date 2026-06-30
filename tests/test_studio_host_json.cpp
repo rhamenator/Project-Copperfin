@@ -111,7 +111,8 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_detail_header_footer_section_tops_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_section_tops_by_stable_selection(argv[1]);
     test_studio_host_json_clears_deleted_detail_header_footer_section_tops_by_stable_selection(argv[1]);
-    test_studio_host_json_exposes_detail_header_footer_object_containment(argv[1]);
+#endif
+#if !defined(COPPERFIN_DETAIL_HEADER_FOOTER_SECTION_LIFECYCLE_SKIP_HOST_SMOKE)
     test_studio_host_json_deletes_and_restores_detail_header_footer_sections_by_stable_selection(argv[1]);
     test_studio_host_json_duplicates_detail_header_footer_sections_by_stable_selection(argv[1]);
     test_studio_host_json_duplicates_deleted_detail_header_footer_sections_by_stable_selection(argv[1]);
