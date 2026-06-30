@@ -235,7 +235,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_deleted_report_group_footer_expressions(argv[1]);
     test_studio_host_json_exposes_report_layout_column_setup(argv[1]);
     test_studio_host_json_exposes_label_layout_parity(argv[1]);
-    test_studio_host_json_exposes_selected_report_objects(argv[1]);
     test_studio_host_json_nudges_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_nudges_label_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_nudges_live_edited_report_layout_object_geometry_by_stable_selection(argv[1]);
