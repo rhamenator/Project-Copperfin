@@ -128,26 +128,68 @@ std::string infer_memo_sidecar_path(const std::string& path) {
         return static_cast<char>(std::tolower(ch));
     });
 
+    auto lowercase_copy = [](std::string value) {
+        std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+            return static_cast<char>(std::tolower(ch));
+        });
+        return value;
+    };
+
+    auto resolve_existing_path_casefold = [&](const std::filesystem::path& candidate) -> std::optional<std::filesystem::path> {
+        std::error_code ignored;
+        if (std::filesystem::exists(candidate, ignored)) {
+            return candidate;
+        }
+
+        const std::filesystem::path directory =
+            candidate.has_parent_path() ? candidate.parent_path() : std::filesystem::current_path(ignored);
+        if (directory.empty() || !std::filesystem::exists(directory, ignored)) {
+            return std::nullopt;
+        }
+
+        const std::string target_name = lowercase_copy(candidate.filename().string());
+        for (const auto& entry : std::filesystem::directory_iterator(directory, ignored)) {
+            if (ignored) {
+                break;
+            }
+
+            if (lowercase_copy(entry.path().filename().string()) == target_name) {
+                return entry.path();
+            }
+        }
+
+        return std::nullopt;
+    };
+
+    auto resolve_sidecar = [&](std::string_view extension) {
+        const auto candidate = file_path.replace_extension(extension).string();
+        if (const auto resolved = resolve_existing_path_casefold(candidate); resolved.has_value()) {
+            return resolved->string();
+        }
+
+        return candidate;
+    };
+
     if (ext == ".scx") {
-        return file_path.replace_extension(".sct").string();
+        return resolve_sidecar(".sct");
     }
     if (ext == ".vcx") {
-        return file_path.replace_extension(".vct").string();
+        return resolve_sidecar(".vct");
     }
     if (ext == ".frx") {
-        return file_path.replace_extension(".frt").string();
+        return resolve_sidecar(".frt");
     }
     if (ext == ".lbx") {
-        return file_path.replace_extension(".lbt").string();
+        return resolve_sidecar(".lbt");
     }
     if (ext == ".mnx") {
-        return file_path.replace_extension(".mnt").string();
+        return resolve_sidecar(".mnt");
     }
     if (ext == ".pjx") {
-        return file_path.replace_extension(".pjt").string();
+        return resolve_sidecar(".pjt");
     }
     if (ext == ".dbc") {
-        return file_path.replace_extension(".dct").string();
+        return resolve_sidecar(".dct");
     }
     return {};
 }

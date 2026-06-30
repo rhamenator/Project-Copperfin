@@ -119,6 +119,32 @@ std::string lowercase_ascii(std::string_view value) {
     return lowered;
 }
 
+std::optional<std::filesystem::path> resolve_existing_path_casefold(const std::filesystem::path& candidate) {
+    std::error_code ignored;
+    if (std::filesystem::exists(candidate, ignored)) {
+        return candidate;
+    }
+
+    const std::filesystem::path directory =
+        candidate.has_parent_path() ? candidate.parent_path() : std::filesystem::current_path(ignored);
+    if (directory.empty() || !std::filesystem::exists(directory, ignored)) {
+        return std::nullopt;
+    }
+
+    const std::string target_name = lowercase_ascii(candidate.filename().string());
+    for (const auto& entry : std::filesystem::directory_iterator(directory, ignored)) {
+        if (ignored) {
+            break;
+        }
+
+        if (lowercase_ascii(entry.path().filename().string()) == target_name) {
+            return entry.path();
+        }
+    }
+
+    return std::nullopt;
+}
+
 std::string first_non_empty(const vfp::DbfRecord& record, std::initializer_list<std::string_view> field_names) {
     for (const auto field_name : field_names) {
         const std::string value = trim_copy(value_or_empty(record, field_name));
@@ -565,19 +591,28 @@ const char* studio_asset_kind_name(StudioAssetKind kind) {
 
 std::string infer_sidecar_path(const std::string& path, StudioAssetKind kind) {
     std::filesystem::path file_path(path);
+    auto resolve_sidecar = [&](std::string_view extension) {
+        const auto candidate = file_path.replace_extension(extension).string();
+        if (const auto resolved = resolve_existing_path_casefold(candidate); resolved.has_value()) {
+            return resolved->string();
+        }
+
+        return candidate;
+    };
+
     switch (kind) {
         case StudioAssetKind::project:
-            return file_path.replace_extension(".pjt").string();
+            return resolve_sidecar(".pjt");
         case StudioAssetKind::form:
-            return file_path.replace_extension(".sct").string();
+            return resolve_sidecar(".sct");
         case StudioAssetKind::class_library:
-            return file_path.replace_extension(".vct").string();
+            return resolve_sidecar(".vct");
         case StudioAssetKind::report:
-            return file_path.replace_extension(".frt").string();
+            return resolve_sidecar(".frt");
         case StudioAssetKind::label:
-            return file_path.replace_extension(".lbt").string();
+            return resolve_sidecar(".lbt");
         case StudioAssetKind::menu:
-            return file_path.replace_extension(".mnt").string();
+            return resolve_sidecar(".mnt");
         case StudioAssetKind::index:
         case StudioAssetKind::table:
         case StudioAssetKind::database_container:

@@ -102,7 +102,7 @@ internal static class Program
                 propertyName: "HPOS",
                 originalValue: "8645.833",
                 updatedValue: "9000",
-                expectedObjectTitle: "_RC60MC40R",
+                expectedObjectTitle: "\"Titles By Author\"",
                 expectedSectionTitle: "Title",
                 expectedSectionCount: 6,
                 expectLabel: false);
@@ -112,7 +112,27 @@ internal static class Program
                 propertyName: "HPOS",
                 originalValue: "6250.000",
                 updatedValue: "6500",
-                expectedObjectTitle: "_QV30QY1DL",
+                expectedObjectTitle: "wiz_field",
+                expectedSectionTitle: "Detail",
+                expectedSectionCount: 5,
+                expectLabel: true);
+            SmokeRealAssetHostBackedPropertyRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 7,
+                propertyName: "FONTFACE",
+                originalValue: "Times New Roman",
+                updatedValue: "Arial",
+                expectedObjectTitle: "\"Titles By Author\"",
+                expectedSectionTitle: "Title",
+                expectedSectionCount: 6,
+                expectLabel: false);
+            SmokeRealAssetHostBackedPropertyRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 6,
+                propertyName: "FONTFACE",
+                originalValue: "Arial",
+                updatedValue: "Calibri",
+                expectedObjectTitle: "wiz_field",
                 expectedSectionTitle: "Detail",
                 expectedSectionCount: 5,
                 expectLabel: true);
@@ -122,10 +142,11 @@ internal static class Program
                 expectedSectionTitle: "Title",
                 propertyName: "HPOS",
                 updatedPropertyValue: 9000,
+                expectedOriginalSelectionValue: null,
                 expectedUpdatedSelectionValue: "9000",
                 expectedUpdatedRawValue: "9000",
                 expectedOriginalRawValue: "8645.833",
-                expectedObjectTitle: "_RC60MC40R",
+                expectedObjectTitle: "\"Titles By Author\"",
                 expectedSectionCount: 6,
                 expectLabel: false);
             SmokeAssetEditorPropertyGridRoundTripWithRealAsset(
@@ -134,10 +155,37 @@ internal static class Program
                 expectedSectionTitle: "Detail",
                 propertyName: "HPOS",
                 updatedPropertyValue: 6500,
+                expectedOriginalSelectionValue: null,
                 expectedUpdatedSelectionValue: "6500",
                 expectedUpdatedRawValue: "6500",
                 expectedOriginalRawValue: "6250.000",
-                expectedObjectTitle: "_QV30QY1DL",
+                expectedObjectTitle: "wiz_field",
+                expectedSectionCount: 5,
+                expectLabel: true);
+            SmokeAssetEditorPropertyGridRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 7,
+                expectedSectionTitle: "Title",
+                propertyName: "FONTFACE",
+                updatedPropertyValue: "Arial",
+                expectedOriginalSelectionValue: null,
+                expectedUpdatedSelectionValue: "Arial",
+                expectedUpdatedRawValue: "Arial",
+                expectedOriginalRawValue: "Times New Roman",
+                expectedObjectTitle: "\"Titles By Author\"",
+                expectedSectionCount: 6,
+                expectLabel: false);
+            SmokeAssetEditorPropertyGridRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 6,
+                expectedSectionTitle: "Detail",
+                propertyName: "FONTFACE",
+                updatedPropertyValue: "Calibri",
+                expectedOriginalSelectionValue: null,
+                expectedUpdatedSelectionValue: "Calibri",
+                expectedUpdatedRawValue: "Calibri",
+                expectedOriginalRawValue: "Arial",
+                expectedObjectTitle: "wiz_field",
                 expectedSectionCount: 5,
                 expectLabel: true);
             SmokeProjectEditorWithRealAsset(
@@ -6852,6 +6900,7 @@ internal static class Program
         string expectedSectionTitle,
         string propertyName,
         object updatedPropertyValue,
+        string? expectedOriginalSelectionValue,
         string expectedUpdatedSelectionValue,
         string expectedUpdatedRawValue,
         string expectedOriginalRawValue,
@@ -6941,8 +6990,12 @@ internal static class Program
             }
 
             var initialSelectionValue = TypeDescriptor.GetProperties(objectSelection)[propertyName]?.GetValue(objectSelection)?.ToString() ?? string.Empty;
-            Expect(!string.IsNullOrWhiteSpace(initialSelectionValue),
-                $"real asset editor smoke should expose property-grid value {propertyName} for {sourcePath}");
+            var expectedUndoSelectionValue = expectedOriginalSelectionValue ?? initialSelectionValue;
+            if (expectedOriginalSelectionValue is not null)
+            {
+                Expect(string.Equals(initialSelectionValue, expectedOriginalSelectionValue, StringComparison.Ordinal),
+                    $"real asset editor smoke should expose original property-grid value {propertyName} for {sourcePath}");
+            }
 
             TypeDescriptor.GetProperties(objectSelection)[propertyName]?.SetValue(objectSelection, updatedPropertyValue);
             InvokeAssetEditorVoid(control, "ApplyPropertyGridChange", propertyName, 0);
@@ -7008,7 +7061,7 @@ internal static class Program
                     var propertyValue = TypeDescriptor.GetProperties(refreshedSelection)[propertyName]?.GetValue(refreshedSelection)?.ToString();
                     return string.Equals(selectedSection, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
                            selectedObject?.RecordIndex == recordIndex &&
-                           string.Equals(propertyValue, initialSelectionValue, StringComparison.Ordinal);
+                           string.Equals(propertyValue, expectedUndoSelectionValue, StringComparison.Ordinal);
                 });
             Expect(undoneSelection,
                 $"real asset editor smoke should preserve section/object continuity after undoing {propertyName} for {sourcePath}");

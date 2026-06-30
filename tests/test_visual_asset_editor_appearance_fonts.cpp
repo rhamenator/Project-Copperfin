@@ -160,6 +160,47 @@ void test_set_visual_object_font_name_assigns_text() {
             appended_font.ok && !appended_font.exists,
         "#831: serialized font-name undo should restore existing values and remove appended properties");
 
+    const fs::path casefold_blob_path = temp_dir / "font_name_casefold.scx";
+    const auto casefold_blob_create = copperfin::vfp::create_dbf_table_file(casefold_blob_path.string(), blob_fields, blob_records);
+    expect(casefold_blob_create.ok, "#2983: casefold font-name property-blob fixture should be writable");
+
+    fs::path lowercase_sidecar = casefold_blob_path;
+    lowercase_sidecar.replace_extension(".sct");
+    fs::path uppercase_sidecar = casefold_blob_path;
+    uppercase_sidecar.replace_extension(".SCT");
+    fs::rename(lowercase_sidecar, uppercase_sidecar, ignored);
+    expect(!ignored, "#2983: casefold font-name fixture should rename the memo sidecar");
+
+    auto casefold_font_result = copperfin::vfp::set_visual_object_font_name({
+        .path = casefold_blob_path.string(),
+        .objects = {
+            {.record_index = 0U, .object_name = {}, .unique_id = "blob-guid"}
+        },
+        .font_name = "Consolas"
+    });
+    expect(casefold_font_result.ok,
+        "#2983: font-name assignment should resolve uppercase memo sidecars for property-blob assets");
+    auto casefold_font = copperfin::vfp::query_visual_object_property({
+        .path = casefold_blob_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "blob-guid",
+        .property_name = "FontName"
+    });
+    expect(casefold_font.ok && casefold_font.exists && casefold_font.value == "\"Consolas\"",
+        "#2983: font-name assignment should persist serialized text through uppercase memo sidecars");
+    undo_result = copperfin::vfp::undo_visual_object_property(casefold_blob_path.string());
+    expect(undo_result.ok, "#2983: uppercase-sidecar font-name assignment should remain undo-backed");
+    casefold_font = copperfin::vfp::query_visual_object_property({
+        .path = casefold_blob_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "blob-guid",
+        .property_name = "FontName"
+    });
+    expect(casefold_font.ok && casefold_font.exists && casefold_font.value == "\"Arial\"",
+        "#2983: uppercase-sidecar font-name undo should restore the original serialized text");
+
     const fs::path incomplete_path = temp_dir / "missing_fontname.scx";
     const std::vector<copperfin::vfp::DbfFieldDescriptor> incomplete_fields{
         {.name = "OBJNAME", .type = 'C', .length = 20U},
