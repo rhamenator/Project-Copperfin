@@ -1501,10 +1501,12 @@ void test_studio_host_json_duplicates_report_visual_object_subtrees_by_stable_se
 void test_studio_host_json_duplicates_deleted_report_visual_object_subtrees_by_stable_selection(
     const std::string& studio_host_path);
 #endif
+#if !defined(COPPERFIN_REPORT_VISUAL_UPDATE_BATCH_SKIP_HOST_SMOKE)
 void test_studio_host_json_updates_report_visual_object_batches_by_stable_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_updates_deleted_report_visual_object_batches_by_stable_selection(
     const std::string& studio_host_path);
+#endif
 void test_studio_host_json_renames_report_visual_object_batches_by_stable_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_renames_deleted_report_visual_object_batches_by_stable_selection(

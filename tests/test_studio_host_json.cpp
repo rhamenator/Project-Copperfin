@@ -313,8 +313,10 @@ int main(int argc, char** argv) {
     test_studio_host_json_plans_selection_toolbox_object_creation_batch_dispatch(argv[1]);
     test_studio_host_json_updates_visual_property_batches(argv[1]);
     test_studio_host_json_updates_visual_object_batches(argv[1]);
+#if !defined(COPPERFIN_REPORT_VISUAL_UPDATE_BATCH_SKIP_HOST_SMOKE)
     test_studio_host_json_updates_report_visual_object_batches_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_visual_object_batches_by_stable_selection(argv[1]);
+#endif
     test_studio_host_json_renames_report_visual_object_batches_by_stable_selection(argv[1]);
     test_studio_host_json_renames_deleted_report_visual_object_batches_by_stable_selection(argv[1]);
     test_studio_host_json_duplicates_report_visual_object_batches_by_stable_selection(argv[1]);
