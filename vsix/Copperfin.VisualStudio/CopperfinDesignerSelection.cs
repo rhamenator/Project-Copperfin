@@ -142,6 +142,10 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             "RECORDINDEX",
             localization.Text("AssetEditor.Column.Record"),
             section.RecordIndex.ToString(CultureInfo.InvariantCulture));
+        selection.AddReadOnlyInt(
+            "OBJECTCOUNT",
+            localization.Text("AssetEditor.Column.Objects"),
+            section.Objects.Count.ToString(CultureInfo.InvariantCulture));
         selection.AddReadOnlyString(
             "SECTIONSTATE",
             localization.Text("AssetEditor.Property.SectionState"),
