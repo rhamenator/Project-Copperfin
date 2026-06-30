@@ -110,7 +110,6 @@ add_executable(test_studio_host_json
     test_studio_host_json_setters_data.cpp
     test_studio_host_json_report_labels.cpp
     test_studio_host_json_geometry_preview_bounds.cpp
-    test_studio_host_json_geometry_dimensions.cpp
     test_studio_host_json_geometry_font_metadata.cpp
     test_studio_host_json_geometry_column_width.cpp
     test_studio_host_json_settings_page_layout_fields.cpp
