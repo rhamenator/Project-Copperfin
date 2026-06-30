@@ -136,6 +136,17 @@ internal static class Program
                 expectedSectionTitle: "Detail",
                 expectedSectionCount: 5,
                 expectLabel: true);
+            SmokeRealAssetHostBackedPropertyRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLE3V.FRX"),
+                recordIndex: 6,
+                propertyName: "FONTFACE",
+                originalValue: string.Empty,
+                updatedValue: "Arial",
+                expectedObjectTitle: "wiz_general",
+                expectedSectionTitle: "Unplaced objects",
+                expectedSectionCount: 4,
+                expectLabel: false,
+                expectUnplacedObject: true);
             SmokeAssetEditorPropertyGridRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 7,
@@ -188,6 +199,20 @@ internal static class Program
                 expectedObjectTitle: "wiz_field",
                 expectedSectionCount: 5,
                 expectLabel: true);
+            SmokeAssetEditorPropertyGridRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLE3V.FRX"),
+                recordIndex: 6,
+                expectedSectionTitle: "Unplaced objects",
+                propertyName: "FONTFACE",
+                updatedPropertyValue: "Arial",
+                expectedOriginalSelectionValue: string.Empty,
+                expectedUpdatedSelectionValue: "Arial",
+                expectedUpdatedRawValue: "Arial",
+                expectedOriginalRawValue: string.Empty,
+                expectedObjectTitle: "wiz_general",
+                expectedSectionCount: 4,
+                expectLabel: false,
+                expectUnplacedObject: true);
             SmokeProjectEditorWithRealAsset(
                 ResolveFirstExistingRealAssetPath(
                     TryResolveVfp9InstallAsset(@"Samples\Solution\solution.pjx"),
@@ -6768,7 +6793,8 @@ internal static class Program
         string expectedObjectTitle,
         string expectedSectionTitle,
         int expectedSectionCount,
-        bool expectLabel)
+        bool expectLabel,
+        bool expectUnplacedObject = false)
     {
         if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
         {
@@ -6799,6 +6825,7 @@ internal static class Program
                 expectedSectionTitle,
                 expectedSectionCount,
                 expectLabel,
+                expectUnplacedObject,
                 $"initial real asset snapshot should preserve {propertyName}");
 
             var updateResult = CopperfinStudioSnapshotClient.TryUpdateProperty(
@@ -6822,6 +6849,7 @@ internal static class Program
                 expectedSectionTitle,
                 expectedSectionCount,
                 expectLabel,
+                expectUnplacedObject,
                 $"updated real asset snapshot should preserve {propertyName}");
             Expect(updateResult.Document.CommandUndoAvailable,
                 $"real asset write smoke should expose undo after updating {propertyName} for {sourcePath}");
@@ -6843,6 +6871,7 @@ internal static class Program
                 expectedSectionTitle,
                 expectedSectionCount,
                 expectLabel,
+                expectUnplacedObject,
                 $"reloaded updated real asset snapshot should preserve {propertyName}");
             Expect(reloadedAfterUpdate.Document.CommandUndoAvailable,
                 $"reloaded updated real asset snapshot should keep undo available for {sourcePath}");
@@ -6872,6 +6901,7 @@ internal static class Program
                 expectedSectionTitle,
                 expectedSectionCount,
                 expectLabel,
+                expectUnplacedObject,
                 $"reloaded undone real asset snapshot should preserve {propertyName}");
             Expect(!reloadedAfterUndo.Document.CommandUndoAvailable,
                 $"real asset write smoke should clear undo after restoring {propertyName} for {sourcePath}");
@@ -6906,7 +6936,8 @@ internal static class Program
         string expectedOriginalRawValue,
         string expectedObjectTitle,
         int expectedSectionCount,
-        bool expectLabel)
+        bool expectLabel,
+        bool expectUnplacedObject = false)
     {
         if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
         {
@@ -6942,6 +6973,9 @@ internal static class Program
             var sectionListView = GetPrivateListView(control, "sectionListView");
             var objectListView = GetPrivateListView(control, "objectListView");
             var propertyGrid = GetPrivatePropertyGrid(control);
+            var surface = expectUnplacedObject
+                ? FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface for the real unplaced asset smoke.")
+                : null;
 
             var loaded = WaitUntil(
                 TimeSpan.FromSeconds(8),
@@ -7016,6 +7050,11 @@ internal static class Program
                     var propertyValue = TypeDescriptor.GetProperties(refreshedSelection)[propertyName]?.GetValue(refreshedSelection)?.ToString();
                     return string.Equals(selectedSection, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
                            selectedObject?.RecordIndex == recordIndex &&
+                           (!expectUnplacedObject ||
+                            (string.Equals(ReadPrivateStringField(surface!, "assetFamily"), "report", StringComparison.Ordinal) &&
+                             ReadPrivateNullableInt(surface!, "selectedRecordIndex") == recordIndex &&
+                             ReadPrivateNullableInt(surface!, "selectedReportSectionRecordIndex") is null &&
+                             ReadPrivateBoolField(surface!, "unplacedReportObjectsSelected"))) &&
                            string.Equals(propertyValue, expectedUpdatedSelectionValue, StringComparison.Ordinal);
                 });
             Expect(updatedSelection,
@@ -7038,6 +7077,7 @@ internal static class Program
                     expectedSectionTitle,
                     expectedSectionCount,
                     expectLabel,
+                    expectUnplacedObject,
                     $"reloaded edited real asset snapshot should preserve {propertyName}");
             }
 
@@ -7061,6 +7101,11 @@ internal static class Program
                     var propertyValue = TypeDescriptor.GetProperties(refreshedSelection)[propertyName]?.GetValue(refreshedSelection)?.ToString();
                     return string.Equals(selectedSection, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
                            selectedObject?.RecordIndex == recordIndex &&
+                           (!expectUnplacedObject ||
+                            (string.Equals(ReadPrivateStringField(surface!, "assetFamily"), "report", StringComparison.Ordinal) &&
+                             ReadPrivateNullableInt(surface!, "selectedRecordIndex") == recordIndex &&
+                             ReadPrivateNullableInt(surface!, "selectedReportSectionRecordIndex") is null &&
+                             ReadPrivateBoolField(surface!, "unplacedReportObjectsSelected"))) &&
                            string.Equals(propertyValue, expectedUndoSelectionValue, StringComparison.Ordinal);
                 });
             Expect(undoneSelection,
@@ -7082,6 +7127,7 @@ internal static class Program
                     expectedSectionTitle,
                     expectedSectionCount,
                     expectLabel,
+                    expectUnplacedObject,
                     $"reloaded undone editor real asset snapshot should preserve {propertyName}");
             }
 
@@ -7363,6 +7409,7 @@ internal static class Program
         string expectedSectionTitle,
         int expectedSectionCount,
         bool expectLabel,
+        bool expectUnplacedObject,
         string failurePrefix)
     {
         Expect(document.ReportLayout is not null,
@@ -7377,21 +7424,36 @@ internal static class Program
         Expect(document.ReportLayout.Sections.Count == expectedSectionCount,
             $"{failurePrefix} for {document.Path} should preserve section counts");
 
-        var section = document.ReportLayout.Sections
-            .FirstOrDefault(candidate => string.Equals(candidate.Title, expectedSectionTitle, StringComparison.OrdinalIgnoreCase));
-        Expect(section is not null,
-            $"{failurePrefix} for {document.Path} should preserve section '{expectedSectionTitle}'");
-        if (section is null)
+        CopperfinStudioReportLayoutObject? layoutObject;
+        if (expectUnplacedObject)
         {
-            return;
+            layoutObject = document.ReportLayout.UnplacedObjects
+                .FirstOrDefault(candidate => candidate.RecordIndex == recordIndex);
+            Expect(layoutObject is not null,
+                $"{failurePrefix} for {document.Path} should preserve unplaced object {recordIndex}");
+            if (layoutObject is null)
+            {
+                return;
+            }
         }
-
-        var layoutObject = section.Objects.FirstOrDefault(candidate => candidate.RecordIndex == recordIndex);
-        Expect(layoutObject is not null,
-            $"{failurePrefix} for {document.Path} should preserve placed object {recordIndex}");
-        if (layoutObject is null)
+        else
         {
-            return;
+            var section = document.ReportLayout.Sections
+                .FirstOrDefault(candidate => string.Equals(candidate.Title, expectedSectionTitle, StringComparison.OrdinalIgnoreCase));
+            Expect(section is not null,
+                $"{failurePrefix} for {document.Path} should preserve section '{expectedSectionTitle}'");
+            if (section is null)
+            {
+                return;
+            }
+
+            layoutObject = section.Objects.FirstOrDefault(candidate => candidate.RecordIndex == recordIndex);
+            Expect(layoutObject is not null,
+                $"{failurePrefix} for {document.Path} should preserve placed object {recordIndex}");
+            if (layoutObject is null)
+            {
+                return;
+            }
         }
 
         Expect(string.Equals(layoutObject.Title, expectedObjectTitle, StringComparison.Ordinal),
