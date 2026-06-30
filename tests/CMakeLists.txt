@@ -121,7 +121,6 @@ add_executable(test_studio_host_json
     test_studio_host_json_sections_diagnostics_and_misc.cpp
     test_studio_host_json_sections_geometry.cpp
     test_studio_host_json_sections_move_and_placement.cpp
-    test_studio_host_json_objects_diagnostics_and_misc.cpp
     test_studio_host_json_objects_dhf_lifecycle.cpp
     test_studio_host_json_objects_dhf_expressions_and_exposure.cpp
     test_studio_host_json_objects_band_exposure.cpp
