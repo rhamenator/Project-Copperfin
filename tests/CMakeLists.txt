@@ -154,6 +154,7 @@ target_compile_definitions(test_studio_host_json PRIVATE
     COPPERFIN_REPORT_SETTINGS_DIAGNOSTICS_SKIP_HOST_SMOKE
     COPPERFIN_REPORT_UNRESOLVED_MEMO_SKIP_HOST_SMOKE
     COPPERFIN_REPORT_SCHEMA_FALLBACK_SKIP_HOST_SMOKE
+    COPPERFIN_REPORT_LAYOUT_WIDTH_LEFT_PREVIEW_BOUNDS_SKIP_HOST_SMOKE
 )
 
 if(MSVC)
@@ -575,6 +576,28 @@ endif()
 add_test(
     NAME test_studio_host_edited_object_delete_geometry
     COMMAND $<TARGET_FILE:test_studio_host_edited_object_delete_geometry> $<TARGET_FILE:copperfin_studio_host>
+)
+
+add_executable(test_studio_host_report_width_left_preview_bounds
+    test_studio_host_report_width_left_preview_bounds.cpp
+    test_studio_host_json_geometry_preview_bounds.cpp
+    test_studio_host_json_shared_test_helpers.cpp
+    test_studio_host_json_report_shared_fixtures.cpp
+)
+target_link_libraries(test_studio_host_report_width_left_preview_bounds PRIVATE cf_vfp_assets)
+target_compile_definitions(test_studio_host_report_width_left_preview_bounds PRIVATE
+    COPPERFIN_REPORT_LAYOUT_WIDTH_LEFT_PREVIEW_BOUNDS_ONLY
+)
+
+if(MSVC)
+    target_compile_options(test_studio_host_report_width_left_preview_bounds PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_report_width_left_preview_bounds PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_report_width_left_preview_bounds
+    COMMAND $<TARGET_FILE:test_studio_host_report_width_left_preview_bounds> $<TARGET_FILE:copperfin_studio_host>
 )
 
 add_executable(test_studio_host_report_geometry_defaults

@@ -185,14 +185,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_moves_report_layout_objects_from_sections_to_unplaced_by_stable_selection(argv[1]);
     test_studio_host_json_restores_edited_deleted_report_layout_object_as_unplaced_by_record_selection(argv[1]);
     test_studio_host_json_restores_edited_deleted_report_layout_object_as_unplaced_by_stable_selection(argv[1]);
-    test_studio_host_json_updates_report_layout_object_width_preview_bounds_by_record_selection(argv[1]);
-    test_studio_host_json_updates_report_layout_object_width_preview_bounds_by_stable_selection(argv[1]);
-    test_studio_host_json_clears_report_layout_object_width_preview_bounds_by_record_selection(argv[1]);
-    test_studio_host_json_clears_report_layout_object_width_preview_bounds_by_stable_selection(argv[1]);
-    test_studio_host_json_updates_report_layout_object_left_preview_bounds_by_record_selection(argv[1]);
-    test_studio_host_json_updates_report_layout_object_left_preview_bounds_by_stable_selection(argv[1]);
-    test_studio_host_json_clears_report_layout_object_left_preview_bounds_by_record_selection(argv[1]);
-    test_studio_host_json_clears_report_layout_object_left_preview_bounds_by_stable_selection(argv[1]);
     test_studio_host_json_updates_report_layout_object_height_preview_bounds_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_layout_object_height_preview_bounds_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_layout_object_height_preview_bounds_by_stable_selection(argv[1]);
