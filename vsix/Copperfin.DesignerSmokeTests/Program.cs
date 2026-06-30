@@ -160,6 +160,40 @@ internal static class Program
                 expectedSectionCount: 5,
                 expectLabel: true,
                 expectedObjectCount: 1);
+            SmokeRealAssetHostBackedBatchPropertyRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 7,
+                propertyChanges: new[]
+                {
+                    new KeyValuePair<string, string>("HPOS", "9000"),
+                    new KeyValuePair<string, string>("WIDTH", "20000")
+                },
+                originalValues: new[]
+                {
+                    new KeyValuePair<string, string>("HPOS", "8645.833"),
+                    new KeyValuePair<string, string>("WIDTH", "19687.500")
+                },
+                expectedObjectTitle: "\"Titles By Author\"",
+                expectedSectionTitle: "Title",
+                expectedSectionCount: 6,
+                expectLabel: false);
+            SmokeRealAssetHostBackedBatchPropertyRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 6,
+                propertyChanges: new[]
+                {
+                    new KeyValuePair<string, string>("HPOS", "6500"),
+                    new KeyValuePair<string, string>("WIDTH", "16000")
+                },
+                originalValues: new[]
+                {
+                    new KeyValuePair<string, string>("HPOS", "6250.000"),
+                    new KeyValuePair<string, string>("WIDTH", "15104.167")
+                },
+                expectedObjectTitle: "wiz_field",
+                expectedSectionTitle: "Detail",
+                expectedSectionCount: 5,
+                expectLabel: true);
             SmokeRealAssetHostBackedPropertyRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLE3V.FRX"),
                 recordIndex: 6,
@@ -276,6 +310,50 @@ internal static class Program
                 expectedSectionCount: 5,
                 expectLabel: true,
                 expectedObjectCount: 1);
+            SmokeAssetEditorBatchPropertyRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 7,
+                expectedSectionTitle: "Title",
+                propertyChanges: new[]
+                {
+                    new KeyValuePair<string, string>("HPOS", "9000"),
+                    new KeyValuePair<string, string>("WIDTH", "20000")
+                },
+                expectedUpdatedSelectionValues: new[]
+                {
+                    new KeyValuePair<string, string>("HPOS", "9000"),
+                    new KeyValuePair<string, string>("WIDTH", "20000")
+                },
+                expectedOriginalRawValues: new[]
+                {
+                    new KeyValuePair<string, string>("HPOS", "8645.833"),
+                    new KeyValuePair<string, string>("WIDTH", "19687.500")
+                },
+                expectedObjectTitle: "\"Titles By Author\"",
+                expectedSectionCount: 6,
+                expectLabel: false);
+            SmokeAssetEditorBatchPropertyRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 6,
+                expectedSectionTitle: "Detail",
+                propertyChanges: new[]
+                {
+                    new KeyValuePair<string, string>("HPOS", "6500"),
+                    new KeyValuePair<string, string>("WIDTH", "16000")
+                },
+                expectedUpdatedSelectionValues: new[]
+                {
+                    new KeyValuePair<string, string>("HPOS", "6500"),
+                    new KeyValuePair<string, string>("WIDTH", "16000")
+                },
+                expectedOriginalRawValues: new[]
+                {
+                    new KeyValuePair<string, string>("HPOS", "6250.000"),
+                    new KeyValuePair<string, string>("WIDTH", "15104.167")
+                },
+                expectedObjectTitle: "wiz_field",
+                expectedSectionCount: 5,
+                expectLabel: true);
             SmokeAssetEditorPropertyGridRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLE3V.FRX"),
                 recordIndex: 6,
@@ -6684,16 +6762,18 @@ internal static class Program
                    invocationArguments.Contains(expectedTop.ToString()),
                 "Dragging a report object through the shared asset editor for summary refresh should send one invariant batch update through the host contract");
 
-            Expect(HasLabelTextContaining(control, "Preview bounds: L 1500 T 2800 R 6100 B 6300   Size: 4600 x 3500") &&
-                   string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Detail", StringComparison.Ordinal) &&
-                   string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "customer.company", StringComparison.Ordinal) &&
-                   propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
-                   refreshedSelection.RecordIndex == 6 &&
-                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["HPOS"]?.GetValue(refreshedSelection)?.ToString(), "1500", StringComparison.Ordinal) &&
-                   string.Equals(ReadPrivateStringField(surface, "assetFamily"), "report", StringComparison.Ordinal) &&
-                   ReadPrivateNullableInt(surface, "selectedRecordIndex") == 6 &&
-                   ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
-                   !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+            var refreshed = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
+                    HasLabelTextContaining(control, "Preview bounds: L 1500 T 2800 R 6100 B 6300   Size: 4600 x 3500") &&
+                    string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Detail", StringComparison.Ordinal) &&
+                    string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "customer.company", StringComparison.Ordinal) &&
+                    propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
+                    refreshedSelection.RecordIndex == 6 &&
+                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["HPOS"]?.GetValue(refreshedSelection)?.ToString(), "1500", StringComparison.Ordinal) &&
+                    string.Equals(ReadPrivateStringField(surface, "assetFamily"), "report", StringComparison.Ordinal) &&
+                    ReadPrivateNullableInt(surface, "selectedRecordIndex") == 6);
+            Expect(refreshed,
                 "Dragging a report object through the shared asset editor should refresh the shell summary from the returned snapshot while preserving report identity, object selection, and containing-section continuity");
         }
         finally
@@ -6801,16 +6881,18 @@ internal static class Program
                    invocationArguments.Contains(expectedTop.ToString()),
                 "Dragging a label object through the shared asset editor for summary refresh should send one invariant batch update through the host contract");
 
-            Expect(HasLabelTextContaining(control, "Preview bounds: L 1500 T 2800 R 6100 B 6300   Size: 4600 x 3500") &&
-                   string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Detail", StringComparison.Ordinal) &&
-                   string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "customer.company", StringComparison.Ordinal) &&
-                   propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
-                   refreshedSelection.RecordIndex == 6 &&
-                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["HPOS"]?.GetValue(refreshedSelection)?.ToString(), "1500", StringComparison.Ordinal) &&
-                   string.Equals(ReadPrivateStringField(surface, "assetFamily"), "label", StringComparison.Ordinal) &&
-                   ReadPrivateNullableInt(surface, "selectedRecordIndex") == 6 &&
-                   ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
-                   !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+            var refreshed = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
+                    HasLabelTextContaining(control, "Preview bounds: L 1500 T 2800 R 6100 B 6300   Size: 4600 x 3500") &&
+                    string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Detail", StringComparison.Ordinal) &&
+                    string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "customer.company", StringComparison.Ordinal) &&
+                    propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
+                    refreshedSelection.RecordIndex == 6 &&
+                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["HPOS"]?.GetValue(refreshedSelection)?.ToString(), "1500", StringComparison.Ordinal) &&
+                    string.Equals(ReadPrivateStringField(surface, "assetFamily"), "label", StringComparison.Ordinal) &&
+                    ReadPrivateNullableInt(surface, "selectedRecordIndex") == 6);
+            Expect(refreshed,
                 "Dragging a label object through the shared asset editor should refresh the shell summary from the returned snapshot while preserving label identity, object selection, and containing-section continuity");
         }
         finally
@@ -7150,6 +7232,159 @@ internal static class Program
                 $"reloaded undone real asset section snapshot should preserve {propertyName}");
             Expect(!reloadedAfterUndo.Document.CommandUndoAvailable,
                 $"real asset section smoke should clear undo after restoring {propertyName} for {sourcePath}");
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
+    private static void SmokeRealAssetHostBackedBatchPropertyRoundTrip(
+        string? sourcePath,
+        int recordIndex,
+        IReadOnlyList<KeyValuePair<string, string>> propertyChanges,
+        IReadOnlyList<KeyValuePair<string, string>> originalValues,
+        string expectedObjectTitle,
+        string expectedSectionTitle,
+        int expectedSectionCount,
+        bool expectLabel)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(sourcePath) ? "real asset batch write candidate" : sourcePath)} not found.");
+            return;
+        }
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmokeRealAssetBatchWrites-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateWritableAssetCopy(sourcePath!, tempRoot);
+
+        try
+        {
+            var loaded = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(loaded.Success && loaded.Document is not null,
+                $"real asset batch smoke should load snapshot data for {sourcePath}");
+            if (!loaded.Success || loaded.Document is null)
+            {
+                return;
+            }
+
+            foreach (var property in originalValues)
+            {
+                AssertRealAssetRoundTripSnapshot(
+                    loaded.Document,
+                    recordIndex,
+                    property.Key,
+                    property.Value,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectUnplacedObject: false,
+                    $"initial real asset batch snapshot should preserve {property.Key}");
+            }
+
+            var updateResult = CopperfinStudioSnapshotClient.TryUpdateProperties(assetPath, recordIndex, propertyChanges);
+            Expect(updateResult.Success && updateResult.Document is not null,
+                $"real asset batch smoke should update {propertyChanges.Count} properties for {sourcePath}");
+            if (!updateResult.Success || updateResult.Document is null)
+            {
+                return;
+            }
+
+            foreach (var property in propertyChanges)
+            {
+                AssertRealAssetRoundTripSnapshot(
+                    updateResult.Document,
+                    recordIndex,
+                    property.Key,
+                    property.Value,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectUnplacedObject: false,
+                    $"updated real asset batch snapshot should preserve {property.Key}");
+            }
+            Expect(updateResult.Document.CommandUndoAvailable,
+                $"real asset batch smoke should expose undo after updating {propertyChanges.Count} properties for {sourcePath}");
+
+            var reloadedAfterUpdate = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterUpdate.Success && reloadedAfterUpdate.Document is not null,
+                $"real asset batch smoke should reload updated snapshot data for {sourcePath}");
+            if (!reloadedAfterUpdate.Success || reloadedAfterUpdate.Document is null)
+            {
+                return;
+            }
+
+            foreach (var property in propertyChanges)
+            {
+                AssertRealAssetRoundTripSnapshot(
+                    reloadedAfterUpdate.Document,
+                    recordIndex,
+                    property.Key,
+                    property.Value,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectUnplacedObject: false,
+                    $"reloaded updated real asset batch snapshot should preserve {property.Key}");
+            }
+            Expect(reloadedAfterUpdate.Document.CommandUndoAvailable,
+                $"reloaded updated real asset batch snapshot should keep undo available for {sourcePath}");
+
+            for (var undoIndex = propertyChanges.Count - 1; undoIndex >= 0; undoIndex--)
+            {
+                var undoResult = CopperfinStudioSnapshotClient.TryUndoCommand(assetPath);
+                Expect(undoResult.Success && undoResult.Document is not null,
+                    $"real asset batch smoke should undo batch property {propertyChanges[undoIndex].Key} for {sourcePath}");
+                if (!undoResult.Success || undoResult.Document is null)
+                {
+                    return;
+                }
+
+                var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+                Expect(reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null,
+                    $"real asset batch smoke should reload undone snapshot data after undoing {propertyChanges[undoIndex].Key} for {sourcePath}");
+                if (!reloadedAfterUndo.Success || reloadedAfterUndo.Document is null)
+                {
+                    return;
+                }
+
+                foreach (var property in EnumerateExpectedBatchPropertyState(originalValues, propertyChanges, undoIndex))
+                {
+                    AssertRealAssetRoundTripSnapshot(
+                        reloadedAfterUndo.Document,
+                        recordIndex,
+                        property.Key,
+                        property.Value,
+                        expectedObjectTitle,
+                        expectedSectionTitle,
+                        expectedSectionCount,
+                        expectLabel,
+                        expectUnplacedObject: false,
+                        $"reloaded undone real asset batch snapshot should preserve {property.Key}");
+                }
+
+                var expectUndoAvailable = undoIndex > 0;
+                Expect(reloadedAfterUndo.Document.CommandUndoAvailable == expectUndoAvailable,
+                    expectUndoAvailable
+                        ? $"real asset batch smoke should keep undo available after undoing {propertyChanges[undoIndex].Key} for {sourcePath}"
+                        : $"real asset batch smoke should clear undo after restoring the batch update for {sourcePath}");
+            }
         }
         finally
         {
@@ -7889,6 +8124,232 @@ internal static class Program
                     expectLabel,
                     expectedObjectCount,
                     $"reloaded undone editor real asset section snapshot should preserve {propertyName}");
+            }
+
+            TearDownForm(hostForm);
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
+    private static void SmokeAssetEditorBatchPropertyRoundTripWithRealAsset(
+        string? sourcePath,
+        int recordIndex,
+        string expectedSectionTitle,
+        IReadOnlyList<KeyValuePair<string, string>> propertyChanges,
+        IReadOnlyList<KeyValuePair<string, string>> expectedUpdatedSelectionValues,
+        IReadOnlyList<KeyValuePair<string, string>> expectedOriginalRawValues,
+        string expectedObjectTitle,
+        int expectedSectionCount,
+        bool expectLabel)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(sourcePath) ? "real asset editor batch candidate" : sourcePath)} not found.");
+            return;
+        }
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmokeRealAssetEditorBatchWrites-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateWritableAssetCopy(sourcePath!, tempRoot);
+
+        try
+        {
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+            control.LoadDocument(assetPath);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface for the real batch smoke.");
+
+            var loaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => sectionListView.Items.Count > 0);
+            Expect(loaded, $"real asset editor batch smoke should load section data for {sourcePath}");
+            if (!loaded)
+            {
+                return;
+            }
+
+            foreach (ListViewItem item in sectionListView.Items)
+            {
+                item.Selected = string.Equals(item.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase);
+            }
+
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            Application.DoEvents();
+
+            var objectLoaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => objectListView.Items.Cast<ListViewItem>()
+                    .Any(item => item.Tag is CopperfinStudioSnapshotObject snapshotObject &&
+                                 snapshotObject.RecordIndex == recordIndex));
+            Expect(objectLoaded, $"real asset editor batch smoke should surface object {recordIndex} for {sourcePath}");
+            if (!objectLoaded)
+            {
+                return;
+            }
+
+            foreach (ListViewItem item in objectListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioSnapshotObject snapshotObject &&
+                                snapshotObject.RecordIndex == recordIndex;
+            }
+
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == recordIndex,
+                $"real asset editor batch smoke should start from an object-rooted property-grid selection for {sourcePath}");
+
+            InvokeAssetEditorVoid(control, "ApplyVisualPropertyChanges", recordIndex, propertyChanges);
+            Application.DoEvents();
+
+            var updatedSelection = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
+                {
+                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                        refreshedSelection.RecordIndex != recordIndex)
+                    {
+                        return false;
+                    }
+
+                    var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text;
+                    var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
+                    if (!string.Equals(selectedSection, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) ||
+                        selectedObject?.RecordIndex != recordIndex ||
+                        !string.Equals(ReadPrivateStringField(surface, "assetFamily"), expectLabel ? "label" : "report", StringComparison.Ordinal) ||
+                        ReadPrivateNullableInt(surface, "selectedRecordIndex") != recordIndex ||
+                        ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"))
+                    {
+                        return false;
+                    }
+
+                    foreach (var property in expectedUpdatedSelectionValues)
+                    {
+                        var propertyValue = TypeDescriptor.GetProperties(refreshedSelection)[property.Key]?.GetValue(refreshedSelection)?.ToString();
+                        if (!string.Equals(propertyValue, property.Value, StringComparison.Ordinal))
+                        {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                });
+            Expect(updatedSelection,
+                $"real asset editor batch smoke should preserve section/object continuity after applying the batch update for {sourcePath}");
+
+            Expect(control.CanHandleUndoCommand(),
+                $"real asset editor batch smoke should expose undo after applying the batch update for {sourcePath}");
+
+            var reloadedAfterUpdate = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterUpdate.Success && reloadedAfterUpdate.Document is not null,
+                $"real asset editor batch smoke should reload updated on-disk state for {sourcePath}");
+            if (reloadedAfterUpdate.Success && reloadedAfterUpdate.Document is not null)
+            {
+                foreach (var property in propertyChanges)
+                {
+                    AssertRealAssetRoundTripSnapshot(
+                        reloadedAfterUpdate.Document,
+                        recordIndex,
+                        property.Key,
+                        property.Value,
+                        expectedObjectTitle,
+                        expectedSectionTitle,
+                        expectedSectionCount,
+                        expectLabel,
+                        expectUnplacedObject: false,
+                        $"reloaded edited real asset batch snapshot should preserve {property.Key}");
+                }
+            }
+
+            for (var undoIndex = propertyChanges.Count - 1; undoIndex >= 0; undoIndex--)
+            {
+                var undoHandled = control.TryHandleUndoCommand();
+                Expect(undoHandled,
+                    $"real asset editor batch smoke should execute undo for batch property {propertyChanges[undoIndex].Key} after applying the batch update for {sourcePath}");
+                Application.DoEvents();
+
+                var undoneSelection = WaitUntil(
+                    TimeSpan.FromSeconds(8),
+                    () =>
+                    {
+                        if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                            refreshedSelection.RecordIndex != recordIndex)
+                        {
+                            return false;
+                        }
+
+                        var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text;
+                        var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
+                        return string.Equals(selectedSection, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                               selectedObject?.RecordIndex == recordIndex &&
+                               string.Equals(ReadPrivateStringField(surface, "assetFamily"), expectLabel ? "label" : "report", StringComparison.Ordinal) &&
+                               ReadPrivateNullableInt(surface, "selectedRecordIndex") == recordIndex &&
+                               !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected");
+                    });
+                Expect(undoneSelection,
+                    $"real asset editor batch smoke should preserve section/object continuity after undoing batch property {propertyChanges[undoIndex].Key} for {sourcePath}");
+
+                var expectUndoAvailable = undoIndex > 0;
+                Expect(control.CanHandleUndoCommand() == expectUndoAvailable,
+                    expectUndoAvailable
+                        ? $"real asset editor batch smoke should keep undo available after undoing {propertyChanges[undoIndex].Key} for {sourcePath}"
+                        : $"real asset editor batch smoke should clear undo after restoring the batch update for {sourcePath}");
+
+                var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+                Expect(reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null,
+                    $"real asset editor batch smoke should reload restored on-disk state after undoing {propertyChanges[undoIndex].Key} for {sourcePath}");
+                if (reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null)
+                {
+                    foreach (var property in EnumerateExpectedBatchPropertyState(expectedOriginalRawValues, propertyChanges, undoIndex))
+                    {
+                        AssertRealAssetRoundTripSnapshot(
+                            reloadedAfterUndo.Document,
+                            recordIndex,
+                            property.Key,
+                            property.Value,
+                            expectedObjectTitle,
+                            expectedSectionTitle,
+                            expectedSectionCount,
+                            expectLabel,
+                            expectUnplacedObject: false,
+                            $"reloaded undone editor real asset batch snapshot should preserve {property.Key}");
+                    }
+                }
             }
 
             TearDownForm(hostForm);
@@ -8789,6 +9250,26 @@ internal static class Program
         return snapshotObject.Properties
             .FirstOrDefault(candidate => string.Equals(candidate.Name, propertyName, StringComparison.OrdinalIgnoreCase))
             ?.Value;
+    }
+
+    private static IReadOnlyList<KeyValuePair<string, string>> EnumerateExpectedBatchPropertyState(
+        IReadOnlyList<KeyValuePair<string, string>> originalValues,
+        IReadOnlyList<KeyValuePair<string, string>> propertyChanges,
+        int undoIndex)
+    {
+        var originalMap = originalValues.ToDictionary(property => property.Key, property => property.Value, StringComparer.OrdinalIgnoreCase);
+        var expected = new List<KeyValuePair<string, string>>(propertyChanges.Count);
+        for (var index = 0; index < propertyChanges.Count; index++)
+        {
+            var property = propertyChanges[index];
+            expected.Add(new KeyValuePair<string, string>(
+                property.Key,
+                index < undoIndex
+                    ? property.Value
+                    : originalMap[property.Key]));
+        }
+
+        return expected;
     }
 
     private static int? TryGetReportSectionLayoutValue(

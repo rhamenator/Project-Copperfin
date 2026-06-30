@@ -8,9 +8,42 @@ namespace Copperfin.VisualStudio;
 
 internal static class CopperfinStudioSnapshotClient
 {
+    private sealed class StudioHostCommandResult
+    {
+        public bool Success { get; set; }
+        public string Stdout { get; set; } = string.Empty;
+        public string Error { get; set; } = string.Empty;
+    }
+
+    private sealed class CopperfinStudioVisualObjectBatchEnvelope
+    {
+        public string Status { get; set; } = string.Empty;
+        public string Error { get; set; } = string.Empty;
+        public CopperfinStudioVisualObjectBatchResult? VisualObjectUpdateBatch { get; set; }
+    }
+
+    private sealed class CopperfinStudioVisualObjectBatchResult
+    {
+        public bool Ok { get; set; }
+        public string Error { get; set; } = string.Empty;
+        public bool UndoAvailable { get; set; }
+        public string UndoLabel { get; set; } = string.Empty;
+    }
+
     private static readonly CopperfinLocalization Localization = CopperfinLocalization.FromEnvironment();
 
-    private static CopperfinStudioSnapshotResult RunSnapshotCommand(string studioHostPath, string arguments)
+    private static bool HasDocumentContent(CopperfinStudioSnapshotDocument? document)
+    {
+        return document is not null &&
+               (!string.IsNullOrWhiteSpace(document.Path) ||
+                !string.IsNullOrWhiteSpace(document.AssetFamily) ||
+                document.Objects.Count > 0 ||
+                document.FieldCount > 0 ||
+                document.ReportLayout is not null ||
+                document.ProjectWorkspace is not null);
+    }
+
+    private static StudioHostCommandResult RunCommand(string studioHostPath, string arguments)
     {
         var startInfo = new ProcessStartInfo
         {
@@ -25,7 +58,7 @@ internal static class CopperfinStudioSnapshotClient
         using var process = new Process { StartInfo = startInfo };
         if (!process.Start())
         {
-            return new CopperfinStudioSnapshotResult
+            return new StudioHostCommandResult
             {
                 Success = false,
                 Error = Localization.Text("AssetEditor.Dialog.StudioHostCouldNotStart")
@@ -46,27 +79,47 @@ internal static class CopperfinStudioSnapshotClient
             {
             }
 
-                return new CopperfinStudioSnapshotResult
-                {
-                    Success = false,
-                    Error = Localization.Text("AssetEditor.Dialog.StudioHostTimedOut")
-                };
-            }
+            return new StudioHostCommandResult
+            {
+                Success = false,
+                Error = Localization.Text("AssetEditor.Dialog.StudioHostTimedOut")
+            };
+        }
 
         if (process.ExitCode != 0)
         {
-            return new CopperfinStudioSnapshotResult
+            return new StudioHostCommandResult
             {
                 Success = false,
                 Error = string.IsNullOrWhiteSpace(stderr) ? stdout.Trim() : stderr.Trim()
             };
         }
 
+        return new StudioHostCommandResult
+        {
+            Success = true,
+            Stdout = stdout
+        };
+    }
+
+    private static CopperfinStudioSnapshotResult RunSnapshotCommand(string studioHostPath, string arguments)
+    {
+        var commandResult = RunCommand(studioHostPath, arguments);
+        if (!commandResult.Success)
+        {
+            return new CopperfinStudioSnapshotResult
+            {
+                Success = false,
+                Error = commandResult.Error
+            };
+        }
+
         try
         {
             var serializer = new JavaScriptSerializer { MaxJsonLength = 1024 * 1024 * 8 };
-            var envelope = serializer.Deserialize<CopperfinStudioSnapshotEnvelope>(stdout);
-            if (envelope is null || envelope.Document is null)
+            var envelope = serializer.Deserialize<CopperfinStudioSnapshotEnvelope>(commandResult.Stdout);
+            var document = envelope?.Document;
+            if (!HasDocumentContent(document))
             {
                 return new CopperfinStudioSnapshotResult
                 {
@@ -78,8 +131,75 @@ internal static class CopperfinStudioSnapshotClient
             return new CopperfinStudioSnapshotResult
             {
                 Success = true,
-                Document = envelope.Document
+                Document = document
             };
+        }
+        catch (InvalidOperationException ex)
+        {
+            return new CopperfinStudioSnapshotResult
+            {
+                Success = false,
+                Error = Localization.Format("AssetEditor.Dialog.StudioSnapshotParseFailed", ex.Message)
+            };
+        }
+    }
+
+    private static CopperfinStudioSnapshotResult RunBatchPropertyUpdateAndReload(
+        string studioHostPath,
+        string assetPath,
+        int recordIndex,
+        IReadOnlyList<KeyValuePair<string, string>> propertyChanges)
+    {
+        var commandResult = RunCommand(
+            studioHostPath,
+            CopperfinStudioHostBridge.BuildPropertyBatchUpdateArguments(assetPath, recordIndex, propertyChanges));
+        if (!commandResult.Success)
+        {
+            return new CopperfinStudioSnapshotResult
+            {
+                Success = false,
+                Error = commandResult.Error
+            };
+        }
+
+        try
+        {
+            var serializer = new JavaScriptSerializer { MaxJsonLength = 1024 * 1024 * 8 };
+            var snapshotEnvelope = serializer.Deserialize<CopperfinStudioSnapshotEnvelope>(commandResult.Stdout);
+            var snapshotDocument = snapshotEnvelope?.Document;
+            if (HasDocumentContent(snapshotDocument))
+            {
+                return new CopperfinStudioSnapshotResult
+                {
+                    Success = true,
+                    Document = snapshotDocument
+                };
+            }
+
+            var envelope = serializer.Deserialize<CopperfinStudioVisualObjectBatchEnvelope>(commandResult.Stdout);
+            if (envelope?.VisualObjectUpdateBatch is null)
+            {
+                return new CopperfinStudioSnapshotResult
+                {
+                    Success = false,
+                    Error = Localization.Text("AssetEditor.Dialog.StudioSnapshotEmpty")
+                };
+            }
+
+            if (!envelope.VisualObjectUpdateBatch.Ok)
+            {
+                return new CopperfinStudioSnapshotResult
+                {
+                    Success = false,
+                    Error = !string.IsNullOrWhiteSpace(envelope.VisualObjectUpdateBatch.Error)
+                        ? envelope.VisualObjectUpdateBatch.Error
+                        : envelope.Error
+                };
+            }
+
+            return RunSnapshotCommand(
+                studioHostPath,
+                CopperfinStudioHostBridge.BuildArguments(assetPath, readOnly: true) + " --json");
         }
         catch (InvalidOperationException ex)
         {
@@ -156,9 +276,11 @@ internal static class CopperfinStudioSnapshotClient
             };
         }
 
-        return RunSnapshotCommand(
+        return RunBatchPropertyUpdateAndReload(
             studioHostPath!,
-            CopperfinStudioHostBridge.BuildPropertyBatchUpdateArguments(assetPath, recordIndex, propertyChanges));
+            assetPath,
+            recordIndex,
+            propertyChanges);
     }
 
     public static CopperfinStudioSnapshotResult TryUndoCommand(string assetPath)
