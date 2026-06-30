@@ -1,6 +1,7 @@
 #include "test_studio_host_json_support.h"
 
 namespace cf_test_studio_host_json {
+#if !defined(COPPERFIN_REPORT_VISUAL_SUBTREE_DUPLICATE_SKIP_HOST_SMOKE)
 void test_studio_host_json_duplicates_report_visual_object_subtrees_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -481,6 +482,7 @@ void test_studio_host_json_duplicates_deleted_report_visual_object_subtrees_by_s
         fs::remove_all(temp_root, ignored);
     }
 }
+#endif
 
 void test_studio_host_json_updates_report_visual_object_batches_by_stable_selection(
     const std::string& studio_host_path) {

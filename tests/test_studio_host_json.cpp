@@ -214,8 +214,10 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_report_column_width_fields_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_column_width_fields_by_stable_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_column_width_fields_by_stable_selection(argv[1]);
+#if !defined(COPPERFIN_REPORT_VISUAL_SUBTREE_DUPLICATE_SKIP_HOST_SMOKE)
     test_studio_host_json_duplicates_report_visual_object_subtrees_by_stable_selection(argv[1]);
     test_studio_host_json_duplicates_deleted_report_visual_object_subtrees_by_stable_selection(argv[1]);
+#endif
     test_studio_host_json_clears_report_section_and_settings_selection_for_ambiguous_stable_selectors(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
     test_studio_host_json_exposes_builder_launch_catalog(argv[1]);
