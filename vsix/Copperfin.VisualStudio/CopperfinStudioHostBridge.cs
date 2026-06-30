@@ -57,6 +57,16 @@ internal static class CopperfinStudioHostBridge
         return $"--from-vs --json --undo-mode command --path {Quote(documentPath)}";
     }
 
+    public static string BuildDeleteObjectArguments(string documentPath, int recordIndex, string? uniqueId = null)
+    {
+        return BuildObjectLifecycleArguments(documentPath, "--delete-object", recordIndex, uniqueId);
+    }
+
+    public static string BuildRestoreObjectArguments(string documentPath, int recordIndex, string? uniqueId = null)
+    {
+        return BuildObjectLifecycleArguments(documentPath, "--restore-object", recordIndex, uniqueId);
+    }
+
     public static bool Launch(string studioHostPath, string documentPath, bool readOnly = false)
     {
         var startInfo = new DiagnosticsStartInfo
@@ -89,5 +99,16 @@ internal static class CopperfinStudioHostBridge
     private static string Quote(string value)
     {
         return "\"" + value.Replace("\"", "\"\"") + "\"";
+    }
+
+    private static string BuildObjectLifecycleArguments(string documentPath, string command, int recordIndex, string? uniqueId)
+    {
+        var arguments = $"--from-vs --json {command} --record {recordIndex}";
+        if (!string.IsNullOrWhiteSpace(uniqueId))
+        {
+            arguments += $" --unique-id {Quote(uniqueId!)}";
+        }
+
+        return $"{arguments} --path {Quote(documentPath)}";
     }
 }

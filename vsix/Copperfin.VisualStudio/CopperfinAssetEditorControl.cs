@@ -33,6 +33,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly Button launchButton;
     private readonly Button revealButton;
     private readonly Button refreshButton;
+    private readonly Button deleteObjectButton;
+    private readonly Button restoreObjectButton;
     private readonly Button buildButton;
     private readonly Button runButton;
     private readonly Button debugButton;
@@ -152,6 +154,22 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 LoadDocument(currentPath!);
             }
         };
+
+        deleteObjectButton = new Button
+        {
+            AutoSize = true,
+            Text = this.localization.Text("AssetEditor.ObjectLifecycle.DeleteButton"),
+            Visible = false
+        };
+        deleteObjectButton.Click += (_, _) => TryHandleObjectLifecycleCommand(restoring: false);
+
+        restoreObjectButton = new Button
+        {
+            AutoSize = true,
+            Text = this.localization.Text("AssetEditor.ObjectLifecycle.RestoreButton"),
+            Visible = false
+        };
+        restoreObjectButton.Click += (_, _) => TryHandleObjectLifecycleCommand(restoring: true);
 
         buildButton = new Button
         {
@@ -533,6 +551,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         buttonPanel.Controls.Add(launchButton);
         buttonPanel.Controls.Add(revealButton);
         buttonPanel.Controls.Add(refreshButton);
+        buttonPanel.Controls.Add(deleteObjectButton);
+        buttonPanel.Controls.Add(restoreObjectButton);
         buttonPanel.Controls.Add(buildButton);
         buttonPanel.Controls.Add(runButton);
         buttonPanel.Controls.Add(debugButton);
@@ -627,14 +647,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
     private int TryReadSelectedRecordIndex()
     {
-        if (objectListView.SelectedItems.Count == 0)
-        {
-            return -1;
-        }
-
-        return int.TryParse(objectListView.SelectedItems[0].SubItems[2].Text, out var recordIndex)
-            ? recordIndex
-            : -1;
+        return TryGetSelectedSnapshotObject()?.RecordIndex ?? -1;
     }
 
     public void LoadDocument(string path)
@@ -676,6 +689,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         designSurface.Visible = true;
         snapshotStatusLabel.Text = this.localization.Text("AssetEditor.Snapshot.LoadingStatus");
         UpdateProjectCommandVisibility();
+        UpdateObjectLifecycleButtonVisibility();
         _ = LoadSnapshotAsync(path);
     }
 
@@ -698,6 +712,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             if (!snapshotResult.Success || snapshotResult.Document is null)
             {
                 snapshotStatusLabel.Text = BuildSnapshotUnavailableStatus(snapshotResult.Error);
+                UpdateObjectLifecycleButtonVisibility();
                 return;
             }
 
@@ -709,6 +724,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             PopulateSectionList();
             SyncExplorerSelection();
             LoadSurface();
+            UpdateObjectLifecycleButtonVisibility();
         });
     }
 
@@ -875,15 +891,13 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         if (suppressSelectionSync) {
             return;
         }
-        var selectedObject = objectListView.SelectedItems
-            .Cast<ListViewItem>()
-            .Select(item => item.Tag as CopperfinStudioSnapshotObject)
-            .FirstOrDefault(item => item is not null);
+        var selectedObject = TryGetSelectedSnapshotObject();
 
         propertyGrid.SelectedObject = selectedObject is null || currentSnapshot is null
             ? null
             : CopperfinDesignerSelection.FromSnapshot(currentSnapshot.AssetFamily, selectedObject, localization);
         designSurface.SelectRecord(selectedObject?.RecordIndex);
+        UpdateObjectLifecycleButtonVisibility();
     }
 
     private void SyncExplorerSelection()
@@ -927,6 +941,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         finally
         {
             suppressSelectionSync = false;
+            UpdateObjectLifecycleButtonVisibility();
         }
     }
 
@@ -1011,6 +1026,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         finally
         {
             suppressSelectionSync = false;
+            UpdateObjectLifecycleButtonVisibility();
         }
     }
 
@@ -1095,6 +1111,56 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
     }
 
+    private bool TryHandleObjectLifecycleCommand(bool restoring)
+    {
+        if (currentSnapshot?.AssetFamily is not ("report" or "label") || string.IsNullOrWhiteSpace(currentPath))
+        {
+            return false;
+        }
+
+        var selectedObject = TryGetSelectedSnapshotObject();
+        if (selectedObject is null || selectedObject.Deleted != restoring)
+        {
+            return false;
+        }
+
+        var explorerSelection = CaptureExplorerSelectionState();
+        var selectedObjectRecordIndex = selectedObject.RecordIndex;
+        var uniqueId = TryReadObjectUniqueId(selectedObject);
+        snapshotStatusLabel.Text = this.localization.Text(
+            restoring
+                ? "AssetEditor.ObjectLifecycle.Restore.Executing"
+                : "AssetEditor.ObjectLifecycle.Delete.Executing");
+
+        var lifecycleResult = restoring
+            ? CopperfinStudioSnapshotClient.TryRestoreObject(currentPath!, selectedObjectRecordIndex, uniqueId)
+            : CopperfinStudioSnapshotClient.TryDeleteObject(currentPath!, selectedObjectRecordIndex, uniqueId);
+        if (!lifecycleResult.Success || lifecycleResult.Document is null)
+        {
+            snapshotStatusLabel.Text = this.localization.Format(
+                restoring
+                    ? "AssetEditor.ObjectLifecycle.Restore.Failed"
+                    : "AssetEditor.ObjectLifecycle.Delete.Failed",
+                lifecycleResult.Error ?? string.Empty);
+            return false;
+        }
+
+        currentSnapshot = lifecycleResult.Document;
+        detailsLabel.Text = BuildSnapshotDetailsText(new FileInfo(currentPath!), currentSnapshot);
+        snapshotStatusLabel.Text = this.localization.Format(
+            restoring
+                ? "AssetEditor.ObjectLifecycle.Restore.Completed"
+                : "AssetEditor.ObjectLifecycle.Delete.Completed",
+            currentSnapshot.Objects.Count,
+            currentSnapshot.FieldCount);
+        PopulateSectionList(explorerSelection);
+        SyncExplorerSelection();
+        LoadSurface();
+        designSurface.SelectRecord(selectedObjectRecordIndex);
+        SyncSelectionFromSurface(selectedObjectRecordIndex);
+        return true;
+    }
+
     private TextBoxBase? TryFindFocusedUndoTextBox()
     {
         return TryFindFocusedUndoTextBox(this);
@@ -1141,6 +1207,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             {
                 designSurface.SelectUnplacedObjects();
             }
+
+            UpdateObjectLifecycleButtonVisibility();
             return;
         }
 
@@ -1153,6 +1221,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             projectWorkspaceTabs.SelectedIndex = 0;
             designSurface.Visible = false;
             UpdateProjectCommandVisibility();
+            UpdateObjectLifecycleButtonVisibility();
             return;
         }
 
@@ -1164,6 +1233,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         designSurface.Visible = true;
         designSurface.LoadObjects(currentSnapshot?.AssetFamily ?? string.Empty, objects);
         UpdateProjectCommandVisibility();
+        UpdateObjectLifecycleButtonVisibility();
     }
 
     private void RefreshProjectWorkspaceInsightViews()
@@ -1539,6 +1609,19 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         debugButton.Enabled = showProjectActions;
     }
 
+    private void UpdateObjectLifecycleButtonVisibility()
+    {
+        var selectedObject = currentSnapshot?.AssetFamily is "report" or "label"
+            ? TryGetSelectedSnapshotObject()
+            : null;
+        var showDelete = selectedObject is not null && !selectedObject.Deleted;
+        var showRestore = selectedObject is not null && selectedObject.Deleted;
+        deleteObjectButton.Visible = showDelete;
+        deleteObjectButton.Enabled = showDelete && !string.IsNullOrWhiteSpace(currentPath);
+        restoreObjectButton.Visible = showRestore;
+        restoreObjectButton.Enabled = showRestore && !string.IsNullOrWhiteSpace(currentPath);
+    }
+
     private void ConfigureObjectColumns()
     {
         objectListView.Columns[0].Text = currentSnapshot?.AssetFamily == "project"
@@ -1615,6 +1698,23 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
 
         return sectionListView.Items.Count > 0 ? sectionListView.Items[0].Tag : null;
+    }
+
+    private CopperfinStudioSnapshotObject? TryGetSelectedSnapshotObject()
+    {
+        return objectListView.SelectedItems
+            .Cast<ListViewItem>()
+            .Select(item => item.Tag as CopperfinStudioSnapshotObject)
+            .FirstOrDefault(item => item is not null);
+    }
+
+    private static string? TryReadObjectUniqueId(CopperfinStudioSnapshotObject snapshotObject)
+    {
+        return snapshotObject.Properties
+            .FirstOrDefault(property =>
+                string.Equals(property.Name, "UNIQUEID", StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrWhiteSpace(property.Value))
+            ?.Value;
     }
 
     private ExplorerSelectionState? CaptureExplorerSelectionState()
