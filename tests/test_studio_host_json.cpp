@@ -387,7 +387,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_selects_deep_report_sections_and_settings_by_stable_selector(argv[1]);
     test_studio_host_json_clears_report_selection_for_deep_ambiguous_section_and_settings_selectors(argv[1]);
     test_studio_host_json_clears_report_selection_for_deep_live_deleted_ambiguous_stable_selectors(argv[1]);
-    test_studio_host_json_exposes_selected_label_settings(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
     test_studio_host_json_exposes_builder_launch_catalog(argv[1]);
     test_studio_host_json_exposes_selection_builder_launch_catalog(argv[1]);

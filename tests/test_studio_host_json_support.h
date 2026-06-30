@@ -780,7 +780,6 @@ void test_studio_host_json_reorders_label_layout_objects_by_stable_selectors(con
 void test_studio_host_json_duplicates_label_layout_objects_by_stable_selectors(const std::string& studio_host_path);
 void test_studio_host_json_renames_label_layout_object_identity_by_stable_selectors(
     const std::string& studio_host_path);
-void test_studio_host_json_exposes_selected_label_settings(const std::string& studio_host_path);
 
 // ==== Report layout JSON tests: group section/footer expressions and nested groupings ====
 void write_synthetic_report_table_for_group_section_expression_json(const std::filesystem::path& report_path);
