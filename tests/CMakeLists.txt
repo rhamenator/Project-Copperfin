@@ -511,6 +511,28 @@ add_test(
     COMMAND $<TARGET_FILE:test_studio_host_deleted_object_width_left_geometry> $<TARGET_FILE:copperfin_studio_host>
 )
 
+add_executable(test_studio_host_deleted_object_height_top_geometry
+    test_studio_host_deleted_object_height_top_geometry.cpp
+    test_studio_host_json_geometry_preview_bounds.cpp
+    test_studio_host_json_shared_test_helpers.cpp
+    test_studio_host_json_report_shared_fixtures.cpp
+)
+target_link_libraries(test_studio_host_deleted_object_height_top_geometry PRIVATE cf_vfp_assets)
+target_compile_definitions(test_studio_host_deleted_object_height_top_geometry PRIVATE
+    COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS
+)
+
+if(MSVC)
+    target_compile_options(test_studio_host_deleted_object_height_top_geometry PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_deleted_object_height_top_geometry PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_deleted_object_height_top_geometry
+    COMMAND $<TARGET_FILE:test_studio_host_deleted_object_height_top_geometry> $<TARGET_FILE:copperfin_studio_host>
+)
+
 add_executable(test_studio_host_report_selection_none
     test_studio_host_report_selection_none.cpp
     test_studio_host_json_shared_test_helpers.cpp
