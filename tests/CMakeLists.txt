@@ -97,7 +97,6 @@ add_executable(test_studio_host_json
     test_studio_host_json_dispatch_designer.cpp
     test_studio_host_json_dispatch_editor_action.cpp
     test_studio_host_json_object_lifecycle.cpp
-    test_studio_host_json_layout_actions.cpp
     test_studio_host_json_behavior_window_chrome.cpp
     test_studio_host_json_behavior_grid_and_selection.cpp
     test_studio_host_json_behavior_data_and_control.cpp
@@ -340,6 +339,23 @@ endif()
 add_test(
     NAME test_studio_host_report_grouping_remaining_exposure
     COMMAND $<TARGET_FILE:test_studio_host_report_grouping_remaining_exposure> $<TARGET_FILE:copperfin_studio_host>
+)
+
+add_executable(test_studio_host_layout_actions
+    test_studio_host_layout_actions.cpp
+    test_studio_host_json_shared_test_helpers.cpp
+)
+target_link_libraries(test_studio_host_layout_actions PRIVATE cf_vfp_assets)
+
+if(MSVC)
+    target_compile_options(test_studio_host_layout_actions PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_layout_actions PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_layout_actions
+    COMMAND $<TARGET_FILE:test_studio_host_layout_actions> $<TARGET_FILE:copperfin_studio_host>
 )
 
 add_executable(test_studio_host_report_section_ids

@@ -479,11 +479,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_reorders_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_reorders_visual_object_batches(argv[1]);
     test_studio_host_json_groups_objects_by_stable_child_selectors(argv[1]);
-    test_studio_host_json_aligns_objects_by_stable_selectors(argv[1]);
-    test_studio_host_json_resizes_objects_by_stable_selectors(argv[1]);
-    test_studio_host_json_distributes_objects_by_stable_selectors(argv[1]);
-    test_studio_host_json_snaps_objects_by_stable_selectors(argv[1]);
-    test_studio_host_json_nudges_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_tab_order_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_tab_stop_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_visibility_by_stable_selectors(argv[1]);
@@ -605,7 +600,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_picture_selection_display_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_dynamic_input_mask_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_dynamic_line_height_by_stable_selectors(argv[1]);
-    test_studio_host_json_assigns_dynamic_alignment_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_dynamic_current_control_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_dynamic_font_name_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_dynamic_font_size_by_stable_selectors(argv[1]);

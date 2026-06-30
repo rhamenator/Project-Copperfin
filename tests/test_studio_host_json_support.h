@@ -411,17 +411,6 @@ void test_studio_host_json_ungroups_objects_by_stable_selectors(const std::strin
 
 // ==== Layout action tests (align/distribute/snap/resize/nudge) ====
 void write_synthetic_form_table_for_object_align(const std::filesystem::path& form_path);
-void write_synthetic_form_table_for_object_distribute(const std::filesystem::path& form_path);
-void write_synthetic_form_table_for_object_snap(const std::filesystem::path& form_path);
-void write_synthetic_form_table_for_object_nudge(const std::filesystem::path& form_path);
-void write_synthetic_form_table_for_object_dynamic_alignment(const std::filesystem::path& form_path);
-void test_studio_host_json_aligns_objects_by_stable_selectors(const std::string& studio_host_path);
-void test_studio_host_json_resizes_objects_by_stable_selectors(const std::string& studio_host_path);
-void test_studio_host_json_distributes_objects_by_stable_selectors(const std::string& studio_host_path);
-void test_studio_host_json_snaps_objects_by_stable_selectors(const std::string& studio_host_path);
-void test_studio_host_json_nudges_objects_by_stable_selectors(const std::string& studio_host_path);
-void test_studio_host_json_assigns_dynamic_alignment_by_stable_selectors(const std::string& studio_host_path);
-
 // ==== Behavior-property setter tests: window chrome and positioning ====
 void write_synthetic_form_table_for_object_caption(const std::filesystem::path& form_path);
 void write_synthetic_form_table_for_object_whats_this_help_id(const std::filesystem::path& form_path);
