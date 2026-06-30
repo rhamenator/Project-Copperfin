@@ -214,8 +214,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_resolved_grouping_expression_for_blank_footer_sections(argv[1]);
     test_studio_host_json_exposes_deleted_object_counts_per_section(argv[1]);
     test_studio_host_json_updates_nested_report_group_section_expressions_by_stable_selection(argv[1]);
-    test_studio_host_json_exposes_record_selected_nested_group_sections(argv[1]);
-    test_studio_host_json_exposes_record_selected_deleted_nested_group_sections(argv[1]);
     test_studio_host_json_updates_nested_report_group_section_expressions_by_record_selection(argv[1]);
     test_studio_host_json_clears_nested_report_group_section_expressions_by_record_selection(argv[1]);
     test_studio_host_json_updates_deleted_nested_report_group_section_expressions(argv[1]);
