@@ -567,6 +567,77 @@ void test_open_document_preserves_launch_selection_record_metadata() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_open_document_loads_full_table_preview_for_report_and_label_assets() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_studio_host_full_table_preview_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto write_dense_layout_fixture = [](const fs::path& path) {
+        const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+            {.name = "OBJTYPE", .type = 'N', .length = 8U},
+            {.name = "OBJCODE", .type = 'N', .length = 8U},
+            {.name = "EXPR", .type = 'M', .length = 4U},
+            {.name = "HPOS", .type = 'N', .length = 10U},
+            {.name = "VPOS", .type = 'N', .length = 10U},
+            {.name = "WIDTH", .type = 'N', .length = 10U},
+            {.name = "HEIGHT", .type = 'N', .length = 10U},
+            {.name = "UNIQUEID", .type = 'C', .length = 24U}
+        };
+        const std::vector<std::vector<std::string>> records{
+            {"1", "53", "ORIENTATION=0", "", "", "", "", ""},
+            {"9", "1", "", "", "0", "", "1200", "title-section-guid"},
+            {"9", "4", "", "", "1200", "", "6000", "detail-section-guid"},
+            {"5", "", "\"Header\"", "100", "100", "500", "150", "title-label-guid"},
+            {"8", "0", "first.value", "100", "1600", "100", "250", "detail-field-1-guid"},
+            {"8", "0", "second.value", "300", "1600", "100", "250", "detail-field-2-guid"},
+            {"8", "0", "third.value", "500", "1600", "100", "250", "detail-field-3-guid"},
+            {"8", "0", "fourth.value", "700", "1600", "100", "250", "detail-field-4-guid"},
+            {"8", "0", "fifth.value", "900", "1600", "100", "250", "detail-field-5-guid"},
+            {"8", "0", "sixth.value", "1100", "1600", "100", "250", "detail-field-6-guid"}
+        };
+
+        const auto create_result = copperfin::vfp::create_dbf_table_file(path.string(), fields, records);
+        expect(create_result.ok, "#2986: dense report/label preview fixture should be created");
+    };
+
+    const fs::path report_path = temp_dir / "full_preview.frx";
+    const fs::path label_path = temp_dir / "full_preview.lbx";
+    write_dense_layout_fixture(report_path);
+    write_dense_layout_fixture(label_path);
+
+    const auto report_result = copperfin::studio::open_document({
+        .path = report_path.string(),
+        .read_only = true
+    });
+    expect(report_result.ok, "#2986: report documents should open for full-preview checks");
+    expect(report_result.document.table_preview_available,
+           "#2986: report documents should expose a table preview");
+    expect(report_result.document.table_preview.records.size() == 10U,
+           "#2986: report documents should load the full FRX table preview by default");
+    if (report_result.document.table_preview.records.size() == 10U) {
+        expect(report_result.document.table_preview.records.back().record_index == 9U,
+               "#2986: report full-table previews should preserve the last FRX record index");
+    }
+
+    const auto label_result = copperfin::studio::open_document({
+        .path = label_path.string(),
+        .read_only = true
+    });
+    expect(label_result.ok, "#2986: label documents should open for full-preview checks");
+    expect(label_result.document.table_preview_available,
+           "#2986: label documents should expose a table preview");
+    expect(label_result.document.table_preview.records.size() == 10U,
+           "#2986: label documents should load the full LBX table preview by default");
+    if (label_result.document.table_preview.records.size() == 10U) {
+        expect(label_result.document.table_preview.records.back().record_index == 9U,
+               "#2986: label full-table previews should preserve the last LBX record index");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_object_snapshot_preserves_empty_and_null_design_fields() {
     copperfin::studio::StudioDocumentModel document;
     document.path = R"(E:\Project-Copperfin\samples\customer.scx)";

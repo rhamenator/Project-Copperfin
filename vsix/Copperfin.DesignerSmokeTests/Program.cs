@@ -158,8 +158,18 @@ internal static class Program
                 updatedSectionTitle: "Page Header",
                 expectedSectionCount: 4,
                 expectLabel: false,
-                expectedOriginalUnplacedObjectCount: 3,
-                expectedUpdatedUnplacedObjectCount: 2);
+                expectedOriginalUnplacedObjectCount: 7,
+                expectedUpdatedUnplacedObjectCount: 6);
+            SmokeRealAssetHostBackedDuplicateRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 7,
+                duplicateUniqueId: "DUPREAL01",
+                expectedSourceObjectTitle: "\"Titles By Author\"",
+                expectedSectionTitle: "Title",
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedOriginalSectionObjectCount: 1,
+                expectedUpdatedSectionObjectCount: 2);
             SmokeAssetEditorPropertyGridRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 7,
@@ -241,8 +251,18 @@ internal static class Program
                 expectedObjectTitle: "wiz_general",
                 expectedSectionCount: 4,
                 expectLabel: false,
-                expectedOriginalUnplacedObjectCount: 3,
-                expectedUpdatedUnplacedObjectCount: 2);
+                expectedOriginalUnplacedObjectCount: 7,
+                expectedUpdatedUnplacedObjectCount: 6);
+            SmokeAssetEditorDuplicateCommandWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 7,
+                duplicateUniqueId: "DUPREAL01",
+                expectedSourceObjectTitle: "\"Titles By Author\"",
+                expectedSectionTitle: "Title",
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedOriginalSectionObjectCount: 1,
+                expectedUpdatedSectionObjectCount: 2);
             SmokeProjectEditorWithRealAsset(
                 ResolveFirstExistingRealAssetPath(
                     TryResolveVfp9InstallAsset(@"Samples\Solution\solution.pjx"),
@@ -7112,6 +7132,160 @@ internal static class Program
         }
     }
 
+    private static void SmokeRealAssetHostBackedDuplicateRoundTrip(
+        string? sourcePath,
+        int recordIndex,
+        string duplicateUniqueId,
+        string expectedSourceObjectTitle,
+        string expectedSectionTitle,
+        int expectedSectionCount,
+        bool expectLabel,
+        int expectedOriginalSectionObjectCount,
+        int expectedUpdatedSectionObjectCount)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(sourcePath) ? "real asset duplicate candidate" : sourcePath)} not found.");
+            return;
+        }
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmokeRealAssetDuplicates-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateWritableAssetCopy(sourcePath!, tempRoot);
+
+        try
+        {
+            var loaded = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(loaded.Success && loaded.Document is not null,
+                $"real asset duplicate smoke should load snapshot data for {sourcePath}");
+            if (!loaded.Success || loaded.Document is null)
+            {
+                return;
+            }
+
+            var sourceObject = loaded.Document.Objects.FirstOrDefault(candidate => candidate.RecordIndex == recordIndex);
+            Expect(sourceObject is not null,
+                $"real asset duplicate smoke should expose source object {recordIndex} for {sourcePath}");
+            if (sourceObject is null)
+            {
+                return;
+            }
+
+            var sourceUniqueId = TryGetSnapshotObjectPropertyValue(sourceObject, "UNIQUEID");
+            Expect(!string.IsNullOrWhiteSpace(sourceUniqueId),
+                $"real asset duplicate smoke should expose source UNIQUEID for {sourcePath}");
+            if (string.IsNullOrWhiteSpace(sourceUniqueId))
+            {
+                return;
+            }
+
+            AssertRealAssetRoundTripSnapshot(
+                loaded.Document,
+                recordIndex,
+                "UNIQUEID",
+                sourceUniqueId!,
+                expectedSourceObjectTitle,
+                expectedSectionTitle,
+                expectedSectionCount,
+                expectLabel,
+                expectUnplacedObject: false,
+                $"initial real asset duplicate snapshot should preserve source object identity");
+            AssertRealAssetSectionObjectCount(
+                loaded.Document,
+                expectedSectionTitle,
+                expectedOriginalSectionObjectCount,
+                $"initial real asset duplicate snapshot should preserve section object counts");
+
+            var duplicateResult = CopperfinStudioSnapshotClient.TryDuplicateObject(
+                assetPath,
+                recordIndex,
+                sourceUniqueId,
+                duplicateUniqueId);
+            Expect(duplicateResult.Success && duplicateResult.Document is not null,
+                $"real asset duplicate smoke should duplicate record {recordIndex} for {sourcePath}");
+            if (!duplicateResult.Success || duplicateResult.Document is null)
+            {
+                return;
+            }
+
+            var duplicatedObject = FindSnapshotObjectByUniqueId(duplicateResult.Document, duplicateUniqueId);
+            Expect(duplicatedObject is not null,
+                $"real asset duplicate smoke should surface the duplicated UNIQUEID for {sourcePath}");
+            if (duplicatedObject is null)
+            {
+                return;
+            }
+
+            Expect(duplicatedObject.RecordIndex != recordIndex,
+                $"real asset duplicate smoke should assign a distinct record to the duplicated object for {sourcePath}");
+            AssertRealAssetRoundTripSnapshot(
+                duplicateResult.Document,
+                duplicatedObject.RecordIndex,
+                "UNIQUEID",
+                duplicateUniqueId,
+                expectedSourceObjectTitle,
+                expectedSectionTitle,
+                expectedSectionCount,
+                expectLabel,
+                expectUnplacedObject: false,
+                $"updated real asset duplicate snapshot should preserve duplicated object identity");
+            AssertRealAssetSectionObjectCount(
+                duplicateResult.Document,
+                expectedSectionTitle,
+                expectedUpdatedSectionObjectCount,
+                $"updated real asset duplicate snapshot should preserve section object counts");
+
+            var reloadedAfterDuplicate = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterDuplicate.Success && reloadedAfterDuplicate.Document is not null,
+                $"real asset duplicate smoke should reload duplicated snapshot data for {sourcePath}");
+            if (!reloadedAfterDuplicate.Success || reloadedAfterDuplicate.Document is null)
+            {
+                return;
+            }
+
+            var reloadedDuplicatedObject = FindSnapshotObjectByUniqueId(reloadedAfterDuplicate.Document, duplicateUniqueId);
+            Expect(reloadedDuplicatedObject is not null,
+                $"reloaded real asset duplicate snapshot should preserve the duplicated UNIQUEID for {sourcePath}");
+            if (reloadedDuplicatedObject is null)
+            {
+                return;
+            }
+
+            AssertRealAssetRoundTripSnapshot(
+                reloadedAfterDuplicate.Document,
+                reloadedDuplicatedObject.RecordIndex,
+                "UNIQUEID",
+                duplicateUniqueId,
+                expectedSourceObjectTitle,
+                expectedSectionTitle,
+                expectedSectionCount,
+                expectLabel,
+                expectUnplacedObject: false,
+                $"reloaded real asset duplicate snapshot should preserve duplicated object identity");
+            AssertRealAssetSectionObjectCount(
+                reloadedAfterDuplicate.Document,
+                expectedSectionTitle,
+                expectedUpdatedSectionObjectCount,
+                $"reloaded real asset duplicate snapshot should preserve section object counts");
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeAssetEditorPropertyGridRoundTripWithRealAsset(
         string? sourcePath,
         int recordIndex,
@@ -7575,6 +7749,192 @@ internal static class Program
         }
     }
 
+    private static void SmokeAssetEditorDuplicateCommandWithRealAsset(
+        string? sourcePath,
+        int recordIndex,
+        string duplicateUniqueId,
+        string expectedSourceObjectTitle,
+        string expectedSectionTitle,
+        int expectedSectionCount,
+        bool expectLabel,
+        int expectedOriginalSectionObjectCount,
+        int expectedUpdatedSectionObjectCount)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(sourcePath) ? "real asset editor duplicate candidate" : sourcePath)} not found.");
+            return;
+        }
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmokeRealAssetEditorDuplicates-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateWritableAssetCopy(sourcePath!, tempRoot);
+        var previousDuplicateUniqueId = Environment.GetEnvironmentVariable("COPPERFIN_DUPLICATE_OBJECT_UNIQUE_ID");
+
+        try
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_DUPLICATE_OBJECT_UNIQUE_ID", duplicateUniqueId);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+            control.LoadDocument(assetPath);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var duplicateButton = GetPrivateButton(control, "duplicateObjectButton");
+            var deleteButton = GetPrivateButton(control, "deleteObjectButton");
+            var restoreButton = GetPrivateButton(control, "restoreObjectButton");
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface for the real duplicate smoke.");
+
+            var loaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => sectionListView.Items.Count > 0);
+            Expect(loaded, $"real asset editor duplicate smoke should load section data for {sourcePath}");
+            if (!loaded)
+            {
+                return;
+            }
+
+            foreach (ListViewItem item in sectionListView.Items)
+            {
+                item.Selected = string.Equals(item.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase);
+            }
+
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            Application.DoEvents();
+
+            var objectLoaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => objectListView.Items.Cast<ListViewItem>()
+                    .Any(item => item.Tag is CopperfinStudioSnapshotObject snapshotObject &&
+                                 snapshotObject.RecordIndex == recordIndex));
+            Expect(objectLoaded, $"real asset editor duplicate smoke should surface object {recordIndex} for {sourcePath}");
+            if (!objectLoaded)
+            {
+                return;
+            }
+
+            foreach (ListViewItem item in objectListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioSnapshotObject snapshotObject &&
+                                snapshotObject.RecordIndex == recordIndex;
+            }
+
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(duplicateButton.Visible &&
+                   duplicateButton.Enabled &&
+                   deleteButton.Visible &&
+                   deleteButton.Enabled &&
+                   !restoreButton.Visible &&
+                   objectListView.Items.Count == expectedOriginalSectionObjectCount &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == recordIndex,
+                $"real asset editor duplicate smoke should start from a live object selection with duplicate and delete commands exposed for {sourcePath}");
+
+            duplicateButton.PerformClick();
+            Application.DoEvents();
+
+            var duplicatedSelection = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
+                {
+                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                        refreshedSelection.RecordIndex == recordIndex)
+                    {
+                        return false;
+                    }
+
+                    var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text;
+                    var selectedSnapshotObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
+                    var selectedUniqueId = selectedSnapshotObject is null
+                        ? null
+                        : TryGetSnapshotObjectPropertyValue(selectedSnapshotObject, "UNIQUEID");
+                    return string.Equals(selectedSection, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                           objectListView.Items.Count == expectedUpdatedSectionObjectCount &&
+                           string.Equals(selectedUniqueId, duplicateUniqueId, StringComparison.Ordinal) &&
+                           string.Equals(selectedSnapshotObject?.Title, expectedSourceObjectTitle, StringComparison.Ordinal) &&
+                           duplicateButton.Visible &&
+                           duplicateButton.Enabled &&
+                           deleteButton.Visible &&
+                           deleteButton.Enabled &&
+                           !restoreButton.Visible &&
+                           string.Equals(ReadPrivateStringField(surface, "assetFamily"), "report", StringComparison.Ordinal) &&
+                           ReadPrivateNullableInt(surface, "selectedRecordIndex") == refreshedSelection.RecordIndex &&
+                           !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected");
+                });
+            Expect(duplicatedSelection,
+                $"real asset editor duplicate smoke should preserve section/object continuity after duplicating the selected row for {sourcePath}");
+
+            var reloadedAfterDuplicate = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterDuplicate.Success && reloadedAfterDuplicate.Document is not null,
+                $"real asset editor duplicate smoke should reload duplicated on-disk state for {sourcePath}");
+            if (reloadedAfterDuplicate.Success && reloadedAfterDuplicate.Document is not null)
+            {
+                var reloadedDuplicatedObject = FindSnapshotObjectByUniqueId(reloadedAfterDuplicate.Document, duplicateUniqueId);
+                Expect(reloadedDuplicatedObject is not null,
+                    $"reloaded real asset editor duplicate snapshot should preserve the duplicated UNIQUEID for {sourcePath}");
+                if (reloadedDuplicatedObject is not null)
+                {
+                    AssertRealAssetRoundTripSnapshot(
+                        reloadedAfterDuplicate.Document,
+                        reloadedDuplicatedObject.RecordIndex,
+                        "UNIQUEID",
+                        duplicateUniqueId,
+                        expectedSourceObjectTitle,
+                        expectedSectionTitle,
+                        expectedSectionCount,
+                        expectLabel,
+                        expectUnplacedObject: false,
+                        $"reloaded real asset editor duplicate snapshot should preserve duplicated object identity");
+                }
+
+                AssertRealAssetSectionObjectCount(
+                    reloadedAfterDuplicate.Document,
+                    expectedSectionTitle,
+                    expectedUpdatedSectionObjectCount,
+                    $"reloaded real asset editor duplicate snapshot should preserve section object counts");
+            }
+
+            TearDownForm(hostForm);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_DUPLICATE_OBJECT_UNIQUE_ID", previousDuplicateUniqueId);
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeProjectEditorWithRealAsset(string? path, string[] expectGroups)
     {
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
@@ -7918,6 +8278,49 @@ internal static class Program
 
         Expect(document.ReportLayout.UnplacedObjects.Count == expectedUnplacedObjectCount,
             $"{failurePrefix} for {document.Path} should expose {expectedUnplacedObjectCount} unplaced objects");
+    }
+
+    private static void AssertRealAssetSectionObjectCount(
+        CopperfinStudioSnapshotDocument document,
+        string expectedSectionTitle,
+        int expectedObjectCount,
+        string failurePrefix)
+    {
+        Expect(document.ReportLayout is not null,
+            $"{failurePrefix} for {document.Path} should include a report layout");
+        if (document.ReportLayout is null)
+        {
+            return;
+        }
+
+        var section = document.ReportLayout.Sections
+            .FirstOrDefault(candidate => string.Equals(candidate.Title, expectedSectionTitle, StringComparison.OrdinalIgnoreCase));
+        Expect(section is not null,
+            $"{failurePrefix} for {document.Path} should preserve section '{expectedSectionTitle}'");
+        if (section is null)
+        {
+            return;
+        }
+
+        Expect(section.Objects.Count == expectedObjectCount,
+            $"{failurePrefix} for {document.Path} should expose {expectedObjectCount} objects in section '{expectedSectionTitle}'");
+    }
+
+    private static CopperfinStudioSnapshotObject? FindSnapshotObjectByUniqueId(
+        CopperfinStudioSnapshotDocument document,
+        string uniqueId)
+    {
+        return document.Objects.FirstOrDefault(candidate =>
+            string.Equals(TryGetSnapshotObjectPropertyValue(candidate, "UNIQUEID"), uniqueId, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string? TryGetSnapshotObjectPropertyValue(
+        CopperfinStudioSnapshotObject snapshotObject,
+        string propertyName)
+    {
+        return snapshotObject.Properties
+            .FirstOrDefault(candidate => string.Equals(candidate.Name, propertyName, StringComparison.OrdinalIgnoreCase))
+            ?.Value;
     }
 
     private static string CreateWritableAssetCopy(string sourcePath, string tempRoot)

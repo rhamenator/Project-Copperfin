@@ -547,6 +547,7 @@ int main() {
     test_open_document_uses_vfp_filename_for_display_name();
     test_open_document_attaches_default_designer_contexts();
     test_open_document_preserves_launch_selection_record_metadata();
+    test_open_document_loads_full_table_preview_for_report_and_label_assets();
     test_object_snapshot_preserves_empty_and_null_design_fields();
     test_object_snapshot_suppresses_unresolved_memo_placeholders();
     test_object_snapshot_trims_normalized_display_metadata();

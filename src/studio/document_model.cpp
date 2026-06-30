@@ -294,6 +294,10 @@ bool supports_visual_container_context(StudioAssetKind kind) {
     return kind == StudioAssetKind::form || kind == StudioAssetKind::class_library;
 }
 
+bool requires_full_table_preview(StudioAssetKind kind) {
+    return kind == StudioAssetKind::report || kind == StudioAssetKind::label;
+}
+
 std::vector<StudioDesignerContextResult> default_designer_contexts_for_kind(StudioAssetKind kind) {
     switch (kind) {
         case StudioAssetKind::form:
@@ -860,7 +864,9 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
             supports_unique_id_record_selection(document.kind) && !trim_copy(request.unique_id).empty();
         const std::size_t record_count = inspection.header.record_count;
         std::size_t max_records = 8U;
-        if (request.load_full_table || unique_id_selection_requested) {
+        if (request.load_full_table ||
+            unique_id_selection_requested ||
+            requires_full_table_preview(document.kind)) {
             max_records = record_count;
         } else if (request.selection_record_available) {
             const std::size_t requested_record_count =

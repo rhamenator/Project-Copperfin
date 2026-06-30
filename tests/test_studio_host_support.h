@@ -45,6 +45,7 @@ void test_open_document_infers_form_sidecar();
 void test_open_document_uses_vfp_filename_for_display_name();
 void test_open_document_attaches_default_designer_contexts();
 void test_open_document_preserves_launch_selection_record_metadata();
+void test_open_document_loads_full_table_preview_for_report_and_label_assets();
 void test_object_snapshot_preserves_empty_and_null_design_fields();
 void test_object_snapshot_suppresses_unresolved_memo_placeholders();
 void test_object_snapshot_trims_normalized_display_metadata();
