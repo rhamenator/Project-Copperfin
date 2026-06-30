@@ -147,13 +147,11 @@ int main(int argc, char** argv) {
     test_studio_host_json_defaults_missing_report_layout_geometry_fields(argv[1]);
     test_studio_host_json_defaults_missing_report_section_objcode_schema(argv[1]);
     test_studio_host_json_defaults_missing_report_object_objcode_schema(argv[1]);
-    test_studio_host_json_preserves_report_settings_without_root_objcode_schema(argv[1]);
     test_studio_host_json_suppresses_unresolved_report_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_report_section_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_deleted_report_object_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_unplaced_report_object_memo_placeholders(argv[1]);
     test_studio_host_json_defaults_unresolved_report_geometry_memo_placeholders(argv[1]);
-    test_studio_host_json_preserves_report_settings_without_root_expr_schema(argv[1]);
     test_studio_host_json_preserves_report_sections_without_expr_schema(argv[1]);
     test_studio_host_json_defaults_report_sections_without_geometry_schema(argv[1]);
     test_studio_host_json_preserves_report_objects_without_expr_schema(argv[1]);
@@ -277,7 +275,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_report_column_width_fields_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_column_width_fields_by_stable_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_column_width_fields_by_stable_selection(argv[1]);
-    test_studio_host_json_deletes_report_settings_by_record_selection(argv[1]);
     test_studio_host_json_applies_report_deleted_states_by_stable_selection(argv[1]);
     test_studio_host_json_applies_report_object_deleted_states_by_stable_selection(argv[1]);
     test_studio_host_json_applies_report_object_subtree_deleted_state_by_stable_selection(argv[1]);

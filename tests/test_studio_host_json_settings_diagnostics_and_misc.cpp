@@ -210,6 +210,7 @@ void write_synthetic_report_table_for_stable_deleted_settings_and_section_json(
            "#1839: stable deleted-state restore fixture should preserve deleted settings and section rows");
 }
 
+#if !defined(COPPERFIN_REPORT_SETTINGS_DIAGNOSTICS_SKIP_HOST_SMOKE)
 void test_studio_host_json_deletes_report_settings_by_record_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -937,5 +938,6 @@ void test_studio_host_json_preserves_report_settings_without_root_expr_schema(
         fs::remove_all(temp_root, ignored);
     }
 }
+#endif
 
 }  // namespace cf_test_studio_host_json

@@ -151,6 +151,7 @@ target_compile_definitions(test_studio_host_json PRIVATE
     COPPERFIN_REPORT_LAYOUT_CLASSIFICATIONS_SKIP_HOST_SMOKE
     COPPERFIN_REPORT_DIRECT_SETTING_FIELDS_SKIP_HOST_SMOKE
     COPPERFIN_REPORT_SETTINGS_MEMO_PARSING_SKIP_HOST_SMOKE
+    COPPERFIN_REPORT_SETTINGS_DIAGNOSTICS_SKIP_HOST_SMOKE
 )
 
 if(MSVC)
@@ -384,6 +385,29 @@ endif()
 add_test(
     NAME test_studio_host_report_settings_memo_parsing
     COMMAND $<TARGET_FILE:test_studio_host_report_settings_memo_parsing> $<TARGET_FILE:copperfin_studio_host>
+)
+
+add_executable(test_studio_host_report_settings_diagnostics
+    test_studio_host_report_settings_diagnostics.cpp
+    test_studio_host_json_geometry_preview_bounds.cpp
+    test_studio_host_json_report_shared_fixtures.cpp
+    test_studio_host_json_settings_diagnostics_and_misc.cpp
+    test_studio_host_json_shared_test_helpers.cpp
+)
+target_link_libraries(test_studio_host_report_settings_diagnostics PRIVATE cf_vfp_assets)
+target_compile_definitions(test_studio_host_report_settings_diagnostics PRIVATE
+    COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS
+)
+
+if(MSVC)
+    target_compile_options(test_studio_host_report_settings_diagnostics PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_report_settings_diagnostics PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_report_settings_diagnostics
+    COMMAND $<TARGET_FILE:test_studio_host_report_settings_diagnostics> $<TARGET_FILE:copperfin_studio_host>
 )
 
 add_executable(test_studio_host_report_selection_none
