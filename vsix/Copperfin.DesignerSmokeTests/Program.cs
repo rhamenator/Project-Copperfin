@@ -1226,6 +1226,10 @@ internal static class Program
                         BandKind = "summary",
                         RecordIndex = 51,
                         Deleted = true,
+                        GroupingContextAvailable = true,
+                        GroupingExpression = "customer.deleted_country",
+                        GroupingExpressionFieldIndex = 4,
+                        GroupingExpressionMemoBlockNumber = 12,
                         Top = 9000,
                         Height = 1400,
                         Objects = new List<CopperfinStudioReportLayoutObject>
@@ -1242,7 +1246,8 @@ internal static class Program
 
         var sectionListView = GetPrivateListView(control, "sectionListView");
         var objectListView = GetPrivateListView(control, "objectListView");
-        Expect(sectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, "Summary (deleted)", StringComparison.Ordinal)),
+        var expectedDeletedSectionTitle = InvokeAssetEditorString(control, "BuildDeletedReportSectionListTitle", snapshot.ReportLayout.DeletedSections[0]);
+        Expect(sectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, expectedDeletedSectionTitle, StringComparison.Ordinal)),
             "Report explorer should surface deleted section rows");
 
         InvokeAssetEditorVoid(control, "SyncExplorerSelection");
@@ -1252,6 +1257,24 @@ internal static class Program
             "Deleted report section explorer selection should produce a section-rooted property-grid selection");
         if (propertyGrid.SelectedObject is CopperfinDesignerSelection deletedSelection)
         {
+            TypeDescriptor.GetProperties(deletedSelection)["TOP"]?.SetValue(deletedSelection, 9100);
+            Expect(deletedSelection.TryGetUpdate("TOP", out var topTarget, out var topValue) &&
+                   string.Equals(topTarget, "TOP", StringComparison.Ordinal) &&
+                   string.Equals(topValue, "9100", StringComparison.Ordinal),
+                "Deleted report section explorer selection should serialize TOP edits through the shared update path");
+
+            TypeDescriptor.GetProperties(deletedSelection)["HEIGHT"]?.SetValue(deletedSelection, 1600);
+            Expect(deletedSelection.TryGetUpdate("HEIGHT", out var heightTarget, out var heightValue) &&
+                   string.Equals(heightTarget, "HEIGHT", StringComparison.Ordinal) &&
+                   string.Equals(heightValue, "1600", StringComparison.Ordinal),
+                "Deleted report section explorer selection should serialize HEIGHT edits through the shared update path");
+
+            TypeDescriptor.GetProperties(deletedSelection)["EXPR"]?.SetValue(deletedSelection, "customer.deleted_region");
+            Expect(deletedSelection.TryGetUpdate("EXPR", out var exprTarget, out var exprValue) &&
+                   string.Equals(exprTarget, "EXPR", StringComparison.Ordinal) &&
+                   string.Equals(exprValue, "customer.deleted_region", StringComparison.Ordinal),
+                "Deleted report section explorer selection should serialize expression edits through the shared update path");
+
             Expect(string.Equals(TypeDescriptor.GetProperties(deletedSelection)["SECTIONSTATE"]?.GetValue(deletedSelection)?.ToString(), "Deleted", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(deletedSelection)["RECORDINDEX"]?.GetValue(deletedSelection)?.ToString(), "51", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(deletedSelection)["OBJECTCOUNT"]?.GetValue(deletedSelection)?.ToString(), "1", StringComparison.Ordinal),
@@ -1263,7 +1286,8 @@ internal static class Program
         using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
         ApplyReportSnapshotForExplorerSmoke(spanishControl, snapshot);
         var spanishSectionListView = GetPrivateListView(spanishControl, "sectionListView");
-        Expect(spanishSectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, "Summary (eliminada)", StringComparison.Ordinal)),
+        var expectedSpanishDeletedTitle = InvokeAssetEditorString(spanishControl, "BuildDeletedReportSectionListTitle", snapshot.ReportLayout.DeletedSections[0]);
+        Expect(spanishSectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, expectedSpanishDeletedTitle, StringComparison.Ordinal)),
             "Spanish report explorer should localize deleted section rows");
         var spanishDeletedSelection = CopperfinDesignerSelection.FromReportSection(snapshot.ReportLayout.DeletedSections[0], new CopperfinLocalization("es-419"));
         Expect(string.Equals(TypeDescriptor.GetProperties(spanishDeletedSelection)["SECTIONSTATE"]?.GetValue(spanishDeletedSelection)?.ToString(), "Eliminada", StringComparison.Ordinal) &&
@@ -1274,7 +1298,8 @@ internal static class Program
         using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
         ApplyReportSnapshotForExplorerSmoke(portugueseControl, snapshot);
         var portugueseSectionListView = GetPrivateListView(portugueseControl, "sectionListView");
-        Expect(portugueseSectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, "Summary (excluída)", StringComparison.Ordinal)),
+        var expectedPortugueseDeletedTitle = InvokeAssetEditorString(portugueseControl, "BuildDeletedReportSectionListTitle", snapshot.ReportLayout.DeletedSections[0]);
+        Expect(portugueseSectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, expectedPortugueseDeletedTitle, StringComparison.Ordinal)),
             "Portuguese report explorer should localize deleted section rows");
         var portugueseDeletedSelection = CopperfinDesignerSelection.FromReportSection(snapshot.ReportLayout.DeletedSections[0], new CopperfinLocalization("pt-BR"));
         Expect(string.Equals(TypeDescriptor.GetProperties(portugueseDeletedSelection)["SECTIONSTATE"]?.GetValue(portugueseDeletedSelection)?.ToString(), "Excluída", StringComparison.Ordinal) &&
@@ -1286,7 +1311,8 @@ internal static class Program
         using var pseudoControl = new CopperfinAssetEditorControl(pseudoLocalization);
         ApplyReportSnapshotForExplorerSmoke(pseudoControl, snapshot);
         var pseudoSectionListView = GetPrivateListView(pseudoControl, "sectionListView");
-        Expect(pseudoSectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, pseudoLocalization.Format("AssetEditor.ReportSection.Deleted", "Summary"), StringComparison.Ordinal)),
+        var expectedPseudoDeletedTitle = InvokeAssetEditorString(pseudoControl, "BuildDeletedReportSectionListTitle", snapshot.ReportLayout.DeletedSections[0]);
+        Expect(pseudoSectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, expectedPseudoDeletedTitle, StringComparison.Ordinal)),
             "Pseudo-localized report explorer should route deleted section rows through the shared catalog");
         var pseudoDeletedSelection = CopperfinDesignerSelection.FromReportSection(snapshot.ReportLayout.DeletedSections[0], pseudoLocalization);
         Expect(string.Equals(TypeDescriptor.GetProperties(pseudoDeletedSelection)["SECTIONSTATE"]?.GetValue(pseudoDeletedSelection)?.ToString(), pseudoLocalization.Text("AssetEditor.State.Deleted"), StringComparison.Ordinal) &&
@@ -1465,7 +1491,8 @@ internal static class Program
         Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection deletedSectionSelection &&
                deletedSectionSelection.RecordIndex == 51,
             "Clicking a deleted report section on the shared surface should produce a deleted section-rooted property-grid selection");
-        Expect(string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Summary (deleted)", StringComparison.Ordinal),
+        var expectedDeletedSectionTitle = InvokeAssetEditorString(control, "BuildDeletedReportSectionListTitle", snapshot.ReportLayout.DeletedSections[0]);
+        Expect(string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, expectedDeletedSectionTitle, StringComparison.Ordinal),
             "Clicking a deleted report section on the shared surface should select the matching deleted explorer row");
         Expect(objectListView.Items.Cast<ListViewItem>().Select(item => item.Text).SequenceEqual(new[] { "deleted.footer.total" }),
             "Clicking a deleted report section on the shared surface should scope objects to deleted section membership");
@@ -1648,7 +1675,8 @@ internal static class Program
 
         ClickDesignSurface(surface, GetCenter(ReadSurfaceObjectRectangle(surface, 1)));
         Application.DoEvents();
-        Expect(string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Summary (deleted)", StringComparison.Ordinal),
+        var expectedDeletedSectionTitle = InvokeAssetEditorString(control, "BuildDeletedReportSectionListTitle", snapshot.ReportLayout.DeletedSections[0]);
+        Expect(string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, expectedDeletedSectionTitle, StringComparison.Ordinal),
             "Clicking a deleted report object on the shared surface should select its containing deleted section row");
         Expect(string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "deleted.footer.total", StringComparison.Ordinal),
             "Clicking a deleted report object on the shared surface should select the matching deleted object row");
