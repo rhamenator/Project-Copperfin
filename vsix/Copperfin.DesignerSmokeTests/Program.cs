@@ -47,6 +47,7 @@ internal static class Program
         SmokeAssetEditorLabelObjectPropertyGridHostUpdate();
         SmokeAssetEditorUnplacedLabelObjectPropertyGridHostUpdate();
         SmokeAssetEditorUnplacedLabelObjectHostUpdateRefreshesShellSummary();
+        SmokeAssetEditorUndoRefreshesLabelShellSummary();
         SmokeAssetEditorDeletedLabelObjectPropertyGridHostUpdate();
         SmokeReportObjectPropertyGridLocalization();
         SmokeLocalizedReportObjectKindSubtitles();
@@ -1964,6 +1965,129 @@ internal static class Program
                    ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") is null &&
                    ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
                 "Editing an unplaced label object through the shared asset editor should refresh the shell summary from the returned snapshot while preserving label identity, unplaced-object selection, and unplaced-scope continuity");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", previousLogPath);
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
+    private static void SmokeAssetEditorUndoRefreshesLabelShellSummary()
+    {
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            Console.WriteLine("SKIP: shared asset-editor label undo summary-refresh smoke requires a POSIX scriptable fake Studio host.");
+            return;
+        }
+
+        var snapshot = BuildAssetEditorLabelUndoPreviewRefreshSmokeSnapshot();
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
+        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var logPath = Path.Combine(tempRoot, "studio-host.log");
+        var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
+
+        try
+        {
+            File.WriteAllText(logPath, string.Empty);
+            CreateFakeStudioHostScript(scriptPath, BuildLabelUndoPreviewRefreshHostResponseJson());
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", scriptPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", logPath);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+
+            ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+            SetCurrentSnapshot(control, snapshot);
+            SetPrivateField(control, "currentPath", assetPath);
+            GetPrivateLabel(control, "detailsLabel").Text = InvokeAssetEditorString(control, "BuildSnapshotDetailsText", new FileInfo(assetPath), snapshot);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            sectionListView.Items[0].Selected = false;
+            sectionListView.Items[1].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            InvokeAssetEditorVoid(control, "LoadSurface");
+            Application.DoEvents();
+
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared label design surface.");
+
+            objectListView.Items[0].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == 9 &&
+                   control.CanHandleUndoCommand() &&
+                   string.Equals(control.GetUndoCommandText(), "Undo Move orphan.note", StringComparison.Ordinal),
+                "A label undo summary-refresh smoke should start from an undo-capable unplaced label object selection");
+
+            Expect(!HasLabelTextContaining(control, "Preview bounds:"),
+                "A label undo summary-refresh smoke should start without preview-bounds shell text when the initial snapshot omits preview bounds");
+
+            Expect(control.TryHandleUndoCommand(),
+                "The shared asset editor should accept an undo command for an unplaced label selection when the snapshot exposes a host-backed undo label");
+            Application.DoEvents();
+
+            var logLines = File.ReadAllLines(logPath);
+            var invocationStartCount = logLines.Count(line => string.Equals(line, "BEGIN", StringComparison.Ordinal));
+            Expect(invocationStartCount == 1,
+                "Undoing through the shared label asset editor should invoke the Studio host exactly once");
+
+            var invocationArguments = logLines.Skip(1).ToList();
+            Expect(invocationArguments.Contains("--from-vs") &&
+                   invocationArguments.Contains("--json") &&
+                   invocationArguments.Contains("--undo-mode") &&
+                   invocationArguments.Contains("command") &&
+                   invocationArguments.Contains("--path") &&
+                   invocationArguments.Contains(assetPath),
+                "Undoing through the shared label asset editor should send one invariant undo command through the host contract");
+
+            Expect(HasLabelTextContaining(control, "Preview bounds: L 1100 T 700 R 5200 B 3100   Size: 4100 x 2400") &&
+                   HasLabelTextContaining(control, "Unplaced objects: 1") &&
+                   string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Unplaced objects", StringComparison.Ordinal) &&
+                   string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "orphan.note", StringComparison.Ordinal) &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
+                   refreshedSelection.RecordIndex == 9 &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["HPOS"]?.GetValue(refreshedSelection)?.ToString(), "1100", StringComparison.Ordinal) &&
+                   string.Equals(ReadPrivateStringField(surface, "assetFamily"), "label", StringComparison.Ordinal) &&
+                   ReadPrivateNullableInt(surface, "selectedRecordIndex") == 9 &&
+                   ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") is null &&
+                   ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+                "Undoing through the shared label asset editor should refresh the shell summary from the returned snapshot while preserving label identity, unplaced-object selection, and unplaced-scope continuity");
         }
         finally
         {
@@ -4192,6 +4316,14 @@ internal static class Program
         return snapshot;
     }
 
+    private static CopperfinStudioSnapshotDocument BuildAssetEditorLabelUndoPreviewRefreshSmokeSnapshot()
+    {
+        var snapshot = BuildAssetEditorUnplacedLabelObjectUpdateSmokeSnapshot();
+        snapshot.CommandUndoAvailable = true;
+        snapshot.CommandUndoLabel = "Move orphan.note";
+        return snapshot;
+    }
+
     private static CopperfinStudioSnapshotDocument BuildAssetEditorLabelObjectUpdateSmokeSnapshot()
     {
         return new CopperfinStudioSnapshotDocument
@@ -4474,6 +4606,13 @@ internal static class Program
     {
         return """
 {"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[{"RecordIndex":6,"Title":"customer.company","Subtitle":"field","Properties":[{"Name":"HPOS","Value":"1200"},{"Name":"VPOS","Value":"2600"},{"Name":"WIDTH","Value":"4000"},{"Name":"HEIGHT","Value":"500"},{"Name":"EXPR","Value":"customer.company"}]},{"RecordIndex":9,"Title":"orphan.note","Subtitle":"field","Properties":[{"Name":"HPOS","Value":"1100"},{"Name":"VPOS","Value":"700"},{"Name":"WIDTH","Value":"2400"},{"Name":"HEIGHT","Value":"450"},{"Name":"EXPR","Value":"orphan.note"}]}],"CommandUndoAvailable":false,"CommandUndoLabel":"","ReportLayout":{"PreviewBoundsAvailable":true,"PreviewBoundsLeft":1100,"PreviewBoundsTop":700,"PreviewBoundsRight":5200,"PreviewBoundsBottom":3100,"PreviewBoundsWidth":4100,"PreviewBoundsHeight":2400,"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":6,"ObjectKind":"field","Title":"customer.company","Expression":"customer.company","Left":1200,"Top":2600,"Width":4000,"Height":500}]}],"DeletedSections":[],"UnplacedObjects":[{"RecordIndex":9,"ObjectKind":"field","Title":"orphan.note","Expression":"orphan.note","Left":1100,"Top":700,"Width":2400,"Height":450}]}}}
+""";
+    }
+
+    private static string BuildLabelUndoPreviewRefreshHostResponseJson()
+    {
+        return """
+{"Status":"ok","Document":{"AssetFamily":"label","FieldCount":5,"Objects":[{"RecordIndex":6,"Title":"customer.company","Subtitle":"label","Properties":[{"Name":"HPOS","Value":"1200"},{"Name":"VPOS","Value":"2600"},{"Name":"WIDTH","Value":"4000"},{"Name":"HEIGHT","Value":"500"},{"Name":"EXPR","Value":"customer.company"}]},{"RecordIndex":9,"Title":"orphan.note","Subtitle":"label","Properties":[{"Name":"HPOS","Value":"1100"},{"Name":"VPOS","Value":"700"},{"Name":"WIDTH","Value":"2400"},{"Name":"HEIGHT","Value":"450"},{"Name":"EXPR","Value":"orphan.note"}]}],"CommandUndoAvailable":false,"CommandUndoLabel":"","ReportLayout":{"IsLabel":true,"PreviewBoundsAvailable":true,"PreviewBoundsLeft":1100,"PreviewBoundsTop":700,"PreviewBoundsRight":5200,"PreviewBoundsBottom":3100,"PreviewBoundsWidth":4100,"PreviewBoundsHeight":2400,"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":6,"ObjectKind":"label","Title":"customer.company","Expression":"customer.company","Left":1200,"Top":2600,"Width":4000,"Height":500}]}],"DeletedSections":[],"UnplacedObjects":[{"RecordIndex":9,"ObjectKind":"label","Title":"orphan.note","Expression":"orphan.note","Left":1100,"Top":700,"Width":2400,"Height":450}]}}}
 """;
     }
 
