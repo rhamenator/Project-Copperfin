@@ -134,6 +134,61 @@ std::optional<VisualPropertyState> read_current_visual_property_state(
     };
 }
 
+bool direct_field_change_is_noop(
+    const std::string& path,
+    const std::vector<std::uint8_t>& table_bytes,
+    const DbfParseResult& header,
+    std::size_t record_index,
+    const RawFieldDescriptor& field,
+    const std::string& new_value) {
+    if (record_index >= header.header.record_count) {
+        return false;
+    }
+
+    const std::size_t record_offset = header.header.header_length +
+                                      (record_index * header.header.record_length);
+    const std::size_t field_offset = record_offset + field.offset;
+    if ((field_offset + field.length) > table_bytes.size()) {
+        return false;
+    }
+
+    const auto raw_begin = table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset);
+    const auto raw_end = raw_begin + static_cast<std::ptrdiff_t>(field.length);
+
+    switch (field.type) {
+        case 'C':
+            return trim_right(std::string(raw_begin, raw_end)) == new_value;
+        case 'N':
+        case 'F':
+            return trim_both(std::string(raw_begin, raw_end)) == trim_both(new_value);
+        case 'L': {
+            const auto logical_value = normalize_logical_value(new_value);
+            return logical_value.has_value() &&
+                   table_bytes[field_offset] == static_cast<std::uint8_t>(*logical_value);
+        }
+        case 'M': {
+            const auto block_number = read_le_u32(table_bytes, field_offset);
+            if (block_number == 0U) {
+                return new_value.empty();
+            }
+
+            const auto memo_path = infer_memo_sidecar_path(path);
+            if (memo_path.empty()) {
+                return false;
+            }
+
+            const auto current_memo_bytes = read_memo_block_raw(memo_path, block_number);
+            if (current_memo_bytes.empty() && !new_value.empty()) {
+                return false;
+            }
+
+            return std::string(current_memo_bytes.begin(), current_memo_bytes.end()) == new_value;
+        }
+        default:
+            return false;
+    }
+}
+
 VisualAssetEditResult apply_visual_object_property_change(
     const VisualObjectEditRequest& request,
     bool record_undo_entry,
@@ -167,6 +222,20 @@ VisualAssetEditResult apply_visual_object_property_change(
     const auto fields = read_raw_field_descriptors(table_bytes);
     const auto direct_field_it = find_direct_visual_property_field(fields, request.property_name);
     if (direct_field_it != fields.end()) {
+        const auto header_result = parse_dbf_header(table_bytes);
+        if (!header_result.ok) {
+            return {.ok = false, .error = header_result.error};
+        }
+        if (direct_field_change_is_noop(
+                request.path,
+                table_bytes,
+                header_result,
+                record_index,
+                *direct_field_it,
+                request.property_value)) {
+            return {.ok = true, .error = {}};
+        }
+
         if (record_undo_entry) {
             const auto property_state = read_current_visual_property_state(request.path, record_index, request.property_name);
             if (!property_state.has_value()) {
@@ -174,9 +243,6 @@ VisualAssetEditResult apply_visual_object_property_change(
             }
             if (!property_state->direct_field) {
                 return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Undo.PropertyLookupMismatch")};
-            }
-            if (property_state->exists && property_state->value == request.property_value) {
-                return {.ok = true, .error = {}};
             }
 
             std::string error;

@@ -405,6 +405,103 @@ void test_update_visual_object_property_skips_noop_writes() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_update_visual_object_property_skips_noop_writes_for_report_and_label_assets() {
+    namespace fs = std::filesystem;
+    const auto exercise_asset = [&](const std::string& stem,
+                                    const std::string& table_extension,
+                                    const std::string& memo_extension,
+                                    const std::string& asset_label) {
+        const fs::path temp_dir = fs::temp_directory_path() /
+            ("copperfin_visual_editor_noop_" + stem + "_tests_" + std::to_string(_getpid()));
+        std::error_code ignored;
+        fs::remove_all(temp_dir, ignored);
+        fs::create_directories(temp_dir);
+
+        const fs::path table_path = temp_dir / ("noop" + table_extension);
+        const fs::path memo_path = temp_dir / ("noop" + memo_extension);
+
+        std::vector<std::uint8_t> table_bytes(178U, 0U);
+        table_bytes[0] = 0x30U;
+        table_bytes[1] = 126U;
+        table_bytes[2] = 4U;
+        table_bytes[3] = 7U;
+        write_le_u32(table_bytes, 4U, 1U);
+        write_le_u16(table_bytes, 8U, 161U);
+        write_le_u16(table_bytes, 10U, 17U);
+        table_bytes[28] = 0x00U;
+        table_bytes[29] = 0x03U;
+
+        write_field_descriptor(table_bytes, 32U, "OBJTYPE", 'N', 1U, 2U);
+        write_field_descriptor(table_bytes, 64U, "HPOS", 'N', 3U, 9U);
+        write_field_descriptor(table_bytes, 96U, "GRID", 'L', 12U, 1U);
+        write_field_descriptor(table_bytes, 128U, "EXPR", 'M', 13U, 4U);
+        table_bytes[160] = 0x0DU;
+        table_bytes[161] = 0x20U;
+        write_ascii(table_bytes, 162U, " 8");
+        write_ascii(table_bytes, 164U, "   7812.5");
+        table_bytes[173] = 'F';
+        write_le_u32(table_bytes, 174U, 1U);
+
+        {
+            std::ofstream output(table_path, std::ios::binary);
+            output.write(reinterpret_cast<const char*>(table_bytes.data()), static_cast<std::streamsize>(table_bytes.size()));
+        }
+
+        std::vector<std::uint8_t> memo_bytes(1024U, 0U);
+        write_be_u32(memo_bytes, 0U, 2U);
+        write_be_u16(memo_bytes, 6U, 512U);
+        const std::string expr = "customer.company";
+        memo_bytes[512 + 3] = 1U;
+        write_be_u32(memo_bytes, 512 + 4, static_cast<std::uint32_t>(expr.size()));
+        write_ascii(memo_bytes, 520U, expr);
+
+        {
+            std::ofstream output(memo_path, std::ios::binary);
+            output.write(reinterpret_cast<const char*>(memo_bytes.data()), static_cast<std::streamsize>(memo_bytes.size()));
+        }
+
+        const auto table_before = read_file_bytes(table_path);
+        const auto memo_before = read_file_bytes(memo_path);
+
+        const auto direct_update_result = copperfin::vfp::update_visual_object_property({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "HPOS",
+            .property_value = "7812.5"
+        });
+        expect(direct_update_result.ok, asset_label + " unchanged HPOS edits should succeed as no-ops");
+        expect(read_file_bytes(table_path) == table_before,
+            asset_label + " unchanged HPOS edits should not rewrite the table bytes");
+        expect(read_file_bytes(memo_path) == memo_before,
+            asset_label + " unchanged HPOS edits should not rewrite the memo bytes");
+        expect(!copperfin::vfp::query_visual_object_undo(table_path.string()).available,
+            asset_label + " unchanged HPOS edits should not create undo history");
+
+        const auto memo_update_result = copperfin::vfp::update_visual_object_property({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "EXPR",
+            .property_value = "customer.company"
+        });
+        expect(memo_update_result.ok, asset_label + " unchanged EXPR edits should succeed as no-ops");
+        expect(read_file_bytes(table_path) == table_before,
+            asset_label + " unchanged EXPR edits should not rewrite the table bytes");
+        expect(read_file_bytes(memo_path) == memo_before,
+            asset_label + " unchanged EXPR edits should not rewrite the memo bytes");
+        expect(!copperfin::vfp::query_visual_object_undo(table_path.string()).available,
+            asset_label + " unchanged EXPR edits should not create undo history");
+
+        fs::remove_all(temp_dir, ignored);
+    };
+
+    exercise_asset("frx", ".frx", ".frt", "Report");
+    exercise_asset("lbx", ".lbx", ".lbt", "Label");
+}
+
 void test_update_visual_object_property_targets_selected_object_name() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -797,7 +894,7 @@ void test_update_visual_object_property_rewrites_direct_fields() {
     table_bytes[160] = 0x0DU;
     table_bytes[161] = 0x20U;
     write_ascii(table_bytes, 162U, " 8");
-    write_ascii(table_bytes, 164U, "  7812.5");
+    write_ascii(table_bytes, 164U, "   7812.5");
     table_bytes[173] = 'F';
     write_le_u32(table_bytes, 174U, 1U);
 

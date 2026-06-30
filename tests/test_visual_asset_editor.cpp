@@ -223,6 +223,7 @@ int main() {
     test_list_visual_object_ancestors_walks_parent_chain();
     test_duplicate_visual_object_subtree_rewrites_copied_parents();
     test_update_visual_object_property_skips_noop_writes();
+    test_update_visual_object_property_skips_noop_writes_for_report_and_label_assets();
     test_update_visual_object_property_targets_selected_object_name();
     test_update_visual_object_property_targets_selected_unique_id();
 
