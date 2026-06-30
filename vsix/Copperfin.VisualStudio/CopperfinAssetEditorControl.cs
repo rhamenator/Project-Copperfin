@@ -837,7 +837,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
             var subtitle = currentSnapshot.AssetFamily == "project"
                 ? projectEntry?.GroupTitle ?? item.Subtitle
-                : item.Subtitle;
+                : BuildObjectListSubtitle(currentSnapshot.AssetFamily, item.Subtitle);
 
             var listItem = new ListViewItem(title);
             listItem.SubItems.Add(subtitle);
@@ -1713,6 +1713,45 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private string BuildDeletedReportSectionListTitle(CopperfinStudioReportSection section)
     {
         return F("AssetEditor.ReportSection.Deleted", BuildReportSectionListTitle(section));
+    }
+
+    private string BuildObjectListSubtitle(string assetFamily, string subtitle)
+    {
+        if (string.IsNullOrWhiteSpace(subtitle))
+        {
+            return subtitle;
+        }
+
+        if (assetFamily == "report" || assetFamily == "label")
+        {
+            return BuildReportObjectKindDisplayText(subtitle);
+        }
+
+        return subtitle;
+    }
+
+    private string BuildReportObjectKindDisplayText(string objectKind)
+    {
+        var key = objectKind switch
+        {
+            "label" => "AssetEditor.ReportObjectKind.Label",
+            "line" => "AssetEditor.ReportObjectKind.Line",
+            "rectangle" => "AssetEditor.ReportObjectKind.Rectangle",
+            "field" => "AssetEditor.ReportObjectKind.Field",
+            "band" => "AssetEditor.ReportObjectKind.Band",
+            "group" => "AssetEditor.ReportObjectKind.Group",
+            "picture" => "AssetEditor.ReportObjectKind.Picture",
+            "variable" => "AssetEditor.ReportObjectKind.Variable",
+            "object" => "AssetEditor.ReportObjectKind.Object",
+            _ => string.Empty
+        };
+
+        if (!string.IsNullOrWhiteSpace(key))
+        {
+            return L(key);
+        }
+
+        return objectKind.Replace('_', ' ');
     }
 
     private string BuildFallbackObjectTitle(int recordIndex)

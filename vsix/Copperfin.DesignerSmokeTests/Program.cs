@@ -37,6 +37,7 @@ internal static class Program
         SmokeReportSectionScopedObjectFiltering();
         SmokeReportSectionPropertyGridSelection();
         SmokeReportObjectPropertyGridLocalization();
+        SmokeLocalizedReportObjectKindSubtitles();
         SmokeLocalizedReportObjectFallbackTitles();
         SmokeReportSelectionPreservedAcrossExplorerRefresh();
         SmokeDeletedReportSectionExplorerSelection();
@@ -973,6 +974,73 @@ internal static class Program
         Expect(InvokeDesignSurfaceString(pseudoSurface, "BuildFallbackObjectTitle", 10).StartsWith("[!! ", StringComparison.Ordinal) &&
                InvokeDesignSurfaceString(pseudoSurface, "BuildFallbackObjectTitle", 10).IndexOf("10", StringComparison.Ordinal) >= 0,
             "Pseudo-localized shared report surface should route untitled fallback captions through the shared catalog");
+    }
+
+    private static void SmokeLocalizedReportObjectKindSubtitles()
+    {
+        var snapshot = new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "report",
+            Objects = new List<CopperfinStudioSnapshotObject>
+            {
+                new()
+                {
+                    RecordIndex = 10,
+                    Title = "detail.field",
+                    Subtitle = "field",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "HPOS", Value = "1200" },
+                        new() { Name = "VPOS", Value = "2600" },
+                        new() { Name = "WIDTH", Value = "4000" },
+                        new() { Name = "HEIGHT", Value = "500" },
+                        new() { Name = "EXPR", Value = "customer.company" }
+                    }
+                }
+            },
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail",
+                        Title = "Detail",
+                        BandKind = "detail",
+                        RecordIndex = 41,
+                        Top = 2000,
+                        Height = 5000,
+                        Objects = new List<CopperfinStudioReportLayoutObject>
+                        {
+                            new() { RecordIndex = 10 }
+                        }
+                    }
+                }
+            }
+        };
+
+        using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
+        ApplyReportSnapshotForExplorerSmoke(spanishControl, snapshot);
+        var spanishObjectListView = GetPrivateListView(spanishControl, "objectListView");
+        Expect(spanishObjectListView.Items.Count == 1 &&
+               string.Equals(spanishObjectListView.Items[0].SubItems[1].Text, "Campo", StringComparison.Ordinal),
+            "Spanish shared report object list should localize report object kind display text");
+
+        using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
+        ApplyReportSnapshotForExplorerSmoke(portugueseControl, snapshot);
+        var portugueseObjectListView = GetPrivateListView(portugueseControl, "objectListView");
+        Expect(portugueseObjectListView.Items.Count == 1 &&
+               string.Equals(portugueseObjectListView.Items[0].SubItems[1].Text, "Campo", StringComparison.Ordinal),
+            "Portuguese shared report object list should localize report object kind display text");
+
+        var pseudoLocalization = new CopperfinLocalization("qps-ploc");
+        using var pseudoControl = new CopperfinAssetEditorControl(pseudoLocalization);
+        Expect(InvokeAssetEditorString(pseudoControl, "BuildObjectListSubtitle", "report", "field").StartsWith("[!! ", StringComparison.Ordinal) &&
+               InvokeAssetEditorString(pseudoControl, "BuildObjectListSubtitle", "label", "group").StartsWith("[!! ", StringComparison.Ordinal),
+            "Pseudo-localized shared report/label object type text should route through the shared catalog");
+
+        Expect(string.Equals(snapshot.Objects[0].Subtitle, "field", StringComparison.Ordinal),
+            "Shared report object type localization should preserve snapshot subtitle contracts");
     }
 
     private static void SmokeReportObjectPropertyGridLocalization()
