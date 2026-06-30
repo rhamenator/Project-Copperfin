@@ -156,6 +156,7 @@ target_compile_definitions(test_studio_host_json PRIVATE
     COPPERFIN_REPORT_SCHEMA_FALLBACK_SKIP_HOST_SMOKE
     COPPERFIN_REPORT_LAYOUT_WIDTH_LEFT_PREVIEW_BOUNDS_SKIP_HOST_SMOKE
     COPPERFIN_REPORT_LAYOUT_HEIGHT_TOP_PREVIEW_BOUNDS_SKIP_HOST_SMOKE
+    COPPERFIN_DETAIL_HEADER_FOOTER_SECTION_PREVIEW_BOUNDS_SKIP_HOST_SMOKE
 )
 
 if(MSVC)
@@ -621,6 +622,29 @@ endif()
 add_test(
     NAME test_studio_host_report_height_top_preview_bounds
     COMMAND $<TARGET_FILE:test_studio_host_report_height_top_preview_bounds> $<TARGET_FILE:copperfin_studio_host>
+)
+
+add_executable(test_studio_host_detail_header_footer_section_preview_bounds
+    test_studio_host_detail_header_footer_section_preview_bounds.cpp
+    test_studio_host_json_geometry_preview_bounds.cpp
+    test_studio_host_json_objects_dhf_expressions_and_exposure.cpp
+    test_studio_host_json_sections_dhf_expressions_and_exposure.cpp
+    test_studio_host_json_shared_test_helpers.cpp
+)
+target_link_libraries(test_studio_host_detail_header_footer_section_preview_bounds PRIVATE cf_vfp_assets)
+target_compile_definitions(test_studio_host_detail_header_footer_section_preview_bounds PRIVATE
+    COPPERFIN_DETAIL_HEADER_FOOTER_SECTION_PREVIEW_BOUNDS_ONLY
+)
+
+if(MSVC)
+    target_compile_options(test_studio_host_detail_header_footer_section_preview_bounds PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_detail_header_footer_section_preview_bounds PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_detail_header_footer_section_preview_bounds
+    COMMAND $<TARGET_FILE:test_studio_host_detail_header_footer_section_preview_bounds> $<TARGET_FILE:copperfin_studio_host>
 )
 
 add_executable(test_studio_host_report_geometry_defaults
