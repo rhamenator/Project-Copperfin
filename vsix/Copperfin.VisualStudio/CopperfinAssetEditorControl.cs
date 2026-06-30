@@ -265,8 +265,13 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             var horizontalName = currentSnapshot?.AssetFamily is "report" or "label" ? "HPOS" : "Left";
             var verticalName = currentSnapshot?.AssetFamily is "report" or "label" ? "VPOS" : "Top";
-            ApplyVisualPropertyChange(recordIndex, horizontalName, left.ToString());
-            ApplyVisualPropertyChange(recordIndex, verticalName, top.ToString());
+            ApplyVisualPropertyChanges(
+                recordIndex,
+                new[]
+                {
+                    new KeyValuePair<string, string>(horizontalName, left.ToString()),
+                    new KeyValuePair<string, string>(verticalName, top.ToString())
+                });
         };
 
         workspaceSummaryBox = new RichTextBox
@@ -1050,15 +1055,26 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
     private void ApplyVisualPropertyChange(int recordIndex, string propertyName, string propertyValue)
     {
-        if (string.IsNullOrWhiteSpace(currentPath))
+        ApplyVisualPropertyChanges(
+            recordIndex,
+            new[]
+            {
+                new KeyValuePair<string, string>(propertyName, propertyValue)
+            });
+    }
+
+    private void ApplyVisualPropertyChanges(int recordIndex, IReadOnlyList<KeyValuePair<string, string>> propertyChanges)
+    {
+        if (string.IsNullOrWhiteSpace(currentPath) || propertyChanges.Count == 0)
         {
             return;
         }
 
         var explorerSelection = CaptureExplorerSelectionState();
         var selectedObjectRecordIndex = TryReadSelectedRecordIndex();
-        snapshotStatusLabel.Text = BuildPropertyApplyingStatus(propertyName);
-        var updateResult = CopperfinStudioSnapshotClient.TryUpdateProperty(currentPath!, recordIndex, propertyName, propertyValue);
+        var statusLabel = ResolvePropertyStatusLabels(propertyChanges.Select(change => change.Key));
+        snapshotStatusLabel.Text = BuildPropertyApplyingStatusLabel(statusLabel);
+        var updateResult = CopperfinStudioSnapshotClient.TryUpdateProperties(currentPath!, recordIndex, propertyChanges);
         if (!updateResult.Success || updateResult.Document is null)
         {
             snapshotStatusLabel.Text = BuildPropertyUpdateFailedStatus(updateResult.Error);
@@ -1066,7 +1082,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
 
         currentSnapshot = updateResult.Document;
-        snapshotStatusLabel.Text = BuildPropertyUpdatedStatus(propertyName, currentSnapshot);
+        snapshotStatusLabel.Text = BuildPropertyUpdatedStatusLabel(statusLabel, currentSnapshot);
         PopulateSectionList(explorerSelection);
         SyncExplorerSelection();
         LoadSurface();
@@ -1228,7 +1244,12 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
     private string BuildPropertyApplyingStatus(string propertyName)
     {
-        return this.localization.Format("AssetEditor.Property.ApplyingChange", ResolvePropertyStatusLabel(propertyName));
+        return BuildPropertyApplyingStatusLabel(ResolvePropertyStatusLabel(propertyName));
+    }
+
+    private string BuildPropertyApplyingStatusLabel(string propertyLabel)
+    {
+        return this.localization.Format("AssetEditor.Property.ApplyingChange", propertyLabel);
     }
 
     private string BuildPropertyUpdateFailedStatus(string? error)
@@ -1238,10 +1259,20 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
     private string BuildPropertyUpdatedStatus(string propertyName, CopperfinStudioSnapshotDocument snapshot)
     {
-        return this.localization.Format("AssetEditor.Property.Updated", ResolvePropertyStatusLabel(propertyName), snapshot.Objects.Count, snapshot.FieldCount) +
+        return BuildPropertyUpdatedStatusLabel(ResolvePropertyStatusLabel(propertyName), snapshot);
+    }
+
+    private string BuildPropertyUpdatedStatusLabel(string propertyLabel, CopperfinStudioSnapshotDocument snapshot)
+    {
+        return this.localization.Format("AssetEditor.Property.Updated", propertyLabel, snapshot.Objects.Count, snapshot.FieldCount) +
             (snapshot.CommandUndoAvailable && !string.IsNullOrWhiteSpace(snapshot.CommandUndoLabel)
                 ? this.localization.Format("AssetEditor.Snapshot.UndoAvailable", snapshot.CommandUndoLabel)
                 : string.Empty);
+    }
+
+    private string ResolvePropertyStatusLabels(IEnumerable<string> propertyNames)
+    {
+        return string.Join(", ", propertyNames.Select(ResolvePropertyStatusLabel));
     }
 
     private string ResolvePropertyStatusLabel(string propertyName)

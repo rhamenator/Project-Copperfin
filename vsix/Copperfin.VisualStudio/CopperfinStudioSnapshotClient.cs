@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Web.Script.Serialization;
@@ -124,6 +125,40 @@ internal static class CopperfinStudioSnapshotClient
         return RunSnapshotCommand(
             studioHostPath!,
             CopperfinStudioHostBridge.BuildPropertyUpdateArguments(assetPath, recordIndex, propertyName, propertyValue));
+    }
+
+    public static CopperfinStudioSnapshotResult TryUpdateProperties(
+        string assetPath,
+        int recordIndex,
+        IReadOnlyList<KeyValuePair<string, string>> propertyChanges)
+    {
+        if (propertyChanges.Count == 0)
+        {
+            return new CopperfinStudioSnapshotResult
+            {
+                Success = false,
+                Error = Localization.Text("AssetEditor.Dialog.StudioSnapshotEmpty")
+            };
+        }
+
+        if (propertyChanges.Count == 1)
+        {
+            return TryUpdateProperty(assetPath, recordIndex, propertyChanges[0].Key, propertyChanges[0].Value);
+        }
+
+        var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
+        if (string.IsNullOrWhiteSpace(studioHostPath))
+        {
+            return new CopperfinStudioSnapshotResult
+            {
+                Success = false,
+                Error = Localization.Text("AssetEditor.Dialog.StudioHostMissing")
+            };
+        }
+
+        return RunSnapshotCommand(
+            studioHostPath!,
+            CopperfinStudioHostBridge.BuildPropertyBatchUpdateArguments(assetPath, recordIndex, propertyChanges));
     }
 
     public static CopperfinStudioSnapshotResult TryUndoCommand(string assetPath)

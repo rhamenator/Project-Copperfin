@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -44,6 +45,7 @@ internal static class Program
         SmokeReportSurfaceScopeSelection();
         SmokeReportSurfaceObjectScopeAlignment();
         SmokeReportSurfaceObjectDragging();
+        SmokeAssetEditorReportDragUsesBatchStudioHostUpdate();
         SmokeDeletedReportSectionDesignSurfaceRendering();
         SmokeAssetEditorWithRealAsset(
             @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx",
@@ -2088,6 +2090,112 @@ internal static class Program
             "Dragging an unplaced report object on the shared surface should keep the unplaced-object tray highlighted");
     }
 
+    private static void SmokeAssetEditorReportDragUsesBatchStudioHostUpdate()
+    {
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            Console.WriteLine("SKIP: shared asset-editor batch-update smoke requires a POSIX scriptable fake Studio host.");
+            return;
+        }
+
+        var snapshot = BuildAssetEditorBatchUpdateSmokeSnapshot();
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var logPath = Path.Combine(tempRoot, "studio-host.log");
+        var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
+
+        try
+        {
+            File.WriteAllText(logPath, string.Empty);
+            CreateFakeStudioHostScript(scriptPath, BuildBatchUpdateHostResponseJson());
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", scriptPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", logPath);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+
+            ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+            SetPrivateField(control, "currentPath", Path.Combine(tempRoot, "invoice.frx"));
+            InvokeAssetEditorVoid(control, "LoadSurface");
+            Application.DoEvents();
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface.");
+            RenderDesignSurface(surface);
+
+            var scale = InvokeDesignSurfaceFloat(surface, "CalculateReportScale");
+            var start = GetCenter(ReadSurfaceObjectRectangle(surface, 0));
+            ClickDesignSurface(surface, start);
+            Application.DoEvents();
+
+            DragDesignSurface(surface, start, 18, 12);
+            Application.DoEvents();
+
+            var expectedLeft = (int)Math.Round(1200 + (18 / Math.Max(0.2F, scale)));
+            var expectedTop = (int)Math.Round(2600 + (12 / Math.Max(0.2F, scale)));
+            var logLines = File.ReadAllLines(logPath);
+            var invocationStartCount = logLines.Count(line => string.Equals(line, "BEGIN", StringComparison.Ordinal));
+            Expect(invocationStartCount == 1,
+                "Dragging a report object through the shared asset editor should invoke the Studio host exactly once");
+
+            var invocationArguments = logLines.Skip(1).ToList();
+            Expect(invocationArguments.Contains("--visual-object-update-batch") &&
+                   invocationArguments.Contains("--selected-record") &&
+                   invocationArguments.Contains("6") &&
+                   invocationArguments.Contains("--property-name") &&
+                   invocationArguments.Contains("HPOS") &&
+                   invocationArguments.Contains("VPOS") &&
+                   invocationArguments.Contains(expectedLeft.ToString()) &&
+                   invocationArguments.Contains(expectedTop.ToString()) &&
+                   !invocationArguments.Contains("--set-property"),
+                "Dragging a report object through the shared asset editor should send one batch update with invariant HPOS/VPOS changes");
+
+            Expect(string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Detail", StringComparison.Ordinal) &&
+                   string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "customer.company", StringComparison.Ordinal) &&
+                   ReadPrivateNullableInt(surface, "selectedRecordIndex") == 6 &&
+                   ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
+                   !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+                "Dragging a report object through the shared asset editor should preserve section and object selection continuity after the batch refresh");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", previousLogPath);
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeAssetEditorWithRealAsset(string path, string expectSection)
     {
         if (!File.Exists(path))
@@ -2459,6 +2567,119 @@ internal static class Program
         populateObjectListMethod.Invoke(control, new object[] { true });
     }
 
+    private static CopperfinStudioSnapshotDocument BuildAssetEditorBatchUpdateSmokeSnapshot()
+    {
+        return new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "report",
+            FieldCount = 5,
+            Objects = new List<CopperfinStudioSnapshotObject>
+            {
+                new()
+                {
+                    RecordIndex = 6,
+                    Title = "customer.company",
+                    Subtitle = "field",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "HPOS", Value = "1200" },
+                        new() { Name = "VPOS", Value = "2600" },
+                        new() { Name = "WIDTH", Value = "4000" },
+                        new() { Name = "HEIGHT", Value = "500" },
+                        new() { Name = "EXPR", Value = "customer.company" }
+                    }
+                }
+            },
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail_1",
+                        Title = "Detail",
+                        BandKind = "detail",
+                        RecordIndex = 42,
+                        Top = 2000,
+                        Height = 5000,
+                        Objects = new List<CopperfinStudioReportLayoutObject>
+                        {
+                            new()
+                            {
+                                RecordIndex = 6,
+                                ObjectKind = "field",
+                                Title = "customer.company",
+                                Expression = "customer.company",
+                                Left = 1200,
+                                Top = 2600,
+                                Width = 4000,
+                                Height = 500
+                            }
+                        }
+                    }
+                }
+            }
+        };
+    }
+
+    private static string BuildBatchUpdateHostResponseJson()
+    {
+        return """
+{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[{"RecordIndex":6,"Title":"customer.company","Subtitle":"field","Properties":[{"Name":"HPOS","Value":"1200"},{"Name":"VPOS","Value":"2600"},{"Name":"WIDTH","Value":"4000"},{"Name":"HEIGHT","Value":"500"},{"Name":"EXPR","Value":"customer.company"}]}],"ReportLayout":{"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":6,"ObjectKind":"field","Title":"customer.company","Expression":"customer.company","Left":1200,"Top":2600,"Width":4000,"Height":500}]}],"DeletedSections":[],"UnplacedObjects":[]}}}
+""";
+    }
+
+    private static void CreateFakeStudioHostScript(string scriptPath, string responseJson)
+    {
+        var script = string.Join(
+            "\n",
+            "#!/usr/bin/env bash",
+            "set -e",
+            "log_file=\"${COPPERFIN_SMOKE_LOG:?}\"",
+            "{",
+            "  printf '%s\\n' 'BEGIN'",
+            "  for arg in \"$@\"; do",
+            "    printf '%s\\n' \"$arg\"",
+            "  done",
+            "} >> \"$log_file\"",
+            "cat <<'JSON'",
+            responseJson,
+            "JSON",
+            string.Empty);
+
+        File.WriteAllText(scriptPath, script);
+        MakeExecutable(scriptPath);
+    }
+
+    private static void MakeExecutable(string path)
+    {
+        using var process = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = "/bin/chmod",
+                Arguments = $"+x \"{path}\"",
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+                CreateNoWindow = true
+            }
+        };
+
+        if (!process.Start())
+        {
+            throw new InvalidOperationException("Could not start chmod for the fake Studio host script.");
+        }
+
+        var stdout = process.StandardOutput.ReadToEnd();
+        var stderr = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+        if (process.ExitCode != 0)
+        {
+            throw new InvalidOperationException(string.IsNullOrWhiteSpace(stderr) ? stdout : stderr);
+        }
+    }
+
     private static string BuildGuidanceText(CopperfinAssetEditorControl control, string assetFamily)
     {
         var method = typeof(CopperfinAssetEditorControl).GetMethod("BuildGuidanceText", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -2751,6 +2972,17 @@ internal static class Program
         }
 
         field.SetValue(control, snapshot);
+    }
+
+    private static void SetPrivateField(object instance, string fieldName, object? value)
+    {
+        var field = instance.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+        if (field is null)
+        {
+            throw new InvalidOperationException($"Could not set private field {fieldName}.");
+        }
+
+        field.SetValue(instance, value);
     }
 
     private static IEnumerable<Label> FindLabels(Control root)

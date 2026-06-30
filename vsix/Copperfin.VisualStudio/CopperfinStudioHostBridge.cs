@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using DiagnosticsProcess = System.Diagnostics.Process;
 using DiagnosticsStartInfo = System.Diagnostics.ProcessStartInfo;
@@ -35,6 +36,20 @@ internal static class CopperfinStudioHostBridge
     public static string BuildPropertyUpdateArguments(string documentPath, int recordIndex, string propertyName, string propertyValue)
     {
         return $"--from-vs --json --set-property --record {recordIndex} --property-name {Quote(propertyName)} --property-value {Quote(propertyValue)} --path {Quote(documentPath)}";
+    }
+
+    public static string BuildPropertyBatchUpdateArguments(
+        string documentPath,
+        int recordIndex,
+        IReadOnlyList<KeyValuePair<string, string>> propertyChanges)
+    {
+        var arguments = $"--visual-object-update-batch --json --path {Quote(documentPath)} --selected-record {recordIndex}";
+        foreach (var propertyChange in propertyChanges)
+        {
+            arguments += $" --property-name {Quote(propertyChange.Key)} --property-value {Quote(propertyChange.Value)}";
+        }
+
+        return arguments;
     }
 
     public static string BuildUndoArguments(string documentPath)
