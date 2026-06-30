@@ -1405,6 +1405,22 @@ add_test(
     COMMAND $<TARGET_FILE:test_studio_host_section_deleted_object_counts> $<TARGET_FILE:copperfin_studio_host>
 )
 
+add_executable(test_studio_host_selected_report_sections
+    test_studio_host_selected_report_sections.cpp
+)
+target_link_libraries(test_studio_host_selected_report_sections PRIVATE cf_vfp_assets)
+
+if(MSVC)
+    target_compile_options(test_studio_host_selected_report_sections PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_selected_report_sections PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_selected_report_sections
+    COMMAND $<TARGET_FILE:test_studio_host_selected_report_sections> $<TARGET_FILE:copperfin_studio_host>
+)
+
 add_executable(test_studio_host_selected_summary_sections_stable
     test_studio_host_selected_summary_sections_stable.cpp
 )
