@@ -30,6 +30,7 @@ void write_synthetic_report_table_for_unresolved_memo_placeholder_layout_json(
     expect(delete_result.ok, "#1736: synthetic report table should mark unresolved memo settings deleted");
 }
 
+#if !defined(COPPERFIN_REPORT_UNRESOLVED_MEMO_SKIP_HOST_SMOKE)
 void test_studio_host_json_suppresses_unresolved_report_memo_placeholders(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -145,5 +146,6 @@ void test_studio_host_json_suppresses_unresolved_report_memo_placeholders(
         fs::remove_all(temp_root, ignored);
     }
 }
+#endif
 
 }  // namespace cf_test_studio_host_json

@@ -152,6 +152,7 @@ target_compile_definitions(test_studio_host_json PRIVATE
     COPPERFIN_REPORT_DIRECT_SETTING_FIELDS_SKIP_HOST_SMOKE
     COPPERFIN_REPORT_SETTINGS_MEMO_PARSING_SKIP_HOST_SMOKE
     COPPERFIN_REPORT_SETTINGS_DIAGNOSTICS_SKIP_HOST_SMOKE
+    COPPERFIN_REPORT_UNRESOLVED_MEMO_SKIP_HOST_SMOKE
 )
 
 if(MSVC)
@@ -408,6 +409,34 @@ endif()
 add_test(
     NAME test_studio_host_report_settings_diagnostics
     COMMAND $<TARGET_FILE:test_studio_host_report_settings_diagnostics> $<TARGET_FILE:copperfin_studio_host>
+)
+
+add_executable(test_studio_host_report_unresolved_memo_placeholders
+    test_studio_host_report_unresolved_memo_placeholders.cpp
+    test_studio_host_json_geometry_dimensions.cpp
+    test_studio_host_json_geometry_preview_bounds.cpp
+    test_studio_host_json_objects_dhf_expressions_and_exposure.cpp
+    test_studio_host_json_objects_diagnostics_and_misc.cpp
+    test_studio_host_json_report_memo_and_placeholders.cpp
+    test_studio_host_json_report_shared_fixtures.cpp
+    test_studio_host_json_sections_diagnostics_and_misc.cpp
+    test_studio_host_json_settings_diagnostics_and_misc.cpp
+    test_studio_host_json_shared_test_helpers.cpp
+)
+target_link_libraries(test_studio_host_report_unresolved_memo_placeholders PRIVATE cf_vfp_assets)
+target_compile_definitions(test_studio_host_report_unresolved_memo_placeholders PRIVATE
+    COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS
+)
+
+if(MSVC)
+    target_compile_options(test_studio_host_report_unresolved_memo_placeholders PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_report_unresolved_memo_placeholders PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_report_unresolved_memo_placeholders
+    COMMAND $<TARGET_FILE:test_studio_host_report_unresolved_memo_placeholders> $<TARGET_FILE:copperfin_studio_host>
 )
 
 add_executable(test_studio_host_report_selection_none

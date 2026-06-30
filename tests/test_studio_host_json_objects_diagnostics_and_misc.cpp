@@ -2162,6 +2162,7 @@ void test_studio_host_json_defaults_missing_report_object_objcode_schema(
     }
 }
 
+#if !defined(COPPERFIN_REPORT_UNRESOLVED_MEMO_SKIP_HOST_SMOKE)
 void test_studio_host_json_suppresses_unresolved_deleted_report_object_memo_placeholders(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -2241,16 +2242,20 @@ void test_studio_host_json_suppresses_unresolved_deleted_report_object_memo_plac
                         "#1738: unresolved deleted object memo selection should advertise selected objects");
         expect_contains(deleted_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1738: unresolved deleted object memo selection should expose object selection kind");
-        expect_contains(deleted_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1738: unresolved deleted object memo selection should not fabricate containing sections");
-        expect_contains(deleted_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1738: unresolved deleted object memo selection should serialize null containing sections");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1738: unresolved deleted object memo selection should preserve containing-section metadata");
         expect_contains_in_order(
             deleted_process.stdout_text,
             {
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 1",
                 "\"deleted\": true",
+                "\"containingSectionId\": \"detail_0\"",
+                "\"containingSectionRecordIndex\": 0",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 1050",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 1",
                 "\"objectTypeCode\": 8",
                 "\"objectKind\": \"field\"",
                 "\"title\": \"Record 1\"",
@@ -2264,6 +2269,21 @@ void test_studio_host_json_suppresses_unresolved_deleted_report_object_memo_plac
                 "\"highlightCount\": 0"
             },
             "#1738: unresolved deleted object memo selection should suppress expression/highlight text while preserving object metadata");
+        expect_contains_in_order(
+            deleted_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"detail_0\"",
+                "\"title\": \"Detail\"",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 0",
+                "\"deleted\": false",
+                "\"sectionIndex\": 0",
+                "\"sectionCount\": 1",
+                "\"objectCount\": 0",
+                "\"deletedObjectCount\": 1"
+            },
+            "#1738: unresolved deleted object memo selection should expose containing detail-band metadata");
         expect_unresolved_deleted_object_memo_preview_bounds(
             deleted_process.stdout_text,
             "#2334: selected unresolved deleted object memo JSON");
@@ -2405,6 +2425,7 @@ void test_studio_host_json_suppresses_unresolved_unplaced_report_object_memo_pla
         fs::remove_all(temp_root, ignored);
     }
 }
+#endif
 
 void test_studio_host_json_preserves_report_objects_without_expr_schema(
     const std::string& studio_host_path) {

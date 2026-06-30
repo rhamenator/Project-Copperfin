@@ -649,6 +649,7 @@ void test_studio_host_json_defaults_missing_report_section_objcode_schema(
     }
 }
 
+#if !defined(COPPERFIN_REPORT_UNRESOLVED_MEMO_SKIP_HOST_SMOKE)
 void test_studio_host_json_suppresses_unresolved_report_section_memo_placeholders(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -819,6 +820,7 @@ void test_studio_host_json_suppresses_unresolved_report_section_memo_placeholder
         fs::remove_all(temp_root, ignored);
     }
 }
+#endif
 
 void test_studio_host_json_preserves_report_sections_without_expr_schema(
     const std::string& studio_host_path) {

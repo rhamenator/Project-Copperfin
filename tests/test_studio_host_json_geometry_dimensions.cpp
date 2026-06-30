@@ -3417,6 +3417,7 @@ void test_studio_host_json_defaults_missing_report_layout_geometry_fields(
     }
 }
 
+#if !defined(COPPERFIN_REPORT_UNRESOLVED_MEMO_SKIP_HOST_SMOKE)
 void test_studio_host_json_defaults_unresolved_report_geometry_memo_placeholders(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -3598,6 +3599,7 @@ void test_studio_host_json_defaults_unresolved_report_geometry_memo_placeholders
         fs::remove_all(temp_root, ignored);
     }
 }
+#endif
 
 void test_studio_host_json_defaults_report_sections_without_geometry_schema(
     const std::string& studio_host_path) {
