@@ -797,18 +797,6 @@ void write_synthetic_report_table_for_deleted_group_section_expression_json(
     const std::filesystem::path& report_path);
 void write_synthetic_report_table_for_deleted_group_footer_expression_json(
     const std::filesystem::path& report_path);
-void test_studio_host_json_updates_nested_report_group_section_expressions_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_nested_report_group_section_expressions_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_deleted_nested_report_group_section_expressions(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_deleted_nested_report_group_section_expressions(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_nested_report_group_section_expressions_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_deleted_nested_report_group_section_expressions_by_stable_selection(
-    const std::string& studio_host_path);
 void test_studio_host_json_exposes_report_group_footer_expressions_by_stable_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_exposes_deleted_report_group_section_expressions_by_stable_selection(
