@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -83,20 +84,40 @@ internal static class Program
         SmokeAssetEditorReportDragRefreshesShellSummary();
         SmokeAssetEditorLabelDragRefreshesShellSummary();
         SmokeDeletedReportSectionDesignSurfaceRendering();
-        SmokeAssetEditorWithRealAsset(
-            @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx",
-            expectSection: "Detail");
-        SmokeAssetEditorWithRealAsset(
-            @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\cust.lbx",
-            expectSection: "Detail");
-        SmokeProjectEditorWithRealAsset(
-            @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\solution.pjx",
-            expectGroup: "Forms");
-        SmokeProjectDebuggerWithRealAsset(
-            @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\solution.pjx");
-        SmokeStandaloneStudioWithMultipleAssets(
-            @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Wizards\Template\Books\Forms\books.scx",
-            @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx");
+        WithResolvedRealAssetToolchain(() =>
+        {
+            SmokeAssetEditorWithRealAsset(
+                ResolveFirstExistingRealAssetPath(
+                    TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
+                    TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX")),
+                expectSection: "Detail");
+            SmokeAssetEditorWithRealAsset(
+                ResolveFirstExistingRealAssetPath(
+                    TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
+                    TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX")),
+                expectSection: "Detail");
+            SmokeProjectEditorWithRealAsset(
+                ResolveFirstExistingRealAssetPath(
+                    TryResolveVfp9InstallAsset(@"Samples\Solution\solution.pjx"),
+                    TryResolveVfpSourceAsset("VFPSource/addlabel/addlabel.pjx"),
+                    TryResolveVfpSourceAsset("VFPSource/tasklist/tasklist.PJX")),
+                expectGroups: new[] { "Forms", "Programs", "Class Libraries", "Classes", "Other Assets" });
+            SmokeProjectDebuggerWithRealAsset(
+                ResolveFirstExistingRealAssetPath(
+                    TryResolveVfp9InstallAsset(@"Samples\Solution\solution.pjx"),
+                    TryResolveVfpSourceAsset("VFPSource/addlabel/addlabel.pjx"),
+                    TryResolveVfpSourceAsset("VFPSource/tasklist/tasklist.PJX")));
+            SmokeStandaloneStudioWithMultipleAssets(
+                ResolveFirstExistingRealAssetPath(
+                    TryResolveVfp9InstallAsset(@"Wizards\Template\Books\Forms\books.scx"),
+                    TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Forms/books.scx")),
+                ResolveFirstExistingRealAssetPath(
+                    TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
+                    TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX")));
+            SmokeStandaloneStudioWithMultipleAssets(
+                TryResolveVfpSourceAsset("VFPSource/EnvMgr/envmgr.vcx"),
+                TryResolveVfpSourceAsset("VFPSource/ReportBuilder/handler_context.mnx"));
+        });
 
         if (failures != 0)
         {
@@ -6592,11 +6613,11 @@ internal static class Program
         }
     }
 
-    private static void SmokeAssetEditorWithRealAsset(string path, string expectSection)
+    private static void SmokeAssetEditorWithRealAsset(string? path, string expectSection)
     {
-        if (!File.Exists(path))
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
         {
-            Console.WriteLine($"SKIP: {path} not found.");
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(path) ? "real asset candidate" : path)} not found.");
             return;
         }
 
@@ -6617,7 +6638,7 @@ internal static class Program
         hostForm.Controls.Add(control);
         hostForm.Show();
         Application.DoEvents();
-        control.LoadDocument(path);
+        control.LoadDocument(path!);
 
         var loaded = WaitUntil(
             TimeSpan.FromSeconds(8),
@@ -6646,11 +6667,11 @@ internal static class Program
         TearDownForm(hostForm);
     }
 
-    private static void SmokeProjectEditorWithRealAsset(string path, string expectGroup)
+    private static void SmokeProjectEditorWithRealAsset(string? path, string[] expectGroups)
     {
-        if (!File.Exists(path))
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
         {
-            Console.WriteLine($"SKIP: {path} not found.");
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(path) ? "real project asset candidate" : path)} not found.");
             return;
         }
 
@@ -6671,7 +6692,7 @@ internal static class Program
         hostForm.Controls.Add(control);
         hostForm.Show();
         Application.DoEvents();
-        control.LoadDocument(path);
+        control.LoadDocument(path!);
 
         var loaded = WaitUntil(
             TimeSpan.FromSeconds(8),
@@ -6681,8 +6702,8 @@ internal static class Program
 
         var groupFound = FindListViews(control)
             .SelectMany(list => list.Items.Cast<ListViewItem>())
-            .Any(item => string.Equals(item.Text, expectGroup, StringComparison.OrdinalIgnoreCase));
-        Expect(groupFound, $"project editor should surface group '{expectGroup}' for {path}");
+            .Any(item => expectGroups.Any(expectGroup => string.Equals(item.Text, expectGroup, StringComparison.OrdinalIgnoreCase)));
+        Expect(groupFound, $"project editor should surface one of the expected groups for {path}");
 
         var projectButtons = FindButtons(control).Select(button => button.Text).ToList();
         Expect(projectButtons.Contains("Build Copperfin Project"), $"project editor should expose a build command for {path}");
@@ -6740,11 +6761,17 @@ internal static class Program
         TearDownForm(hostForm);
     }
 
-    private static void SmokeProjectDebuggerWithRealAsset(string path)
+    private static void SmokeProjectDebuggerWithRealAsset(string? path)
     {
-        if (!File.Exists(path))
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
         {
-            Console.WriteLine($"SKIP: {path} not found.");
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(path) ? "real project debug asset candidate" : path)} not found.");
+            return;
+        }
+
+        if (Path.DirectorySeparatorChar != '\\')
+        {
+            Console.WriteLine("SKIP: real project debugger smoke requires Windows runtime build execution support.");
             return;
         }
 
@@ -6765,7 +6792,7 @@ internal static class Program
         hostForm.Controls.Add(control);
         hostForm.Show();
         Application.DoEvents();
-        control.LoadDocument(path);
+        control.LoadDocument(path!);
 
         var loaded = WaitUntil(
             TimeSpan.FromSeconds(8),
@@ -6801,11 +6828,14 @@ internal static class Program
         TearDownForm(hostForm);
     }
 
-    private static void SmokeStandaloneStudioWithMultipleAssets(string firstPath, string secondPath)
+    private static void SmokeStandaloneStudioWithMultipleAssets(string? firstPath, string? secondPath)
     {
-        if (!File.Exists(firstPath) || !File.Exists(secondPath))
+        if (string.IsNullOrWhiteSpace(firstPath) ||
+            string.IsNullOrWhiteSpace(secondPath) ||
+            !File.Exists(firstPath) ||
+            !File.Exists(secondPath))
         {
-            Console.WriteLine($"SKIP: {firstPath} or {secondPath} not found.");
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(firstPath) ? "real asset candidate" : firstPath)} or {(string.IsNullOrWhiteSpace(secondPath) ? "real asset candidate" : secondPath)} not found.");
             return;
         }
 
@@ -6820,8 +6850,8 @@ internal static class Program
 
         form.Show();
         Application.DoEvents();
-        form.OpenDocument(firstPath);
-        form.OpenDocument(secondPath);
+        form.OpenDocument(firstPath!);
+        form.OpenDocument(secondPath!);
 
         var loaded = WaitUntil(
             TimeSpan.FromSeconds(10),
@@ -6837,7 +6867,7 @@ internal static class Program
         if (tabControl is not null)
         {
             var beforeDuplicateOpen = tabControl.TabPages.Count;
-            form.OpenDocument(firstPath);
+            form.OpenDocument(firstPath!);
             Application.DoEvents();
             Expect(tabControl.TabPages.Count == beforeDuplicateOpen, "opening an already open asset should not duplicate tabs");
             Expect(tabControl.SelectedTab is not null, "standalone Studio should keep a selected tab");
@@ -6879,6 +6909,208 @@ internal static class Program
 
         Application.DoEvents();
         return condition();
+    }
+
+    private static string? ResolveFirstExistingRealAssetPath(params string?[] candidates)
+    {
+        return candidates.FirstOrDefault(candidate => !string.IsNullOrWhiteSpace(candidate) && File.Exists(candidate));
+    }
+
+    private static void WithResolvedRealAssetToolchain(Action action)
+    {
+        var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        var previousBuildHostPath = Environment.GetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH");
+        var previousRuntimeHostPath = Environment.GetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH");
+        var resolvedStudioHostPath = ResolveLocalToolPath(
+            Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH"),
+            "copperfin_studio_host");
+        var resolvedBuildHostPath = ResolveLocalToolPath(
+            Environment.GetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH"),
+            "copperfin_build_host");
+        var resolvedRuntimeHostPath = ResolveLocalToolPath(
+            Environment.GetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH"),
+            "copperfin_runtime_host");
+
+        if (!string.IsNullOrWhiteSpace(resolvedStudioHostPath))
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", resolvedStudioHostPath);
+        }
+
+        if (!string.IsNullOrWhiteSpace(resolvedBuildHostPath))
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH", resolvedBuildHostPath);
+        }
+
+        if (!string.IsNullOrWhiteSpace(resolvedRuntimeHostPath))
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH", resolvedRuntimeHostPath);
+        }
+
+        try
+        {
+            action();
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH", previousBuildHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH", previousRuntimeHostPath);
+        }
+    }
+
+    private static string? ResolveLocalToolPath(string? configuredPath, string toolName)
+    {
+        var candidates = new[]
+        {
+            ExpandUserPath(configuredPath),
+            ExpandUserPath("./build/" + toolName),
+            ExpandUserPath("./build/" + toolName + ".exe"),
+            ExpandUserPath("./build2/" + toolName),
+            ExpandUserPath("./build2/" + toolName + ".exe"),
+            ExpandUserPath("./build/Release/" + toolName),
+            ExpandUserPath("./build/Release/" + toolName + ".exe"),
+            ExpandUserPath("./.tmp/install-localization/bin/" + toolName),
+            ExpandUserPath("./.tmp/install-localization/bin/" + toolName + ".exe")
+        };
+
+        return candidates.FirstOrDefault(candidate => !string.IsNullOrWhiteSpace(candidate) && File.Exists(candidate));
+    }
+
+    private static string? TryResolveVfp9InstallAsset(string relativePath)
+    {
+        var configuredRoot = ExpandUserPath(Environment.GetEnvironmentVariable("COPPERFIN_VFP9_ROOT"));
+        var defaultRoot = Path.DirectorySeparatorChar == '\\'
+            ? @"C:\Program Files (x86)\Microsoft Visual FoxPro 9"
+            : null;
+
+        foreach (var root in new[] { configuredRoot, defaultRoot })
+        {
+            if (string.IsNullOrWhiteSpace(root))
+            {
+                continue;
+            }
+
+            var candidate = Path.Combine(root!, relativePath.Replace('\\', Path.DirectorySeparatorChar));
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        return null;
+    }
+
+    private static string? TryResolveVfpSourceAsset(string archiveRelativePath)
+    {
+        var configuredRoot = ExpandUserPath(Environment.GetEnvironmentVariable("COPPERFIN_VFPSOURCE_ROOT"));
+        if (!string.IsNullOrWhiteSpace(configuredRoot))
+        {
+            var rootedCandidate = TryResolveAssetUnderRoot(configuredRoot!, archiveRelativePath);
+            if (!string.IsNullOrWhiteSpace(rootedCandidate))
+            {
+                return rootedCandidate;
+            }
+        }
+
+        var zipPath = ResolveFirstExistingRealAssetPath(
+            ExpandUserPath(Environment.GetEnvironmentVariable("COPPERFIN_VFPSOURCE_ZIP")),
+            ExpandUserPath("~/Downloads/VFPSource.zip"));
+        if (string.IsNullOrWhiteSpace(zipPath))
+        {
+            return null;
+        }
+
+        return TryExtractArchiveContainingDirectory(zipPath!, archiveRelativePath);
+    }
+
+    private static string? TryResolveAssetUnderRoot(string root, string archiveRelativePath)
+    {
+        var normalizedRelativePath = archiveRelativePath.Replace('/', Path.DirectorySeparatorChar);
+        var candidates = new List<string>
+        {
+            Path.Combine(root, normalizedRelativePath)
+        };
+
+        const string vfpSourcePrefix = "VFPSource/";
+        if (archiveRelativePath.StartsWith(vfpSourcePrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            candidates.Add(Path.Combine(root, archiveRelativePath.Substring(vfpSourcePrefix.Length).Replace('/', Path.DirectorySeparatorChar)));
+        }
+
+        return candidates.FirstOrDefault(File.Exists);
+    }
+
+    private static string? TryExtractArchiveContainingDirectory(string zipPath, string archiveRelativePath)
+    {
+        var normalizedRelativePath = archiveRelativePath.Replace('\\', '/');
+        var directorySeparatorIndex = normalizedRelativePath.LastIndexOf('/');
+        if (directorySeparatorIndex < 0)
+        {
+            return null;
+        }
+
+        var archiveDirectory = normalizedRelativePath.Substring(0, directorySeparatorIndex + 1);
+        var assetFileName = normalizedRelativePath.Substring(directorySeparatorIndex + 1);
+        var extractionRoot = Path.Combine(
+            Path.GetTempPath(),
+            "CopperfinDesignerSmokeRealAssets",
+            Path.GetFileNameWithoutExtension(zipPath),
+            archiveDirectory.Replace('/', Path.DirectorySeparatorChar));
+        var extractedAssetPath = Path.Combine(extractionRoot, assetFileName);
+        if (File.Exists(extractedAssetPath))
+        {
+            return extractedAssetPath;
+        }
+
+        Directory.CreateDirectory(extractionRoot);
+
+        using var archive = ZipFile.OpenRead(zipPath);
+        var matchingEntries = archive.Entries
+            .Where(entry => entry.FullName.StartsWith(archiveDirectory, StringComparison.OrdinalIgnoreCase) &&
+                            !string.IsNullOrEmpty(entry.Name))
+            .ToList();
+        if (matchingEntries.Count == 0)
+        {
+            return null;
+        }
+
+        foreach (var entry in matchingEntries)
+        {
+            var relativeEntryPath = entry.FullName.Substring(archiveDirectory.Length).Replace('/', Path.DirectorySeparatorChar);
+            var destinationPath = Path.Combine(extractionRoot, relativeEntryPath);
+            var destinationDirectory = Path.GetDirectoryName(destinationPath);
+            if (!string.IsNullOrWhiteSpace(destinationDirectory))
+            {
+                Directory.CreateDirectory(destinationDirectory!);
+            }
+
+            entry.ExtractToFile(destinationPath, overwrite: true);
+        }
+
+        return File.Exists(extractedAssetPath) ? extractedAssetPath : null;
+    }
+
+    private static string? ExpandUserPath(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return path;
+        }
+
+        var nonNullPath = path!;
+
+        if (nonNullPath == "~")
+        {
+            return Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        }
+
+        if (nonNullPath.StartsWith("~/", StringComparison.Ordinal) || nonNullPath.StartsWith("~\\", StringComparison.Ordinal))
+        {
+            var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            return Path.Combine(home, nonNullPath.Substring(2));
+        }
+
+        return nonNullPath;
     }
 
     private static IEnumerable<ListView> FindListViews(Control root)
