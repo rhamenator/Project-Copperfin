@@ -876,7 +876,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
         propertyGrid.SelectedObject = selectedObject is null || currentSnapshot is null
             ? null
-            : CopperfinDesignerSelection.FromSnapshot(currentSnapshot.AssetFamily, selectedObject);
+            : CopperfinDesignerSelection.FromSnapshot(currentSnapshot.AssetFamily, selectedObject, localization);
         designSurface.SelectRecord(selectedObject?.RecordIndex);
     }
 
@@ -1000,7 +1000,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
             propertyGrid.SelectedObject = selectedObject is null || currentSnapshot is null
                 ? null
-                : CopperfinDesignerSelection.FromSnapshot(currentSnapshot.AssetFamily, selectedObject);
+                : CopperfinDesignerSelection.FromSnapshot(currentSnapshot.AssetFamily, selectedObject, localization);
         }
         finally
         {

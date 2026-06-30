@@ -36,6 +36,7 @@ internal static class Program
         SmokeReportSectionGroupingExplorerTitles();
         SmokeReportSectionScopedObjectFiltering();
         SmokeReportSectionPropertyGridSelection();
+        SmokeReportObjectPropertyGridLocalization();
         SmokeReportSelectionPreservedAcrossExplorerRefresh();
         SmokeDeletedReportSectionExplorerSelection();
         SmokeReportSurfaceScopeSelection();
@@ -847,6 +848,60 @@ internal static class Program
         Expect(objectPropertyGrid.SelectedObject is CopperfinDesignerSelection refreshedObjectSelection &&
                refreshedObjectSelection.RecordIndex == 10,
             "Report object property-grid selection should remain object-rooted after explorer refresh");
+    }
+
+    private static void SmokeReportObjectPropertyGridLocalization()
+    {
+        var snapshotObject = new CopperfinStudioSnapshotObject
+        {
+            RecordIndex = 10,
+            Title = "detail.line",
+            Subtitle = "field",
+            Properties = new List<CopperfinStudioSnapshotProperty>
+            {
+                new() { Name = "OBJTYPE", Value = "8" },
+                new() { Name = "OBJCODE", Value = "53" },
+                new() { Name = "EXPR", Value = "customer.company" },
+                new() { Name = "HPOS", Value = "1200" },
+                new() { Name = "VPOS", Value = "2600" },
+                new() { Name = "WIDTH", Value = "4000" },
+                new() { Name = "HEIGHT", Value = "500" },
+                new() { Name = "FONTFACE", Value = "Arial" },
+                new() { Name = "FONTSTYLE", Value = "1" },
+                new() { Name = "FONTSIZE", Value = "10" }
+            }
+        };
+
+        var spanishSelection = CopperfinDesignerSelection.FromSnapshot("report", snapshotObject, new CopperfinLocalization("es-419"));
+        Expect(spanishSelection is not null &&
+               TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Tipo de objeto", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Expresión", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Tamaño de fuente", StringComparison.Ordinal)),
+            "Spanish report object property-grid selection should localize object field labels");
+
+        var portugueseSelection = CopperfinDesignerSelection.FromSnapshot("report", snapshotObject, new CopperfinLocalization("pt-BR"));
+        Expect(portugueseSelection is not null &&
+               TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Tipo de objeto", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Expressão", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Tamanho da fonte", StringComparison.Ordinal)),
+            "Portuguese report object property-grid selection should localize object field labels");
+
+        var pseudoLocalization = new CopperfinLocalization("qps-ploc");
+        var pseudoSelection = CopperfinDesignerSelection.FromSnapshot("report", snapshotObject, pseudoLocalization);
+        Expect(pseudoSelection is not null &&
+               TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ObjectType"), StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Expression"), StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.FontSize"), StringComparison.Ordinal)),
+            "Pseudo-localized report object property-grid selection should route object field labels through the shared catalog");
+
+        if (pseudoSelection is not null)
+        {
+            TypeDescriptor.GetProperties(pseudoSelection)["EXPR"]?.SetValue(pseudoSelection, "customer.region");
+            Expect(pseudoSelection.TryGetUpdate("EXPR", out var exprTarget, out var exprValue) &&
+                   string.Equals(exprTarget, "EXPR", StringComparison.Ordinal) &&
+                   string.Equals(exprValue, "customer.region", StringComparison.Ordinal),
+                "Localized report object property-grid labels should preserve machine-readable update targets");
+        }
     }
 
     private static void SmokeDeletedReportSectionExplorerSelection()

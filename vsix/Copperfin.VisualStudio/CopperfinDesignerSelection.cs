@@ -60,12 +60,14 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
 
     public int RecordIndex { get; private set; }
 
-    public static CopperfinDesignerSelection? FromSnapshot(string assetFamily, CopperfinStudioSnapshotObject snapshotObject)
+    public static CopperfinDesignerSelection? FromSnapshot(string assetFamily, CopperfinStudioSnapshotObject snapshotObject, CopperfinLocalization? localization = null)
     {
         var selection = new CopperfinDesignerSelection
         {
             RecordIndex = snapshotObject.RecordIndex
         };
+
+        string L(string key, string fallback) => localization?.Text(key) ?? fallback;
 
         switch (assetFamily)
         {
@@ -83,16 +85,16 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
 
             case "report":
             case "label":
-                selection.AddReadOnlyInt("OBJTYPE", "Object Type", selection.Read(snapshotObject, "OBJTYPE"));
-                selection.AddReadOnlyInt("OBJCODE", "Object Code", selection.Read(snapshotObject, "OBJCODE"));
-                selection.AddEditableString("EXPR", "Expression", selection.Read(snapshotObject, "EXPR"));
-                selection.AddEditableInt("HPOS", "Left", selection.Read(snapshotObject, "HPOS"));
-                selection.AddEditableInt("VPOS", "Top", selection.Read(snapshotObject, "VPOS"));
-                selection.AddEditableInt("WIDTH", "Width", selection.Read(snapshotObject, "WIDTH"));
-                selection.AddEditableInt("HEIGHT", "Height", selection.Read(snapshotObject, "HEIGHT"));
-                selection.AddEditableString("FONTFACE", "Font Face", selection.Read(snapshotObject, "FONTFACE"));
-                selection.AddEditableInt("FONTSTYLE", "Font Style", selection.Read(snapshotObject, "FONTSTYLE"));
-                selection.AddEditableInt("FONTSIZE", "Font Size", selection.Read(snapshotObject, "FONTSIZE"));
+                selection.AddReadOnlyInt("OBJTYPE", L("AssetEditor.Property.ObjectType", "Object Type"), selection.Read(snapshotObject, "OBJTYPE"));
+                selection.AddReadOnlyInt("OBJCODE", L("AssetEditor.Property.ObjectCode", "Object Code"), selection.Read(snapshotObject, "OBJCODE"));
+                selection.AddEditableString("EXPR", L("AssetEditor.Property.Expression", "Expression"), selection.Read(snapshotObject, "EXPR"));
+                selection.AddEditableInt("HPOS", L("AssetEditor.Property.Left", "Left"), selection.Read(snapshotObject, "HPOS"));
+                selection.AddEditableInt("VPOS", L("AssetEditor.Column.Top", "Top"), selection.Read(snapshotObject, "VPOS"));
+                selection.AddEditableInt("WIDTH", L("AssetEditor.Property.Width", "Width"), selection.Read(snapshotObject, "WIDTH"));
+                selection.AddEditableInt("HEIGHT", L("AssetEditor.Property.Height", "Height"), selection.Read(snapshotObject, "HEIGHT"));
+                selection.AddEditableString("FONTFACE", L("AssetEditor.Property.FontFace", "Font Face"), selection.Read(snapshotObject, "FONTFACE"));
+                selection.AddEditableInt("FONTSTYLE", L("AssetEditor.Property.FontStyle", "Font Style"), selection.Read(snapshotObject, "FONTSTYLE"));
+                selection.AddEditableInt("FONTSIZE", L("AssetEditor.Property.FontSize", "Font Size"), selection.Read(snapshotObject, "FONTSIZE"));
                 break;
 
             case "menu":
