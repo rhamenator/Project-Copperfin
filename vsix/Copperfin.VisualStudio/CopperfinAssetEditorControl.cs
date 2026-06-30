@@ -823,7 +823,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             foreach (var section in reportLayout.Sections)
             {
                 var item = new ListViewItem(BuildReportSectionListTitle(section));
-                item.SubItems.Add(section.Objects.Count.ToString());
+                item.SubItems.Add(CountVisibleReportSectionObjects(reportLayout, section).ToString());
                 item.SubItems.Add(section.Top.ToString());
                 item.Tag = section;
                 sectionListView.Items.Add(item);
@@ -832,7 +832,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             foreach (var section in reportLayout.DeletedSections)
             {
                 var item = new ListViewItem(BuildDeletedReportSectionListTitle(section));
-                item.SubItems.Add(section.Objects.Count.ToString());
+                item.SubItems.Add(CountVisibleReportSectionObjects(reportLayout, section).ToString());
                 item.SubItems.Add(section.Top.ToString());
                 item.Tag = section;
                 item.ForeColor = Color.Firebrick;
@@ -1851,7 +1851,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
                 if (selectedSection is CopperfinStudioReportSection reportSection)
                 {
-                    var sectionRecords = reportSection.Objects.Select(item => item.RecordIndex).ToHashSet();
+                    var sectionRecords = EnumerateVisibleReportSectionRecordIndexes(currentSnapshot.ReportLayout, reportSection)
+                        .ToHashSet();
                     return currentSnapshot.Objects.Where(item => sectionRecords.Contains(item.RecordIndex)).ToList();
                 }
 
@@ -1900,6 +1901,31 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
 
         return sectionListView.Items.Count > 0 ? sectionListView.Items[0].Tag : null;
+    }
+
+    private static int CountVisibleReportSectionObjects(
+        CopperfinStudioReportLayout reportLayout,
+        CopperfinStudioReportSection section)
+    {
+        return EnumerateVisibleReportSectionRecordIndexes(reportLayout, section).Count();
+    }
+
+    private static IEnumerable<int> EnumerateVisibleReportSectionRecordIndexes(
+        CopperfinStudioReportLayout reportLayout,
+        CopperfinStudioReportSection section)
+    {
+        foreach (var layoutObject in section.Objects)
+        {
+            yield return layoutObject.RecordIndex;
+        }
+
+        foreach (var layoutObject in reportLayout.DeletedObjects)
+        {
+            if (layoutObject.ContainingSectionRecordIndex == section.RecordIndex)
+            {
+                yield return layoutObject.RecordIndex;
+            }
+        }
     }
 
     private CopperfinStudioSnapshotObject? TryGetSelectedSnapshotObject()

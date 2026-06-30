@@ -81,6 +81,7 @@ internal sealed class CopperfinStudioReportLayout
     public List<CopperfinStudioReportSection> Sections { get; set; } = new();
     public List<CopperfinStudioReportSection> DeletedSections { get; set; } = new();
     public List<CopperfinStudioReportLayoutObject> UnplacedObjects { get; set; } = new();
+    public List<CopperfinStudioReportLayoutObject> DeletedObjects { get; set; } = new();
 }
 
 internal sealed class CopperfinStudioReportGrouping
@@ -130,6 +131,13 @@ internal sealed class CopperfinStudioReportSection
 internal sealed class CopperfinStudioReportLayoutObject
 {
     public int RecordIndex { get; set; }
+    public bool Deleted { get; set; }
+    public string ContainingSectionId { get; set; } = string.Empty;
+    public int? ContainingSectionRecordIndex { get; set; }
+    public int SectionRelativeTop { get; set; }
+    public int SectionRelativeBottom { get; set; }
+    public int SectionObjectIndex { get; set; }
+    public int SectionObjectCount { get; set; }
     public string ObjectKind { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string Expression { get; set; } = string.Empty;

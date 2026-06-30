@@ -108,12 +108,12 @@ internal sealed class CopperfinDesignSurfaceControl : Control
         var lookup = snapshotObjects.ToDictionary(item => item.RecordIndex);
         foreach (var section in layout.Sections)
         {
-            reportSections.Add(BuildReportSectionVisual(section, deleted: false, lookup));
+            reportSections.Add(BuildReportSectionVisual(section, deleted: false, lookup, layout.DeletedObjects));
         }
 
         foreach (var section in layout.DeletedSections)
         {
-            reportSections.Add(BuildReportSectionVisual(section, deleted: true, lookup));
+            reportSections.Add(BuildReportSectionVisual(section, deleted: true, lookup, layout.DeletedObjects));
         }
 
         foreach (var layoutObject in layout.UnplacedObjects)
@@ -472,13 +472,18 @@ internal sealed class CopperfinDesignSurfaceControl : Control
 
     private static void DrawSurfaceObject(Graphics graphics, SurfaceObject item, bool selected, string assetFamily)
     {
-        var fillColor = assetFamily switch
+        var deleted = item.Source.Deleted;
+        var fillColor = deleted
+            ? (selected ? Color.FromArgb(252, 220, 216) : Color.FromArgb(246, 228, 225))
+            : assetFamily switch
         {
             "report" => selected ? Color.FromArgb(254, 220, 188) : Color.FromArgb(214, 230, 250),
             "label" => selected ? Color.FromArgb(255, 230, 192) : Color.FromArgb(224, 239, 214),
             _ => selected ? Color.FromArgb(255, 211, 171) : Color.FromArgb(205, 223, 247)
         };
-        var borderColor = assetFamily switch
+        var borderColor = deleted
+            ? (selected ? Color.FromArgb(163, 63, 54) : Color.FromArgb(166, 91, 84))
+            : assetFamily switch
         {
             "report" => selected ? Color.FromArgb(174, 86, 24) : Color.FromArgb(52, 97, 164),
             "label" => selected ? Color.FromArgb(152, 86, 12) : Color.FromArgb(64, 122, 70),
@@ -589,7 +594,8 @@ internal sealed class CopperfinDesignSurfaceControl : Control
     private ReportSectionVisual BuildReportSectionVisual(
         CopperfinStudioReportSection section,
         bool deleted,
-        IReadOnlyDictionary<int, CopperfinStudioSnapshotObject> lookup)
+        IReadOnlyDictionary<int, CopperfinStudioSnapshotObject> lookup,
+        IReadOnlyList<CopperfinStudioReportLayoutObject> deletedObjects)
     {
         var visual = new ReportSectionVisual
         {
@@ -605,7 +611,13 @@ internal sealed class CopperfinDesignSurfaceControl : Control
             DeletedObjectCount = section.DeletedObjectCount
         };
 
-        foreach (var layoutObject in section.Objects)
+        var visibleObjects = section.Objects
+            .Concat(deletedObjects.Where(item => item.ContainingSectionRecordIndex == section.RecordIndex))
+            .OrderBy(item => item.Top)
+            .ThenBy(item => item.Left)
+            .ThenBy(item => item.RecordIndex);
+
+        foreach (var layoutObject in visibleObjects)
         {
             if (!lookup.TryGetValue(layoutObject.RecordIndex, out var snapshotObject))
             {
