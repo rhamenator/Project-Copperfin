@@ -96,6 +96,26 @@ internal static class Program
                     TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
                     TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX")),
                 expectSection: "Detail");
+            SmokeRealAssetHostBackedPropertyRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 7,
+                propertyName: "HPOS",
+                originalValue: "8645.833",
+                updatedValue: "9000",
+                expectedObjectTitle: "_RC60MC40R",
+                expectedSectionTitle: "Title",
+                expectedSectionCount: 6,
+                expectLabel: false);
+            SmokeRealAssetHostBackedPropertyRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 6,
+                propertyName: "HPOS",
+                originalValue: "6250.000",
+                updatedValue: "6500",
+                expectedObjectTitle: "_QV30QY1DL",
+                expectedSectionTitle: "Detail",
+                expectedSectionCount: 5,
+                expectLabel: true);
             SmokeProjectEditorWithRealAsset(
                 ResolveFirstExistingRealAssetPath(
                     TryResolveVfp9InstallAsset(@"Samples\Solution\solution.pjx"),
@@ -6667,6 +6687,141 @@ internal static class Program
         TearDownForm(hostForm);
     }
 
+    private static void SmokeRealAssetHostBackedPropertyRoundTrip(
+        string? sourcePath,
+        int recordIndex,
+        string propertyName,
+        string originalValue,
+        string updatedValue,
+        string expectedObjectTitle,
+        string expectedSectionTitle,
+        int expectedSectionCount,
+        bool expectLabel)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(sourcePath) ? "real asset write candidate" : sourcePath)} not found.");
+            return;
+        }
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmokeRealAssetWrites-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateWritableAssetCopy(sourcePath!, tempRoot);
+
+        try
+        {
+            var loaded = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(loaded.Success && loaded.Document is not null,
+                $"real asset write smoke should load snapshot data for {sourcePath}");
+            if (!loaded.Success || loaded.Document is null)
+            {
+                return;
+            }
+
+            AssertRealAssetRoundTripSnapshot(
+                loaded.Document,
+                recordIndex,
+                propertyName,
+                originalValue,
+                expectedObjectTitle,
+                expectedSectionTitle,
+                expectedSectionCount,
+                expectLabel,
+                $"initial real asset snapshot should preserve {propertyName}");
+
+            var updateResult = CopperfinStudioSnapshotClient.TryUpdateProperty(
+                assetPath,
+                recordIndex,
+                propertyName,
+                updatedValue);
+            Expect(updateResult.Success && updateResult.Document is not null,
+                $"real asset write smoke should update {propertyName} for {sourcePath}");
+            if (!updateResult.Success || updateResult.Document is null)
+            {
+                return;
+            }
+
+            AssertRealAssetRoundTripSnapshot(
+                updateResult.Document,
+                recordIndex,
+                propertyName,
+                updatedValue,
+                expectedObjectTitle,
+                expectedSectionTitle,
+                expectedSectionCount,
+                expectLabel,
+                $"updated real asset snapshot should preserve {propertyName}");
+            Expect(updateResult.Document.CommandUndoAvailable,
+                $"real asset write smoke should expose undo after updating {propertyName} for {sourcePath}");
+
+            var reloadedAfterUpdate = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterUpdate.Success && reloadedAfterUpdate.Document is not null,
+                $"real asset write smoke should reload updated snapshot data for {sourcePath}");
+            if (!reloadedAfterUpdate.Success || reloadedAfterUpdate.Document is null)
+            {
+                return;
+            }
+
+            AssertRealAssetRoundTripSnapshot(
+                reloadedAfterUpdate.Document,
+                recordIndex,
+                propertyName,
+                updatedValue,
+                expectedObjectTitle,
+                expectedSectionTitle,
+                expectedSectionCount,
+                expectLabel,
+                $"reloaded updated real asset snapshot should preserve {propertyName}");
+            Expect(reloadedAfterUpdate.Document.CommandUndoAvailable,
+                $"reloaded updated real asset snapshot should keep undo available for {sourcePath}");
+
+            var undoResult = CopperfinStudioSnapshotClient.TryUndoCommand(assetPath);
+            Expect(undoResult.Success && undoResult.Document is not null,
+                $"real asset write smoke should undo {propertyName} for {sourcePath}");
+            if (!undoResult.Success || undoResult.Document is null)
+            {
+                return;
+            }
+
+            var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null,
+                $"real asset write smoke should reload undone snapshot data for {sourcePath}");
+            if (!reloadedAfterUndo.Success || reloadedAfterUndo.Document is null)
+            {
+                return;
+            }
+
+            AssertRealAssetRoundTripSnapshot(
+                reloadedAfterUndo.Document,
+                recordIndex,
+                propertyName,
+                originalValue,
+                expectedObjectTitle,
+                expectedSectionTitle,
+                expectedSectionCount,
+                expectLabel,
+                $"reloaded undone real asset snapshot should preserve {propertyName}");
+            Expect(!reloadedAfterUndo.Document.CommandUndoAvailable,
+                $"real asset write smoke should clear undo after restoring {propertyName} for {sourcePath}");
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeProjectEditorWithRealAsset(string? path, string[] expectGroups)
     {
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
@@ -6914,6 +7069,100 @@ internal static class Program
     private static string? ResolveFirstExistingRealAssetPath(params string?[] candidates)
     {
         return candidates.FirstOrDefault(candidate => !string.IsNullOrWhiteSpace(candidate) && File.Exists(candidate));
+    }
+
+    private static void AssertRealAssetRoundTripSnapshot(
+        CopperfinStudioSnapshotDocument document,
+        int recordIndex,
+        string propertyName,
+        string expectedPropertyValue,
+        string expectedObjectTitle,
+        string expectedSectionTitle,
+        int expectedSectionCount,
+        bool expectLabel,
+        string failurePrefix)
+    {
+        Expect(document.ReportLayout is not null,
+            $"{failurePrefix} for {document.Path} should include a report layout");
+        if (document.ReportLayout is null)
+        {
+            return;
+        }
+
+        Expect(document.ReportLayout.IsLabel == expectLabel,
+            $"{failurePrefix} for {document.Path} should preserve report/label identity");
+        Expect(document.ReportLayout.Sections.Count == expectedSectionCount,
+            $"{failurePrefix} for {document.Path} should preserve section counts");
+
+        var section = document.ReportLayout.Sections
+            .FirstOrDefault(candidate => string.Equals(candidate.Title, expectedSectionTitle, StringComparison.OrdinalIgnoreCase));
+        Expect(section is not null,
+            $"{failurePrefix} for {document.Path} should preserve section '{expectedSectionTitle}'");
+        if (section is null)
+        {
+            return;
+        }
+
+        var layoutObject = section.Objects.FirstOrDefault(candidate => candidate.RecordIndex == recordIndex);
+        Expect(layoutObject is not null,
+            $"{failurePrefix} for {document.Path} should preserve placed object {recordIndex}");
+        if (layoutObject is null)
+        {
+            return;
+        }
+
+        Expect(string.Equals(layoutObject.Title, expectedObjectTitle, StringComparison.Ordinal),
+            $"{failurePrefix} for {document.Path} should preserve the selected object title");
+
+        var snapshotObject = document.Objects.FirstOrDefault(candidate => candidate.RecordIndex == recordIndex);
+        Expect(snapshotObject is not null,
+            $"{failurePrefix} for {document.Path} should preserve raw snapshot object {recordIndex}");
+        if (snapshotObject is null)
+        {
+            return;
+        }
+
+        var property = snapshotObject.Properties
+            .FirstOrDefault(candidate => string.Equals(candidate.Name, propertyName, StringComparison.OrdinalIgnoreCase));
+        Expect(property is not null,
+            $"{failurePrefix} for {document.Path} should preserve property {propertyName}");
+        if (property is null)
+        {
+            return;
+        }
+
+        Expect(string.Equals(property.Value, expectedPropertyValue, StringComparison.Ordinal),
+            $"{failurePrefix} for {document.Path} should expose {propertyName}={expectedPropertyValue}");
+    }
+
+    private static string CreateWritableAssetCopy(string sourcePath, string tempRoot)
+    {
+        var sourceFileInfo = new FileInfo(sourcePath);
+        if (sourceFileInfo.Directory is null)
+        {
+            throw new InvalidOperationException($"Could not determine containing directory for {sourcePath}.");
+        }
+
+        var destinationDirectory = Path.Combine(tempRoot, sourceFileInfo.Directory.Name);
+        CopyDirectoryRecursive(sourceFileInfo.Directory.FullName, destinationDirectory);
+        return Path.Combine(destinationDirectory, sourceFileInfo.Name);
+    }
+
+    private static void CopyDirectoryRecursive(string sourceDirectory, string destinationDirectory)
+    {
+        Directory.CreateDirectory(destinationDirectory);
+
+        foreach (var filePath in Directory.GetFiles(sourceDirectory))
+        {
+            var destinationPath = Path.Combine(destinationDirectory, Path.GetFileName(filePath));
+            File.Copy(filePath, destinationPath, overwrite: true);
+        }
+
+        foreach (var childDirectory in Directory.GetDirectories(sourceDirectory))
+        {
+            var destinationChild = Path.Combine(destinationDirectory, Path.GetFileName(childDirectory));
+            CopyDirectoryRecursive(childDirectory, destinationChild);
+        }
     }
 
     private static void WithResolvedRealAssetToolchain(Action action)
