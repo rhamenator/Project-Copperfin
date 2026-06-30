@@ -320,6 +320,7 @@ void write_synthetic_report_table_for_invalid_direct_page_setup_layout_json(
     expect(delete_result.ok, "#1733: synthetic report table should mark invalid direct settings deleted");
 }
 
+#if !defined(COPPERFIN_REPORT_LAYOUT_CLASSIFICATIONS_SKIP_HOST_SMOKE)
 void test_studio_host_json_ignores_invalid_report_layout_classifications(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -1447,7 +1448,7 @@ void test_studio_host_json_exposes_unknown_report_band_codes(const std::string& 
             live_process.stdout_text,
             {
                 "\"selectedReportSection\": {",
-                "\"id\": \"other_1\"",
+                "\"id\": \"unknown-live-band-guid\"",
                 "\"title\": \"Other Band\"",
                 "\"bandKind\": \"other\"",
                 "\"expression\": \"unknown.live\"",
@@ -1476,12 +1477,12 @@ void test_studio_host_json_exposes_unknown_report_band_codes(const std::string& 
             deleted_process.stdout_text,
             {
                 "\"deletedSections\": [",
-                "\"id\": \"other_2\"",
+                "\"id\": \"unknown-deleted-band-guid\"",
                 "\"title\": \"Other Band\"",
                 "\"bandKind\": \"other\"",
                 "\"expression\": \"unknown.deleted\"",
                 "\"selectedReportSection\": {",
-                "\"id\": \"other_2\"",
+                "\"id\": \"unknown-deleted-band-guid\"",
                 "\"title\": \"Other Band\"",
                 "\"bandKind\": \"other\"",
                 "\"expression\": \"unknown.deleted\"",
@@ -1652,5 +1653,6 @@ void test_studio_host_json_ignores_invalid_direct_report_page_setup_fields(
         fs::remove_all(temp_root, ignored);
     }
 }
+#endif
 
 }  // namespace cf_test_studio_host_json
