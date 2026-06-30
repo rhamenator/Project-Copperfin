@@ -502,6 +502,102 @@ void test_update_visual_object_property_skips_noop_writes_for_report_and_label_a
     exercise_asset("lbx", ".lbx", ".lbt", "Label");
 }
 
+void test_update_visual_object_property_preserves_unsupported_report_and_label_metadata() {
+    namespace fs = std::filesystem;
+    const auto exercise_asset = [&](const std::string& stem,
+                                    const std::string& table_extension,
+                                    const std::string& asset_label) {
+        const fs::path temp_dir = fs::temp_directory_path() /
+            ("copperfin_visual_editor_preserve_unsupported_" + stem + "_tests_" + std::to_string(_getpid()));
+        std::error_code ignored;
+        fs::remove_all(temp_dir, ignored);
+        fs::create_directories(temp_dir);
+
+        const fs::path table_path = temp_dir / ("sample" + table_extension);
+        const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+            {.name = "OBJTYPE", .type = 'N', .length = 8U},
+            {.name = "HPOS", .type = 'N', .length = 10U},
+            {.name = "EXPR", .type = 'M', .length = 4U},
+            {.name = "USERFLAG", .type = 'C', .length = 24U},
+            {.name = "USERMETA", .type = 'M', .length = 4U}
+        };
+        const std::vector<std::vector<std::string>> records{
+            {"8", "1200", "customer.company", asset_label + "DirectMetadata", asset_label + "MemoMetadata"}
+        };
+        const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+        expect(create_result.ok, asset_label + " unsupported-metadata fixture should be writable");
+
+        auto update_result = copperfin::vfp::update_visual_object_property({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "HPOS",
+            .property_value = "2400"
+        });
+        expect(update_result.ok, asset_label + " supported HPOS edits should succeed");
+
+        update_result = copperfin::vfp::update_visual_object_property({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "EXPR",
+            .property_value = "\"updated.expr\""
+        });
+        expect(update_result.ok, asset_label + " supported EXPR edits should succeed");
+
+        const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+        expect(parse_result.ok, asset_label + " unsupported-metadata fixture should remain readable after supported edits");
+        if (parse_result.ok && parse_result.table.records.size() == 1U) {
+            const auto& record = parse_result.table.records[0];
+            const auto* hpos = find_record_field(record, "HPOS");
+            const auto* expr = find_record_field(record, "EXPR");
+            const auto* direct_metadata = find_record_field(record, "USERFLAG");
+            const auto* memo_metadata = find_record_field(record, "USERMETA");
+            expect(hpos != nullptr && hpos->display_value == "2400",
+                asset_label + " supported HPOS edits should persist");
+            expect(expr != nullptr && expr->display_value == "\"updated.expr\"",
+                asset_label + " supported EXPR edits should persist");
+            expect(direct_metadata != nullptr && direct_metadata->display_value == asset_label + "DirectMetadata",
+                asset_label + " unsupported direct metadata should survive supported edits");
+            expect(memo_metadata != nullptr && memo_metadata->display_value == asset_label + "MemoMetadata",
+                asset_label + " unsupported memo metadata should survive supported edits");
+        }
+
+        auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+        expect(undo_result.ok, asset_label + " first undo should restore the supported EXPR edit");
+        undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+        expect(undo_result.ok, asset_label + " second undo should restore the supported HPOS edit");
+
+        const auto reverted_parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+        expect(reverted_parse_result.ok, asset_label + " unsupported-metadata fixture should remain readable after undo");
+        if (reverted_parse_result.ok && reverted_parse_result.table.records.size() == 1U) {
+            const auto& record = reverted_parse_result.table.records[0];
+            const auto* hpos = find_record_field(record, "HPOS");
+            const auto* expr = find_record_field(record, "EXPR");
+            const auto* direct_metadata = find_record_field(record, "USERFLAG");
+            const auto* memo_metadata = find_record_field(record, "USERMETA");
+            expect(hpos != nullptr && hpos->display_value == "1200",
+                asset_label + " undo should restore the original HPOS value");
+            expect(expr != nullptr && expr->display_value == "customer.company",
+                asset_label + " undo should restore the original EXPR value");
+            expect(direct_metadata != nullptr && direct_metadata->display_value == asset_label + "DirectMetadata",
+                asset_label + " unsupported direct metadata should survive undo");
+            expect(memo_metadata != nullptr && memo_metadata->display_value == asset_label + "MemoMetadata",
+                asset_label + " unsupported memo metadata should survive undo");
+        }
+
+        const auto undo_status = copperfin::vfp::query_visual_object_undo(table_path.string());
+        expect(!undo_status.available, asset_label + " undo journal should be empty after restoring supported edits");
+
+        fs::remove_all(temp_dir, ignored);
+    };
+
+    exercise_asset("frx", ".frx", "Report");
+    exercise_asset("lbx", ".lbx", "Label");
+}
+
 void test_update_visual_object_property_targets_selected_object_name() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
