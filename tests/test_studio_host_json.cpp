@@ -101,6 +101,7 @@ int main(int argc, char** argv) {
     test_studio_host_visual_method_copy_move_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_method_reorder_parse_diagnostics_localize(argv[1]);
     test_studio_host_json_exposes_designer_contexts(argv[1]);
+#if !defined(COPPERFIN_DETAIL_HEADER_FOOTER_SECTION_SKIP_HOST_SMOKE)
     test_studio_host_json_exposes_detail_header_footer_section_kinds(argv[1]);
     test_studio_host_json_updates_detail_header_footer_section_heights_by_stable_selection(argv[1]);
     test_studio_host_json_clears_detail_header_footer_section_heights_by_stable_selection(argv[1]);
@@ -118,6 +119,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_renames_deleted_detail_header_footer_sections_by_stable_selection(argv[1]);
     test_studio_host_json_reorders_detail_header_footer_sections_by_stable_selection(argv[1]);
     test_studio_host_json_reorders_deleted_detail_header_footer_sections_by_stable_selection(argv[1]);
+#endif
     test_studio_host_json_exposes_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_deletes_and_restores_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_duplicates_detail_header_footer_objects_by_stable_selection(argv[1]);
