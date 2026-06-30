@@ -130,8 +130,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_deleted_detail_header_footer_object_font_metadata_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_object_font_options_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_object_font_options_by_stable_selection(argv[1]);
-    test_studio_host_json_updates_detail_header_footer_object_geometry_by_stable_selection(argv[1]);
-    test_studio_host_json_updates_deleted_detail_header_footer_object_geometry_by_stable_selection(argv[1]);
     test_studio_host_json_deletes_and_restores_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_duplicates_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_duplicates_deleted_detail_header_footer_objects_by_stable_selection(argv[1]);

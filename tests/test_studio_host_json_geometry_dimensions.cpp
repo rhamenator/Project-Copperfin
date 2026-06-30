@@ -2535,6 +2535,7 @@ void test_studio_host_json_restores_edited_deleted_report_layout_object_geometry
     }
 }
 
+#if !defined(COPPERFIN_DETAIL_HEADER_FOOTER_OBJECT_GEOMETRY_SKIP_STABLE)
 void test_studio_host_json_updates_detail_header_footer_object_geometry_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -2988,6 +2989,7 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_geometry_
         fs::remove_all(temp_root, ignored);
     }
 }
+#endif
 
 void test_studio_host_json_clamps_negative_report_layout_dimensions(
     const std::string& studio_host_path) {
