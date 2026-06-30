@@ -1,0 +1,603 @@
+#include "copperfin/vfp/dbf_table.h"
+#include <cstdlib>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <vector>
+
+#if !defined(_WIN32)
+#include <sys/wait.h>
+#endif
+
+namespace {
+
+int failures = 0;
+
+std::string getenv_value(const std::string& name) {
+#ifdef _WIN32
+    char* value = nullptr;
+    std::size_t value_size = 0;
+    if (_dupenv_s(&value, &value_size, name.c_str()) != 0 || value == nullptr) {
+        return {};
+    }
+    std::string result(value);
+    std::free(value);
+    return result;
+#else
+    const char* value = std::getenv(name.c_str());
+    return value == nullptr ? std::string{} : std::string(value);
+#endif
+}
+
+void set_env_value(const std::string& name, const std::string& value, bool has_value) {
+#ifdef _WIN32
+    if (has_value) {
+        _putenv_s(name.c_str(), value.c_str());
+    } else {
+        _putenv_s((name + "=").c_str(), "");
+    }
+#else
+    if (has_value) {
+        setenv(name.c_str(), value.c_str(), 1);
+    } else {
+        unsetenv(name.c_str());
+    }
+#endif
+}
+
+struct ScopedEnvironmentValue {
+    std::string name;
+    std::string original;
+    bool had_original = false;
+
+    explicit ScopedEnvironmentValue(const std::string& environment_name)
+        : name(environment_name),
+          original(getenv_value(name)) {
+        had_original = !original.empty();
+        set_env_value(name, "", false);
+    }
+
+    ~ScopedEnvironmentValue() {
+        set_env_value(name, original, had_original);
+    }
+};
+
+struct ScopedDefaultLocaleCatalogEnvironment {
+    ScopedEnvironmentValue locale;
+    ScopedEnvironmentValue locale_dir;
+
+    ScopedDefaultLocaleCatalogEnvironment()
+        : locale("COPPERFIN_LOCALE"),
+          locale_dir("COPPERFIN_LOCALE_DIR") {
+        set_env_value("COPPERFIN_LOCALE", "en-US", true);
+        set_env_value(
+            "COPPERFIN_LOCALE_DIR",
+            [] {
+                std::filesystem::path ancestor = std::filesystem::absolute(std::filesystem::current_path());
+                for (;;) {
+                    const auto candidate = ancestor / "resources" / "locales";
+                    if (std::filesystem::exists(candidate)) {
+                        return candidate.lexically_normal().string();
+                    }
+                    const auto parent = ancestor.parent_path();
+                    if (parent == ancestor) {
+                        return candidate.lexically_normal().string();
+                    }
+                    ancestor = parent;
+                }
+            }(),
+            true);
+    }
+};
+
+void expect(bool condition, const std::string& message) {
+    if (!condition) {
+        std::cerr << "FAIL: " << message << "\n";
+        ++failures;
+    }
+}
+
+void expect_contains(const std::string& text, const std::string& needle, const std::string& message) {
+    expect(text.find(needle) != std::string::npos, message);
+}
+
+void expect_not_contains(const std::string& text, const std::string& needle, const std::string& message) {
+    expect(text.find(needle) == std::string::npos, message);
+}
+
+void expect_contains_in_order(
+    const std::string& text,
+    const std::vector<std::string>& needles,
+    const std::string& message) {
+    std::size_t offset = 0U;
+    for (const auto& needle : needles) {
+        const std::size_t position = text.find(needle, offset);
+        if (position == std::string::npos) {
+            expect(false, message);
+            return;
+        }
+        offset = position + needle.size();
+    }
+}
+
+std::string quote_command_argument(const std::string& value) {
+    std::string quoted = "\"";
+    quoted.reserve(value.size() + 2U);
+    for (const char ch : value) {
+        if (ch == '"') {
+            quoted += "\\\"";
+        } else {
+            quoted.push_back(ch);
+        }
+    }
+    quoted.push_back('"');
+    return quoted;
+}
+
+std::string read_text(const std::filesystem::path& path) {
+    std::ifstream input(path, std::ios::binary);
+    return {
+        std::istreambuf_iterator<char>(input),
+        std::istreambuf_iterator<char>()
+    };
+}
+
+struct ProcessResult {
+    int exit_code = -1;
+    std::string stdout_text;
+    std::string stderr_text;
+};
+
+ProcessResult run_process_capture(
+    const std::string& executable_path,
+    const std::vector<std::string>& arguments,
+    const std::filesystem::path& working_directory) {
+    namespace fs = std::filesystem;
+
+    const fs::path resolved_executable_path = fs::absolute(executable_path);
+    const fs::path stdout_path = working_directory / "studio_host_stdout.log";
+    const fs::path stderr_path = working_directory / "studio_host_stderr.log";
+
+    std::string command = quote_command_argument(resolved_executable_path.string());
+    for (const auto& argument : arguments) {
+        command += " ";
+        command += quote_command_argument(argument);
+    }
+    command += " > ";
+    command += quote_command_argument(stdout_path.string());
+    command += " 2> ";
+    command += quote_command_argument(stderr_path.string());
+
+    const fs::path original_directory = fs::current_path();
+    fs::current_path(working_directory);
+    const int raw_exit_code = std::system(command.c_str());
+    fs::current_path(original_directory);
+
+    ProcessResult result;
+    if (fs::exists(stdout_path)) {
+        result.stdout_text = read_text(stdout_path);
+    }
+    if (fs::exists(stderr_path)) {
+        result.stderr_text = read_text(stderr_path);
+    }
+
+#if defined(_WIN32)
+    result.exit_code = raw_exit_code;
+#else
+    if (raw_exit_code != -1 && WIFEXITED(raw_exit_code)) {
+        result.exit_code = WEXITSTATUS(raw_exit_code);
+    } else {
+        result.exit_code = raw_exit_code;
+    }
+#endif
+    return result;
+}
+
+void write_sort_settings_fixture(
+    const std::filesystem::path& asset_path,
+    const std::string& settings_guid) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "TAG", .type = 'M', .length = 4U},
+        {.name = "UNIQUEID", .type = 'C', .length = 24U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=1\nPAPERSIZE=9", "customer.country", settings_guid}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(asset_path.string(), fields, records);
+    expect(create_result.ok, "#2909: TAG sort-settings fixture should be created");
+}
+
+void write_deleted_sort_settings_fixture(
+    const std::filesystem::path& asset_path,
+    const std::string& settings_guid) {
+    write_sort_settings_fixture(asset_path, settings_guid);
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(asset_path.string(), 0U, true);
+    expect(delete_result.ok, "#2909: deleted TAG sort-settings fixture should mark the root record deleted");
+}
+
+void expect_live_sort_setting_json(
+    const std::string& text,
+    const std::string& title,
+    const std::string& expected_tag,
+    const std::string& issue_prefix,
+    bool label_asset) {
+    expect_contains(text, "\"documentTitle\": \"" + title + "\"",
+                    issue_prefix + " should preserve document titles");
+    if (label_asset) {
+        expect_contains(text, "\"isLabel\": true",
+                        issue_prefix + " should retain label identity");
+    }
+    expect_contains(text, "\"selectedReportSettingsAvailable\": true",
+                    issue_prefix + " should preserve selected-settings availability");
+    expect_contains(text, "\"selectedReportSelectionKind\": \"settings\"",
+                    issue_prefix + " should preserve settings selection kind");
+    expect_contains(text, "\"pageSetupAvailable\": true",
+                    issue_prefix + " should preserve page setup availability");
+    expect_contains(text, "\"orientationCode\": 1",
+                    issue_prefix + " should preserve memo-derived orientation");
+    expect_contains(text, "\"paperSizeCode\": 9",
+                    issue_prefix + " should preserve memo-derived paper size");
+    expect_contains(text, "\"settingCount\": 3",
+                    issue_prefix + " should expose the TAG direct setting in live counts");
+    expect_contains(text, "\"deletedSettingCount\": 0",
+                    issue_prefix + " should keep deleted setting counts empty");
+    expect_contains_in_order(
+        text,
+        {
+            "\"selectedReportSettings\": [",
+            "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+            "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+            "\"name\": \"TAG\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null",
+            "\"value\": \"" + expected_tag + "\""
+        },
+        issue_prefix + " should expose refreshed TAG provenance in selected settings");
+}
+
+void expect_deleted_sort_setting_json(
+    const std::string& text,
+    const std::string& title,
+    const std::string& expected_tag,
+    const std::string& issue_prefix,
+    bool label_asset) {
+    expect_contains(text, "\"documentTitle\": \"" + title + "\"",
+                    issue_prefix + " should preserve document titles");
+    if (label_asset) {
+        expect_contains(text, "\"isLabel\": true",
+                        issue_prefix + " should retain label identity");
+    }
+    expect_contains(text, "\"selectedReportSettingsAvailable\": true",
+                    issue_prefix + " should preserve selected-settings availability");
+    expect_contains(text, "\"selectedReportSelectionKind\": \"settings\"",
+                    issue_prefix + " should preserve settings selection kind");
+    expect_contains(text, "\"pageSetupAvailable\": false",
+                    issue_prefix + " should not fabricate live page setup for deleted roots");
+    expect_contains(text, "\"settingCount\": 0",
+                    issue_prefix + " should keep live setting counts empty");
+    expect_contains(text, "\"deletedSettingCount\": 3",
+                    issue_prefix + " should expose deleted TAG settings in deleted counts");
+    expect_contains_in_order(
+        text,
+        {
+            "\"selectedReportSettings\": [",
+            "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+            "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+            "\"name\": \"TAG\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null",
+            "\"value\": \"" + expected_tag + "\""
+        },
+        issue_prefix + " should expose refreshed deleted TAG provenance in selected settings");
+}
+
+void test_updates_report_sort_settings_by_stable_selection(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_sort_settings_update_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
+    const auto run_update = [&](const fs::path& asset_path,
+                                const std::string& title,
+                                const std::string& label,
+                                bool label_asset) {
+        write_sort_settings_fixture(asset_path, "settings-guid");
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--unique-id", "settings-guid",
+                "--property-name", "TAG",
+                "--property-value", "customer.region",
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable TAG update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable TAG update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#2909: report/label stable TAG update should exit successfully");
+        const auto reopen_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "0", "--json"},
+            temp_root);
+        expect(reopen_process.exit_code == 0,
+               "#2909: report/label stable TAG update reopen should exit successfully");
+        expect_live_sort_setting_json(
+            reopen_process.stdout_text,
+            title,
+            "customer.region",
+            "#2909: report/label stable TAG update reopen JSON",
+            label_asset);
+    };
+
+    run_update(temp_root / "sort_update_stable.frx", "sort_update_stable.frx", "report", false);
+    run_update(temp_root / "sort_update_stable.lbx", "sort_update_stable.lbx", "label", true);
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_clears_report_sort_settings_by_stable_selection(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_sort_settings_clear_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
+    const auto run_clear = [&](const fs::path& asset_path,
+                               const std::string& title,
+                               const std::string& label,
+                               bool label_asset) {
+        write_sort_settings_fixture(asset_path, "settings-guid");
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--unique-id", "settings-guid",
+                "--property-name", "TAG",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable TAG clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable TAG clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#2909: report/label stable TAG clear should exit successfully");
+        const auto reopen_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "0", "--json"},
+            temp_root);
+        expect(reopen_process.exit_code == 0,
+               "#2909: report/label stable TAG clear reopen should exit successfully");
+        expect_contains(reopen_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#2909: report/label stable TAG clear reopen JSON should preserve document titles");
+        if (label_asset) {
+            expect_contains(reopen_process.stdout_text, "\"isLabel\": true",
+                            "#2909: label stable TAG clear reopen JSON should retain label identity");
+        }
+        expect_contains(reopen_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#2909: report/label stable TAG clear reopen JSON should preserve selected-settings availability");
+        expect_contains(reopen_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#2909: report/label stable TAG clear reopen JSON should preserve settings selection kind");
+        expect_contains(reopen_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#2909: report/label stable TAG clear reopen JSON should preserve memo-derived page setup");
+        expect_contains(reopen_process.stdout_text, "\"settingCount\": 2",
+                        "#2909: report/label stable TAG clear reopen JSON should remove TAG from live setting counts");
+        expect_contains(reopen_process.stdout_text, "\"deletedSettingCount\": 0",
+                        "#2909: report/label stable TAG clear reopen JSON should keep deleted setting counts empty");
+        expect_contains_in_order(
+            reopen_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1"
+            },
+            "#2909: report/label stable TAG clear reopen JSON should preserve remaining selected settings");
+        expect_not_contains(reopen_process.stdout_text,
+                            "\"name\": \"TAG\", \"recordIndex\": 0, \"fieldIndex\": 3",
+                            "#2909: report/label stable TAG clear reopen JSON should remove TAG provenance");
+    };
+
+    run_clear(temp_root / "sort_clear_stable.frx", "sort_clear_stable.frx", "report", false);
+    run_clear(temp_root / "sort_clear_stable.lbx", "sort_clear_stable.lbx", "label", true);
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_updates_deleted_report_sort_settings_by_stable_selection(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_sort_settings_update_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
+    const auto run_update = [&](const fs::path& asset_path,
+                                const std::string& title,
+                                const std::string& label,
+                                bool label_asset) {
+        write_deleted_sort_settings_fixture(asset_path, "deleted-settings-guid");
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--unique-id", "deleted-settings-guid",
+                "--property-name", "TAG",
+                "--property-value", "customer.region",
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted TAG update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted TAG update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#2909: report/label stable deleted TAG update should exit successfully");
+        const auto reopen_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "0", "--json"},
+            temp_root);
+        expect(reopen_process.exit_code == 0,
+               "#2909: report/label stable deleted TAG update reopen should exit successfully");
+        expect_deleted_sort_setting_json(
+            reopen_process.stdout_text,
+            title,
+            "customer.region",
+            "#2909: report/label stable deleted TAG update reopen JSON",
+            label_asset);
+    };
+
+    run_update(temp_root / "deleted_sort_update_stable.frx",
+               "deleted_sort_update_stable.frx",
+               "report",
+               false);
+    run_update(temp_root / "deleted_sort_update_stable.lbx",
+               "deleted_sort_update_stable.lbx",
+               "label",
+               true);
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_clears_deleted_report_sort_settings_by_stable_selection(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_sort_settings_clear_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
+    const auto run_clear = [&](const fs::path& asset_path,
+                               const std::string& title,
+                               const std::string& label,
+                               bool label_asset) {
+        write_deleted_sort_settings_fixture(asset_path, "deleted-settings-guid");
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--unique-id", "deleted-settings-guid",
+                "--property-name", "TAG",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted TAG clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted TAG clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#2909: report/label stable deleted TAG clear should exit successfully");
+        const auto reopen_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "0", "--json"},
+            temp_root);
+        expect(reopen_process.exit_code == 0,
+               "#2909: report/label stable deleted TAG clear reopen should exit successfully");
+        expect_contains(reopen_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#2909: report/label stable deleted TAG clear reopen JSON should preserve document titles");
+        if (label_asset) {
+            expect_contains(reopen_process.stdout_text, "\"isLabel\": true",
+                            "#2909: label stable deleted TAG clear reopen JSON should retain label identity");
+        }
+        expect_contains(reopen_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#2909: report/label stable deleted TAG clear reopen JSON should preserve selected-settings availability");
+        expect_contains(reopen_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#2909: report/label stable deleted TAG clear reopen JSON should preserve settings selection kind");
+        expect_contains(reopen_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#2909: report/label stable deleted TAG clear reopen JSON should not fabricate live page setup");
+        expect_contains(reopen_process.stdout_text, "\"settingCount\": 0",
+                        "#2909: report/label stable deleted TAG clear reopen JSON should keep live setting counts empty");
+        expect_contains(reopen_process.stdout_text, "\"deletedSettingCount\": 2",
+                        "#2909: report/label stable deleted TAG clear reopen JSON should remove TAG from deleted setting counts");
+        expect_contains_in_order(
+            reopen_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1"
+            },
+            "#2909: report/label stable deleted TAG clear reopen JSON should preserve remaining deleted settings");
+        expect_not_contains(reopen_process.stdout_text,
+                            "\"name\": \"TAG\", \"recordIndex\": 0, \"fieldIndex\": 3",
+                            "#2909: report/label stable deleted TAG clear reopen JSON should remove deleted TAG provenance");
+    };
+
+    run_clear(temp_root / "deleted_sort_clear_stable.frx",
+              "deleted_sort_clear_stable.frx",
+              "report",
+              false);
+    run_clear(temp_root / "deleted_sort_clear_stable.lbx",
+              "deleted_sort_clear_stable.lbx",
+              "label",
+              true);
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+}  // namespace
+
+int main(int argc, char** argv) {
+    if (argc < 2) {
+        std::cerr << "Usage: test_studio_host_report_sort_settings_stable <studio_host_path>\n";
+        return 1;
+    }
+
+    test_updates_report_sort_settings_by_stable_selection(argv[1]);
+    test_clears_report_sort_settings_by_stable_selection(argv[1]);
+    test_updates_deleted_report_sort_settings_by_stable_selection(argv[1]);
+    test_clears_deleted_report_sort_settings_by_stable_selection(argv[1]);
+
+    if (failures != 0) {
+        std::cerr << failures << " test(s) failed.\n";
+        return 1;
+    }
+
+    std::cout << "All tests passed.\n";
+    return 0;
+}
