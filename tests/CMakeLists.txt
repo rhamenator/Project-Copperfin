@@ -140,7 +140,10 @@ add_executable(test_studio_host_json
     test_studio_host_json_visual_editor_json_properties.cpp
 )
 target_link_libraries(test_studio_host_json PRIVATE cf_vfp_assets)
-target_compile_definitions(test_studio_host_json PRIVATE COPPERFIN_OBJECT_LIFECYCLE_SKIP_TOOLBOX_CREATE)
+target_compile_definitions(test_studio_host_json PRIVATE
+    COPPERFIN_OBJECT_LIFECYCLE_SKIP_TOOLBOX_CREATE
+    COPPERFIN_OBJECT_LIFECYCLE_SKIP_STABLE_SELECTOR_MUTATION
+)
 
 if(MSVC)
     target_compile_options(test_studio_host_json PRIVATE /W4 /permissive-)
@@ -173,6 +176,28 @@ endif()
 add_test(
     NAME test_studio_host_toolbox_create_lifecycle
     COMMAND $<TARGET_FILE:test_studio_host_toolbox_create_lifecycle> $<TARGET_FILE:copperfin_studio_host>
+)
+
+add_executable(test_studio_host_stable_selector_mutation
+    test_studio_host_stable_selector_mutation.cpp
+    test_studio_host_json_object_lifecycle.cpp
+    test_studio_host_json_shared_test_helpers.cpp
+)
+target_link_libraries(test_studio_host_stable_selector_mutation PRIVATE cf_vfp_assets)
+target_compile_definitions(test_studio_host_stable_selector_mutation PRIVATE
+    COPPERFIN_OBJECT_LIFECYCLE_SKIP_TOOLBOX_CREATE
+    COPPERFIN_OBJECT_LIFECYCLE_ONLY_STABLE_SELECTOR_MUTATION
+)
+
+if(MSVC)
+    target_compile_options(test_studio_host_stable_selector_mutation PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_stable_selector_mutation PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_stable_selector_mutation
+    COMMAND $<TARGET_FILE:test_studio_host_stable_selector_mutation> $<TARGET_FILE:copperfin_studio_host>
 )
 
 add_executable(test_studio_host_report_selection_none
