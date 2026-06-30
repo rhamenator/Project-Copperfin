@@ -177,6 +177,7 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             "column_header" => "AssetEditor.ReportBandKind.ColumnHeader",
             "group_header" => "AssetEditor.ReportBandKind.GroupHeader",
             "detail" => "AssetEditor.ReportBandKind.Detail",
+            "detail_header" => "AssetEditor.ReportBandKind.DetailHeader",
             "detail_footer" => "AssetEditor.ReportBandKind.DetailFooter",
             "group_footer" => "AssetEditor.ReportBandKind.GroupFooter",
             "column_footer" => "AssetEditor.ReportBandKind.ColumnFooter",

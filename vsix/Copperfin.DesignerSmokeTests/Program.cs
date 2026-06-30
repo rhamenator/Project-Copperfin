@@ -175,6 +175,10 @@ internal static class Program
                    "Encabezado de página",
                    StringComparison.Ordinal) &&
                string.Equals(
+                   InvokeDesignSurfaceString(spanishSurface, "BuildReportBandKindDisplayText", "detail_header"),
+                   "Encabezado de detalle",
+                   StringComparison.Ordinal) &&
+               string.Equals(
                    InvokeDesignSurfaceString(spanishSurface, "BuildDeletedReportSectionHeaderTitle", "Detalle"),
                    "Detalle (eliminada)",
                    StringComparison.Ordinal) &&
@@ -194,6 +198,10 @@ internal static class Program
                    "Rodapé do grupo",
                    StringComparison.Ordinal) &&
                string.Equals(
+                   InvokeDesignSurfaceString(portugueseSurface, "BuildReportBandKindDisplayText", "detail_header"),
+                   "Cabeçalho do detalhe",
+                   StringComparison.Ordinal) &&
+               string.Equals(
                    InvokeDesignSurfaceString(portugueseSurface, "BuildDeletedReportSectionHeaderTitle", "Detalhe"),
                    "Detalhe (excluída)",
                    StringComparison.Ordinal) &&
@@ -208,6 +216,7 @@ internal static class Program
         Expect(
             InvokeDesignSurfaceString(pseudoSurface, "BuildReportSectionHeaderTitle", "Detail", 2).StartsWith("[!! ", StringComparison.Ordinal) &&
             InvokeDesignSurfaceString(pseudoSurface, "BuildReportBandKindDisplayText", "summary").StartsWith("[!! ", StringComparison.Ordinal) &&
+            InvokeDesignSurfaceString(pseudoSurface, "BuildReportBandKindDisplayText", "detail_header").StartsWith("[!! ", StringComparison.Ordinal) &&
             InvokeDesignSurfaceString(pseudoSurface, "BuildDeletedReportSectionHeaderTitle", "Detail").StartsWith("[!! ", StringComparison.Ordinal) &&
             InvokeDesignSurfaceString(pseudoSurface, "BuildUnplacedTrayTitle", 1).StartsWith("[!! ", StringComparison.Ordinal),
             "Pseudo-localized design-surface report context should route deleted-object, deleted-section, band-kind, and unplaced-object titles through the shared catalog");
@@ -751,7 +760,7 @@ internal static class Program
                     {
                         Id = "detail",
                         Title = "Detail",
-                        BandKind = "detail",
+                        BandKind = "detail_header",
                         RecordIndex = 41,
                         Top = 2000,
                         Height = 5000,
@@ -800,14 +809,14 @@ internal static class Program
         var spanishSectionProperties = TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().ToList();
         Expect(spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Altura", StringComparison.Ordinal)),
             "Spanish report section property-grid selection should localize section field labels");
-        Expect(string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "BANDKIND", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "Detalle", StringComparison.Ordinal),
+        Expect(string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "BANDKIND", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "Encabezado de detalle", StringComparison.Ordinal),
             "Spanish report section property-grid selection should localize visible band-kind values");
 
         var portugueseSelection = CopperfinDesignerSelection.FromReportSection(snapshot.ReportLayout.Sections[0], new CopperfinLocalization("pt-BR"));
         var portugueseSectionProperties = TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().ToList();
         Expect(portugueseSectionProperties.Any(property => string.Equals(property.DisplayName, "Altura", StringComparison.Ordinal)),
             "Portuguese report section property-grid selection should localize section field labels");
-        Expect(string.Equals(portugueseSectionProperties.First(property => string.Equals(property.Name, "BANDKIND", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "Detalhe", StringComparison.Ordinal),
+        Expect(string.Equals(portugueseSectionProperties.First(property => string.Equals(property.Name, "BANDKIND", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "Cabeçalho do detalhe", StringComparison.Ordinal),
             "Portuguese report section property-grid selection should localize visible band-kind values");
 
         var pseudoLocalization = new CopperfinLocalization("qps-ploc");
@@ -815,10 +824,10 @@ internal static class Program
         var pseudoSectionProperties = TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().ToList();
         Expect(pseudoSectionProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Height"), StringComparison.Ordinal)),
             "Pseudo-localized report section property-grid selection should route new field labels through the shared catalog");
-        Expect(string.Equals(pseudoSectionProperties.First(property => string.Equals(property.Name, "BANDKIND", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), pseudoLocalization.Text("AssetEditor.ReportBandKind.Detail"), StringComparison.Ordinal),
+        Expect(string.Equals(pseudoSectionProperties.First(property => string.Equals(property.Name, "BANDKIND", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), pseudoLocalization.Text("AssetEditor.ReportBandKind.DetailHeader"), StringComparison.Ordinal),
             "Pseudo-localized report section property-grid selection should route visible band-kind values through the shared catalog");
 
-        Expect(string.Equals(snapshot.ReportLayout.Sections[0].BandKind, "detail", StringComparison.Ordinal),
+        Expect(string.Equals(snapshot.ReportLayout.Sections[0].BandKind, "detail_header", StringComparison.Ordinal),
             "Localized report section property-grid band-kind values should preserve section snapshot contracts");
     }
 
