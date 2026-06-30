@@ -109,13 +109,13 @@ add_executable(test_studio_host_json
     test_studio_host_json_appearance_ole_and_drag.cpp
     test_studio_host_json_setters_data.cpp
     test_studio_host_json_geometry_preview_helpers.cpp
+    test_studio_host_json_objects_dhf_shared_fixtures.cpp
     test_studio_host_json_report_settings_shared_fixtures.cpp
     test_studio_host_json_report_section_shared_fixtures.cpp
     test_studio_host_json_sections_dhf_shared_fixtures.cpp
     test_studio_host_json_sections_band_exposure.cpp
     test_studio_host_json_sections_dhf_lifecycle.cpp
     test_studio_host_json_objects_dhf_lifecycle.cpp
-    test_studio_host_json_objects_dhf_expressions_and_exposure.cpp
     test_studio_host_json_objects_band_exposure.cpp
     test_studio_host_json_report_shared_fixtures.cpp
     test_studio_host_json_visual_editor_json_methods.cpp
@@ -130,6 +130,7 @@ target_compile_definitions(test_studio_host_json PRIVATE
     COPPERFIN_OBJECT_LIFECYCLE_SKIP_REMAINING_OBJECT_ACTIONS
     COPPERFIN_DETAIL_HEADER_FOOTER_SECTION_SKIP_EXPRESSIONS
     COPPERFIN_DETAIL_HEADER_FOOTER_SECTION_SKIP_HOST_SMOKE
+    COPPERFIN_DETAIL_HEADER_FOOTER_OBJECT_EXPRESSIONS_SKIP_HOST_SMOKE
     COPPERFIN_DETAIL_HEADER_FOOTER_OBJECT_GEOMETRY_SKIP_STABLE
     COPPERFIN_REPORT_DIRECT_SETTING_FIELDS_SKIP_HOST_SMOKE
     COPPERFIN_REPORT_SETTINGS_DIAGNOSTICS_SKIP_HOST_SMOKE
@@ -294,6 +295,7 @@ add_executable(test_studio_host_detail_header_footer_object_geometry
     test_studio_host_detail_header_footer_object_geometry.cpp
     test_studio_host_json_geometry_dimensions.cpp
     test_studio_host_json_geometry_preview_bounds.cpp
+    test_studio_host_json_objects_dhf_shared_fixtures.cpp
     test_studio_host_json_objects_dhf_expressions_and_exposure.cpp
     test_studio_host_json_report_shared_fixtures.cpp
     test_studio_host_json_shared_test_helpers.cpp
@@ -314,8 +316,28 @@ add_test(
     COMMAND $<TARGET_FILE:test_studio_host_detail_header_footer_object_geometry> $<TARGET_FILE:copperfin_studio_host>
 )
 
+add_executable(test_studio_host_detail_header_footer_object_expressions
+    test_studio_host_detail_header_footer_object_expressions.cpp
+    test_studio_host_json_objects_dhf_shared_fixtures.cpp
+    test_studio_host_json_objects_dhf_expressions_and_exposure.cpp
+    test_studio_host_json_shared_test_helpers.cpp
+)
+target_link_libraries(test_studio_host_detail_header_footer_object_expressions PRIVATE cf_vfp_assets)
+
+if(MSVC)
+    target_compile_options(test_studio_host_detail_header_footer_object_expressions PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_detail_header_footer_object_expressions PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_detail_header_footer_object_expressions
+    COMMAND $<TARGET_FILE:test_studio_host_detail_header_footer_object_expressions> $<TARGET_FILE:copperfin_studio_host>
+)
+
 add_executable(test_studio_host_detail_header_footer_object_layout_actions
     test_studio_host_detail_header_footer_object_layout_actions.cpp
+    test_studio_host_json_objects_dhf_shared_fixtures.cpp
     test_studio_host_json_objects_dhf_layout_actions.cpp
     test_studio_host_json_objects_dhf_expressions_and_exposure.cpp
     test_studio_host_json_shared_test_helpers.cpp
