@@ -108,7 +108,6 @@ add_executable(test_studio_host_json
     test_studio_host_json_appearance_window_and_display.cpp
     test_studio_host_json_appearance_ole_and_drag.cpp
     test_studio_host_json_setters_data.cpp
-    test_studio_host_json_report_labels.cpp
     test_studio_host_json_geometry_preview_helpers.cpp
     test_studio_host_json_geometry_font_metadata.cpp
     test_studio_host_json_report_settings_shared_fixtures.cpp
@@ -423,6 +422,26 @@ endif()
 add_test(
     NAME test_studio_host_report_column_width_fields
     COMMAND $<TARGET_FILE:test_studio_host_report_column_width_fields> $<TARGET_FILE:copperfin_studio_host>
+)
+
+add_executable(test_studio_host_label_layout_actions
+    test_studio_host_label_layout_actions.cpp
+    test_studio_host_json_report_labels.cpp
+    test_studio_host_json_geometry_preview_helpers.cpp
+    test_studio_host_json_report_shared_fixtures.cpp
+    test_studio_host_json_shared_test_helpers.cpp
+)
+target_link_libraries(test_studio_host_label_layout_actions PRIVATE cf_vfp_assets)
+
+if(MSVC)
+    target_compile_options(test_studio_host_label_layout_actions PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_label_layout_actions PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_label_layout_actions
+    COMMAND $<TARGET_FILE:test_studio_host_label_layout_actions> $<TARGET_FILE:copperfin_studio_host>
 )
 
 add_executable(test_studio_host_report_settings_memo_parsing
