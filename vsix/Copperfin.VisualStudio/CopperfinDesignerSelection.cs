@@ -138,7 +138,10 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
 
         selection.AddReadOnlyString("TITLE", localization.Text("AssetEditor.Property.SectionTitle"), section.Title);
         selection.AddReadOnlyString("ID", localization.Text("AssetEditor.Property.SectionId"), section.Id);
-        selection.AddReadOnlyString("BANDKIND", localization.Text("AssetEditor.Property.BandKind"), section.BandKind);
+        selection.AddReadOnlyString(
+            "BANDKIND",
+            localization.Text("AssetEditor.Property.BandKind"),
+            BuildReportBandKindDisplayText(localization, section.BandKind));
         selection.AddEditableInt("TOP", localization.Text("AssetEditor.Column.Top"), section.Top.ToString(CultureInfo.InvariantCulture));
         selection.AddEditableInt("HEIGHT", localization.Text("AssetEditor.Property.Height"), section.Height.ToString(CultureInfo.InvariantCulture));
         selection.AddReadOnlyInt(
@@ -163,6 +166,32 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         }
 
         return selection;
+    }
+
+    private static string BuildReportBandKindDisplayText(CopperfinLocalization localization, string bandKind)
+    {
+        var key = bandKind switch
+        {
+            "title" => "AssetEditor.ReportBandKind.Title",
+            "page_header" => "AssetEditor.ReportBandKind.PageHeader",
+            "column_header" => "AssetEditor.ReportBandKind.ColumnHeader",
+            "group_header" => "AssetEditor.ReportBandKind.GroupHeader",
+            "detail" => "AssetEditor.ReportBandKind.Detail",
+            "detail_footer" => "AssetEditor.ReportBandKind.DetailFooter",
+            "group_footer" => "AssetEditor.ReportBandKind.GroupFooter",
+            "column_footer" => "AssetEditor.ReportBandKind.ColumnFooter",
+            "page_footer" => "AssetEditor.ReportBandKind.PageFooter",
+            "summary" => "AssetEditor.ReportBandKind.Summary",
+            "other" => "AssetEditor.ReportBandKind.Other",
+            _ => string.Empty
+        };
+
+        if (!string.IsNullOrWhiteSpace(key))
+        {
+            return localization.Text(key);
+        }
+
+        return bandKind.Replace('_', ' ');
     }
 
     public bool TryGetUpdate(string propertyName, out string targetName, out string serializedValue)

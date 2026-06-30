@@ -797,17 +797,29 @@ internal static class Program
         }
 
         var spanishSelection = CopperfinDesignerSelection.FromReportSection(snapshot.ReportLayout.Sections[0], new CopperfinLocalization("es-419"));
-        Expect(TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Altura", StringComparison.Ordinal)),
+        var spanishSectionProperties = TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().ToList();
+        Expect(spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Altura", StringComparison.Ordinal)),
             "Spanish report section property-grid selection should localize section field labels");
+        Expect(string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "BANDKIND", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "Detalle", StringComparison.Ordinal),
+            "Spanish report section property-grid selection should localize visible band-kind values");
 
         var portugueseSelection = CopperfinDesignerSelection.FromReportSection(snapshot.ReportLayout.Sections[0], new CopperfinLocalization("pt-BR"));
-        Expect(TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Altura", StringComparison.Ordinal)),
+        var portugueseSectionProperties = TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().ToList();
+        Expect(portugueseSectionProperties.Any(property => string.Equals(property.DisplayName, "Altura", StringComparison.Ordinal)),
             "Portuguese report section property-grid selection should localize section field labels");
+        Expect(string.Equals(portugueseSectionProperties.First(property => string.Equals(property.Name, "BANDKIND", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "Detalhe", StringComparison.Ordinal),
+            "Portuguese report section property-grid selection should localize visible band-kind values");
 
         var pseudoLocalization = new CopperfinLocalization("qps-ploc");
         var pseudoSelection = CopperfinDesignerSelection.FromReportSection(snapshot.ReportLayout.Sections[0], pseudoLocalization);
-        Expect(TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Height"), StringComparison.Ordinal)),
+        var pseudoSectionProperties = TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().ToList();
+        Expect(pseudoSectionProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Height"), StringComparison.Ordinal)),
             "Pseudo-localized report section property-grid selection should route new field labels through the shared catalog");
+        Expect(string.Equals(pseudoSectionProperties.First(property => string.Equals(property.Name, "BANDKIND", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), pseudoLocalization.Text("AssetEditor.ReportBandKind.Detail"), StringComparison.Ordinal),
+            "Pseudo-localized report section property-grid selection should route visible band-kind values through the shared catalog");
+
+        Expect(string.Equals(snapshot.ReportLayout.Sections[0].BandKind, "detail", StringComparison.Ordinal),
+            "Localized report section property-grid band-kind values should preserve section snapshot contracts");
     }
 
     private static void SmokeReportSelectionPreservedAcrossExplorerRefresh()
