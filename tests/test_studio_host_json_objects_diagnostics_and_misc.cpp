@@ -532,6 +532,7 @@ void write_synthetic_report_table_for_layout_subtree_deleted_state_json(
     expect(create_result.ok, "#1857: synthetic FRX/LBX table for report layout subtree deleted-state should be created");
 }
 
+#if !defined(COPPERFIN_REPORT_LAYOUT_DIAGNOSTICS_SKIP_HOST_SMOKE)
 void test_studio_host_json_exposes_report_layout_provenance(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -921,6 +922,10 @@ void test_studio_host_json_exposes_extended_report_object_kinds(
         fs::remove_all(temp_root, ignored);
     }
 }
+
+#endif
+
+#if !defined(COPPERFIN_REPORT_LAYOUT_DIAGNOSTICS_ONLY)
 
 #if !defined(COPPERFIN_REPORT_DELETED_STATES_SKIP_HOST_SMOKE)
 void test_studio_host_json_applies_report_deleted_states_by_stable_selection(
@@ -2909,6 +2914,8 @@ void test_studio_host_json_synthesizes_report_object_titles_without_title_schema
         fs::remove_all(temp_root, ignored);
     }
 }
+#endif
+
 #endif
 
 #endif

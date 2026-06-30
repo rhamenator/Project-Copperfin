@@ -101,8 +101,6 @@ int main(int argc, char** argv) {
     test_studio_host_visual_method_copy_move_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_method_reorder_parse_diagnostics_localize(argv[1]);
     test_studio_host_json_exposes_designer_contexts(argv[1]);
-    test_studio_host_json_exposes_report_layout_provenance(argv[1]);
-    test_studio_host_json_exposes_extended_report_object_kinds(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_section_kinds(argv[1]);
     test_studio_host_json_updates_detail_header_footer_section_heights_by_stable_selection(argv[1]);
     test_studio_host_json_clears_detail_header_footer_section_heights_by_stable_selection(argv[1]);
