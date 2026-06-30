@@ -989,34 +989,6 @@ void test_studio_host_json_updates_detail_header_footer_object_font_options_by_s
 void test_studio_host_json_updates_deleted_detail_header_footer_object_font_options_by_stable_selection(
     const std::string& studio_host_path);
 
-// ==== Report layout JSON tests: live-edited object geometry actions ====
-void test_studio_host_json_nudges_live_edited_report_layout_object_geometry_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_aligns_live_edited_report_layout_object_geometry_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_resizes_live_edited_report_layout_object_geometry_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_snaps_live_edited_report_layout_object_geometry_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_restores_live_edited_then_deleted_report_layout_object_geometry_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_restores_live_edited_unplaced_then_deleted_report_layout_object_geometry_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_distributes_live_edited_report_layout_object_geometry_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_reorders_live_edited_report_layout_object_geometry_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_reorders_live_edited_unplaced_report_layout_object_geometry_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_duplicates_live_edited_report_layout_object_geometry_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_duplicates_live_edited_unplaced_report_layout_object_geometry_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_renames_live_edited_report_layout_object_geometry_by_record_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_renames_live_edited_unplaced_report_layout_object_geometry_by_record_selection(
-    const std::string& studio_host_path);
-
 // ==== Report layout JSON tests: column-width geometry fields ====
 void write_synthetic_report_table_for_column_width_field_json(const std::filesystem::path& report_path);
 void write_synthetic_report_table_for_deleted_column_width_field_json(

@@ -114,7 +114,6 @@ add_executable(test_studio_host_json
     test_studio_host_json_geometry_preview_bounds.cpp
     test_studio_host_json_geometry_dimensions.cpp
     test_studio_host_json_geometry_font_metadata.cpp
-    test_studio_host_json_geometry_live_edit_actions.cpp
     test_studio_host_json_geometry_column_width.cpp
     test_studio_host_json_settings_page_layout_fields.cpp
     test_studio_host_json_settings_memo_parsing.cpp
@@ -356,6 +355,23 @@ endif()
 add_test(
     NAME test_studio_host_layout_actions
     COMMAND $<TARGET_FILE:test_studio_host_layout_actions> $<TARGET_FILE:copperfin_studio_host>
+)
+
+add_executable(test_studio_host_geometry_live_edit_actions
+    test_studio_host_geometry_live_edit_actions.cpp
+    test_studio_host_json_shared_test_helpers.cpp
+)
+target_link_libraries(test_studio_host_geometry_live_edit_actions PRIVATE cf_vfp_assets)
+
+if(MSVC)
+    target_compile_options(test_studio_host_geometry_live_edit_actions PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_geometry_live_edit_actions PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_geometry_live_edit_actions
+    COMMAND $<TARGET_FILE:test_studio_host_geometry_live_edit_actions> $<TARGET_FILE:copperfin_studio_host>
 )
 
 add_executable(test_studio_host_report_section_ids

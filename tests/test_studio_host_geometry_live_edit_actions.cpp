@@ -1,6 +1,82 @@
 #include "test_studio_host_json_support.h"
 
 namespace cf_test_studio_host_json {
+void write_synthetic_report_table_for_layout_json(const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "FONTFACE", .type = 'M', .length = 4U},
+        {.name = "TOPMARGIN", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 24U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0\nPAPERSIZE=1\nBOTMARGIN=20\nGRIDV=4\nGRIDH=8", "", "", "", "", "", "10", ""},
+        {"9", "1", "", "", "0", "", "2000", "", "", ""},
+        {"9", "4", "", "", "2000", "", "5000", "", "", ""},
+        {"8", "0", "customer.company", "1200", "2600", "4000", "450", "Segoe UI", "", "field-guid"},
+        {"5", "", "\"Invoice\"", "900", "100", "1800", "350", "", "", "label-guid"},
+        {"6", "", "", "50", "8000", "100", "100", "", "", ""},
+        {"5", "", "\"Deleted label\"", "1000", "2600", "1200", "300", "", "", ""}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1452: synthetic FRX table for report layout JSON should be created");
+
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 6U, true);
+    expect(delete_result.ok, "#1452: synthetic FRX table should mark deleted layout objects");
+}
+
+void write_synthetic_report_table_for_layout_distribution_json(const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 24U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", "", "", ""},
+        {"9", "4", "", "", "2000", "", "5000", ""},
+        {"8", "0", "left.value", "100", "2600", "50", "200", "left-field-guid"},
+        {"8", "0", "middle.value", "175", "2600", "50", "200", "middle-field-guid"},
+        {"8", "0", "right.value", "700", "2600", "50", "200", "right-field-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1469: synthetic FRX table for report layout distribution should be created");
+}
+
+void write_synthetic_report_table_for_layout_reorder_json(const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 24U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", "", "", ""},
+        {"9", "4", "", "", "2000", "", "5000", ""},
+        {"8", "0", "left.value", "100", "2600", "50", "200", "left-field-guid"},
+        {"8", "0", "middle.value", "100", "2600", "50", "200", "middle-field-guid"},
+        {"8", "0", "right.value", "100", "2600", "50", "200", "right-field-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1470: synthetic FRX table for report layout reorder should be created");
+}
+
 void test_studio_host_json_nudges_live_edited_report_layout_object_geometry_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -1948,3 +2024,48 @@ void test_studio_host_json_renames_live_edited_unplaced_report_layout_object_geo
 }
 
 }  // namespace cf_test_studio_host_json
+
+int main(int argc, char** argv) {
+    if (argc != 2) {
+        std::cerr << "usage: test_studio_host_geometry_live_edit_actions <copperfin_studio_host>\n";
+        return 2;
+    }
+
+    cf_test_studio_host_json::test_studio_host_json_nudges_live_edited_report_layout_object_geometry_by_stable_selection(
+        argv[1]);
+    cf_test_studio_host_json::test_studio_host_json_aligns_live_edited_report_layout_object_geometry_by_stable_selection(
+        argv[1]);
+    cf_test_studio_host_json::test_studio_host_json_resizes_live_edited_report_layout_object_geometry_by_stable_selection(
+        argv[1]);
+    cf_test_studio_host_json::test_studio_host_json_snaps_live_edited_report_layout_object_geometry_by_stable_selection(
+        argv[1]);
+    cf_test_studio_host_json::
+        test_studio_host_json_restores_live_edited_then_deleted_report_layout_object_geometry_by_record_selection(
+            argv[1]);
+    cf_test_studio_host_json::
+        test_studio_host_json_restores_live_edited_unplaced_then_deleted_report_layout_object_geometry_by_record_selection(
+            argv[1]);
+    cf_test_studio_host_json::
+        test_studio_host_json_distributes_live_edited_report_layout_object_geometry_by_stable_selection(argv[1]);
+    cf_test_studio_host_json::test_studio_host_json_reorders_live_edited_report_layout_object_geometry_by_record_selection(
+        argv[1]);
+    cf_test_studio_host_json::
+        test_studio_host_json_reorders_live_edited_unplaced_report_layout_object_geometry_by_record_selection(
+            argv[1]);
+    cf_test_studio_host_json::
+        test_studio_host_json_duplicates_live_edited_report_layout_object_geometry_by_record_selection(argv[1]);
+    cf_test_studio_host_json::
+        test_studio_host_json_duplicates_live_edited_unplaced_report_layout_object_geometry_by_record_selection(
+            argv[1]);
+    cf_test_studio_host_json::test_studio_host_json_renames_live_edited_report_layout_object_geometry_by_record_selection(
+        argv[1]);
+    cf_test_studio_host_json::
+        test_studio_host_json_renames_live_edited_unplaced_report_layout_object_geometry_by_record_selection(
+            argv[1]);
+
+    if (cf_test_studio_host_json::failures != 0) {
+        return 1;
+    }
+
+    return 0;
+}
