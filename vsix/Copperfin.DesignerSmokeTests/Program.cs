@@ -659,7 +659,10 @@ internal static class Program
                         Height = 5000,
                         DeletedObjectCount = 1,
                         GroupRole = "header",
-                        GroupingExpression = "customer.country"
+                        GroupingContextAvailable = true,
+                        GroupingExpression = "customer.country",
+                        GroupingExpressionFieldIndex = 2,
+                        GroupingExpressionMemoBlockNumber = 7
                     }
                 }
             }
@@ -687,6 +690,12 @@ internal static class Program
                    string.Equals(heightTarget, "HEIGHT", StringComparison.Ordinal) &&
                    string.Equals(heightValue, "6100", StringComparison.Ordinal),
                 "Report section property-grid selection should serialize HEIGHT edits through the shared update path");
+
+            TypeDescriptor.GetProperties(editableSelection)["EXPR"]?.SetValue(editableSelection, "customer.region");
+            Expect(editableSelection.TryGetUpdate("EXPR", out var exprTarget, out var exprValue) &&
+                   string.Equals(exprTarget, "EXPR", StringComparison.Ordinal) &&
+                   string.Equals(exprValue, "customer.region", StringComparison.Ordinal),
+                "Report section property-grid selection should serialize expression edits through the shared update path");
         }
 
         var spanishSelection = CopperfinDesignerSelection.FromReportSection(snapshot.ReportLayout.Sections[0], new CopperfinLocalization("es-419"));

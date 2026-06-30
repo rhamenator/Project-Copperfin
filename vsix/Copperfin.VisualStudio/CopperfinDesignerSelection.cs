@@ -149,10 +149,13 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             selection.AddReadOnlyString("GROUPROLE", localization.Text("AssetEditor.Property.GroupRole"), section.GroupRole ?? string.Empty);
         }
 
-        if (!string.IsNullOrWhiteSpace(section.GroupingExpression))
+        if (section.GroupingContextAvailable ||
+            !string.IsNullOrWhiteSpace(section.GroupingExpression) ||
+            section.GroupingExpressionFieldIndex.HasValue ||
+            section.GroupingExpressionMemoBlockNumber > 0)
         {
-            selection.AddReadOnlyString(
-                "GROUPINGEXPRESSION",
+            selection.AddEditableString(
+                "EXPR",
                 localization.Text("AssetEditor.Property.GroupingExpression"),
                 section.GroupingExpression ?? string.Empty);
         }
