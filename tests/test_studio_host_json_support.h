@@ -1630,16 +1630,6 @@ void test_studio_host_json_reorders_deleted_report_visual_object_batches_by_stab
     const std::string& studio_host_path);
 
 // ==== Report layout JSON tests: selector resolution and ambiguity ====
-void test_studio_host_json_clears_report_selection_for_missing_stable_selector(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_report_selection_for_blank_stable_selector(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_report_selection_when_unique_id_field_is_missing(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_report_selection_for_ambiguous_stable_selector(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_report_selection_for_live_deleted_ambiguous_stable_selectors(
-    const std::string& studio_host_path);
 void test_studio_host_json_selects_padded_report_records_by_trimmed_stable_selector(
     const std::string& studio_host_path);
 void test_studio_host_json_record_selection_takes_precedence_over_stable_report_selector(

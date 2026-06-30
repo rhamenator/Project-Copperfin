@@ -157,6 +157,23 @@ add_test(
     COMMAND $<TARGET_FILE:test_studio_host_json> $<TARGET_FILE:copperfin_studio_host>
 )
 
+add_executable(test_studio_host_report_selection_none
+    test_studio_host_report_selection_none.cpp
+    test_studio_host_json_shared_test_helpers.cpp
+)
+target_link_libraries(test_studio_host_report_selection_none PRIVATE cf_vfp_assets)
+
+if(MSVC)
+    target_compile_options(test_studio_host_report_selection_none PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_report_selection_none PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_report_selection_none
+    COMMAND $<TARGET_FILE:test_studio_host_report_selection_none> $<TARGET_FILE:copperfin_studio_host>
+)
+
 add_executable(test_studio_host_report_section_ids
     test_studio_host_report_section_ids.cpp
 )

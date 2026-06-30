@@ -372,12 +372,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_duplicates_report_visual_object_subtrees_by_stable_selection(argv[1]);
     test_studio_host_json_duplicates_deleted_report_visual_object_subtrees_by_stable_selection(argv[1]);
     test_studio_host_json_applies_mixed_report_deleted_states_by_stable_selection(argv[1]);
-    test_studio_host_json_clears_report_selection_for_missing_stable_selector(argv[1]);
-    test_studio_host_json_clears_report_selection_for_blank_stable_selector(argv[1]);
-    test_studio_host_json_clears_report_selection_when_unique_id_field_is_missing(argv[1]);
-    test_studio_host_json_clears_report_selection_for_ambiguous_stable_selector(argv[1]);
     test_studio_host_json_clears_report_section_and_settings_selection_for_ambiguous_stable_selectors(argv[1]);
-    test_studio_host_json_clears_report_selection_for_live_deleted_ambiguous_stable_selectors(argv[1]);
     test_studio_host_json_selects_padded_report_records_by_trimmed_stable_selector(argv[1]);
     test_studio_host_json_record_selection_takes_precedence_over_stable_report_selector(argv[1]);
     test_studio_host_json_selects_deep_report_records_by_record_selector(argv[1]);
