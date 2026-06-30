@@ -1,6 +1,7 @@
 #include "test_studio_host_json_support.h"
 
 namespace cf_test_studio_host_json {
+#if !defined(COPPERFIN_REPORT_LAYOUT_DIAGNOSTICS_SKIP_HELPERS)
 void write_synthetic_report_table_for_extended_object_kind_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -30,6 +31,7 @@ void write_synthetic_report_table_for_extended_object_kind_json(
     const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 5U, true);
     expect(delete_result.ok, "#1762: synthetic report table should mark deleted picture object");
 }
+#endif
 
 #if !defined(COPPERFIN_REPORT_OBJECT_FALLBACKS_SKIP_HELPERS)
 void write_synthetic_report_table_for_missing_object_objcode_layout_json(
@@ -150,6 +152,7 @@ void write_synthetic_report_table_for_missing_object_title_layout_json(
 }
 #endif
 
+#if !defined(COPPERFIN_REPORT_DELETED_STATES_SKIP_HELPERS)
 void write_synthetic_report_table_for_layout_subtree_deleted_state_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -176,6 +179,7 @@ void write_synthetic_report_table_for_layout_subtree_deleted_state_json(
     const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
     expect(create_result.ok, "#1857: synthetic FRX/LBX table for report layout subtree deleted-state should be created");
 }
+#endif
 
 #if !defined(COPPERFIN_REPORT_LAYOUT_DIAGNOSTICS_SKIP_HOST_SMOKE)
 void test_studio_host_json_exposes_report_layout_provenance(const std::string& studio_host_path) {
