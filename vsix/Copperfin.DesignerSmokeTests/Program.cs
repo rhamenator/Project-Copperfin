@@ -1214,6 +1214,40 @@ internal static class Program
                 "Localized report object property-grid labels should preserve machine-readable update targets");
         }
 
+        var liveSelection = CopperfinDesignerSelection.FromSnapshot("report", snapshotObject, new CopperfinLocalization("en-US"));
+        Expect(liveSelection is not null,
+            "Live report object property-grid selection should remain available for shared update-path parity checks");
+        if (liveSelection is not null)
+        {
+            ExpectSelectionUpdate(liveSelection, "HPOS", 1300, "1300",
+                "Live report object property-grid selection should serialize HPOS edits through the shared update path");
+            ExpectSelectionUpdate(liveSelection, "VPOS", 2700, "2700",
+                "Live report object property-grid selection should serialize VPOS edits through the shared update path");
+            ExpectSelectionUpdate(liveSelection, "WIDTH", 4100, "4100",
+                "Live report object property-grid selection should serialize WIDTH edits through the shared update path");
+            ExpectSelectionUpdate(liveSelection, "HEIGHT", 550, "550",
+                "Live report object property-grid selection should serialize HEIGHT edits through the shared update path");
+            ExpectSelectionUpdate(liveSelection, "FONTFACE", "Calibri", "Calibri",
+                "Live report object property-grid selection should serialize FONTFACE edits through the shared update path");
+            ExpectSelectionUpdate(liveSelection, "FONTSTYLE", 2, "2",
+                "Live report object property-grid selection should serialize FONTSTYLE edits through the shared update path");
+            ExpectSelectionUpdate(liveSelection, "FONTSIZE", 11, "11",
+                "Live report object property-grid selection should serialize FONTSIZE edits through the shared update path");
+        }
+
+        var labelSelection = CopperfinDesignerSelection.FromSnapshot("label", snapshotObject, new CopperfinLocalization("en-US"));
+        Expect(labelSelection is not null,
+            "Shared label object property-grid selection should expose the same update surface as report objects");
+        if (labelSelection is not null)
+        {
+            ExpectSelectionUpdate(labelSelection, "HPOS", 1500, "1500",
+                "Shared label object property-grid selection should serialize HPOS edits through the shared update path");
+            ExpectSelectionUpdate(labelSelection, "FONTFACE", "Tahoma", "Tahoma",
+                "Shared label object property-grid selection should serialize FONTFACE edits through the shared update path");
+            ExpectSelectionUpdate(labelSelection, "FONTSIZE", 12, "12",
+                "Shared label object property-grid selection should serialize FONTSIZE edits through the shared update path");
+        }
+
         var deletedSnapshotObject = new CopperfinStudioSnapshotObject
         {
             RecordIndex = 13,
@@ -1242,11 +1276,22 @@ internal static class Program
             "Deleted report object property-grid selection should expose deleted state and stable record identity");
         if (deletedSelection is not null)
         {
-            TypeDescriptor.GetProperties(deletedSelection)["EXPR"]?.SetValue(deletedSelection, "customer.deleted_region");
-            Expect(deletedSelection.TryGetUpdate("EXPR", out var exprTarget, out var exprValue) &&
-                   string.Equals(exprTarget, "EXPR", StringComparison.Ordinal) &&
-                   string.Equals(exprValue, "customer.deleted_region", StringComparison.Ordinal),
+            ExpectSelectionUpdate(deletedSelection, "EXPR", "customer.deleted_region", "customer.deleted_region",
                 "Deleted report object property-grid selection should preserve invariant editable update targets");
+            ExpectSelectionUpdate(deletedSelection, "HPOS", 1600, "1600",
+                "Deleted report object property-grid selection should serialize HPOS edits through the shared update path");
+            ExpectSelectionUpdate(deletedSelection, "VPOS", 9300, "9300",
+                "Deleted report object property-grid selection should serialize VPOS edits through the shared update path");
+            ExpectSelectionUpdate(deletedSelection, "WIDTH", 3200, "3200",
+                "Deleted report object property-grid selection should serialize WIDTH edits through the shared update path");
+            ExpectSelectionUpdate(deletedSelection, "HEIGHT", 500, "500",
+                "Deleted report object property-grid selection should serialize HEIGHT edits through the shared update path");
+            ExpectSelectionUpdate(deletedSelection, "FONTFACE", "Consolas", "Consolas",
+                "Deleted report object property-grid selection should serialize FONTFACE edits through the shared update path");
+            ExpectSelectionUpdate(deletedSelection, "FONTSTYLE", 1, "1",
+                "Deleted report object property-grid selection should serialize FONTSTYLE edits through the shared update path");
+            ExpectSelectionUpdate(deletedSelection, "FONTSIZE", 10, "10",
+                "Deleted report object property-grid selection should serialize FONTSIZE edits through the shared update path");
         }
     }
 
@@ -2675,6 +2720,15 @@ internal static class Program
         }
 
         return false;
+    }
+
+    private static void ExpectSelectionUpdate(CopperfinDesignerSelection selection, string propertyName, object value, string expectedSerializedValue, string message)
+    {
+        TypeDescriptor.GetProperties(selection)[propertyName]?.SetValue(selection, value);
+        Expect(selection.TryGetUpdate(propertyName, out var targetName, out var serializedValue) &&
+               string.Equals(targetName, propertyName, StringComparison.Ordinal) &&
+               string.Equals(serializedValue, expectedSerializedValue, StringComparison.Ordinal),
+            message);
     }
 
     private static void Expect(bool condition, string message)
