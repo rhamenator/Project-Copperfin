@@ -1396,10 +1396,6 @@ void write_synthetic_report_table_for_section_deleted_object_count_json(
 void write_synthetic_report_table_for_stable_deleted_section_json(const std::filesystem::path& report_path);
 void test_studio_host_json_clears_report_section_and_settings_selection_for_ambiguous_stable_selectors(
     const std::string& studio_host_path);
-void test_studio_host_json_selects_deep_report_sections_and_settings_by_stable_selector(
-    const std::string& studio_host_path);
-void test_studio_host_json_clears_report_selection_for_deep_ambiguous_section_and_settings_selectors(
-    const std::string& studio_host_path);
 void test_studio_host_json_defaults_missing_report_section_objcode_schema(
     const std::string& studio_host_path);
 void test_studio_host_json_suppresses_unresolved_report_section_memo_placeholders(
