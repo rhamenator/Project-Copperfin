@@ -611,6 +611,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
 
         currentSnapshot = undoResult.Document;
+        detailsLabel.Text = BuildSnapshotDetailsText(new FileInfo(currentPath!), currentSnapshot);
         snapshotStatusLabel.Text = BuildUndoCompletedStatus(priorLabel, currentSnapshot);
         PopulateSectionList(explorerSelection);
         SyncExplorerSelection();
@@ -1082,6 +1083,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
 
         currentSnapshot = updateResult.Document;
+        detailsLabel.Text = BuildSnapshotDetailsText(new FileInfo(currentPath!), currentSnapshot);
         snapshotStatusLabel.Text = BuildPropertyUpdatedStatusLabel(statusLabel, currentSnapshot);
         PopulateSectionList(explorerSelection);
         SyncExplorerSelection();

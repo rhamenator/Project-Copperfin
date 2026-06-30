@@ -42,6 +42,7 @@ internal static class Program
         SmokeAssetEditorDeletedLabelSectionPropertyGridHostUpdate();
         SmokeAssetEditorReportObjectPropertyGridHostUpdate();
         SmokeAssetEditorUnplacedReportObjectPropertyGridHostUpdate();
+        SmokeAssetEditorUnplacedReportObjectHostUpdateRefreshesShellSummary();
         SmokeAssetEditorLabelObjectPropertyGridHostUpdate();
         SmokeAssetEditorUnplacedLabelObjectPropertyGridHostUpdate();
         SmokeAssetEditorDeletedLabelObjectPropertyGridHostUpdate();
@@ -941,6 +942,7 @@ internal static class Program
         var snapshot = BuildAssetEditorSectionUpdateSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
         var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
@@ -972,7 +974,7 @@ internal static class Program
             Application.DoEvents();
 
             ApplyReportSnapshotForExplorerSmoke(control, snapshot);
-            SetPrivateField(control, "currentPath", Path.Combine(tempRoot, "invoice.frx"));
+            SetPrivateField(control, "currentPath", assetPath);
             InvokeAssetEditorVoid(control, "SyncExplorerSelection");
             InvokeAssetEditorVoid(control, "LoadSurface");
             Application.DoEvents();
@@ -1055,6 +1057,7 @@ internal static class Program
         var snapshot = BuildAssetEditorObjectUpdateSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
         var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
@@ -1086,7 +1089,7 @@ internal static class Program
             Application.DoEvents();
 
             ApplyReportSnapshotForExplorerSmoke(control, snapshot);
-            SetPrivateField(control, "currentPath", Path.Combine(tempRoot, "invoice.frx"));
+            SetPrivateField(control, "currentPath", assetPath);
             InvokeAssetEditorVoid(control, "LoadSurface");
             Application.DoEvents();
 
@@ -1171,6 +1174,7 @@ internal static class Program
         var snapshot = BuildAssetEditorUnplacedReportObjectUpdateSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
         var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
@@ -1202,7 +1206,7 @@ internal static class Program
             Application.DoEvents();
 
             ApplyReportSnapshotForExplorerSmoke(control, snapshot);
-            SetPrivateField(control, "currentPath", Path.Combine(tempRoot, "invoice.frx"));
+            SetPrivateField(control, "currentPath", assetPath);
 
             var sectionListView = GetPrivateListView(control, "sectionListView");
             sectionListView.Items[0].Selected = false;
@@ -1281,6 +1285,102 @@ internal static class Program
         }
     }
 
+    private static void SmokeAssetEditorUnplacedReportObjectHostUpdateRefreshesShellSummary()
+    {
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            Console.WriteLine("SKIP: shared asset-editor unplaced-report-object summary-refresh smoke requires a POSIX scriptable fake Studio host.");
+            return;
+        }
+
+        var snapshot = BuildAssetEditorUnplacedReportObjectUpdateSmokeSnapshot();
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
+        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var logPath = Path.Combine(tempRoot, "studio-host.log");
+        var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
+
+        try
+        {
+            File.WriteAllText(logPath, string.Empty);
+            CreateFakeStudioHostScript(scriptPath, BuildUnplacedReportObjectPreviewRefreshHostResponseJson());
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", scriptPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", logPath);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+
+            ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+            SetPrivateField(control, "currentPath", assetPath);
+            GetPrivateLabel(control, "detailsLabel").Text = InvokeAssetEditorString(control, "BuildSnapshotDetailsText", new FileInfo(assetPath), snapshot);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            sectionListView.Items[0].Selected = false;
+            sectionListView.Items[1].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            InvokeAssetEditorVoid(control, "LoadSurface");
+            Application.DoEvents();
+
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            objectListView.Items[0].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(!HasLabelTextContaining(control, "Preview bounds:"),
+                "An unplaced report object summary-refresh smoke should start without preview-bounds shell text when the initial snapshot omits preview bounds");
+
+            if (propertyGrid.SelectedObject is not CopperfinDesignerSelection objectSelection)
+            {
+                throw new InvalidOperationException("Could not read the selected unplaced report object for the summary-refresh smoke.");
+            }
+
+            TypeDescriptor.GetProperties(objectSelection)["HPOS"]?.SetValue(objectSelection, 1100);
+            InvokeAssetEditorVoid(control, "ApplyPropertyGridChange", "HPOS", 800);
+            Application.DoEvents();
+
+            Expect(HasLabelTextContaining(control, "Preview bounds: L 1100 T 700 R 5200 B 3100   Size: 4100 x 2400") &&
+                   HasLabelTextContaining(control, "Unplaced objects: 1"),
+                "Editing an unplaced report object through the shared asset editor should refresh the shell summary from the returned snapshot, including updated preview bounds and unplaced-object context");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", previousLogPath);
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeAssetEditorLabelSectionPropertyGridHostUpdate()
     {
         if (Path.DirectorySeparatorChar == '\\')
@@ -1292,6 +1392,7 @@ internal static class Program
         var snapshot = BuildAssetEditorLabelSectionUpdateSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
         var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
@@ -1323,7 +1424,7 @@ internal static class Program
             Application.DoEvents();
 
             ApplyReportSnapshotForExplorerSmoke(control, snapshot);
-            SetPrivateField(control, "currentPath", Path.Combine(tempRoot, "cust.lbx"));
+            SetPrivateField(control, "currentPath", assetPath);
             InvokeAssetEditorVoid(control, "SyncExplorerSelection");
             InvokeAssetEditorVoid(control, "LoadSurface");
             Application.DoEvents();
@@ -1404,6 +1505,7 @@ internal static class Program
         var snapshot = BuildAssetEditorLabelObjectUpdateSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
         var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
@@ -1435,7 +1537,7 @@ internal static class Program
             Application.DoEvents();
 
             ApplyReportSnapshotForExplorerSmoke(control, snapshot);
-            SetPrivateField(control, "currentPath", Path.Combine(tempRoot, "cust.lbx"));
+            SetPrivateField(control, "currentPath", assetPath);
             InvokeAssetEditorVoid(control, "LoadSurface");
             Application.DoEvents();
 
@@ -1521,6 +1623,7 @@ internal static class Program
         var snapshot = BuildAssetEditorUnplacedLabelObjectUpdateSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
         var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
@@ -1552,7 +1655,7 @@ internal static class Program
             Application.DoEvents();
 
             ApplyReportSnapshotForExplorerSmoke(control, snapshot);
-            SetPrivateField(control, "currentPath", Path.Combine(tempRoot, "cust.lbx"));
+            SetPrivateField(control, "currentPath", assetPath);
 
             var sectionListView = GetPrivateListView(control, "sectionListView");
             sectionListView.Items[0].Selected = false;
@@ -1642,6 +1745,7 @@ internal static class Program
         var snapshot = BuildAssetEditorDeletedLabelSectionUpdateSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
         var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
@@ -1673,7 +1777,7 @@ internal static class Program
             Application.DoEvents();
 
             ApplyReportSnapshotForExplorerSmoke(control, snapshot);
-            SetPrivateField(control, "currentPath", Path.Combine(tempRoot, "cust.lbx"));
+            SetPrivateField(control, "currentPath", assetPath);
 
             var sectionListView = GetPrivateListView(control, "sectionListView");
             var objectListView = GetPrivateListView(control, "objectListView");
@@ -1763,6 +1867,7 @@ internal static class Program
         var snapshot = BuildAssetEditorDeletedLabelObjectUpdateSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
         var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
@@ -1794,7 +1899,7 @@ internal static class Program
             Application.DoEvents();
 
             ApplyReportSnapshotForExplorerSmoke(control, snapshot);
-            SetPrivateField(control, "currentPath", Path.Combine(tempRoot, "cust.lbx"));
+            SetPrivateField(control, "currentPath", assetPath);
 
             var sectionListView = GetPrivateListView(control, "sectionListView");
             sectionListView.Items[0].Selected = false;
@@ -3056,6 +3161,7 @@ internal static class Program
         var snapshot = BuildAssetEditorBatchUpdateSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
         var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
@@ -3087,7 +3193,7 @@ internal static class Program
             Application.DoEvents();
 
             ApplyReportSnapshotForExplorerSmoke(control, snapshot);
-            SetPrivateField(control, "currentPath", Path.Combine(tempRoot, "invoice.frx"));
+            SetPrivateField(control, "currentPath", assetPath);
             InvokeAssetEditorVoid(control, "LoadSurface");
             Application.DoEvents();
 
@@ -4097,6 +4203,13 @@ internal static class Program
 """;
     }
 
+    private static string BuildUnplacedReportObjectPreviewRefreshHostResponseJson()
+    {
+        return """
+{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[{"RecordIndex":6,"Title":"customer.company","Subtitle":"field","Properties":[{"Name":"HPOS","Value":"1200"},{"Name":"VPOS","Value":"2600"},{"Name":"WIDTH","Value":"4000"},{"Name":"HEIGHT","Value":"500"},{"Name":"EXPR","Value":"customer.company"}]},{"RecordIndex":9,"Title":"orphan.note","Subtitle":"field","Properties":[{"Name":"HPOS","Value":"1100"},{"Name":"VPOS","Value":"700"},{"Name":"WIDTH","Value":"2400"},{"Name":"HEIGHT","Value":"450"},{"Name":"EXPR","Value":"orphan.note"}]}],"ReportLayout":{"PreviewBoundsAvailable":true,"PreviewBoundsLeft":1100,"PreviewBoundsTop":700,"PreviewBoundsRight":5200,"PreviewBoundsBottom":3100,"PreviewBoundsWidth":4100,"PreviewBoundsHeight":2400,"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":6,"ObjectKind":"field","Title":"customer.company","Expression":"customer.company","Left":1200,"Top":2600,"Width":4000,"Height":500}]}],"DeletedSections":[],"UnplacedObjects":[{"RecordIndex":9,"ObjectKind":"field","Title":"orphan.note","Expression":"orphan.note","Left":1100,"Top":700,"Width":2400,"Height":450}]}}}
+""";
+    }
+
     private static string BuildLabelSectionUpdateHostResponseJson()
     {
         return """
@@ -4464,6 +4577,24 @@ internal static class Program
         }
 
         return listView;
+    }
+
+    private static string CreateSmokeAssetFile(string tempRoot, string fileName)
+    {
+        var assetPath = Path.Combine(tempRoot, fileName);
+        File.WriteAllText(assetPath, string.Empty);
+        return assetPath;
+    }
+
+    private static Label GetPrivateLabel(CopperfinAssetEditorControl control, string fieldName)
+    {
+        var field = typeof(CopperfinAssetEditorControl).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+        if (field?.GetValue(control) is not Label label)
+        {
+            throw new InvalidOperationException($"Could not read private label {fieldName}.");
+        }
+
+        return label;
     }
 
     private static PropertyGrid GetPrivatePropertyGrid(CopperfinAssetEditorControl control)
