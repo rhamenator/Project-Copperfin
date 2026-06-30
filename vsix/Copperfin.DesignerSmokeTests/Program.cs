@@ -49,6 +49,7 @@ internal static class Program
         SmokeAssetEditorUnplacedLabelObjectPropertyGridHostUpdate();
         SmokeAssetEditorUnplacedLabelObjectHostUpdateRefreshesShellSummary();
         SmokeAssetEditorUndoRefreshesLabelShellSummary();
+        SmokeAssetEditorDeletedReportObjectPropertyGridHostUpdate();
         SmokeAssetEditorDeletedLabelObjectPropertyGridHostUpdate();
         SmokeReportObjectPropertyGridLocalization();
         SmokeSharedDesignerSelectionLocalization();
@@ -2334,6 +2335,132 @@ internal static class Program
                    ReadPrivateNullableInt(surface, "selectedRecordIndex") is null &&
                    !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
                 "Editing a deleted label section through the shared asset editor should preserve label identity, deleted section selection, and deleted-scope continuity after the host-backed refresh");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", previousLogPath);
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
+    private static void SmokeAssetEditorDeletedReportObjectPropertyGridHostUpdate()
+    {
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            Console.WriteLine("SKIP: shared asset-editor deleted-report-object host-update smoke requires a POSIX scriptable fake Studio host.");
+            return;
+        }
+
+        var snapshot = BuildAssetEditorDeletedReportObjectUpdateSmokeSnapshot();
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
+        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var logPath = Path.Combine(tempRoot, "studio-host.log");
+        var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
+
+        try
+        {
+            File.WriteAllText(logPath, string.Empty);
+            CreateFakeStudioHostScript(scriptPath, BuildDeletedReportObjectUpdateHostResponseJson());
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", scriptPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", logPath);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+
+            ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+            SetPrivateField(control, "currentPath", assetPath);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            sectionListView.Items[0].Selected = false;
+            sectionListView.Items[1].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            InvokeAssetEditorVoid(control, "LoadSurface");
+            Application.DoEvents();
+
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface.");
+
+            objectListView.Items[0].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == 13,
+                "A deleted report object host-update smoke should start from an object-rooted property-grid selection");
+
+            if (propertyGrid.SelectedObject is not CopperfinDesignerSelection objectSelection)
+            {
+                throw new InvalidOperationException("Could not read the selected deleted report object from the shared asset editor.");
+            }
+
+            TypeDescriptor.GetProperties(objectSelection)["HPOS"]?.SetValue(objectSelection, 1600);
+            InvokeAssetEditorVoid(control, "ApplyPropertyGridChange", "HPOS", 1400);
+            Application.DoEvents();
+
+            var logLines = File.ReadAllLines(logPath);
+            var invocationStartCount = logLines.Count(line => string.Equals(line, "BEGIN", StringComparison.Ordinal));
+            Expect(invocationStartCount == 1,
+                "Editing a deleted report object through the shared asset editor should invoke the Studio host exactly once");
+
+            var invocationArguments = logLines.Skip(1).ToList();
+            Expect(invocationArguments.Contains("--from-vs") &&
+                   invocationArguments.Contains("--json") &&
+                   invocationArguments.Contains("--set-property") &&
+                   invocationArguments.Contains("--record") &&
+                   invocationArguments.Contains("13") &&
+                   invocationArguments.Contains("--property-name") &&
+                   invocationArguments.Contains("HPOS") &&
+                   invocationArguments.Contains("--property-value") &&
+                   invocationArguments.Contains("1600"),
+                "Editing a deleted report object through the shared asset editor should send one invariant HPOS update through the host property contract");
+
+            var deletedSection = snapshot.ReportLayout?.DeletedSections[0]
+                ?? throw new InvalidOperationException("Could not read the deleted report section from the shared smoke snapshot.");
+            var expectedDeletedSectionTitle = InvokeAssetEditorString(control, "BuildDeletedReportSectionListTitle", deletedSection);
+            Expect(string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, expectedDeletedSectionTitle, StringComparison.Ordinal) &&
+                   string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "deleted.footer.total", StringComparison.Ordinal) &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
+                   refreshedSelection.RecordIndex == 13 &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString(), "Deleted", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["HPOS"]?.GetValue(refreshedSelection)?.ToString(), "1600", StringComparison.Ordinal) &&
+                   string.Equals(ReadPrivateStringField(surface, "assetFamily"), "report", StringComparison.Ordinal) &&
+                   ReadPrivateNullableInt(surface, "selectedRecordIndex") == 13 &&
+                   ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 51 &&
+                   !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+                "Editing a deleted report object through the shared asset editor should preserve report identity, deleted object selection, and deleted-section continuity after the host-backed refresh");
         }
         finally
         {
@@ -4823,6 +4950,103 @@ internal static class Program
         };
     }
 
+    private static CopperfinStudioSnapshotDocument BuildAssetEditorDeletedReportObjectUpdateSmokeSnapshot()
+    {
+        return new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "report",
+            FieldCount = 5,
+            Objects = new List<CopperfinStudioSnapshotObject>
+            {
+                new()
+                {
+                    RecordIndex = 6,
+                    Title = "customer.company",
+                    Subtitle = "field",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "HPOS", Value = "1200" },
+                        new() { Name = "VPOS", Value = "2600" },
+                        new() { Name = "WIDTH", Value = "4000" },
+                        new() { Name = "HEIGHT", Value = "500" },
+                        new() { Name = "EXPR", Value = "customer.company" }
+                    }
+                },
+                new()
+                {
+                    RecordIndex = 13,
+                    Deleted = true,
+                    Title = "deleted.footer.total",
+                    Subtitle = "field",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "HPOS", Value = "1400" },
+                        new() { Name = "VPOS", Value = "9400" },
+                        new() { Name = "WIDTH", Value = "3600" },
+                        new() { Name = "HEIGHT", Value = "600" },
+                        new() { Name = "EXPR", Value = "deleted.footer.total" }
+                    }
+                }
+            },
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail_1",
+                        Title = "Detail",
+                        BandKind = "detail",
+                        RecordIndex = 42,
+                        Top = 2000,
+                        Height = 5000,
+                        Objects = new List<CopperfinStudioReportLayoutObject>
+                        {
+                            new()
+                            {
+                                RecordIndex = 6,
+                                ObjectKind = "field",
+                                Title = "customer.company",
+                                Expression = "customer.company",
+                                Left = 1200,
+                                Top = 2600,
+                                Width = 4000,
+                                Height = 500
+                            }
+                        }
+                    }
+                },
+                DeletedSections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "deleted_footer",
+                        Title = "Summary",
+                        BandKind = "summary",
+                        RecordIndex = 51,
+                        Deleted = true,
+                        Top = 9000,
+                        Height = 1400,
+                        Objects = new List<CopperfinStudioReportLayoutObject>
+                        {
+                            new()
+                            {
+                                RecordIndex = 13,
+                                ObjectKind = "field",
+                                Title = "deleted.footer.total",
+                                Expression = "deleted.footer.total",
+                                Left = 1400,
+                                Top = 9400,
+                                Width = 3600,
+                                Height = 600
+                            }
+                        }
+                    }
+                }
+            }
+        };
+    }
+
     private static CopperfinStudioSnapshotDocument BuildAssetEditorDeletedReportSectionUpdateSmokeSnapshot()
     {
         return new CopperfinStudioSnapshotDocument
@@ -5006,6 +5230,13 @@ internal static class Program
     {
         return """
 {"Status":"ok","Document":{"AssetFamily":"label","FieldCount":5,"Objects":[{"RecordIndex":6,"Title":"customer.company","Subtitle":"label","Properties":[{"Name":"HPOS","Value":"1200"},{"Name":"VPOS","Value":"2600"},{"Name":"WIDTH","Value":"4000"},{"Name":"HEIGHT","Value":"500"},{"Name":"EXPR","Value":"customer.company"}]},{"RecordIndex":13,"Deleted":true,"Title":"deleted.footer.total","Subtitle":"label","Properties":[{"Name":"HPOS","Value":"1600"},{"Name":"VPOS","Value":"9400"},{"Name":"WIDTH","Value":"3600"},{"Name":"HEIGHT","Value":"600"},{"Name":"EXPR","Value":"deleted.footer.total"}]}],"ReportLayout":{"IsLabel":true,"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":6,"ObjectKind":"label","Title":"customer.company","Expression":"customer.company","Left":1200,"Top":2600,"Width":4000,"Height":500}]}],"DeletedSections":[{"Id":"deleted_footer","Title":"Summary","BandKind":"summary","RecordIndex":51,"Deleted":true,"Top":9000,"Height":1400,"Objects":[{"RecordIndex":13,"ObjectKind":"label","Title":"deleted.footer.total","Expression":"deleted.footer.total","Left":1600,"Top":9400,"Width":3600,"Height":600}]}],"UnplacedObjects":[]}}}
+""";
+    }
+
+    private static string BuildDeletedReportObjectUpdateHostResponseJson()
+    {
+        return """
+{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[{"RecordIndex":6,"Title":"customer.company","Subtitle":"field","Properties":[{"Name":"HPOS","Value":"1200"},{"Name":"VPOS","Value":"2600"},{"Name":"WIDTH","Value":"4000"},{"Name":"HEIGHT","Value":"500"},{"Name":"EXPR","Value":"customer.company"}]},{"RecordIndex":13,"Deleted":true,"Title":"deleted.footer.total","Subtitle":"field","Properties":[{"Name":"HPOS","Value":"1600"},{"Name":"VPOS","Value":"9400"},{"Name":"WIDTH","Value":"3600"},{"Name":"HEIGHT","Value":"600"},{"Name":"EXPR","Value":"deleted.footer.total"}]}],"ReportLayout":{"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":6,"ObjectKind":"field","Title":"customer.company","Expression":"customer.company","Left":1200,"Top":2600,"Width":4000,"Height":500}]}],"DeletedSections":[{"Id":"deleted_footer","Title":"Summary","BandKind":"summary","RecordIndex":51,"Deleted":true,"Top":9000,"Height":1400,"Objects":[{"RecordIndex":13,"ObjectKind":"field","Title":"deleted.footer.total","Expression":"deleted.footer.total","Left":1600,"Top":9400,"Width":3600,"Height":600}]}],"UnplacedObjects":[]}}}
 """;
     }
 
