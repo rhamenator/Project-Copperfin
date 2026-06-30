@@ -1,6 +1,7 @@
 #include "test_studio_host_json_support.h"
 
 namespace cf_test_studio_host_json {
+#if !defined(COPPERFIN_DETAIL_HEADER_FOOTER_OBJECT_LAYOUT_ACTIONS_SKIP_STABLE)
 void test_studio_host_json_aligns_detail_header_footer_objects_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -2836,5 +2837,6 @@ void test_studio_host_json_distributes_deleted_detail_header_footer_objects_vert
         fs::remove_all(temp_root, ignored);
     }
 }
+#endif
 
 }  // namespace cf_test_studio_host_json

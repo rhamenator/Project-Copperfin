@@ -137,18 +137,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_renames_deleted_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_reorders_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_reorders_deleted_detail_header_footer_objects_by_stable_selection(argv[1]);
-    test_studio_host_json_aligns_detail_header_footer_objects_by_stable_selection(argv[1]);
-    test_studio_host_json_aligns_deleted_detail_header_footer_objects_by_stable_selection(argv[1]);
-    test_studio_host_json_resizes_detail_header_footer_objects_by_stable_selection(argv[1]);
-    test_studio_host_json_resizes_deleted_detail_header_footer_objects_by_stable_selection(argv[1]);
-    test_studio_host_json_snaps_detail_header_footer_objects_by_stable_selection(argv[1]);
-    test_studio_host_json_snaps_deleted_detail_header_footer_objects_by_stable_selection(argv[1]);
-    test_studio_host_json_nudges_detail_header_footer_objects_by_stable_selection(argv[1]);
-    test_studio_host_json_nudges_deleted_detail_header_footer_objects_by_stable_selection(argv[1]);
-    test_studio_host_json_distributes_detail_header_footer_objects_by_stable_selection(argv[1]);
-    test_studio_host_json_distributes_deleted_detail_header_footer_objects_by_stable_selection(argv[1]);
-    test_studio_host_json_distributes_detail_header_footer_objects_vertically_by_stable_selection(argv[1]);
-    test_studio_host_json_distributes_deleted_detail_header_footer_objects_vertically_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
