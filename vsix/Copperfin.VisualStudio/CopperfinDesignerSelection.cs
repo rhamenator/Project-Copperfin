@@ -87,6 +87,8 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             case "label":
                 selection.AddReadOnlyInt("OBJTYPE", L("AssetEditor.Property.ObjectType", "Object Type"), selection.Read(snapshotObject, "OBJTYPE"));
                 selection.AddReadOnlyInt("OBJCODE", L("AssetEditor.Property.ObjectCode", "Object Code"), selection.Read(snapshotObject, "OBJCODE"));
+                selection.AddReadOnlyInt("RECORDINDEX", L("AssetEditor.Column.Record", "Record"), snapshotObject.RecordIndex.ToString(CultureInfo.InvariantCulture));
+                selection.AddReadOnlyString("OBJECTSTATE", L("AssetEditor.Property.ObjectState", "Object State"), BuildStateText(localization, snapshotObject.Deleted));
                 selection.AddEditableString("EXPR", L("AssetEditor.Property.Expression", "Expression"), selection.Read(snapshotObject, "EXPR"));
                 selection.AddEditableInt("HPOS", L("AssetEditor.Property.Left", "Left"), selection.Read(snapshotObject, "HPOS"));
                 selection.AddEditableInt("VPOS", L("AssetEditor.Column.Top", "Top"), selection.Read(snapshotObject, "VPOS"));
@@ -149,7 +151,7 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         selection.AddReadOnlyString(
             "SECTIONSTATE",
             localization.Text("AssetEditor.Property.SectionState"),
-            BuildGroupPartnerStateText(localization, section.Deleted));
+            BuildStateText(localization, section.Deleted));
         selection.AddReadOnlyString(
             "BANDKIND",
             localization.Text("AssetEditor.Property.BandKind"),
@@ -206,7 +208,7 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             selection.AddReadOnlyString(
                 "GROUPPARTNERSTATE",
                 localization.Text("AssetEditor.Property.GroupPartnerState"),
-                BuildGroupPartnerStateText(localization, section.GroupPartnerDeleted));
+                BuildStateText(localization, section.GroupPartnerDeleted));
         }
 
         if (section.GroupingContextAvailable ||
@@ -283,9 +285,14 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         return groupRole.Replace('_', ' ');
     }
 
-    private static string BuildGroupPartnerStateText(CopperfinLocalization localization, bool deleted)
+    private static string BuildStateText(CopperfinLocalization? localization, bool deleted)
     {
-        return localization.Text(deleted ? "AssetEditor.State.Deleted" : "AssetEditor.State.Live");
+        if (localization is not null)
+        {
+            return localization.Text(deleted ? "AssetEditor.State.Deleted" : "AssetEditor.State.Live");
+        }
+
+        return deleted ? "Deleted" : "Live";
     }
 
     public bool TryGetUpdate(string propertyName, out string targetName, out string serializedValue)

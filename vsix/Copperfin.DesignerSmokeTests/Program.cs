@@ -1177,21 +1177,30 @@ internal static class Program
         var spanishSelection = CopperfinDesignerSelection.FromSnapshot("report", snapshotObject, new CopperfinLocalization("es-419"));
         Expect(spanishSelection is not null &&
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Tipo de objeto", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Estado del objeto", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Expresión", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Tamaño de fuente", StringComparison.Ordinal)),
             "Spanish report object property-grid selection should localize object field labels");
+        Expect(string.Equals(TypeDescriptor.GetProperties(spanishSelection)["OBJECTSTATE"]?.GetValue(spanishSelection)?.ToString(), "Activa", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(spanishSelection)["RECORDINDEX"]?.GetValue(spanishSelection)?.ToString(), "10", StringComparison.Ordinal),
+            "Spanish report object property-grid selection should localize live object state values and preserve record identity");
 
         var portugueseSelection = CopperfinDesignerSelection.FromSnapshot("report", snapshotObject, new CopperfinLocalization("pt-BR"));
         Expect(portugueseSelection is not null &&
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Tipo de objeto", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Estado do objeto", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Expressão", StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Tamanho da fonte", StringComparison.Ordinal)),
             "Portuguese report object property-grid selection should localize object field labels");
+        Expect(string.Equals(TypeDescriptor.GetProperties(portugueseSelection)["OBJECTSTATE"]?.GetValue(portugueseSelection)?.ToString(), "Ativa", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(portugueseSelection)["RECORDINDEX"]?.GetValue(portugueseSelection)?.ToString(), "10", StringComparison.Ordinal),
+            "Portuguese report object property-grid selection should localize live object state values and preserve record identity");
 
         var pseudoLocalization = new CopperfinLocalization("qps-ploc");
         var pseudoSelection = CopperfinDesignerSelection.FromSnapshot("report", snapshotObject, pseudoLocalization);
         Expect(pseudoSelection is not null &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ObjectType"), StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ObjectState"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Expression"), StringComparison.Ordinal)) &&
                TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.FontSize"), StringComparison.Ordinal)),
             "Pseudo-localized report object property-grid selection should route object field labels through the shared catalog");
@@ -1203,6 +1212,41 @@ internal static class Program
                    string.Equals(exprTarget, "EXPR", StringComparison.Ordinal) &&
                    string.Equals(exprValue, "customer.region", StringComparison.Ordinal),
                 "Localized report object property-grid labels should preserve machine-readable update targets");
+        }
+
+        var deletedSnapshotObject = new CopperfinStudioSnapshotObject
+        {
+            RecordIndex = 13,
+            Deleted = true,
+            Title = "deleted.footer.total",
+            Subtitle = "field",
+            Properties = new List<CopperfinStudioSnapshotProperty>
+            {
+                new() { Name = "OBJTYPE", Value = "8" },
+                new() { Name = "OBJCODE", Value = "53" },
+                new() { Name = "EXPR", Value = "customer.deleted_total" },
+                new() { Name = "HPOS", Value = "1400" },
+                new() { Name = "VPOS", Value = "9200" },
+                new() { Name = "WIDTH", Value = "3000" },
+                new() { Name = "HEIGHT", Value = "450" },
+                new() { Name = "FONTFACE", Value = "Arial" },
+                new() { Name = "FONTSTYLE", Value = "0" },
+                new() { Name = "FONTSIZE", Value = "9" }
+            }
+        };
+
+        var deletedSelection = CopperfinDesignerSelection.FromSnapshot("report", deletedSnapshotObject, new CopperfinLocalization("en-US"));
+        Expect(deletedSelection is not null &&
+               string.Equals(TypeDescriptor.GetProperties(deletedSelection)["OBJECTSTATE"]?.GetValue(deletedSelection)?.ToString(), "Deleted", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(deletedSelection)["RECORDINDEX"]?.GetValue(deletedSelection)?.ToString(), "13", StringComparison.Ordinal),
+            "Deleted report object property-grid selection should expose deleted state and stable record identity");
+        if (deletedSelection is not null)
+        {
+            TypeDescriptor.GetProperties(deletedSelection)["EXPR"]?.SetValue(deletedSelection, "customer.deleted_region");
+            Expect(deletedSelection.TryGetUpdate("EXPR", out var exprTarget, out var exprValue) &&
+                   string.Equals(exprTarget, "EXPR", StringComparison.Ordinal) &&
+                   string.Equals(exprValue, "customer.deleted_region", StringComparison.Ordinal),
+                "Deleted report object property-grid selection should preserve invariant editable update targets");
         }
     }
 
@@ -1683,6 +1727,12 @@ internal static class Program
         Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection deletedObjectSelection &&
                deletedObjectSelection.RecordIndex == 13,
             "Clicking a deleted report object on the shared surface should keep object-rooted property-grid selection");
+        if (propertyGrid.SelectedObject is CopperfinDesignerSelection deletedObjectMetadataSelection)
+        {
+            Expect(string.Equals(TypeDescriptor.GetProperties(deletedObjectMetadataSelection)["OBJECTSTATE"]?.GetValue(deletedObjectMetadataSelection)?.ToString(), "Deleted", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(deletedObjectMetadataSelection)["RECORDINDEX"]?.GetValue(deletedObjectMetadataSelection)?.ToString(), "13", StringComparison.Ordinal),
+                "Clicking a deleted report object on the shared surface should expose deleted object state metadata");
+        }
         Expect(ReadPrivateNullableInt(surface, "selectedRecordIndex") == 13 &&
                ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 51 &&
                ReadPrivateBoolField(surface, "unplacedReportObjectsSelected") == false,
