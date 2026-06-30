@@ -17,6 +17,13 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         public List<int> RecordIndexes { get; } = new();
     }
 
+    private sealed class ExplorerSelectionState
+    {
+        public int? ReportSectionRecordIndex { get; set; }
+        public bool ReportUnplacedObjects { get; set; }
+        public string? ProjectGroupId { get; set; }
+    }
+
     private readonly Label titleLabel;
     private readonly Label subtitleLabel;
     private readonly Label pathLabel;
@@ -585,7 +592,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
 
         var priorLabel = currentSnapshot.CommandUndoLabel;
-        var selectedRecordIndex = (propertyGrid.SelectedObject as CopperfinDesignerSelection)?.RecordIndex ?? TryReadSelectedRecordIndex();
+        var explorerSelection = CaptureExplorerSelectionState();
+        var selectedObjectRecordIndex = TryReadSelectedRecordIndex();
         snapshotStatusLabel.Text = BuildUndoExecutingStatus(priorLabel);
 
         var undoResult = CopperfinStudioSnapshotClient.TryUndoCommand(currentPath!);
@@ -597,13 +605,13 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
         currentSnapshot = undoResult.Document;
         snapshotStatusLabel.Text = BuildUndoCompletedStatus(priorLabel, currentSnapshot);
-        PopulateSectionList();
+        PopulateSectionList(explorerSelection);
         SyncExplorerSelection();
         LoadSurface();
-        if (selectedRecordIndex >= 0)
+        if (selectedObjectRecordIndex >= 0)
         {
-            designSurface.SelectRecord(selectedRecordIndex);
-            SyncSelectionFromSurface(selectedRecordIndex);
+            designSurface.SelectRecord(selectedObjectRecordIndex);
+            SyncSelectionFromSurface(selectedObjectRecordIndex);
         }
 
         return true;
@@ -727,7 +735,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
     }
 
-    private void PopulateSectionList()
+    private void PopulateSectionList(ExplorerSelectionState? selectionState = null)
     {
         sectionListView.BeginUpdate();
         sectionListView.Items.Clear();
@@ -760,10 +768,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 sectionListView.Items.Add(item);
             }
 
-            if (sectionListView.Items.Count > 0)
-            {
-                sectionListView.Items[0].Selected = true;
-            }
+            ApplyExplorerSelectionState(selectionState);
 
             sectionListView.EndUpdate();
             return;
@@ -785,10 +790,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 sectionListView.Items.Add(item);
             }
 
-            if (sectionListView.Items.Count > 0)
-            {
-                sectionListView.Items[0].Selected = true;
-            }
+            ApplyExplorerSelectionState(selectionState);
 
             sectionListView.EndUpdate();
             return;
@@ -960,6 +962,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             return;
         }
 
+        var explorerSelection = CaptureExplorerSelectionState();
+        var selectedObjectRecordIndex = TryReadSelectedRecordIndex();
         snapshotStatusLabel.Text = BuildPropertyApplyingStatus(propertyName);
         var updateResult = CopperfinStudioSnapshotClient.TryUpdateProperty(currentPath!, recordIndex, propertyName, propertyValue);
         if (!updateResult.Success || updateResult.Document is null)
@@ -970,11 +974,14 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
         currentSnapshot = updateResult.Document;
         snapshotStatusLabel.Text = BuildPropertyUpdatedStatus(propertyName, currentSnapshot);
-        PopulateSectionList();
+        PopulateSectionList(explorerSelection);
         SyncExplorerSelection();
         LoadSurface();
-        designSurface.SelectRecord(recordIndex);
-        SyncSelectionFromSurface(recordIndex);
+        if (selectedObjectRecordIndex >= 0)
+        {
+            designSurface.SelectRecord(selectedObjectRecordIndex);
+            SyncSelectionFromSurface(selectedObjectRecordIndex);
+        }
     }
 
     private TextBoxBase? TryFindFocusedUndoTextBox()
@@ -1461,6 +1468,72 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
 
         return sectionListView.Items.Count > 0 ? sectionListView.Items[0].Tag : null;
+    }
+
+    private ExplorerSelectionState? CaptureExplorerSelectionState()
+    {
+        var selectedTag = TryReadSelectedExplorerTag();
+        if (selectedTag is CopperfinStudioReportSection reportSection)
+        {
+            return new ExplorerSelectionState
+            {
+                ReportSectionRecordIndex = reportSection.RecordIndex
+            };
+        }
+
+        if (selectedTag is ReportUnplacedObjectScope)
+        {
+            return new ExplorerSelectionState
+            {
+                ReportUnplacedObjects = true
+            };
+        }
+
+        if (selectedTag is CopperfinStudioProjectGroup projectGroup)
+        {
+            return new ExplorerSelectionState
+            {
+                ProjectGroupId = projectGroup.Id
+            };
+        }
+
+        return null;
+    }
+
+    private void ApplyExplorerSelectionState(ExplorerSelectionState? selectionState)
+    {
+        ListViewItem? selectedItem = null;
+        if (selectionState?.ReportSectionRecordIndex is int reportSectionRecordIndex)
+        {
+            selectedItem = sectionListView.Items
+                .Cast<ListViewItem>()
+                .FirstOrDefault(item => item.Tag is CopperfinStudioReportSection section &&
+                                        section.RecordIndex == reportSectionRecordIndex);
+        }
+        else if (selectionState?.ReportUnplacedObjects == true)
+        {
+            selectedItem = sectionListView.Items
+                .Cast<ListViewItem>()
+                .FirstOrDefault(item => item.Tag is ReportUnplacedObjectScope);
+        }
+        else if (!string.IsNullOrWhiteSpace(selectionState?.ProjectGroupId))
+        {
+            var projectGroupId = selectionState!.ProjectGroupId!;
+            selectedItem = sectionListView.Items
+                .Cast<ListViewItem>()
+                .FirstOrDefault(item => item.Tag is CopperfinStudioProjectGroup group &&
+                                        string.Equals(group.Id, projectGroupId, StringComparison.Ordinal));
+        }
+
+        if (selectedItem is null && sectionListView.Items.Count > 0)
+        {
+            selectedItem = sectionListView.Items[0];
+        }
+
+        if (selectedItem is not null)
+        {
+            selectedItem.Selected = true;
+        }
     }
 
     private string BuildSnapshotDetailsText(FileInfo info, CopperfinStudioSnapshotDocument? snapshot)

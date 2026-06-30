@@ -36,6 +36,7 @@ internal static class Program
         SmokeReportSectionGroupingExplorerTitles();
         SmokeReportSectionScopedObjectFiltering();
         SmokeReportSectionPropertyGridSelection();
+        SmokeReportSelectionPreservedAcrossExplorerRefresh();
         SmokeAssetEditorWithRealAsset(
             @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx",
             expectSection: "Detail");
@@ -531,7 +532,7 @@ internal static class Program
         }
 
         currentSnapshotField.SetValue(control, snapshot);
-        populateSectionListMethod.Invoke(control, Array.Empty<object>());
+        populateSectionListMethod.Invoke(control, new object?[] { null });
 
         var sectionItems = FindListViews(control)
             .SelectMany(list => list.Items.Cast<ListViewItem>())
@@ -700,6 +701,105 @@ internal static class Program
         var pseudoSelection = CopperfinDesignerSelection.FromReportSection(snapshot.ReportLayout.Sections[0], pseudoLocalization);
         Expect(TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Height"), StringComparison.Ordinal)),
             "Pseudo-localized report section property-grid selection should route new field labels through the shared catalog");
+    }
+
+    private static void SmokeReportSelectionPreservedAcrossExplorerRefresh()
+    {
+        var initialSnapshot = new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "report",
+            Objects = new List<CopperfinStudioSnapshotObject>
+            {
+                new() { RecordIndex = 10, Title = "detail.line", Subtitle = "field" },
+                new() { RecordIndex = 11, Title = "summary.total", Subtitle = "field" }
+            },
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail",
+                        Title = "Detail",
+                        RecordIndex = 41,
+                        Top = 2000,
+                        Height = 5000,
+                        Objects = new List<CopperfinStudioReportLayoutObject> { new() { RecordIndex = 10 } }
+                    },
+                    new()
+                    {
+                        Id = "summary",
+                        Title = "Summary",
+                        RecordIndex = 42,
+                        Top = 7600,
+                        Height = 2800,
+                        Objects = new List<CopperfinStudioReportLayoutObject> { new() { RecordIndex = 11 } }
+                    }
+                }
+            }
+        };
+
+        var refreshedSnapshot = new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "report",
+            Objects = new List<CopperfinStudioSnapshotObject>
+            {
+                new() { RecordIndex = 10, Title = "detail.line", Subtitle = "field" },
+                new() { RecordIndex = 11, Title = "summary.total", Subtitle = "field" }
+            },
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail",
+                        Title = "Detail",
+                        RecordIndex = 41,
+                        Top = 2000,
+                        Height = 5000,
+                        Objects = new List<CopperfinStudioReportLayoutObject> { new() { RecordIndex = 10 } }
+                    },
+                    new()
+                    {
+                        Id = "summary",
+                        Title = "Summary",
+                        RecordIndex = 42,
+                        Top = 8100,
+                        Height = 3100,
+                        Objects = new List<CopperfinStudioReportLayoutObject> { new() { RecordIndex = 11 } }
+                    }
+                }
+            }
+        };
+
+        using var sectionControl = new CopperfinAssetEditorControl();
+        ApplyReportSnapshotForExplorerSmoke(sectionControl, initialSnapshot);
+        var sectionListView = GetPrivateListView(sectionControl, "sectionListView");
+        sectionListView.Items[0].Selected = false;
+        sectionListView.Items[1].Selected = true;
+        InvokeAssetEditorVoid(sectionControl, "SyncExplorerSelection");
+        var explorerState = InvokeAssetEditorObject(sectionControl, "CaptureExplorerSelectionState");
+        SetCurrentSnapshot(sectionControl, refreshedSnapshot);
+        InvokeAssetEditorVoid(sectionControl, "PopulateSectionList", explorerState);
+        InvokeAssetEditorVoid(sectionControl, "SyncExplorerSelection");
+        var propertyGrid = GetPrivatePropertyGrid(sectionControl);
+        Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSectionSelection &&
+               refreshedSectionSelection.RecordIndex == 42 &&
+               Equals(TypeDescriptor.GetProperties(refreshedSectionSelection)["TOP"]?.GetValue(refreshedSectionSelection), 8100),
+            "Report section property-grid selection should survive explorer refresh on the same section");
+
+        using var objectControl = new CopperfinAssetEditorControl();
+        ApplyReportSnapshotForExplorerSmoke(objectControl, initialSnapshot);
+        var objectExplorerState = InvokeAssetEditorObject(objectControl, "CaptureExplorerSelectionState");
+        SetCurrentSnapshot(objectControl, refreshedSnapshot);
+        InvokeAssetEditorVoid(objectControl, "PopulateSectionList", objectExplorerState);
+        InvokeAssetEditorVoid(objectControl, "SyncExplorerSelection");
+        InvokeAssetEditorVoid(objectControl, "SyncSelectionFromSurface", 10);
+        var objectPropertyGrid = GetPrivatePropertyGrid(objectControl);
+        Expect(objectPropertyGrid.SelectedObject is CopperfinDesignerSelection refreshedObjectSelection &&
+               refreshedObjectSelection.RecordIndex == 10,
+            "Report object property-grid selection should remain object-rooted after explorer refresh");
     }
 
     private static void SmokeAssetEditorWithRealAsset(string path, string expectSection)
@@ -1053,7 +1153,7 @@ internal static class Program
         }
 
         currentSnapshotField?.SetValue(control, snapshot);
-        populateSectionListMethod.Invoke(control, Array.Empty<object>());
+        populateSectionListMethod.Invoke(control, new object?[] { null });
         configureObjectColumnsMethod.Invoke(control, Array.Empty<object>());
     }
 
@@ -1069,7 +1169,7 @@ internal static class Program
         }
 
         currentSnapshotField.SetValue(control, snapshot);
-        populateSectionListMethod.Invoke(control, Array.Empty<object>());
+        populateSectionListMethod.Invoke(control, new object?[] { null });
         populateObjectListMethod.Invoke(control, new object[] { true });
     }
 
@@ -1111,7 +1211,7 @@ internal static class Program
         return (string)(method.Invoke(control, args) ?? string.Empty);
     }
 
-    private static void InvokeAssetEditorVoid(CopperfinAssetEditorControl control, string methodName, params object[] args)
+    private static void InvokeAssetEditorVoid(CopperfinAssetEditorControl control, string methodName, params object?[] args)
     {
         var method = typeof(CopperfinAssetEditorControl).GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic);
         if (method is null)
@@ -1120,6 +1220,17 @@ internal static class Program
         }
 
         method.Invoke(control, args);
+    }
+
+    private static object? InvokeAssetEditorObject(CopperfinAssetEditorControl control, string methodName, params object?[] args)
+    {
+        var method = typeof(CopperfinAssetEditorControl).GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic);
+        if (method is null)
+        {
+            throw new InvalidOperationException($"Could not find CopperfinAssetEditorControl smoke hook {methodName}.");
+        }
+
+        return method.Invoke(control, args);
     }
 
     private static string InvokeDesignSurfaceString(CopperfinDesignSurfaceControl surface, string methodName, params object[] args)
@@ -1218,6 +1329,17 @@ internal static class Program
         }
 
         return propertyGrid;
+    }
+
+    private static void SetCurrentSnapshot(CopperfinAssetEditorControl control, CopperfinStudioSnapshotDocument snapshot)
+    {
+        var field = typeof(CopperfinAssetEditorControl).GetField("currentSnapshot", BindingFlags.Instance | BindingFlags.NonPublic);
+        if (field is null)
+        {
+            throw new InvalidOperationException("Could not set private currentSnapshot.");
+        }
+
+        field.SetValue(control, snapshot);
     }
 
     private static IEnumerable<Label> FindLabels(Control root)
