@@ -209,4 +209,25 @@ internal static class CopperfinStudioSnapshotClient
             studioHostPath!,
             CopperfinStudioHostBridge.BuildRestoreObjectArguments(assetPath, recordIndex, uniqueId));
     }
+
+    public static CopperfinStudioSnapshotResult TryDuplicateObject(
+        string assetPath,
+        int recordIndex,
+        string? uniqueId,
+        string newUniqueId)
+    {
+        var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
+        if (string.IsNullOrWhiteSpace(studioHostPath))
+        {
+            return new CopperfinStudioSnapshotResult
+            {
+                Success = false,
+                Error = Localization.Text("AssetEditor.Dialog.StudioHostMissing")
+            };
+        }
+
+        return RunSnapshotCommand(
+            studioHostPath!,
+            CopperfinStudioHostBridge.BuildDuplicateObjectArguments(assetPath, recordIndex, uniqueId, newUniqueId));
+    }
 }

@@ -33,6 +33,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly Button launchButton;
     private readonly Button revealButton;
     private readonly Button refreshButton;
+    private readonly Button duplicateObjectButton;
     private readonly Button deleteObjectButton;
     private readonly Button restoreObjectButton;
     private readonly Button buildButton;
@@ -154,6 +155,14 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 LoadDocument(currentPath!);
             }
         };
+
+        duplicateObjectButton = new Button
+        {
+            AutoSize = true,
+            Text = this.localization.Text("AssetEditor.ObjectLifecycle.DuplicateButton"),
+            Visible = false
+        };
+        duplicateObjectButton.Click += (_, _) => TryHandleDuplicateObjectCommand();
 
         deleteObjectButton = new Button
         {
@@ -551,6 +560,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         buttonPanel.Controls.Add(launchButton);
         buttonPanel.Controls.Add(revealButton);
         buttonPanel.Controls.Add(refreshButton);
+        buttonPanel.Controls.Add(duplicateObjectButton);
         buttonPanel.Controls.Add(deleteObjectButton);
         buttonPanel.Controls.Add(restoreObjectButton);
         buttonPanel.Controls.Add(buildButton);
@@ -1161,6 +1171,53 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         return true;
     }
 
+    private bool TryHandleDuplicateObjectCommand()
+    {
+        if (currentSnapshot?.AssetFamily is not ("report" or "label") || string.IsNullOrWhiteSpace(currentPath))
+        {
+            return false;
+        }
+
+        var selectedObject = TryGetSelectedSnapshotObject();
+        if (selectedObject is null)
+        {
+            return false;
+        }
+
+        var explorerSelection = CaptureExplorerSelectionState();
+        var sourceUniqueId = TryReadObjectUniqueId(selectedObject);
+        var duplicateUniqueId = CreateDuplicateObjectUniqueId();
+        snapshotStatusLabel.Text = this.localization.Text("AssetEditor.ObjectLifecycle.Duplicate.Executing");
+
+        var duplicateResult = CopperfinStudioSnapshotClient.TryDuplicateObject(
+            currentPath!,
+            selectedObject.RecordIndex,
+            sourceUniqueId,
+            duplicateUniqueId);
+        if (!duplicateResult.Success || duplicateResult.Document is null)
+        {
+            snapshotStatusLabel.Text = this.localization.Format(
+                "AssetEditor.ObjectLifecycle.Duplicate.Failed",
+                duplicateResult.Error ?? string.Empty);
+            return false;
+        }
+
+        currentSnapshot = duplicateResult.Document;
+        detailsLabel.Text = BuildSnapshotDetailsText(new FileInfo(currentPath!), currentSnapshot);
+        snapshotStatusLabel.Text = this.localization.Format(
+            "AssetEditor.ObjectLifecycle.Duplicate.Completed",
+            currentSnapshot.Objects.Count,
+            currentSnapshot.FieldCount);
+        PopulateSectionList(explorerSelection);
+        SyncExplorerSelection();
+        LoadSurface();
+
+        var duplicatedRecordIndex = TryReadObjectRecordIndex(currentSnapshot, duplicateUniqueId) ?? selectedObject.RecordIndex;
+        designSurface.SelectRecord(duplicatedRecordIndex);
+        SyncSelectionFromSurface(duplicatedRecordIndex);
+        return true;
+    }
+
     private TextBoxBase? TryFindFocusedUndoTextBox()
     {
         return TryFindFocusedUndoTextBox(this);
@@ -1614,8 +1671,11 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         var selectedObject = currentSnapshot?.AssetFamily is "report" or "label"
             ? TryGetSelectedSnapshotObject()
             : null;
+        var showDuplicate = selectedObject is not null;
         var showDelete = selectedObject is not null && !selectedObject.Deleted;
         var showRestore = selectedObject is not null && selectedObject.Deleted;
+        duplicateObjectButton.Visible = showDuplicate;
+        duplicateObjectButton.Enabled = showDuplicate && !string.IsNullOrWhiteSpace(currentPath);
         deleteObjectButton.Visible = showDelete;
         deleteObjectButton.Enabled = showDelete && !string.IsNullOrWhiteSpace(currentPath);
         restoreObjectButton.Visible = showRestore;
@@ -1715,6 +1775,22 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 string.Equals(property.Name, "UNIQUEID", StringComparison.OrdinalIgnoreCase) &&
                 !string.IsNullOrWhiteSpace(property.Value))
             ?.Value;
+    }
+
+    private static int? TryReadObjectRecordIndex(CopperfinStudioSnapshotDocument snapshot, string uniqueId)
+    {
+        return snapshot.Objects
+            .FirstOrDefault(snapshotObject =>
+                string.Equals(TryReadObjectUniqueId(snapshotObject), uniqueId, StringComparison.OrdinalIgnoreCase))
+            ?.RecordIndex;
+    }
+
+    private static string CreateDuplicateObjectUniqueId()
+    {
+        var configured = Environment.GetEnvironmentVariable("COPPERFIN_DUPLICATE_OBJECT_UNIQUE_ID");
+        return string.IsNullOrWhiteSpace(configured)
+            ? Guid.NewGuid().ToString("D")
+            : configured.Trim();
     }
 
     private ExplorerSelectionState? CaptureExplorerSelectionState()

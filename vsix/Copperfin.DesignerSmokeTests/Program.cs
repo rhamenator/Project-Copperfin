@@ -47,6 +47,7 @@ internal static class Program
         SmokeAssetEditorDeletedReportObjectHostUpdateRefreshesShellSummary();
         SmokeAssetEditorUndoRefreshesReportShellSummary();
         SmokeAssetEditorUndoRefreshesDeletedReportShellSummary();
+        SmokeAssetEditorDuplicateObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorDeleteObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorLabelObjectPropertyGridHostUpdate();
         SmokeAssetEditorUnplacedLabelObjectPropertyGridHostUpdate();
@@ -54,6 +55,7 @@ internal static class Program
         SmokeAssetEditorDeletedLabelObjectHostUpdateRefreshesShellSummary();
         SmokeAssetEditorUndoRefreshesLabelShellSummary();
         SmokeAssetEditorUndoRefreshesDeletedLabelShellSummary();
+        SmokeAssetEditorDuplicateObjectCommandRefreshesLabelShellSummary();
         SmokeAssetEditorRestoreObjectCommandRefreshesLabelShellSummary();
         SmokeAssetEditorDeletedReportObjectPropertyGridHostUpdate();
         SmokeAssetEditorDeletedLabelObjectPropertyGridHostUpdate();
@@ -263,6 +265,7 @@ internal static class Program
         Expect(HasButtonText(spanishControl, "Abrir en Studio nativo") &&
                HasButtonText(spanishControl, "Mostrar en Explorer") &&
                HasButtonText(spanishControl, "Actualizar") &&
+               HasButtonText(spanishControl, "Duplicar objeto") &&
                HasButtonText(spanishControl, "Eliminar objeto") &&
                HasButtonText(spanishControl, "Restaurar objeto"),
             "Spanish editor chrome should localize shell command buttons");
@@ -277,6 +280,7 @@ internal static class Program
         Expect(HasButtonText(portugueseControl, "Abrir no Studio nativo") &&
                HasButtonText(portugueseControl, "Revelar no Explorer") &&
                HasButtonText(portugueseControl, "Atualizar") &&
+               HasButtonText(portugueseControl, "Duplicar objeto") &&
                HasButtonText(portugueseControl, "Excluir objeto") &&
                HasButtonText(portugueseControl, "Restaurar objeto"),
             "Portuguese editor chrome should localize shell command buttons");
@@ -292,6 +296,7 @@ internal static class Program
         Expect(HasLabelTextContaining(pseudoControl, pseudoLocalization.Text("AssetEditor.Subtitle")),
             "Pseudo-localized editor chrome should route the embedded subtitle through the shared catalog");
         Expect(HasButtonText(pseudoControl, pseudoLocalization.Text("AssetEditor.RefreshButton")) &&
+               HasButtonText(pseudoControl, pseudoLocalization.Text("AssetEditor.ObjectLifecycle.DuplicateButton")) &&
                HasButtonText(pseudoControl, pseudoLocalization.Text("AssetEditor.ObjectLifecycle.DeleteButton")) &&
                HasButtonText(pseudoControl, pseudoLocalization.Text("AssetEditor.ObjectLifecycle.RestoreButton")) &&
                HasTabPageText(pseudoControl, pseudoLocalization.Text("AssetEditor.Tab.Summary")) &&
@@ -1875,6 +1880,146 @@ internal static class Program
         }
     }
 
+    private static void SmokeAssetEditorDuplicateObjectCommandRefreshesReportShellSummary()
+    {
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            Console.WriteLine("SKIP: shared asset-editor duplicate-object smoke requires a POSIX scriptable fake Studio host.");
+            return;
+        }
+
+        var snapshot = BuildAssetEditorDuplicateReportObjectSmokeSnapshot();
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
+        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var logPath = Path.Combine(tempRoot, "studio-host.log");
+        const string duplicateUniqueId = "middle-copy-guid";
+        var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
+        var previousDuplicateUniqueId = Environment.GetEnvironmentVariable("COPPERFIN_DUPLICATE_OBJECT_UNIQUE_ID");
+
+        try
+        {
+            File.WriteAllText(logPath, string.Empty);
+            CreateFakeStudioHostScript(scriptPath, BuildDuplicateReportObjectHostResponseJson());
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", scriptPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", logPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_DUPLICATE_OBJECT_UNIQUE_ID", duplicateUniqueId);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+
+            ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+            SetPrivateField(control, "currentPath", assetPath);
+            GetPrivateLabel(control, "detailsLabel").Text = InvokeAssetEditorString(control, "BuildSnapshotDetailsText", new FileInfo(assetPath), snapshot);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            sectionListView.Items[0].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            InvokeAssetEditorVoid(control, "LoadSurface");
+            Application.DoEvents();
+
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var duplicateButton = GetPrivateButton(control, "duplicateObjectButton");
+            var deleteButton = GetPrivateButton(control, "deleteObjectButton");
+            var restoreButton = GetPrivateButton(control, "restoreObjectButton");
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface.");
+
+            objectListView.Items[0].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(duplicateButton.Visible &&
+                   duplicateButton.Enabled &&
+                   deleteButton.Visible &&
+                   deleteButton.Enabled &&
+                   !restoreButton.Visible &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == 7,
+                "A report duplicate-object smoke should start from a live object selection with duplicate and delete commands exposed");
+
+            Expect(!HasLabelTextContaining(control, "Preview bounds:"),
+                "A report duplicate-object smoke should start without preview-bounds shell text when the initial snapshot omits preview bounds");
+
+            duplicateButton.PerformClick();
+            Application.DoEvents();
+
+            var logLines = File.ReadAllLines(logPath);
+            var invocationStartCount = logLines.Count(line => string.Equals(line, "BEGIN", StringComparison.Ordinal));
+            Expect(invocationStartCount == 1,
+                "Duplicating a report object through the shared asset editor should invoke the Studio host exactly once");
+
+            var invocationArguments = logLines.Skip(1).ToList();
+            Expect(invocationArguments.Contains("--from-vs") &&
+                   invocationArguments.Contains("--json") &&
+                   invocationArguments.Contains("--duplicate-object") &&
+                   invocationArguments.Contains("--record") &&
+                   invocationArguments.Contains("7") &&
+                   invocationArguments.Contains("--unique-id") &&
+                   invocationArguments.Contains("middle-field-guid") &&
+                   invocationArguments.Contains("--new-unique-id") &&
+                   invocationArguments.Contains(duplicateUniqueId) &&
+                   invocationArguments.Contains("--path") &&
+                   invocationArguments.Contains(assetPath),
+                "Duplicating a report object through the shared asset editor should send one invariant duplicate-object command through the host contract");
+
+            Expect(HasLabelTextContaining(control, "Preview bounds: L 1200 T 2600 R 6200 B 3200   Size: 5000 x 600") &&
+                   HasLabelTextContaining(control, "Duplicated object. Snapshot loaded: 2 object rows, 5 fields.") &&
+                   string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Detail", StringComparison.Ordinal) &&
+                   string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.SubItems[2].Text, "10", StringComparison.Ordinal) &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
+                   refreshedSelection.RecordIndex == 10 &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString(), "Live", StringComparison.Ordinal) &&
+                   duplicateButton.Visible &&
+                   duplicateButton.Enabled &&
+                   deleteButton.Visible &&
+                   deleteButton.Enabled &&
+                   !restoreButton.Visible &&
+                   string.Equals(ReadPrivateStringField(surface, "assetFamily"), "report", StringComparison.Ordinal) &&
+                   ReadPrivateNullableInt(surface, "selectedRecordIndex") == 10 &&
+                   ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
+                   !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+                "Duplicating a report object through the shared asset editor should refresh the shell summary and move shared selection continuity to the duplicated report object");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", previousLogPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_DUPLICATE_OBJECT_UNIQUE_ID", previousDuplicateUniqueId);
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeAssetEditorDeleteObjectCommandRefreshesReportShellSummary()
     {
         if (Path.DirectorySeparatorChar == '\\')
@@ -2825,6 +2970,146 @@ internal static class Program
         {
             Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
             Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", previousLogPath);
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
+    private static void SmokeAssetEditorDuplicateObjectCommandRefreshesLabelShellSummary()
+    {
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            Console.WriteLine("SKIP: shared asset-editor label duplicate-object smoke requires a POSIX scriptable fake Studio host.");
+            return;
+        }
+
+        var snapshot = BuildAssetEditorDuplicateLabelObjectSmokeSnapshot();
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
+        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var logPath = Path.Combine(tempRoot, "studio-host.log");
+        const string duplicateUniqueId = "middle-copy-guid";
+        var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
+        var previousDuplicateUniqueId = Environment.GetEnvironmentVariable("COPPERFIN_DUPLICATE_OBJECT_UNIQUE_ID");
+
+        try
+        {
+            File.WriteAllText(logPath, string.Empty);
+            CreateFakeStudioHostScript(scriptPath, BuildDuplicateLabelObjectHostResponseJson());
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", scriptPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", logPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_DUPLICATE_OBJECT_UNIQUE_ID", duplicateUniqueId);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+
+            ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+            SetPrivateField(control, "currentPath", assetPath);
+            GetPrivateLabel(control, "detailsLabel").Text = InvokeAssetEditorString(control, "BuildSnapshotDetailsText", new FileInfo(assetPath), snapshot);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            sectionListView.Items[0].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            InvokeAssetEditorVoid(control, "LoadSurface");
+            Application.DoEvents();
+
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var duplicateButton = GetPrivateButton(control, "duplicateObjectButton");
+            var deleteButton = GetPrivateButton(control, "deleteObjectButton");
+            var restoreButton = GetPrivateButton(control, "restoreObjectButton");
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared label design surface.");
+
+            objectListView.Items[0].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(duplicateButton.Visible &&
+                   duplicateButton.Enabled &&
+                   deleteButton.Visible &&
+                   deleteButton.Enabled &&
+                   !restoreButton.Visible &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == 7,
+                "A label duplicate-object smoke should start from a live object selection with duplicate and delete commands exposed");
+
+            Expect(!HasLabelTextContaining(control, "Preview bounds:"),
+                "A label duplicate-object smoke should start without preview-bounds shell text when the initial snapshot omits preview bounds");
+
+            duplicateButton.PerformClick();
+            Application.DoEvents();
+
+            var logLines = File.ReadAllLines(logPath);
+            var invocationStartCount = logLines.Count(line => string.Equals(line, "BEGIN", StringComparison.Ordinal));
+            Expect(invocationStartCount == 1,
+                "Duplicating a label object through the shared asset editor should invoke the Studio host exactly once");
+
+            var invocationArguments = logLines.Skip(1).ToList();
+            Expect(invocationArguments.Contains("--from-vs") &&
+                   invocationArguments.Contains("--json") &&
+                   invocationArguments.Contains("--duplicate-object") &&
+                   invocationArguments.Contains("--record") &&
+                   invocationArguments.Contains("7") &&
+                   invocationArguments.Contains("--unique-id") &&
+                   invocationArguments.Contains("middle-field-guid") &&
+                   invocationArguments.Contains("--new-unique-id") &&
+                   invocationArguments.Contains(duplicateUniqueId) &&
+                   invocationArguments.Contains("--path") &&
+                   invocationArguments.Contains(assetPath),
+                "Duplicating a label object through the shared asset editor should send one invariant duplicate-object command through the host contract");
+
+            Expect(HasLabelTextContaining(control, "Preview bounds: L 1200 T 2600 R 6200 B 3200   Size: 5000 x 600") &&
+                   HasLabelTextContaining(control, "Duplicated object. Snapshot loaded: 2 object rows, 5 fields.") &&
+                   string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Detail", StringComparison.Ordinal) &&
+                   string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.SubItems[2].Text, "10", StringComparison.Ordinal) &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
+                   refreshedSelection.RecordIndex == 10 &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString(), "Live", StringComparison.Ordinal) &&
+                   duplicateButton.Visible &&
+                   duplicateButton.Enabled &&
+                   deleteButton.Visible &&
+                   deleteButton.Enabled &&
+                   !restoreButton.Visible &&
+                   string.Equals(ReadPrivateStringField(surface, "assetFamily"), "label", StringComparison.Ordinal) &&
+                   ReadPrivateNullableInt(surface, "selectedRecordIndex") == 10 &&
+                   ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
+                   !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+                "Duplicating a label object through the shared asset editor should refresh the shell summary and move shared selection continuity to the duplicated label object");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", previousLogPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_DUPLICATE_OBJECT_UNIQUE_ID", previousDuplicateUniqueId);
 
             try
             {
@@ -6278,6 +6563,63 @@ internal static class Program
         };
     }
 
+    private static CopperfinStudioSnapshotDocument BuildAssetEditorDuplicateLabelObjectSmokeSnapshot()
+    {
+        return new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "label",
+            FieldCount = 5,
+            Objects = new List<CopperfinStudioSnapshotObject>
+            {
+                new()
+                {
+                    RecordIndex = 7,
+                    Title = "middle.value",
+                    Subtitle = "label",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "UNIQUEID", Value = "middle-field-guid" },
+                        new() { Name = "HPOS", Value = "1200" },
+                        new() { Name = "VPOS", Value = "2600" },
+                        new() { Name = "WIDTH", Value = "4000" },
+                        new() { Name = "HEIGHT", Value = "600" },
+                        new() { Name = "EXPR", Value = "middle.value" }
+                    }
+                }
+            },
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                IsLabel = true,
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail_1",
+                        Title = "Detail",
+                        BandKind = "detail",
+                        RecordIndex = 42,
+                        Top = 2000,
+                        Height = 5000,
+                        Objects = new List<CopperfinStudioReportLayoutObject>
+                        {
+                            new()
+                            {
+                                RecordIndex = 7,
+                                ObjectKind = "label",
+                                Title = "middle.value",
+                                Expression = "middle.value",
+                                Left = 1200,
+                                Top = 2600,
+                                Width = 4000,
+                                Height = 600
+                            }
+                        }
+                    }
+                }
+            }
+        };
+    }
+
     private static CopperfinStudioSnapshotDocument BuildAssetEditorRestoreLabelObjectSmokeSnapshot()
     {
         return new CopperfinStudioSnapshotDocument
@@ -6425,6 +6767,62 @@ internal static class Program
                                 Left = 1400,
                                 Top = 9400,
                                 Width = 3600,
+                                Height = 600
+                            }
+                        }
+                    }
+                }
+            }
+        };
+    }
+
+    private static CopperfinStudioSnapshotDocument BuildAssetEditorDuplicateReportObjectSmokeSnapshot()
+    {
+        return new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "report",
+            FieldCount = 5,
+            Objects = new List<CopperfinStudioSnapshotObject>
+            {
+                new()
+                {
+                    RecordIndex = 7,
+                    Title = "middle.value",
+                    Subtitle = "field",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "UNIQUEID", Value = "middle-field-guid" },
+                        new() { Name = "HPOS", Value = "1200" },
+                        new() { Name = "VPOS", Value = "2600" },
+                        new() { Name = "WIDTH", Value = "4000" },
+                        new() { Name = "HEIGHT", Value = "600" },
+                        new() { Name = "EXPR", Value = "middle.value" }
+                    }
+                }
+            },
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail_1",
+                        Title = "Detail",
+                        BandKind = "detail",
+                        RecordIndex = 42,
+                        Top = 2000,
+                        Height = 5000,
+                        Objects = new List<CopperfinStudioReportLayoutObject>
+                        {
+                            new()
+                            {
+                                RecordIndex = 7,
+                                ObjectKind = "field",
+                                Title = "middle.value",
+                                Expression = "middle.value",
+                                Left = 1200,
+                                Top = 2600,
+                                Width = 4000,
                                 Height = 600
                             }
                         }
@@ -6718,6 +7116,13 @@ internal static class Program
 """;
     }
 
+    private static string BuildDuplicateLabelObjectHostResponseJson()
+    {
+        return """
+{"Status":"ok","Document":{"AssetFamily":"label","FieldCount":5,"Objects":[{"RecordIndex":7,"Title":"middle.value","Subtitle":"label","Properties":[{"Name":"UNIQUEID","Value":"middle-field-guid"},{"Name":"HPOS","Value":"1200"},{"Name":"VPOS","Value":"2600"},{"Name":"WIDTH","Value":"4000"},{"Name":"HEIGHT","Value":"600"},{"Name":"EXPR","Value":"middle.value"}]},{"RecordIndex":10,"Title":"middle.value.copy","Subtitle":"label","Properties":[{"Name":"UNIQUEID","Value":"middle-copy-guid"},{"Name":"HPOS","Value":"2200"},{"Name":"VPOS","Value":"2600"},{"Name":"WIDTH","Value":"4000"},{"Name":"HEIGHT","Value":"600"},{"Name":"EXPR","Value":"middle.value"}]}],"ReportLayout":{"IsLabel":true,"PreviewBoundsAvailable":true,"PreviewBoundsLeft":1200,"PreviewBoundsTop":2600,"PreviewBoundsRight":6200,"PreviewBoundsBottom":3200,"PreviewBoundsWidth":5000,"PreviewBoundsHeight":600,"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":7,"ObjectKind":"label","Title":"middle.value","Expression":"middle.value","Left":1200,"Top":2600,"Width":4000,"Height":600},{"RecordIndex":10,"ObjectKind":"label","Title":"middle.value.copy","Expression":"middle.value","Left":2200,"Top":2600,"Width":4000,"Height":600}]}],"DeletedSections":[],"UnplacedObjects":[]}}}
+""";
+    }
+
     private static string BuildDeletedReportObjectUpdateHostResponseJson()
     {
         return """
@@ -6736,6 +7141,13 @@ internal static class Program
     {
         return """
 {"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[{"RecordIndex":6,"Deleted":true,"Title":"customer.company","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"live-detail-guid"},{"Name":"HPOS","Value":"1500"},{"Name":"VPOS","Value":"2600"},{"Name":"WIDTH","Value":"4000"},{"Name":"HEIGHT","Value":"500"},{"Name":"EXPR","Value":"customer.company"}]}],"ReportLayout":{"DeletedPreviewBoundsAvailable":true,"DeletedPreviewBoundsLeft":1500,"DeletedPreviewBoundsTop":2600,"DeletedPreviewBoundsRight":5500,"DeletedPreviewBoundsBottom":3100,"DeletedPreviewBoundsWidth":4000,"DeletedPreviewBoundsHeight":500,"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[{"Id":"deleted_detail","Title":"Detail","BandKind":"detail","RecordIndex":52,"Deleted":true,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":6,"ObjectKind":"field","Title":"customer.company","Expression":"customer.company","Left":1500,"Top":2600,"Width":4000,"Height":500}]}],"UnplacedObjects":[]}}}
+""";
+    }
+
+    private static string BuildDuplicateReportObjectHostResponseJson()
+    {
+        return """
+{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[{"RecordIndex":7,"Title":"middle.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"middle-field-guid"},{"Name":"HPOS","Value":"1200"},{"Name":"VPOS","Value":"2600"},{"Name":"WIDTH","Value":"4000"},{"Name":"HEIGHT","Value":"600"},{"Name":"EXPR","Value":"middle.value"}]},{"RecordIndex":10,"Title":"middle.value.copy","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"middle-copy-guid"},{"Name":"HPOS","Value":"2200"},{"Name":"VPOS","Value":"2600"},{"Name":"WIDTH","Value":"4000"},{"Name":"HEIGHT","Value":"600"},{"Name":"EXPR","Value":"middle.value"}]}],"ReportLayout":{"PreviewBoundsAvailable":true,"PreviewBoundsLeft":1200,"PreviewBoundsTop":2600,"PreviewBoundsRight":6200,"PreviewBoundsBottom":3200,"PreviewBoundsWidth":5000,"PreviewBoundsHeight":600,"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":7,"ObjectKind":"field","Title":"middle.value","Expression":"middle.value","Left":1200,"Top":2600,"Width":4000,"Height":600},{"RecordIndex":10,"ObjectKind":"field","Title":"middle.value.copy","Expression":"middle.value","Left":2200,"Top":2600,"Width":4000,"Height":600}]}],"DeletedSections":[],"UnplacedObjects":[]}}}
 """;
     }
 

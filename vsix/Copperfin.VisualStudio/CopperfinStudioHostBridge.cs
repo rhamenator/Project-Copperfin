@@ -67,6 +67,16 @@ internal static class CopperfinStudioHostBridge
         return BuildObjectLifecycleArguments(documentPath, "--restore-object", recordIndex, uniqueId);
     }
 
+    public static string BuildDuplicateObjectArguments(
+        string documentPath,
+        int recordIndex,
+        string? uniqueId,
+        string newUniqueId)
+    {
+        var arguments = BuildObjectLifecycleArguments(documentPath, "--duplicate-object", recordIndex, uniqueId);
+        return $"{arguments} --new-unique-id {Quote(newUniqueId)}";
+    }
+
     public static bool Launch(string studioHostPath, string documentPath, bool readOnly = false)
     {
         var startInfo = new DiagnosticsStartInfo
