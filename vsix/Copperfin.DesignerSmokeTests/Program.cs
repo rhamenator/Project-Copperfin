@@ -37,6 +37,7 @@ internal static class Program
         SmokeReportSectionScopedObjectFiltering();
         SmokeReportSectionPropertyGridSelection();
         SmokeReportSelectionPreservedAcrossExplorerRefresh();
+        SmokeDeletedReportSectionExplorerSelection();
         SmokeAssetEditorWithRealAsset(
             @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx",
             expectSection: "Detail");
@@ -809,6 +810,73 @@ internal static class Program
         Expect(objectPropertyGrid.SelectedObject is CopperfinDesignerSelection refreshedObjectSelection &&
                refreshedObjectSelection.RecordIndex == 10,
             "Report object property-grid selection should remain object-rooted after explorer refresh");
+    }
+
+    private static void SmokeDeletedReportSectionExplorerSelection()
+    {
+        var snapshot = new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "report",
+            Objects = new List<CopperfinStudioSnapshotObject>
+            {
+                new() { RecordIndex = 13, Title = "deleted.footer.total", Subtitle = "field", Deleted = true }
+            },
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                DeletedSections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "deleted_footer",
+                        Title = "Summary",
+                        BandKind = "summary",
+                        RecordIndex = 51,
+                        Deleted = true,
+                        Top = 9000,
+                        Height = 1400,
+                        Objects = new List<CopperfinStudioReportLayoutObject>
+                        {
+                            new() { RecordIndex = 13 }
+                        }
+                    }
+                }
+            }
+        };
+
+        using var control = new CopperfinAssetEditorControl();
+        ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+
+        var sectionListView = GetPrivateListView(control, "sectionListView");
+        var objectListView = GetPrivateListView(control, "objectListView");
+        Expect(sectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, "Summary (deleted)", StringComparison.Ordinal)),
+            "Report explorer should surface deleted section rows");
+
+        InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+        var propertyGrid = GetPrivatePropertyGrid(control);
+        Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection deletedSectionSelection &&
+               deletedSectionSelection.RecordIndex == 51,
+            "Deleted report section explorer selection should produce a section-rooted property-grid selection");
+        Expect(objectListView.Items.Cast<ListViewItem>().Select(item => item.Text).SequenceEqual(new[] { "deleted.footer.total" }),
+            "Deleted report section explorer selection should filter object rows to deleted section membership");
+
+        using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
+        ApplyReportSnapshotForExplorerSmoke(spanishControl, snapshot);
+        var spanishSectionListView = GetPrivateListView(spanishControl, "sectionListView");
+        Expect(spanishSectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, "Summary (eliminada)", StringComparison.Ordinal)),
+            "Spanish report explorer should localize deleted section rows");
+
+        using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
+        ApplyReportSnapshotForExplorerSmoke(portugueseControl, snapshot);
+        var portugueseSectionListView = GetPrivateListView(portugueseControl, "sectionListView");
+        Expect(portugueseSectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, "Summary (excluída)", StringComparison.Ordinal)),
+            "Portuguese report explorer should localize deleted section rows");
+
+        var pseudoLocalization = new CopperfinLocalization("qps-ploc");
+        using var pseudoControl = new CopperfinAssetEditorControl(pseudoLocalization);
+        ApplyReportSnapshotForExplorerSmoke(pseudoControl, snapshot);
+        var pseudoSectionListView = GetPrivateListView(pseudoControl, "sectionListView");
+        Expect(pseudoSectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, pseudoLocalization.Format("AssetEditor.ReportSection.Deleted", "Summary"), StringComparison.Ordinal)),
+            "Pseudo-localized report explorer should route deleted section rows through the shared catalog");
     }
 
     private static void SmokeAssetEditorWithRealAsset(string path, string expectSection)

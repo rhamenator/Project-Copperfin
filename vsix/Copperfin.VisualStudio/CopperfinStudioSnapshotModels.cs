@@ -65,6 +65,7 @@ internal sealed class CopperfinStudioReportLayout
     public List<CopperfinStudioReportGrouping> Groupings { get; set; } = new();
     public List<CopperfinStudioNamedValue> Settings { get; set; } = new();
     public List<CopperfinStudioReportSection> Sections { get; set; } = new();
+    public List<CopperfinStudioReportSection> DeletedSections { get; set; } = new();
     public List<CopperfinStudioReportLayoutObject> UnplacedObjects { get; set; } = new();
 }
 
@@ -95,6 +96,7 @@ internal sealed class CopperfinStudioReportSection
     public string Title { get; set; } = string.Empty;
     public string BandKind { get; set; } = string.Empty;
     public int RecordIndex { get; set; }
+    public bool Deleted { get; set; }
     public bool GroupingContextAvailable { get; set; }
     public int? GroupingIndex { get; set; }
     public int? GroupingNestingDepth { get; set; }

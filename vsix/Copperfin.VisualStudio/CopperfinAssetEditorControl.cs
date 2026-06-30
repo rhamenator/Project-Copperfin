@@ -740,14 +740,15 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         sectionListView.BeginUpdate();
         sectionListView.Items.Clear();
 
-        if (currentSnapshot?.ReportLayout?.Sections is { Count: > 0 })
+        if (currentSnapshot?.ReportLayout is { } reportLayout &&
+            (reportLayout.Sections.Count > 0 || reportLayout.DeletedSections.Count > 0 || reportLayout.UnplacedObjects.Count > 0))
         {
             sectionListView.Visible = true;
             leftExplorerSplit.Panel1Collapsed = false;
             sectionListView.Columns[0].Text = this.localization.Text("AssetEditor.Column.Section");
             sectionListView.Columns[1].Text = this.localization.Text("AssetEditor.Column.Objects");
             sectionListView.Columns[2].Text = this.localization.Text("AssetEditor.Column.Top");
-            foreach (var section in currentSnapshot.ReportLayout.Sections)
+            foreach (var section in reportLayout.Sections)
             {
                 var item = new ListViewItem(BuildReportSectionListTitle(section));
                 item.SubItems.Add(section.Objects.Count.ToString());
@@ -756,13 +757,23 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 sectionListView.Items.Add(item);
             }
 
-            if (currentSnapshot.ReportLayout.UnplacedObjects.Count > 0)
+            foreach (var section in reportLayout.DeletedSections)
+            {
+                var item = new ListViewItem(BuildDeletedReportSectionListTitle(section));
+                item.SubItems.Add(section.Objects.Count.ToString());
+                item.SubItems.Add(section.Top.ToString());
+                item.Tag = section;
+                item.ForeColor = Color.Firebrick;
+                sectionListView.Items.Add(item);
+            }
+
+            if (reportLayout.UnplacedObjects.Count > 0)
             {
                 var unplacedScope = new ReportUnplacedObjectScope();
-                unplacedScope.RecordIndexes.AddRange(currentSnapshot.ReportLayout.UnplacedObjects.Select(item => item.RecordIndex));
+                unplacedScope.RecordIndexes.AddRange(reportLayout.UnplacedObjects.Select(item => item.RecordIndex));
 
                 var item = new ListViewItem(L("AssetEditor.ReportSection.UnplacedObjects"));
-                item.SubItems.Add(currentSnapshot.ReportLayout.UnplacedObjects.Count.ToString());
+                item.SubItems.Add(reportLayout.UnplacedObjects.Count.ToString());
                 item.SubItems.Add(string.Empty);
                 item.Tag = unplacedScope;
                 sectionListView.Items.Add(item);
@@ -1568,6 +1579,11 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             "AssetEditor.ReportSection.WithGroupingExpression",
             section.Title ?? string.Empty,
             section.GroupingExpression ?? string.Empty);
+    }
+
+    private string BuildDeletedReportSectionListTitle(CopperfinStudioReportSection section)
+    {
+        return F("AssetEditor.ReportSection.Deleted", BuildReportSectionListTitle(section));
     }
 
     private string L(string key) => this.localization.Text(key);
