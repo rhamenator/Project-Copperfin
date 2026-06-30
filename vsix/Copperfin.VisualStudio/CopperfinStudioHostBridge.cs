@@ -77,6 +77,16 @@ internal static class CopperfinStudioHostBridge
         return $"{arguments} --new-unique-id {Quote(newUniqueId)}";
     }
 
+    public static string BuildReorderObjectArguments(
+        string documentPath,
+        int recordIndex,
+        string? uniqueId,
+        string placement)
+    {
+        var arguments = BuildObjectLifecycleArguments(documentPath, "--reorder-object", recordIndex, uniqueId);
+        return $"{arguments} --placement {Quote(placement)}";
+    }
+
     public static bool Launch(string studioHostPath, string documentPath, bool readOnly = false)
     {
         var startInfo = new DiagnosticsStartInfo

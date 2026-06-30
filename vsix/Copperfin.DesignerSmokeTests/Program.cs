@@ -48,6 +48,7 @@ internal static class Program
         SmokeAssetEditorUndoRefreshesReportShellSummary();
         SmokeAssetEditorUndoRefreshesDeletedReportShellSummary();
         SmokeAssetEditorDuplicateObjectCommandRefreshesReportShellSummary();
+        SmokeAssetEditorReorderFrontObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorDeleteObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorLabelObjectPropertyGridHostUpdate();
         SmokeAssetEditorUnplacedLabelObjectPropertyGridHostUpdate();
@@ -56,6 +57,7 @@ internal static class Program
         SmokeAssetEditorUndoRefreshesLabelShellSummary();
         SmokeAssetEditorUndoRefreshesDeletedLabelShellSummary();
         SmokeAssetEditorDuplicateObjectCommandRefreshesLabelShellSummary();
+        SmokeAssetEditorReorderBackObjectCommandRefreshesLabelShellSummary();
         SmokeAssetEditorRestoreObjectCommandRefreshesLabelShellSummary();
         SmokeAssetEditorDeletedReportObjectPropertyGridHostUpdate();
         SmokeAssetEditorDeletedLabelObjectPropertyGridHostUpdate();
@@ -2149,6 +2151,153 @@ internal static class Program
         }
     }
 
+    private static void SmokeAssetEditorReorderFrontObjectCommandRefreshesReportShellSummary()
+    {
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            Console.WriteLine("SKIP: shared asset-editor reorder-front smoke requires a POSIX scriptable fake Studio host.");
+            return;
+        }
+
+        var snapshot = BuildAssetEditorReorderFrontReportObjectSmokeSnapshot();
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
+        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var logPath = Path.Combine(tempRoot, "studio-host.log");
+        var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
+
+        try
+        {
+            File.WriteAllText(logPath, string.Empty);
+            CreateFakeStudioHostScript(scriptPath, BuildReorderFrontReportObjectHostResponseJson());
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", scriptPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", logPath);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+
+            ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+            SetPrivateField(control, "currentPath", assetPath);
+            GetPrivateLabel(control, "detailsLabel").Text = InvokeAssetEditorString(control, "BuildSnapshotDetailsText", new FileInfo(assetPath), snapshot);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            sectionListView.Items[0].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            InvokeAssetEditorVoid(control, "LoadSurface");
+            Application.DoEvents();
+
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var duplicateButton = GetPrivateButton(control, "duplicateObjectButton");
+            var reorderFrontButton = GetPrivateButton(control, "reorderFrontObjectButton");
+            var reorderBackButton = GetPrivateButton(control, "reorderBackObjectButton");
+            var deleteButton = GetPrivateButton(control, "deleteObjectButton");
+            var restoreButton = GetPrivateButton(control, "restoreObjectButton");
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface.");
+
+            objectListView.Items[1].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(objectListView.Items.Cast<ListViewItem>().Select(item => item.Text).SequenceEqual(new[] { "first.value", "middle.value", "last.value" }) &&
+                   duplicateButton.Visible &&
+                   duplicateButton.Enabled &&
+                   reorderFrontButton.Visible &&
+                   reorderFrontButton.Enabled &&
+                   reorderBackButton.Visible &&
+                   reorderBackButton.Enabled &&
+                   deleteButton.Visible &&
+                   deleteButton.Enabled &&
+                   !restoreButton.Visible &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == 7,
+                "A report reorder-front smoke should start from a live object selection with shared duplicate, reorder, and delete commands exposed");
+
+            Expect(!HasLabelTextContaining(control, "Preview bounds:"),
+                "A report reorder-front smoke should start without preview-bounds shell text when the initial snapshot omits preview bounds");
+
+            reorderFrontButton.PerformClick();
+            Application.DoEvents();
+
+            var logLines = File.ReadAllLines(logPath);
+            var invocationStartCount = logLines.Count(line => string.Equals(line, "BEGIN", StringComparison.Ordinal));
+            Expect(invocationStartCount == 1,
+                "Reordering a report object to the front through the shared asset editor should invoke the Studio host exactly once");
+
+            var invocationArguments = logLines.Skip(1).ToList();
+            Expect(invocationArguments.Contains("--from-vs") &&
+                   invocationArguments.Contains("--json") &&
+                   invocationArguments.Contains("--reorder-object") &&
+                   invocationArguments.Contains("--record") &&
+                   invocationArguments.Contains("7") &&
+                   invocationArguments.Contains("--unique-id") &&
+                   invocationArguments.Contains("middle-field-guid") &&
+                   invocationArguments.Contains("--placement") &&
+                   invocationArguments.Contains("front") &&
+                   invocationArguments.Contains("--path") &&
+                   invocationArguments.Contains(assetPath),
+                "Reordering a report object to the front through the shared asset editor should send one invariant reorder-object command through the host contract");
+
+            Expect(HasLabelTextContaining(control, "Preview bounds: L 1000 T 2400 R 5900 B 3100   Size: 4900 x 700") &&
+                   HasLabelTextContaining(control, "Moved object to front. Snapshot loaded: 3 object rows, 5 fields.") &&
+                   string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Detail", StringComparison.Ordinal) &&
+                   objectListView.Items.Cast<ListViewItem>().Select(item => item.Text).SequenceEqual(new[] { "middle.value", "first.value", "last.value" }) &&
+                   string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "middle.value", StringComparison.Ordinal) &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
+                   refreshedSelection.RecordIndex == 7 &&
+                   duplicateButton.Visible &&
+                   duplicateButton.Enabled &&
+                   reorderFrontButton.Visible &&
+                   reorderFrontButton.Enabled &&
+                   reorderBackButton.Visible &&
+                   reorderBackButton.Enabled &&
+                   deleteButton.Visible &&
+                   deleteButton.Enabled &&
+                   !restoreButton.Visible &&
+                   string.Equals(ReadPrivateStringField(surface, "assetFamily"), "report", StringComparison.Ordinal) &&
+                   ReadPrivateNullableInt(surface, "selectedRecordIndex") == 7 &&
+                   ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
+                   !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+                "Reordering a report object to the front through the shared asset editor should refresh the shell summary, reorder visible rows, and preserve report selection continuity");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", previousLogPath);
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeAssetEditorLabelSectionPropertyGridHostUpdate()
     {
         if (Path.DirectorySeparatorChar == '\\')
@@ -3234,6 +3383,153 @@ internal static class Program
                    ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
                    !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
                 "Restoring a label object through the shared asset editor should refresh the shell summary, preserve record identity, and flip the shared command surface back to delete");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", previousLogPath);
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
+    private static void SmokeAssetEditorReorderBackObjectCommandRefreshesLabelShellSummary()
+    {
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            Console.WriteLine("SKIP: shared asset-editor reorder-back smoke requires a POSIX scriptable fake Studio host.");
+            return;
+        }
+
+        var snapshot = BuildAssetEditorReorderBackLabelObjectSmokeSnapshot();
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
+        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var logPath = Path.Combine(tempRoot, "studio-host.log");
+        var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
+
+        try
+        {
+            File.WriteAllText(logPath, string.Empty);
+            CreateFakeStudioHostScript(scriptPath, BuildReorderBackLabelObjectHostResponseJson());
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", scriptPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", logPath);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+
+            ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+            SetPrivateField(control, "currentPath", assetPath);
+            GetPrivateLabel(control, "detailsLabel").Text = InvokeAssetEditorString(control, "BuildSnapshotDetailsText", new FileInfo(assetPath), snapshot);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            sectionListView.Items[0].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            InvokeAssetEditorVoid(control, "LoadSurface");
+            Application.DoEvents();
+
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var duplicateButton = GetPrivateButton(control, "duplicateObjectButton");
+            var reorderFrontButton = GetPrivateButton(control, "reorderFrontObjectButton");
+            var reorderBackButton = GetPrivateButton(control, "reorderBackObjectButton");
+            var deleteButton = GetPrivateButton(control, "deleteObjectButton");
+            var restoreButton = GetPrivateButton(control, "restoreObjectButton");
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared label design surface.");
+
+            objectListView.Items[0].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(objectListView.Items.Cast<ListViewItem>().Select(item => item.Text).SequenceEqual(new[] { "first.value", "middle.value", "last.value" }) &&
+                   duplicateButton.Visible &&
+                   duplicateButton.Enabled &&
+                   reorderFrontButton.Visible &&
+                   reorderFrontButton.Enabled &&
+                   reorderBackButton.Visible &&
+                   reorderBackButton.Enabled &&
+                   deleteButton.Visible &&
+                   deleteButton.Enabled &&
+                   !restoreButton.Visible &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == 6,
+                "A label reorder-back smoke should start from a live object selection with shared duplicate, reorder, and delete commands exposed");
+
+            Expect(!HasLabelTextContaining(control, "Preview bounds:"),
+                "A label reorder-back smoke should start without preview-bounds shell text when the initial snapshot omits preview bounds");
+
+            reorderBackButton.PerformClick();
+            Application.DoEvents();
+
+            var logLines = File.ReadAllLines(logPath);
+            var invocationStartCount = logLines.Count(line => string.Equals(line, "BEGIN", StringComparison.Ordinal));
+            Expect(invocationStartCount == 1,
+                "Reordering a label object to the back through the shared asset editor should invoke the Studio host exactly once");
+
+            var invocationArguments = logLines.Skip(1).ToList();
+            Expect(invocationArguments.Contains("--from-vs") &&
+                   invocationArguments.Contains("--json") &&
+                   invocationArguments.Contains("--reorder-object") &&
+                   invocationArguments.Contains("--record") &&
+                   invocationArguments.Contains("6") &&
+                   invocationArguments.Contains("--unique-id") &&
+                   invocationArguments.Contains("first-field-guid") &&
+                   invocationArguments.Contains("--placement") &&
+                   invocationArguments.Contains("back") &&
+                   invocationArguments.Contains("--path") &&
+                   invocationArguments.Contains(assetPath),
+                "Reordering a label object to the back through the shared asset editor should send one invariant reorder-object command through the host contract");
+
+            Expect(HasLabelTextContaining(control, "Preview bounds: L 1400 T 2600 R 6800 B 3200   Size: 5400 x 600") &&
+                   HasLabelTextContaining(control, "Moved object to back. Snapshot loaded: 3 object rows, 5 fields.") &&
+                   string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Detail", StringComparison.Ordinal) &&
+                   objectListView.Items.Cast<ListViewItem>().Select(item => item.Text).SequenceEqual(new[] { "middle.value", "last.value", "first.value" }) &&
+                   string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "first.value", StringComparison.Ordinal) &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
+                   refreshedSelection.RecordIndex == 6 &&
+                   duplicateButton.Visible &&
+                   duplicateButton.Enabled &&
+                   reorderFrontButton.Visible &&
+                   reorderFrontButton.Enabled &&
+                   reorderBackButton.Visible &&
+                   reorderBackButton.Enabled &&
+                   deleteButton.Visible &&
+                   deleteButton.Enabled &&
+                   !restoreButton.Visible &&
+                   string.Equals(ReadPrivateStringField(surface, "assetFamily"), "label", StringComparison.Ordinal) &&
+                   ReadPrivateNullableInt(surface, "selectedRecordIndex") == 6 &&
+                   ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
+                   !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+                "Reordering a label object to the back through the shared asset editor should refresh the shell summary, reorder visible rows, and preserve label selection continuity");
         }
         finally
         {
@@ -6620,6 +6916,115 @@ internal static class Program
         };
     }
 
+    private static CopperfinStudioSnapshotDocument BuildAssetEditorReorderBackLabelObjectSmokeSnapshot()
+    {
+        return new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "label",
+            FieldCount = 5,
+            Objects = new List<CopperfinStudioSnapshotObject>
+            {
+                new()
+                {
+                    RecordIndex = 6,
+                    Title = "first.value",
+                    Subtitle = "label",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "UNIQUEID", Value = "first-field-guid" },
+                        new() { Name = "HPOS", Value = "1400" },
+                        new() { Name = "VPOS", Value = "2600" },
+                        new() { Name = "WIDTH", Value = "3400" },
+                        new() { Name = "HEIGHT", Value = "600" },
+                        new() { Name = "EXPR", Value = "first.value" }
+                    }
+                },
+                new()
+                {
+                    RecordIndex = 7,
+                    Title = "middle.value",
+                    Subtitle = "label",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "UNIQUEID", Value = "middle-field-guid" },
+                        new() { Name = "HPOS", Value = "2500" },
+                        new() { Name = "VPOS", Value = "2600" },
+                        new() { Name = "WIDTH", Value = "3400" },
+                        new() { Name = "HEIGHT", Value = "600" },
+                        new() { Name = "EXPR", Value = "middle.value" }
+                    }
+                },
+                new()
+                {
+                    RecordIndex = 8,
+                    Title = "last.value",
+                    Subtitle = "label",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "UNIQUEID", Value = "last-field-guid" },
+                        new() { Name = "HPOS", Value = "3600" },
+                        new() { Name = "VPOS", Value = "2600" },
+                        new() { Name = "WIDTH", Value = "3200" },
+                        new() { Name = "HEIGHT", Value = "600" },
+                        new() { Name = "EXPR", Value = "last.value" }
+                    }
+                }
+            },
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                IsLabel = true,
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail_1",
+                        Title = "Detail",
+                        BandKind = "detail",
+                        RecordIndex = 42,
+                        Top = 2000,
+                        Height = 5000,
+                        Objects = new List<CopperfinStudioReportLayoutObject>
+                        {
+                            new()
+                            {
+                                RecordIndex = 6,
+                                ObjectKind = "label",
+                                Title = "first.value",
+                                Expression = "first.value",
+                                Left = 1400,
+                                Top = 2600,
+                                Width = 3400,
+                                Height = 600
+                            },
+                            new()
+                            {
+                                RecordIndex = 7,
+                                ObjectKind = "label",
+                                Title = "middle.value",
+                                Expression = "middle.value",
+                                Left = 2500,
+                                Top = 2600,
+                                Width = 3400,
+                                Height = 600
+                            },
+                            new()
+                            {
+                                RecordIndex = 8,
+                                ObjectKind = "label",
+                                Title = "last.value",
+                                Expression = "last.value",
+                                Left = 3600,
+                                Top = 2600,
+                                Width = 3200,
+                                Height = 600
+                            }
+                        }
+                    }
+                }
+            }
+        };
+    }
+
     private static CopperfinStudioSnapshotDocument BuildAssetEditorRestoreLabelObjectSmokeSnapshot()
     {
         return new CopperfinStudioSnapshotDocument
@@ -6824,6 +7229,114 @@ internal static class Program
                                 Top = 2600,
                                 Width = 4000,
                                 Height = 600
+                            }
+                        }
+                    }
+                }
+            }
+        };
+    }
+
+    private static CopperfinStudioSnapshotDocument BuildAssetEditorReorderFrontReportObjectSmokeSnapshot()
+    {
+        return new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "report",
+            FieldCount = 5,
+            Objects = new List<CopperfinStudioSnapshotObject>
+            {
+                new()
+                {
+                    RecordIndex = 6,
+                    Title = "first.value",
+                    Subtitle = "field",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "UNIQUEID", Value = "first-field-guid" },
+                        new() { Name = "HPOS", Value = "1000" },
+                        new() { Name = "VPOS", Value = "2400" },
+                        new() { Name = "WIDTH", Value = "3200" },
+                        new() { Name = "HEIGHT", Value = "700" },
+                        new() { Name = "EXPR", Value = "first.value" }
+                    }
+                },
+                new()
+                {
+                    RecordIndex = 7,
+                    Title = "middle.value",
+                    Subtitle = "field",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "UNIQUEID", Value = "middle-field-guid" },
+                        new() { Name = "HPOS", Value = "2100" },
+                        new() { Name = "VPOS", Value = "2400" },
+                        new() { Name = "WIDTH", Value = "3200" },
+                        new() { Name = "HEIGHT", Value = "700" },
+                        new() { Name = "EXPR", Value = "middle.value" }
+                    }
+                },
+                new()
+                {
+                    RecordIndex = 8,
+                    Title = "last.value",
+                    Subtitle = "field",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "UNIQUEID", Value = "last-field-guid" },
+                        new() { Name = "HPOS", Value = "3200" },
+                        new() { Name = "VPOS", Value = "2400" },
+                        new() { Name = "WIDTH", Value = "2700" },
+                        new() { Name = "HEIGHT", Value = "700" },
+                        new() { Name = "EXPR", Value = "last.value" }
+                    }
+                }
+            },
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail_1",
+                        Title = "Detail",
+                        BandKind = "detail",
+                        RecordIndex = 42,
+                        Top = 2000,
+                        Height = 5000,
+                        Objects = new List<CopperfinStudioReportLayoutObject>
+                        {
+                            new()
+                            {
+                                RecordIndex = 6,
+                                ObjectKind = "field",
+                                Title = "first.value",
+                                Expression = "first.value",
+                                Left = 1000,
+                                Top = 2400,
+                                Width = 3200,
+                                Height = 700
+                            },
+                            new()
+                            {
+                                RecordIndex = 7,
+                                ObjectKind = "field",
+                                Title = "middle.value",
+                                Expression = "middle.value",
+                                Left = 2100,
+                                Top = 2400,
+                                Width = 3200,
+                                Height = 700
+                            },
+                            new()
+                            {
+                                RecordIndex = 8,
+                                ObjectKind = "field",
+                                Title = "last.value",
+                                Expression = "last.value",
+                                Left = 3200,
+                                Top = 2400,
+                                Width = 2700,
+                                Height = 700
                             }
                         }
                     }
@@ -7116,6 +7629,13 @@ internal static class Program
 """;
     }
 
+    private static string BuildReorderBackLabelObjectHostResponseJson()
+    {
+        return """
+{"Status":"ok","Document":{"AssetFamily":"label","FieldCount":5,"Objects":[{"RecordIndex":7,"Title":"middle.value","Subtitle":"label","Properties":[{"Name":"UNIQUEID","Value":"middle-field-guid"},{"Name":"HPOS","Value":"2500"},{"Name":"VPOS","Value":"2600"},{"Name":"WIDTH","Value":"3400"},{"Name":"HEIGHT","Value":"600"},{"Name":"EXPR","Value":"middle.value"}]},{"RecordIndex":8,"Title":"last.value","Subtitle":"label","Properties":[{"Name":"UNIQUEID","Value":"last-field-guid"},{"Name":"HPOS","Value":"3600"},{"Name":"VPOS","Value":"2600"},{"Name":"WIDTH","Value":"3200"},{"Name":"HEIGHT","Value":"600"},{"Name":"EXPR","Value":"last.value"}]},{"RecordIndex":6,"Title":"first.value","Subtitle":"label","Properties":[{"Name":"UNIQUEID","Value":"first-field-guid"},{"Name":"HPOS","Value":"1400"},{"Name":"VPOS","Value":"2600"},{"Name":"WIDTH","Value":"3400"},{"Name":"HEIGHT","Value":"600"},{"Name":"EXPR","Value":"first.value"}]}],"ReportLayout":{"IsLabel":true,"PreviewBoundsAvailable":true,"PreviewBoundsLeft":1400,"PreviewBoundsTop":2600,"PreviewBoundsRight":6800,"PreviewBoundsBottom":3200,"PreviewBoundsWidth":5400,"PreviewBoundsHeight":600,"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":7,"ObjectKind":"label","Title":"middle.value","Expression":"middle.value","Left":2500,"Top":2600,"Width":3400,"Height":600},{"RecordIndex":8,"ObjectKind":"label","Title":"last.value","Expression":"last.value","Left":3600,"Top":2600,"Width":3200,"Height":600},{"RecordIndex":6,"ObjectKind":"label","Title":"first.value","Expression":"first.value","Left":1400,"Top":2600,"Width":3400,"Height":600}]}],"DeletedSections":[],"UnplacedObjects":[]}}}
+""";
+    }
+
     private static string BuildDuplicateLabelObjectHostResponseJson()
     {
         return """
@@ -7141,6 +7661,13 @@ internal static class Program
     {
         return """
 {"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[{"RecordIndex":6,"Deleted":true,"Title":"customer.company","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"live-detail-guid"},{"Name":"HPOS","Value":"1500"},{"Name":"VPOS","Value":"2600"},{"Name":"WIDTH","Value":"4000"},{"Name":"HEIGHT","Value":"500"},{"Name":"EXPR","Value":"customer.company"}]}],"ReportLayout":{"DeletedPreviewBoundsAvailable":true,"DeletedPreviewBoundsLeft":1500,"DeletedPreviewBoundsTop":2600,"DeletedPreviewBoundsRight":5500,"DeletedPreviewBoundsBottom":3100,"DeletedPreviewBoundsWidth":4000,"DeletedPreviewBoundsHeight":500,"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[{"Id":"deleted_detail","Title":"Detail","BandKind":"detail","RecordIndex":52,"Deleted":true,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":6,"ObjectKind":"field","Title":"customer.company","Expression":"customer.company","Left":1500,"Top":2600,"Width":4000,"Height":500}]}],"UnplacedObjects":[]}}}
+""";
+    }
+
+    private static string BuildReorderFrontReportObjectHostResponseJson()
+    {
+        return """
+{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[{"RecordIndex":7,"Title":"middle.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"middle-field-guid"},{"Name":"HPOS","Value":"2100"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"3200"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"middle.value"}]},{"RecordIndex":6,"Title":"first.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"first-field-guid"},{"Name":"HPOS","Value":"1000"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"3200"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"first.value"}]},{"RecordIndex":8,"Title":"last.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"last-field-guid"},{"Name":"HPOS","Value":"3200"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"2700"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"last.value"}]}],"ReportLayout":{"PreviewBoundsAvailable":true,"PreviewBoundsLeft":1000,"PreviewBoundsTop":2400,"PreviewBoundsRight":5900,"PreviewBoundsBottom":3100,"PreviewBoundsWidth":4900,"PreviewBoundsHeight":700,"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":7,"ObjectKind":"field","Title":"middle.value","Expression":"middle.value","Left":2100,"Top":2400,"Width":3200,"Height":700},{"RecordIndex":6,"ObjectKind":"field","Title":"first.value","Expression":"first.value","Left":1000,"Top":2400,"Width":3200,"Height":700},{"RecordIndex":8,"ObjectKind":"field","Title":"last.value","Expression":"last.value","Left":3200,"Top":2400,"Width":2700,"Height":700}]}],"DeletedSections":[],"UnplacedObjects":[]}}}
 """;
     }
 

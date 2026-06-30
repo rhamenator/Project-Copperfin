@@ -34,6 +34,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly Button revealButton;
     private readonly Button refreshButton;
     private readonly Button duplicateObjectButton;
+    private readonly Button reorderFrontObjectButton;
+    private readonly Button reorderBackObjectButton;
     private readonly Button deleteObjectButton;
     private readonly Button restoreObjectButton;
     private readonly Button buildButton;
@@ -163,6 +165,30 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             Visible = false
         };
         duplicateObjectButton.Click += (_, _) => TryHandleDuplicateObjectCommand();
+
+        reorderFrontObjectButton = new Button
+        {
+            AutoSize = true,
+            Text = this.localization.Text("AssetEditor.ObjectLifecycle.ReorderFrontButton"),
+            Visible = false
+        };
+        reorderFrontObjectButton.Click += (_, _) => TryHandleReorderObjectCommand(
+            placement: "front",
+            executingKey: "AssetEditor.ObjectLifecycle.ReorderFront.Executing",
+            failedKey: "AssetEditor.ObjectLifecycle.ReorderFront.Failed",
+            completedKey: "AssetEditor.ObjectLifecycle.ReorderFront.Completed");
+
+        reorderBackObjectButton = new Button
+        {
+            AutoSize = true,
+            Text = this.localization.Text("AssetEditor.ObjectLifecycle.ReorderBackButton"),
+            Visible = false
+        };
+        reorderBackObjectButton.Click += (_, _) => TryHandleReorderObjectCommand(
+            placement: "back",
+            executingKey: "AssetEditor.ObjectLifecycle.ReorderBack.Executing",
+            failedKey: "AssetEditor.ObjectLifecycle.ReorderBack.Failed",
+            completedKey: "AssetEditor.ObjectLifecycle.ReorderBack.Completed");
 
         deleteObjectButton = new Button
         {
@@ -561,6 +587,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         buttonPanel.Controls.Add(revealButton);
         buttonPanel.Controls.Add(refreshButton);
         buttonPanel.Controls.Add(duplicateObjectButton);
+        buttonPanel.Controls.Add(reorderFrontObjectButton);
+        buttonPanel.Controls.Add(reorderBackObjectButton);
         buttonPanel.Controls.Add(deleteObjectButton);
         buttonPanel.Controls.Add(restoreObjectButton);
         buttonPanel.Controls.Add(buildButton);
@@ -1218,6 +1246,55 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         return true;
     }
 
+    private bool TryHandleReorderObjectCommand(
+        string placement,
+        string executingKey,
+        string failedKey,
+        string completedKey)
+    {
+        if (currentSnapshot?.AssetFamily is not ("report" or "label") || string.IsNullOrWhiteSpace(currentPath))
+        {
+            return false;
+        }
+
+        var selectedObject = TryGetSelectedSnapshotObject();
+        if (selectedObject is null || selectedObject.Deleted)
+        {
+            return false;
+        }
+
+        var explorerSelection = CaptureExplorerSelectionState();
+        var selectedObjectRecordIndex = selectedObject.RecordIndex;
+        var uniqueId = TryReadObjectUniqueId(selectedObject);
+        snapshotStatusLabel.Text = this.localization.Text(executingKey);
+
+        var reorderResult = CopperfinStudioSnapshotClient.TryReorderObject(
+            currentPath!,
+            selectedObjectRecordIndex,
+            uniqueId,
+            placement);
+        if (!reorderResult.Success || reorderResult.Document is null)
+        {
+            snapshotStatusLabel.Text = this.localization.Format(
+                failedKey,
+                reorderResult.Error ?? string.Empty);
+            return false;
+        }
+
+        currentSnapshot = reorderResult.Document;
+        detailsLabel.Text = BuildSnapshotDetailsText(new FileInfo(currentPath!), currentSnapshot);
+        snapshotStatusLabel.Text = this.localization.Format(
+            completedKey,
+            currentSnapshot.Objects.Count,
+            currentSnapshot.FieldCount);
+        PopulateSectionList(explorerSelection);
+        SyncExplorerSelection();
+        LoadSurface();
+        designSurface.SelectRecord(selectedObjectRecordIndex);
+        SyncSelectionFromSurface(selectedObjectRecordIndex);
+        return true;
+    }
+
     private TextBoxBase? TryFindFocusedUndoTextBox()
     {
         return TryFindFocusedUndoTextBox(this);
@@ -1672,10 +1749,15 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             ? TryGetSelectedSnapshotObject()
             : null;
         var showDuplicate = selectedObject is not null;
+        var showReorder = selectedObject is not null && !selectedObject.Deleted;
         var showDelete = selectedObject is not null && !selectedObject.Deleted;
         var showRestore = selectedObject is not null && selectedObject.Deleted;
         duplicateObjectButton.Visible = showDuplicate;
         duplicateObjectButton.Enabled = showDuplicate && !string.IsNullOrWhiteSpace(currentPath);
+        reorderFrontObjectButton.Visible = showReorder;
+        reorderFrontObjectButton.Enabled = showReorder && !string.IsNullOrWhiteSpace(currentPath);
+        reorderBackObjectButton.Visible = showReorder;
+        reorderBackObjectButton.Enabled = showReorder && !string.IsNullOrWhiteSpace(currentPath);
         deleteObjectButton.Visible = showDelete;
         deleteObjectButton.Enabled = showDelete && !string.IsNullOrWhiteSpace(currentPath);
         restoreObjectButton.Visible = showRestore;
