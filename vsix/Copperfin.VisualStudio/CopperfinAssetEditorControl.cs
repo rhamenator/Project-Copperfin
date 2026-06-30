@@ -980,6 +980,12 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         try
         {
             suppressSelectionSync = true;
+            if ((currentSnapshot?.AssetFamily == "report" || currentSnapshot?.AssetFamily == "label") &&
+                TrySelectReportScopeForRecord(recordIndex))
+            {
+                PopulateObjectList(autoSelectFirstItem: false);
+            }
+
             foreach (ListViewItem item in objectListView.Items)
             {
                 item.Selected = item.Tag is CopperfinStudioSnapshotObject snapshotObject &&
@@ -1000,6 +1006,33 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             suppressSelectionSync = false;
         }
+    }
+
+    private bool TrySelectReportScopeForRecord(int recordIndex)
+    {
+        if (currentSnapshot?.ReportLayout is null || currentSnapshot.AssetFamily is not ("report" or "label"))
+        {
+            return false;
+        }
+
+        var selectedItem = sectionListView.Items
+            .Cast<ListViewItem>()
+            .FirstOrDefault(item =>
+                item.Tag is CopperfinStudioReportSection section
+                    ? section.Objects.Any(layoutObject => layoutObject.RecordIndex == recordIndex)
+                    : item.Tag is ReportUnplacedObjectScope unplacedScope &&
+                      unplacedScope.RecordIndexes.Contains(recordIndex));
+        if (selectedItem is null)
+        {
+            return false;
+        }
+
+        foreach (ListViewItem item in sectionListView.Items)
+        {
+            item.Selected = ReferenceEquals(item, selectedItem);
+        }
+
+        return true;
     }
 
     private void ApplyPropertyGridChange(string propertyName, object oldValue)
