@@ -50,6 +50,7 @@ void write_synthetic_report_table_for_deleted_detail_header_footer_section_expre
     expect(delete_footer_result.ok, "#1766: synthetic report table should mark deleted detail footer section");
 }
 
+#if !defined(COPPERFIN_DETAIL_HEADER_FOOTER_SECTION_ONLY_EXPRESSIONS)
 void test_studio_host_json_exposes_detail_header_footer_section_kinds(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -1814,6 +1815,9 @@ void test_studio_host_json_clears_deleted_detail_header_footer_section_tops_by_s
         fs::remove_all(temp_root, ignored);
     }
 }
+#endif
+
+#if !defined(COPPERFIN_DETAIL_HEADER_FOOTER_SECTION_SKIP_EXPRESSIONS)
 
 void test_studio_host_json_updates_detail_header_footer_section_expressions(
     const std::string& studio_host_path) {
@@ -3296,5 +3300,6 @@ void test_studio_host_json_exposes_deleted_detail_header_footer_sections_by_stab
         fs::remove_all(temp_root, ignored);
     }
 }
+#endif
 
 }  // namespace cf_test_studio_host_json

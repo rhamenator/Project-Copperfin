@@ -154,12 +154,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
-    test_studio_host_json_updates_detail_header_footer_section_expressions(argv[1]);
-    test_studio_host_json_exposes_detail_header_footer_section_expressions_by_stable_selection(argv[1]);
-    test_studio_host_json_updates_detail_header_footer_section_expressions_by_stable_selection(argv[1]);
-    test_studio_host_json_updates_deleted_detail_header_footer_section_expressions(argv[1]);
-    test_studio_host_json_updates_deleted_detail_header_footer_section_expressions_by_stable_selection(argv[1]);
-    test_studio_host_json_exposes_deleted_detail_header_footer_sections_by_stable_selection(argv[1]);
     test_studio_host_json_clamps_negative_report_layout_dimensions(argv[1]);
     test_studio_host_json_defaults_malformed_report_layout_numerics(argv[1]);
     test_studio_host_json_defaults_oversized_report_layout_numerics(argv[1]);
