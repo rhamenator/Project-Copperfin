@@ -259,6 +259,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             Dock = DockStyle.Fill
         };
         designSurface.SelectedRecordChanged += recordIndex => SyncSelectionFromSurface(recordIndex);
+        designSurface.SelectedReportSectionChanged += recordIndex => SyncReportSectionSelectionFromSurface(recordIndex);
+        designSurface.SelectedUnplacedObjectsChanged += SyncUnplacedObjectsSelectionFromSurface;
         designSurface.ObjectMoved += (recordIndex, left, top) =>
         {
             var horizontalName = currentSnapshot?.AssetFamily is "report" or "label" ? "HPOS" : "Left";
@@ -900,7 +902,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 }
 
                 propertyGrid.SelectedObject = CopperfinDesignerSelection.FromReportSection(reportSection, localization);
-                designSurface.SelectRecord(null);
+                designSurface.SelectReportSection(reportSection.RecordIndex);
                 return;
             }
 
@@ -912,7 +914,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 }
 
                 propertyGrid.SelectedObject = null;
-                designSurface.SelectRecord(null);
+                designSurface.SelectUnplacedObjects();
                 return;
             }
         }
@@ -920,6 +922,53 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             suppressSelectionSync = false;
         }
+    }
+
+    private void SyncReportSectionSelectionFromSurface(int recordIndex)
+    {
+        if (suppressSelectionSync)
+        {
+            return;
+        }
+
+        try
+        {
+            suppressSelectionSync = true;
+            foreach (ListViewItem item in sectionListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioReportSection section &&
+                                section.RecordIndex == recordIndex;
+            }
+        }
+        finally
+        {
+            suppressSelectionSync = false;
+        }
+
+        SyncExplorerSelection();
+    }
+
+    private void SyncUnplacedObjectsSelectionFromSurface()
+    {
+        if (suppressSelectionSync)
+        {
+            return;
+        }
+
+        try
+        {
+            suppressSelectionSync = true;
+            foreach (ListViewItem item in sectionListView.Items)
+            {
+                item.Selected = item.Tag is ReportUnplacedObjectScope;
+            }
+        }
+        finally
+        {
+            suppressSelectionSync = false;
+        }
+
+        SyncExplorerSelection();
     }
 
     private void SyncSelectionFromSurface(int recordIndex)
@@ -1032,6 +1081,15 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             workspaceSummaryBox.Visible = false;
             designSurface.Visible = true;
             designSurface.LoadReportLayout(currentSnapshot.ReportLayout, currentSnapshot.Objects);
+            var selectedExplorerTag = TryReadSelectedExplorerTag();
+            if (selectedExplorerTag is CopperfinStudioReportSection reportSection)
+            {
+                designSurface.SelectReportSection(reportSection.RecordIndex);
+            }
+            else if (selectedExplorerTag is ReportUnplacedObjectScope)
+            {
+                designSurface.SelectUnplacedObjects();
+            }
             return;
         }
 

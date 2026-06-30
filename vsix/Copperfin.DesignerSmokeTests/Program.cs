@@ -38,6 +38,7 @@ internal static class Program
         SmokeReportSectionPropertyGridSelection();
         SmokeReportSelectionPreservedAcrossExplorerRefresh();
         SmokeDeletedReportSectionExplorerSelection();
+        SmokeReportSurfaceScopeSelection();
         SmokeDeletedReportSectionDesignSurfaceRendering();
         SmokeAssetEditorWithRealAsset(
             @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx",
@@ -914,6 +915,185 @@ internal static class Program
             "Pseudo-localized report explorer should route deleted section rows through the shared catalog");
     }
 
+    private static void SmokeReportSurfaceScopeSelection()
+    {
+        var snapshot = new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "report",
+            Objects = new List<CopperfinStudioSnapshotObject>
+            {
+                new()
+                {
+                    RecordIndex = 6,
+                    Title = "customer.company",
+                    Subtitle = "field",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "HPOS", Value = "1200" },
+                        new() { Name = "VPOS", Value = "2600" },
+                        new() { Name = "WIDTH", Value = "4000" },
+                        new() { Name = "HEIGHT", Value = "500" }
+                    }
+                },
+                new()
+                {
+                    RecordIndex = 13,
+                    Title = "deleted.footer.total",
+                    Subtitle = "field",
+                    Deleted = true,
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "HPOS", Value = "1400" },
+                        new() { Name = "VPOS", Value = "9400" },
+                        new() { Name = "WIDTH", Value = "3600" },
+                        new() { Name = "HEIGHT", Value = "600" }
+                    }
+                },
+                new()
+                {
+                    RecordIndex = 9,
+                    Title = "orphan.note",
+                    Subtitle = "field",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "HPOS", Value = "800" },
+                        new() { Name = "VPOS", Value = "700" },
+                        new() { Name = "WIDTH", Value = "2400" },
+                        new() { Name = "HEIGHT", Value = "450" }
+                    }
+                }
+            },
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail_1",
+                        Title = "Detail",
+                        BandKind = "detail",
+                        RecordIndex = 42,
+                        Top = 2000,
+                        Height = 5000,
+                        Objects = new List<CopperfinStudioReportLayoutObject>
+                        {
+                            new()
+                            {
+                                RecordIndex = 6,
+                                ObjectKind = "field",
+                                Title = "customer.company",
+                                Left = 1200,
+                                Top = 2600,
+                                Width = 4000,
+                                Height = 500
+                            }
+                        }
+                    }
+                },
+                DeletedSections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "deleted_footer",
+                        Title = "Summary",
+                        BandKind = "summary",
+                        RecordIndex = 51,
+                        Deleted = true,
+                        Top = 9000,
+                        Height = 1400,
+                        Objects = new List<CopperfinStudioReportLayoutObject>
+                        {
+                            new()
+                            {
+                                RecordIndex = 13,
+                                ObjectKind = "field",
+                                Title = "deleted.footer.total",
+                                Left = 1400,
+                                Top = 9400,
+                                Width = 3600,
+                                Height = 600
+                            }
+                        }
+                    }
+                },
+                UnplacedObjects = new List<CopperfinStudioReportLayoutObject>
+                {
+                    new()
+                    {
+                        RecordIndex = 9,
+                        ObjectKind = "field",
+                        Title = "orphan.note",
+                        Left = 800,
+                        Top = 700,
+                        Width = 2400,
+                        Height = 450
+                    }
+                }
+            }
+        };
+
+        using var hostForm = new Form
+        {
+            Width = 1400,
+            Height = 1000,
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-32000, -32000)
+        };
+
+        using var control = new CopperfinAssetEditorControl
+        {
+            Dock = DockStyle.Fill
+        };
+
+        hostForm.Controls.Add(control);
+        hostForm.Show();
+        Application.DoEvents();
+
+        ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+        InvokeAssetEditorVoid(control, "LoadSurface");
+        Application.DoEvents();
+
+        var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface.");
+        using (var bitmap = new Bitmap(surface.Width, surface.Height))
+        {
+            surface.DrawToBitmap(bitmap, new Rectangle(0, 0, bitmap.Width, bitmap.Height));
+        }
+
+        var sectionListView = GetPrivateListView(control, "sectionListView");
+        var objectListView = GetPrivateListView(control, "objectListView");
+        var propertyGrid = GetPrivatePropertyGrid(control);
+
+        ClickDesignSurface(surface, GetCenter(ReadReportSectionRectangle(surface, 0, "HeaderBounds")));
+        Application.DoEvents();
+        Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection liveSectionSelection &&
+               liveSectionSelection.RecordIndex == 42,
+            "Clicking a live report section on the shared surface should produce a section-rooted property-grid selection");
+        Expect(string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Detail", StringComparison.Ordinal),
+            "Clicking a live report section on the shared surface should select the matching explorer row");
+        Expect(objectListView.Items.Cast<ListViewItem>().Select(item => item.Text).SequenceEqual(new[] { "customer.company" }),
+            "Clicking a live report section on the shared surface should scope objects to that section");
+
+        ClickDesignSurface(surface, GetCenter(ReadReportSectionRectangle(surface, 1, "HeaderBounds")));
+        Application.DoEvents();
+        Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection deletedSectionSelection &&
+               deletedSectionSelection.RecordIndex == 51,
+            "Clicking a deleted report section on the shared surface should produce a deleted section-rooted property-grid selection");
+        Expect(string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Summary (deleted)", StringComparison.Ordinal),
+            "Clicking a deleted report section on the shared surface should select the matching deleted explorer row");
+        Expect(objectListView.Items.Cast<ListViewItem>().Select(item => item.Text).SequenceEqual(new[] { "deleted.footer.total" }),
+            "Clicking a deleted report section on the shared surface should scope objects to deleted section membership");
+
+        ClickDesignSurface(surface, GetCenter(ReadPrivateRectangle(surface, "unplacedTrayHeaderBounds")));
+        Application.DoEvents();
+        Expect(propertyGrid.SelectedObject is null,
+            "Clicking the unplaced-object tray on the shared surface should clear the property-grid selection");
+        Expect(string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Unplaced objects", StringComparison.Ordinal),
+            "Clicking the unplaced-object tray on the shared surface should select the unplaced explorer row");
+        Expect(objectListView.Items.Cast<ListViewItem>().Select(item => item.Text).SequenceEqual(new[] { "orphan.note" }),
+            "Clicking the unplaced-object tray on the shared surface should scope objects to unplaced rows");
+    }
+
     private static void SmokeDeletedReportSectionDesignSurfaceRendering()
     {
         using var surface = new CopperfinDesignSurfaceControl
@@ -1471,6 +1651,17 @@ internal static class Program
         return (string)(method.Invoke(surface, args) ?? string.Empty);
     }
 
+    private static void ClickDesignSurface(CopperfinDesignSurfaceControl surface, Point location)
+    {
+        var method = typeof(CopperfinDesignSurfaceControl).GetMethod("OnMouseDown", BindingFlags.Instance | BindingFlags.NonPublic);
+        if (method is null)
+        {
+            throw new InvalidOperationException("Could not find shared report design-surface mouse hook.");
+        }
+
+        method.Invoke(surface, new object[] { new MouseEventArgs(MouseButtons.Left, 1, location.X, location.Y, 0) });
+    }
+
     private static int ReadPrivateListCount(object instance, string fieldName)
     {
         var field = instance.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
@@ -1518,6 +1709,18 @@ internal static class Program
         return value;
     }
 
+    private static Rectangle ReadReportSectionRectangle(CopperfinDesignSurfaceControl surface, int index, string propertyName)
+    {
+        var section = ReadReportSectionVisual(surface, index);
+        var property = section.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        if (property?.GetValue(section) is not Rectangle value)
+        {
+            throw new InvalidOperationException($"Could not read report-section rectangle property {propertyName}.");
+        }
+
+        return value;
+    }
+
     private static object ReadReportSectionVisual(CopperfinDesignSurfaceControl surface, int index)
     {
         var field = typeof(CopperfinDesignSurfaceControl).GetField("reportSections", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -1527,6 +1730,22 @@ internal static class Program
         }
 
         return sections[index]!;
+    }
+
+    private static Rectangle ReadPrivateRectangle(object instance, string fieldName)
+    {
+        var field = instance.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+        if (field?.GetValue(instance) is not Rectangle rectangle)
+        {
+            throw new InvalidOperationException($"Could not read private rectangle field {fieldName}.");
+        }
+
+        return rectangle;
+    }
+
+    private static Point GetCenter(Rectangle rectangle)
+    {
+        return new Point(rectangle.Left + (rectangle.Width / 2), rectangle.Top + (rectangle.Height / 2));
     }
 
     private static CopperfinDesignSurfaceControl? FindDesignSurface(Control root)

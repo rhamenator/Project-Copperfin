@@ -21,6 +21,7 @@ internal sealed class CopperfinDesignSurfaceControl : Control
     private sealed class ReportSectionVisual
     {
         public bool Deleted { get; set; }
+        public int RecordIndex { get; set; }
         public string Title { get; set; } = string.Empty;
         public string HeaderTitle { get; set; } = string.Empty;
         public string BandKind { get; set; } = string.Empty;
@@ -37,11 +38,17 @@ internal sealed class CopperfinDesignSurfaceControl : Control
     private readonly List<SurfaceObject> unplacedReportObjects = new();
     private string assetFamily = string.Empty;
     private int? selectedRecordIndex;
+    private int? selectedReportSectionRecordIndex;
+    private bool unplacedReportObjectsSelected;
     private int? dragRecordIndex;
     private Point lastMousePoint;
+    private Rectangle unplacedTrayBounds;
+    private Rectangle unplacedTrayHeaderBounds;
     private CopperfinStudioReportLayout? reportLayout;
 
     public event Action<int>? SelectedRecordChanged;
+    public event Action<int>? SelectedReportSectionChanged;
+    public event Action? SelectedUnplacedObjectsChanged;
     public event Action<int, int, int>? ObjectMoved;
 
     public CopperfinDesignSurfaceControl(CopperfinLocalization? localization = null)
@@ -59,6 +66,11 @@ internal sealed class CopperfinDesignSurfaceControl : Control
         reportSections.Clear();
         unplacedReportObjects.Clear();
         objects.Clear();
+        selectedRecordIndex = null;
+        selectedReportSectionRecordIndex = null;
+        unplacedReportObjectsSelected = false;
+        unplacedTrayBounds = Rectangle.Empty;
+        unplacedTrayHeaderBounds = Rectangle.Empty;
         foreach (var snapshotObject in snapshotObjects)
         {
             if (!TryBuildBounds(this.assetFamily, snapshotObject, out var bounds))
@@ -85,6 +97,11 @@ internal sealed class CopperfinDesignSurfaceControl : Control
         reportSections.Clear();
         unplacedReportObjects.Clear();
         objects.Clear();
+        selectedRecordIndex = null;
+        selectedReportSectionRecordIndex = null;
+        unplacedReportObjectsSelected = false;
+        unplacedTrayBounds = Rectangle.Empty;
+        unplacedTrayHeaderBounds = Rectangle.Empty;
 
         var lookup = snapshotObjects.ToDictionary(item => item.RecordIndex);
         foreach (var section in layout.Sections)
@@ -130,6 +147,27 @@ internal sealed class CopperfinDesignSurfaceControl : Control
     public void SelectRecord(int? recordIndex)
     {
         selectedRecordIndex = recordIndex;
+        if (recordIndex.HasValue)
+        {
+            selectedReportSectionRecordIndex = null;
+            unplacedReportObjectsSelected = false;
+        }
+        Invalidate();
+    }
+
+    public void SelectReportSection(int? recordIndex)
+    {
+        selectedReportSectionRecordIndex = recordIndex;
+        selectedRecordIndex = null;
+        unplacedReportObjectsSelected = false;
+        Invalidate();
+    }
+
+    public void SelectUnplacedObjects()
+    {
+        unplacedReportObjectsSelected = true;
+        selectedRecordIndex = null;
+        selectedReportSectionRecordIndex = null;
         Invalidate();
     }
 
@@ -156,9 +194,16 @@ internal sealed class CopperfinDesignSurfaceControl : Control
         var hit = objects.LastOrDefault(item => item.PixelBounds.Contains(e.Location));
         if (hit is null)
         {
+            if (TrySelectReportScope(e.Location))
+            {
+                return;
+            }
+
             return;
         }
 
+        selectedReportSectionRecordIndex = null;
+        unplacedReportObjectsSelected = false;
         selectedRecordIndex = hit.Source.RecordIndex;
         dragRecordIndex = hit.Source.RecordIndex;
         lastMousePoint = e.Location;
@@ -277,6 +322,10 @@ internal sealed class CopperfinDesignSurfaceControl : Control
         using var deletedSectionBorder = new Pen(Color.FromArgb(218, 176, 176));
         using var deletedSectionHeaderFill = new SolidBrush(Color.FromArgb(252, 224, 224));
         using var deletedSectionHeaderText = new SolidBrush(Color.FromArgb(130, 41, 41));
+        using var selectedSectionBorder = new Pen(Color.FromArgb(174, 86, 24), 2.0F);
+        using var selectedDeletedSectionBorder = new Pen(Color.FromArgb(140, 52, 52), 2.0F);
+        using var selectedSectionHeaderFill = new SolidBrush(Color.FromArgb(255, 239, 220));
+        using var selectedDeletedSectionHeaderFill = new SolidBrush(Color.FromArgb(249, 212, 212));
 
         const int outerPadding = 24;
         const int headerHeight = 28;
@@ -332,9 +381,14 @@ internal sealed class CopperfinDesignSurfaceControl : Control
             section.PixelBounds = sectionBounds;
             section.HeaderBounds = headerBounds;
 
+            var sectionSelected = selectedReportSectionRecordIndex == section.RecordIndex;
             var currentSectionFill = section.Deleted ? deletedSectionFill : sectionFill;
-            var currentSectionBorder = section.Deleted ? deletedSectionBorder : sectionBorder;
-            var currentSectionHeaderFill = section.Deleted ? deletedSectionHeaderFill : sectionHeaderFill;
+            var currentSectionBorder = sectionSelected
+                ? (section.Deleted ? selectedDeletedSectionBorder : selectedSectionBorder)
+                : (section.Deleted ? deletedSectionBorder : sectionBorder);
+            var currentSectionHeaderFill = sectionSelected
+                ? (section.Deleted ? selectedDeletedSectionHeaderFill : selectedSectionHeaderFill)
+                : (section.Deleted ? deletedSectionHeaderFill : sectionHeaderFill);
             var currentSectionHeaderText = section.Deleted ? deletedSectionHeaderText : sectionHeaderText;
             e.Graphics.FillRectangle(currentSectionFill, sectionBounds);
             e.Graphics.DrawRectangle(currentSectionBorder, sectionBounds);
@@ -381,11 +435,15 @@ internal sealed class CopperfinDesignSurfaceControl : Control
             Math.Max(180, (int)Math.Round(maxRight * scale)),
             headerHeight + (sectionInnerPadding * 2) + unplacedScaledHeight);
         var unplacedHeaderBounds = new Rectangle(unplacedBounds.X, unplacedBounds.Y, unplacedBounds.Width, headerHeight);
+        unplacedTrayBounds = unplacedBounds;
+        unplacedTrayHeaderBounds = unplacedHeaderBounds;
 
+        var currentUnplacedBorder = unplacedReportObjectsSelected ? selectedSectionBorder : sectionBorder;
+        var currentUnplacedHeaderFill = unplacedReportObjectsSelected ? selectedSectionHeaderFill : sectionHeaderFill;
         e.Graphics.FillRectangle(sectionFill, unplacedBounds);
-        e.Graphics.DrawRectangle(sectionBorder, unplacedBounds);
-        e.Graphics.FillRectangle(sectionHeaderFill, unplacedHeaderBounds);
-        e.Graphics.DrawRectangle(sectionBorder, unplacedHeaderBounds);
+        e.Graphics.DrawRectangle(currentUnplacedBorder, unplacedBounds);
+        e.Graphics.FillRectangle(currentUnplacedHeaderFill, unplacedHeaderBounds);
+        e.Graphics.DrawRectangle(currentUnplacedBorder, unplacedHeaderBounds);
         e.Graphics.DrawString(
             BuildUnplacedTrayTitle(unplacedReportObjects.Count),
             Font,
@@ -489,6 +547,39 @@ internal sealed class CopperfinDesignSurfaceControl : Control
         return Math.Max(0.12F, Math.Min(scaleX, scaleY));
     }
 
+    private bool TrySelectReportScope(Point location)
+    {
+        if (reportLayout is null)
+        {
+            return false;
+        }
+
+        var section = reportSections.LastOrDefault(candidate => candidate.PixelBounds.Contains(location));
+        if (section is not null)
+        {
+            selectedRecordIndex = null;
+            selectedReportSectionRecordIndex = section.RecordIndex;
+            unplacedReportObjectsSelected = false;
+            dragRecordIndex = null;
+            SelectedReportSectionChanged?.Invoke(section.RecordIndex);
+            Invalidate();
+            return true;
+        }
+
+        if (unplacedReportObjects.Count > 0 && unplacedTrayBounds.Contains(location))
+        {
+            selectedRecordIndex = null;
+            selectedReportSectionRecordIndex = null;
+            unplacedReportObjectsSelected = true;
+            dragRecordIndex = null;
+            SelectedUnplacedObjectsChanged?.Invoke();
+            Invalidate();
+            return true;
+        }
+
+        return false;
+    }
+
     private ReportSectionVisual BuildReportSectionVisual(
         CopperfinStudioReportSection section,
         bool deleted,
@@ -497,6 +588,7 @@ internal sealed class CopperfinDesignSurfaceControl : Control
         var visual = new ReportSectionVisual
         {
             Deleted = deleted,
+            RecordIndex = section.RecordIndex,
             Title = section.Title,
             HeaderTitle = deleted
                 ? BuildDeletedReportSectionHeaderTitle(BuildReportSectionHeaderTitle(section.Title, section.DeletedObjectCount))
