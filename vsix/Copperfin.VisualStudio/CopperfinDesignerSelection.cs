@@ -210,6 +210,22 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
                 "EXPR",
                 localization.Text("AssetEditor.Property.GroupingExpression"),
                 section.GroupingExpression ?? string.Empty);
+
+            if (section.GroupingExpressionFieldIndex.HasValue)
+            {
+                selection.AddReadOnlyInt(
+                    "GROUPINGEXPRESSIONFIELD",
+                    localization.Text("AssetEditor.Property.GroupingExpressionFieldIndex"),
+                    section.GroupingExpressionFieldIndex.Value.ToString(CultureInfo.InvariantCulture));
+            }
+
+            if (section.GroupingExpressionMemoBlockNumber > 0)
+            {
+                selection.AddReadOnlyInt(
+                    "GROUPINGEXPRESSIONMEMO",
+                    localization.Text("AssetEditor.Property.GroupingExpressionMemoBlock"),
+                    section.GroupingExpressionMemoBlockNumber.ToString(CultureInfo.InvariantCulture));
+            }
         }
 
         return selection;

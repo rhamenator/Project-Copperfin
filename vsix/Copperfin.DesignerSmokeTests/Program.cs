@@ -824,6 +824,10 @@ internal static class Program
                string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "GROUPINGINDEX", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "1", StringComparison.Ordinal) &&
                string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "GROUPINGNESTINGDEPTH", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "2", StringComparison.Ordinal),
             "Spanish report section property-grid selection should expose localized grouping index metadata");
+        Expect(spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Campo de la expresión de agrupación", StringComparison.Ordinal)) &&
+               string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "GROUPINGEXPRESSIONFIELD", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "2", StringComparison.Ordinal) &&
+               string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "GROUPINGEXPRESSIONMEMO", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "7", StringComparison.Ordinal),
+            "Spanish report section property-grid selection should expose grouping-expression provenance metadata");
         Expect(spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Id de la sección asociada", StringComparison.Ordinal)) &&
                string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "GROUPPARTNERSECTIONID", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "group_footer_7", StringComparison.Ordinal) &&
                string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "GROUPPARTNERRECORD", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "47", StringComparison.Ordinal) &&
@@ -844,6 +848,10 @@ internal static class Program
                string.Equals(portugueseSectionProperties.First(property => string.Equals(property.Name, "GROUPINGINDEX", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "1", StringComparison.Ordinal) &&
                string.Equals(portugueseSectionProperties.First(property => string.Equals(property.Name, "GROUPINGNESTINGDEPTH", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "2", StringComparison.Ordinal),
             "Portuguese report section property-grid selection should expose localized grouping index metadata");
+        Expect(portugueseSectionProperties.Any(property => string.Equals(property.DisplayName, "Campo da expressão de agrupamento", StringComparison.Ordinal)) &&
+               string.Equals(portugueseSectionProperties.First(property => string.Equals(property.Name, "GROUPINGEXPRESSIONFIELD", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "2", StringComparison.Ordinal) &&
+               string.Equals(portugueseSectionProperties.First(property => string.Equals(property.Name, "GROUPINGEXPRESSIONMEMO", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "7", StringComparison.Ordinal),
+            "Portuguese report section property-grid selection should expose grouping-expression provenance metadata");
         Expect(portugueseSectionProperties.Any(property => string.Equals(property.DisplayName, "Id da seção parceira", StringComparison.Ordinal)) &&
                string.Equals(portugueseSectionProperties.First(property => string.Equals(property.Name, "GROUPPARTNERSECTIONID", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "group_footer_7", StringComparison.Ordinal) &&
                string.Equals(portugueseSectionProperties.First(property => string.Equals(property.Name, "GROUPPARTNERRECORD", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "47", StringComparison.Ordinal) &&
@@ -864,6 +872,9 @@ internal static class Program
         Expect(string.Equals(pseudoSectionProperties.First(property => string.Equals(property.Name, "GROUPINGINDEX", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), "1", StringComparison.Ordinal) &&
                pseudoSectionProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.GroupingNestingDepth"), StringComparison.Ordinal)),
             "Pseudo-localized report section property-grid selection should route grouping index metadata through the shared catalog");
+        Expect(string.Equals(pseudoSectionProperties.First(property => string.Equals(property.Name, "GROUPINGEXPRESSIONFIELD", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), "2", StringComparison.Ordinal) &&
+               pseudoSectionProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.GroupingExpressionMemoBlock"), StringComparison.Ordinal)),
+            "Pseudo-localized report section property-grid selection should route grouping-expression provenance metadata through the shared catalog");
         Expect(string.Equals(pseudoSectionProperties.First(property => string.Equals(property.Name, "GROUPPARTNERSTATE", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), pseudoLocalization.Text("AssetEditor.State.Deleted"), StringComparison.Ordinal) &&
                pseudoSectionProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.GroupPartnerSectionId"), StringComparison.Ordinal)),
             "Pseudo-localized report section property-grid selection should route grouping partner metadata through the shared catalog");
@@ -875,6 +886,9 @@ internal static class Program
         Expect(snapshot.ReportLayout.Sections[0].GroupingIndex == 1 &&
                snapshot.ReportLayout.Sections[0].GroupingNestingDepth == 2,
             "Localized report section property-grid grouping index metadata should preserve section snapshot contracts");
+        Expect(snapshot.ReportLayout.Sections[0].GroupingExpressionFieldIndex == 2 &&
+               snapshot.ReportLayout.Sections[0].GroupingExpressionMemoBlockNumber == 7,
+            "Localized report section property-grid grouping-expression provenance should preserve section snapshot contracts");
         Expect(!snapshot.ReportLayout.Sections[0].Deleted,
             "Localized report section property-grid live state values should preserve section snapshot contracts");
         Expect(string.Equals(snapshot.ReportLayout.Sections[0].GroupPartnerSectionId, "group_footer_7", StringComparison.Ordinal) &&
