@@ -63,7 +63,10 @@ internal static class Program
         SmokeDeletedReportSectionExplorerSelection();
         SmokeReportSurfaceScopeSelection();
         SmokeReportSurfaceObjectScopeAlignment();
+        SmokeLabelSurfaceScopeSelection();
+        SmokeLabelSurfaceObjectScopeAlignment();
         SmokeReportSurfaceObjectDragging();
+        SmokeLabelSurfaceObjectDragging();
         SmokeAssetEditorReportDragUsesBatchStudioHostUpdate();
         SmokeAssetEditorReportDragRefreshesShellSummary();
         SmokeAssetEditorLabelDragRefreshesShellSummary();
@@ -4093,6 +4096,164 @@ internal static class Program
             "Clicking an unplaced report object on the shared surface should keep the unplaced-object tray highlighted");
     }
 
+    private static void SmokeLabelSurfaceScopeSelection()
+    {
+        var snapshot = BuildLabelSurfaceInteractionSmokeSnapshot();
+        var reportLayout = snapshot.ReportLayout ?? throw new InvalidOperationException("Could not build shared label surface layout snapshot.");
+
+        using var hostForm = new Form
+        {
+            Width = 1400,
+            Height = 1000,
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-32000, -32000)
+        };
+
+        using var control = new CopperfinAssetEditorControl
+        {
+            Dock = DockStyle.Fill
+        };
+
+        hostForm.Controls.Add(control);
+        hostForm.Show();
+        Application.DoEvents();
+
+        ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+        InvokeAssetEditorVoid(control, "LoadSurface");
+        Application.DoEvents();
+
+        var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared label design surface.");
+        using (var bitmap = new Bitmap(surface.Width, surface.Height))
+        {
+            surface.DrawToBitmap(bitmap, new Rectangle(0, 0, bitmap.Width, bitmap.Height));
+        }
+
+        var sectionListView = GetPrivateListView(control, "sectionListView");
+        var objectListView = GetPrivateListView(control, "objectListView");
+        var propertyGrid = GetPrivatePropertyGrid(control);
+
+        ClickDesignSurface(surface, GetCenter(ReadReportSectionRectangle(surface, 0, "HeaderBounds")));
+        Application.DoEvents();
+        Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection liveSectionSelection &&
+               liveSectionSelection.RecordIndex == 42,
+            "Clicking a live label section on the shared surface should produce a section-rooted property-grid selection");
+        Expect(string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Detail", StringComparison.Ordinal),
+            "Clicking a live label section on the shared surface should select the matching explorer row");
+        Expect(objectListView.Items.Cast<ListViewItem>().Select(item => item.Text).SequenceEqual(new[] { "customer.company" }),
+            "Clicking a live label section on the shared surface should scope objects to that section");
+
+        ClickDesignSurface(surface, GetCenter(ReadReportSectionRectangle(surface, 1, "HeaderBounds")));
+        Application.DoEvents();
+        Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection deletedSectionSelection &&
+               deletedSectionSelection.RecordIndex == 51,
+            "Clicking a deleted label section on the shared surface should produce a deleted section-rooted property-grid selection");
+        var expectedDeletedSectionTitle = InvokeAssetEditorString(control, "BuildDeletedReportSectionListTitle", reportLayout.DeletedSections[0]);
+        Expect(string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, expectedDeletedSectionTitle, StringComparison.Ordinal),
+            "Clicking a deleted label section on the shared surface should select the matching deleted explorer row");
+        Expect(objectListView.Items.Cast<ListViewItem>().Select(item => item.Text).SequenceEqual(new[] { "deleted.footer.total" }),
+            "Clicking a deleted label section on the shared surface should scope objects to deleted section membership");
+
+        ClickDesignSurface(surface, GetCenter(ReadPrivateRectangle(surface, "unplacedTrayHeaderBounds")));
+        Application.DoEvents();
+        Expect(propertyGrid.SelectedObject is null,
+            "Clicking the unplaced-object tray on the shared label surface should clear the property-grid selection");
+        Expect(string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Unplaced objects", StringComparison.Ordinal),
+            "Clicking the unplaced-object tray on the shared label surface should select the unplaced explorer row");
+        Expect(objectListView.Items.Cast<ListViewItem>().Select(item => item.Text).SequenceEqual(new[] { "orphan.note" }),
+            "Clicking the unplaced-object tray on the shared label surface should scope objects to unplaced rows");
+    }
+
+    private static void SmokeLabelSurfaceObjectScopeAlignment()
+    {
+        var snapshot = BuildLabelSurfaceInteractionSmokeSnapshot();
+        var reportLayout = snapshot.ReportLayout ?? throw new InvalidOperationException("Could not build shared label surface layout snapshot.");
+
+        using var hostForm = new Form
+        {
+            Width = 1400,
+            Height = 1000,
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-32000, -32000)
+        };
+
+        using var control = new CopperfinAssetEditorControl
+        {
+            Dock = DockStyle.Fill
+        };
+
+        hostForm.Controls.Add(control);
+        hostForm.Show();
+        Application.DoEvents();
+
+        ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+        var sectionListView = GetPrivateListView(control, "sectionListView");
+        sectionListView.Items[0].Selected = false;
+        sectionListView.Items[1].Selected = true;
+        InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+        InvokeAssetEditorVoid(control, "LoadSurface");
+        Application.DoEvents();
+
+        var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared label design surface.");
+        using (var bitmap = new Bitmap(surface.Width, surface.Height))
+        {
+            surface.DrawToBitmap(bitmap, new Rectangle(0, 0, bitmap.Width, bitmap.Height));
+        }
+
+        var objectListView = GetPrivateListView(control, "objectListView");
+        var propertyGrid = GetPrivatePropertyGrid(control);
+
+        ClickDesignSurface(surface, GetCenter(ReadSurfaceObjectRectangle(surface, 0)));
+        Application.DoEvents();
+        Expect(string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Detail", StringComparison.Ordinal),
+            "Clicking a live label object on the shared surface should select its containing live section row");
+        Expect(string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "customer.company", StringComparison.Ordinal),
+            "Clicking a live label object on the shared surface should select the matching object row");
+        Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection liveObjectSelection &&
+               liveObjectSelection.RecordIndex == 6,
+            "Clicking a live label object on the shared surface should produce an object-rooted property-grid selection");
+        Expect(ReadPrivateNullableInt(surface, "selectedRecordIndex") == 6 &&
+               ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
+               ReadPrivateBoolField(surface, "unplacedReportObjectsSelected") == false,
+            "Clicking a live label object on the shared surface should keep its containing live section highlighted");
+
+        ClickDesignSurface(surface, GetCenter(ReadSurfaceObjectRectangle(surface, 1)));
+        Application.DoEvents();
+        var expectedDeletedSectionTitle = InvokeAssetEditorString(control, "BuildDeletedReportSectionListTitle", reportLayout.DeletedSections[0]);
+        Expect(string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, expectedDeletedSectionTitle, StringComparison.Ordinal),
+            "Clicking a deleted label object on the shared surface should select its containing deleted section row");
+        Expect(string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "deleted.footer.total", StringComparison.Ordinal),
+            "Clicking a deleted label object on the shared surface should select the matching deleted object row");
+        Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection deletedObjectSelection &&
+               deletedObjectSelection.RecordIndex == 13,
+            "Clicking a deleted label object on the shared surface should keep object-rooted property-grid selection");
+        if (propertyGrid.SelectedObject is CopperfinDesignerSelection deletedObjectMetadataSelection)
+        {
+            Expect(string.Equals(TypeDescriptor.GetProperties(deletedObjectMetadataSelection)["OBJECTSTATE"]?.GetValue(deletedObjectMetadataSelection)?.ToString(), "Deleted", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(deletedObjectMetadataSelection)["RECORDINDEX"]?.GetValue(deletedObjectMetadataSelection)?.ToString(), "13", StringComparison.Ordinal),
+                "Clicking a deleted label object on the shared surface should expose deleted object state metadata");
+        }
+        Expect(ReadPrivateNullableInt(surface, "selectedRecordIndex") == 13 &&
+               ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 51 &&
+               ReadPrivateBoolField(surface, "unplacedReportObjectsSelected") == false,
+            "Clicking a deleted label object on the shared surface should keep its containing deleted section highlighted");
+
+        ClickDesignSurface(surface, GetCenter(ReadSurfaceObjectRectangle(surface, 2)));
+        Application.DoEvents();
+        Expect(string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Unplaced objects", StringComparison.Ordinal),
+            "Clicking an unplaced label object on the shared surface should select the unplaced-object row");
+        Expect(string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "orphan.note", StringComparison.Ordinal),
+            "Clicking an unplaced label object on the shared surface should select the matching unplaced object row");
+        Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection unplacedObjectSelection &&
+               unplacedObjectSelection.RecordIndex == 9,
+            "Clicking an unplaced label object on the shared surface should keep object-rooted property-grid selection");
+        Expect(ReadPrivateNullableInt(surface, "selectedRecordIndex") == 9 &&
+               ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") is null &&
+               ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+            "Clicking an unplaced label object on the shared surface should keep the unplaced-object tray highlighted");
+    }
+
     private static void SmokeDeletedReportSectionDesignSurfaceRendering()
     {
         using var surface = new CopperfinDesignSurfaceControl
@@ -4380,6 +4541,64 @@ internal static class Program
                ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") is null &&
                ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
             "Dragging an unplaced report object on the shared surface should keep the unplaced-object tray highlighted");
+    }
+
+    private static void SmokeLabelSurfaceObjectDragging()
+    {
+        using var surface = new CopperfinDesignSurfaceControl
+        {
+            Size = new Size(1400, 1000)
+        };
+
+        var snapshot = BuildLabelSurfaceInteractionSmokeSnapshot();
+        var reportLayout = snapshot.ReportLayout ?? throw new InvalidOperationException("Could not build shared label surface layout snapshot.");
+        surface.LoadReportLayout(reportLayout, snapshot.Objects);
+        RenderDesignSurface(surface);
+
+        var scale = InvokeDesignSurfaceFloat(surface, "CalculateReportScale");
+        var moves = new List<(int RecordIndex, int Left, int Top)>();
+        surface.ObjectMoved += (recordIndex, left, top) => moves.Add((recordIndex, left, top));
+
+        DragDesignSurface(surface, GetCenter(ReadSurfaceObjectRectangle(surface, 0)), 18, 12);
+        var expectedLiveLeft = (int)Math.Round(1200 + (18 / Math.Max(0.2F, scale)));
+        var expectedLiveTop = (int)Math.Round(2600 + (12 / Math.Max(0.2F, scale)));
+        Expect(moves.Count == 1 &&
+               moves[0].RecordIndex == 6 &&
+               moves[0].Left == expectedLiveLeft &&
+               moves[0].Top == expectedLiveTop,
+            "Dragging a live label object on the shared surface should emit invariant HPOS/VPOS updates");
+        Expect(ReadPrivateNullableInt(surface, "selectedRecordIndex") == 6 &&
+               ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
+               !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+            "Dragging a live label object on the shared surface should keep the containing live section highlighted");
+
+        moves.Clear();
+        DragDesignSurface(surface, GetCenter(ReadSurfaceObjectRectangle(surface, 1)), 14, 10);
+        var expectedDeletedLeft = (int)Math.Round(1400 + (14 / Math.Max(0.2F, scale)));
+        var expectedDeletedTop = (int)Math.Round(9400 + (10 / Math.Max(0.2F, scale)));
+        Expect(moves.Count == 1 &&
+               moves[0].RecordIndex == 13 &&
+               moves[0].Left == expectedDeletedLeft &&
+               moves[0].Top == expectedDeletedTop,
+            "Dragging a deleted label object on the shared surface should emit invariant HPOS/VPOS updates");
+        Expect(ReadPrivateNullableInt(surface, "selectedRecordIndex") == 13 &&
+               ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 51 &&
+               !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+            "Dragging a deleted label object on the shared surface should keep the containing deleted section highlighted");
+
+        moves.Clear();
+        DragDesignSurface(surface, GetCenter(ReadSurfaceObjectRectangle(surface, 2)), 16, 9);
+        var expectedUnplacedLeft = (int)Math.Round(800 + (16 / Math.Max(0.2F, scale)));
+        var expectedUnplacedTop = (int)Math.Round(700 + (9 / Math.Max(0.2F, scale)));
+        Expect(moves.Count == 1 &&
+               moves[0].RecordIndex == 9 &&
+               moves[0].Left == expectedUnplacedLeft &&
+               moves[0].Top == expectedUnplacedTop,
+            "Dragging an unplaced label object on the shared surface should emit invariant HPOS/VPOS updates");
+        Expect(ReadPrivateNullableInt(surface, "selectedRecordIndex") == 9 &&
+               ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") is null &&
+               ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+            "Dragging an unplaced label object on the shared surface should keep the unplaced-object tray highlighted");
     }
 
     private static void SmokeAssetEditorReportDragUsesBatchStudioHostUpdate()
@@ -5480,6 +5699,132 @@ internal static class Program
                                 Height = 500
                             }
                         }
+                    }
+                }
+            }
+        };
+    }
+
+    private static CopperfinStudioSnapshotDocument BuildLabelSurfaceInteractionSmokeSnapshot()
+    {
+        return new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "label",
+            FieldCount = 5,
+            Objects = new List<CopperfinStudioSnapshotObject>
+            {
+                new()
+                {
+                    RecordIndex = 6,
+                    Title = "customer.company",
+                    Subtitle = "label",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "HPOS", Value = "1200" },
+                        new() { Name = "VPOS", Value = "2600" },
+                        new() { Name = "WIDTH", Value = "4000" },
+                        new() { Name = "HEIGHT", Value = "500" },
+                        new() { Name = "EXPR", Value = "customer.company" }
+                    }
+                },
+                new()
+                {
+                    RecordIndex = 13,
+                    Deleted = true,
+                    Title = "deleted.footer.total",
+                    Subtitle = "label",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "HPOS", Value = "1400" },
+                        new() { Name = "VPOS", Value = "9400" },
+                        new() { Name = "WIDTH", Value = "3600" },
+                        new() { Name = "HEIGHT", Value = "600" },
+                        new() { Name = "EXPR", Value = "deleted.footer.total" }
+                    }
+                },
+                new()
+                {
+                    RecordIndex = 9,
+                    Title = "orphan.note",
+                    Subtitle = "label",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "HPOS", Value = "800" },
+                        new() { Name = "VPOS", Value = "700" },
+                        new() { Name = "WIDTH", Value = "2400" },
+                        new() { Name = "HEIGHT", Value = "450" },
+                        new() { Name = "EXPR", Value = "orphan.note" }
+                    }
+                }
+            },
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                IsLabel = true,
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail_1",
+                        Title = "Detail",
+                        BandKind = "detail",
+                        RecordIndex = 42,
+                        Top = 2000,
+                        Height = 5000,
+                        Objects = new List<CopperfinStudioReportLayoutObject>
+                        {
+                            new()
+                            {
+                                RecordIndex = 6,
+                                ObjectKind = "label",
+                                Title = "customer.company",
+                                Expression = "customer.company",
+                                Left = 1200,
+                                Top = 2600,
+                                Width = 4000,
+                                Height = 500
+                            }
+                        }
+                    }
+                },
+                DeletedSections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "deleted_footer",
+                        Title = "Summary",
+                        BandKind = "summary",
+                        RecordIndex = 51,
+                        Deleted = true,
+                        Top = 9000,
+                        Height = 1400,
+                        Objects = new List<CopperfinStudioReportLayoutObject>
+                        {
+                            new()
+                            {
+                                RecordIndex = 13,
+                                ObjectKind = "label",
+                                Title = "deleted.footer.total",
+                                Expression = "deleted.footer.total",
+                                Left = 1400,
+                                Top = 9400,
+                                Width = 3600,
+                                Height = 600
+                            }
+                        }
+                    }
+                },
+                UnplacedObjects = new List<CopperfinStudioReportLayoutObject>
+                {
+                    new()
+                    {
+                        RecordIndex = 9,
+                        ObjectKind = "label",
+                        Title = "orphan.note",
+                        Expression = "orphan.note",
+                        Left = 800,
+                        Top = 700,
+                        Width = 2400,
+                        Height = 450
                     }
                 }
             }
