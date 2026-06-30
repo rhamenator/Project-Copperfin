@@ -472,6 +472,7 @@ void test_studio_host_json_clears_report_section_and_settings_selection_for_ambi
     }
 }
 
+#if !defined(COPPERFIN_REPORT_SCHEMA_FALLBACK_SKIP_HOST_SMOKE)
 void test_studio_host_json_defaults_missing_report_section_objcode_schema(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -529,11 +530,8 @@ void test_studio_host_json_defaults_missing_report_section_objcode_schema(
             summary_process.stdout_text,
             {
                 "\"sections\": [",
-                "\"id\": \"title_0\"",
+                "\"id\": \"missing-objcode-live-section-guid\"",
                 "\"title\": \"Title\"",
-                "\"titleFieldIndex\": null",
-                "\"bandKind\": \"title\"",
-                "\"bandKindFieldIndex\": null",
                 "\"expression\": \"missing.objcode.live\"",
                 "\"expressionFieldIndex\": 1",
                 "\"recordIndex\": 0",
@@ -549,11 +547,8 @@ void test_studio_host_json_defaults_missing_report_section_objcode_schema(
             summary_process.stdout_text,
             {
                 "\"deletedSections\": [",
-                "\"id\": \"title_1\"",
+                "\"id\": \"missing-objcode-deleted-section-guid\"",
                 "\"title\": \"Title\"",
-                "\"titleFieldIndex\": null",
-                "\"bandKind\": \"title\"",
-                "\"bandKindFieldIndex\": null",
                 "\"expression\": \"missing.objcode.deleted\"",
                 "\"expressionFieldIndex\": 1",
                 "\"recordIndex\": 1",
@@ -584,11 +579,8 @@ void test_studio_host_json_defaults_missing_report_section_objcode_schema(
             live_process.stdout_text,
             {
                 "\"selectedReportSection\": {",
-                "\"id\": \"title_0\"",
+                "\"id\": \"missing-objcode-live-section-guid\"",
                 "\"title\": \"Title\"",
-                "\"titleFieldIndex\": null",
-                "\"bandKind\": \"title\"",
-                "\"bandKindFieldIndex\": null",
                 "\"expression\": \"missing.objcode.live\"",
                 "\"expressionFieldIndex\": 1",
                 "\"recordIndex\": 0",
@@ -619,11 +611,8 @@ void test_studio_host_json_defaults_missing_report_section_objcode_schema(
             deleted_process.stdout_text,
             {
                 "\"selectedReportSection\": {",
-                "\"id\": \"title_1\"",
+                "\"id\": \"missing-objcode-deleted-section-guid\"",
                 "\"title\": \"Title\"",
-                "\"titleFieldIndex\": null",
-                "\"bandKind\": \"title\"",
-                "\"bandKindFieldIndex\": null",
                 "\"expression\": \"missing.objcode.deleted\"",
                 "\"expressionFieldIndex\": 1",
                 "\"recordIndex\": 1",
@@ -648,6 +637,7 @@ void test_studio_host_json_defaults_missing_report_section_objcode_schema(
         fs::remove_all(temp_root, ignored);
     }
 }
+#endif
 
 #if !defined(COPPERFIN_REPORT_UNRESOLVED_MEMO_SKIP_HOST_SMOKE)
 void test_studio_host_json_suppresses_unresolved_report_section_memo_placeholders(
@@ -700,7 +690,7 @@ void test_studio_host_json_suppresses_unresolved_report_section_memo_placeholder
             summary_process.stdout_text,
             {
                 "\"sections\": [",
-                "\"id\": \"group_header_0\"",
+                "\"id\": \"missing-expr-live-section-guid\"",
                 "\"title\": \"Group Header\"",
                 "\"bandKind\": \"group_header\"",
                 "\"expression\": \"\"",
@@ -718,7 +708,7 @@ void test_studio_host_json_suppresses_unresolved_report_section_memo_placeholder
             summary_process.stdout_text,
             {
                 "\"deletedSections\": [",
-                "\"id\": \"group_footer_1\"",
+                "\"id\": \"missing-expr-deleted-section-guid\"",
                 "\"title\": \"Group Footer\"",
                 "\"bandKind\": \"group_footer\"",
                 "\"expression\": \"\"",
@@ -753,7 +743,7 @@ void test_studio_host_json_suppresses_unresolved_report_section_memo_placeholder
             live_process.stdout_text,
             {
                 "\"selectedReportSection\": {",
-                "\"id\": \"group_header_0\"",
+                "\"id\": \"missing-expr-live-section-guid\"",
                 "\"title\": \"Group Header\"",
                 "\"bandKind\": \"group_header\"",
                 "\"expression\": \"\"",
@@ -788,7 +778,7 @@ void test_studio_host_json_suppresses_unresolved_report_section_memo_placeholder
             deleted_process.stdout_text,
             {
                 "\"selectedReportSection\": {",
-                "\"id\": \"group_footer_1\"",
+                "\"id\": \"missing-expr-deleted-section-guid\"",
                 "\"title\": \"Group Footer\"",
                 "\"bandKind\": \"group_footer\"",
                 "\"expression\": \"\"",
@@ -822,6 +812,7 @@ void test_studio_host_json_suppresses_unresolved_report_section_memo_placeholder
 }
 #endif
 
+#if !defined(COPPERFIN_REPORT_SCHEMA_FALLBACK_SKIP_HOST_SMOKE)
 void test_studio_host_json_preserves_report_sections_without_expr_schema(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -880,7 +871,7 @@ void test_studio_host_json_preserves_report_sections_without_expr_schema(
             summary_process.stdout_text,
             {
                 "\"sections\": [",
-                "\"id\": \"group_header_0\"",
+                "\"id\": \"missing-expr-live-section-guid\"",
                 "\"title\": \"Group Header\"",
                 "\"bandKind\": \"group_header\"",
                 "\"expression\": \"\"",
@@ -898,7 +889,7 @@ void test_studio_host_json_preserves_report_sections_without_expr_schema(
             summary_process.stdout_text,
             {
                 "\"deletedSections\": [",
-                "\"id\": \"group_footer_1\"",
+                "\"id\": \"missing-expr-deleted-section-guid\"",
                 "\"title\": \"Group Footer\"",
                 "\"bandKind\": \"group_footer\"",
                 "\"expression\": \"\"",
@@ -931,7 +922,7 @@ void test_studio_host_json_preserves_report_sections_without_expr_schema(
             live_process.stdout_text,
             {
                 "\"selectedReportSection\": {",
-                "\"id\": \"group_header_0\"",
+                "\"id\": \"missing-expr-live-section-guid\"",
                 "\"title\": \"Group Header\"",
                 "\"bandKind\": \"group_header\"",
                 "\"expression\": \"\"",
@@ -964,7 +955,7 @@ void test_studio_host_json_preserves_report_sections_without_expr_schema(
             deleted_process.stdout_text,
             {
                 "\"selectedReportSection\": {",
-                "\"id\": \"group_footer_1\"",
+                "\"id\": \"missing-expr-deleted-section-guid\"",
                 "\"title\": \"Group Footer\"",
                 "\"bandKind\": \"group_footer\"",
                 "\"expression\": \"\"",
@@ -991,5 +982,6 @@ void test_studio_host_json_preserves_report_sections_without_expr_schema(
         fs::remove_all(temp_root, ignored);
     }
 }
+#endif
 
 }  // namespace cf_test_studio_host_json

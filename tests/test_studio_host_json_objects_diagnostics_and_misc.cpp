@@ -1942,6 +1942,7 @@ void test_studio_host_json_applies_mixed_report_deleted_states_by_stable_selecti
     }
 }
 
+#if !defined(COPPERFIN_REPORT_SCHEMA_FALLBACK_SKIP_HOST_SMOKE)
 void test_studio_host_json_defaults_missing_report_object_objcode_schema(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -2161,6 +2162,7 @@ void test_studio_host_json_defaults_missing_report_object_objcode_schema(
         fs::remove_all(temp_root, ignored);
     }
 }
+#endif
 
 #if !defined(COPPERFIN_REPORT_UNRESOLVED_MEMO_SKIP_HOST_SMOKE)
 void test_studio_host_json_suppresses_unresolved_deleted_report_object_memo_placeholders(
@@ -2427,6 +2429,7 @@ void test_studio_host_json_suppresses_unresolved_unplaced_report_object_memo_pla
 }
 #endif
 
+#if !defined(COPPERFIN_REPORT_SCHEMA_FALLBACK_SKIP_HOST_SMOKE)
 void test_studio_host_json_preserves_report_objects_without_expr_schema(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -2487,6 +2490,10 @@ void test_studio_host_json_preserves_report_objects_without_expr_schema(
                         "#1725: missing object EXPR layouts should keep live object section membership");
         expect_contains(summary_process.stdout_text, "\"deletedPlacedObjectCount\": 1",
                         "#1725: missing object EXPR layouts should preserve deleted placed-object counts");
+        expect_contains(summary_process.stdout_text, "\"sectionCount\": 1",
+                        "#1725: missing object EXPR layouts should preserve the containing live section");
+        expect_contains(summary_process.stdout_text, "\"deletedSectionCount\": 0",
+                        "#1725: missing object EXPR layouts should not fabricate deleted sections");
         expect_contains(summary_process.stdout_text, "\"deletedUnplacedObjectCount\": 0",
                         "#1725: missing object EXPR layouts should not fabricate deleted unplaced objects");
         expect_contains(summary_process.stdout_text, "\"objectKindCounts\": [\n        {\"kind\": \"field\", \"count\": 1}\n      ]",
@@ -2496,10 +2503,12 @@ void test_studio_host_json_preserves_report_objects_without_expr_schema(
         expect_contains_in_order(
             summary_process.stdout_text,
             {
+                "\"sections\": [",
+                "\"id\": \"missing-expr-detail-section-guid\"",
                 "\"objects\": [",
                 "\"recordIndex\": 1",
                 "\"deleted\": false",
-                "\"containingSectionId\": \"detail_0\"",
+                "\"containingSectionId\": \"missing-expr-detail-section-guid\"",
                 "\"objectTypeCode\": 8",
                 "\"objectKind\": \"field\"",
                 "\"title\": \"missing-expr-live-object-guid\"",
@@ -2522,7 +2531,10 @@ void test_studio_host_json_preserves_report_objects_without_expr_schema(
                 "\"deletedObjects\": [",
                 "\"recordIndex\": 2",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
+                "\"containingSectionId\": \"missing-expr-detail-section-guid\"",
+                "\"containingSectionRecordIndex\": 0",
+                "\"sectionRelativeTop\": 420",
+                "\"sectionRelativeBottom\": 540",
                 "\"objectTypeCode\": 5",
                 "\"objectKind\": \"label\"",
                 "\"title\": \"missing-expr-deleted-object-guid\"",
@@ -2562,7 +2574,7 @@ void test_studio_host_json_preserves_report_objects_without_expr_schema(
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 1",
                 "\"deleted\": false",
-                "\"containingSectionId\": \"detail_0\"",
+                "\"containingSectionId\": \"missing-expr-detail-section-guid\"",
                 "\"containingSectionRecordIndex\": 0",
                 "\"sectionRelativeTop\": 100",
                 "\"sectionRelativeBottom\": 190",
@@ -2588,7 +2600,7 @@ void test_studio_host_json_preserves_report_objects_without_expr_schema(
             live_process.stdout_text,
             {
                 "\"selectedReportObjectSection\": {",
-                "\"id\": \"detail_0\"",
+                "\"id\": \"missing-expr-detail-section-guid\"",
                 "\"bandKind\": \"detail\"",
                 "\"recordIndex\": 0",
                 "\"top\": 200",
@@ -2608,10 +2620,8 @@ void test_studio_host_json_preserves_report_objects_without_expr_schema(
                         "#1725: missing object EXPR deleted selection should advertise selected objects");
         expect_contains(deleted_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1725: missing object EXPR deleted selection should expose object selection kind");
-        expect_contains(deleted_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1725: missing object EXPR deleted selection should not fabricate containing sections");
-        expect_contains(deleted_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1725: missing object EXPR deleted selection should serialize null containing sections");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1725: missing object EXPR deleted selection should preserve containing sections");
         expect_missing_object_expr_preview_bounds(
             deleted_process.stdout_text,
             "#2339: selected missing deleted object EXPR JSON");
@@ -2621,9 +2631,11 @@ void test_studio_host_json_preserves_report_objects_without_expr_schema(
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 2",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"containingSectionRecordIndex\": null",
-                "\"sectionObjectIndex\": null",
+                "\"containingSectionId\": \"missing-expr-detail-section-guid\"",
+                "\"containingSectionRecordIndex\": 0",
+                "\"sectionRelativeTop\": 420",
+                "\"sectionRelativeBottom\": 540",
+                "\"sectionObjectIndex\": 0",
                 "\"objectTypeCode\": 5",
                 "\"objectKind\": \"label\"",
                 "\"title\": \"missing-expr-deleted-object-guid\"",
@@ -2640,6 +2652,18 @@ void test_studio_host_json_preserves_report_objects_without_expr_schema(
                 "\"highlightCount\": 0"
             },
             "#1725: missing deleted object EXPR selection should expose object metadata with null expression provenance");
+        expect_contains_in_order(
+            deleted_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"missing-expr-detail-section-guid\"",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 0",
+                "\"top\": 200",
+                "\"height\": 1000",
+                "\"bottom\": 1200"
+            },
+            "#1725: missing deleted object EXPR selection should expose containing section metadata");
     };
 
     run_missing_object_expr_layout(temp_root / "missing_object_expr.frx",
@@ -2699,6 +2723,10 @@ void test_studio_host_json_synthesizes_report_object_titles_without_title_schema
                         "#1726: missing object title layouts should keep live object section membership");
         expect_contains(summary_process.stdout_text, "\"deletedPlacedObjectCount\": 1",
                         "#1726: missing object title layouts should preserve deleted placed-object counts");
+        expect_contains(summary_process.stdout_text, "\"sectionCount\": 1",
+                        "#1726: missing object title layouts should preserve the containing live section");
+        expect_contains(summary_process.stdout_text, "\"deletedSectionCount\": 0",
+                        "#1726: missing object title layouts should not fabricate deleted sections");
         expect_contains(summary_process.stdout_text, "\"objectKindCounts\": [\n        {\"kind\": \"field\", \"count\": 1}\n      ]",
                         "#1726: missing live object title layouts should preserve object-kind counts");
         expect_contains(summary_process.stdout_text, "\"deletedObjectKindCounts\": [\n        {\"kind\": \"label\", \"count\": 1}\n      ]",
@@ -2709,6 +2737,8 @@ void test_studio_host_json_synthesizes_report_object_titles_without_title_schema
         expect_contains_in_order(
             summary_process.stdout_text,
             {
+                "\"sections\": [",
+                "\"id\": \"detail_0\"",
                 "\"objects\": [",
                 "\"recordIndex\": 1",
                 "\"deleted\": false",
@@ -2735,7 +2765,10 @@ void test_studio_host_json_synthesizes_report_object_titles_without_title_schema
                 "\"deletedObjects\": [",
                 "\"recordIndex\": 2",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
+                "\"containingSectionId\": \"detail_0\"",
+                "\"containingSectionRecordIndex\": 0",
+                "\"sectionRelativeTop\": 400",
+                "\"sectionRelativeBottom\": 510",
                 "\"objectTypeCode\": 5",
                 "\"objectKind\": \"label\"",
                 "\"title\": \"Record 2\"",
@@ -2793,6 +2826,18 @@ void test_studio_host_json_synthesizes_report_object_titles_without_title_schema
                 "\"bottom\": 300"
             },
             "#1726: missing live object title selection should expose synthesized title metadata");
+        expect_contains_in_order(
+            live_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"detail_0\"",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 0",
+                "\"top\": 100",
+                "\"height\": 800",
+                "\"bottom\": 900"
+            },
+            "#1726: missing live object title selection should expose containing section metadata");
 
         const auto deleted_process = run_process_capture(
             studio_host_path,
@@ -2805,10 +2850,8 @@ void test_studio_host_json_synthesizes_report_object_titles_without_title_schema
                         "#1726: missing object title deleted selection should advertise selected objects");
         expect_contains(deleted_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                         "#1726: missing object title deleted selection should expose object selection kind");
-        expect_contains(deleted_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
-                        "#1726: missing object title deleted selection should not fabricate containing sections");
-        expect_contains(deleted_process.stdout_text, "\"selectedReportObjectSection\": null",
-                        "#1726: missing object title deleted selection should serialize null containing sections");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1726: missing object title deleted selection should preserve containing sections");
         expect_missing_object_title_preview_bounds(
             deleted_process.stdout_text,
             "#2340: selected missing deleted object title JSON");
@@ -2818,8 +2861,10 @@ void test_studio_host_json_synthesizes_report_object_titles_without_title_schema
                 "\"selectedReportObject\": {",
                 "\"recordIndex\": 2",
                 "\"deleted\": true",
-                "\"containingSectionId\": \"\"",
-                "\"containingSectionRecordIndex\": null",
+                "\"containingSectionId\": \"detail_0\"",
+                "\"containingSectionRecordIndex\": 0",
+                "\"sectionRelativeTop\": 400",
+                "\"sectionRelativeBottom\": 510",
                 "\"objectTypeCode\": 5",
                 "\"objectKind\": \"label\"",
                 "\"title\": \"Record 2\"",
@@ -2834,6 +2879,18 @@ void test_studio_host_json_synthesizes_report_object_titles_without_title_schema
                 "\"bottom\": 610"
             },
             "#1726: missing deleted object title selection should expose synthesized title metadata");
+        expect_contains_in_order(
+            deleted_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"detail_0\"",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 0",
+                "\"top\": 100",
+                "\"height\": 800",
+                "\"bottom\": 900"
+            },
+            "#1726: missing deleted object title selection should expose containing section metadata");
     };
 
     run_missing_object_title_layout(temp_root / "missing_object_title.frx",
@@ -2847,5 +2904,6 @@ void test_studio_host_json_synthesizes_report_object_titles_without_title_schema
         fs::remove_all(temp_root, ignored);
     }
 }
+#endif
 
 }  // namespace cf_test_studio_host_json

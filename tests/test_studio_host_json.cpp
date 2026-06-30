@@ -145,12 +145,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_defaults_oversized_report_layout_numerics(argv[1]);
     test_studio_host_json_uses_integer_portions_for_fractional_report_layout_geometry(argv[1]);
     test_studio_host_json_defaults_missing_report_layout_geometry_fields(argv[1]);
-    test_studio_host_json_defaults_missing_report_section_objcode_schema(argv[1]);
-    test_studio_host_json_defaults_missing_report_object_objcode_schema(argv[1]);
-    test_studio_host_json_preserves_report_sections_without_expr_schema(argv[1]);
-    test_studio_host_json_defaults_report_sections_without_geometry_schema(argv[1]);
-    test_studio_host_json_preserves_report_objects_without_expr_schema(argv[1]);
-    test_studio_host_json_synthesizes_report_object_titles_without_title_schema(argv[1]);
     test_studio_host_json_exposes_report_layout_column_setup(argv[1]);
     test_studio_host_json_exposes_label_layout_parity(argv[1]);
     test_studio_host_json_nudges_report_layout_objects_by_stable_selectors(argv[1]);

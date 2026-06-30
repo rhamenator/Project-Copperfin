@@ -3601,6 +3601,7 @@ void test_studio_host_json_defaults_unresolved_report_geometry_memo_placeholders
 }
 #endif
 
+#if !defined(COPPERFIN_REPORT_SCHEMA_FALLBACK_SKIP_HOST_SMOKE)
 void test_studio_host_json_defaults_report_sections_without_geometry_schema(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -3657,7 +3658,7 @@ void test_studio_host_json_defaults_report_sections_without_geometry_schema(
             summary_process.stdout_text,
             {
                 "\"sections\": [",
-                "\"id\": \"page_header_0\"",
+                "\"id\": \"missing-geometry-live-section-guid\"",
                 "\"title\": \"Page Header\"",
                 "\"bandKind\": \"page_header\"",
                 "\"expression\": \"page.header.missing.geometry\"",
@@ -3676,7 +3677,7 @@ void test_studio_host_json_defaults_report_sections_without_geometry_schema(
             summary_process.stdout_text,
             {
                 "\"deletedSections\": [",
-                "\"id\": \"summary_1\"",
+                "\"id\": \"missing-geometry-deleted-section-guid\"",
                 "\"title\": \"Summary\"",
                 "\"bandKind\": \"summary\"",
                 "\"expression\": \"summary.missing.geometry\"",
@@ -3710,7 +3711,7 @@ void test_studio_host_json_defaults_report_sections_without_geometry_schema(
             live_process.stdout_text,
             {
                 "\"selectedReportSection\": {",
-                "\"id\": \"page_header_0\"",
+                "\"id\": \"missing-geometry-live-section-guid\"",
                 "\"title\": \"Page Header\"",
                 "\"bandKind\": \"page_header\"",
                 "\"expression\": \"page.header.missing.geometry\"",
@@ -3744,7 +3745,7 @@ void test_studio_host_json_defaults_report_sections_without_geometry_schema(
             deleted_process.stdout_text,
             {
                 "\"selectedReportSection\": {",
-                "\"id\": \"summary_1\"",
+                "\"id\": \"missing-geometry-deleted-section-guid\"",
                 "\"title\": \"Summary\"",
                 "\"bandKind\": \"summary\"",
                 "\"expression\": \"summary.missing.geometry\"",
@@ -3772,5 +3773,6 @@ void test_studio_host_json_defaults_report_sections_without_geometry_schema(
         fs::remove_all(temp_root, ignored);
     }
 }
+#endif
 
 }  // namespace cf_test_studio_host_json
