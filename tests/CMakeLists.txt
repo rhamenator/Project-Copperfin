@@ -119,7 +119,6 @@ add_executable(test_studio_host_json
     test_studio_host_json_sections_band_exposure.cpp
     test_studio_host_json_sections_dhf_lifecycle.cpp
     test_studio_host_json_sections_dhf_expressions_and_exposure.cpp
-    test_studio_host_json_sections_geometry.cpp
     test_studio_host_json_sections_move_and_placement.cpp
     test_studio_host_json_objects_dhf_lifecycle.cpp
     test_studio_host_json_objects_dhf_expressions_and_exposure.cpp
@@ -424,6 +423,27 @@ endif()
 add_test(
     NAME test_studio_host_report_section_selection_diagnostics
     COMMAND $<TARGET_FILE:test_studio_host_report_section_selection_diagnostics> $<TARGET_FILE:copperfin_studio_host>
+)
+
+add_executable(test_studio_host_report_live_section_geometry
+    test_studio_host_report_live_section_geometry.cpp
+    test_studio_host_json_geometry_preview_helpers.cpp
+    test_studio_host_json_sections_geometry.cpp
+    test_studio_host_json_report_shared_fixtures.cpp
+    test_studio_host_json_report_section_shared_fixtures.cpp
+    test_studio_host_json_shared_test_helpers.cpp
+)
+target_link_libraries(test_studio_host_report_live_section_geometry PRIVATE cf_vfp_assets)
+
+if(MSVC)
+    target_compile_options(test_studio_host_report_live_section_geometry PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_report_live_section_geometry PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_report_live_section_geometry
+    COMMAND $<TARGET_FILE:test_studio_host_report_live_section_geometry> $<TARGET_FILE:copperfin_studio_host>
 )
 
 add_executable(test_studio_host_report_unresolved_memo_placeholders
