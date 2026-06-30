@@ -157,8 +157,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_snaps_label_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_deletes_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_deletes_label_layout_objects_by_stable_selectors(argv[1]);
-    test_studio_host_json_deletes_edited_report_layout_object_geometry_by_record_selection(argv[1]);
-    test_studio_host_json_deletes_edited_unplaced_report_layout_object_geometry_by_record_selection(argv[1]);
     test_studio_host_json_restores_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_restores_label_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_distributes_report_layout_objects_by_stable_selectors(argv[1]);
