@@ -44,6 +44,7 @@ internal static class Program
         SmokeAssetEditorReportObjectPropertyGridHostUpdate();
         SmokeAssetEditorUnplacedReportObjectPropertyGridHostUpdate();
         SmokeAssetEditorUnplacedReportObjectHostUpdateRefreshesShellSummary();
+        SmokeAssetEditorUnplacedReportObjectPlacementIntoSectionRefreshesContinuity();
         SmokeAssetEditorDeletedReportObjectHostUpdateRefreshesShellSummary();
         SmokeAssetEditorUndoRefreshesReportShellSummary();
         SmokeAssetEditorUndoRefreshesDeletedReportShellSummary();
@@ -53,6 +54,7 @@ internal static class Program
         SmokeAssetEditorDeleteObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorRestoreObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorLabelObjectPropertyGridHostUpdate();
+        SmokeAssetEditorLabelObjectPlacementIntoUnplacedRefreshesContinuity();
         SmokeAssetEditorUnplacedLabelObjectPropertyGridHostUpdate();
         SmokeAssetEditorUnplacedLabelObjectHostUpdateRefreshesShellSummary();
         SmokeAssetEditorDeletedLabelObjectHostUpdateRefreshesShellSummary();
@@ -1536,6 +1538,133 @@ internal static class Program
         }
     }
 
+    private static void SmokeAssetEditorUnplacedReportObjectPlacementIntoSectionRefreshesContinuity()
+    {
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            Console.WriteLine("SKIP: shared asset-editor unplaced-report placement-transition smoke requires a POSIX scriptable fake Studio host.");
+            return;
+        }
+
+        var snapshot = BuildAssetEditorUnplacedReportObjectUpdateSmokeSnapshot();
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
+        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var logPath = Path.Combine(tempRoot, "studio-host.log");
+        var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
+
+        try
+        {
+            File.WriteAllText(logPath, string.Empty);
+            CreateFakeStudioHostScript(scriptPath, BuildUnplacedReportObjectPlacementIntoSectionHostResponseJson());
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", scriptPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", logPath);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+
+            ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+            SetPrivateField(control, "currentPath", assetPath);
+            GetPrivateLabel(control, "detailsLabel").Text = InvokeAssetEditorString(control, "BuildSnapshotDetailsText", new FileInfo(assetPath), snapshot);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            sectionListView.Items[0].Selected = false;
+            sectionListView.Items[1].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            InvokeAssetEditorVoid(control, "LoadSurface");
+            Application.DoEvents();
+
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface.");
+
+            objectListView.Items[0].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == 9,
+                "A report placement-transition smoke should start from an unplaced object-rooted property-grid selection");
+            Expect(!HasLabelTextContaining(control, "Preview bounds:"),
+                "A report placement-transition smoke should start without preview-bounds shell text when the initial snapshot omits preview bounds");
+
+            if (propertyGrid.SelectedObject is not CopperfinDesignerSelection objectSelection)
+            {
+                throw new InvalidOperationException("Could not read the selected unplaced report object for the placement-transition smoke.");
+            }
+
+            TypeDescriptor.GetProperties(objectSelection)["VPOS"]?.SetValue(objectSelection, 2400);
+            InvokeAssetEditorVoid(control, "ApplyPropertyGridChange", "VPOS", 700);
+            Application.DoEvents();
+
+            var logLines = File.ReadAllLines(logPath);
+            var invocationStartCount = logLines.Count(line => string.Equals(line, "BEGIN", StringComparison.Ordinal));
+            Expect(invocationStartCount == 1,
+                "Moving an unplaced report object into a section through the shared asset editor should invoke the Studio host exactly once");
+
+            var invocationArguments = logLines.Skip(1).ToList();
+            Expect(invocationArguments.Contains("--from-vs") &&
+                   invocationArguments.Contains("--json") &&
+                   invocationArguments.Contains("--set-property") &&
+                   invocationArguments.Contains("--record") &&
+                   invocationArguments.Contains("9") &&
+                   invocationArguments.Contains("--property-name") &&
+                   invocationArguments.Contains("VPOS") &&
+                   invocationArguments.Contains("--property-value") &&
+                   invocationArguments.Contains("2400"),
+                "Moving an unplaced report object into a section through the shared asset editor should send one invariant VPOS update through the host property contract");
+
+            Expect(HasLabelTextContaining(control, "Preview bounds: L 1100 T 2400 R 5200 B 3100   Size: 4100 x 700") &&
+                   HasLabelTextContaining(control, "Unplaced objects: 0") &&
+                   string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Detail", StringComparison.Ordinal) &&
+                   string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "orphan.note", StringComparison.Ordinal) &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
+                   refreshedSelection.RecordIndex == 9 &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["VPOS"]?.GetValue(refreshedSelection)?.ToString(), "2400", StringComparison.Ordinal) &&
+                   string.Equals(ReadPrivateStringField(surface, "assetFamily"), "report", StringComparison.Ordinal) &&
+                   ReadPrivateNullableInt(surface, "selectedRecordIndex") == 9 &&
+                   ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
+                   !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+                "Moving an unplaced report object into a section through the shared asset editor should refresh the shell summary and preserve record-rooted continuity in the new containing-section scope");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", previousLogPath);
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeAssetEditorDeletedReportObjectHostUpdateRefreshesShellSummary()
     {
         if (Path.DirectorySeparatorChar == '\\')
@@ -2907,6 +3036,129 @@ internal static class Program
                    ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") is null &&
                    ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
                 "Editing an unplaced label object through the shared asset editor should preserve label identity, unplaced object selection, and unplaced-scope continuity after the host-backed refresh");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", previousLogPath);
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
+    private static void SmokeAssetEditorLabelObjectPlacementIntoUnplacedRefreshesContinuity()
+    {
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            Console.WriteLine("SKIP: shared asset-editor label placement-transition smoke requires a POSIX scriptable fake Studio host.");
+            return;
+        }
+
+        var snapshot = BuildAssetEditorLabelObjectUpdateSmokeSnapshot();
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
+        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var logPath = Path.Combine(tempRoot, "studio-host.log");
+        var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
+
+        try
+        {
+            File.WriteAllText(logPath, string.Empty);
+            CreateFakeStudioHostScript(scriptPath, BuildLabelObjectPlacementIntoUnplacedHostResponseJson());
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", scriptPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", logPath);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+
+            ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+            SetPrivateField(control, "currentPath", assetPath);
+            GetPrivateLabel(control, "detailsLabel").Text = InvokeAssetEditorString(control, "BuildSnapshotDetailsText", new FileInfo(assetPath), snapshot);
+            InvokeAssetEditorVoid(control, "LoadSurface");
+            Application.DoEvents();
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared label design surface.");
+
+            objectListView.Items[0].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == 6,
+                "A label placement-transition smoke should start from a section-contained object-rooted property-grid selection");
+            Expect(!HasLabelTextContaining(control, "Preview bounds:"),
+                "A label placement-transition smoke should start without preview-bounds shell text when the initial snapshot omits preview bounds");
+
+            if (propertyGrid.SelectedObject is not CopperfinDesignerSelection objectSelection)
+            {
+                throw new InvalidOperationException("Could not read the selected label object for the placement-transition smoke.");
+            }
+
+            TypeDescriptor.GetProperties(objectSelection)["VPOS"]?.SetValue(objectSelection, 9000);
+            InvokeAssetEditorVoid(control, "ApplyPropertyGridChange", "VPOS", 2600);
+            Application.DoEvents();
+
+            var logLines = File.ReadAllLines(logPath);
+            var invocationStartCount = logLines.Count(line => string.Equals(line, "BEGIN", StringComparison.Ordinal));
+            Expect(invocationStartCount == 1,
+                "Moving a label object into the unplaced tray through the shared asset editor should invoke the Studio host exactly once");
+
+            var invocationArguments = logLines.Skip(1).ToList();
+            Expect(invocationArguments.Contains("--from-vs") &&
+                   invocationArguments.Contains("--json") &&
+                   invocationArguments.Contains("--set-property") &&
+                   invocationArguments.Contains("--record") &&
+                   invocationArguments.Contains("6") &&
+                   invocationArguments.Contains("--property-name") &&
+                   invocationArguments.Contains("VPOS") &&
+                   invocationArguments.Contains("--property-value") &&
+                   invocationArguments.Contains("9000"),
+                "Moving a label object into the unplaced tray through the shared asset editor should send one invariant VPOS update through the host property contract");
+
+            Expect(HasLabelTextContaining(control, "Preview bounds: L 1200 T 9000 R 5200 B 9500   Size: 4000 x 500") &&
+                   HasLabelTextContaining(control, "Unplaced objects: 1") &&
+                   string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Unplaced objects", StringComparison.Ordinal) &&
+                   string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "customer.company", StringComparison.Ordinal) &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
+                   refreshedSelection.RecordIndex == 6 &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["VPOS"]?.GetValue(refreshedSelection)?.ToString(), "9000", StringComparison.Ordinal) &&
+                   string.Equals(ReadPrivateStringField(surface, "assetFamily"), "label", StringComparison.Ordinal) &&
+                   ReadPrivateNullableInt(surface, "selectedRecordIndex") == 6 &&
+                   ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") is null &&
+                   ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+                "Moving a label object into the unplaced tray through the shared asset editor should refresh the shell summary and preserve record-rooted continuity in the new unplaced scope");
         }
         finally
         {
@@ -8334,6 +8586,13 @@ internal static class Program
 """;
     }
 
+    private static string BuildUnplacedReportObjectPlacementIntoSectionHostResponseJson()
+    {
+        return """
+{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[{"RecordIndex":6,"Title":"customer.company","Subtitle":"field","Properties":[{"Name":"HPOS","Value":"1200"},{"Name":"VPOS","Value":"2600"},{"Name":"WIDTH","Value":"4000"},{"Name":"HEIGHT","Value":"500"},{"Name":"EXPR","Value":"customer.company"}]},{"RecordIndex":9,"Title":"orphan.note","Subtitle":"field","Properties":[{"Name":"HPOS","Value":"1100"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"2400"},{"Name":"HEIGHT","Value":"450"},{"Name":"EXPR","Value":"orphan.note"}]}],"ReportLayout":{"PreviewBoundsAvailable":true,"PreviewBoundsLeft":1100,"PreviewBoundsTop":2400,"PreviewBoundsRight":5200,"PreviewBoundsBottom":3100,"PreviewBoundsWidth":4100,"PreviewBoundsHeight":700,"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":6,"ObjectKind":"field","Title":"customer.company","Expression":"customer.company","Left":1200,"Top":2600,"Width":4000,"Height":500},{"RecordIndex":9,"ObjectKind":"field","Title":"orphan.note","Expression":"orphan.note","Left":1100,"Top":2400,"Width":2400,"Height":450}]}],"DeletedSections":[],"UnplacedObjects":[]}}}
+""";
+    }
+
     private static string BuildUndoPreviewRefreshHostResponseJson()
     {
         return """
@@ -8373,6 +8632,13 @@ internal static class Program
     {
         return """
 {"Status":"ok","Document":{"AssetFamily":"label","FieldCount":5,"Objects":[{"RecordIndex":6,"Title":"customer.company","Subtitle":"label","Properties":[{"Name":"HPOS","Value":"1500"},{"Name":"VPOS","Value":"2600"},{"Name":"WIDTH","Value":"4000"},{"Name":"HEIGHT","Value":"500"},{"Name":"EXPR","Value":"customer.company"}]}],"ReportLayout":{"IsLabel":true,"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":6,"ObjectKind":"label","Title":"customer.company","Expression":"customer.company","Left":1500,"Top":2600,"Width":4000,"Height":500}]}],"DeletedSections":[],"UnplacedObjects":[]}}}
+""";
+    }
+
+    private static string BuildLabelObjectPlacementIntoUnplacedHostResponseJson()
+    {
+        return """
+{"Status":"ok","Document":{"AssetFamily":"label","FieldCount":5,"Objects":[{"RecordIndex":6,"Title":"customer.company","Subtitle":"label","Properties":[{"Name":"HPOS","Value":"1200"},{"Name":"VPOS","Value":"9000"},{"Name":"WIDTH","Value":"4000"},{"Name":"HEIGHT","Value":"500"},{"Name":"EXPR","Value":"customer.company"}]}],"ReportLayout":{"IsLabel":true,"PreviewBoundsAvailable":true,"PreviewBoundsLeft":1200,"PreviewBoundsTop":9000,"PreviewBoundsRight":5200,"PreviewBoundsBottom":9500,"PreviewBoundsWidth":4000,"PreviewBoundsHeight":500,"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[],"UnplacedObjects":[{"RecordIndex":6,"ObjectKind":"label","Title":"customer.company","Expression":"customer.company","Left":1200,"Top":9000,"Width":4000,"Height":500}]}}}
 """;
     }
 
