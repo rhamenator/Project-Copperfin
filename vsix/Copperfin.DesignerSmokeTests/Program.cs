@@ -814,6 +814,8 @@ internal static class Program
         var spanishSectionProperties = TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().ToList();
         Expect(spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Altura", StringComparison.Ordinal)),
             "Spanish report section property-grid selection should localize section field labels");
+        Expect(string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "SECTIONSTATE", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "Activa", StringComparison.Ordinal),
+            "Spanish report section property-grid selection should localize live section state values");
         Expect(string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "BANDKIND", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "Encabezado de detalle", StringComparison.Ordinal),
             "Spanish report section property-grid selection should localize visible band-kind values");
         Expect(string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "GROUPROLE", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "Encabezado", StringComparison.Ordinal),
@@ -832,6 +834,8 @@ internal static class Program
         var portugueseSectionProperties = TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().ToList();
         Expect(portugueseSectionProperties.Any(property => string.Equals(property.DisplayName, "Altura", StringComparison.Ordinal)),
             "Portuguese report section property-grid selection should localize section field labels");
+        Expect(string.Equals(portugueseSectionProperties.First(property => string.Equals(property.Name, "SECTIONSTATE", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "Ativa", StringComparison.Ordinal),
+            "Portuguese report section property-grid selection should localize live section state values");
         Expect(string.Equals(portugueseSectionProperties.First(property => string.Equals(property.Name, "BANDKIND", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "Cabeçalho do detalhe", StringComparison.Ordinal),
             "Portuguese report section property-grid selection should localize visible band-kind values");
         Expect(string.Equals(portugueseSectionProperties.First(property => string.Equals(property.Name, "GROUPROLE", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "Cabeçalho", StringComparison.Ordinal),
@@ -851,6 +855,8 @@ internal static class Program
         var pseudoSectionProperties = TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().ToList();
         Expect(pseudoSectionProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Height"), StringComparison.Ordinal)),
             "Pseudo-localized report section property-grid selection should route new field labels through the shared catalog");
+        Expect(string.Equals(pseudoSectionProperties.First(property => string.Equals(property.Name, "SECTIONSTATE", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), pseudoLocalization.Text("AssetEditor.State.Live"), StringComparison.Ordinal),
+            "Pseudo-localized report section property-grid selection should route live section state values through the shared catalog");
         Expect(string.Equals(pseudoSectionProperties.First(property => string.Equals(property.Name, "BANDKIND", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), pseudoLocalization.Text("AssetEditor.ReportBandKind.DetailHeader"), StringComparison.Ordinal),
             "Pseudo-localized report section property-grid selection should route visible band-kind values through the shared catalog");
         Expect(string.Equals(pseudoSectionProperties.First(property => string.Equals(property.Name, "GROUPROLE", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), pseudoLocalization.Text("AssetEditor.GroupRole.Header"), StringComparison.Ordinal),
@@ -869,6 +875,8 @@ internal static class Program
         Expect(snapshot.ReportLayout.Sections[0].GroupingIndex == 1 &&
                snapshot.ReportLayout.Sections[0].GroupingNestingDepth == 2,
             "Localized report section property-grid grouping index metadata should preserve section snapshot contracts");
+        Expect(!snapshot.ReportLayout.Sections[0].Deleted,
+            "Localized report section property-grid live state values should preserve section snapshot contracts");
         Expect(string.Equals(snapshot.ReportLayout.Sections[0].GroupPartnerSectionId, "group_footer_7", StringComparison.Ordinal) &&
                snapshot.ReportLayout.Sections[0].GroupPartnerRecordIndex == 47 &&
                snapshot.ReportLayout.Sections[0].GroupPartnerDeleted,
@@ -1206,6 +1214,11 @@ internal static class Program
         Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection deletedSectionSelection &&
                deletedSectionSelection.RecordIndex == 51,
             "Deleted report section explorer selection should produce a section-rooted property-grid selection");
+        if (propertyGrid.SelectedObject is CopperfinDesignerSelection deletedSelection)
+        {
+            Expect(string.Equals(TypeDescriptor.GetProperties(deletedSelection)["SECTIONSTATE"]?.GetValue(deletedSelection)?.ToString(), "Deleted", StringComparison.Ordinal),
+                "Deleted report section explorer selection should expose deleted section state metadata");
+        }
         Expect(objectListView.Items.Cast<ListViewItem>().Select(item => item.Text).SequenceEqual(new[] { "deleted.footer.total" }),
             "Deleted report section explorer selection should filter object rows to deleted section membership");
 
@@ -1214,12 +1227,18 @@ internal static class Program
         var spanishSectionListView = GetPrivateListView(spanishControl, "sectionListView");
         Expect(spanishSectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, "Summary (eliminada)", StringComparison.Ordinal)),
             "Spanish report explorer should localize deleted section rows");
+        var spanishDeletedSelection = CopperfinDesignerSelection.FromReportSection(snapshot.ReportLayout.DeletedSections[0], new CopperfinLocalization("es-419"));
+        Expect(string.Equals(TypeDescriptor.GetProperties(spanishDeletedSelection)["SECTIONSTATE"]?.GetValue(spanishDeletedSelection)?.ToString(), "Eliminada", StringComparison.Ordinal),
+            "Spanish deleted report section property-grid selection should localize deleted section state values");
 
         using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
         ApplyReportSnapshotForExplorerSmoke(portugueseControl, snapshot);
         var portugueseSectionListView = GetPrivateListView(portugueseControl, "sectionListView");
         Expect(portugueseSectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, "Summary (excluída)", StringComparison.Ordinal)),
             "Portuguese report explorer should localize deleted section rows");
+        var portugueseDeletedSelection = CopperfinDesignerSelection.FromReportSection(snapshot.ReportLayout.DeletedSections[0], new CopperfinLocalization("pt-BR"));
+        Expect(string.Equals(TypeDescriptor.GetProperties(portugueseDeletedSelection)["SECTIONSTATE"]?.GetValue(portugueseDeletedSelection)?.ToString(), "Excluída", StringComparison.Ordinal),
+            "Portuguese deleted report section property-grid selection should localize deleted section state values");
 
         var pseudoLocalization = new CopperfinLocalization("qps-ploc");
         using var pseudoControl = new CopperfinAssetEditorControl(pseudoLocalization);
@@ -1227,6 +1246,11 @@ internal static class Program
         var pseudoSectionListView = GetPrivateListView(pseudoControl, "sectionListView");
         Expect(pseudoSectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, pseudoLocalization.Format("AssetEditor.ReportSection.Deleted", "Summary"), StringComparison.Ordinal)),
             "Pseudo-localized report explorer should route deleted section rows through the shared catalog");
+        var pseudoDeletedSelection = CopperfinDesignerSelection.FromReportSection(snapshot.ReportLayout.DeletedSections[0], pseudoLocalization);
+        Expect(string.Equals(TypeDescriptor.GetProperties(pseudoDeletedSelection)["SECTIONSTATE"]?.GetValue(pseudoDeletedSelection)?.ToString(), pseudoLocalization.Text("AssetEditor.State.Deleted"), StringComparison.Ordinal),
+            "Pseudo-localized deleted report section property-grid selection should route deleted section state values through the shared catalog");
+        Expect(snapshot.ReportLayout.DeletedSections[0].Deleted,
+            "Deleted report section property-grid state values should preserve deleted section snapshot contracts");
     }
 
     private static void SmokeReportSurfaceScopeSelection()
