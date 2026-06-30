@@ -113,12 +113,12 @@ add_executable(test_studio_host_json
     test_studio_host_json_geometry_font_metadata.cpp
     test_studio_host_json_geometry_column_width.cpp
     test_studio_host_json_report_settings_shared_fixtures.cpp
+    test_studio_host_json_report_section_shared_fixtures.cpp
     test_studio_host_json_settings_page_layout_fields.cpp
     test_studio_host_json_settings_column_setup.cpp
     test_studio_host_json_sections_band_exposure.cpp
     test_studio_host_json_sections_dhf_lifecycle.cpp
     test_studio_host_json_sections_dhf_expressions_and_exposure.cpp
-    test_studio_host_json_sections_diagnostics_and_misc.cpp
     test_studio_host_json_sections_geometry.cpp
     test_studio_host_json_sections_move_and_placement.cpp
     test_studio_host_json_objects_dhf_lifecycle.cpp
@@ -406,6 +406,24 @@ endif()
 add_test(
     NAME test_studio_host_report_settings_diagnostics
     COMMAND $<TARGET_FILE:test_studio_host_report_settings_diagnostics> $<TARGET_FILE:copperfin_studio_host>
+)
+
+add_executable(test_studio_host_report_section_selection_diagnostics
+    test_studio_host_report_section_selection_diagnostics.cpp
+    test_studio_host_json_report_section_selection_diagnostics.cpp
+    test_studio_host_json_shared_test_helpers.cpp
+)
+target_link_libraries(test_studio_host_report_section_selection_diagnostics PRIVATE cf_vfp_assets)
+
+if(MSVC)
+    target_compile_options(test_studio_host_report_section_selection_diagnostics PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_report_section_selection_diagnostics PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_report_section_selection_diagnostics
+    COMMAND $<TARGET_FILE:test_studio_host_report_section_selection_diagnostics> $<TARGET_FILE:copperfin_studio_host>
 )
 
 add_executable(test_studio_host_report_unresolved_memo_placeholders

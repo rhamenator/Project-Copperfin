@@ -1262,8 +1262,6 @@ void write_synthetic_report_table_for_missing_section_expr_layout_json(
     const std::filesystem::path& report_path);
 void write_synthetic_report_table_for_stable_summary_section_json(
     const std::filesystem::path& report_path);
-void write_synthetic_report_table_for_ambiguous_summary_section_json(
-    const std::filesystem::path& report_path);
 void write_synthetic_report_table_for_live_deleted_ambiguous_summary_section_json(
     const std::filesystem::path& report_path);
 void write_synthetic_report_table_for_padded_stable_section_json(

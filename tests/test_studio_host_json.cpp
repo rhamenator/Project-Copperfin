@@ -214,7 +214,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_report_column_width_fields_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_column_width_fields_by_stable_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_column_width_fields_by_stable_selection(argv[1]);
-    test_studio_host_json_clears_report_section_and_settings_selection_for_ambiguous_stable_selectors(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
     test_studio_host_json_exposes_builder_launch_catalog(argv[1]);
     test_studio_host_json_exposes_selection_builder_launch_catalog(argv[1]);
