@@ -598,6 +598,139 @@ void test_update_visual_object_property_preserves_unsupported_report_and_label_m
     exercise_asset("lbx", ".lbx", "Label");
 }
 
+void test_update_visual_object_property_preserves_report_and_label_sibling_rows() {
+    namespace fs = std::filesystem;
+    const auto exercise_asset = [&](const std::string& stem,
+                                    const std::string& table_extension,
+                                    const std::string& asset_label) {
+        const fs::path temp_dir = fs::temp_directory_path() /
+            ("copperfin_visual_editor_preserve_siblings_" + stem + "_tests_" + std::to_string(_getpid()));
+        std::error_code ignored;
+        fs::remove_all(temp_dir, ignored);
+        fs::create_directories(temp_dir);
+
+        const fs::path table_path = temp_dir / ("siblings" + table_extension);
+        const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+            {.name = "OBJTYPE", .type = 'N', .length = 8U},
+            {.name = "HPOS", .type = 'N', .length = 10U},
+            {.name = "EXPR", .type = 'M', .length = 4U},
+            {.name = "USERFLAG", .type = 'C', .length = 24U},
+            {.name = "USERMETA", .type = 'M', .length = 4U}
+        };
+        const std::vector<std::vector<std::string>> records{
+            {"8", "1200", "customer.company", asset_label + "TargetDirect", asset_label + "TargetMemo"},
+            {"8", "2400", "shipto.city", asset_label + "SiblingDirect", asset_label + "SiblingMemo"},
+            {"8", "3600", "deleted.total", asset_label + "DeletedDirect", asset_label + "DeletedMemo"}
+        };
+        const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+        expect(create_result.ok, asset_label + " sibling-row fixture should be writable");
+
+        const auto delete_result = copperfin::vfp::set_record_deleted_flag(table_path.string(), 2U, true);
+        expect(delete_result.ok, asset_label + " sibling-row fixture should support deleted-row setup");
+
+        auto update_result = copperfin::vfp::update_visual_object_property({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "HPOS",
+            .property_value = "1800"
+        });
+        expect(update_result.ok, asset_label + " targeted HPOS edits should succeed in a multi-row fixture");
+
+        update_result = copperfin::vfp::update_visual_object_property({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "EXPR",
+            .property_value = "\"updated.expr\""
+        });
+        expect(update_result.ok, asset_label + " targeted EXPR edits should succeed in a multi-row fixture");
+
+        auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 3U);
+        expect(parse_result.ok, asset_label + " sibling-row fixture should remain readable after targeted edits");
+        if (parse_result.ok && parse_result.table.records.size() == 3U) {
+            const auto& target_record = parse_result.table.records[0];
+            const auto& sibling_record = parse_result.table.records[1];
+            const auto& deleted_record = parse_result.table.records[2];
+            const auto* target_hpos = find_record_field(target_record, "HPOS");
+            const auto* target_expr = find_record_field(target_record, "EXPR");
+            const auto* sibling_hpos = find_record_field(sibling_record, "HPOS");
+            const auto* sibling_expr = find_record_field(sibling_record, "EXPR");
+            const auto* deleted_hpos = find_record_field(deleted_record, "HPOS");
+            const auto* deleted_expr = find_record_field(deleted_record, "EXPR");
+            const auto* sibling_direct = find_record_field(sibling_record, "USERFLAG");
+            const auto* sibling_memo = find_record_field(sibling_record, "USERMETA");
+            const auto* deleted_direct = find_record_field(deleted_record, "USERFLAG");
+            const auto* deleted_memo = find_record_field(deleted_record, "USERMETA");
+            expect(target_hpos != nullptr && target_hpos->display_value == "1800",
+                asset_label + " targeted direct-field edits should persist on the selected row");
+            expect(target_expr != nullptr && target_expr->display_value == "\"updated.expr\"",
+                asset_label + " targeted memo-backed edits should persist on the selected row");
+            expect(sibling_hpos != nullptr && sibling_hpos->display_value == "2400",
+                asset_label + " targeted edits should preserve live sibling HPOS values");
+            expect(sibling_expr != nullptr && sibling_expr->display_value == "shipto.city",
+                asset_label + " targeted edits should preserve live sibling EXPR values");
+            expect(sibling_direct != nullptr && sibling_direct->display_value == asset_label + "SiblingDirect",
+                asset_label + " targeted edits should preserve live sibling direct metadata");
+            expect(sibling_memo != nullptr && sibling_memo->display_value == asset_label + "SiblingMemo",
+                asset_label + " targeted edits should preserve live sibling memo metadata");
+            expect(deleted_hpos != nullptr && deleted_hpos->display_value == "3600",
+                asset_label + " targeted edits should preserve deleted sibling HPOS values");
+            expect(deleted_expr != nullptr && deleted_expr->display_value == "deleted.total",
+                asset_label + " targeted edits should preserve deleted sibling EXPR values");
+            expect(deleted_direct != nullptr && deleted_direct->display_value == asset_label + "DeletedDirect",
+                asset_label + " targeted edits should preserve deleted sibling direct metadata");
+            expect(deleted_memo != nullptr && deleted_memo->display_value == asset_label + "DeletedMemo",
+                asset_label + " targeted edits should preserve deleted sibling memo metadata");
+            expect(!target_record.deleted && !sibling_record.deleted && deleted_record.deleted,
+                asset_label + " targeted edits should preserve sibling deleted flags");
+        }
+
+        auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+        expect(undo_result.ok, asset_label + " first undo should restore the targeted EXPR edit");
+        undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+        expect(undo_result.ok, asset_label + " second undo should restore the targeted HPOS edit");
+
+        parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 3U);
+        expect(parse_result.ok, asset_label + " sibling-row fixture should remain readable after undo");
+        if (parse_result.ok && parse_result.table.records.size() == 3U) {
+            const auto& target_record = parse_result.table.records[0];
+            const auto& sibling_record = parse_result.table.records[1];
+            const auto& deleted_record = parse_result.table.records[2];
+            const auto* target_hpos = find_record_field(target_record, "HPOS");
+            const auto* target_expr = find_record_field(target_record, "EXPR");
+            const auto* sibling_hpos = find_record_field(sibling_record, "HPOS");
+            const auto* sibling_expr = find_record_field(sibling_record, "EXPR");
+            const auto* deleted_hpos = find_record_field(deleted_record, "HPOS");
+            const auto* deleted_expr = find_record_field(deleted_record, "EXPR");
+            expect(target_hpos != nullptr && target_hpos->display_value == "1200",
+                asset_label + " undo should restore the targeted HPOS value");
+            expect(target_expr != nullptr && target_expr->display_value == "customer.company",
+                asset_label + " undo should restore the targeted EXPR value");
+            expect(sibling_hpos != nullptr && sibling_hpos->display_value == "2400",
+                asset_label + " undo should preserve live sibling HPOS values");
+            expect(sibling_expr != nullptr && sibling_expr->display_value == "shipto.city",
+                asset_label + " undo should preserve live sibling EXPR values");
+            expect(deleted_hpos != nullptr && deleted_hpos->display_value == "3600",
+                asset_label + " undo should preserve deleted sibling HPOS values");
+            expect(deleted_expr != nullptr && deleted_expr->display_value == "deleted.total",
+                asset_label + " undo should preserve deleted sibling EXPR values");
+            expect(!target_record.deleted && !sibling_record.deleted && deleted_record.deleted,
+                asset_label + " undo should preserve sibling deleted flags");
+        }
+
+        const auto undo_status = copperfin::vfp::query_visual_object_undo(table_path.string());
+        expect(!undo_status.available, asset_label + " undo journal should be empty after restoring targeted edits");
+
+        fs::remove_all(temp_dir, ignored);
+    };
+
+    exercise_asset("frx", ".frx", "Report");
+    exercise_asset("lbx", ".lbx", "Label");
+}
+
 void test_report_and_label_asset_inspection_is_a_noop_binary_round_trip() {
     namespace fs = std::filesystem;
     const auto exercise_asset = [&](const std::string& stem,

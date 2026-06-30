@@ -225,6 +225,7 @@ int main() {
     test_update_visual_object_property_skips_noop_writes();
     test_update_visual_object_property_skips_noop_writes_for_report_and_label_assets();
     test_update_visual_object_property_preserves_unsupported_report_and_label_metadata();
+    test_update_visual_object_property_preserves_report_and_label_sibling_rows();
     test_report_and_label_asset_inspection_is_a_noop_binary_round_trip();
     test_update_visual_object_property_targets_selected_object_name();
     test_update_visual_object_property_targets_selected_unique_id();
