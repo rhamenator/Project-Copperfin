@@ -292,6 +292,23 @@ add_test(
     COMMAND $<TARGET_FILE:test_studio_host_report_grouping_record_mutation> $<TARGET_FILE:copperfin_studio_host>
 )
 
+add_executable(test_studio_host_report_grouping_deleted_exposure
+    test_studio_host_report_grouping_deleted_exposure.cpp
+    test_studio_host_json_shared_test_helpers.cpp
+)
+target_link_libraries(test_studio_host_report_grouping_deleted_exposure PRIVATE cf_vfp_assets)
+
+if(MSVC)
+    target_compile_options(test_studio_host_report_grouping_deleted_exposure PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_report_grouping_deleted_exposure PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_report_grouping_deleted_exposure
+    COMMAND $<TARGET_FILE:test_studio_host_report_grouping_deleted_exposure> $<TARGET_FILE:copperfin_studio_host>
+)
+
 add_executable(test_studio_host_report_section_ids
     test_studio_host_report_section_ids.cpp
 )

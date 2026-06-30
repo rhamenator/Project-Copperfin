@@ -803,10 +803,6 @@ void test_studio_host_json_exposes_deleted_report_group_section_expressions_by_s
     const std::string& studio_host_path);
 void test_studio_host_json_exposes_deleted_report_group_footer_expressions_by_stable_selection(
     const std::string& studio_host_path);
-void test_studio_host_json_exposes_deleted_report_group_section_expressions(
-    const std::string& studio_host_path);
-void test_studio_host_json_exposes_deleted_report_group_footer_expressions(
-    const std::string& studio_host_path);
 void test_studio_host_json_updates_deleted_report_group_section_expressions(
     const std::string& studio_host_path);
 void test_studio_host_json_clears_deleted_report_group_section_expressions(
