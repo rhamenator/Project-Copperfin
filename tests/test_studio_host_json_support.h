@@ -1494,38 +1494,6 @@ void test_studio_host_json_restores_edited_deleted_report_layout_object_as_unpla
 void test_studio_host_json_restores_edited_deleted_report_layout_object_as_unplaced_by_stable_selection(
     const std::string& studio_host_path);
 
-// ==== Report layout JSON tests: visual-object batch/subtree lifecycle ====
-#if !defined(COPPERFIN_REPORT_VISUAL_SUBTREE_DUPLICATE_SKIP_HOST_SMOKE)
-void test_studio_host_json_duplicates_report_visual_object_subtrees_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_duplicates_deleted_report_visual_object_subtrees_by_stable_selection(
-    const std::string& studio_host_path);
-#endif
-#if !defined(COPPERFIN_REPORT_VISUAL_UPDATE_BATCH_SKIP_HOST_SMOKE)
-void test_studio_host_json_updates_report_visual_object_batches_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_updates_deleted_report_visual_object_batches_by_stable_selection(
-    const std::string& studio_host_path);
-#endif
-#if !defined(COPPERFIN_REPORT_VISUAL_RENAME_BATCH_SKIP_HOST_SMOKE)
-void test_studio_host_json_renames_report_visual_object_batches_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_renames_deleted_report_visual_object_batches_by_stable_selection(
-    const std::string& studio_host_path);
-#endif
-#if !defined(COPPERFIN_REPORT_VISUAL_DUPLICATE_BATCH_SKIP_HOST_SMOKE)
-void test_studio_host_json_duplicates_report_visual_object_batches_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_duplicates_deleted_report_visual_object_batches_by_stable_selection(
-    const std::string& studio_host_path);
-#endif
-#if !defined(COPPERFIN_REPORT_VISUAL_REORDER_BATCH_SKIP_HOST_SMOKE)
-void test_studio_host_json_reorders_report_visual_object_batches_by_stable_selection(
-    const std::string& studio_host_path);
-void test_studio_host_json_reorders_deleted_report_visual_object_batches_by_stable_selection(
-    const std::string& studio_host_path);
-#endif
-
 // ==== Report layout JSON tests: selector resolution and ambiguity ====
 // ==== Report layout JSON tests: memo placeholder resolution ====
 void write_synthetic_report_table_for_unresolved_memo_placeholder_layout_json(
