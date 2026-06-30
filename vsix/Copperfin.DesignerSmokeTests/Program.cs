@@ -65,6 +65,7 @@ internal static class Program
         SmokeReportSurfaceObjectScopeAlignment();
         SmokeReportSurfaceObjectDragging();
         SmokeAssetEditorReportDragUsesBatchStudioHostUpdate();
+        SmokeAssetEditorReportDragRefreshesShellSummary();
         SmokeDeletedReportSectionDesignSurfaceRendering();
         SmokeAssetEditorWithRealAsset(
             @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx",
@@ -4487,6 +4488,123 @@ internal static class Program
         }
     }
 
+    private static void SmokeAssetEditorReportDragRefreshesShellSummary()
+    {
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            Console.WriteLine("SKIP: shared asset-editor drag summary-refresh smoke requires a POSIX scriptable fake Studio host.");
+            return;
+        }
+
+        var snapshot = BuildAssetEditorBatchUpdateSmokeSnapshot();
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
+        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var logPath = Path.Combine(tempRoot, "studio-host.log");
+        var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
+
+        try
+        {
+            File.WriteAllText(logPath, string.Empty);
+            CreateFakeStudioHostScript(scriptPath, BuildBatchUpdatePreviewRefreshHostResponseJson());
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", scriptPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", logPath);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+
+            ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+            SetCurrentSnapshot(control, snapshot);
+            SetPrivateField(control, "currentPath", assetPath);
+            GetPrivateLabel(control, "detailsLabel").Text = InvokeAssetEditorString(control, "BuildSnapshotDetailsText", new FileInfo(assetPath), snapshot);
+            InvokeAssetEditorVoid(control, "LoadSurface");
+            Application.DoEvents();
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface.");
+            RenderDesignSurface(surface);
+
+            Expect(!HasLabelTextContaining(control, "Preview bounds:"),
+                "A drag summary-refresh smoke should start without preview-bounds shell text when the initial snapshot omits preview bounds");
+
+            var scale = InvokeDesignSurfaceFloat(surface, "CalculateReportScale");
+            var start = GetCenter(ReadSurfaceObjectRectangle(surface, 0));
+            ClickDesignSurface(surface, start);
+            Application.DoEvents();
+
+            DragDesignSurface(surface, start, 18, 12);
+            Application.DoEvents();
+
+            var expectedLeft = (int)Math.Round(1200 + (18 / Math.Max(0.2F, scale)));
+            var expectedTop = (int)Math.Round(2600 + (12 / Math.Max(0.2F, scale)));
+            var logLines = File.ReadAllLines(logPath);
+            var invocationStartCount = logLines.Count(line => string.Equals(line, "BEGIN", StringComparison.Ordinal));
+            Expect(invocationStartCount == 1,
+                "Dragging a report object through the shared asset editor for summary refresh should invoke the Studio host exactly once");
+
+            var invocationArguments = logLines.Skip(1).ToList();
+            Expect(invocationArguments.Contains("--visual-object-update-batch") &&
+                   invocationArguments.Contains("--selected-record") &&
+                   invocationArguments.Contains("6") &&
+                   invocationArguments.Contains("--property-name") &&
+                   invocationArguments.Contains("HPOS") &&
+                   invocationArguments.Contains("VPOS") &&
+                   invocationArguments.Contains(expectedLeft.ToString()) &&
+                   invocationArguments.Contains(expectedTop.ToString()),
+                "Dragging a report object through the shared asset editor for summary refresh should send one invariant batch update through the host contract");
+
+            Expect(HasLabelTextContaining(control, "Preview bounds: L 1500 T 2800 R 6100 B 6300   Size: 4600 x 3500") &&
+                   string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Detail", StringComparison.Ordinal) &&
+                   string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "customer.company", StringComparison.Ordinal) &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
+                   refreshedSelection.RecordIndex == 6 &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["HPOS"]?.GetValue(refreshedSelection)?.ToString(), "1500", StringComparison.Ordinal) &&
+                   string.Equals(ReadPrivateStringField(surface, "assetFamily"), "report", StringComparison.Ordinal) &&
+                   ReadPrivateNullableInt(surface, "selectedRecordIndex") == 6 &&
+                   ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
+                   !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+                "Dragging a report object through the shared asset editor should refresh the shell summary from the returned snapshot while preserving report identity, object selection, and containing-section continuity");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", previousLogPath);
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeAssetEditorWithRealAsset(string path, string expectSection)
     {
         if (!File.Exists(path))
@@ -5635,6 +5753,13 @@ internal static class Program
     {
         return """
 {"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[{"RecordIndex":6,"Title":"customer.company","Subtitle":"field","Properties":[{"Name":"HPOS","Value":"1200"},{"Name":"VPOS","Value":"2600"},{"Name":"WIDTH","Value":"4000"},{"Name":"HEIGHT","Value":"500"},{"Name":"EXPR","Value":"customer.company"}]}],"ReportLayout":{"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":6,"ObjectKind":"field","Title":"customer.company","Expression":"customer.company","Left":1200,"Top":2600,"Width":4000,"Height":500}]}],"DeletedSections":[],"UnplacedObjects":[]}}}
+""";
+    }
+
+    private static string BuildBatchUpdatePreviewRefreshHostResponseJson()
+    {
+        return """
+{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[{"RecordIndex":6,"Title":"customer.company","Subtitle":"field","Properties":[{"Name":"HPOS","Value":"1500"},{"Name":"VPOS","Value":"2800"},{"Name":"WIDTH","Value":"4600"},{"Name":"HEIGHT","Value":"3500"},{"Name":"EXPR","Value":"customer.company"}]}],"ReportLayout":{"PreviewBoundsAvailable":true,"PreviewBoundsLeft":1500,"PreviewBoundsTop":2800,"PreviewBoundsRight":6100,"PreviewBoundsBottom":6300,"PreviewBoundsWidth":4600,"PreviewBoundsHeight":3500,"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":6,"ObjectKind":"field","Title":"customer.company","Expression":"customer.company","Left":1500,"Top":2800,"Width":4600,"Height":3500}]}],"DeletedSections":[],"UnplacedObjects":[]}}}
 """;
     }
 
