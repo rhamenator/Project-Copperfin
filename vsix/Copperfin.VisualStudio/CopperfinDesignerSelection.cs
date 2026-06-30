@@ -151,7 +151,10 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
 
         if (!string.IsNullOrWhiteSpace(section.GroupRole))
         {
-            selection.AddReadOnlyString("GROUPROLE", localization.Text("AssetEditor.Property.GroupRole"), section.GroupRole ?? string.Empty);
+            selection.AddReadOnlyString(
+                "GROUPROLE",
+                localization.Text("AssetEditor.Property.GroupRole"),
+                BuildGroupingRoleDisplayText(localization, section.GroupRole ?? string.Empty));
         }
 
         if (section.GroupingContextAvailable ||
@@ -193,6 +196,23 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         }
 
         return bandKind.Replace('_', ' ');
+    }
+
+    private static string BuildGroupingRoleDisplayText(CopperfinLocalization localization, string groupRole)
+    {
+        var key = groupRole switch
+        {
+            "header" => "AssetEditor.GroupRole.Header",
+            "footer" => "AssetEditor.GroupRole.Footer",
+            _ => string.Empty
+        };
+
+        if (!string.IsNullOrWhiteSpace(key))
+        {
+            return localization.Text(key);
+        }
+
+        return groupRole.Replace('_', ' ');
     }
 
     public bool TryGetUpdate(string propertyName, out string targetName, out string serializedValue)
