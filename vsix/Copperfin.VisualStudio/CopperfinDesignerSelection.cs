@@ -157,6 +157,30 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
                 BuildGroupingRoleDisplayText(localization, section.GroupRole ?? string.Empty));
         }
 
+        if (!string.IsNullOrWhiteSpace(section.GroupPartnerSectionId))
+        {
+            selection.AddReadOnlyString(
+                "GROUPPARTNERSECTIONID",
+                localization.Text("AssetEditor.Property.GroupPartnerSectionId"),
+                section.GroupPartnerSectionId ?? string.Empty);
+        }
+
+        if (section.GroupPartnerRecordIndex.HasValue)
+        {
+            selection.AddReadOnlyInt(
+                "GROUPPARTNERRECORD",
+                localization.Text("AssetEditor.Property.GroupPartnerRecord"),
+                section.GroupPartnerRecordIndex.Value.ToString(CultureInfo.InvariantCulture));
+        }
+
+        if (!string.IsNullOrWhiteSpace(section.GroupPartnerSectionId) || section.GroupPartnerRecordIndex.HasValue)
+        {
+            selection.AddReadOnlyString(
+                "GROUPPARTNERSTATE",
+                localization.Text("AssetEditor.Property.GroupPartnerState"),
+                BuildGroupPartnerStateText(localization, section.GroupPartnerDeleted));
+        }
+
         if (section.GroupingContextAvailable ||
             !string.IsNullOrWhiteSpace(section.GroupingExpression) ||
             section.GroupingExpressionFieldIndex.HasValue ||
@@ -213,6 +237,11 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         }
 
         return groupRole.Replace('_', ' ');
+    }
+
+    private static string BuildGroupPartnerStateText(CopperfinLocalization localization, bool deleted)
+    {
+        return localization.Text(deleted ? "AssetEditor.State.Deleted" : "AssetEditor.State.Live");
     }
 
     public bool TryGetUpdate(string propertyName, out string targetName, out string serializedValue)
