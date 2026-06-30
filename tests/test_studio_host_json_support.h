@@ -1301,7 +1301,6 @@ void write_synthetic_report_table_for_stable_settings_and_section_json(
 void write_synthetic_report_table_for_stable_deleted_settings_and_section_json(
     const std::filesystem::path& report_path);
 void test_studio_host_json_deletes_report_settings_by_record_selection(const std::string& studio_host_path);
-void test_studio_host_json_exposes_selected_report_settings(const std::string& studio_host_path);
 void test_studio_host_json_preserves_report_settings_without_root_objcode_schema(
     const std::string& studio_host_path);
 void test_studio_host_json_preserves_duplicate_report_setting_precedence(
