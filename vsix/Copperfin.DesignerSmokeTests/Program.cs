@@ -33,6 +33,7 @@ internal static class Program
         SmokeLocalizedSnapshotUndoPropertyStatus();
         SmokeLocalizedLaunchWorkflowDialogText();
         SmokeReportSectionGroupingExplorerTitles();
+        SmokeReportSectionScopedObjectFiltering();
         SmokeAssetEditorWithRealAsset(
             @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx",
             expectSection: "Detail");
@@ -541,6 +542,101 @@ internal static class Program
             "Report explorer should preserve ungrouped section titles");
     }
 
+    private static void SmokeReportSectionScopedObjectFiltering()
+    {
+        var snapshot = new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "report",
+            Objects = new List<CopperfinStudioSnapshotObject>
+            {
+                new()
+                {
+                    RecordIndex = 10,
+                    Title = "detail.line",
+                    Subtitle = "field"
+                },
+                new()
+                {
+                    RecordIndex = 11,
+                    Title = "summary.total",
+                    Subtitle = "field"
+                },
+                new()
+                {
+                    RecordIndex = 12,
+                    Title = "orphan.note",
+                    Subtitle = "field"
+                }
+            },
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail",
+                        Title = "Detail",
+                        Objects = new List<CopperfinStudioReportLayoutObject>
+                        {
+                            new() { RecordIndex = 10 }
+                        }
+                    },
+                    new()
+                    {
+                        Id = "summary",
+                        Title = "Summary",
+                        Objects = new List<CopperfinStudioReportLayoutObject>
+                        {
+                            new() { RecordIndex = 11 }
+                        }
+                    }
+                },
+                UnplacedObjects = new List<CopperfinStudioReportLayoutObject>
+                {
+                    new() { RecordIndex = 12 }
+                }
+            }
+        };
+
+        using var control = new CopperfinAssetEditorControl();
+        ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+
+        var sectionListView = GetPrivateListView(control, "sectionListView");
+        var objectListView = GetPrivateListView(control, "objectListView");
+
+        var detailRows = objectListView.Items.Cast<ListViewItem>().Select(item => item.Text).ToList();
+        Expect(detailRows.SequenceEqual(new[] { "detail.line" }),
+            "Report explorer should filter object rows to the selected section");
+
+        sectionListView.Items[1].Selected = false;
+        sectionListView.Items[0].Selected = false;
+        sectionListView.Items[2].Selected = true;
+        InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+
+        var unplacedRows = objectListView.Items.Cast<ListViewItem>().Select(item => item.Text).ToList();
+        Expect(unplacedRows.SequenceEqual(new[] { "orphan.note" }),
+            "Report explorer should filter object rows to the unplaced-object scope");
+
+        using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
+        ApplyReportSnapshotForExplorerSmoke(spanishControl, snapshot);
+        var spanishSectionListView = GetPrivateListView(spanishControl, "sectionListView");
+        Expect(spanishSectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, "Objetos sin sección", StringComparison.Ordinal)),
+            "Spanish report explorer should localize the unplaced-object row");
+
+        using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
+        ApplyReportSnapshotForExplorerSmoke(portugueseControl, snapshot);
+        var portugueseSectionListView = GetPrivateListView(portugueseControl, "sectionListView");
+        Expect(portugueseSectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, "Objetos sem seção", StringComparison.Ordinal)),
+            "Portuguese report explorer should localize the unplaced-object row");
+
+        var pseudoLocalization = new CopperfinLocalization("qps-ploc");
+        using var pseudoControl = new CopperfinAssetEditorControl(pseudoLocalization);
+        ApplyReportSnapshotForExplorerSmoke(pseudoControl, snapshot);
+        var pseudoSectionListView = GetPrivateListView(pseudoControl, "sectionListView");
+        Expect(pseudoSectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, pseudoLocalization.Text("AssetEditor.ReportSection.UnplacedObjects"), StringComparison.Ordinal)),
+            "Pseudo-localized report explorer should route the unplaced-object row through the shared catalog");
+    }
+
     private static void SmokeAssetEditorWithRealAsset(string path, string expectSection)
     {
         if (!File.Exists(path))
@@ -896,6 +992,22 @@ internal static class Program
         configureObjectColumnsMethod.Invoke(control, Array.Empty<object>());
     }
 
+    private static void ApplyReportSnapshotForExplorerSmoke(CopperfinAssetEditorControl control, CopperfinStudioSnapshotDocument snapshot)
+    {
+        var controlType = typeof(CopperfinAssetEditorControl);
+        var currentSnapshotField = controlType.GetField("currentSnapshot", BindingFlags.Instance | BindingFlags.NonPublic);
+        var populateSectionListMethod = controlType.GetMethod("PopulateSectionList", BindingFlags.Instance | BindingFlags.NonPublic);
+        var populateObjectListMethod = controlType.GetMethod("PopulateObjectList", BindingFlags.Instance | BindingFlags.NonPublic);
+        if (currentSnapshotField is null || populateSectionListMethod is null || populateObjectListMethod is null)
+        {
+            throw new InvalidOperationException("Could not find CopperfinAssetEditorControl report-explorer smoke hooks.");
+        }
+
+        currentSnapshotField.SetValue(control, snapshot);
+        populateSectionListMethod.Invoke(control, Array.Empty<object>());
+        populateObjectListMethod.Invoke(control, Array.Empty<object>());
+    }
+
     private static string BuildGuidanceText(CopperfinAssetEditorControl control, string assetFamily)
     {
         var method = typeof(CopperfinAssetEditorControl).GetMethod("BuildGuidanceText", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -932,6 +1044,17 @@ internal static class Program
         }
 
         return (string)(method.Invoke(control, args) ?? string.Empty);
+    }
+
+    private static void InvokeAssetEditorVoid(CopperfinAssetEditorControl control, string methodName, params object[] args)
+    {
+        var method = typeof(CopperfinAssetEditorControl).GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic);
+        if (method is null)
+        {
+            throw new InvalidOperationException($"Could not find CopperfinAssetEditorControl smoke hook {methodName}.");
+        }
+
+        method.Invoke(control, args);
     }
 
     private static string InvokeDesignSurfaceString(CopperfinDesignSurfaceControl surface, string methodName, params object[] args)
@@ -1008,6 +1131,17 @@ internal static class Program
         }
 
         return null;
+    }
+
+    private static ListView GetPrivateListView(CopperfinAssetEditorControl control, string fieldName)
+    {
+        var field = typeof(CopperfinAssetEditorControl).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+        if (field?.GetValue(control) is not ListView listView)
+        {
+            throw new InvalidOperationException($"Could not read private list view {fieldName}.");
+        }
+
+        return listView;
     }
 
     private static IEnumerable<Label> FindLabels(Control root)
