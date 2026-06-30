@@ -136,6 +136,30 @@ internal static class Program
                 expectedSectionTitle: "Detail",
                 expectedSectionCount: 5,
                 expectLabel: true);
+            SmokeRealAssetHostBackedSectionRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 1,
+                expectedSectionTitle: "Title",
+                propertyName: "HEIGHT",
+                originalRawValue: "11459.000",
+                updatedRawValue: "12000",
+                expectedOriginalLayoutValue: 11459,
+                expectedUpdatedLayoutValue: 12000,
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedObjectCount: 1);
+            SmokeRealAssetHostBackedSectionRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 3,
+                expectedSectionTitle: "Detail",
+                propertyName: "HEIGHT",
+                originalRawValue: "10000.000",
+                updatedRawValue: "9600",
+                expectedOriginalLayoutValue: 10000,
+                expectedUpdatedLayoutValue: 9600,
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedObjectCount: 1);
             SmokeRealAssetHostBackedPropertyRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLE3V.FRX"),
                 recordIndex: 6,
@@ -222,6 +246,36 @@ internal static class Program
                 expectedObjectTitle: "wiz_field",
                 expectedSectionCount: 5,
                 expectLabel: true);
+            SmokeAssetEditorSectionRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 1,
+                expectedSectionTitle: "Title",
+                propertyName: "HEIGHT",
+                updatedPropertyValue: 12000,
+                expectedOriginalSelectionValue: "11459",
+                expectedUpdatedSelectionValue: "12000",
+                expectedOriginalRawValue: "11459.000",
+                expectedUpdatedRawValue: "12000",
+                expectedOriginalLayoutValue: 11459,
+                expectedUpdatedLayoutValue: 12000,
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedObjectCount: 1);
+            SmokeAssetEditorSectionRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 3,
+                expectedSectionTitle: "Detail",
+                propertyName: "HEIGHT",
+                updatedPropertyValue: 9600,
+                expectedOriginalSelectionValue: "10000",
+                expectedUpdatedSelectionValue: "9600",
+                expectedOriginalRawValue: "10000.000",
+                expectedUpdatedRawValue: "9600",
+                expectedOriginalLayoutValue: 10000,
+                expectedUpdatedLayoutValue: 9600,
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedObjectCount: 1);
             SmokeAssetEditorPropertyGridRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLE3V.FRX"),
                 recordIndex: 6,
@@ -6974,6 +7028,147 @@ internal static class Program
         }
     }
 
+    private static void SmokeRealAssetHostBackedSectionRoundTrip(
+        string? sourcePath,
+        int recordIndex,
+        string expectedSectionTitle,
+        string propertyName,
+        string originalRawValue,
+        string updatedRawValue,
+        int expectedOriginalLayoutValue,
+        int expectedUpdatedLayoutValue,
+        int expectedSectionCount,
+        bool expectLabel,
+        int expectedObjectCount)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(sourcePath) ? "real asset section write candidate" : sourcePath)} not found.");
+            return;
+        }
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmokeRealAssetSectionWrites-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateWritableAssetCopy(sourcePath!, tempRoot);
+
+        try
+        {
+            var loaded = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(loaded.Success && loaded.Document is not null,
+                $"real asset section smoke should load snapshot data for {sourcePath}");
+            if (!loaded.Success || loaded.Document is null)
+            {
+                return;
+            }
+
+            AssertRealAssetSectionSnapshot(
+                loaded.Document,
+                recordIndex,
+                expectedSectionTitle,
+                propertyName,
+                originalRawValue,
+                expectedOriginalLayoutValue,
+                expectedSectionCount,
+                expectLabel,
+                expectedObjectCount,
+                $"initial real asset section snapshot should preserve {propertyName}");
+
+            var updateResult = CopperfinStudioSnapshotClient.TryUpdateProperty(
+                assetPath,
+                recordIndex,
+                propertyName,
+                updatedRawValue);
+            Expect(updateResult.Success && updateResult.Document is not null,
+                $"real asset section smoke should update {propertyName} for {sourcePath}");
+            if (!updateResult.Success || updateResult.Document is null)
+            {
+                return;
+            }
+
+            AssertRealAssetSectionSnapshot(
+                updateResult.Document,
+                recordIndex,
+                expectedSectionTitle,
+                propertyName,
+                updatedRawValue,
+                expectedUpdatedLayoutValue,
+                expectedSectionCount,
+                expectLabel,
+                expectedObjectCount,
+                $"updated real asset section snapshot should preserve {propertyName}");
+            Expect(updateResult.Document.CommandUndoAvailable,
+                $"real asset section smoke should expose undo after updating {propertyName} for {sourcePath}");
+
+            var reloadedAfterUpdate = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterUpdate.Success && reloadedAfterUpdate.Document is not null,
+                $"real asset section smoke should reload updated snapshot data for {sourcePath}");
+            if (!reloadedAfterUpdate.Success || reloadedAfterUpdate.Document is null)
+            {
+                return;
+            }
+
+            AssertRealAssetSectionSnapshot(
+                reloadedAfterUpdate.Document,
+                recordIndex,
+                expectedSectionTitle,
+                propertyName,
+                updatedRawValue,
+                expectedUpdatedLayoutValue,
+                expectedSectionCount,
+                expectLabel,
+                expectedObjectCount,
+                $"reloaded updated real asset section snapshot should preserve {propertyName}");
+            Expect(reloadedAfterUpdate.Document.CommandUndoAvailable,
+                $"reloaded updated real asset section snapshot should keep undo available for {sourcePath}");
+
+            var undoResult = CopperfinStudioSnapshotClient.TryUndoCommand(assetPath);
+            Expect(undoResult.Success && undoResult.Document is not null,
+                $"real asset section smoke should undo {propertyName} for {sourcePath}");
+            if (!undoResult.Success || undoResult.Document is null)
+            {
+                return;
+            }
+
+            var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null,
+                $"real asset section smoke should reload undone snapshot data for {sourcePath}");
+            if (!reloadedAfterUndo.Success || reloadedAfterUndo.Document is null)
+            {
+                return;
+            }
+
+            AssertRealAssetSectionSnapshot(
+                reloadedAfterUndo.Document,
+                recordIndex,
+                expectedSectionTitle,
+                propertyName,
+                originalRawValue,
+                expectedOriginalLayoutValue,
+                expectedSectionCount,
+                expectLabel,
+                expectedObjectCount,
+                $"reloaded undone real asset section snapshot should preserve {propertyName}");
+            Expect(!reloadedAfterUndo.Document.CommandUndoAvailable,
+                $"real asset section smoke should clear undo after restoring {propertyName} for {sourcePath}");
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeRealAssetHostBackedPlacementRoundTrip(
         string? sourcePath,
         int recordIndex,
@@ -7491,6 +7686,209 @@ internal static class Program
                     expectLabel,
                     expectUnplacedObject,
                     $"reloaded undone editor real asset snapshot should preserve {propertyName}");
+            }
+
+            TearDownForm(hostForm);
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
+    private static void SmokeAssetEditorSectionRoundTripWithRealAsset(
+        string? sourcePath,
+        int recordIndex,
+        string expectedSectionTitle,
+        string propertyName,
+        object updatedPropertyValue,
+        string expectedOriginalSelectionValue,
+        string expectedUpdatedSelectionValue,
+        string expectedOriginalRawValue,
+        string expectedUpdatedRawValue,
+        int expectedOriginalLayoutValue,
+        int expectedUpdatedLayoutValue,
+        int expectedSectionCount,
+        bool expectLabel,
+        int expectedObjectCount)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(sourcePath) ? "real asset editor section candidate" : sourcePath)} not found.");
+            return;
+        }
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmokeRealAssetEditorSections-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateWritableAssetCopy(sourcePath!, tempRoot);
+
+        try
+        {
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+            control.LoadDocument(assetPath);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared design surface for the real section asset smoke.");
+
+            var loaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => sectionListView.Items.Count > 0);
+            Expect(loaded, $"real asset editor section smoke should load section data for {sourcePath}");
+            if (!loaded)
+            {
+                return;
+            }
+
+            foreach (ListViewItem item in sectionListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioReportSection section &&
+                                section.RecordIndex == recordIndex;
+            }
+
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            Application.DoEvents();
+
+            Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == recordIndex,
+                $"real asset editor section smoke should start from a section-rooted property-grid selection for {sourcePath}");
+
+            if (propertyGrid.SelectedObject is not CopperfinDesignerSelection sectionSelection)
+            {
+                return;
+            }
+
+            var initialSelectionValue = TypeDescriptor.GetProperties(sectionSelection)[propertyName]?.GetValue(sectionSelection)?.ToString();
+            Expect(string.Equals(initialSelectionValue, expectedOriginalSelectionValue, StringComparison.Ordinal),
+                $"real asset editor section smoke should expose original property-grid value {propertyName} for {sourcePath}");
+
+            TypeDescriptor.GetProperties(sectionSelection)[propertyName]?.SetValue(sectionSelection, updatedPropertyValue);
+            InvokeAssetEditorVoid(control, "ApplyPropertyGridChange", propertyName, 0);
+            Application.DoEvents();
+
+            var updatedSelection = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
+                {
+                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                        refreshedSelection.RecordIndex != recordIndex)
+                    {
+                        return false;
+                    }
+
+                    var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault();
+                    var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
+                    var propertyValue = TypeDescriptor.GetProperties(refreshedSelection)[propertyName]?.GetValue(refreshedSelection)?.ToString();
+                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                           selectedSectionModel?.RecordIndex == recordIndex &&
+                           string.Equals(ReadPrivateStringField(surface, "assetFamily"), expectLabel ? "label" : "report", StringComparison.Ordinal) &&
+                           ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == recordIndex &&
+                           ReadPrivateNullableInt(surface, "selectedRecordIndex") is null &&
+                           !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected") &&
+                           objectListView.SelectedItems.Count == 0 &&
+                           string.Equals(propertyValue, expectedUpdatedSelectionValue, StringComparison.Ordinal);
+                });
+            Expect(updatedSelection,
+                $"real asset editor section smoke should preserve section-rooted continuity after editing {propertyName} for {sourcePath}");
+
+            Expect(control.CanHandleUndoCommand(),
+                $"real asset editor section smoke should expose undo after editing {propertyName} for {sourcePath}");
+
+            var reloadedAfterUpdate = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterUpdate.Success && reloadedAfterUpdate.Document is not null,
+                $"real asset editor section smoke should reload updated on-disk state for {sourcePath}");
+            if (reloadedAfterUpdate.Success && reloadedAfterUpdate.Document is not null)
+            {
+                AssertRealAssetSectionSnapshot(
+                    reloadedAfterUpdate.Document,
+                    recordIndex,
+                    expectedSectionTitle,
+                    propertyName,
+                    expectedUpdatedRawValue,
+                    expectedUpdatedLayoutValue,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectedObjectCount,
+                    $"reloaded edited real asset section snapshot should preserve {propertyName}");
+            }
+
+            var undoHandled = control.TryHandleUndoCommand();
+            Expect(undoHandled,
+                $"real asset editor section smoke should execute undo after editing {propertyName} for {sourcePath}");
+            Application.DoEvents();
+
+            var undoneSelection = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
+                {
+                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                        refreshedSelection.RecordIndex != recordIndex)
+                    {
+                        return false;
+                    }
+
+                    var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault();
+                    var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
+                    var propertyValue = TypeDescriptor.GetProperties(refreshedSelection)[propertyName]?.GetValue(refreshedSelection)?.ToString();
+                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                           selectedSectionModel?.RecordIndex == recordIndex &&
+                           string.Equals(ReadPrivateStringField(surface, "assetFamily"), expectLabel ? "label" : "report", StringComparison.Ordinal) &&
+                           ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == recordIndex &&
+                           ReadPrivateNullableInt(surface, "selectedRecordIndex") is null &&
+                           !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected") &&
+                           objectListView.SelectedItems.Count == 0 &&
+                           string.Equals(propertyValue, expectedOriginalSelectionValue, StringComparison.Ordinal);
+                });
+            Expect(undoneSelection,
+                $"real asset editor section smoke should preserve section-rooted continuity after undoing {propertyName} for {sourcePath}");
+            Expect(!control.CanHandleUndoCommand(),
+                $"real asset editor section smoke should clear undo after restoring {propertyName} for {sourcePath}");
+
+            var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null,
+                $"real asset editor section smoke should reload restored on-disk state for {sourcePath}");
+            if (reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null)
+            {
+                AssertRealAssetSectionSnapshot(
+                    reloadedAfterUndo.Document,
+                    recordIndex,
+                    expectedSectionTitle,
+                    propertyName,
+                    expectedOriginalRawValue,
+                    expectedOriginalLayoutValue,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectedObjectCount,
+                    $"reloaded undone editor real asset section snapshot should preserve {propertyName}");
             }
 
             TearDownForm(hostForm);
@@ -8264,6 +8662,76 @@ internal static class Program
             $"{failurePrefix} for {document.Path} should expose {propertyName}={expectedPropertyValue}");
     }
 
+    private static void AssertRealAssetSectionSnapshot(
+        CopperfinStudioSnapshotDocument document,
+        int recordIndex,
+        string expectedSectionTitle,
+        string propertyName,
+        string expectedRawPropertyValue,
+        int expectedLayoutPropertyValue,
+        int expectedSectionCount,
+        bool expectLabel,
+        int expectedObjectCount,
+        string failurePrefix)
+    {
+        Expect(document.ReportLayout is not null,
+            $"{failurePrefix} for {document.Path} should include a report layout");
+        if (document.ReportLayout is null)
+        {
+            return;
+        }
+
+        Expect(document.ReportLayout.IsLabel == expectLabel,
+            $"{failurePrefix} for {document.Path} should preserve report/label identity");
+        Expect(document.ReportLayout.Sections.Count == expectedSectionCount,
+            $"{failurePrefix} for {document.Path} should preserve section counts");
+
+        var section = document.ReportLayout.Sections
+            .FirstOrDefault(candidate => candidate.RecordIndex == recordIndex);
+        Expect(section is not null,
+            $"{failurePrefix} for {document.Path} should preserve section record {recordIndex}");
+        if (section is null)
+        {
+            return;
+        }
+
+        Expect(string.Equals(section.Title, expectedSectionTitle, StringComparison.OrdinalIgnoreCase),
+            $"{failurePrefix} for {document.Path} should preserve section '{expectedSectionTitle}'");
+        Expect(section.Objects.Count == expectedObjectCount,
+            $"{failurePrefix} for {document.Path} should expose {expectedObjectCount} objects in section '{expectedSectionTitle}'");
+
+        var layoutPropertyValue = TryGetReportSectionLayoutValue(section, propertyName);
+        Expect(layoutPropertyValue.HasValue,
+            $"{failurePrefix} for {document.Path} should expose section layout property {propertyName}");
+        if (!layoutPropertyValue.HasValue)
+        {
+            return;
+        }
+
+        Expect(layoutPropertyValue.Value == expectedLayoutPropertyValue,
+            $"{failurePrefix} for {document.Path} should expose section {propertyName}={expectedLayoutPropertyValue}");
+
+        var snapshotObject = document.Objects.FirstOrDefault(candidate => candidate.RecordIndex == recordIndex);
+        Expect(snapshotObject is not null,
+            $"{failurePrefix} for {document.Path} should preserve raw snapshot object {recordIndex}");
+        if (snapshotObject is null)
+        {
+            return;
+        }
+
+        var property = snapshotObject.Properties
+            .FirstOrDefault(candidate => string.Equals(candidate.Name, propertyName, StringComparison.OrdinalIgnoreCase));
+        Expect(property is not null,
+            $"{failurePrefix} for {document.Path} should preserve property {propertyName}");
+        if (property is null)
+        {
+            return;
+        }
+
+        Expect(string.Equals(property.Value, expectedRawPropertyValue, StringComparison.Ordinal),
+            $"{failurePrefix} for {document.Path} should expose {propertyName}={expectedRawPropertyValue}");
+    }
+
     private static void AssertRealAssetUnplacedObjectCount(
         CopperfinStudioSnapshotDocument document,
         int expectedUnplacedObjectCount,
@@ -8321,6 +8789,23 @@ internal static class Program
         return snapshotObject.Properties
             .FirstOrDefault(candidate => string.Equals(candidate.Name, propertyName, StringComparison.OrdinalIgnoreCase))
             ?.Value;
+    }
+
+    private static int? TryGetReportSectionLayoutValue(
+        CopperfinStudioReportSection section,
+        string propertyName)
+    {
+        if (string.Equals(propertyName, "TOP", StringComparison.OrdinalIgnoreCase))
+        {
+            return section.Top;
+        }
+
+        if (string.Equals(propertyName, "HEIGHT", StringComparison.OrdinalIgnoreCase))
+        {
+            return section.Height;
+        }
+
+        return null;
     }
 
     private static string CreateWritableAssetCopy(string sourcePath, string tempRoot)
