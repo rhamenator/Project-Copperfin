@@ -28,8 +28,10 @@ internal static class Program
         SmokeLocalizedProjectWorkspacePlaceholders();
         SmokeLocalizedExplorerColumnHeaders();
         SmokeLocalizedAssetFamilyGuidance();
+        SmokeLocalizedReportLayoutShellSummary();
         SmokeLocalizedSnapshotUndoPropertyStatus();
         SmokeLocalizedLaunchWorkflowDialogText();
+        SmokeReportSectionGroupingExplorerTitles();
         SmokeAssetEditorWithRealAsset(
             @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx",
             expectSection: "Detail");
@@ -331,6 +333,48 @@ internal static class Program
             "Portuguese asset-family guidance should localize all static guidance cases");
     }
 
+    private static void SmokeLocalizedReportLayoutShellSummary()
+    {
+        var tempPath = Path.GetTempFileName();
+        try
+        {
+            var info = new FileInfo(tempPath);
+            var snapshot = new CopperfinStudioSnapshotDocument
+            {
+                AssetFamily = "report",
+                ReportLayout = new CopperfinStudioReportLayout
+                {
+                    Sections = new List<CopperfinStudioReportSection> { new(), new(), new() },
+                    Groupings = new List<CopperfinStudioReportGrouping> { new() },
+                    Settings = new List<CopperfinStudioNamedValue> { new(), new() },
+                    UnplacedObjects = new List<CopperfinStudioReportLayoutObject> { new() }
+                }
+            };
+
+            using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
+            var spanishDetails = InvokeAssetEditorString(spanishControl, "BuildSnapshotDetailsText", info, snapshot);
+            Expect(spanishDetails.IndexOf("Tamaño:", StringComparison.Ordinal) >= 0 &&
+                   spanishDetails.IndexOf("Secciones: 3", StringComparison.Ordinal) >= 0 &&
+                   spanishDetails.IndexOf("Agrupaciones: 1", StringComparison.Ordinal) >= 0 &&
+                   spanishDetails.IndexOf("Configuraciones: 2", StringComparison.Ordinal) >= 0 &&
+                   spanishDetails.IndexOf("Objetos sin sección: 1", StringComparison.Ordinal) >= 0,
+                "Spanish report layout shell summary should localize file details and report counts");
+
+            using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
+            var portugueseDetails = InvokeAssetEditorString(portugueseControl, "BuildSnapshotDetailsText", info, snapshot);
+            Expect(portugueseDetails.IndexOf("Tamanho:", StringComparison.Ordinal) >= 0 &&
+                   portugueseDetails.IndexOf("Seções: 3", StringComparison.Ordinal) >= 0 &&
+                   portugueseDetails.IndexOf("Agrupamentos: 1", StringComparison.Ordinal) >= 0 &&
+                   portugueseDetails.IndexOf("Configurações: 2", StringComparison.Ordinal) >= 0 &&
+                   portugueseDetails.IndexOf("Objetos sem seção: 1", StringComparison.Ordinal) >= 0,
+                "Portuguese report layout shell summary should localize file details and report counts");
+        }
+        finally
+        {
+            File.Delete(tempPath);
+        }
+    }
+
     private static void SmokeLocalizedSnapshotUndoPropertyStatus()
     {
         var snapshot = BuildStatusSmokeSnapshot();
@@ -381,6 +425,55 @@ internal static class Program
             "Portuguese launch and workflow dialog text should localize static messages");
     }
 
+    private static void SmokeReportSectionGroupingExplorerTitles()
+    {
+        using var control = new CopperfinAssetEditorControl();
+
+        var snapshot = new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "report",
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "group_header",
+                        Title = "Group Header",
+                        GroupingContextAvailable = true,
+                        GroupingExpression = "customer.country"
+                    },
+                    new()
+                    {
+                        Id = "detail",
+                        Title = "Detail"
+                    }
+                }
+            }
+        };
+
+        var controlType = typeof(CopperfinAssetEditorControl);
+        var currentSnapshotField = controlType.GetField("currentSnapshot", BindingFlags.Instance | BindingFlags.NonPublic);
+        var populateSectionListMethod = controlType.GetMethod("PopulateSectionList", BindingFlags.Instance | BindingFlags.NonPublic);
+        if (currentSnapshotField is null || populateSectionListMethod is null)
+        {
+            throw new InvalidOperationException("Could not find CopperfinAssetEditorControl report-grouping smoke hooks.");
+        }
+
+        currentSnapshotField.SetValue(control, snapshot);
+        populateSectionListMethod.Invoke(control, Array.Empty<object>());
+
+        var sectionItems = FindListViews(control)
+            .SelectMany(list => list.Items.Cast<ListViewItem>())
+            .Select(item => item.Text)
+            .ToList();
+
+        Expect(sectionItems.Any(text => string.Equals(text, "Group Header - customer.country", StringComparison.Ordinal)),
+            "Report explorer should surface grouping expressions in grouped section titles");
+        Expect(sectionItems.Any(text => string.Equals(text, "Detail", StringComparison.Ordinal)),
+            "Report explorer should preserve ungrouped section titles");
+    }
+
     private static void SmokeAssetEditorWithRealAsset(string path, string expectSection)
     {
         if (!File.Exists(path))
@@ -418,6 +511,10 @@ internal static class Program
             .Any(item => string.Equals(item.Text, expectSection, StringComparison.OrdinalIgnoreCase) ||
                          item.Text.IndexOf(expectSection, StringComparison.OrdinalIgnoreCase) >= 0);
         Expect(sectionFound, $"editor should surface section '{expectSection}' for {path}");
+        Expect(HasLabelTextContaining(control, "Sections:") &&
+               HasLabelTextContaining(control, "Settings:") &&
+               HasLabelTextContaining(control, "Unplaced objects:"),
+            $"editor should surface a report layout summary for {path}");
 
         var designSurface = FindDesignSurface(control);
         Expect(designSurface is not null, $"design surface should exist for {path}");

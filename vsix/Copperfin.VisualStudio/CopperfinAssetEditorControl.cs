@@ -624,8 +624,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         var info = new FileInfo(path);
         titleLabel.Text = CopperfinStudioHostBridge.DescribeAssetKind(path, localization);
         pathLabel.Text = path;
-        detailsLabel.Text =
-            $"Size: {info.Length:N0} bytes   Last write: {info.LastWriteTime:G}   Extension: {info.Extension.ToLowerInvariant()}";
+        detailsLabel.Text = BuildSnapshotDetailsText(info, null);
         launchButton.Enabled = true;
         revealButton.Enabled = true;
         refreshButton.Enabled = true;
@@ -682,6 +681,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             }
 
             currentSnapshot = snapshotResult.Document;
+            detailsLabel.Text = BuildSnapshotDetailsText(new FileInfo(path), currentSnapshot);
             snapshotStatusLabel.Text = BuildSnapshotLoadedStatus(currentSnapshot);
             guidanceLabel.Text = BuildGuidanceText(currentSnapshot.AssetFamily);
             UpdateProjectCommandVisibility();
@@ -736,7 +736,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             sectionListView.Columns[2].Text = this.localization.Text("AssetEditor.Column.Top");
             foreach (var section in currentSnapshot.ReportLayout.Sections)
             {
-                var item = new ListViewItem(section.Title);
+                var item = new ListViewItem(BuildReportSectionListTitle(section));
                 item.SubItems.Add(section.Objects.Count.ToString());
                 item.SubItems.Add(section.Top.ToString());
                 item.Tag = section;
@@ -1373,6 +1373,40 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private CopperfinStudioProjectEntry? LookupProjectEntry(int recordIndex)
     {
         return currentSnapshot?.ProjectWorkspace?.Entries.FirstOrDefault(entry => entry.RecordIndex == recordIndex);
+    }
+
+    private string BuildSnapshotDetailsText(FileInfo info, CopperfinStudioSnapshotDocument? snapshot)
+    {
+        var details = F(
+            "AssetEditor.Details.FileMetadata",
+            info.Length,
+            info.LastWriteTime,
+            info.Extension.ToLowerInvariant());
+
+        if (snapshot?.ReportLayout is null || (snapshot.AssetFamily != "report" && snapshot.AssetFamily != "label"))
+        {
+            return details;
+        }
+
+        return details + Environment.NewLine + F(
+            "AssetEditor.Details.ReportLayoutSummary",
+            snapshot.ReportLayout.Sections.Count,
+            snapshot.ReportLayout.Groupings.Count,
+            snapshot.ReportLayout.Settings.Count,
+            snapshot.ReportLayout.UnplacedObjects.Count);
+    }
+
+    private string BuildReportSectionListTitle(CopperfinStudioReportSection section)
+    {
+        if (!section.GroupingContextAvailable || string.IsNullOrWhiteSpace(section.GroupingExpression))
+        {
+            return section.Title ?? string.Empty;
+        }
+
+        return F(
+            "AssetEditor.ReportSection.WithGroupingExpression",
+            section.Title ?? string.Empty,
+            section.GroupingExpression ?? string.Empty);
     }
 
     private string L(string key) => this.localization.Text(key);
