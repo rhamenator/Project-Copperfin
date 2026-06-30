@@ -1519,10 +1519,12 @@ void test_studio_host_json_duplicates_report_visual_object_batches_by_stable_sel
 void test_studio_host_json_duplicates_deleted_report_visual_object_batches_by_stable_selection(
     const std::string& studio_host_path);
 #endif
+#if !defined(COPPERFIN_REPORT_VISUAL_REORDER_BATCH_SKIP_HOST_SMOKE)
 void test_studio_host_json_reorders_report_visual_object_batches_by_stable_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_reorders_deleted_report_visual_object_batches_by_stable_selection(
     const std::string& studio_host_path);
+#endif
 
 // ==== Report layout JSON tests: selector resolution and ambiguity ====
 // ==== Report layout JSON tests: memo placeholder resolution ====
