@@ -50,6 +50,7 @@ internal static class Program
         SmokeAssetEditorUndoRefreshesLabelShellSummary();
         SmokeAssetEditorDeletedLabelObjectPropertyGridHostUpdate();
         SmokeReportObjectPropertyGridLocalization();
+        SmokeSharedDesignerSelectionLocalization();
         SmokeLocalizedReportObjectKindSubtitles();
         SmokeLocalizedReportObjectFallbackTitles();
         SmokeReportSelectionPreservedAcrossExplorerRefresh();
@@ -2731,6 +2732,143 @@ internal static class Program
                 "Deleted report object property-grid selection should serialize FONTSTYLE edits through the shared update path");
             ExpectSelectionUpdate(deletedSelection, "FONTSIZE", 10, "10",
                 "Deleted report object property-grid selection should serialize FONTSIZE edits through the shared update path");
+        }
+    }
+
+    private static void SmokeSharedDesignerSelectionLocalization()
+    {
+        var formSnapshot = new CopperfinStudioSnapshotObject
+        {
+            RecordIndex = 12,
+            Title = "frmCustomer",
+            Subtitle = "form",
+            Properties = new List<CopperfinStudioSnapshotProperty>
+            {
+                new() { Name = "OBJNAME", Value = "frmCustomer" },
+                new() { Name = "BASECLASS", Value = "form" },
+                new() { Name = "PARENT", Value = "_screen" },
+                new() { Name = "Left", Value = "100" },
+                new() { Name = "Top", Value = "200" },
+                new() { Name = "Width", Value = "600" },
+                new() { Name = "Height", Value = "400" },
+                new() { Name = "Caption", Value = "\"Customers\"" }
+            }
+        };
+
+        var menuSnapshot = new CopperfinStudioSnapshotObject
+        {
+            RecordIndex = 8,
+            Title = "mnuFile",
+            Subtitle = "menu",
+            Properties = new List<CopperfinStudioSnapshotProperty>
+            {
+                new() { Name = "OBJTYPE", Value = "1" },
+                new() { Name = "OBJCODE", Value = "22" },
+                new() { Name = "NAME", Value = "mnuFile" },
+                new() { Name = "PROMPT", Value = "File" },
+                new() { Name = "COMMAND", Value = "DO open" },
+                new() { Name = "PROCEDURE", Value = "OpenMenu" },
+                new() { Name = "MESSAGE", Value = "Open a file" },
+                new() { Name = "KEYLABEL", Value = "Ctrl+O" },
+                new() { Name = "LEVELNAME", Value = "Top level" },
+                new() { Name = "ITEMNUM", Value = "1" }
+            }
+        };
+
+        var projectSnapshot = new CopperfinStudioSnapshotObject
+        {
+            RecordIndex = 3,
+            Title = "invoice.scx",
+            Subtitle = "Form",
+            Properties = new List<CopperfinStudioSnapshotProperty>
+            {
+                new() { Name = "NAME", Value = "invoice.scx" },
+                new() { Name = "TYPE", Value = "Form" },
+                new() { Name = "KEY", Value = "Invoices" },
+                new() { Name = "COMMENTS", Value = "Core invoice form" },
+                new() { Name = "EXCLUDE", Value = "F" },
+                new() { Name = "MAINPROG", Value = "F" },
+                new() { Name = "DEBUG", Value = "T" }
+            }
+        };
+
+        var genericSnapshot = new CopperfinStudioSnapshotObject
+        {
+            RecordIndex = 1,
+            Title = "shared.asset",
+            Subtitle = "generic"
+        };
+
+        var spanishFormSelection = CopperfinDesignerSelection.FromSnapshot("form", formSnapshot, new CopperfinLocalization("es-419"));
+        Expect(spanishFormSelection is not null &&
+               TypeDescriptor.GetProperties(spanishFormSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Nombre del objeto", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(spanishFormSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Clase base", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(spanishFormSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Padre", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(spanishFormSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Título", StringComparison.Ordinal)),
+            "Spanish shared form/class selection should localize object identity and caption labels");
+
+        var spanishMenuSelection = CopperfinDesignerSelection.FromSnapshot("menu", menuSnapshot, new CopperfinLocalization("es-419"));
+        Expect(spanishMenuSelection is not null &&
+               TypeDescriptor.GetProperties(spanishMenuSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Nombre", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(spanishMenuSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Solicitud", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(spanishMenuSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Etiqueta de tecla", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(spanishMenuSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Número de elemento", StringComparison.Ordinal)),
+            "Spanish shared menu selection should localize editable menu field labels");
+
+        var spanishProjectSelection = CopperfinDesignerSelection.FromSnapshot("project", projectSnapshot, new CopperfinLocalization("es-419"));
+        Expect(spanishProjectSelection is not null &&
+               TypeDescriptor.GetProperties(spanishProjectSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Elemento del proyecto", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(spanishProjectSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Clave", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(spanishProjectSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Comentarios", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(spanishProjectSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Depurar", StringComparison.Ordinal)),
+            "Spanish shared project selection should localize project metadata labels");
+
+        var portugueseFormSelection = CopperfinDesignerSelection.FromSnapshot("form", formSnapshot, new CopperfinLocalization("pt-BR"));
+        Expect(portugueseFormSelection is not null &&
+               TypeDescriptor.GetProperties(portugueseFormSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Nome do objeto", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(portugueseFormSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Classe base", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(portugueseFormSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Pai", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(portugueseFormSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Legenda", StringComparison.Ordinal)),
+            "Portuguese shared form/class selection should localize object identity and caption labels");
+
+        var portugueseMenuSelection = CopperfinDesignerSelection.FromSnapshot("menu", menuSnapshot, new CopperfinLocalization("pt-BR"));
+        Expect(portugueseMenuSelection is not null &&
+               TypeDescriptor.GetProperties(portugueseMenuSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Nome", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(portugueseMenuSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Comando", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(portugueseMenuSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Rótulo da tecla", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(portugueseMenuSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Número do item", StringComparison.Ordinal)),
+            "Portuguese shared menu selection should localize editable menu field labels");
+
+        var portugueseProjectSelection = CopperfinDesignerSelection.FromSnapshot("project", projectSnapshot, new CopperfinLocalization("pt-BR"));
+        Expect(portugueseProjectSelection is not null &&
+               TypeDescriptor.GetProperties(portugueseProjectSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Item do projeto", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(portugueseProjectSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Chave", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(portugueseProjectSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Comentários", StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(portugueseProjectSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Depurar", StringComparison.Ordinal)),
+            "Portuguese shared project selection should localize project metadata labels");
+
+        var pseudoLocalization = new CopperfinLocalization("qps-ploc");
+        var pseudoMenuSelection = CopperfinDesignerSelection.FromSnapshot("menu", menuSnapshot, pseudoLocalization);
+        var pseudoProjectSelection = CopperfinDesignerSelection.FromSnapshot("project", projectSnapshot, pseudoLocalization);
+        var pseudoGenericSelection = CopperfinDesignerSelection.FromSnapshot("dbf", genericSnapshot, pseudoLocalization);
+        Expect(pseudoMenuSelection is not null &&
+               TypeDescriptor.GetProperties(pseudoMenuSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Name"), StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(pseudoMenuSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.KeyLabel"), StringComparison.Ordinal)) &&
+               pseudoProjectSelection is not null &&
+               TypeDescriptor.GetProperties(pseudoProjectSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ProjectItem"), StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(pseudoProjectSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Debug"), StringComparison.Ordinal)) &&
+               pseudoGenericSelection is not null &&
+               TypeDescriptor.GetProperties(pseudoGenericSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Name"), StringComparison.Ordinal)) &&
+               TypeDescriptor.GetProperties(pseudoGenericSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Type"), StringComparison.Ordinal)),
+            "Pseudo-localized shared non-report selections should route menu, project, and generic labels through the shared catalog");
+
+        if (pseudoMenuSelection is not null)
+        {
+            TypeDescriptor.GetProperties(pseudoMenuSelection)["PROMPT"]?.SetValue(pseudoMenuSelection, "Archivo");
+            Expect(pseudoMenuSelection.TryGetUpdate("PROMPT", out var promptTarget, out var promptValue) &&
+                   string.Equals(promptTarget, "PROMPT", StringComparison.Ordinal) &&
+                   string.Equals(promptValue, "Archivo", StringComparison.Ordinal),
+                "Localized shared menu selection labels should preserve invariant property update targets");
         }
     }
 

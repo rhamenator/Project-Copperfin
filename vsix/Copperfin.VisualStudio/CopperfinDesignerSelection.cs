@@ -73,14 +73,14 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         {
             case "form":
             case "class_library":
-                selection.AddReadOnlyString("OBJNAME", "Object Name", selection.Read(snapshotObject, "OBJNAME", fallback: snapshotObject.Title));
-                selection.AddReadOnlyString("BASECLASS", "Base Class", selection.Read(snapshotObject, "BASECLASS", "CLASS", fallback: snapshotObject.Subtitle));
-                selection.AddReadOnlyString("PARENT", "Parent", selection.Read(snapshotObject, "PARENT"));
-                selection.AddEditableInt("Left", "Left", selection.Read(snapshotObject, "Left"));
-                selection.AddEditableInt("Top", "Top", selection.Read(snapshotObject, "Top"));
-                selection.AddEditableInt("Width", "Width", selection.Read(snapshotObject, "Width"));
-                selection.AddEditableInt("Height", "Height", selection.Read(snapshotObject, "Height"));
-                selection.AddEditableString("Caption", "Caption", selection.Read(snapshotObject, "Caption"), requiresFoxStringLiteral: true);
+                selection.AddReadOnlyString("OBJNAME", L("AssetEditor.Property.ObjectName", "Object Name"), selection.Read(snapshotObject, "OBJNAME", fallback: snapshotObject.Title));
+                selection.AddReadOnlyString("BASECLASS", L("AssetEditor.Property.BaseClass", "Base Class"), selection.Read(snapshotObject, "BASECLASS", "CLASS", fallback: snapshotObject.Subtitle));
+                selection.AddReadOnlyString("PARENT", L("AssetEditor.Property.Parent", "Parent"), selection.Read(snapshotObject, "PARENT"));
+                selection.AddEditableInt("Left", L("AssetEditor.Property.Left", "Left"), selection.Read(snapshotObject, "Left"));
+                selection.AddEditableInt("Top", L("AssetEditor.Column.Top", "Top"), selection.Read(snapshotObject, "Top"));
+                selection.AddEditableInt("Width", L("AssetEditor.Property.Width", "Width"), selection.Read(snapshotObject, "Width"));
+                selection.AddEditableInt("Height", L("AssetEditor.Property.Height", "Height"), selection.Read(snapshotObject, "Height"));
+                selection.AddEditableString("Caption", L("AssetEditor.Property.Caption", "Caption"), selection.Read(snapshotObject, "Caption"), requiresFoxStringLiteral: true);
                 break;
 
             case "report":
@@ -100,31 +100,31 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
                 break;
 
             case "menu":
-                selection.AddReadOnlyInt("OBJTYPE", "Object Type", selection.Read(snapshotObject, "OBJTYPE"));
-                selection.AddReadOnlyInt("OBJCODE", "Object Code", selection.Read(snapshotObject, "OBJCODE"));
-                selection.AddEditableString("NAME", "Name", selection.Read(snapshotObject, "NAME", fallback: snapshotObject.Title));
-                selection.AddEditableString("PROMPT", "Prompt", selection.Read(snapshotObject, "PROMPT"));
-                selection.AddEditableString("COMMAND", "Command", selection.Read(snapshotObject, "COMMAND"));
-                selection.AddEditableString("PROCEDURE", "Procedure", selection.Read(snapshotObject, "PROCEDURE"));
-                selection.AddEditableString("MESSAGE", "Message", selection.Read(snapshotObject, "MESSAGE"));
-                selection.AddEditableString("KEYLABEL", "Key Label", selection.Read(snapshotObject, "KEYLABEL"));
-                selection.AddReadOnlyString("LEVELNAME", "Level", selection.Read(snapshotObject, "LEVELNAME", fallback: snapshotObject.Subtitle));
-                selection.AddReadOnlyString("ITEMNUM", "Item Number", selection.Read(snapshotObject, "ITEMNUM"));
+                selection.AddReadOnlyInt("OBJTYPE", L("AssetEditor.Property.ObjectType", "Object Type"), selection.Read(snapshotObject, "OBJTYPE"));
+                selection.AddReadOnlyInt("OBJCODE", L("AssetEditor.Property.ObjectCode", "Object Code"), selection.Read(snapshotObject, "OBJCODE"));
+                selection.AddEditableString("NAME", L("AssetEditor.Property.Name", "Name"), selection.Read(snapshotObject, "NAME", fallback: snapshotObject.Title));
+                selection.AddEditableString("PROMPT", L("AssetEditor.Property.Prompt", "Prompt"), selection.Read(snapshotObject, "PROMPT"));
+                selection.AddEditableString("COMMAND", L("AssetEditor.Property.Command", "Command"), selection.Read(snapshotObject, "COMMAND"));
+                selection.AddEditableString("PROCEDURE", L("AssetEditor.Property.Procedure", "Procedure"), selection.Read(snapshotObject, "PROCEDURE"));
+                selection.AddEditableString("MESSAGE", L("AssetEditor.Property.Message", "Message"), selection.Read(snapshotObject, "MESSAGE"));
+                selection.AddEditableString("KEYLABEL", L("AssetEditor.Property.KeyLabel", "Key Label"), selection.Read(snapshotObject, "KEYLABEL"));
+                selection.AddReadOnlyString("LEVELNAME", L("AssetEditor.Property.Level", "Level"), selection.Read(snapshotObject, "LEVELNAME", fallback: snapshotObject.Subtitle));
+                selection.AddReadOnlyString("ITEMNUM", L("AssetEditor.Property.ItemNumber", "Item Number"), selection.Read(snapshotObject, "ITEMNUM"));
                 break;
 
             case "project":
-                selection.AddReadOnlyString("NAME", "Project Item", selection.Read(snapshotObject, "NAME", fallback: snapshotObject.Title));
-                selection.AddReadOnlyString("TYPE", "Type", selection.Read(snapshotObject, "TYPE", fallback: snapshotObject.Subtitle));
-                selection.AddReadOnlyString("KEY", "Key", selection.Read(snapshotObject, "KEY"));
-                selection.AddEditableString("COMMENTS", "Comments", selection.Read(snapshotObject, "COMMENTS"));
-                selection.AddEditableBool("EXCLUDE", "Exclude", selection.Read(snapshotObject, "EXCLUDE"));
-                selection.AddEditableBool("MAINPROG", "Main Program", selection.Read(snapshotObject, "MAINPROG"));
-                selection.AddEditableBool("DEBUG", "Debug", selection.Read(snapshotObject, "DEBUG"));
+                selection.AddReadOnlyString("NAME", L("AssetEditor.Property.ProjectItem", "Project Item"), selection.Read(snapshotObject, "NAME", fallback: snapshotObject.Title));
+                selection.AddReadOnlyString("TYPE", L("AssetEditor.Property.Type", "Type"), selection.Read(snapshotObject, "TYPE", fallback: snapshotObject.Subtitle));
+                selection.AddReadOnlyString("KEY", L("AssetEditor.Property.Key", "Key"), selection.Read(snapshotObject, "KEY"));
+                selection.AddEditableString("COMMENTS", L("AssetEditor.Property.Comments", "Comments"), selection.Read(snapshotObject, "COMMENTS"));
+                selection.AddEditableBool("EXCLUDE", L("AssetEditor.Property.Exclude", "Exclude"), selection.Read(snapshotObject, "EXCLUDE"));
+                selection.AddEditableBool("MAINPROG", L("AssetEditor.Property.MainProgram", "Main Program"), selection.Read(snapshotObject, "MAINPROG"));
+                selection.AddEditableBool("DEBUG", L("AssetEditor.Property.Debug", "Debug"), selection.Read(snapshotObject, "DEBUG"));
                 break;
 
             default:
-                selection.AddReadOnlyString("NAME", "Name", snapshotObject.Title);
-                selection.AddReadOnlyString("TYPE", "Type", snapshotObject.Subtitle);
+                selection.AddReadOnlyString("NAME", L("AssetEditor.Property.Name", "Name"), snapshotObject.Title);
+                selection.AddReadOnlyString("TYPE", L("AssetEditor.Property.Type", "Type"), snapshotObject.Subtitle);
                 break;
         }
 
