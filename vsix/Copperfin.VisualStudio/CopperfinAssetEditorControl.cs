@@ -598,7 +598,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         currentSnapshot = undoResult.Document;
         snapshotStatusLabel.Text = BuildUndoCompletedStatus(priorLabel, currentSnapshot);
         PopulateSectionList();
-        PopulateObjectList();
+        SyncExplorerSelection();
         LoadSurface();
         if (selectedRecordIndex >= 0)
         {
@@ -691,7 +691,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             guidanceLabel.Text = BuildGuidanceText(currentSnapshot.AssetFamily);
             UpdateProjectCommandVisibility();
             PopulateSectionList();
-            PopulateObjectList();
+            SyncExplorerSelection();
             LoadSurface();
         });
     }
@@ -799,7 +799,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         sectionListView.EndUpdate();
     }
 
-    private void PopulateObjectList()
+    private void PopulateObjectList(bool autoSelectFirstItem = true)
     {
         objectListView.BeginUpdate();
         objectListView.Items.Clear();
@@ -839,11 +839,11 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
         objectListView.EndUpdate();
 
-        if (objectListView.Items.Count > 0)
+        if (autoSelectFirstItem && objectListView.Items.Count > 0)
         {
             objectListView.Items[0].Selected = true;
         }
-        else
+        else if (objectListView.Items.Count == 0)
         {
             propertyGrid.SelectedObject = null;
         }
@@ -872,7 +872,41 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             return;
         }
 
-        PopulateObjectList();
+        try
+        {
+            suppressSelectionSync = true;
+            var selectedExplorerTag = TryReadSelectedExplorerTag();
+            var isReportSectionSelection = selectedExplorerTag is CopperfinStudioReportSection || selectedExplorerTag is ReportUnplacedObjectScope;
+            PopulateObjectList(autoSelectFirstItem: !isReportSectionSelection);
+
+            if (selectedExplorerTag is CopperfinStudioReportSection reportSection)
+            {
+                foreach (ListViewItem item in objectListView.Items)
+                {
+                    item.Selected = false;
+                }
+
+                propertyGrid.SelectedObject = CopperfinDesignerSelection.FromReportSection(reportSection, localization);
+                designSurface.SelectRecord(null);
+                return;
+            }
+
+            if (selectedExplorerTag is ReportUnplacedObjectScope)
+            {
+                foreach (ListViewItem item in objectListView.Items)
+                {
+                    item.Selected = false;
+                }
+
+                propertyGrid.SelectedObject = null;
+                designSurface.SelectRecord(null);
+                return;
+            }
+        }
+        finally
+        {
+            suppressSelectionSync = false;
+        }
     }
 
     private void SyncSelectionFromSurface(int recordIndex)
@@ -937,7 +971,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         currentSnapshot = updateResult.Document;
         snapshotStatusLabel.Text = BuildPropertyUpdatedStatus(propertyName, currentSnapshot);
         PopulateSectionList();
-        PopulateObjectList();
+        SyncExplorerSelection();
         LoadSurface();
         designSurface.SelectRecord(recordIndex);
         SyncSelectionFromSurface(recordIndex);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -34,6 +35,7 @@ internal static class Program
         SmokeLocalizedLaunchWorkflowDialogText();
         SmokeReportSectionGroupingExplorerTitles();
         SmokeReportSectionScopedObjectFiltering();
+        SmokeReportSectionPropertyGridSelection();
         SmokeAssetEditorWithRealAsset(
             @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx",
             expectSection: "Detail");
@@ -637,6 +639,69 @@ internal static class Program
             "Pseudo-localized report explorer should route the unplaced-object row through the shared catalog");
     }
 
+    private static void SmokeReportSectionPropertyGridSelection()
+    {
+        var snapshot = new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "report",
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail",
+                        Title = "Detail",
+                        BandKind = "detail",
+                        RecordIndex = 41,
+                        Top = 2000,
+                        Height = 5000,
+                        DeletedObjectCount = 1,
+                        GroupRole = "header",
+                        GroupingExpression = "customer.country"
+                    }
+                }
+            }
+        };
+
+        using var control = new CopperfinAssetEditorControl();
+        ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+        InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+
+        var propertyGrid = GetPrivatePropertyGrid(control);
+        Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection sectionSelection &&
+               sectionSelection.RecordIndex == 41,
+            "Report section explorer selection should produce a section-rooted property-grid selection");
+
+        if (propertyGrid.SelectedObject is CopperfinDesignerSelection editableSelection)
+        {
+            TypeDescriptor.GetProperties(editableSelection)["TOP"]?.SetValue(editableSelection, 3200);
+            Expect(editableSelection.TryGetUpdate("TOP", out var topTarget, out var topValue) &&
+                   string.Equals(topTarget, "TOP", StringComparison.Ordinal) &&
+                   string.Equals(topValue, "3200", StringComparison.Ordinal),
+                "Report section property-grid selection should serialize TOP edits through the shared update path");
+
+            TypeDescriptor.GetProperties(editableSelection)["HEIGHT"]?.SetValue(editableSelection, 6100);
+            Expect(editableSelection.TryGetUpdate("HEIGHT", out var heightTarget, out var heightValue) &&
+                   string.Equals(heightTarget, "HEIGHT", StringComparison.Ordinal) &&
+                   string.Equals(heightValue, "6100", StringComparison.Ordinal),
+                "Report section property-grid selection should serialize HEIGHT edits through the shared update path");
+        }
+
+        var spanishSelection = CopperfinDesignerSelection.FromReportSection(snapshot.ReportLayout.Sections[0], new CopperfinLocalization("es-419"));
+        Expect(TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Altura", StringComparison.Ordinal)),
+            "Spanish report section property-grid selection should localize section field labels");
+
+        var portugueseSelection = CopperfinDesignerSelection.FromReportSection(snapshot.ReportLayout.Sections[0], new CopperfinLocalization("pt-BR"));
+        Expect(TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, "Altura", StringComparison.Ordinal)),
+            "Portuguese report section property-grid selection should localize section field labels");
+
+        var pseudoLocalization = new CopperfinLocalization("qps-ploc");
+        var pseudoSelection = CopperfinDesignerSelection.FromReportSection(snapshot.ReportLayout.Sections[0], pseudoLocalization);
+        Expect(TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Height"), StringComparison.Ordinal)),
+            "Pseudo-localized report section property-grid selection should route new field labels through the shared catalog");
+    }
+
     private static void SmokeAssetEditorWithRealAsset(string path, string expectSection)
     {
         if (!File.Exists(path))
@@ -1005,7 +1070,7 @@ internal static class Program
 
         currentSnapshotField.SetValue(control, snapshot);
         populateSectionListMethod.Invoke(control, Array.Empty<object>());
-        populateObjectListMethod.Invoke(control, Array.Empty<object>());
+        populateObjectListMethod.Invoke(control, new object[] { true });
     }
 
     private static string BuildGuidanceText(CopperfinAssetEditorControl control, string assetFamily)
@@ -1142,6 +1207,17 @@ internal static class Program
         }
 
         return listView;
+    }
+
+    private static PropertyGrid GetPrivatePropertyGrid(CopperfinAssetEditorControl control)
+    {
+        var field = typeof(CopperfinAssetEditorControl).GetField("propertyGrid", BindingFlags.Instance | BindingFlags.NonPublic);
+        if (field?.GetValue(control) is not PropertyGrid propertyGrid)
+        {
+            throw new InvalidOperationException("Could not read private property grid.");
+        }
+
+        return propertyGrid;
     }
 
     private static IEnumerable<Label> FindLabels(Control root)

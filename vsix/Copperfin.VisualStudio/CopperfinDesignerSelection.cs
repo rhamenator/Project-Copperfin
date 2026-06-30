@@ -127,6 +127,39 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         return selection;
     }
 
+    public static CopperfinDesignerSelection FromReportSection(CopperfinStudioReportSection section, CopperfinLocalization localization)
+    {
+        var selection = new CopperfinDesignerSelection
+        {
+            RecordIndex = section.RecordIndex
+        };
+
+        selection.AddReadOnlyString("TITLE", localization.Text("AssetEditor.Property.SectionTitle"), section.Title);
+        selection.AddReadOnlyString("ID", localization.Text("AssetEditor.Property.SectionId"), section.Id);
+        selection.AddReadOnlyString("BANDKIND", localization.Text("AssetEditor.Property.BandKind"), section.BandKind);
+        selection.AddEditableInt("TOP", localization.Text("AssetEditor.Column.Top"), section.Top.ToString(CultureInfo.InvariantCulture));
+        selection.AddEditableInt("HEIGHT", localization.Text("AssetEditor.Property.Height"), section.Height.ToString(CultureInfo.InvariantCulture));
+        selection.AddReadOnlyInt(
+            "DELETEDOBJECTCOUNT",
+            localization.Text("AssetEditor.Property.DeletedObjects"),
+            section.DeletedObjectCount.ToString(CultureInfo.InvariantCulture));
+
+        if (!string.IsNullOrWhiteSpace(section.GroupRole))
+        {
+            selection.AddReadOnlyString("GROUPROLE", localization.Text("AssetEditor.Property.GroupRole"), section.GroupRole ?? string.Empty);
+        }
+
+        if (!string.IsNullOrWhiteSpace(section.GroupingExpression))
+        {
+            selection.AddReadOnlyString(
+                "GROUPINGEXPRESSION",
+                localization.Text("AssetEditor.Property.GroupingExpression"),
+                section.GroupingExpression ?? string.Empty);
+        }
+
+        return selection;
+    }
+
     public bool TryGetUpdate(string propertyName, out string targetName, out string serializedValue)
     {
         targetName = string.Empty;
