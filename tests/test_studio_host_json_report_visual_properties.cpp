@@ -1290,6 +1290,7 @@ void test_studio_host_json_copies_deleted_report_visual_property_batches_by_stab
 
 #if !defined(COPPERFIN_DELETED_REPORT_VISUAL_PROPERTY_COPIES_ONLY)
 
+#if !defined(COPPERFIN_DELETED_REPORT_VISUAL_PROPERTY_MOVES_SKIP_HOST_SMOKE)
 void test_studio_host_json_moves_deleted_report_visual_properties_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -1997,6 +1998,10 @@ void test_studio_host_json_moves_deleted_report_visual_property_batches_by_stabl
         fs::remove_all(temp_root, ignored);
     }
 }
+
+#endif
+
+#if !defined(COPPERFIN_DELETED_REPORT_VISUAL_PROPERTY_MOVES_ONLY)
 
 #if !defined(COPPERFIN_DELETED_REPORT_VISUAL_PROPERTY_REJECTIONS_SKIP_HOST_SMOKE)
 void test_studio_host_json_rejects_deleted_report_visual_property_rename_by_stable_selection(
@@ -2885,6 +2890,7 @@ void test_studio_host_json_rejects_deleted_report_visual_property_reorder_batche
         fs::remove_all(temp_root, ignored);
     }
 }
+#endif
 #endif
 #endif
 #endif
