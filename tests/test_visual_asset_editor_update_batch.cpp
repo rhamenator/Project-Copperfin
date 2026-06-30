@@ -168,7 +168,6 @@ void test_update_visual_object_properties_updates_selected_geometry_fields() {
         expect(second_vpos != nullptr && std::abs(parse_number(second_vpos->display_value) - 322.0) < 0.001,
             "#735: multi-property undo should restore selected VPOS values");
     }
-
     const auto empty_result = copperfin::vfp::update_visual_object_properties({
         .path = table_path.string(),
         .record_index = 0U,
@@ -343,6 +342,84 @@ void test_update_visual_object_batch_rolls_back_failed_alignment() {
         "#752: empty batch edit requests should not mutate existing geometry");
 
     fs::remove_all(temp_dir, ignored);
+}
+
+void test_update_visual_object_batch_undoes_report_and_label_batches_in_single_step() {
+    namespace fs = std::filesystem;
+    const auto exercise_asset = [&](const std::string& stem,
+                                    const std::string& table_extension,
+                                    const std::string& asset_label) {
+        const fs::path temp_dir = fs::temp_directory_path() /
+            ("copperfin_visual_editor_report_batch_undo_" + stem + "_tests_" + std::to_string(_getpid()));
+        std::error_code ignored;
+        fs::remove_all(temp_dir, ignored);
+        fs::create_directories(temp_dir);
+
+        const fs::path table_path = temp_dir / ("batch" + table_extension);
+        const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+            {.name = "OBJTYPE", .type = 'N', .length = 8U},
+            {.name = "HPOS", .type = 'N', .length = 10U},
+            {.name = "WIDTH", .type = 'N', .length = 10U},
+            {.name = "EXPR", .type = 'M', .length = 4U}
+        };
+        const std::vector<std::vector<std::string>> records{
+            {"8", "1200", "2400", "customer.company"}
+        };
+        const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+        expect(create_result.ok, asset_label + " batch-undo fixture should be writable");
+
+        const auto batch_result = copperfin::vfp::update_visual_object_batch({
+            .path = table_path.string(),
+            .objects = {
+                {
+                    .record_index = 0U,
+                    .object_name = {},
+                    .unique_id = {},
+                    .properties = {
+                        {.property_name = "HPOS", .property_value = "1800"},
+                        {.property_name = "WIDTH", .property_value = "3200"},
+                        {.property_name = "EXPR", .property_value = "\"updated.expr\""}
+                    }
+                }
+            }
+        });
+        expect(batch_result.ok, asset_label + " batch property edits should succeed");
+        expect(batch_result.affected_object_count == 1U,
+            asset_label + " batch property edits should report one affected object");
+
+        auto undo_status = copperfin::vfp::query_visual_object_undo(table_path.string());
+        expect(undo_status.available, asset_label + " batch property edits should expose undo");
+        expect(undo_status.label.find("EXPR") != std::string::npos,
+            asset_label + " batch property edits should keep the latest-property undo label");
+
+        const auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+        expect(undo_result.ok, asset_label + " batch property edits should undo in a single command");
+
+        const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+        expect(parse_result.ok, asset_label + " fixture should remain readable after the command undo");
+        if (parse_result.ok && parse_result.table.records.size() == 1U) {
+            const auto& record = parse_result.table.records[0];
+            for (const auto& value : record.values) {
+                if (value.field_name == "HPOS") {
+                    expect(value.display_value == "1200", asset_label + " command undo should restore HPOS");
+                }
+                if (value.field_name == "WIDTH") {
+                    expect(value.display_value == "2400", asset_label + " command undo should restore WIDTH");
+                }
+                if (value.field_name == "EXPR") {
+                    expect(value.display_value == "customer.company", asset_label + " command undo should restore EXPR");
+                }
+            }
+        }
+
+        undo_status = copperfin::vfp::query_visual_object_undo(table_path.string());
+        expect(!undo_status.available, asset_label + " command undo should consume the only report batch history entry");
+
+        fs::remove_all(temp_dir, ignored);
+    };
+
+    exercise_asset("frx", ".frx", "Report");
+    exercise_asset("lbx", ".lbx", "Label");
 }
 
 void test_update_visual_object_property_skips_noop_writes() {

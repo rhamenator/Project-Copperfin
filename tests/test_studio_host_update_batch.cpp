@@ -361,6 +361,30 @@ void run_update_batch_case(
             "\"expression\": \"customer.contact\""
         },
         issue_prefix + " should refresh selected object metadata after reopen");
+
+    const auto undo_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", asset_path.string(),
+            "--undo-mode", "command",
+            "--json"
+        },
+        temp_root);
+
+    if (undo_process.exit_code != 0) {
+        std::cerr << "studio host " << label << " update-batch undo stdout:\n"
+                  << undo_process.stdout_text << "\n";
+        std::cerr << "studio host " << label << " update-batch undo stderr:\n"
+                  << undo_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(undo_process.exit_code == 0, issue_prefix + " undo should exit successfully");
+    expect(visual_object_property(asset_path, "field-guid", "EXPR") == "customer.company" &&
+               visual_object_property(asset_path, "field-guid", "WIDTH") == "4000" &&
+               visual_object_property(asset_path, "label-guid", "EXPR") == "\"Invoice\"" &&
+               visual_object_property(asset_path, "label-guid", "HPOS") == "900",
+           issue_prefix + " should restore all batch-updated properties through one command undo");
 }
 
 void test_studio_host_json_preserves_update_batch(const std::string& studio_host_path) {

@@ -54,6 +54,21 @@ bool write_visual_asset_undo_entry(const std::filesystem::path& path, const Visu
     output.write(entry.property_name.data(), static_cast<std::streamsize>(entry.property_name.size()));
     output.write(entry.prior_value.data(), static_cast<std::streamsize>(entry.prior_value.size()));
     output.write(entry.label.data(), static_cast<std::streamsize>(entry.label.size()));
+    const std::uint64_t grouped_change_count = static_cast<std::uint64_t>(entry.grouped_changes.size());
+    output.write(reinterpret_cast<const char*>(&grouped_change_count), sizeof(grouped_change_count));
+    for (const auto& grouped_change : entry.grouped_changes) {
+        const std::uint64_t grouped_record_index = static_cast<std::uint64_t>(grouped_change.record_index);
+        const std::uint8_t grouped_prior_exists = grouped_change.prior_value_exists ? 1U : 0U;
+        const std::uint64_t grouped_property_name_length = static_cast<std::uint64_t>(grouped_change.property_name.size());
+        const std::uint64_t grouped_prior_value_length = static_cast<std::uint64_t>(grouped_change.prior_value.size());
+
+        output.write(reinterpret_cast<const char*>(&grouped_record_index), sizeof(grouped_record_index));
+        output.write(reinterpret_cast<const char*>(&grouped_prior_exists), sizeof(grouped_prior_exists));
+        output.write(reinterpret_cast<const char*>(&grouped_property_name_length), sizeof(grouped_property_name_length));
+        output.write(reinterpret_cast<const char*>(&grouped_prior_value_length), sizeof(grouped_prior_value_length));
+        output.write(grouped_change.property_name.data(), static_cast<std::streamsize>(grouped_change.property_name.size()));
+        output.write(grouped_change.prior_value.data(), static_cast<std::streamsize>(grouped_change.prior_value.size()));
+    }
     return static_cast<bool>(output);
 }
 
@@ -86,7 +101,49 @@ std::optional<VisualAssetUndoEntry> read_visual_asset_undo_entry(const std::file
     input.read(entry.property_name.data(), static_cast<std::streamsize>(entry.property_name.size()));
     input.read(entry.prior_value.data(), static_cast<std::streamsize>(entry.prior_value.size()));
     input.read(entry.label.data(), static_cast<std::streamsize>(entry.label.size()));
-    return input.good() ? std::optional<VisualAssetUndoEntry>(entry) : std::nullopt;
+    if (!input.good()) {
+        return std::nullopt;
+    }
+
+    std::uint64_t grouped_change_count = 0;
+    input.read(reinterpret_cast<char*>(&grouped_change_count), sizeof(grouped_change_count));
+    if (input.eof()) {
+        input.clear();
+        return entry;
+    }
+    if (!input.good()) {
+        return std::nullopt;
+    }
+
+    entry.grouped_changes.reserve(static_cast<std::size_t>(grouped_change_count));
+    for (std::uint64_t index = 0; index < grouped_change_count; ++index) {
+        VisualAssetUndoEntry grouped_change;
+        std::uint64_t grouped_record_index = 0;
+        std::uint8_t grouped_prior_exists = 0;
+        std::uint64_t grouped_property_name_length = 0;
+        std::uint64_t grouped_prior_value_length = 0;
+        input.read(reinterpret_cast<char*>(&grouped_record_index), sizeof(grouped_record_index));
+        input.read(reinterpret_cast<char*>(&grouped_prior_exists), sizeof(grouped_prior_exists));
+        input.read(reinterpret_cast<char*>(&grouped_property_name_length), sizeof(grouped_property_name_length));
+        input.read(reinterpret_cast<char*>(&grouped_prior_value_length), sizeof(grouped_prior_value_length));
+        if (!input.good()) {
+            return std::nullopt;
+        }
+
+        grouped_change.record_index = static_cast<std::size_t>(grouped_record_index);
+        grouped_change.prior_value_exists = grouped_prior_exists != 0U;
+        grouped_change.property_name.resize(static_cast<std::size_t>(grouped_property_name_length));
+        grouped_change.prior_value.resize(static_cast<std::size_t>(grouped_prior_value_length));
+        input.read(grouped_change.property_name.data(), static_cast<std::streamsize>(grouped_change.property_name.size()));
+        input.read(grouped_change.prior_value.data(), static_cast<std::streamsize>(grouped_change.prior_value.size()));
+        if (!input.good()) {
+            return std::nullopt;
+        }
+
+        entry.grouped_changes.push_back(std::move(grouped_change));
+    }
+
+    return entry;
 }
 
 bool record_visual_asset_undo_entry(const std::string& path, const VisualAssetUndoEntry& entry, std::string& error) {
@@ -155,19 +212,38 @@ VisualAssetEditResult undo_visual_object_property(const std::string& path) {
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Undo.JournalReadFailed")};
     }
 
-    const auto result = apply_visual_object_property_change(
-        {
-            .path = path,
-            .record_index = entry->record_index,
-            .object_name = {},
-            .unique_id = {},
-            .property_name = entry->property_name,
-            .property_value = entry->prior_value
-        },
-        false,
-        !entry->prior_value_exists);
-    if (!result.ok) {
-        return result;
+    if (entry->grouped_changes.empty()) {
+        const auto result = apply_visual_object_property_change(
+            {
+                .path = path,
+                .record_index = entry->record_index,
+                .object_name = {},
+                .unique_id = {},
+                .property_name = entry->property_name,
+                .property_value = entry->prior_value
+            },
+            false,
+            !entry->prior_value_exists);
+        if (!result.ok) {
+            return result;
+        }
+    } else {
+        for (auto it = entry->grouped_changes.rbegin(); it != entry->grouped_changes.rend(); ++it) {
+            const auto result = apply_visual_object_property_change(
+                {
+                    .path = path,
+                    .record_index = it->record_index,
+                    .object_name = {},
+                    .unique_id = {},
+                    .property_name = it->property_name,
+                    .property_value = it->prior_value
+                },
+                false,
+                !it->prior_value_exists);
+            if (!result.ok) {
+                return result;
+            }
+        }
     }
 
     std::error_code error;

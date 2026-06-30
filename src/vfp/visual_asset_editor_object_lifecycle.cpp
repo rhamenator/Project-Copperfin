@@ -3071,36 +3071,229 @@ VisualAssetEditResult set_visual_object_subtree_deleted_state(const VisualObject
     });
 }
 
-VisualAssetEditResult update_visual_object_properties(const VisualObjectMultiEditRequest& request) {
-    if (request.properties.empty()) {
-        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.ChangeBatchRequired")};
+namespace {
+
+bool should_group_report_batch_undo(const std::string& path) {
+    auto extension = std::filesystem::path(path).extension().string();
+    std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
+    return extension == ".frx" || extension == ".lbx";
+}
+
+bool visual_property_states_match(const VisualPropertyState& left, const VisualPropertyState& right) {
+    return left.exists == right.exists &&
+           left.direct_field == right.direct_field &&
+           left.property_name == right.property_name &&
+           left.value == right.value &&
+           left.record_deleted == right.record_deleted;
+}
+
+VisualAssetEditResult rollback_visual_object_batch_changes(
+    const std::string& path,
+    const std::vector<VisualAssetUndoEntry>& applied_changes) {
+    for (auto it = applied_changes.rbegin(); it != applied_changes.rend(); ++it) {
+        const auto rollback_result = apply_visual_object_property_change(
+            {
+                .path = path,
+                .record_index = it->record_index,
+                .object_name = {},
+                .unique_id = {},
+                .property_name = it->property_name,
+                .property_value = it->prior_value
+            },
+            false,
+            !it->prior_value_exists);
+        if (!rollback_result.ok) {
+            return rollback_result;
+        }
     }
 
-    const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
-    for (const auto& property : request.properties) {
-        const auto result = update_visual_object_property({
-            .path = request.path,
-            .record_index = request.record_index,
-            .object_name = request.object_name,
-            .unique_id = request.unique_id,
-            .property_name = property.property_name,
-            .property_value = property.property_value
-        });
-        if (!result.ok) {
-            while (list_visual_asset_undo_entry_files(request.path).size() > initial_undo_depth) {
-                const auto rollback_result = undo_visual_object_property(request.path);
+    return {.ok = true, .error = {}, .affected_object_count = 1U};
+}
+
+VisualAssetEditResult apply_visual_object_batch_update(
+    const std::string& path,
+    const std::vector<VisualObjectBatchEditItem>& objects,
+    std::size_t affected_object_count) {
+    if (path.empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
+    }
+    if (objects.empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.EditBatchRequired")};
+    }
+
+    std::vector<VisualAssetUndoEntry> applied_changes;
+    std::string latest_label;
+
+    for (const auto& object : objects) {
+        if (object.properties.empty()) {
+            const auto rollback_result = rollback_visual_object_batch_changes(path, applied_changes);
+            if (!rollback_result.ok) {
+                return {
+                    .ok = false,
+                    .error = visual_asset_rollback_failed_text(
+                        visual_asset_text("VisualAssetEditor.Property.ChangeBatchRequired"),
+                        rollback_result.error)
+                };
+            }
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.ChangeBatchRequired")};
+        }
+
+        for (const auto& property : object.properties) {
+            std::size_t resolved_record_index = 0U;
+            const auto resolution = resolve_visual_object_record_index({
+                .path = path,
+                .record_index = object.record_index,
+                .object_name = object.object_name,
+                .unique_id = object.unique_id,
+                .property_name = property.property_name,
+                .property_value = property.property_value
+            }, resolved_record_index);
+            if (!resolution.ok) {
+                const auto rollback_result = rollback_visual_object_batch_changes(path, applied_changes);
+                if (!rollback_result.ok) {
+                    return {
+                        .ok = false,
+                        .error = visual_asset_rollback_failed_text(resolution.error, rollback_result.error)
+                    };
+                }
+                return resolution;
+            }
+
+            const auto prior_state = read_current_visual_property_state(path, resolved_record_index, property.property_name);
+            if (!prior_state.has_value()) {
+                const auto rollback_result = rollback_visual_object_batch_changes(path, applied_changes);
+                if (!rollback_result.ok) {
+                    return {
+                        .ok = false,
+                        .error = visual_asset_rollback_failed_text(
+                            visual_asset_text("VisualAssetEditor.Undo.CurrentPropertyReadFailed"),
+                            rollback_result.error)
+                    };
+                }
+                return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Undo.CurrentPropertyReadFailed")};
+            }
+
+            const auto result = apply_visual_object_property_change({
+                .path = path,
+                .record_index = object.record_index,
+                .object_name = object.object_name,
+                .unique_id = object.unique_id,
+                .property_name = property.property_name,
+                .property_value = property.property_value
+            }, false, false);
+            if (!result.ok) {
+                const auto rollback_result = rollback_visual_object_batch_changes(path, applied_changes);
                 if (!rollback_result.ok) {
                     return {
                         .ok = false,
                         .error = visual_asset_rollback_failed_text(result.error, rollback_result.error)
                     };
                 }
+                return result;
             }
-            return result;
+
+            const auto current_state = read_current_visual_property_state(path, resolved_record_index, property.property_name);
+            if (!current_state.has_value()) {
+                const auto rollback_result = rollback_visual_object_batch_changes(path, applied_changes);
+                if (!rollback_result.ok) {
+                    return {
+                        .ok = false,
+                        .error = visual_asset_rollback_failed_text(
+                            visual_asset_text("VisualAssetEditor.Undo.CurrentPropertyReadFailed"),
+                            rollback_result.error)
+                    };
+                }
+                return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Undo.CurrentPropertyReadFailed")};
+            }
+
+            if (!visual_property_states_match(*prior_state, *current_state)) {
+                applied_changes.push_back({
+                    .record_index = resolved_record_index,
+                    .property_name = property.property_name,
+                    .prior_value = prior_state->value,
+                    .prior_value_exists = prior_state->exists,
+                    .label = {},
+                    .grouped_changes = {}
+                });
+                latest_label = visual_asset_text(
+                    "VisualAssetEditor.Undo.PropertyLabel",
+                    {{"propertyName", property.property_name}});
+            }
         }
     }
 
-    return {.ok = true, .error = {}, .affected_object_count = 1U};
+    if (applied_changes.empty()) {
+        return {.ok = true, .error = {}, .affected_object_count = affected_object_count};
+    }
+
+    std::string error;
+    const auto& latest_change = applied_changes.back();
+    if (!record_visual_asset_undo_entry(path, {
+            .record_index = latest_change.record_index,
+            .property_name = latest_change.property_name,
+            .prior_value = latest_change.prior_value,
+            .prior_value_exists = latest_change.prior_value_exists,
+            .label = latest_label,
+            .grouped_changes = applied_changes
+        }, error)) {
+        const auto rollback_result = rollback_visual_object_batch_changes(path, applied_changes);
+        if (!rollback_result.ok) {
+            return {.ok = false, .error = visual_asset_rollback_failed_text(error, rollback_result.error)};
+        }
+        return {.ok = false, .error = error};
+    }
+
+    return {.ok = true, .error = {}, .affected_object_count = affected_object_count};
+}
+
+}  // namespace
+
+VisualAssetEditResult update_visual_object_properties(const VisualObjectMultiEditRequest& request) {
+    if (request.properties.empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.ChangeBatchRequired")};
+    }
+
+    if (!should_group_report_batch_undo(request.path)) {
+        const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
+        for (const auto& property : request.properties) {
+            const auto result = update_visual_object_property({
+                .path = request.path,
+                .record_index = request.record_index,
+                .object_name = request.object_name,
+                .unique_id = request.unique_id,
+                .property_name = property.property_name,
+                .property_value = property.property_value
+            });
+            if (!result.ok) {
+                while (list_visual_asset_undo_entry_files(request.path).size() > initial_undo_depth) {
+                    const auto rollback_result = undo_visual_object_property(request.path);
+                    if (!rollback_result.ok) {
+                        return {
+                            .ok = false,
+                            .error = visual_asset_rollback_failed_text(result.error, rollback_result.error)
+                        };
+                    }
+                }
+                return result;
+            }
+        }
+
+        return {.ok = true, .error = {}, .affected_object_count = 1U};
+    }
+
+    return apply_visual_object_batch_update(
+        request.path,
+        {
+            {
+                .record_index = request.record_index,
+                .object_name = request.object_name,
+                .unique_id = request.unique_id,
+                .properties = request.properties
+            }
+        },
+        1U);
 }
 
 VisualAssetEditResult update_visual_object_batch(const VisualObjectBatchEditRequest& request) {
@@ -3111,43 +3304,47 @@ VisualAssetEditResult update_visual_object_batch(const VisualObjectBatchEditRequ
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.EditBatchRequired")};
     }
 
-    const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
-    for (const auto& object : request.objects) {
-        if (object.properties.empty()) {
-            while (list_visual_asset_undo_entry_files(request.path).size() > initial_undo_depth) {
-                const auto rollback_result = undo_visual_object_property(request.path);
-                if (!rollback_result.ok) {
-                    return {
-                        .ok = false,
-                        .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Property.ChangeBatchRequired"), rollback_result.error)
-                    };
+    if (!should_group_report_batch_undo(request.path)) {
+        const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
+        for (const auto& object : request.objects) {
+            if (object.properties.empty()) {
+                while (list_visual_asset_undo_entry_files(request.path).size() > initial_undo_depth) {
+                    const auto rollback_result = undo_visual_object_property(request.path);
+                    if (!rollback_result.ok) {
+                        return {
+                            .ok = false,
+                            .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Property.ChangeBatchRequired"), rollback_result.error)
+                        };
+                    }
                 }
+                return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.ChangeBatchRequired")};
             }
-            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.ChangeBatchRequired")};
+
+            const auto result = update_visual_object_properties({
+                .path = request.path,
+                .record_index = object.record_index,
+                .object_name = object.object_name,
+                .unique_id = object.unique_id,
+                .properties = object.properties
+            });
+            if (!result.ok) {
+                while (list_visual_asset_undo_entry_files(request.path).size() > initial_undo_depth) {
+                    const auto rollback_result = undo_visual_object_property(request.path);
+                    if (!rollback_result.ok) {
+                        return {
+                            .ok = false,
+                            .error = visual_asset_rollback_failed_text(result.error, rollback_result.error)
+                        };
+                    }
+                }
+                return result;
+            }
         }
 
-        const auto result = update_visual_object_properties({
-            .path = request.path,
-            .record_index = object.record_index,
-            .object_name = object.object_name,
-            .unique_id = object.unique_id,
-            .properties = object.properties
-        });
-        if (!result.ok) {
-            while (list_visual_asset_undo_entry_files(request.path).size() > initial_undo_depth) {
-                const auto rollback_result = undo_visual_object_property(request.path);
-                if (!rollback_result.ok) {
-                    return {
-                        .ok = false,
-                        .error = visual_asset_rollback_failed_text(result.error, rollback_result.error)
-                    };
-                }
-            }
-            return result;
-        }
+        return {.ok = true, .error = {}, .affected_object_count = request.objects.size()};
     }
 
-    return {.ok = true, .error = {}, .affected_object_count = request.objects.size()};
+    return apply_visual_object_batch_update(request.path, request.objects, request.objects.size());
 }
 
 }  // namespace copperfin::vfp

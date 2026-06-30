@@ -7346,45 +7346,39 @@ internal static class Program
             Expect(reloadedAfterUpdate.Document.CommandUndoAvailable,
                 $"reloaded updated real asset batch snapshot should keep undo available for {sourcePath}");
 
-            for (var undoIndex = propertyChanges.Count - 1; undoIndex >= 0; undoIndex--)
+            var undoResult = CopperfinStudioSnapshotClient.TryUndoCommand(assetPath);
+            Expect(undoResult.Success && undoResult.Document is not null,
+                $"real asset batch smoke should undo {propertyChanges.Count} properties in one command for {sourcePath}");
+            if (!undoResult.Success || undoResult.Document is null)
             {
-                var undoResult = CopperfinStudioSnapshotClient.TryUndoCommand(assetPath);
-                Expect(undoResult.Success && undoResult.Document is not null,
-                    $"real asset batch smoke should undo batch property {propertyChanges[undoIndex].Key} for {sourcePath}");
-                if (!undoResult.Success || undoResult.Document is null)
-                {
-                    return;
-                }
-
-                var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
-                Expect(reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null,
-                    $"real asset batch smoke should reload undone snapshot data after undoing {propertyChanges[undoIndex].Key} for {sourcePath}");
-                if (!reloadedAfterUndo.Success || reloadedAfterUndo.Document is null)
-                {
-                    return;
-                }
-
-                foreach (var property in EnumerateExpectedBatchPropertyState(originalValues, propertyChanges, undoIndex))
-                {
-                    AssertRealAssetRoundTripSnapshot(
-                        reloadedAfterUndo.Document,
-                        recordIndex,
-                        property.Key,
-                        property.Value,
-                        expectedObjectTitle,
-                        expectedSectionTitle,
-                        expectedSectionCount,
-                        expectLabel,
-                        expectUnplacedObject: false,
-                        $"reloaded undone real asset batch snapshot should preserve {property.Key}");
-                }
-
-                var expectUndoAvailable = undoIndex > 0;
-                Expect(reloadedAfterUndo.Document.CommandUndoAvailable == expectUndoAvailable,
-                    expectUndoAvailable
-                        ? $"real asset batch smoke should keep undo available after undoing {propertyChanges[undoIndex].Key} for {sourcePath}"
-                        : $"real asset batch smoke should clear undo after restoring the batch update for {sourcePath}");
+                return;
             }
+
+            var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null,
+                $"real asset batch smoke should reload restored snapshot data after the command undo for {sourcePath}");
+            if (!reloadedAfterUndo.Success || reloadedAfterUndo.Document is null)
+            {
+                return;
+            }
+
+            foreach (var property in originalValues)
+            {
+                AssertRealAssetRoundTripSnapshot(
+                    reloadedAfterUndo.Document,
+                    recordIndex,
+                    property.Key,
+                    property.Value,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectUnplacedObject: false,
+                    $"reloaded undone real asset batch snapshot should preserve {property.Key}");
+            }
+
+            Expect(!reloadedAfterUndo.Document.CommandUndoAvailable,
+                $"real asset batch smoke should clear undo after restoring the batch update for {sourcePath}");
         }
         finally
         {
@@ -8247,11 +8241,7 @@ internal static class Program
                         return false;
                     }
 
-                    var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text;
-                    var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
-                    if (!string.Equals(selectedSection, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) ||
-                        selectedObject?.RecordIndex != recordIndex ||
-                        !string.Equals(ReadPrivateStringField(surface, "assetFamily"), expectLabel ? "label" : "report", StringComparison.Ordinal) ||
+                    if (!string.Equals(ReadPrivateStringField(surface, "assetFamily"), expectLabel ? "label" : "report", StringComparison.Ordinal) ||
                         ReadPrivateNullableInt(surface, "selectedRecordIndex") != recordIndex ||
                         ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"))
                     {
@@ -8296,59 +8286,58 @@ internal static class Program
                 }
             }
 
-            for (var undoIndex = propertyChanges.Count - 1; undoIndex >= 0; undoIndex--)
-            {
-                var undoHandled = control.TryHandleUndoCommand();
-                Expect(undoHandled,
-                    $"real asset editor batch smoke should execute undo for batch property {propertyChanges[undoIndex].Key} after applying the batch update for {sourcePath}");
-                Application.DoEvents();
+            var undoHandled = control.TryHandleUndoCommand();
+            Expect(undoHandled,
+                $"real asset editor batch smoke should execute one command undo after applying the batch update for {sourcePath}");
+            Application.DoEvents();
 
-                var undoneSelection = WaitUntil(
-                    TimeSpan.FromSeconds(8),
-                    () =>
-                    {
-                        if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
-                            refreshedSelection.RecordIndex != recordIndex)
-                        {
-                            return false;
-                        }
-
-                        var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text;
-                        var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
-                        return string.Equals(selectedSection, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
-                               selectedObject?.RecordIndex == recordIndex &&
-                               string.Equals(ReadPrivateStringField(surface, "assetFamily"), expectLabel ? "label" : "report", StringComparison.Ordinal) &&
-                               ReadPrivateNullableInt(surface, "selectedRecordIndex") == recordIndex &&
-                               !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected");
-                    });
-                Expect(undoneSelection,
-                    $"real asset editor batch smoke should preserve section/object continuity after undoing batch property {propertyChanges[undoIndex].Key} for {sourcePath}");
-
-                var expectUndoAvailable = undoIndex > 0;
-                Expect(control.CanHandleUndoCommand() == expectUndoAvailable,
-                    expectUndoAvailable
-                        ? $"real asset editor batch smoke should keep undo available after undoing {propertyChanges[undoIndex].Key} for {sourcePath}"
-                        : $"real asset editor batch smoke should clear undo after restoring the batch update for {sourcePath}");
-
-                var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
-                Expect(reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null,
-                    $"real asset editor batch smoke should reload restored on-disk state after undoing {propertyChanges[undoIndex].Key} for {sourcePath}");
-                if (reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null)
+            var undoneSelection = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
                 {
-                    foreach (var property in EnumerateExpectedBatchPropertyState(expectedOriginalRawValues, propertyChanges, undoIndex))
+                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                        refreshedSelection.RecordIndex != recordIndex)
                     {
-                        AssertRealAssetRoundTripSnapshot(
-                            reloadedAfterUndo.Document,
-                            recordIndex,
-                            property.Key,
-                            property.Value,
-                            expectedObjectTitle,
-                            expectedSectionTitle,
-                            expectedSectionCount,
-                            expectLabel,
-                            expectUnplacedObject: false,
-                            $"reloaded undone editor real asset batch snapshot should preserve {property.Key}");
+                        return false;
                     }
+
+                    var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text;
+                    var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
+                    if (!string.Equals(selectedSection, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) ||
+                        selectedObject?.RecordIndex != recordIndex ||
+                        !string.Equals(ReadPrivateStringField(surface, "assetFamily"), expectLabel ? "label" : "report", StringComparison.Ordinal) ||
+                        ReadPrivateNullableInt(surface, "selectedRecordIndex") != recordIndex ||
+                        ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"))
+                    {
+                        return false;
+                    }
+
+                    return true;
+                });
+            Expect(undoneSelection,
+                $"real asset editor batch smoke should preserve section/object continuity after the command undo for {sourcePath}");
+
+            Expect(!control.CanHandleUndoCommand(),
+                $"real asset editor batch smoke should clear undo after restoring the batch update for {sourcePath}");
+
+            var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null,
+                $"real asset editor batch smoke should reload restored on-disk state after the command undo for {sourcePath}");
+            if (reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null)
+            {
+                foreach (var property in expectedOriginalRawValues)
+                {
+                    AssertRealAssetRoundTripSnapshot(
+                        reloadedAfterUndo.Document,
+                        recordIndex,
+                        property.Key,
+                        property.Value,
+                        expectedObjectTitle,
+                        expectedSectionTitle,
+                        expectedSectionCount,
+                        expectLabel,
+                        expectUnplacedObject: false,
+                        $"reloaded undone editor real asset batch snapshot should preserve {property.Key}");
                 }
             }
 
@@ -9250,26 +9239,6 @@ internal static class Program
         return snapshotObject.Properties
             .FirstOrDefault(candidate => string.Equals(candidate.Name, propertyName, StringComparison.OrdinalIgnoreCase))
             ?.Value;
-    }
-
-    private static IReadOnlyList<KeyValuePair<string, string>> EnumerateExpectedBatchPropertyState(
-        IReadOnlyList<KeyValuePair<string, string>> originalValues,
-        IReadOnlyList<KeyValuePair<string, string>> propertyChanges,
-        int undoIndex)
-    {
-        var originalMap = originalValues.ToDictionary(property => property.Key, property => property.Value, StringComparer.OrdinalIgnoreCase);
-        var expected = new List<KeyValuePair<string, string>>(propertyChanges.Count);
-        for (var index = 0; index < propertyChanges.Count; index++)
-        {
-            var property = propertyChanges[index];
-            expected.Add(new KeyValuePair<string, string>(
-                property.Key,
-                index < undoIndex
-                    ? property.Value
-                    : originalMap[property.Key]));
-        }
-
-        return expected;
     }
 
     private static int? TryGetReportSectionLayoutValue(

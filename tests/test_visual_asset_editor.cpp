@@ -7,6 +7,7 @@ int main() {
     test_update_visual_object_property_rewrites_properties_memo();
     test_update_visual_object_properties_updates_selected_geometry_fields();
     test_update_visual_object_properties_rolls_back_failed_batches();
+    test_update_visual_object_batch_undoes_report_and_label_batches_in_single_step();
     test_query_visual_object_property_reads_selected_values();
     test_clear_visual_object_property_resets_selected_values();
     test_clear_visual_object_properties_rolls_back_failed_batches();

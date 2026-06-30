@@ -48,6 +48,7 @@ struct VisualAssetUndoEntry {
     std::string prior_value;
     bool prior_value_exists = false;
     std::string label;
+    std::vector<VisualAssetUndoEntry> grouped_changes;
 };
 
 struct VisualPropertyState {

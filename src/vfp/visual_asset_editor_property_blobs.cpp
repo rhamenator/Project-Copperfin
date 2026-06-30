@@ -251,7 +251,8 @@ VisualAssetEditResult apply_visual_object_property_change(
                     .property_name = request.property_name,
                     .prior_value = property_state->value,
                     .prior_value_exists = property_state->exists,
-                    .label = visual_asset_text("VisualAssetEditor.Undo.PropertyLabel", {{"propertyName", request.property_name}})
+                    .label = visual_asset_text("VisualAssetEditor.Undo.PropertyLabel", {{"propertyName", request.property_name}}),
+                    .grouped_changes = {}
                 }, error)) {
                 return {.ok = false, .error = error};
             }
@@ -294,7 +295,8 @@ VisualAssetEditResult apply_visual_object_property_change(
                 .property_name = request.property_name,
                 .prior_value = prior_value,
                 .prior_value_exists = exists,
-                .label = visual_asset_text("VisualAssetEditor.Undo.PropertyLabel", {{"propertyName", request.property_name}})
+                .label = visual_asset_text("VisualAssetEditor.Undo.PropertyLabel", {{"propertyName", request.property_name}}),
+                .grouped_changes = {}
             }, error)) {
             return {.ok = false, .error = error};
         }
@@ -918,7 +920,8 @@ VisualAssetEditResult rename_visual_object_property(const VisualObjectPropertyRe
             .property_name = "PROPERTIES",
             .prior_value = properties_it->display_value,
             .prior_value_exists = true,
-            .label = visual_asset_text("VisualAssetEditor.Undo.RenamePropertyLabel", {{"propertyName", source_property_name}})
+            .label = visual_asset_text("VisualAssetEditor.Undo.RenamePropertyLabel", {{"propertyName", source_property_name}}),
+            .grouped_changes = {}
         }, error)) {
         return {.ok = false, .error = error};
     }
