@@ -31,6 +31,7 @@ void write_synthetic_report_table_for_extended_object_kind_json(
     expect(delete_result.ok, "#1762: synthetic report table should mark deleted picture object");
 }
 
+#if !defined(COPPERFIN_REPORT_OBJECT_FALLBACKS_SKIP_HELPERS)
 void write_synthetic_report_table_for_missing_object_objcode_layout_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -147,6 +148,7 @@ void write_synthetic_report_table_for_missing_object_title_layout_json(
     const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 2U, true);
     expect(delete_result.ok, "#1726: synthetic report table should mark the no-title object deleted");
 }
+#endif
 
 void write_synthetic_report_table_for_stable_summary_object_json(
     const std::filesystem::path& report_path) {

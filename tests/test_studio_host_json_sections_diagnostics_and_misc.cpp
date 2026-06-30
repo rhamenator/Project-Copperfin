@@ -28,11 +28,12 @@ void write_synthetic_report_table_for_unresolved_section_memo_layout_json(
         {.name = "OBJCODE", .type = 'N', .length = 8U},
         {.name = "EXPR", .type = 'M', .length = 4U},
         {.name = "VPOS", .type = 'N', .length = 10U},
-        {.name = "HEIGHT", .type = 'N', .length = 10U}
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 48U}
     };
     const std::vector<std::vector<std::string>> records{
-        {"9", "3", "<memo block 40>", "100", "500"},
-        {"9", "5", "<memo block 41>", "900", "300"}
+        {"9", "3", "<memo block 40>", "100", "500", "missing-expr-live-section-guid"},
+        {"9", "5", "<memo block 41>", "900", "300", "missing-expr-deleted-section-guid"}
     };
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);

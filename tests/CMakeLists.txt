@@ -156,6 +156,7 @@ target_compile_definitions(test_studio_host_json PRIVATE
     COPPERFIN_REPORT_SCHEMA_FALLBACK_SKIP_HOST_SMOKE
     COPPERFIN_REPORT_DELETED_STATES_SKIP_HOST_SMOKE
     COPPERFIN_REPORT_LAYOUT_DIAGNOSTICS_SKIP_HOST_SMOKE
+    COPPERFIN_REPORT_OBJECT_FALLBACKS_SKIP_HELPERS
     COPPERFIN_REPORT_LAYOUT_WIDTH_LEFT_PREVIEW_BOUNDS_SKIP_HOST_SMOKE
     COPPERFIN_REPORT_LAYOUT_HEIGHT_TOP_PREVIEW_BOUNDS_SKIP_HOST_SMOKE
     COPPERFIN_DETAIL_HEADER_FOOTER_SECTION_PREVIEW_BOUNDS_SKIP_HOST_SMOKE
@@ -425,8 +426,8 @@ add_executable(test_studio_host_report_unresolved_memo_placeholders
     test_studio_host_report_unresolved_memo_placeholders.cpp
     test_studio_host_json_geometry_dimensions.cpp
     test_studio_host_json_geometry_preview_bounds.cpp
+    test_studio_host_json_report_object_fallbacks.cpp
     test_studio_host_json_objects_dhf_expressions_and_exposure.cpp
-    test_studio_host_json_objects_diagnostics_and_misc.cpp
     test_studio_host_json_report_memo_and_placeholders.cpp
     test_studio_host_json_report_shared_fixtures.cpp
     test_studio_host_json_sections_diagnostics_and_misc.cpp
@@ -453,8 +454,8 @@ add_executable(test_studio_host_report_schema_fallbacks
     test_studio_host_report_schema_fallbacks.cpp
     test_studio_host_json_geometry_dimensions.cpp
     test_studio_host_json_geometry_preview_bounds.cpp
+    test_studio_host_json_report_object_fallbacks.cpp
     test_studio_host_json_objects_dhf_expressions_and_exposure.cpp
-    test_studio_host_json_objects_diagnostics_and_misc.cpp
     test_studio_host_json_report_shared_fixtures.cpp
     test_studio_host_json_sections_diagnostics_and_misc.cpp
     test_studio_host_json_settings_diagnostics_and_misc.cpp
@@ -784,6 +785,7 @@ add_executable(test_studio_host_report_deleted_states
 target_link_libraries(test_studio_host_report_deleted_states PRIVATE cf_vfp_assets)
 target_compile_definitions(test_studio_host_report_deleted_states PRIVATE
     COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS
+    COPPERFIN_REPORT_OBJECT_FALLBACKS_SKIP_HELPERS
     COPPERFIN_REPORT_SETTINGS_DIAGNOSTICS_SKIP_HOST_SMOKE
     COPPERFIN_REPORT_DELETED_STATES_ONLY
 )
@@ -809,6 +811,7 @@ add_executable(test_studio_host_report_layout_diagnostics
 target_link_libraries(test_studio_host_report_layout_diagnostics PRIVATE cf_vfp_assets)
 target_compile_definitions(test_studio_host_report_layout_diagnostics PRIVATE
     COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS
+    COPPERFIN_REPORT_OBJECT_FALLBACKS_SKIP_HELPERS
     COPPERFIN_REPORT_LAYOUT_DIAGNOSTICS_ONLY
 )
 
