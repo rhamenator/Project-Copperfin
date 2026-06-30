@@ -365,7 +365,7 @@ void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValu
         ++line_index;
     }
 
-    const auto append_numeric = [&](std::string_view field_name) {
+    const auto append_direct_setting = [&](std::string_view field_name) {
         const std::string value = trim_copy(value_or_empty(record, field_name));
         if (!value.empty()) {
             settings.push_back({
@@ -378,15 +378,16 @@ void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValu
         }
     };
 
-    append_numeric("ORIENTATION");
-    append_numeric("PAPERSIZE");
-    append_numeric("TOPMARGIN");
-    append_numeric("BOTMARGIN");
-    append_numeric("GRIDV");
-    append_numeric("GRIDH");
-    append_numeric("COLS");
-    append_numeric("COLWIDTH");
-    append_numeric("COLSPACING");
+    append_direct_setting("ORIENTATION");
+    append_direct_setting("PAPERSIZE");
+    append_direct_setting("TOPMARGIN");
+    append_direct_setting("BOTMARGIN");
+    append_direct_setting("GRIDV");
+    append_direct_setting("GRIDH");
+    append_direct_setting("COLS");
+    append_direct_setting("COLWIDTH");
+    append_direct_setting("COLSPACING");
+    append_direct_setting("TAG");
 }
 
 std::string make_section_id(std::size_t record_index, int objcode) {
