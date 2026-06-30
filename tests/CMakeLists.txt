@@ -112,9 +112,9 @@ add_executable(test_studio_host_json
     test_studio_host_json_geometry_preview_bounds.cpp
     test_studio_host_json_geometry_font_metadata.cpp
     test_studio_host_json_geometry_column_width.cpp
+    test_studio_host_json_report_settings_shared_fixtures.cpp
     test_studio_host_json_settings_page_layout_fields.cpp
     test_studio_host_json_settings_column_setup.cpp
-    test_studio_host_json_settings_diagnostics_and_misc.cpp
     test_studio_host_json_sections_band_exposure.cpp
     test_studio_host_json_sections_dhf_lifecycle.cpp
     test_studio_host_json_sections_dhf_expressions_and_exposure.cpp
@@ -417,8 +417,8 @@ add_executable(test_studio_host_report_unresolved_memo_placeholders
     test_studio_host_json_objects_dhf_expressions_and_exposure.cpp
     test_studio_host_json_report_memo_and_placeholders.cpp
     test_studio_host_json_report_shared_fixtures.cpp
+    test_studio_host_json_report_settings_shared_fixtures.cpp
     test_studio_host_json_sections_diagnostics_and_misc.cpp
-    test_studio_host_json_settings_diagnostics_and_misc.cpp
     test_studio_host_json_shared_test_helpers.cpp
 )
 target_link_libraries(test_studio_host_report_unresolved_memo_placeholders PRIVATE cf_vfp_assets)
@@ -445,8 +445,8 @@ add_executable(test_studio_host_report_schema_fallbacks
     test_studio_host_json_report_object_fallbacks.cpp
     test_studio_host_json_objects_dhf_expressions_and_exposure.cpp
     test_studio_host_json_report_shared_fixtures.cpp
+    test_studio_host_json_report_settings_shared_fixtures.cpp
     test_studio_host_json_sections_diagnostics_and_misc.cpp
-    test_studio_host_json_settings_diagnostics_and_misc.cpp
     test_studio_host_json_shared_test_helpers.cpp
 )
 target_link_libraries(test_studio_host_report_schema_fallbacks PRIVATE cf_vfp_assets)
@@ -771,7 +771,7 @@ add_executable(test_studio_host_report_deleted_states
     test_studio_host_json_geometry_preview_bounds.cpp
     test_studio_host_json_objects_diagnostics_and_misc.cpp
     test_studio_host_json_report_shared_fixtures.cpp
-    test_studio_host_json_settings_diagnostics_and_misc.cpp
+    test_studio_host_json_report_settings_shared_fixtures.cpp
     test_studio_host_json_shared_test_helpers.cpp
 )
 target_link_libraries(test_studio_host_report_deleted_states PRIVATE cf_vfp_assets)
