@@ -109,7 +109,6 @@ add_executable(test_studio_host_json
     test_studio_host_json_appearance_ole_and_drag.cpp
     test_studio_host_json_setters_data.cpp
     test_studio_host_json_report_labels.cpp
-    test_studio_host_json_report_layout_classifications.cpp
     test_studio_host_json_geometry_preview_bounds.cpp
     test_studio_host_json_geometry_dimensions.cpp
     test_studio_host_json_geometry_font_metadata.cpp
@@ -146,8 +145,6 @@ target_compile_definitions(test_studio_host_json PRIVATE
     COPPERFIN_DETAIL_HEADER_FOOTER_SECTION_SKIP_EXPRESSIONS
     COPPERFIN_DETAIL_HEADER_FOOTER_OBJECT_GEOMETRY_SKIP_STABLE
     COPPERFIN_DETAIL_HEADER_FOOTER_OBJECT_LAYOUT_ACTIONS_SKIP_STABLE
-    COPPERFIN_REPORT_LAYOUT_CLASSIFICATIONS_SKIP_HOST_SMOKE
-    COPPERFIN_REPORT_LAYOUT_CLASSIFICATIONS_SKIP_HELPERS
     COPPERFIN_REPORT_DIRECT_SETTING_FIELDS_SKIP_HOST_SMOKE
     COPPERFIN_REPORT_SETTINGS_MEMO_PARSING_SKIP_HOST_SMOKE
     COPPERFIN_REPORT_SETTINGS_DIAGNOSTICS_SKIP_HOST_SMOKE
