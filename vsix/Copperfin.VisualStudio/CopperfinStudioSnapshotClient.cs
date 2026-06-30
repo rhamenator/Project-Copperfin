@@ -231,6 +231,27 @@ internal static class CopperfinStudioSnapshotClient
             CopperfinStudioHostBridge.BuildDuplicateObjectArguments(assetPath, recordIndex, uniqueId, newUniqueId));
     }
 
+    public static CopperfinStudioSnapshotResult TryRenameObject(
+        string assetPath,
+        int recordIndex,
+        string? uniqueId,
+        string newUniqueId)
+    {
+        var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
+        if (string.IsNullOrWhiteSpace(studioHostPath))
+        {
+            return new CopperfinStudioSnapshotResult
+            {
+                Success = false,
+                Error = Localization.Text("AssetEditor.Dialog.StudioHostMissing")
+            };
+        }
+
+        return RunSnapshotCommand(
+            studioHostPath!,
+            CopperfinStudioHostBridge.BuildRenameObjectArguments(assetPath, recordIndex, uniqueId, newUniqueId));
+    }
+
     public static CopperfinStudioSnapshotResult TryReorderObject(
         string assetPath,
         int recordIndex,

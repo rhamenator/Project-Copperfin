@@ -48,6 +48,7 @@ internal static class Program
         SmokeAssetEditorUndoRefreshesReportShellSummary();
         SmokeAssetEditorUndoRefreshesDeletedReportShellSummary();
         SmokeAssetEditorDuplicateObjectCommandRefreshesReportShellSummary();
+        SmokeAssetEditorRenameObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorReorderFrontObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorDeleteObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorLabelObjectPropertyGridHostUpdate();
@@ -57,6 +58,7 @@ internal static class Program
         SmokeAssetEditorUndoRefreshesLabelShellSummary();
         SmokeAssetEditorUndoRefreshesDeletedLabelShellSummary();
         SmokeAssetEditorDuplicateObjectCommandRefreshesLabelShellSummary();
+        SmokeAssetEditorRenameObjectCommandRefreshesDeletedLabelShellSummary();
         SmokeAssetEditorReorderBackObjectCommandRefreshesLabelShellSummary();
         SmokeAssetEditorRestoreObjectCommandRefreshesLabelShellSummary();
         SmokeAssetEditorDeletedReportObjectPropertyGridHostUpdate();
@@ -2022,6 +2024,151 @@ internal static class Program
         }
     }
 
+    private static void SmokeAssetEditorRenameObjectCommandRefreshesReportShellSummary()
+    {
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            Console.WriteLine("SKIP: shared asset-editor rename-object smoke requires a POSIX scriptable fake Studio host.");
+            return;
+        }
+
+        var snapshot = BuildAssetEditorRenameReportObjectSmokeSnapshot();
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
+        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var logPath = Path.Combine(tempRoot, "studio-host.log");
+        const string renamedUniqueId = "middle-renamed-guid";
+        var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
+        var previousRenameUniqueId = Environment.GetEnvironmentVariable("COPPERFIN_RENAME_OBJECT_UNIQUE_ID");
+
+        try
+        {
+            File.WriteAllText(logPath, string.Empty);
+            CreateFakeStudioHostScript(scriptPath, BuildRenameReportObjectHostResponseJson());
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", scriptPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", logPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_RENAME_OBJECT_UNIQUE_ID", renamedUniqueId);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+
+            ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+            SetPrivateField(control, "currentPath", assetPath);
+            GetPrivateLabel(control, "detailsLabel").Text = InvokeAssetEditorString(control, "BuildSnapshotDetailsText", new FileInfo(assetPath), snapshot);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            sectionListView.Items[0].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            InvokeAssetEditorVoid(control, "LoadSurface");
+            Application.DoEvents();
+
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var renameButton = GetPrivateButton(control, "renameObjectButton");
+            var duplicateButton = GetPrivateButton(control, "duplicateObjectButton");
+            var deleteButton = GetPrivateButton(control, "deleteObjectButton");
+            var restoreButton = GetPrivateButton(control, "restoreObjectButton");
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface.");
+
+            objectListView.Items[0].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(renameButton.Visible &&
+                   renameButton.Enabled &&
+                   duplicateButton.Visible &&
+                   duplicateButton.Enabled &&
+                   deleteButton.Visible &&
+                   deleteButton.Enabled &&
+                   !restoreButton.Visible &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == 7,
+                "A report rename-object smoke should start from a live object selection with rename, duplicate, and delete commands exposed");
+
+            Expect(!HasLabelTextContaining(control, "Preview bounds:"),
+                "A report rename-object smoke should start without preview-bounds shell text when the initial snapshot omits preview bounds");
+
+            renameButton.PerformClick();
+            Application.DoEvents();
+
+            var logLines = File.ReadAllLines(logPath);
+            var invocationStartCount = logLines.Count(line => string.Equals(line, "BEGIN", StringComparison.Ordinal));
+            Expect(invocationStartCount == 1,
+                "Renaming a report object identity through the shared asset editor should invoke the Studio host exactly once");
+
+            var invocationArguments = logLines.Skip(1).ToList();
+            Expect(invocationArguments.Contains("--from-vs") &&
+                   invocationArguments.Contains("--json") &&
+                   invocationArguments.Contains("--rename-object") &&
+                   invocationArguments.Contains("--record") &&
+                   invocationArguments.Contains("7") &&
+                   invocationArguments.Contains("--unique-id") &&
+                   invocationArguments.Contains("middle-field-guid") &&
+                   invocationArguments.Contains("--new-unique-id") &&
+                   invocationArguments.Contains(renamedUniqueId) &&
+                   invocationArguments.Contains("--path") &&
+                   invocationArguments.Contains(assetPath),
+                "Renaming a report object identity through the shared asset editor should send one invariant rename-object command through the host contract");
+
+            Expect(HasLabelTextContaining(control, "Preview bounds: L 1200 T 2600 R 5200 B 3200   Size: 4000 x 600") &&
+                   HasLabelTextContaining(control, "Regenerated object id. Snapshot loaded: 1 object rows, 5 fields.") &&
+                   string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Detail", StringComparison.Ordinal) &&
+                   string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "middle.value", StringComparison.Ordinal) &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
+                   refreshedSelection.RecordIndex == 7 &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString(), "Live", StringComparison.Ordinal) &&
+                   renameButton.Visible &&
+                   renameButton.Enabled &&
+                   duplicateButton.Visible &&
+                   duplicateButton.Enabled &&
+                   deleteButton.Visible &&
+                   deleteButton.Enabled &&
+                   !restoreButton.Visible &&
+                   string.Equals(ReadPrivateStringField(surface, "assetFamily"), "report", StringComparison.Ordinal) &&
+                   ReadPrivateNullableInt(surface, "selectedRecordIndex") == 7 &&
+                   ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
+                   !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+                "Renaming a report object identity through the shared asset editor should refresh the shell summary and preserve report selection continuity on the renamed row");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", previousLogPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_RENAME_OBJECT_UNIQUE_ID", previousRenameUniqueId);
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeAssetEditorDeleteObjectCommandRefreshesReportShellSummary()
     {
         if (Path.DirectorySeparatorChar == '\\')
@@ -3259,6 +3406,151 @@ internal static class Program
             Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
             Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", previousLogPath);
             Environment.SetEnvironmentVariable("COPPERFIN_DUPLICATE_OBJECT_UNIQUE_ID", previousDuplicateUniqueId);
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
+    private static void SmokeAssetEditorRenameObjectCommandRefreshesDeletedLabelShellSummary()
+    {
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            Console.WriteLine("SKIP: shared asset-editor label rename-object smoke requires a POSIX scriptable fake Studio host.");
+            return;
+        }
+
+        var snapshot = BuildAssetEditorRenameDeletedLabelObjectSmokeSnapshot();
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
+        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var logPath = Path.Combine(tempRoot, "studio-host.log");
+        const string renamedUniqueId = "deleted-footer-renamed-guid";
+        var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
+        var previousRenameUniqueId = Environment.GetEnvironmentVariable("COPPERFIN_RENAME_OBJECT_UNIQUE_ID");
+
+        try
+        {
+            File.WriteAllText(logPath, string.Empty);
+            CreateFakeStudioHostScript(scriptPath, BuildRenameDeletedLabelObjectHostResponseJson());
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", scriptPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", logPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_RENAME_OBJECT_UNIQUE_ID", renamedUniqueId);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+
+            ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+            SetPrivateField(control, "currentPath", assetPath);
+            GetPrivateLabel(control, "detailsLabel").Text = InvokeAssetEditorString(control, "BuildSnapshotDetailsText", new FileInfo(assetPath), snapshot);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            sectionListView.Items[0].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            InvokeAssetEditorVoid(control, "LoadSurface");
+            Application.DoEvents();
+
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var renameButton = GetPrivateButton(control, "renameObjectButton");
+            var duplicateButton = GetPrivateButton(control, "duplicateObjectButton");
+            var deleteButton = GetPrivateButton(control, "deleteObjectButton");
+            var restoreButton = GetPrivateButton(control, "restoreObjectButton");
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared label design surface.");
+
+            objectListView.Items[0].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(renameButton.Visible &&
+                   renameButton.Enabled &&
+                   duplicateButton.Visible &&
+                   duplicateButton.Enabled &&
+                   !deleteButton.Visible &&
+                   restoreButton.Visible &&
+                   restoreButton.Enabled &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == 13,
+                "A deleted label rename-object smoke should start from a deleted object selection with rename, duplicate, and restore commands exposed");
+
+            Expect(!HasLabelTextContaining(control, "Deleted preview bounds:"),
+                "A deleted label rename-object smoke should start without deleted preview-bounds shell text when the initial snapshot omits deleted preview bounds");
+
+            renameButton.PerformClick();
+            Application.DoEvents();
+
+            var logLines = File.ReadAllLines(logPath);
+            var invocationStartCount = logLines.Count(line => string.Equals(line, "BEGIN", StringComparison.Ordinal));
+            Expect(invocationStartCount == 1,
+                "Renaming a deleted label object identity through the shared asset editor should invoke the Studio host exactly once");
+
+            var invocationArguments = logLines.Skip(1).ToList();
+            Expect(invocationArguments.Contains("--from-vs") &&
+                   invocationArguments.Contains("--json") &&
+                   invocationArguments.Contains("--rename-object") &&
+                   invocationArguments.Contains("--record") &&
+                   invocationArguments.Contains("13") &&
+                   invocationArguments.Contains("--unique-id") &&
+                   invocationArguments.Contains("deleted-footer-guid") &&
+                   invocationArguments.Contains("--new-unique-id") &&
+                   invocationArguments.Contains(renamedUniqueId) &&
+                   invocationArguments.Contains("--path") &&
+                   invocationArguments.Contains(assetPath),
+                "Renaming a deleted label object identity through the shared asset editor should send one invariant rename-object command through the host contract");
+
+            Expect(HasLabelTextContaining(control, "Deleted preview bounds: L 1600 T 9400 R 5200 B 10000   Size: 3600 x 600") &&
+                   HasLabelTextContaining(control, "Regenerated object id. Snapshot loaded: 1 object rows, 5 fields.") &&
+                   string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, InvokeAssetEditorString(control, "BuildDeletedReportSectionListTitle", snapshot.ReportLayout!.DeletedSections[0]), StringComparison.Ordinal) &&
+                   string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "deleted.footer.total", StringComparison.Ordinal) &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
+                   refreshedSelection.RecordIndex == 13 &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString(), "Deleted", StringComparison.Ordinal) &&
+                   renameButton.Visible &&
+                   renameButton.Enabled &&
+                   duplicateButton.Visible &&
+                   duplicateButton.Enabled &&
+                   !deleteButton.Visible &&
+                   restoreButton.Visible &&
+                   restoreButton.Enabled &&
+                   string.Equals(ReadPrivateStringField(surface, "assetFamily"), "label", StringComparison.Ordinal) &&
+                   ReadPrivateNullableInt(surface, "selectedRecordIndex") == 13 &&
+                   ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 51 &&
+                   !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+                "Renaming a deleted label object identity through the shared asset editor should refresh the shell summary and preserve deleted label selection continuity on the renamed row");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", previousLogPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_RENAME_OBJECT_UNIQUE_ID", previousRenameUniqueId);
 
             try
             {
@@ -6916,6 +7208,65 @@ internal static class Program
         };
     }
 
+    private static CopperfinStudioSnapshotDocument BuildAssetEditorRenameDeletedLabelObjectSmokeSnapshot()
+    {
+        return new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "label",
+            FieldCount = 5,
+            Objects = new List<CopperfinStudioSnapshotObject>
+            {
+                new()
+                {
+                    RecordIndex = 13,
+                    Deleted = true,
+                    Title = "deleted.footer.total",
+                    Subtitle = "label",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "UNIQUEID", Value = "deleted-footer-guid" },
+                        new() { Name = "HPOS", Value = "1600" },
+                        new() { Name = "VPOS", Value = "9400" },
+                        new() { Name = "WIDTH", Value = "3600" },
+                        new() { Name = "HEIGHT", Value = "600" },
+                        new() { Name = "EXPR", Value = "deleted.footer.total" }
+                    }
+                }
+            },
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                IsLabel = true,
+                DeletedSections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "deleted_footer",
+                        Title = "Summary",
+                        BandKind = "summary",
+                        RecordIndex = 51,
+                        Deleted = true,
+                        Top = 9000,
+                        Height = 1400,
+                        Objects = new List<CopperfinStudioReportLayoutObject>
+                        {
+                            new()
+                            {
+                                RecordIndex = 13,
+                                ObjectKind = "label",
+                                Title = "deleted.footer.total",
+                                Expression = "deleted.footer.total",
+                                Left = 1600,
+                                Top = 9400,
+                                Width = 3600,
+                                Height = 600
+                            }
+                        }
+                    }
+                }
+            }
+        };
+    }
+
     private static CopperfinStudioSnapshotDocument BuildAssetEditorReorderBackLabelObjectSmokeSnapshot()
     {
         return new CopperfinStudioSnapshotDocument
@@ -7182,6 +7533,62 @@ internal static class Program
     }
 
     private static CopperfinStudioSnapshotDocument BuildAssetEditorDuplicateReportObjectSmokeSnapshot()
+    {
+        return new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "report",
+            FieldCount = 5,
+            Objects = new List<CopperfinStudioSnapshotObject>
+            {
+                new()
+                {
+                    RecordIndex = 7,
+                    Title = "middle.value",
+                    Subtitle = "field",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "UNIQUEID", Value = "middle-field-guid" },
+                        new() { Name = "HPOS", Value = "1200" },
+                        new() { Name = "VPOS", Value = "2600" },
+                        new() { Name = "WIDTH", Value = "4000" },
+                        new() { Name = "HEIGHT", Value = "600" },
+                        new() { Name = "EXPR", Value = "middle.value" }
+                    }
+                }
+            },
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail_1",
+                        Title = "Detail",
+                        BandKind = "detail",
+                        RecordIndex = 42,
+                        Top = 2000,
+                        Height = 5000,
+                        Objects = new List<CopperfinStudioReportLayoutObject>
+                        {
+                            new()
+                            {
+                                RecordIndex = 7,
+                                ObjectKind = "field",
+                                Title = "middle.value",
+                                Expression = "middle.value",
+                                Left = 1200,
+                                Top = 2600,
+                                Width = 4000,
+                                Height = 600
+                            }
+                        }
+                    }
+                }
+            }
+        };
+    }
+
+    private static CopperfinStudioSnapshotDocument BuildAssetEditorRenameReportObjectSmokeSnapshot()
     {
         return new CopperfinStudioSnapshotDocument
         {
@@ -7629,6 +8036,13 @@ internal static class Program
 """;
     }
 
+    private static string BuildRenameDeletedLabelObjectHostResponseJson()
+    {
+        return """
+{"Status":"ok","Document":{"AssetFamily":"label","FieldCount":5,"Objects":[{"RecordIndex":13,"Deleted":true,"Title":"deleted.footer.total","Subtitle":"label","Properties":[{"Name":"UNIQUEID","Value":"deleted-footer-renamed-guid"},{"Name":"HPOS","Value":"1600"},{"Name":"VPOS","Value":"9400"},{"Name":"WIDTH","Value":"3600"},{"Name":"HEIGHT","Value":"600"},{"Name":"EXPR","Value":"deleted.footer.total"}]}],"ReportLayout":{"IsLabel":true,"DeletedPreviewBoundsAvailable":true,"DeletedPreviewBoundsLeft":1600,"DeletedPreviewBoundsTop":9400,"DeletedPreviewBoundsRight":5200,"DeletedPreviewBoundsBottom":10000,"DeletedPreviewBoundsWidth":3600,"DeletedPreviewBoundsHeight":600,"Sections":[],"DeletedSections":[{"Id":"deleted_footer","Title":"Summary","BandKind":"summary","RecordIndex":51,"Deleted":true,"Top":9000,"Height":1400,"Objects":[{"RecordIndex":13,"ObjectKind":"label","Title":"deleted.footer.total","Expression":"deleted.footer.total","Left":1600,"Top":9400,"Width":3600,"Height":600}]}],"UnplacedObjects":[]}}}
+""";
+    }
+
     private static string BuildReorderBackLabelObjectHostResponseJson()
     {
         return """
@@ -7661,6 +8075,13 @@ internal static class Program
     {
         return """
 {"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[{"RecordIndex":6,"Deleted":true,"Title":"customer.company","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"live-detail-guid"},{"Name":"HPOS","Value":"1500"},{"Name":"VPOS","Value":"2600"},{"Name":"WIDTH","Value":"4000"},{"Name":"HEIGHT","Value":"500"},{"Name":"EXPR","Value":"customer.company"}]}],"ReportLayout":{"DeletedPreviewBoundsAvailable":true,"DeletedPreviewBoundsLeft":1500,"DeletedPreviewBoundsTop":2600,"DeletedPreviewBoundsRight":5500,"DeletedPreviewBoundsBottom":3100,"DeletedPreviewBoundsWidth":4000,"DeletedPreviewBoundsHeight":500,"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[{"Id":"deleted_detail","Title":"Detail","BandKind":"detail","RecordIndex":52,"Deleted":true,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":6,"ObjectKind":"field","Title":"customer.company","Expression":"customer.company","Left":1500,"Top":2600,"Width":4000,"Height":500}]}],"UnplacedObjects":[]}}}
+""";
+    }
+
+    private static string BuildRenameReportObjectHostResponseJson()
+    {
+        return """
+{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[{"RecordIndex":7,"Title":"middle.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"middle-renamed-guid"},{"Name":"HPOS","Value":"1200"},{"Name":"VPOS","Value":"2600"},{"Name":"WIDTH","Value":"4000"},{"Name":"HEIGHT","Value":"600"},{"Name":"EXPR","Value":"middle.value"}]}],"ReportLayout":{"PreviewBoundsAvailable":true,"PreviewBoundsLeft":1200,"PreviewBoundsTop":2600,"PreviewBoundsRight":5200,"PreviewBoundsBottom":3200,"PreviewBoundsWidth":4000,"PreviewBoundsHeight":600,"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":7,"ObjectKind":"field","Title":"middle.value","Expression":"middle.value","Left":1200,"Top":2600,"Width":4000,"Height":600}]}],"DeletedSections":[],"UnplacedObjects":[]}}}
 """;
     }
 

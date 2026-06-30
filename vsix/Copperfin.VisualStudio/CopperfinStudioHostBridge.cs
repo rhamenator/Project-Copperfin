@@ -77,6 +77,16 @@ internal static class CopperfinStudioHostBridge
         return $"{arguments} --new-unique-id {Quote(newUniqueId)}";
     }
 
+    public static string BuildRenameObjectArguments(
+        string documentPath,
+        int recordIndex,
+        string? uniqueId,
+        string newUniqueId)
+    {
+        var arguments = BuildObjectLifecycleArguments(documentPath, "--rename-object", recordIndex, uniqueId);
+        return $"{arguments} --new-unique-id {Quote(newUniqueId)}";
+    }
+
     public static string BuildReorderObjectArguments(
         string documentPath,
         int recordIndex,

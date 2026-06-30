@@ -33,6 +33,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly Button launchButton;
     private readonly Button revealButton;
     private readonly Button refreshButton;
+    private readonly Button renameObjectButton;
     private readonly Button duplicateObjectButton;
     private readonly Button reorderFrontObjectButton;
     private readonly Button reorderBackObjectButton;
@@ -157,6 +158,14 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 LoadDocument(currentPath!);
             }
         };
+
+        renameObjectButton = new Button
+        {
+            AutoSize = true,
+            Text = this.localization.Text("AssetEditor.ObjectLifecycle.RenameButton"),
+            Visible = false
+        };
+        renameObjectButton.Click += (_, _) => TryHandleRenameObjectCommand();
 
         duplicateObjectButton = new Button
         {
@@ -586,6 +595,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         buttonPanel.Controls.Add(launchButton);
         buttonPanel.Controls.Add(revealButton);
         buttonPanel.Controls.Add(refreshButton);
+        buttonPanel.Controls.Add(renameObjectButton);
         buttonPanel.Controls.Add(duplicateObjectButton);
         buttonPanel.Controls.Add(reorderFrontObjectButton);
         buttonPanel.Controls.Add(reorderBackObjectButton);
@@ -1246,6 +1256,53 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         return true;
     }
 
+    private bool TryHandleRenameObjectCommand()
+    {
+        if (currentSnapshot?.AssetFamily is not ("report" or "label") || string.IsNullOrWhiteSpace(currentPath))
+        {
+            return false;
+        }
+
+        var selectedObject = TryGetSelectedSnapshotObject();
+        if (selectedObject is null)
+        {
+            return false;
+        }
+
+        var explorerSelection = CaptureExplorerSelectionState();
+        var sourceUniqueId = TryReadObjectUniqueId(selectedObject);
+        var renamedUniqueId = CreateRenameObjectUniqueId();
+        snapshotStatusLabel.Text = this.localization.Text("AssetEditor.ObjectLifecycle.Rename.Executing");
+
+        var renameResult = CopperfinStudioSnapshotClient.TryRenameObject(
+            currentPath!,
+            selectedObject.RecordIndex,
+            sourceUniqueId,
+            renamedUniqueId);
+        if (!renameResult.Success || renameResult.Document is null)
+        {
+            snapshotStatusLabel.Text = this.localization.Format(
+                "AssetEditor.ObjectLifecycle.Rename.Failed",
+                renameResult.Error ?? string.Empty);
+            return false;
+        }
+
+        currentSnapshot = renameResult.Document;
+        detailsLabel.Text = BuildSnapshotDetailsText(new FileInfo(currentPath!), currentSnapshot);
+        snapshotStatusLabel.Text = this.localization.Format(
+            "AssetEditor.ObjectLifecycle.Rename.Completed",
+            currentSnapshot.Objects.Count,
+            currentSnapshot.FieldCount);
+        PopulateSectionList(explorerSelection);
+        SyncExplorerSelection();
+        LoadSurface();
+
+        var renamedRecordIndex = TryReadObjectRecordIndex(currentSnapshot, renamedUniqueId) ?? selectedObject.RecordIndex;
+        designSurface.SelectRecord(renamedRecordIndex);
+        SyncSelectionFromSurface(renamedRecordIndex);
+        return true;
+    }
+
     private bool TryHandleReorderObjectCommand(
         string placement,
         string executingKey,
@@ -1748,10 +1805,13 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         var selectedObject = currentSnapshot?.AssetFamily is "report" or "label"
             ? TryGetSelectedSnapshotObject()
             : null;
+        var showRename = selectedObject is not null;
         var showDuplicate = selectedObject is not null;
         var showReorder = selectedObject is not null && !selectedObject.Deleted;
         var showDelete = selectedObject is not null && !selectedObject.Deleted;
         var showRestore = selectedObject is not null && selectedObject.Deleted;
+        renameObjectButton.Visible = showRename;
+        renameObjectButton.Enabled = showRename && !string.IsNullOrWhiteSpace(currentPath);
         duplicateObjectButton.Visible = showDuplicate;
         duplicateObjectButton.Enabled = showDuplicate && !string.IsNullOrWhiteSpace(currentPath);
         reorderFrontObjectButton.Visible = showReorder;
@@ -1870,6 +1930,14 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private static string CreateDuplicateObjectUniqueId()
     {
         var configured = Environment.GetEnvironmentVariable("COPPERFIN_DUPLICATE_OBJECT_UNIQUE_ID");
+        return string.IsNullOrWhiteSpace(configured)
+            ? Guid.NewGuid().ToString("D")
+            : configured.Trim();
+    }
+
+    private static string CreateRenameObjectUniqueId()
+    {
+        var configured = Environment.GetEnvironmentVariable("COPPERFIN_RENAME_OBJECT_UNIQUE_ID");
         return string.IsNullOrWhiteSpace(configured)
             ? Guid.NewGuid().ToString("D")
             : configured.Trim();
