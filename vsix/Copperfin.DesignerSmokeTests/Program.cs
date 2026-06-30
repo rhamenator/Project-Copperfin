@@ -502,6 +502,36 @@ internal static class Program
                InvokeAssetEditorString(spanishControl, "BuildPropertyUpdatedStatus", "WIDTH", snapshot).IndexOf("Se actualizó WIDTH. Instantánea cargada: 2 filas de objetos, 7 campos. Deshacer disponible: Reordenar.", StringComparison.Ordinal) >= 0,
             "Spanish snapshot and property status text should localize formatted messages");
 
+        var spanishPropertyGrid = GetPrivatePropertyGrid(spanishControl);
+        var reportObject = new CopperfinStudioSnapshotObject
+        {
+            RecordIndex = 10,
+            Properties = new List<CopperfinStudioSnapshotProperty>
+            {
+                new() { Name = "WIDTH", Value = "4000" },
+                new() { Name = "EXPR", Value = "customer.company" }
+            }
+        };
+        spanishPropertyGrid.SelectedObject = CopperfinDesignerSelection.FromSnapshot("report", reportObject, new CopperfinLocalization("es-419"));
+        Expect(InvokeAssetEditorString(spanishControl, "BuildPropertyApplyingStatus", "WIDTH").IndexOf("Aplicando cambio de Ancho", StringComparison.Ordinal) >= 0 &&
+               InvokeAssetEditorString(spanishControl, "BuildPropertyUpdatedStatus", "EXPR", snapshot).IndexOf("Se actualizó Expresión.", StringComparison.Ordinal) >= 0,
+            "Spanish report object status text should use localized property labels when report-object selection is active");
+
+        var reportSection = new CopperfinStudioReportSection
+        {
+            RecordIndex = 42,
+            Title = "Detail",
+            Id = "detail_1",
+            BandKind = "detail",
+            Top = 2000,
+            Height = 5000,
+            GroupingContextAvailable = true,
+            GroupingExpression = "customer.country"
+        };
+        spanishPropertyGrid.SelectedObject = CopperfinDesignerSelection.FromReportSection(reportSection, new CopperfinLocalization("es-419"));
+        Expect(InvokeAssetEditorString(spanishControl, "BuildPropertyApplyingStatus", "EXPR").IndexOf("Aplicando cambio de Expresión de agrupación", StringComparison.Ordinal) >= 0,
+            "Spanish report section status text should use localized section property labels when section selection is active");
+
         using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
         Expect(string.Equals(InvokeAssetEditorString(portugueseControl, "BuildUndoCommandText", "Reordenar"), "Desfazer Reordenar", StringComparison.Ordinal) &&
                InvokeAssetEditorString(portugueseControl, "BuildUndoExecutingStatus", "Reordenar").IndexOf("Executando desfazer do comando: Reordenar", StringComparison.Ordinal) >= 0 &&
@@ -514,6 +544,24 @@ internal static class Program
                InvokeAssetEditorString(portugueseControl, "BuildPropertyUpdateFailedStatus", "campo protegido").IndexOf("Falha ao atualizar propriedade: campo protegido", StringComparison.Ordinal) >= 0 &&
                InvokeAssetEditorString(portugueseControl, "BuildPropertyUpdatedStatus", "WIDTH", snapshot).IndexOf("WIDTH atualizado. Instantâneo carregado: 2 linhas de objetos, 7 campos. Desfazer disponível: Reordenar.", StringComparison.Ordinal) >= 0,
             "Portuguese snapshot and property status text should localize formatted messages");
+
+        var portuguesePropertyGrid = GetPrivatePropertyGrid(portugueseControl);
+        portuguesePropertyGrid.SelectedObject = CopperfinDesignerSelection.FromSnapshot("report", reportObject, new CopperfinLocalization("pt-BR"));
+        Expect(InvokeAssetEditorString(portugueseControl, "BuildPropertyApplyingStatus", "WIDTH").IndexOf("Aplicando alteração de Largura", StringComparison.Ordinal) >= 0 &&
+               InvokeAssetEditorString(portugueseControl, "BuildPropertyUpdatedStatus", "EXPR", snapshot).IndexOf("Expressão atualizado.", StringComparison.Ordinal) >= 0,
+            "Portuguese report object status text should use localized property labels when report-object selection is active");
+
+        portuguesePropertyGrid.SelectedObject = CopperfinDesignerSelection.FromReportSection(reportSection, new CopperfinLocalization("pt-BR"));
+        Expect(InvokeAssetEditorString(portugueseControl, "BuildPropertyApplyingStatus", "EXPR").IndexOf("Aplicando alteração de Expressão de agrupamento", StringComparison.Ordinal) >= 0,
+            "Portuguese report section status text should use localized section property labels when section selection is active");
+
+        var pseudoLocalization = new CopperfinLocalization("qps-ploc");
+        using var pseudoControl = new CopperfinAssetEditorControl(pseudoLocalization);
+        var pseudoPropertyGrid = GetPrivatePropertyGrid(pseudoControl);
+        pseudoPropertyGrid.SelectedObject = CopperfinDesignerSelection.FromSnapshot("report", reportObject, pseudoLocalization);
+        Expect(InvokeAssetEditorString(pseudoControl, "BuildPropertyApplyingStatus", "WIDTH").IndexOf(pseudoLocalization.Text("AssetEditor.Property.Width"), StringComparison.Ordinal) >= 0 &&
+               InvokeAssetEditorString(pseudoControl, "BuildPropertyUpdatedStatus", "EXPR", snapshot).IndexOf(pseudoLocalization.Text("AssetEditor.Property.Expression"), StringComparison.Ordinal) >= 0,
+            "Pseudo-localized report object status text should route property labels through the shared catalog");
     }
 
     private static void SmokeLocalizedLaunchWorkflowDialogText()

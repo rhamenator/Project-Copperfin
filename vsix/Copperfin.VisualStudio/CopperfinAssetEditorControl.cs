@@ -1228,7 +1228,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
     private string BuildPropertyApplyingStatus(string propertyName)
     {
-        return this.localization.Format("AssetEditor.Property.ApplyingChange", propertyName);
+        return this.localization.Format("AssetEditor.Property.ApplyingChange", ResolvePropertyStatusLabel(propertyName));
     }
 
     private string BuildPropertyUpdateFailedStatus(string? error)
@@ -1238,10 +1238,22 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
     private string BuildPropertyUpdatedStatus(string propertyName, CopperfinStudioSnapshotDocument snapshot)
     {
-        return this.localization.Format("AssetEditor.Property.Updated", propertyName, snapshot.Objects.Count, snapshot.FieldCount) +
+        return this.localization.Format("AssetEditor.Property.Updated", ResolvePropertyStatusLabel(propertyName), snapshot.Objects.Count, snapshot.FieldCount) +
             (snapshot.CommandUndoAvailable && !string.IsNullOrWhiteSpace(snapshot.CommandUndoLabel)
                 ? this.localization.Format("AssetEditor.Snapshot.UndoAvailable", snapshot.CommandUndoLabel)
                 : string.Empty);
+    }
+
+    private string ResolvePropertyStatusLabel(string propertyName)
+    {
+        if (propertyGrid.SelectedObject is CopperfinDesignerSelection selection &&
+            selection.TryGetDisplayName(propertyName, out var displayName) &&
+            !string.IsNullOrWhiteSpace(displayName))
+        {
+            return displayName;
+        }
+
+        return propertyName;
     }
 
     private string BuildAssetPathUnavailableMessage()

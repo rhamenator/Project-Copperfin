@@ -180,6 +180,18 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         return true;
     }
 
+    public bool TryGetDisplayName(string propertyName, out string displayName)
+    {
+        displayName = string.Empty;
+        if (!fieldMap.TryGetValue(propertyName, out var field))
+        {
+            return false;
+        }
+
+        displayName = field.DisplayName;
+        return true;
+    }
+
     private string Read(CopperfinStudioSnapshotObject snapshotObject, string propertyName, string? alternateName = null, string? fallback = null)
     {
         var value = snapshotObject.Properties.FirstOrDefault(item => item.Name == propertyName)?.Value;
