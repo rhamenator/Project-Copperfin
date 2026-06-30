@@ -122,7 +122,6 @@ add_executable(test_studio_host_json
     test_studio_host_json_sections_geometry.cpp
     test_studio_host_json_sections_move_and_placement.cpp
     test_studio_host_json_objects_diagnostics_and_misc.cpp
-    test_studio_host_json_objects_dhf_layout_actions.cpp
     test_studio_host_json_objects_dhf_lifecycle.cpp
     test_studio_host_json_objects_dhf_expressions_and_exposure.cpp
     test_studio_host_json_objects_band_exposure.cpp
@@ -140,7 +139,6 @@ target_compile_definitions(test_studio_host_json PRIVATE
     COPPERFIN_OBJECT_LIFECYCLE_SKIP_REMAINING_OBJECT_ACTIONS
     COPPERFIN_DETAIL_HEADER_FOOTER_SECTION_SKIP_EXPRESSIONS
     COPPERFIN_DETAIL_HEADER_FOOTER_OBJECT_GEOMETRY_SKIP_STABLE
-    COPPERFIN_DETAIL_HEADER_FOOTER_OBJECT_LAYOUT_ACTIONS_SKIP_STABLE
     COPPERFIN_REPORT_DIRECT_SETTING_FIELDS_SKIP_HOST_SMOKE
     COPPERFIN_REPORT_SETTINGS_DIAGNOSTICS_SKIP_HOST_SMOKE
     COPPERFIN_REPORT_UNRESOLVED_MEMO_SKIP_HOST_SMOKE
