@@ -38,6 +38,7 @@ internal static class Program
         SmokeReportSectionPropertyGridSelection();
         SmokeReportSelectionPreservedAcrossExplorerRefresh();
         SmokeDeletedReportSectionExplorerSelection();
+        SmokeDeletedReportSectionDesignSurfaceRendering();
         SmokeAssetEditorWithRealAsset(
             @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx",
             expectSection: "Detail");
@@ -165,10 +166,14 @@ internal static class Program
                 "Detalle (2 objetos eliminados)",
                 StringComparison.Ordinal) &&
                string.Equals(
+                   InvokeDesignSurfaceString(spanishSurface, "BuildDeletedReportSectionHeaderTitle", "Detalle"),
+                   "Detalle (eliminada)",
+                   StringComparison.Ordinal) &&
+               string.Equals(
                    InvokeDesignSurfaceString(spanishSurface, "BuildUnplacedTrayTitle", 1),
                    "Objetos sin sección (1)",
                    StringComparison.Ordinal),
-            "Spanish design-surface report context should localize deleted-object and unplaced-object titles");
+            "Spanish design-surface report context should localize deleted-object, deleted-section, and unplaced-object titles");
 
         using var portugueseSurface = new CopperfinDesignSurfaceControl(new CopperfinLocalization("pt-BR"));
         Expect(string.Equals(
@@ -176,17 +181,22 @@ internal static class Program
                 "Detalhe (2 objetos excluídos)",
                 StringComparison.Ordinal) &&
                string.Equals(
+                   InvokeDesignSurfaceString(portugueseSurface, "BuildDeletedReportSectionHeaderTitle", "Detalhe"),
+                   "Detalhe (excluída)",
+                   StringComparison.Ordinal) &&
+               string.Equals(
                    InvokeDesignSurfaceString(portugueseSurface, "BuildUnplacedTrayTitle", 1),
                    "Objetos sem seção (1)",
                    StringComparison.Ordinal),
-            "Portuguese design-surface report context should localize deleted-object and unplaced-object titles");
+            "Portuguese design-surface report context should localize deleted-object, deleted-section, and unplaced-object titles");
 
         var pseudoLocalization = new CopperfinLocalization("qps-ploc");
         using var pseudoSurface = new CopperfinDesignSurfaceControl(pseudoLocalization);
         Expect(
             InvokeDesignSurfaceString(pseudoSurface, "BuildReportSectionHeaderTitle", "Detail", 2).StartsWith("[!! ", StringComparison.Ordinal) &&
+            InvokeDesignSurfaceString(pseudoSurface, "BuildDeletedReportSectionHeaderTitle", "Detail").StartsWith("[!! ", StringComparison.Ordinal) &&
             InvokeDesignSurfaceString(pseudoSurface, "BuildUnplacedTrayTitle", 1).StartsWith("[!! ", StringComparison.Ordinal),
-            "Pseudo-localized design-surface report context should route new titles through the shared catalog");
+            "Pseudo-localized design-surface report context should route deleted-object, deleted-section, and unplaced-object titles through the shared catalog");
     }
 
     private static void SmokeLocalizedAssetEditorChrome()
@@ -904,6 +914,121 @@ internal static class Program
             "Pseudo-localized report explorer should route deleted section rows through the shared catalog");
     }
 
+    private static void SmokeDeletedReportSectionDesignSurfaceRendering()
+    {
+        using var surface = new CopperfinDesignSurfaceControl
+        {
+            Size = new Size(900, 700)
+        };
+
+        var objects = new List<CopperfinStudioSnapshotObject>
+        {
+            new()
+            {
+                RecordIndex = 6,
+                Title = "customer.company",
+                Subtitle = "field",
+                Properties = new List<CopperfinStudioSnapshotProperty>
+                {
+                    new() { Name = "HPOS", Value = "1200" },
+                    new() { Name = "VPOS", Value = "2600" },
+                    new() { Name = "WIDTH", Value = "4000" },
+                    new() { Name = "HEIGHT", Value = "500" },
+                    new() { Name = "EXPR", Value = "customer.company" }
+                }
+            },
+            new()
+            {
+                RecordIndex = 13,
+                Title = "deleted.footer.total",
+                Subtitle = "field",
+                Deleted = true,
+                Properties = new List<CopperfinStudioSnapshotProperty>
+                {
+                    new() { Name = "HPOS", Value = "1400" },
+                    new() { Name = "VPOS", Value = "9400" },
+                    new() { Name = "WIDTH", Value = "3600" },
+                    new() { Name = "HEIGHT", Value = "600" },
+                    new() { Name = "EXPR", Value = "deleted.footer.total" }
+                }
+            }
+        };
+
+        var layout = new CopperfinStudioReportLayout
+        {
+            Sections = new List<CopperfinStudioReportSection>
+            {
+                new()
+                {
+                    Id = "detail_1",
+                    Title = "Detail",
+                    BandKind = "detail",
+                    RecordIndex = 1,
+                    Top = 2000,
+                    Height = 5000,
+                    Objects = new List<CopperfinStudioReportLayoutObject>
+                    {
+                        new()
+                        {
+                            RecordIndex = 6,
+                            ObjectKind = "field",
+                            Title = "customer.company",
+                            Expression = "customer.company",
+                            Left = 1200,
+                            Top = 2600,
+                            Width = 4000,
+                            Height = 500
+                        }
+                    }
+                }
+            },
+            DeletedSections = new List<CopperfinStudioReportSection>
+            {
+                new()
+                {
+                    Id = "deleted_footer",
+                    Title = "Summary",
+                    BandKind = "summary",
+                    RecordIndex = 51,
+                    Deleted = true,
+                    Top = 9000,
+                    Height = 1400,
+                    DeletedObjectCount = 1,
+                    Objects = new List<CopperfinStudioReportLayoutObject>
+                    {
+                        new()
+                        {
+                            RecordIndex = 13,
+                            ObjectKind = "field",
+                            Title = "deleted.footer.total",
+                            Expression = "deleted.footer.total",
+                            Left = 1400,
+                            Top = 9400,
+                            Width = 3600,
+                            Height = 600
+                        }
+                    }
+                }
+            }
+        };
+
+        surface.LoadReportLayout(layout, objects);
+        Expect(ReadPrivateListCount(surface, "reportSections") == 2,
+            "shared report surface should render live and deleted sections together");
+        Expect(ReadReportSectionPropertyBool(surface, 1, "Deleted"),
+            "shared report surface should mark deleted section visuals");
+        var expectedDeletedHeader = InvokeDesignSurfaceString(
+            surface,
+            "BuildDeletedReportSectionHeaderTitle",
+            InvokeDesignSurfaceString(surface, "BuildReportSectionHeaderTitle", "Summary", 1));
+        Expect(string.Equals(ReadReportSectionPropertyText(surface, 1, "HeaderTitle"), expectedDeletedHeader, StringComparison.Ordinal),
+            "shared report surface should label deleted section headers distinctly");
+
+        using var bitmap = new Bitmap(surface.Width, surface.Height);
+        surface.DrawToBitmap(bitmap, new Rectangle(0, 0, bitmap.Width, bitmap.Height));
+        Expect(CountNonWhitePixels(bitmap) > 5000, "shared report surface should render visible deleted-section UI content");
+    }
+
     private static void SmokeAssetEditorWithRealAsset(string path, string expectSection)
     {
         if (!File.Exists(path))
@@ -1376,6 +1501,18 @@ internal static class Program
         if (property?.GetValue(section) is not string value)
         {
             throw new InvalidOperationException($"Could not read report-section text property {propertyName}.");
+        }
+
+        return value;
+    }
+
+    private static bool ReadReportSectionPropertyBool(CopperfinDesignSurfaceControl surface, int index, string propertyName)
+    {
+        var section = ReadReportSectionVisual(surface, index);
+        var property = section.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        if (property?.GetValue(section) is not bool value)
+        {
+            throw new InvalidOperationException($"Could not read report-section boolean property {propertyName}.");
         }
 
         return value;

@@ -20,6 +20,7 @@ internal sealed class CopperfinDesignSurfaceControl : Control
 
     private sealed class ReportSectionVisual
     {
+        public bool Deleted { get; set; }
         public string Title { get; set; } = string.Empty;
         public string HeaderTitle { get; set; } = string.Empty;
         public string BandKind { get; set; } = string.Empty;
@@ -88,44 +89,12 @@ internal sealed class CopperfinDesignSurfaceControl : Control
         var lookup = snapshotObjects.ToDictionary(item => item.RecordIndex);
         foreach (var section in layout.Sections)
         {
-            var visual = new ReportSectionVisual
-            {
-                Title = section.Title,
-                HeaderTitle = BuildReportSectionHeaderTitle(section.Title, section.DeletedObjectCount),
-                BandKind = section.BandKind,
-                Top = section.Top,
-                Height = Math.Max(400, section.Height),
-                DeletedObjectCount = section.DeletedObjectCount
-            };
+            reportSections.Add(BuildReportSectionVisual(section, deleted: false, lookup));
+        }
 
-            foreach (var layoutObject in section.Objects)
-            {
-                if (!lookup.TryGetValue(layoutObject.RecordIndex, out var snapshotObject))
-                {
-                    continue;
-                }
-
-                var bounds = new RectangleF(
-                    layoutObject.Left,
-                    layoutObject.Top,
-                    Math.Max(120, layoutObject.Width),
-                    Math.Max(120, layoutObject.Height));
-
-                var surfaceObject = new SurfaceObject
-                {
-                    Source = snapshotObject,
-                    Bounds = bounds,
-                    PixelBounds = Rectangle.Empty,
-                    Caption = string.IsNullOrWhiteSpace(layoutObject.Title)
-                        ? ExtractCaption(assetFamily, snapshotObject)
-                        : layoutObject.Title
-                };
-
-                visual.Objects.Add(surfaceObject);
-                objects.Add(surfaceObject);
-            }
-
-            reportSections.Add(visual);
+        foreach (var section in layout.DeletedSections)
+        {
+            reportSections.Add(BuildReportSectionVisual(section, deleted: true, lookup));
         }
 
         foreach (var layoutObject in layout.UnplacedObjects)
@@ -304,6 +273,10 @@ internal sealed class CopperfinDesignSurfaceControl : Control
         using var sectionBorder = new Pen(Color.FromArgb(212, 218, 228));
         using var sectionHeaderFill = new SolidBrush(Color.FromArgb(233, 238, 247));
         using var sectionHeaderText = new SolidBrush(Color.FromArgb(44, 52, 64));
+        using var deletedSectionFill = new SolidBrush(Color.FromArgb(255, 244, 244));
+        using var deletedSectionBorder = new Pen(Color.FromArgb(218, 176, 176));
+        using var deletedSectionHeaderFill = new SolidBrush(Color.FromArgb(252, 224, 224));
+        using var deletedSectionHeaderText = new SolidBrush(Color.FromArgb(130, 41, 41));
 
         const int outerPadding = 24;
         const int headerHeight = 28;
@@ -359,18 +332,22 @@ internal sealed class CopperfinDesignSurfaceControl : Control
             section.PixelBounds = sectionBounds;
             section.HeaderBounds = headerBounds;
 
-            e.Graphics.FillRectangle(sectionFill, sectionBounds);
-            e.Graphics.DrawRectangle(sectionBorder, sectionBounds);
-            e.Graphics.FillRectangle(sectionHeaderFill, headerBounds);
-            e.Graphics.DrawRectangle(sectionBorder, headerBounds);
+            var currentSectionFill = section.Deleted ? deletedSectionFill : sectionFill;
+            var currentSectionBorder = section.Deleted ? deletedSectionBorder : sectionBorder;
+            var currentSectionHeaderFill = section.Deleted ? deletedSectionHeaderFill : sectionHeaderFill;
+            var currentSectionHeaderText = section.Deleted ? deletedSectionHeaderText : sectionHeaderText;
+            e.Graphics.FillRectangle(currentSectionFill, sectionBounds);
+            e.Graphics.DrawRectangle(currentSectionBorder, sectionBounds);
+            e.Graphics.FillRectangle(currentSectionHeaderFill, headerBounds);
+            e.Graphics.DrawRectangle(currentSectionBorder, headerBounds);
 
-            e.Graphics.DrawString(section.HeaderTitle, Font, sectionHeaderText, headerBounds.X + 10, headerBounds.Y + 6);
+            e.Graphics.DrawString(section.HeaderTitle, Font, currentSectionHeaderText, headerBounds.X + 10, headerBounds.Y + 6);
             using (var smallFont = new Font(Font.FontFamily, Math.Max(8.0F, Font.Size - 1.0F), FontStyle.Regular))
             {
                 e.Graphics.DrawString(
                     section.BandKind.Replace('_', ' '),
                     smallFont,
-                    textBrush,
+                    section.Deleted ? deletedSectionHeaderText : textBrush,
                     headerBounds.Right - 140,
                     headerBounds.Y + 7);
             }
@@ -512,6 +489,54 @@ internal sealed class CopperfinDesignSurfaceControl : Control
         return Math.Max(0.12F, Math.Min(scaleX, scaleY));
     }
 
+    private ReportSectionVisual BuildReportSectionVisual(
+        CopperfinStudioReportSection section,
+        bool deleted,
+        IReadOnlyDictionary<int, CopperfinStudioSnapshotObject> lookup)
+    {
+        var visual = new ReportSectionVisual
+        {
+            Deleted = deleted,
+            Title = section.Title,
+            HeaderTitle = deleted
+                ? BuildDeletedReportSectionHeaderTitle(BuildReportSectionHeaderTitle(section.Title, section.DeletedObjectCount))
+                : BuildReportSectionHeaderTitle(section.Title, section.DeletedObjectCount),
+            BandKind = section.BandKind,
+            Top = section.Top,
+            Height = Math.Max(400, section.Height),
+            DeletedObjectCount = section.DeletedObjectCount
+        };
+
+        foreach (var layoutObject in section.Objects)
+        {
+            if (!lookup.TryGetValue(layoutObject.RecordIndex, out var snapshotObject))
+            {
+                continue;
+            }
+
+            var bounds = new RectangleF(
+                layoutObject.Left,
+                layoutObject.Top,
+                Math.Max(120, layoutObject.Width),
+                Math.Max(120, layoutObject.Height));
+
+            var surfaceObject = new SurfaceObject
+            {
+                Source = snapshotObject,
+                Bounds = bounds,
+                PixelBounds = Rectangle.Empty,
+                Caption = string.IsNullOrWhiteSpace(layoutObject.Title)
+                    ? ExtractCaption(assetFamily, snapshotObject)
+                    : layoutObject.Title
+            };
+
+            visual.Objects.Add(surfaceObject);
+            objects.Add(surfaceObject);
+        }
+
+        return visual;
+    }
+
     private string BuildReportSectionHeaderTitle(string title, int deletedObjectCount)
     {
         if (deletedObjectCount <= 0)
@@ -528,6 +553,11 @@ internal sealed class CopperfinDesignSurfaceControl : Control
     private string BuildUnplacedTrayTitle(int count)
     {
         return this.localization.Format("AssetEditor.DesignSurface.UnplacedObjects", count);
+    }
+
+    private string BuildDeletedReportSectionHeaderTitle(string title)
+    {
+        return this.localization.Format("AssetEditor.ReportSection.Deleted", title);
     }
 
     private RectangleF CalculateLogicalBounds()
