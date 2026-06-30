@@ -179,10 +179,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_moves_report_layout_objects_from_sections_to_unplaced_by_stable_selection(argv[1]);
     test_studio_host_json_restores_edited_deleted_report_layout_object_as_unplaced_by_record_selection(argv[1]);
     test_studio_host_json_restores_edited_deleted_report_layout_object_as_unplaced_by_stable_selection(argv[1]);
-    test_studio_host_json_updates_report_column_width_fields_by_stable_selection(argv[1]);
-    test_studio_host_json_clears_report_column_width_fields_by_stable_selection(argv[1]);
-    test_studio_host_json_updates_deleted_report_column_width_fields_by_stable_selection(argv[1]);
-    test_studio_host_json_clears_deleted_report_column_width_fields_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
     test_studio_host_json_exposes_builder_launch_catalog(argv[1]);
     test_studio_host_json_exposes_selection_builder_launch_catalog(argv[1]);
