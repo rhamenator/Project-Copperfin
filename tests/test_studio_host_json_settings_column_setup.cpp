@@ -631,6 +631,7 @@ void test_studio_host_json_clears_deleted_report_column_count_fields_by_stable_s
     }
 }
 
+#if !defined(COPPERFIN_REPORT_DIRECT_SETTING_FIELDS_SKIP_HOST_SMOKE)
 void test_studio_host_json_ignores_invalid_direct_report_column_setup_fields(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -767,5 +768,6 @@ void test_studio_host_json_ignores_invalid_direct_report_column_setup_fields(
         fs::remove_all(temp_root, ignored);
     }
 }
+#endif
 
 }  // namespace cf_test_studio_host_json

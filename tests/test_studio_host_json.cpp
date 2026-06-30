@@ -148,16 +148,8 @@ int main(int argc, char** argv) {
     test_studio_host_json_defaults_missing_report_section_objcode_schema(argv[1]);
     test_studio_host_json_defaults_missing_report_object_objcode_schema(argv[1]);
     test_studio_host_json_preserves_report_settings_without_root_objcode_schema(argv[1]);
-    test_studio_host_json_ignores_invalid_direct_report_column_setup_fields(argv[1]);
-    test_studio_host_json_ignores_invalid_direct_report_margin_grid_fields(argv[1]);
     test_studio_host_json_suppresses_unresolved_report_direct_setting_memo_placeholders(argv[1]);
     test_studio_host_json_preserves_mixed_report_direct_setting_memo_placeholders(argv[1]);
-    test_studio_host_json_skips_blank_report_direct_setting_fields(argv[1]);
-    test_studio_host_json_preserves_mixed_invalid_report_direct_setting_fields(argv[1]);
-    test_studio_host_json_preserves_trimmed_report_direct_setting_fields(argv[1]);
-    test_studio_host_json_preserves_fractional_report_direct_setting_fields(argv[1]);
-    test_studio_host_json_ignores_oversized_report_direct_setting_fields(argv[1]);
-    test_studio_host_json_ignores_dot_leading_report_direct_setting_fields(argv[1]);
     test_studio_host_json_ignores_invalid_report_setting_memo_values(argv[1]);
     test_studio_host_json_preserves_fractional_report_setting_memo_values(argv[1]);
     test_studio_host_json_ignores_blank_report_setting_memo_values(argv[1]);

@@ -149,6 +149,7 @@ target_compile_definitions(test_studio_host_json PRIVATE
     COPPERFIN_DETAIL_HEADER_FOOTER_OBJECT_GEOMETRY_SKIP_STABLE
     COPPERFIN_DETAIL_HEADER_FOOTER_OBJECT_LAYOUT_ACTIONS_SKIP_STABLE
     COPPERFIN_REPORT_LAYOUT_CLASSIFICATIONS_SKIP_HOST_SMOKE
+    COPPERFIN_REPORT_DIRECT_SETTING_FIELDS_SKIP_HOST_SMOKE
 )
 
 if(MSVC)
@@ -336,6 +337,30 @@ endif()
 add_test(
     NAME test_studio_host_report_layout_classifications
     COMMAND $<TARGET_FILE:test_studio_host_report_layout_classifications> $<TARGET_FILE:copperfin_studio_host>
+)
+
+add_executable(test_studio_host_report_direct_setting_fields
+    test_studio_host_report_direct_setting_fields.cpp
+    test_studio_host_json_geometry_preview_bounds.cpp
+    test_studio_host_json_settings_column_setup.cpp
+    test_studio_host_json_settings_direct_field_validation.cpp
+    test_studio_host_json_settings_page_layout_fields.cpp
+    test_studio_host_json_shared_test_helpers.cpp
+)
+target_link_libraries(test_studio_host_report_direct_setting_fields PRIVATE cf_vfp_assets)
+target_compile_definitions(test_studio_host_report_direct_setting_fields PRIVATE
+    COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS
+)
+
+if(MSVC)
+    target_compile_options(test_studio_host_report_direct_setting_fields PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_report_direct_setting_fields PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_report_direct_setting_fields
+    COMMAND $<TARGET_FILE:test_studio_host_report_direct_setting_fields> $<TARGET_FILE:copperfin_studio_host>
 )
 
 add_executable(test_studio_host_report_selection_none

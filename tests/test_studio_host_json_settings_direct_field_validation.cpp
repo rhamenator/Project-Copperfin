@@ -177,6 +177,7 @@ void write_synthetic_report_table_for_dot_leading_direct_setting_layout_json(
     expect(delete_result.ok, "#1748: synthetic report table should mark dot-leading direct settings deleted");
 }
 
+#if !defined(COPPERFIN_REPORT_DIRECT_SETTING_FIELDS_SKIP_HOST_SMOKE)
 void test_studio_host_json_skips_blank_report_direct_setting_fields(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -1125,5 +1126,6 @@ void test_studio_host_json_ignores_dot_leading_report_direct_setting_fields(
         fs::remove_all(temp_root, ignored);
     }
 }
+#endif
 
 }  // namespace cf_test_studio_host_json
