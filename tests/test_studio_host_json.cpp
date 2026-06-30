@@ -140,11 +140,8 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
-    test_studio_host_json_clamps_negative_report_layout_dimensions(argv[1]);
     test_studio_host_json_defaults_malformed_report_layout_numerics(argv[1]);
     test_studio_host_json_defaults_oversized_report_layout_numerics(argv[1]);
-    test_studio_host_json_uses_integer_portions_for_fractional_report_layout_geometry(argv[1]);
-    test_studio_host_json_defaults_missing_report_layout_geometry_fields(argv[1]);
     test_studio_host_json_exposes_report_layout_column_setup(argv[1]);
     test_studio_host_json_exposes_label_layout_parity(argv[1]);
     test_studio_host_json_nudges_report_layout_objects_by_stable_selectors(argv[1]);

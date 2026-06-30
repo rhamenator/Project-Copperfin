@@ -577,6 +577,28 @@ add_test(
     COMMAND $<TARGET_FILE:test_studio_host_edited_object_delete_geometry> $<TARGET_FILE:copperfin_studio_host>
 )
 
+add_executable(test_studio_host_report_geometry_defaults
+    test_studio_host_report_geometry_defaults.cpp
+    test_studio_host_json_geometry_preview_bounds.cpp
+    test_studio_host_json_shared_test_helpers.cpp
+    test_studio_host_json_report_shared_fixtures.cpp
+)
+target_link_libraries(test_studio_host_report_geometry_defaults PRIVATE cf_vfp_assets)
+target_compile_definitions(test_studio_host_report_geometry_defaults PRIVATE
+    COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS
+)
+
+if(MSVC)
+    target_compile_options(test_studio_host_report_geometry_defaults PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_report_geometry_defaults PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_report_geometry_defaults
+    COMMAND $<TARGET_FILE:test_studio_host_report_geometry_defaults> $<TARGET_FILE:copperfin_studio_host>
+)
+
 add_executable(test_studio_host_report_selection_none
     test_studio_host_report_selection_none.cpp
     test_studio_host_json_shared_test_helpers.cpp
