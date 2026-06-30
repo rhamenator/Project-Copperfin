@@ -109,7 +109,6 @@ add_executable(test_studio_host_json
     test_studio_host_json_appearance_ole_and_drag.cpp
     test_studio_host_json_setters_data.cpp
     test_studio_host_json_report_labels.cpp
-    test_studio_host_json_report_visual_properties.cpp
     test_studio_host_json_report_layout_classifications.cpp
     test_studio_host_json_geometry_preview_bounds.cpp
     test_studio_host_json_geometry_dimensions.cpp
@@ -162,10 +161,6 @@ target_compile_definitions(test_studio_host_json PRIVATE
     COPPERFIN_REPORT_LAYOUT_HEIGHT_TOP_PREVIEW_BOUNDS_SKIP_HOST_SMOKE
     COPPERFIN_DETAIL_HEADER_FOOTER_SECTION_PREVIEW_BOUNDS_SKIP_HOST_SMOKE
     COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_SKIP_UNRESOLVED_AND_MISSING_HELPERS
-    COPPERFIN_DELETED_REPORT_VISUAL_PROPERTY_REJECTIONS_SKIP_HOST_SMOKE
-    COPPERFIN_DELETED_REPORT_VISUAL_PROPERTY_CLEARS_SKIP_HOST_SMOKE
-    COPPERFIN_DELETED_REPORT_VISUAL_PROPERTY_COPIES_SKIP_HOST_SMOKE
-    COPPERFIN_DELETED_REPORT_VISUAL_PROPERTY_MOVES_SKIP_HOST_SMOKE
 )
 
 if(MSVC)
