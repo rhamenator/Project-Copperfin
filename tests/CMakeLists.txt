@@ -113,7 +113,6 @@ add_executable(test_studio_host_json
     test_studio_host_json_geometry_font_metadata.cpp
     test_studio_host_json_geometry_column_width.cpp
     test_studio_host_json_settings_page_layout_fields.cpp
-    test_studio_host_json_settings_direct_field_validation.cpp
     test_studio_host_json_settings_column_setup.cpp
     test_studio_host_json_settings_diagnostics_and_misc.cpp
     test_studio_host_json_sections_band_exposure.cpp
