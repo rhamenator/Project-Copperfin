@@ -154,6 +154,7 @@ target_compile_definitions(test_studio_host_json PRIVATE
     COPPERFIN_REPORT_SETTINGS_DIAGNOSTICS_SKIP_HOST_SMOKE
     COPPERFIN_REPORT_UNRESOLVED_MEMO_SKIP_HOST_SMOKE
     COPPERFIN_REPORT_SCHEMA_FALLBACK_SKIP_HOST_SMOKE
+    COPPERFIN_REPORT_DELETED_STATES_SKIP_HOST_SMOKE
     COPPERFIN_REPORT_LAYOUT_WIDTH_LEFT_PREVIEW_BOUNDS_SKIP_HOST_SMOKE
     COPPERFIN_REPORT_LAYOUT_HEIGHT_TOP_PREVIEW_BOUNDS_SKIP_HOST_SMOKE
     COPPERFIN_DETAIL_HEADER_FOOTER_SECTION_PREVIEW_BOUNDS_SKIP_HOST_SMOKE
@@ -769,6 +770,32 @@ endif()
 add_test(
     NAME test_studio_host_report_geometry_defaults
     COMMAND $<TARGET_FILE:test_studio_host_report_geometry_defaults> $<TARGET_FILE:copperfin_studio_host>
+)
+
+add_executable(test_studio_host_report_deleted_states
+    test_studio_host_report_deleted_states.cpp
+    test_studio_host_json_geometry_preview_bounds.cpp
+    test_studio_host_json_objects_diagnostics_and_misc.cpp
+    test_studio_host_json_report_shared_fixtures.cpp
+    test_studio_host_json_settings_diagnostics_and_misc.cpp
+    test_studio_host_json_shared_test_helpers.cpp
+)
+target_link_libraries(test_studio_host_report_deleted_states PRIVATE cf_vfp_assets)
+target_compile_definitions(test_studio_host_report_deleted_states PRIVATE
+    COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS
+    COPPERFIN_REPORT_SETTINGS_DIAGNOSTICS_SKIP_HOST_SMOKE
+    COPPERFIN_REPORT_DELETED_STATES_ONLY
+)
+
+if(MSVC)
+    target_compile_options(test_studio_host_report_deleted_states PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_report_deleted_states PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_report_deleted_states
+    COMMAND $<TARGET_FILE:test_studio_host_report_deleted_states> $<TARGET_FILE:copperfin_studio_host>
 )
 
 add_executable(test_studio_host_report_selection_none

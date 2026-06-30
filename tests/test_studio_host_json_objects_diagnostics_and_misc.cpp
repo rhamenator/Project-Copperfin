@@ -922,6 +922,7 @@ void test_studio_host_json_exposes_extended_report_object_kinds(
     }
 }
 
+#if !defined(COPPERFIN_REPORT_DELETED_STATES_SKIP_HOST_SMOKE)
 void test_studio_host_json_applies_report_deleted_states_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -1942,6 +1943,10 @@ void test_studio_host_json_applies_mixed_report_deleted_states_by_stable_selecti
     }
 }
 
+#endif
+
+#if !defined(COPPERFIN_REPORT_DELETED_STATES_ONLY)
+
 #if !defined(COPPERFIN_REPORT_SCHEMA_FALLBACK_SKIP_HOST_SMOKE)
 void test_studio_host_json_defaults_missing_report_object_objcode_schema(
     const std::string& studio_host_path) {
@@ -2904,6 +2909,8 @@ void test_studio_host_json_synthesizes_report_object_titles_without_title_schema
         fs::remove_all(temp_root, ignored);
     }
 }
+#endif
+
 #endif
 
 }  // namespace cf_test_studio_host_json
