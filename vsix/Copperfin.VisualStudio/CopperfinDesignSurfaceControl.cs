@@ -405,7 +405,7 @@ internal sealed class CopperfinDesignSurfaceControl : Control
             using (var smallFont = new Font(Font.FontFamily, Math.Max(8.0F, Font.Size - 1.0F), FontStyle.Regular))
             {
                 e.Graphics.DrawString(
-                    section.BandKind.Replace('_', ' '),
+                    BuildReportBandKindDisplayText(section.BandKind),
                     smallFont,
                     section.Deleted ? deletedSectionHeaderText : textBrush,
                     headerBounds.Right - 140,
@@ -657,6 +657,32 @@ internal sealed class CopperfinDesignSurfaceControl : Control
     private string BuildDeletedReportSectionHeaderTitle(string title)
     {
         return this.localization.Format("AssetEditor.ReportSection.Deleted", title);
+    }
+
+    private string BuildReportBandKindDisplayText(string bandKind)
+    {
+        var key = bandKind switch
+        {
+            "title" => "AssetEditor.ReportBandKind.Title",
+            "page_header" => "AssetEditor.ReportBandKind.PageHeader",
+            "column_header" => "AssetEditor.ReportBandKind.ColumnHeader",
+            "group_header" => "AssetEditor.ReportBandKind.GroupHeader",
+            "detail" => "AssetEditor.ReportBandKind.Detail",
+            "detail_footer" => "AssetEditor.ReportBandKind.DetailFooter",
+            "group_footer" => "AssetEditor.ReportBandKind.GroupFooter",
+            "column_footer" => "AssetEditor.ReportBandKind.ColumnFooter",
+            "page_footer" => "AssetEditor.ReportBandKind.PageFooter",
+            "summary" => "AssetEditor.ReportBandKind.Summary",
+            "other" => "AssetEditor.ReportBandKind.Other",
+            _ => string.Empty
+        };
+
+        if (!string.IsNullOrWhiteSpace(key))
+        {
+            return this.localization.Text(key);
+        }
+
+        return bandKind.Replace('_', ' ');
     }
 
     private RectangleF CalculateLogicalBounds()

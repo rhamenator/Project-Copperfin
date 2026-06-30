@@ -169,14 +169,18 @@ internal static class Program
                 "Detalle (2 objetos eliminados)",
                 StringComparison.Ordinal) &&
                string.Equals(
+                   InvokeDesignSurfaceString(spanishSurface, "BuildReportBandKindDisplayText", "page_header"),
+                   "Encabezado de página",
+                   StringComparison.Ordinal) &&
+               string.Equals(
                    InvokeDesignSurfaceString(spanishSurface, "BuildDeletedReportSectionHeaderTitle", "Detalle"),
                    "Detalle (eliminada)",
                    StringComparison.Ordinal) &&
                string.Equals(
-                   InvokeDesignSurfaceString(spanishSurface, "BuildUnplacedTrayTitle", 1),
-                   "Objetos sin sección (1)",
-                   StringComparison.Ordinal),
-            "Spanish design-surface report context should localize deleted-object, deleted-section, and unplaced-object titles");
+                    InvokeDesignSurfaceString(spanishSurface, "BuildUnplacedTrayTitle", 1),
+                    "Objetos sin sección (1)",
+                    StringComparison.Ordinal),
+            "Spanish design-surface report context should localize deleted-object, deleted-section, band-kind, and unplaced-object titles");
 
         using var portugueseSurface = new CopperfinDesignSurfaceControl(new CopperfinLocalization("pt-BR"));
         Expect(string.Equals(
@@ -184,22 +188,27 @@ internal static class Program
                 "Detalhe (2 objetos excluídos)",
                 StringComparison.Ordinal) &&
                string.Equals(
+                   InvokeDesignSurfaceString(portugueseSurface, "BuildReportBandKindDisplayText", "group_footer"),
+                   "Rodapé do grupo",
+                   StringComparison.Ordinal) &&
+               string.Equals(
                    InvokeDesignSurfaceString(portugueseSurface, "BuildDeletedReportSectionHeaderTitle", "Detalhe"),
                    "Detalhe (excluída)",
                    StringComparison.Ordinal) &&
                string.Equals(
-                   InvokeDesignSurfaceString(portugueseSurface, "BuildUnplacedTrayTitle", 1),
-                   "Objetos sem seção (1)",
-                   StringComparison.Ordinal),
-            "Portuguese design-surface report context should localize deleted-object, deleted-section, and unplaced-object titles");
+                    InvokeDesignSurfaceString(portugueseSurface, "BuildUnplacedTrayTitle", 1),
+                    "Objetos sem seção (1)",
+                    StringComparison.Ordinal),
+            "Portuguese design-surface report context should localize deleted-object, deleted-section, band-kind, and unplaced-object titles");
 
         var pseudoLocalization = new CopperfinLocalization("qps-ploc");
         using var pseudoSurface = new CopperfinDesignSurfaceControl(pseudoLocalization);
         Expect(
             InvokeDesignSurfaceString(pseudoSurface, "BuildReportSectionHeaderTitle", "Detail", 2).StartsWith("[!! ", StringComparison.Ordinal) &&
+            InvokeDesignSurfaceString(pseudoSurface, "BuildReportBandKindDisplayText", "summary").StartsWith("[!! ", StringComparison.Ordinal) &&
             InvokeDesignSurfaceString(pseudoSurface, "BuildDeletedReportSectionHeaderTitle", "Detail").StartsWith("[!! ", StringComparison.Ordinal) &&
             InvokeDesignSurfaceString(pseudoSurface, "BuildUnplacedTrayTitle", 1).StartsWith("[!! ", StringComparison.Ordinal),
-            "Pseudo-localized design-surface report context should route deleted-object, deleted-section, and unplaced-object titles through the shared catalog");
+            "Pseudo-localized design-surface report context should route deleted-object, deleted-section, band-kind, and unplaced-object titles through the shared catalog");
     }
 
     private static void SmokeLocalizedAssetEditorChrome()
