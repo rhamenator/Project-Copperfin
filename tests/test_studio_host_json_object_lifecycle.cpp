@@ -181,6 +181,7 @@ void write_synthetic_form_table_for_object_ungroup(const std::filesystem::path& 
     expect(create_result.ok, "#1029: synthetic SCX table for object ungroup should be created");
 }
 
+#if !defined(COPPERFIN_OBJECT_LIFECYCLE_SKIP_TOOLBOX_CREATE)
 void test_studio_host_json_creates_toolbox_object_batches(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -1339,7 +1340,9 @@ void test_studio_host_json_creates_toolbox_objects(const std::string& studio_hos
         fs::remove_all(temp_root, ignored);
     }
 }
+#endif
 
+#if !defined(COPPERFIN_OBJECT_LIFECYCLE_ONLY_TOOLBOX_CREATE)
 void test_studio_host_json_sets_properties_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -3060,4 +3063,5 @@ void test_studio_host_json_ungroups_objects_by_stable_selectors(const std::strin
     }
 }
 
+#endif
 }  // namespace cf_test_studio_host_json

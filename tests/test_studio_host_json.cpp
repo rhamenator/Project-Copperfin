@@ -425,10 +425,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_plans_selection_toolbox_object_creation_batches(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation_batch_dispatch(argv[1]);
     test_studio_host_json_plans_selection_toolbox_object_creation_batch_dispatch(argv[1]);
-    test_studio_host_json_creates_toolbox_object_batches(argv[1]);
-    test_studio_host_json_creates_selection_toolbox_object_batches(argv[1]);
-    test_studio_host_json_creates_selection_toolbox_objects(argv[1]);
-    test_studio_host_json_creates_toolbox_objects(argv[1]);
     test_studio_host_json_sets_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_updates_visual_property_batches(argv[1]);
     test_studio_host_json_updates_visual_object_batches(argv[1]);

@@ -140,6 +140,7 @@ add_executable(test_studio_host_json
     test_studio_host_json_visual_editor_json_properties.cpp
 )
 target_link_libraries(test_studio_host_json PRIVATE cf_vfp_assets)
+target_compile_definitions(test_studio_host_json PRIVATE COPPERFIN_OBJECT_LIFECYCLE_SKIP_TOOLBOX_CREATE)
 
 if(MSVC)
     target_compile_options(test_studio_host_json PRIVATE /W4 /permissive-)
@@ -151,6 +152,27 @@ endif()
 add_test(
     NAME test_studio_host_json
     COMMAND $<TARGET_FILE:test_studio_host_json> $<TARGET_FILE:copperfin_studio_host>
+)
+
+add_executable(test_studio_host_toolbox_create_lifecycle
+    test_studio_host_toolbox_create_lifecycle.cpp
+    test_studio_host_json_object_lifecycle.cpp
+    test_studio_host_json_shared_test_helpers.cpp
+)
+target_link_libraries(test_studio_host_toolbox_create_lifecycle PRIVATE cf_vfp_assets)
+target_compile_definitions(test_studio_host_toolbox_create_lifecycle PRIVATE
+    COPPERFIN_OBJECT_LIFECYCLE_ONLY_TOOLBOX_CREATE
+)
+
+if(MSVC)
+    target_compile_options(test_studio_host_toolbox_create_lifecycle PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_toolbox_create_lifecycle PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_toolbox_create_lifecycle
+    COMMAND $<TARGET_FILE:test_studio_host_toolbox_create_lifecycle> $<TARGET_FILE:copperfin_studio_host>
 )
 
 add_executable(test_studio_host_report_selection_none
