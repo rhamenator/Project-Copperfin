@@ -829,7 +829,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         foreach (var item in GetVisibleObjects())
         {
             var projectEntry = LookupProjectEntry(item.RecordIndex);
-            var title = string.IsNullOrWhiteSpace(item.Title) ? $"Record {item.RecordIndex}" : item.Title;
+            var title = string.IsNullOrWhiteSpace(item.Title) ? BuildFallbackObjectTitle(item.RecordIndex) : item.Title;
             if (currentSnapshot.AssetFamily == "project" && projectEntry is not null && !string.IsNullOrWhiteSpace(projectEntry.RelativePath))
             {
                 title = projectEntry.RelativePath;
@@ -1713,6 +1713,11 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private string BuildDeletedReportSectionListTitle(CopperfinStudioReportSection section)
     {
         return F("AssetEditor.ReportSection.Deleted", BuildReportSectionListTitle(section));
+    }
+
+    private string BuildFallbackObjectTitle(int recordIndex)
+    {
+        return F("AssetEditor.ObjectFallbackTitle", recordIndex);
     }
 
     private string L(string key) => this.localization.Text(key);

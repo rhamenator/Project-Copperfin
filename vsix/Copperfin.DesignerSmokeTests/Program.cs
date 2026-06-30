@@ -37,6 +37,7 @@ internal static class Program
         SmokeReportSectionScopedObjectFiltering();
         SmokeReportSectionPropertyGridSelection();
         SmokeReportObjectPropertyGridLocalization();
+        SmokeLocalizedReportObjectFallbackTitles();
         SmokeReportSelectionPreservedAcrossExplorerRefresh();
         SmokeDeletedReportSectionExplorerSelection();
         SmokeReportSurfaceScopeSelection();
@@ -905,6 +906,73 @@ internal static class Program
         Expect(objectPropertyGrid.SelectedObject is CopperfinDesignerSelection refreshedObjectSelection &&
                refreshedObjectSelection.RecordIndex == 10,
             "Report object property-grid selection should remain object-rooted after explorer refresh");
+    }
+
+    private static void SmokeLocalizedReportObjectFallbackTitles()
+    {
+        var snapshot = new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "report",
+            Objects = new List<CopperfinStudioSnapshotObject>
+            {
+                new()
+                {
+                    RecordIndex = 10,
+                    Title = string.Empty,
+                    Subtitle = "field",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "HPOS", Value = "1200" },
+                        new() { Name = "VPOS", Value = "2600" },
+                        new() { Name = "WIDTH", Value = "4000" },
+                        new() { Name = "HEIGHT", Value = "500" },
+                        new() { Name = "EXPR", Value = "<memo block 0>" }
+                    }
+                }
+            },
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail",
+                        Title = "Detail",
+                        BandKind = "detail",
+                        RecordIndex = 41,
+                        Top = 2000,
+                        Height = 5000,
+                        Objects = new List<CopperfinStudioReportLayoutObject>
+                        {
+                            new() { RecordIndex = 10 }
+                        }
+                    }
+                }
+            }
+        };
+
+        using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
+        ApplyReportSnapshotForExplorerSmoke(spanishControl, snapshot);
+        var spanishObjectListView = GetPrivateListView(spanishControl, "objectListView");
+        Expect(spanishObjectListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, "Registro 10", StringComparison.Ordinal)),
+            "Spanish shared report object list should localize untitled fallback titles");
+
+        using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
+        ApplyReportSnapshotForExplorerSmoke(portugueseControl, snapshot);
+        var portugueseObjectListView = GetPrivateListView(portugueseControl, "objectListView");
+        Expect(portugueseObjectListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, "Registro 10", StringComparison.Ordinal)),
+            "Portuguese shared report object list should localize untitled fallback titles");
+
+        var pseudoLocalization = new CopperfinLocalization("qps-ploc");
+        using var pseudoControl = new CopperfinAssetEditorControl(pseudoLocalization);
+        Expect(InvokeAssetEditorString(pseudoControl, "BuildFallbackObjectTitle", 10).StartsWith("[!! ", StringComparison.Ordinal) &&
+               InvokeAssetEditorString(pseudoControl, "BuildFallbackObjectTitle", 10).IndexOf("10", StringComparison.Ordinal) >= 0,
+            "Pseudo-localized shared report object list should route untitled fallback titles through the shared catalog");
+
+        using var pseudoSurface = new CopperfinDesignSurfaceControl(pseudoLocalization);
+        Expect(InvokeDesignSurfaceString(pseudoSurface, "BuildFallbackObjectTitle", 10).StartsWith("[!! ", StringComparison.Ordinal) &&
+               InvokeDesignSurfaceString(pseudoSurface, "BuildFallbackObjectTitle", 10).IndexOf("10", StringComparison.Ordinal) >= 0,
+            "Pseudo-localized shared report surface should route untitled fallback captions through the shared catalog");
     }
 
     private static void SmokeReportObjectPropertyGridLocalization()

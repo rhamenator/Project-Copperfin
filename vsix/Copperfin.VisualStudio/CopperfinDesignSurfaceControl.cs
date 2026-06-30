@@ -85,7 +85,7 @@ internal sealed class CopperfinDesignSurfaceControl : Control
                 Source = snapshotObject,
                 Bounds = bounds,
                 PixelBounds = Rectangle.Empty,
-                Caption = ExtractCaption(this.assetFamily, snapshotObject)
+                Caption = BuildObjectCaption(this.assetFamily, snapshotObject)
             });
         }
 
@@ -136,7 +136,7 @@ internal sealed class CopperfinDesignSurfaceControl : Control
                 Bounds = bounds,
                 PixelBounds = Rectangle.Empty,
                 Caption = string.IsNullOrWhiteSpace(layoutObject.Title)
-                    ? ExtractCaption(assetFamily, snapshotObject)
+                    ? BuildObjectCaption(assetFamily, snapshotObject)
                     : layoutObject.Title
             };
 
@@ -625,7 +625,7 @@ internal sealed class CopperfinDesignSurfaceControl : Control
                 Bounds = bounds,
                 PixelBounds = Rectangle.Empty,
                 Caption = string.IsNullOrWhiteSpace(layoutObject.Title)
-                    ? ExtractCaption(assetFamily, snapshotObject)
+                    ? BuildObjectCaption(assetFamily, snapshotObject)
                     : layoutObject.Title
             };
 
@@ -742,7 +742,7 @@ internal sealed class CopperfinDesignSurfaceControl : Control
         return null;
     }
 
-    private static string ExtractCaption(string assetFamily, CopperfinStudioSnapshotObject snapshotObject)
+    private string BuildObjectCaption(string assetFamily, CopperfinStudioSnapshotObject snapshotObject)
     {
         string[] candidateNames = assetFamily switch
         {
@@ -760,6 +760,13 @@ internal sealed class CopperfinDesignSurfaceControl : Control
             }
         }
 
-        return string.IsNullOrWhiteSpace(snapshotObject.Title) ? $"Record {snapshotObject.RecordIndex}" : snapshotObject.Title;
+        return string.IsNullOrWhiteSpace(snapshotObject.Title)
+            ? BuildFallbackObjectTitle(snapshotObject.RecordIndex)
+            : snapshotObject.Title;
+    }
+
+    private string BuildFallbackObjectTitle(int recordIndex)
+    {
+        return this.localization.Format("AssetEditor.ObjectFallbackTitle", recordIndex);
     }
 }
