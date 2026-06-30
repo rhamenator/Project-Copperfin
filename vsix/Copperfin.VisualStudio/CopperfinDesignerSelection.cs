@@ -157,6 +157,22 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
                 BuildGroupingRoleDisplayText(localization, section.GroupRole ?? string.Empty));
         }
 
+        if (section.GroupingIndex.HasValue)
+        {
+            selection.AddReadOnlyInt(
+                "GROUPINGINDEX",
+                localization.Text("AssetEditor.Property.GroupingIndex"),
+                section.GroupingIndex.Value.ToString(CultureInfo.InvariantCulture));
+        }
+
+        if (section.GroupingNestingDepth.HasValue)
+        {
+            selection.AddReadOnlyInt(
+                "GROUPINGNESTINGDEPTH",
+                localization.Text("AssetEditor.Property.GroupingNestingDepth"),
+                section.GroupingNestingDepth.Value.ToString(CultureInfo.InvariantCulture));
+        }
+
         if (!string.IsNullOrWhiteSpace(section.GroupPartnerSectionId))
         {
             selection.AddReadOnlyString(
