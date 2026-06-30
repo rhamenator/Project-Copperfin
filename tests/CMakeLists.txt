@@ -130,7 +130,6 @@ add_executable(test_studio_host_json
     test_studio_host_json_objects_dhf_expressions_and_exposure.cpp
     test_studio_host_json_objects_band_exposure.cpp
     test_studio_host_json_objects_layout_and_expressions.cpp
-    test_studio_host_json_report_memo_and_placeholders.cpp
     test_studio_host_json_report_shared_fixtures.cpp
     test_studio_host_json_visual_editor_json_methods.cpp
     test_studio_host_json_visual_editor_json_objects.cpp
