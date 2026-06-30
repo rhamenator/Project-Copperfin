@@ -1,7 +1,9 @@
 #include "test_studio_host_json_support.h"
 
 namespace cf_test_studio_host_json {
-void write_synthetic_report_table_for_group_section_expression_json(const std::filesystem::path& report_path) {
+namespace {
+
+void write_group_section_expression_fixture(const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
         {.name = "OBJCODE", .type = 'N', .length = 8U},
@@ -20,8 +22,7 @@ void write_synthetic_report_table_for_group_section_expression_json(const std::f
     expect(create_result.ok, "#1566: synthetic report table for group section expression JSON should be created");
 }
 
-void write_synthetic_report_table_for_stable_group_section_expression_json(
-    const std::filesystem::path& report_path) {
+void write_stable_group_section_expression_fixture(const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
         {.name = "OBJCODE", .type = 'N', .length = 8U},
@@ -42,84 +43,7 @@ void write_synthetic_report_table_for_stable_group_section_expression_json(
            "#1666: synthetic report table for stable group section expression JSON should be created");
 }
 
-void write_synthetic_report_table_for_stable_blank_group_footer_expression_json(
-    const std::filesystem::path& report_path) {
-    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
-        {.name = "OBJTYPE", .type = 'N', .length = 8U},
-        {.name = "OBJCODE", .type = 'N', .length = 8U},
-        {.name = "EXPR", .type = 'M', .length = 4U},
-        {.name = "HPOS", .type = 'N', .length = 10U},
-        {.name = "VPOS", .type = 'N', .length = 10U},
-        {.name = "WIDTH", .type = 'N', .length = 10U},
-        {.name = "HEIGHT", .type = 'N', .length = 10U},
-        {.name = "UNIQUEID", .type = 'C', .length = 24U}
-    };
-    const std::vector<std::vector<std::string>> records{
-        {"1", "53", "ORIENTATION=0", "", "", "", "", ""},
-        {"9", "3", "customer.country", "", "0", "", "600", "group-header-guid"},
-        {"9", "4", "", "", "600", "", "3000", ""},
-        {"5", "", "\"Detail label\"", "120", "900", "1400", "240", "detail-object-guid"},
-        {"9", "5", "", "", "3600", "", "500", "group-footer-guid"}
-    };
-
-    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
-    expect(create_result.ok,
-           "#2687: synthetic report table for stable blank group-footer expression JSON should be created");
-}
-
-void write_synthetic_report_table_for_deleted_blank_group_footer_expression_json(
-    const std::filesystem::path& report_path) {
-    write_synthetic_report_table_for_stable_blank_group_footer_expression_json(report_path);
-    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 4U, true);
-    expect(delete_result.ok,
-           "#2687: synthetic report table should mark the blank group-footer section deleted");
-}
-
-void write_synthetic_report_table_for_stable_nested_group_section_expression_json(
-    const std::filesystem::path& report_path) {
-    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
-        {.name = "OBJTYPE", .type = 'N', .length = 8U},
-        {.name = "OBJCODE", .type = 'N', .length = 8U},
-        {.name = "EXPR", .type = 'M', .length = 4U},
-        {.name = "VPOS", .type = 'N', .length = 10U},
-        {.name = "HEIGHT", .type = 'N', .length = 10U},
-        {.name = "UNIQUEID", .type = 'C', .length = 24U}
-    };
-    const std::vector<std::vector<std::string>> records{
-        {"1", "53", "ORIENTATION=0", "", "", ""},
-        {"9", "3", "customer.region", "0", "400", "region-header-guid"},
-        {"9", "3", "customer.country", "400", "300", "country-header-guid"},
-        {"9", "4", "", "700", "2200", ""},
-        {"9", "5", "customer.country", "2900", "250", "country-footer-guid"},
-        {"9", "5", "customer.region", "3150", "350", "region-footer-guid"}
-    };
-
-    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
-    expect(create_result.ok,
-           "#2680: synthetic report table for stable nested group section expression JSON should be created");
-}
-
-void write_synthetic_report_table_for_deleted_nested_group_footer_expression_json(
-    const std::filesystem::path& report_path) {
-    write_synthetic_report_table_for_stable_nested_group_section_expression_json(report_path);
-    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 4U, true);
-    expect(delete_result.ok,
-           "#2681: synthetic report table should mark the nested group footer section deleted");
-}
-
-void write_synthetic_report_table_for_deleted_group_section_expression_json(
-    const std::filesystem::path& report_path) {
-    write_synthetic_report_table_for_group_section_expression_json(report_path);
-    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
-    expect(delete_result.ok, "#1569: synthetic report table should mark group section deleted");
-}
-
-void write_synthetic_report_table_for_deleted_group_footer_expression_json(
-    const std::filesystem::path& report_path) {
-    write_synthetic_report_table_for_group_section_expression_json(report_path);
-    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 3U, true);
-    expect(delete_result.ok, "#1570: synthetic report table should mark group footer section deleted");
-}
+}  // namespace
 
 void test_studio_host_json_exposes_report_group_footer_expressions_by_stable_selection(
     const std::string& studio_host_path) {
@@ -135,7 +59,7 @@ void test_studio_host_json_exposes_report_group_footer_expressions_by_stable_sel
     const auto run_group_footer_expression_json = [&](const fs::path& asset_path,
                                                       const std::string& title,
                                                       const std::string& label) {
-        write_synthetic_report_table_for_stable_group_section_expression_json(asset_path);
+        write_stable_group_section_expression_fixture(asset_path);
         const auto process = run_process_capture(
             studio_host_path,
             {"--path", asset_path.string(), "--unique-id", "group-footer-guid", "--json"},
@@ -215,7 +139,7 @@ void test_studio_host_json_exposes_report_group_footer_expressions_by_stable_sel
             process.stdout_text,
             {
                 "\"selectedReportSection\": {",
-                "\"id\": \"group_footer_3\"",
+                "\"id\": \"group-footer-guid\"",
                 "\"bandKind\": \"group_footer\"",
                 "\"expression\": \"customer.country\"",
                 "\"expressionFieldIndex\": 2",
@@ -257,7 +181,7 @@ void test_studio_host_json_exposes_deleted_report_group_section_expressions_by_s
     const auto run_deleted_group_expression_json = [&](const fs::path& asset_path,
                                                        const std::string& title,
                                                        const std::string& label) {
-        write_synthetic_report_table_for_stable_group_section_expression_json(asset_path);
+        write_stable_group_section_expression_fixture(asset_path);
         const auto delete_result = copperfin::vfp::set_record_deleted_flag(asset_path.string(), 1U, true);
         expect(delete_result.ok && dbf_record_deleted(asset_path, 1U),
                "#1668: stable deleted group-header fixture should mark the group-header section deleted");
@@ -337,7 +261,7 @@ void test_studio_host_json_exposes_deleted_report_group_section_expressions_by_s
             process.stdout_text,
             {
                 "\"deletedSections\": [",
-                "\"id\": \"group_header_1\"",
+                "\"id\": \"group-header-guid\"",
                 "\"bandKind\": \"group_header\"",
                 "\"expression\": \"customer.country\"",
                 "\"expressionFieldIndex\": 2",
@@ -350,7 +274,7 @@ void test_studio_host_json_exposes_deleted_report_group_section_expressions_by_s
             process.stdout_text,
             {
                 "\"selectedReportSection\": {",
-                "\"id\": \"group_header_1\"",
+                "\"id\": \"group-header-guid\"",
                 "\"bandKind\": \"group_header\"",
                 "\"expression\": \"customer.country\"",
                 "\"expressionFieldIndex\": 2",
@@ -402,7 +326,7 @@ void test_studio_host_json_exposes_deleted_report_group_footer_expressions_by_st
     const auto run_deleted_group_footer_expression_json = [&](const fs::path& asset_path,
                                                               const std::string& title,
                                                               const std::string& label) {
-        write_synthetic_report_table_for_stable_group_section_expression_json(asset_path);
+        write_stable_group_section_expression_fixture(asset_path);
         const auto delete_result = copperfin::vfp::set_record_deleted_flag(asset_path.string(), 3U, true);
         expect(delete_result.ok && dbf_record_deleted(asset_path, 3U),
                "#1669: stable deleted group-footer fixture should mark the group-footer section deleted");
@@ -482,7 +406,7 @@ void test_studio_host_json_exposes_deleted_report_group_footer_expressions_by_st
             process.stdout_text,
             {
                 "\"deletedSections\": [",
-                "\"id\": \"group_footer_3\"",
+                "\"id\": \"group-footer-guid\"",
                 "\"bandKind\": \"group_footer\"",
                 "\"expression\": \"customer.country\"",
                 "\"expressionFieldIndex\": 2",
@@ -495,7 +419,7 @@ void test_studio_host_json_exposes_deleted_report_group_footer_expressions_by_st
             process.stdout_text,
             {
                 "\"selectedReportSection\": {",
-                "\"id\": \"group_footer_3\"",
+                "\"id\": \"group-footer-guid\"",
                 "\"bandKind\": \"group_footer\"",
                 "\"expression\": \"customer.country\"",
                 "\"expressionFieldIndex\": 2",
@@ -546,7 +470,7 @@ void test_studio_host_json_exposes_report_group_section_expressions(const std::s
     const auto run_group_expression_json = [&](const fs::path& asset_path,
                                                const std::string& title,
                                                const std::string& label) {
-        write_synthetic_report_table_for_group_section_expression_json(asset_path);
+        write_group_section_expression_fixture(asset_path);
         const auto process = run_process_capture(
             studio_host_path,
             {"--path", asset_path.string(), "--record", "1", "--json"},
@@ -636,3 +560,24 @@ void test_studio_host_json_exposes_report_group_section_expressions(const std::s
 }
 
 }  // namespace cf_test_studio_host_json
+
+int main(int argc, char** argv) {
+    if (argc != 2) {
+        std::cerr << "usage: test_studio_host_report_grouping_remaining_exposure <copperfin_studio_host>\n";
+        return 2;
+    }
+
+    cf_test_studio_host_json::test_studio_host_json_exposes_report_group_footer_expressions_by_stable_selection(
+        argv[1]);
+    cf_test_studio_host_json::
+        test_studio_host_json_exposes_deleted_report_group_section_expressions_by_stable_selection(argv[1]);
+    cf_test_studio_host_json::
+        test_studio_host_json_exposes_deleted_report_group_footer_expressions_by_stable_selection(argv[1]);
+    cf_test_studio_host_json::test_studio_host_json_exposes_report_group_section_expressions(argv[1]);
+
+    if (cf_test_studio_host_json::failures != 0) {
+        return 1;
+    }
+
+    return 0;
+}
