@@ -409,7 +409,8 @@ void expect_missing_object_title_preview_bounds(const std::string& text, const s
 }
 
 #if !defined(COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_ONLY_HELPERS)
-#if !defined(COPPERFIN_REPORT_LAYOUT_WIDTH_LEFT_PREVIEW_BOUNDS_ONLY)
+#if !defined(COPPERFIN_REPORT_LAYOUT_WIDTH_LEFT_PREVIEW_BOUNDS_ONLY) && \
+    !defined(COPPERFIN_REPORT_LAYOUT_HEIGHT_TOP_PREVIEW_BOUNDS_ONLY)
 void test_studio_host_json_refreshes_detail_header_footer_section_preview_bounds_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -586,7 +587,8 @@ void test_studio_host_json_refreshes_detail_header_footer_section_preview_bounds
 
 #endif
 
-#if !defined(COPPERFIN_REPORT_LAYOUT_WIDTH_LEFT_PREVIEW_BOUNDS_SKIP_HOST_SMOKE)
+#if !defined(COPPERFIN_REPORT_LAYOUT_WIDTH_LEFT_PREVIEW_BOUNDS_SKIP_HOST_SMOKE) && \
+    !defined(COPPERFIN_REPORT_LAYOUT_HEIGHT_TOP_PREVIEW_BOUNDS_ONLY)
 
 void test_studio_host_json_updates_report_layout_object_width_preview_bounds_by_record_selection(
     const std::string& studio_host_path) {
@@ -1392,7 +1394,8 @@ void test_studio_host_json_clears_report_layout_object_left_preview_bounds_by_st
 
 #endif
 
-#if !defined(COPPERFIN_REPORT_LAYOUT_WIDTH_LEFT_PREVIEW_BOUNDS_ONLY)
+#if !defined(COPPERFIN_REPORT_LAYOUT_HEIGHT_TOP_PREVIEW_BOUNDS_SKIP_HOST_SMOKE) && \
+    !defined(COPPERFIN_REPORT_LAYOUT_WIDTH_LEFT_PREVIEW_BOUNDS_ONLY)
 
 void test_studio_host_json_updates_report_layout_object_height_preview_bounds_by_record_selection(
     const std::string& studio_host_path) {
@@ -2205,6 +2208,11 @@ void test_studio_host_json_clears_report_layout_object_top_preview_bounds_by_sta
         fs::remove_all(temp_root, ignored);
     }
 }
+
+#endif
+
+#if !defined(COPPERFIN_REPORT_LAYOUT_WIDTH_LEFT_PREVIEW_BOUNDS_ONLY) && \
+    !defined(COPPERFIN_REPORT_LAYOUT_HEIGHT_TOP_PREVIEW_BOUNDS_ONLY)
 
 void test_studio_host_json_refreshes_deleted_detail_header_footer_section_preview_bounds_by_stable_selection(
     const std::string& studio_host_path) {
