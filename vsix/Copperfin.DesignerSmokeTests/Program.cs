@@ -13632,17 +13632,11 @@ internal static class Program
 
     private static void SmokeAssetEditorLabelSectionPropertyGridHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor label-section host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorLabelSectionUpdateSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -13707,10 +13701,10 @@ internal static class Program
                    invocationArguments.Contains("--record") &&
                    invocationArguments.Contains("42") &&
                    invocationArguments.Contains("--property-name") &&
-                   invocationArguments.Contains("TOP") &&
+                   invocationArguments.Contains("VPOS") &&
                    invocationArguments.Contains("--property-value") &&
                    invocationArguments.Contains("3200"),
-                "Editing a label section through the shared asset editor should send one invariant TOP update through the host property contract");
+                "Editing a label section through the shared asset editor should send one invariant VPOS update through the host property contract");
 
             Expect(string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Detail", StringComparison.Ordinal) &&
                    propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
