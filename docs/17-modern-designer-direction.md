@@ -108,3 +108,26 @@ The standalone Copperfin IDE should feel like:
 
 The product should never fork behavior between the two.
 Only the shell chrome should differ.
+
+## Host Shell Standards
+
+Host shells are product surfaces, not incidental wrappers around the shared designer.
+
+Windows-facing Copperfin experiences should follow current Microsoft desktop guidance and modern Visual Studio 202x extension conventions.
+macOS-facing experiences should follow Apple desktop conventions directly.
+Linux-facing experiences should follow Linux desktop expectations, using VS Code as the primary reference point where Copperfin exposes IDE-style workspace, docking, and terminal behaviors.
+
+This means:
+
+- keep shared editor and designer behavior compatible across hosts
+- keep host chrome, docking, commands, and window affordances native to the platform
+- treat the current shared WinForms shell chrome as temporary, not product-grade
+
+For the command surface specifically:
+
+- the standalone IDE should provide a dockable `Command` window
+- the standalone IDE should provide a dockable `Terminal` window comparable to contemporary IDE terminal workflows
+- the VSIX should expose `Command` as a bottom-region tabbed tool window by default, alongside terminal/output-style panes in the Visual Studio shell
+
+Future standalone extension support, if it exists, should be treated as a curated host-compatibility problem rather than general VSIX parity.
+Do not plan on loading the Copperfin VSIX inside the standalone host.
