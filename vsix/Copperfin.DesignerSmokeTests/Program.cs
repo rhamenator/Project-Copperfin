@@ -1798,6 +1798,20 @@ internal static class Program
             AssetFamily = "report",
             ReportLayout = new CopperfinStudioReportLayout
             {
+                PreviewBoundsAvailable = true,
+                PreviewBoundsLeft = 0,
+                PreviewBoundsTop = 2000,
+                PreviewBoundsRight = 5200,
+                PreviewBoundsBottom = 8100,
+                PreviewBoundsWidth = 5200,
+                PreviewBoundsHeight = 6100,
+                DeletedPreviewBoundsAvailable = true,
+                DeletedPreviewBoundsLeft = 1000,
+                DeletedPreviewBoundsTop = 2600,
+                DeletedPreviewBoundsRight = 2200,
+                DeletedPreviewBoundsBottom = 2900,
+                DeletedPreviewBoundsWidth = 1200,
+                DeletedPreviewBoundsHeight = 300,
                 Settings = settings
             }
         };
@@ -1834,6 +1848,9 @@ internal static class Program
                objectListView.Items.Count == 0 &&
                string.Equals(sectionListView.Items.Cast<ListViewItem>().FirstOrDefault()?.Text, "Settings", StringComparison.Ordinal),
             "Report settings explorer selection should produce a settings-rooted property-grid selection and clear object rows");
+        Expect(string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["PREVIEWBOUNDS"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "L 0 T 2000 R 5200 B 8100   Size: 5200 x 6100", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["DELETEDPREVIEWBOUNDS"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "L 1000 T 2600 R 2200 B 2900   Size: 1200 x 300", StringComparison.Ordinal),
+            "Report settings explorer selection should expose live and deleted preview metadata from the shared report-layout model");
 
         if (propertyGrid.SelectedObject is CopperfinDesignerSelection editableSelection)
         {
@@ -1865,28 +1882,37 @@ internal static class Program
                string.Equals(labelSectionListView.Items.Cast<ListViewItem>().FirstOrDefault()?.Text, "Settings", StringComparison.Ordinal),
             "Label settings explorer selection should expose the same shared settings-rooted property-grid selection");
 
-        var spanishSelection = CopperfinDesignerSelection.FromReportSettings(settings, new CopperfinLocalization("es-419"));
+        var spanishSelection = CopperfinDesignerSelection.FromReportSettings(settings, new CopperfinLocalization("es-419"), reportLayout: settingsOnlySnapshot.ReportLayout);
         var spanishProperties = TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().ToList();
         Expect(spanishProperties.Any(property => string.Equals(property.DisplayName, "Cantidad de configuraciones", StringComparison.Ordinal)) &&
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Orientación", StringComparison.Ordinal)) &&
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Margen superior", StringComparison.Ordinal)) &&
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Expresión de orden", StringComparison.Ordinal)),
             "Spanish report settings property-grid selection should localize supported root-setting labels");
+        Expect(spanishProperties.Any(property => string.Equals(property.DisplayName, "Limites de vista previa", StringComparison.Ordinal)) &&
+               string.Equals(spanishProperties.First(property => string.Equals(property.Name, "PREVIEWBOUNDS", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "Izq 0 Arr 2000 Der 5200 Ab 8100   Tamaño: 5200 x 6100", StringComparison.Ordinal),
+            "Spanish report settings property-grid selection should localize preview metadata labels and values");
 
-        var portugueseSelection = CopperfinDesignerSelection.FromReportSettings(settings, new CopperfinLocalization("pt-BR"));
+        var portugueseSelection = CopperfinDesignerSelection.FromReportSettings(settings, new CopperfinLocalization("pt-BR"), reportLayout: settingsOnlySnapshot.ReportLayout);
         var portugueseProperties = TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().ToList();
         Expect(portugueseProperties.Any(property => string.Equals(property.DisplayName, "Quantidade de configurações", StringComparison.Ordinal)) &&
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Orientação", StringComparison.Ordinal)) &&
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Margem superior", StringComparison.Ordinal)) &&
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Expressão de ordenação", StringComparison.Ordinal)),
             "Portuguese report settings property-grid selection should localize supported root-setting labels");
+        Expect(portugueseProperties.Any(property => string.Equals(property.DisplayName, "Limites da visualização", StringComparison.Ordinal)) &&
+               string.Equals(portugueseProperties.First(property => string.Equals(property.Name, "PREVIEWBOUNDS", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "E 0 T 2000 D 5200 B 8100   Tamanho: 5200 x 6100", StringComparison.Ordinal),
+            "Portuguese report settings property-grid selection should localize preview metadata labels and values");
 
         var pseudoLocalization = new CopperfinLocalization("qps-ploc");
-        var pseudoSelection = CopperfinDesignerSelection.FromReportSettings(settings, pseudoLocalization);
+        var pseudoSelection = CopperfinDesignerSelection.FromReportSettings(settings, pseudoLocalization, reportLayout: settingsOnlySnapshot.ReportLayout);
         var pseudoProperties = TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().ToList();
         Expect(pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.SettingsCount"), StringComparison.Ordinal)) &&
                pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.TopMargin"), StringComparison.Ordinal)),
             "Pseudo-localized report settings property-grid selection should route new root-setting labels through the shared catalog");
+        Expect(pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.PreviewBounds"), StringComparison.Ordinal)) &&
+               string.Equals(pseudoProperties.First(property => string.Equals(property.Name, "PREVIEWBOUNDS", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), pseudoLocalization.Format("AssetEditor.Property.BoundsValue", 0, 2000, 5200, 8100, 5200, 6100), StringComparison.Ordinal),
+            "Pseudo-localized report settings property-grid selection should route preview metadata through the shared catalog");
 
         using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
         ApplyReportSnapshotForExplorerSmoke(spanishControl, mixedSnapshot);
@@ -1926,6 +1952,13 @@ internal static class Program
             AssetFamily = "report",
             ReportLayout = new CopperfinStudioReportLayout
             {
+                DeletedPreviewBoundsAvailable = true,
+                DeletedPreviewBoundsLeft = 1000,
+                DeletedPreviewBoundsTop = 2600,
+                DeletedPreviewBoundsRight = 2200,
+                DeletedPreviewBoundsBottom = 2900,
+                DeletedPreviewBoundsWidth = 1200,
+                DeletedPreviewBoundsHeight = 300,
                 DeletedSettings = deletedSettings
             }
         };
@@ -1955,6 +1988,8 @@ internal static class Program
                string.Equals(sectionListView.Items.Cast<ListViewItem>().FirstOrDefault()?.Text, "Settings (deleted)", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(deletedSettingsSelection)["SETTINGSSTATE"]?.GetValue(deletedSettingsSelection)?.ToString(), "Deleted", StringComparison.Ordinal),
             "Deleted report settings explorer selection should produce a deleted settings-rooted property-grid selection and clear object rows");
+        Expect(string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["DELETEDPREVIEWBOUNDS"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "L 1000 T 2600 R 2200 B 2900   Size: 1200 x 300", StringComparison.Ordinal),
+            "Deleted report settings explorer selection should expose deleted preview metadata from the shared report-layout model");
 
         if (propertyGrid.SelectedObject is CopperfinDesignerSelection editableSelection)
         {
@@ -1982,24 +2017,30 @@ internal static class Program
                string.Equals(TypeDescriptor.GetProperties(labelSelection)["SETTINGSSTATE"]?.GetValue(labelSelection)?.ToString(), "Deleted", StringComparison.Ordinal),
             "Deleted label settings explorer selection should expose the same shared deleted-settings property-grid selection");
 
-        var spanishSelection = CopperfinDesignerSelection.FromReportSettings(deletedSettings, new CopperfinLocalization("es-419"), deleted: true);
+        var spanishSelection = CopperfinDesignerSelection.FromReportSettings(deletedSettings, new CopperfinLocalization("es-419"), deleted: true, reportLayout: deletedOnlySnapshot.ReportLayout);
         var spanishProperties = TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().ToList();
         Expect(spanishProperties.Any(property => string.Equals(property.DisplayName, "Estado de las configuraciones", StringComparison.Ordinal)) &&
                string.Equals(spanishProperties.First(property => string.Equals(property.Name, "SETTINGSSTATE", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "Eliminada", StringComparison.Ordinal),
             "Spanish deleted report settings property-grid selection should localize deleted settings state");
+        Expect(spanishProperties.Any(property => string.Equals(property.DisplayName, "Limites de vista previa eliminada", StringComparison.Ordinal)),
+            "Spanish deleted report settings property-grid selection should localize deleted preview metadata labels");
 
-        var portugueseSelection = CopperfinDesignerSelection.FromReportSettings(deletedSettings, new CopperfinLocalization("pt-BR"), deleted: true);
+        var portugueseSelection = CopperfinDesignerSelection.FromReportSettings(deletedSettings, new CopperfinLocalization("pt-BR"), deleted: true, reportLayout: deletedOnlySnapshot.ReportLayout);
         var portugueseProperties = TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().ToList();
         Expect(portugueseProperties.Any(property => string.Equals(property.DisplayName, "Estado das configurações", StringComparison.Ordinal)) &&
                string.Equals(portugueseProperties.First(property => string.Equals(property.Name, "SETTINGSSTATE", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "Excluída", StringComparison.Ordinal),
             "Portuguese deleted report settings property-grid selection should localize deleted settings state");
+        Expect(portugueseProperties.Any(property => string.Equals(property.DisplayName, "Limites da visualização excluída", StringComparison.Ordinal)),
+            "Portuguese deleted report settings property-grid selection should localize deleted preview metadata labels");
 
         var pseudoLocalization = new CopperfinLocalization("qps-ploc");
-        var pseudoSelection = CopperfinDesignerSelection.FromReportSettings(deletedSettings, pseudoLocalization, deleted: true);
+        var pseudoSelection = CopperfinDesignerSelection.FromReportSettings(deletedSettings, pseudoLocalization, deleted: true, reportLayout: deletedOnlySnapshot.ReportLayout);
         var pseudoProperties = TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().ToList();
         Expect(pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.SettingsState"), StringComparison.Ordinal)) &&
                string.Equals(pseudoProperties.First(property => string.Equals(property.Name, "SETTINGSSTATE", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), pseudoLocalization.Text("AssetEditor.State.Deleted"), StringComparison.Ordinal),
             "Pseudo-localized deleted report settings property-grid selection should route deleted settings state through the shared catalog");
+        Expect(pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.DeletedPreviewBounds"), StringComparison.Ordinal)),
+            "Pseudo-localized deleted report settings property-grid selection should route deleted preview metadata through the shared catalog");
 
         using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
         ApplyReportSnapshotForExplorerSmoke(spanishControl, mixedSnapshot);
@@ -2199,7 +2240,9 @@ internal static class Program
 
             Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
                    initialSelection.RecordIndex == 0 &&
-                   objectListView.Items.Count == 0,
+                   objectListView.Items.Count == 0 &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["PREVIEWBOUNDS"]?.GetValue(initialSelection)?.ToString(), "L 0 T 2000 R 5200 B 8100   Size: 5200 x 6100", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["DELETEDPREVIEWBOUNDS"]?.GetValue(initialSelection)?.ToString(), "L 1000 T 2600 R 2200 B 2900   Size: 1200 x 300", StringComparison.Ordinal),
                 "A report settings host-update smoke should start from a settings-rooted property-grid selection");
 
             if (propertyGrid.SelectedObject is not CopperfinDesignerSelection settingsSelection)
@@ -2232,6 +2275,8 @@ internal static class Program
                    propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
                    refreshedSelection.RecordIndex == 0 &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["TOPMARGIN"]?.GetValue(refreshedSelection)?.ToString(), "30", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["PREVIEWBOUNDS"]?.GetValue(refreshedSelection)?.ToString(), "L 0 T 2000 R 5200 B 8100   Size: 5200 x 6100", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["DELETEDPREVIEWBOUNDS"]?.GetValue(refreshedSelection)?.ToString(), "L 1000 T 2600 R 2200 B 2900   Size: 1200 x 300", StringComparison.Ordinal) &&
                    objectListView.Items.Count == 0 &&
                    ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") is null &&
                    ReadPrivateNullableInt(surface, "selectedRecordIndex") is null &&
@@ -2318,7 +2363,8 @@ internal static class Program
             Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
                    initialSelection.RecordIndex == 0 &&
                    objectListView.Items.Count == 0 &&
-                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["SETTINGSSTATE"]?.GetValue(initialSelection)?.ToString(), "Deleted", StringComparison.Ordinal),
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["SETTINGSSTATE"]?.GetValue(initialSelection)?.ToString(), "Deleted", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["DELETEDPREVIEWBOUNDS"]?.GetValue(initialSelection)?.ToString(), "L 1000 T 2600 R 2200 B 2900   Size: 1200 x 300", StringComparison.Ordinal),
                 "A deleted report settings host-update smoke should start from a deleted settings-rooted property-grid selection");
 
             if (propertyGrid.SelectedObject is not CopperfinDesignerSelection settingsSelection)
@@ -2352,6 +2398,7 @@ internal static class Program
                    refreshedSelection.RecordIndex == 0 &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["TOPMARGIN"]?.GetValue(refreshedSelection)?.ToString(), "55", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["SETTINGSSTATE"]?.GetValue(refreshedSelection)?.ToString(), "Deleted", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["DELETEDPREVIEWBOUNDS"]?.GetValue(refreshedSelection)?.ToString(), "L 1000 T 2600 R 2200 B 2900   Size: 1200 x 300", StringComparison.Ordinal) &&
                    objectListView.Items.Count == 0 &&
                    ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") is null &&
                    ReadPrivateNullableInt(surface, "selectedRecordIndex") is null &&
@@ -14484,6 +14531,20 @@ internal static class Program
             FieldCount = 5,
             ReportLayout = new CopperfinStudioReportLayout
             {
+                PreviewBoundsAvailable = true,
+                PreviewBoundsLeft = 0,
+                PreviewBoundsTop = 2000,
+                PreviewBoundsRight = 5200,
+                PreviewBoundsBottom = 8100,
+                PreviewBoundsWidth = 5200,
+                PreviewBoundsHeight = 6100,
+                DeletedPreviewBoundsAvailable = true,
+                DeletedPreviewBoundsLeft = 1000,
+                DeletedPreviewBoundsTop = 2600,
+                DeletedPreviewBoundsRight = 2200,
+                DeletedPreviewBoundsBottom = 2900,
+                DeletedPreviewBoundsWidth = 1200,
+                DeletedPreviewBoundsHeight = 300,
                 Settings = new List<CopperfinStudioNamedValue>
                 {
                     new() { Name = "ORIENTATION", Value = "0", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 0, MemoBlockNumber = 9 },
@@ -14514,6 +14575,13 @@ internal static class Program
             FieldCount = 5,
             ReportLayout = new CopperfinStudioReportLayout
             {
+                DeletedPreviewBoundsAvailable = true,
+                DeletedPreviewBoundsLeft = 1000,
+                DeletedPreviewBoundsTop = 2600,
+                DeletedPreviewBoundsRight = 2200,
+                DeletedPreviewBoundsBottom = 2900,
+                DeletedPreviewBoundsWidth = 1200,
+                DeletedPreviewBoundsHeight = 300,
                 DeletedSettings = new List<CopperfinStudioNamedValue>
                 {
                     new() { Name = "ORIENTATION", Value = "1", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 0, MemoBlockNumber = 19 },
@@ -16031,14 +16099,14 @@ internal static class Program
     private static string BuildSettingsUpdateHostResponseJson()
     {
         return """
-{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[],"ReportLayout":{"Settings":[{"Name":"ORIENTATION","Value":"0","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":0,"MemoBlockNumber":9},{"Name":"TOPMARGIN","Value":"30","RecordIndex":0,"FieldIndex":3,"MemoBlockNumber":0},{"Name":"TAG","Value":"customer.country","RecordIndex":0,"FieldIndex":9,"MemoBlockNumber":11}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[],"UnplacedObjects":[]}}}
+{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[],"ReportLayout":{"PreviewBoundsAvailable":true,"PreviewBoundsLeft":0,"PreviewBoundsTop":2000,"PreviewBoundsRight":5200,"PreviewBoundsBottom":8100,"PreviewBoundsWidth":5200,"PreviewBoundsHeight":6100,"DeletedPreviewBoundsAvailable":true,"DeletedPreviewBoundsLeft":1000,"DeletedPreviewBoundsTop":2600,"DeletedPreviewBoundsRight":2200,"DeletedPreviewBoundsBottom":2900,"DeletedPreviewBoundsWidth":1200,"DeletedPreviewBoundsHeight":300,"Settings":[{"Name":"ORIENTATION","Value":"0","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":0,"MemoBlockNumber":9},{"Name":"TOPMARGIN","Value":"30","RecordIndex":0,"FieldIndex":3,"MemoBlockNumber":0},{"Name":"TAG","Value":"customer.country","RecordIndex":0,"FieldIndex":9,"MemoBlockNumber":11}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[],"UnplacedObjects":[]}}}
 """;
     }
 
     private static string BuildDeletedSettingsUpdateHostResponseJson()
     {
         return """
-{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[],"ReportLayout":{"DeletedSettings":[{"Name":"ORIENTATION","Value":"1","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":0,"MemoBlockNumber":19},{"Name":"TOPMARGIN","Value":"55","RecordIndex":0,"FieldIndex":3,"MemoBlockNumber":0},{"Name":"TAG","Value":"deleted.customer.country","RecordIndex":0,"FieldIndex":9,"MemoBlockNumber":21}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[],"UnplacedObjects":[]}}}
+{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[],"ReportLayout":{"DeletedPreviewBoundsAvailable":true,"DeletedPreviewBoundsLeft":1000,"DeletedPreviewBoundsTop":2600,"DeletedPreviewBoundsRight":2200,"DeletedPreviewBoundsBottom":2900,"DeletedPreviewBoundsWidth":1200,"DeletedPreviewBoundsHeight":300,"DeletedSettings":[{"Name":"ORIENTATION","Value":"1","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":0,"MemoBlockNumber":19},{"Name":"TOPMARGIN","Value":"55","RecordIndex":0,"FieldIndex":3,"MemoBlockNumber":0},{"Name":"TAG","Value":"deleted.customer.country","RecordIndex":0,"FieldIndex":9,"MemoBlockNumber":21}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[],"UnplacedObjects":[]}}}
 """;
     }
 

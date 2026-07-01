@@ -271,7 +271,8 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
     public static CopperfinDesignerSelection FromReportSettings(
         IReadOnlyList<CopperfinStudioNamedValue> settings,
         CopperfinLocalization localization,
-        bool deleted = false)
+        bool deleted = false,
+        CopperfinStudioReportLayout? reportLayout = null)
     {
         var selection = new CopperfinDesignerSelection
         {
@@ -290,6 +291,36 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             "SETTINGSSTATE",
             localization.Text("AssetEditor.Property.SettingsState"),
             BuildStateText(localization, deleted));
+
+        if (reportLayout?.PreviewBoundsAvailable == true)
+        {
+            selection.AddReadOnlyString(
+                "PREVIEWBOUNDS",
+                localization.Text("AssetEditor.Property.PreviewBounds"),
+                localization.Format(
+                    "AssetEditor.Property.BoundsValue",
+                    reportLayout.PreviewBoundsLeft,
+                    reportLayout.PreviewBoundsTop,
+                    reportLayout.PreviewBoundsRight,
+                    reportLayout.PreviewBoundsBottom,
+                    reportLayout.PreviewBoundsWidth,
+                    reportLayout.PreviewBoundsHeight));
+        }
+
+        if (reportLayout?.DeletedPreviewBoundsAvailable == true)
+        {
+            selection.AddReadOnlyString(
+                "DELETEDPREVIEWBOUNDS",
+                localization.Text("AssetEditor.Property.DeletedPreviewBounds"),
+                localization.Format(
+                    "AssetEditor.Property.BoundsValue",
+                    reportLayout.DeletedPreviewBoundsLeft,
+                    reportLayout.DeletedPreviewBoundsTop,
+                    reportLayout.DeletedPreviewBoundsRight,
+                    reportLayout.DeletedPreviewBoundsBottom,
+                    reportLayout.DeletedPreviewBoundsWidth,
+                    reportLayout.DeletedPreviewBoundsHeight));
+        }
 
         var seenNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var setting in settings)

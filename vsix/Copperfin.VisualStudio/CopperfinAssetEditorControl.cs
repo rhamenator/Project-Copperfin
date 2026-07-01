@@ -1041,7 +1041,11 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                     item.Selected = false;
                 }
 
-                propertyGrid.SelectedObject = CopperfinDesignerSelection.FromReportSettings(settingsScope.Settings, localization, settingsScope.Deleted);
+                propertyGrid.SelectedObject = CopperfinDesignerSelection.FromReportSettings(
+                    settingsScope.Settings,
+                    localization,
+                    settingsScope.Deleted,
+                    currentSnapshot?.ReportLayout);
                 designSurface.SelectRecord(null);
                 return;
             }
