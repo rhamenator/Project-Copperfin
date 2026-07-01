@@ -515,6 +515,9 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
     {
         var key = settingName.ToUpperInvariant() switch
         {
+            "DRIVER" => "AssetEditor.Property.PrinterDriver",
+            "DEVICE" => "AssetEditor.Property.PrinterDevice",
+            "OUTPUT" => "AssetEditor.Property.PrinterOutput",
             "ORIENTATION" => "AssetEditor.Property.Orientation",
             "PAPERSIZE" => "AssetEditor.Property.PaperSize",
             "PAPERLENGTH" => "AssetEditor.Property.PaperLength",
