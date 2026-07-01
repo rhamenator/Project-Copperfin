@@ -3112,6 +3112,31 @@ internal static class Program
                 },
                 expectedObjectListCount: 3);
             SmokeAssetEditorSectionMetadataSelectionWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLE3V.FRX"),
+                recordIndex: 4,
+                expectedSectionListTitle: "Page Footer",
+                expectedProperties: new[]
+                {
+                    new KeyValuePair<string, string>("SECTIONSTATE", "Live"),
+                    new KeyValuePair<string, string>("BANDKIND", "Page Footer"),
+                    new KeyValuePair<string, string>("RECORDINDEX", "4"),
+                    new KeyValuePair<string, string>("OBJECTCOUNT", "0"),
+                    new KeyValuePair<string, string>("DELETEDOBJECTCOUNT", "0"),
+                    new KeyValuePair<string, string>("TOP", "0"),
+                    new KeyValuePair<string, string>("HEIGHT", "2917")
+                },
+                expectedMissingProperties: new[]
+                {
+                    "EXPR",
+                    "EXPRESSIONFIELD",
+                    "EXPRESSIONMEMO",
+                    "GROUPINGEXPRESSION",
+                    "GROUPINGEXPRESSIONFIELD",
+                    "GROUPINGEXPRESSIONMEMO",
+                    "GROUPPARTNERSTATE"
+                },
+                expectedObjectListCount: 0);
+            SmokeAssetEditorSectionMetadataSelectionWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Sedna/DataExplorer/DATAEXPLORERQUICKREPORT.FRX"),
                 recordIndex: 2,
                 expectedSectionListTitle: "Detail",
