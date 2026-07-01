@@ -423,4 +423,31 @@ internal static class CopperfinStudioSnapshotClient
                 deltaHpos,
                 deltaVpos));
     }
+
+    public static CopperfinStudioSnapshotResult TryAlignObject(
+        string assetPath,
+        int recordIndex,
+        string anchorUniqueId,
+        string alignmentMode,
+        IReadOnlyList<string> targetUniqueIds)
+    {
+        var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
+        if (string.IsNullOrWhiteSpace(studioHostPath))
+        {
+            return new CopperfinStudioSnapshotResult
+            {
+                Success = false,
+                Error = Localization.Text("AssetEditor.Dialog.StudioHostMissing")
+            };
+        }
+
+        return RunSnapshotCommand(
+            studioHostPath!,
+            CopperfinStudioHostBridge.BuildAlignObjectArguments(
+                assetPath,
+                recordIndex,
+                anchorUniqueId,
+                alignmentMode,
+                targetUniqueIds));
+    }
 }

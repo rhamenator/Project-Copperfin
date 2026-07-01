@@ -91,6 +91,7 @@ internal static class Program
         SmokeAssetEditorDuplicateObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorRenameObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorReorderFrontObjectCommandRefreshesReportShellSummary();
+        SmokeAssetEditorAlignLeftObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorDeleteObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorRestoreObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorLabelObjectPropertyGridHostUpdate();
@@ -103,6 +104,7 @@ internal static class Program
         SmokeAssetEditorDuplicateObjectCommandRefreshesLabelShellSummary();
         SmokeAssetEditorRenameObjectCommandRefreshesDeletedLabelShellSummary();
         SmokeAssetEditorReorderBackObjectCommandRefreshesLabelShellSummary();
+        SmokeAssetEditorAlignLeftObjectCommandRefreshesLabelShellSummary();
         SmokeAssetEditorDeleteObjectCommandRefreshesLabelShellSummary();
         SmokeAssetEditorRestoreObjectCommandRefreshesLabelShellSummary();
         SmokeAssetEditorDeletedReportObjectPropertyGridHostUpdate();
@@ -1704,6 +1706,21 @@ internal static class Program
                 expectedOriginalLayoutVpos: 6666,
                 expectedUpdatedLayoutHpos: 6450,
                 expectedUpdatedLayoutVpos: 6966);
+            SmokeAssetEditorAlignLeftCommandWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Sedna/DataExplorer/DATAEXPLORERQUICKREPORT.FRX"),
+                anchorRecordIndex: 4,
+                targetRecordIndex: 5,
+                expectedSectionTitle: "Detail",
+                expectedSectionRecordIndex: 2,
+                expectedAnchorObjectTitle: "\"Customerid\"",
+                expectedTargetObjectTitle: "customerid",
+                expectedSectionCount: 3,
+                expectedAnchorUniqueId: "_1WB13DS3B",
+                expectedTargetUniqueId: "_1WB13DS4P",
+                expectedOriginalTargetRawHpos: "11979.167",
+                expectedUpdatedTargetRawHpos: "0",
+                expectedOriginalTargetLayoutHpos: 11979,
+                expectedUpdatedTargetLayoutHpos: 0);
             SmokeAssetEditorSectionRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 1,
@@ -5797,6 +5814,155 @@ internal static class Program
         }
     }
 
+    private static void SmokeAssetEditorAlignLeftObjectCommandRefreshesReportShellSummary()
+    {
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            Console.WriteLine("SKIP: shared asset-editor align-left smoke requires a POSIX scriptable fake Studio host.");
+            return;
+        }
+
+        var snapshot = BuildAssetEditorReorderFrontReportObjectSmokeSnapshot();
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
+        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var logPath = Path.Combine(tempRoot, "studio-host.log");
+        var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
+
+        try
+        {
+            File.WriteAllText(logPath, string.Empty);
+            CreateFakeStudioHostScript(scriptPath, BuildAlignLeftReportObjectHostResponseJson());
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", scriptPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", logPath);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+
+            ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+            SetPrivateField(control, "currentPath", assetPath);
+            GetPrivateLabel(control, "detailsLabel").Text = InvokeAssetEditorString(control, "BuildSnapshotDetailsText", new FileInfo(assetPath), snapshot);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            sectionListView.Items[0].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            InvokeAssetEditorVoid(control, "LoadSurface");
+            Application.DoEvents();
+
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var alignLeftButton = GetPrivateButton(control, "alignLeftObjectButton");
+            var duplicateButton = GetPrivateButton(control, "duplicateObjectButton");
+            var reorderFrontButton = GetPrivateButton(control, "reorderFrontObjectButton");
+            var reorderBackButton = GetPrivateButton(control, "reorderBackObjectButton");
+            var deleteButton = GetPrivateButton(control, "deleteObjectButton");
+            var restoreButton = GetPrivateButton(control, "restoreObjectButton");
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface.");
+
+            objectListView.Items[0].Selected = true;
+            objectListView.Items[0].Focused = true;
+            objectListView.Items[1].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(objectListView.Items.Cast<ListViewItem>().Select(item => item.Text).SequenceEqual(new[] { "first.value", "middle.value", "last.value" }) &&
+                   alignLeftButton.Visible &&
+                   alignLeftButton.Enabled &&
+                   !duplicateButton.Visible &&
+                   !reorderFrontButton.Visible &&
+                   !reorderBackButton.Visible &&
+                   !deleteButton.Visible &&
+                   !restoreButton.Visible &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == 6 &&
+                   string.Equals(ReadSelectionPropertyValue(initialSelection, "HPOS"), "1000", StringComparison.Ordinal),
+                "A report align-left smoke should start from a multi-selection with the anchor row selected in the shared property grid");
+
+            alignLeftButton.PerformClick();
+            Application.DoEvents();
+
+            var logLines = File.ReadAllLines(logPath);
+            var invocationStartCount = logLines.Count(line => string.Equals(line, "BEGIN", StringComparison.Ordinal));
+            Expect(invocationStartCount == 1,
+                "Aligning report objects left through the shared asset editor should invoke the Studio host exactly once");
+
+            var invocationArguments = logLines.Skip(1).ToList();
+            Expect(invocationArguments.Contains("--from-vs") &&
+                   invocationArguments.Contains("--json") &&
+                   invocationArguments.Contains("--align-object") &&
+                   invocationArguments.Contains("--alignment-mode") &&
+                   invocationArguments.Contains("left") &&
+                   invocationArguments.Contains("--record") &&
+                   invocationArguments.Contains("6") &&
+                   invocationArguments.Contains("--anchor-unique-id") &&
+                   invocationArguments.Contains("first-field-guid") &&
+                   invocationArguments.Contains("--align-target-unique-id") &&
+                   invocationArguments.Contains("middle-field-guid") &&
+                   invocationArguments.Contains("--path") &&
+                   invocationArguments.Contains(assetPath),
+                "Aligning report objects left through the shared asset editor should send one invariant align-object command through the host contract");
+
+            var refreshedSnapshot = GetCurrentSnapshot(control);
+            var alignedObject = refreshedSnapshot.Objects.FirstOrDefault(item => item.RecordIndex == 7);
+            Expect(HasLabelTextContaining(control, "Aligned objects left. Snapshot loaded: 3 object rows, 5 fields.") &&
+                   string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Detail", StringComparison.Ordinal) &&
+                   string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.SubItems[2].Text, "6", StringComparison.Ordinal) &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
+                   refreshedSelection.RecordIndex == 6 &&
+                   string.Equals(ReadSelectionPropertyValue(refreshedSelection, "HPOS"), "1000", StringComparison.Ordinal) &&
+                   alignLeftButton.Visible &&
+                   alignLeftButton.Enabled &&
+                   !duplicateButton.Visible &&
+                   !reorderFrontButton.Visible &&
+                   !reorderBackButton.Visible &&
+                   !deleteButton.Visible &&
+                   !restoreButton.Visible &&
+                   alignedObject is not null &&
+                   string.Equals(TryGetSnapshotObjectPropertyValue(alignedObject, "HPOS"), "1000", StringComparison.Ordinal) &&
+                   string.Equals(ReadPrivateStringField(surface, "assetFamily"), "report", StringComparison.Ordinal) &&
+                   ReadPrivateNullableInt(surface, "selectedRecordIndex") == 6 &&
+                   ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
+                   !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+                "Aligning report objects left through the shared asset editor should preserve anchor selection continuity and refresh the aligned target geometry");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", previousLogPath);
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeAssetEditorLabelSectionPropertyGridHostUpdate()
     {
         if (Path.DirectorySeparatorChar == '\\')
@@ -7426,6 +7592,155 @@ internal static class Program
                    ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
                    !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
                 "Reordering a label object to the back through the shared asset editor should refresh the shell summary, reorder visible rows, and preserve label selection continuity");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", previousLogPath);
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
+    private static void SmokeAssetEditorAlignLeftObjectCommandRefreshesLabelShellSummary()
+    {
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            Console.WriteLine("SKIP: shared asset-editor label align-left smoke requires a POSIX scriptable fake Studio host.");
+            return;
+        }
+
+        var snapshot = BuildAssetEditorReorderBackLabelObjectSmokeSnapshot();
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
+        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var logPath = Path.Combine(tempRoot, "studio-host.log");
+        var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
+
+        try
+        {
+            File.WriteAllText(logPath, string.Empty);
+            CreateFakeStudioHostScript(scriptPath, BuildAlignLeftLabelObjectHostResponseJson());
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", scriptPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", logPath);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+
+            ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+            SetPrivateField(control, "currentPath", assetPath);
+            GetPrivateLabel(control, "detailsLabel").Text = InvokeAssetEditorString(control, "BuildSnapshotDetailsText", new FileInfo(assetPath), snapshot);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            sectionListView.Items[0].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            InvokeAssetEditorVoid(control, "LoadSurface");
+            Application.DoEvents();
+
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var alignLeftButton = GetPrivateButton(control, "alignLeftObjectButton");
+            var duplicateButton = GetPrivateButton(control, "duplicateObjectButton");
+            var reorderFrontButton = GetPrivateButton(control, "reorderFrontObjectButton");
+            var reorderBackButton = GetPrivateButton(control, "reorderBackObjectButton");
+            var deleteButton = GetPrivateButton(control, "deleteObjectButton");
+            var restoreButton = GetPrivateButton(control, "restoreObjectButton");
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared label design surface.");
+
+            objectListView.Items[0].Selected = true;
+            objectListView.Items[0].Focused = true;
+            objectListView.Items[1].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(objectListView.Items.Cast<ListViewItem>().Select(item => item.Text).SequenceEqual(new[] { "first.value", "middle.value", "last.value" }) &&
+                   alignLeftButton.Visible &&
+                   alignLeftButton.Enabled &&
+                   !duplicateButton.Visible &&
+                   !reorderFrontButton.Visible &&
+                   !reorderBackButton.Visible &&
+                   !deleteButton.Visible &&
+                   !restoreButton.Visible &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == 6 &&
+                   string.Equals(ReadSelectionPropertyValue(initialSelection, "HPOS"), "1400", StringComparison.Ordinal),
+                "A label align-left smoke should start from a multi-selection with the anchor row selected in the shared property grid");
+
+            alignLeftButton.PerformClick();
+            Application.DoEvents();
+
+            var logLines = File.ReadAllLines(logPath);
+            var invocationStartCount = logLines.Count(line => string.Equals(line, "BEGIN", StringComparison.Ordinal));
+            Expect(invocationStartCount == 1,
+                "Aligning label objects left through the shared asset editor should invoke the Studio host exactly once");
+
+            var invocationArguments = logLines.Skip(1).ToList();
+            Expect(invocationArguments.Contains("--from-vs") &&
+                   invocationArguments.Contains("--json") &&
+                   invocationArguments.Contains("--align-object") &&
+                   invocationArguments.Contains("--alignment-mode") &&
+                   invocationArguments.Contains("left") &&
+                   invocationArguments.Contains("--record") &&
+                   invocationArguments.Contains("6") &&
+                   invocationArguments.Contains("--anchor-unique-id") &&
+                   invocationArguments.Contains("first-field-guid") &&
+                   invocationArguments.Contains("--align-target-unique-id") &&
+                   invocationArguments.Contains("middle-field-guid") &&
+                   invocationArguments.Contains("--path") &&
+                   invocationArguments.Contains(assetPath),
+                "Aligning label objects left through the shared asset editor should send one invariant align-object command through the host contract");
+
+            var refreshedSnapshot = GetCurrentSnapshot(control);
+            var alignedObject = refreshedSnapshot.Objects.FirstOrDefault(item => item.RecordIndex == 7);
+            Expect(HasLabelTextContaining(control, "Aligned objects left. Snapshot loaded: 3 object rows, 5 fields.") &&
+                   string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Detail", StringComparison.Ordinal) &&
+                   string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.SubItems[2].Text, "6", StringComparison.Ordinal) &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
+                   refreshedSelection.RecordIndex == 6 &&
+                   string.Equals(ReadSelectionPropertyValue(refreshedSelection, "HPOS"), "1400", StringComparison.Ordinal) &&
+                   alignLeftButton.Visible &&
+                   alignLeftButton.Enabled &&
+                   !duplicateButton.Visible &&
+                   !reorderFrontButton.Visible &&
+                   !reorderBackButton.Visible &&
+                   !deleteButton.Visible &&
+                   !restoreButton.Visible &&
+                   alignedObject is not null &&
+                   string.Equals(TryGetSnapshotObjectPropertyValue(alignedObject, "HPOS"), "1400", StringComparison.Ordinal) &&
+                   string.Equals(ReadPrivateStringField(surface, "assetFamily"), "label", StringComparison.Ordinal) &&
+                   ReadPrivateNullableInt(surface, "selectedRecordIndex") == 6 &&
+                   ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
+                   !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+                "Aligning label objects left through the shared asset editor should preserve anchor selection continuity and refresh the aligned target geometry");
         }
         finally
         {
@@ -15863,6 +16178,278 @@ internal static class Program
         }
     }
 
+    private static void SmokeAssetEditorAlignLeftCommandWithRealAsset(
+        string? sourcePath,
+        int anchorRecordIndex,
+        int targetRecordIndex,
+        string expectedSectionTitle,
+        int expectedSectionRecordIndex,
+        string expectedAnchorObjectTitle,
+        string expectedTargetObjectTitle,
+        int expectedSectionCount,
+        string expectedAnchorUniqueId,
+        string expectedTargetUniqueId,
+        string expectedOriginalTargetRawHpos,
+        string expectedUpdatedTargetRawHpos,
+        int expectedOriginalTargetLayoutHpos,
+        int expectedUpdatedTargetLayoutHpos)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(sourcePath) ? "real asset editor align-left candidate" : sourcePath)} not found.");
+            return;
+        }
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmokeRealAssetEditorAlignLeft-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateWritableAssetCopy(sourcePath!, tempRoot);
+
+        try
+        {
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+            control.LoadDocument(assetPath);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var alignLeftButton = GetPrivateButton(control, "alignLeftObjectButton");
+            var duplicateButton = GetPrivateButton(control, "duplicateObjectButton");
+            var reorderFrontButton = GetPrivateButton(control, "reorderFrontObjectButton");
+            var reorderBackButton = GetPrivateButton(control, "reorderBackObjectButton");
+            var deleteButton = GetPrivateButton(control, "deleteObjectButton");
+            var restoreButton = GetPrivateButton(control, "restoreObjectButton");
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface for the real align-left smoke.");
+
+            var loaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => sectionListView.Items.Count > 0);
+            Expect(loaded, $"real asset editor align-left smoke should load section data for {sourcePath}");
+            if (!loaded)
+            {
+                return;
+            }
+
+            foreach (ListViewItem item in sectionListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioReportSection section &&
+                                section.RecordIndex == expectedSectionRecordIndex;
+            }
+
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            Application.DoEvents();
+
+            var objectsLoaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => objectListView.Items.Cast<ListViewItem>().Any(item => item.Tag is CopperfinStudioSnapshotObject snapshotObject && snapshotObject.RecordIndex == anchorRecordIndex) &&
+                      objectListView.Items.Cast<ListViewItem>().Any(item => item.Tag is CopperfinStudioSnapshotObject snapshotObject && snapshotObject.RecordIndex == targetRecordIndex));
+            Expect(objectsLoaded, $"real asset editor align-left smoke should surface anchor and target objects for {sourcePath}");
+            if (!objectsLoaded)
+            {
+                return;
+            }
+
+            foreach (ListViewItem item in objectListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioSnapshotObject snapshotObject &&
+                                (snapshotObject.RecordIndex == anchorRecordIndex || snapshotObject.RecordIndex == targetRecordIndex);
+                item.Focused = item.Tag is CopperfinStudioSnapshotObject focusedObject &&
+                               focusedObject.RecordIndex == anchorRecordIndex;
+            }
+
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(alignLeftButton.Visible &&
+                   alignLeftButton.Enabled &&
+                   !duplicateButton.Visible &&
+                   !reorderFrontButton.Visible &&
+                   !reorderBackButton.Visible &&
+                   !deleteButton.Visible &&
+                   !restoreButton.Visible &&
+                   objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault(item => item.Focused)?.Tag is CopperfinStudioSnapshotObject initialAnchorObject &&
+                   initialAnchorObject.RecordIndex == anchorRecordIndex &&
+                   string.Equals(initialAnchorObject.Title, expectedAnchorObjectTitle, StringComparison.Ordinal) &&
+                   string.Equals(TryGetSnapshotObjectPropertyValue(initialAnchorObject, "UNIQUEID"), expectedAnchorUniqueId, StringComparison.Ordinal) &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == anchorRecordIndex &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["OBJECTSTATE"]?.GetValue(initialSelection)?.ToString(), "Live", StringComparison.Ordinal),
+                $"real asset editor align-left smoke should start from a live multi-selection with an anchor property-grid selection for {sourcePath}");
+
+            alignLeftButton.PerformClick();
+            Application.DoEvents();
+
+            var alignedSelection = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
+                {
+                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                        refreshedSelection.RecordIndex != anchorRecordIndex)
+                    {
+                        return false;
+                    }
+
+                    var refreshedSnapshot = GetCurrentSnapshot(control);
+                    var selectedAnchorObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault(item => item.Focused)?.Tag as CopperfinStudioSnapshotObject;
+                    var alignedTarget = refreshedSnapshot.Objects.FirstOrDefault(item => item.RecordIndex == targetRecordIndex);
+                    var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault();
+                    var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
+                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                           selectedSectionModel?.RecordIndex == expectedSectionRecordIndex &&
+                           string.Equals(ReadSelectionPropertyValue(refreshedSelection, "OBJECTSTATE"), "Live", StringComparison.Ordinal) &&
+                           alignLeftButton.Visible &&
+                           alignLeftButton.Enabled &&
+                           selectedAnchorObject is not null &&
+                           selectedAnchorObject.RecordIndex == anchorRecordIndex &&
+                           string.Equals(selectedAnchorObject.Title, expectedAnchorObjectTitle, StringComparison.Ordinal) &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(selectedAnchorObject, "UNIQUEID"), expectedAnchorUniqueId, StringComparison.Ordinal) &&
+                           alignedTarget is not null &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(alignedTarget, "UNIQUEID"), expectedTargetUniqueId, StringComparison.Ordinal) &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(alignedTarget, "HPOS"), expectedUpdatedTargetRawHpos, StringComparison.Ordinal) &&
+                           string.Equals(ReadPrivateStringField(surface, "assetFamily"), "report", StringComparison.Ordinal) &&
+                           ReadPrivateNullableInt(surface, "selectedRecordIndex") == anchorRecordIndex &&
+                           ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == expectedSectionRecordIndex &&
+                           !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected");
+                });
+            Expect(alignedSelection,
+                $"real asset editor align-left smoke should preserve anchor selection continuity and align the target object for {sourcePath}");
+            Expect(control.CanHandleUndoCommand(),
+                $"real asset editor align-left smoke should expose undo after aligning for {sourcePath}");
+            if (!alignedSelection)
+            {
+                return;
+            }
+
+            var reloadedAfterAlign = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterAlign.Success && reloadedAfterAlign.Document is not null,
+                $"real asset editor align-left smoke should reload aligned on-disk state for {sourcePath}");
+            if (reloadedAfterAlign.Success && reloadedAfterAlign.Document is not null)
+            {
+                AssertRealAssetRoundTripSnapshot(
+                    reloadedAfterAlign.Document,
+                    targetRecordIndex,
+                    "HPOS",
+                    expectedUpdatedTargetRawHpos,
+                    expectedTargetObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel: false,
+                    expectUnplacedObject: false,
+                    "reloaded real asset editor align-left snapshot should preserve target HPOS");
+
+                var reloadedSection = reloadedAfterAlign.Document.ReportLayout?.Sections
+                    .FirstOrDefault(candidate => candidate.RecordIndex == expectedSectionRecordIndex);
+                var reloadedLayoutObject = reloadedSection?.Objects
+                    .FirstOrDefault(candidate => candidate.RecordIndex == targetRecordIndex);
+                Expect(reloadedLayoutObject is not null,
+                    $"reloaded real asset editor align-left snapshot should preserve target layout object {targetRecordIndex} for {sourcePath}");
+                if (reloadedLayoutObject is not null)
+                {
+                    Expect(TryGetReportLayoutObjectValue(reloadedLayoutObject, "HPOS") == expectedUpdatedTargetLayoutHpos,
+                        $"reloaded real asset editor align-left snapshot should expose layout HPOS={expectedUpdatedTargetLayoutHpos} for {sourcePath}");
+                }
+            }
+
+            var undoHandled = control.TryHandleUndoCommand();
+            Expect(undoHandled,
+                $"real asset editor align-left smoke should execute undo after aligning for {sourcePath}");
+            Application.DoEvents();
+
+            var undoneSelection = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
+                {
+                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                        refreshedSelection.RecordIndex != anchorRecordIndex)
+                    {
+                        return false;
+                    }
+
+                    var refreshedSnapshot = GetCurrentSnapshot(control);
+                    var selectedAnchorObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault(item => item.Focused)?.Tag as CopperfinStudioSnapshotObject;
+                    var restoredTarget = refreshedSnapshot.Objects.FirstOrDefault(item => item.RecordIndex == targetRecordIndex);
+                    return string.Equals(ReadSelectionPropertyValue(refreshedSelection, "OBJECTSTATE"), "Live", StringComparison.Ordinal) &&
+                           selectedAnchorObject is not null &&
+                           selectedAnchorObject.RecordIndex == anchorRecordIndex &&
+                           string.Equals(selectedAnchorObject.Title, expectedAnchorObjectTitle, StringComparison.Ordinal) &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(selectedAnchorObject, "UNIQUEID"), expectedAnchorUniqueId, StringComparison.Ordinal) &&
+                           restoredTarget is not null &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(restoredTarget, "UNIQUEID"), expectedTargetUniqueId, StringComparison.Ordinal) &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(restoredTarget, "HPOS"), expectedOriginalTargetRawHpos, StringComparison.Ordinal) &&
+                           ReadPrivateNullableInt(surface, "selectedRecordIndex") == anchorRecordIndex &&
+                           ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == expectedSectionRecordIndex &&
+                           !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected");
+                });
+            Expect(undoneSelection,
+                $"real asset editor align-left smoke should preserve anchor selection continuity after undoing for {sourcePath}");
+            Expect(!control.CanHandleUndoCommand(),
+                $"real asset editor align-left smoke should clear undo after restoring original target geometry for {sourcePath}");
+
+            var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null,
+                $"real asset editor align-left smoke should reload restored on-disk state for {sourcePath}");
+            if (reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null)
+            {
+                AssertRealAssetRoundTripSnapshot(
+                    reloadedAfterUndo.Document,
+                    targetRecordIndex,
+                    "HPOS",
+                    expectedOriginalTargetRawHpos,
+                    expectedTargetObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel: false,
+                    expectUnplacedObject: false,
+                    "reloaded undone real asset editor align-left snapshot should preserve original target HPOS");
+
+                var reloadedSection = reloadedAfterUndo.Document.ReportLayout?.Sections
+                    .FirstOrDefault(candidate => candidate.RecordIndex == expectedSectionRecordIndex);
+                var reloadedLayoutObject = reloadedSection?.Objects
+                    .FirstOrDefault(candidate => candidate.RecordIndex == targetRecordIndex);
+                Expect(reloadedLayoutObject is not null,
+                    $"reloaded undone real asset editor align-left snapshot should preserve target layout object {targetRecordIndex} for {sourcePath}");
+                if (reloadedLayoutObject is not null)
+                {
+                    Expect(TryGetReportLayoutObjectValue(reloadedLayoutObject, "HPOS") == expectedOriginalTargetLayoutHpos,
+                        $"reloaded undone real asset editor align-left snapshot should expose layout HPOS={expectedOriginalTargetLayoutHpos} for {sourcePath}");
+                }
+            }
+
+            TearDownForm(hostForm);
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeAssetEditorDeletedDuplicateCommandWithRealAsset(
         string? sourcePath,
         int recordIndex,
@@ -21139,6 +21726,13 @@ internal static class Program
 """;
     }
 
+    private static string BuildAlignLeftLabelObjectHostResponseJson()
+    {
+        return """
+{"Status":"ok","Document":{"AssetFamily":"label","FieldCount":5,"Objects":[{"RecordIndex":6,"Title":"first.value","Subtitle":"label","Properties":[{"Name":"UNIQUEID","Value":"first-field-guid"},{"Name":"HPOS","Value":"1400"},{"Name":"VPOS","Value":"2600"},{"Name":"WIDTH","Value":"3400"},{"Name":"HEIGHT","Value":"600"},{"Name":"EXPR","Value":"first.value"}]},{"RecordIndex":7,"Title":"middle.value","Subtitle":"label","Properties":[{"Name":"UNIQUEID","Value":"middle-field-guid"},{"Name":"HPOS","Value":"1400"},{"Name":"VPOS","Value":"2600"},{"Name":"WIDTH","Value":"3400"},{"Name":"HEIGHT","Value":"600"},{"Name":"EXPR","Value":"middle.value"}]},{"RecordIndex":8,"Title":"last.value","Subtitle":"label","Properties":[{"Name":"UNIQUEID","Value":"last-field-guid"},{"Name":"HPOS","Value":"3600"},{"Name":"VPOS","Value":"2600"},{"Name":"WIDTH","Value":"3200"},{"Name":"HEIGHT","Value":"600"},{"Name":"EXPR","Value":"last.value"}]}],"ReportLayout":{"IsLabel":true,"PreviewBoundsAvailable":true,"PreviewBoundsLeft":1400,"PreviewBoundsTop":2600,"PreviewBoundsRight":6800,"PreviewBoundsBottom":3200,"PreviewBoundsWidth":5400,"PreviewBoundsHeight":600,"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":6,"ObjectKind":"label","Title":"first.value","Expression":"first.value","Left":1400,"Top":2600,"Width":3400,"Height":600},{"RecordIndex":7,"ObjectKind":"label","Title":"middle.value","Expression":"middle.value","Left":1400,"Top":2600,"Width":3400,"Height":600},{"RecordIndex":8,"ObjectKind":"label","Title":"last.value","Expression":"last.value","Left":3600,"Top":2600,"Width":3200,"Height":600}]}],"DeletedSections":[],"UnplacedObjects":[]},"SelectedReportSelectionAvailable":true,"SelectedReportSelectionKind":"object","SelectedReportObjectAvailable":true,"SelectedReportObject":{"RecordIndex":6,"Title":"first.value","Subtitle":"label","Properties":[{"Name":"UNIQUEID","Value":"first-field-guid"},{"Name":"HPOS","Value":"1400"},{"Name":"VPOS","Value":"2600"},{"Name":"WIDTH","Value":"3400"},{"Name":"HEIGHT","Value":"600"},{"Name":"EXPR","Value":"first.value"}]},"SelectedReportObjectSectionAvailable":true,"SelectedReportObjectSection":{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42}}}
+""";
+    }
+
     private static string BuildDuplicateLabelObjectHostResponseJson()
     {
         return """
@@ -21185,6 +21779,13 @@ internal static class Program
     {
         return """
 {"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[{"RecordIndex":7,"Title":"middle.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"middle-field-guid"},{"Name":"HPOS","Value":"2100"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"3200"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"middle.value"}]},{"RecordIndex":6,"Title":"first.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"first-field-guid"},{"Name":"HPOS","Value":"1000"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"3200"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"first.value"}]},{"RecordIndex":8,"Title":"last.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"last-field-guid"},{"Name":"HPOS","Value":"3200"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"2700"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"last.value"}]}],"ReportLayout":{"PreviewBoundsAvailable":true,"PreviewBoundsLeft":1000,"PreviewBoundsTop":2400,"PreviewBoundsRight":5900,"PreviewBoundsBottom":3100,"PreviewBoundsWidth":4900,"PreviewBoundsHeight":700,"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":7,"ObjectKind":"field","Title":"middle.value","Expression":"middle.value","Left":2100,"Top":2400,"Width":3200,"Height":700},{"RecordIndex":6,"ObjectKind":"field","Title":"first.value","Expression":"first.value","Left":1000,"Top":2400,"Width":3200,"Height":700},{"RecordIndex":8,"ObjectKind":"field","Title":"last.value","Expression":"last.value","Left":3200,"Top":2400,"Width":2700,"Height":700}]}],"DeletedSections":[],"UnplacedObjects":[]}}}
+""";
+    }
+
+    private static string BuildAlignLeftReportObjectHostResponseJson()
+    {
+        return """
+{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[{"RecordIndex":6,"Title":"first.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"first-field-guid"},{"Name":"HPOS","Value":"1000"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"3200"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"first.value"}]},{"RecordIndex":7,"Title":"middle.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"middle-field-guid"},{"Name":"HPOS","Value":"1000"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"3200"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"middle.value"}]},{"RecordIndex":8,"Title":"last.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"last-field-guid"},{"Name":"HPOS","Value":"3200"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"2700"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"last.value"}]}],"ReportLayout":{"PreviewBoundsAvailable":true,"PreviewBoundsLeft":1000,"PreviewBoundsTop":2400,"PreviewBoundsRight":5900,"PreviewBoundsBottom":3100,"PreviewBoundsWidth":4900,"PreviewBoundsHeight":700,"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":6,"ObjectKind":"field","Title":"first.value","Expression":"first.value","Left":1000,"Top":2400,"Width":3200,"Height":700},{"RecordIndex":7,"ObjectKind":"field","Title":"middle.value","Expression":"middle.value","Left":1000,"Top":2400,"Width":3200,"Height":700},{"RecordIndex":8,"ObjectKind":"field","Title":"last.value","Expression":"last.value","Left":3200,"Top":2400,"Width":2700,"Height":700}]}],"DeletedSections":[],"UnplacedObjects":[]},"SelectedReportSelectionAvailable":true,"SelectedReportSelectionKind":"object","SelectedReportObjectAvailable":true,"SelectedReportObject":{"RecordIndex":6,"Title":"first.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"first-field-guid"},{"Name":"HPOS","Value":"1000"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"3200"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"first.value"}]},"SelectedReportObjectSectionAvailable":true,"SelectedReportObjectSection":{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42}}}
 """;
     }
 
@@ -21592,6 +22193,18 @@ internal static class Program
         }
 
         field.SetValue(control, snapshot);
+    }
+
+    private static CopperfinStudioSnapshotDocument GetCurrentSnapshot(CopperfinAssetEditorControl control)
+    {
+        var field = typeof(CopperfinAssetEditorControl).GetField("currentSnapshot", BindingFlags.Instance | BindingFlags.NonPublic);
+        if (field is null)
+        {
+            throw new InvalidOperationException("Could not read private currentSnapshot.");
+        }
+
+        return (CopperfinStudioSnapshotDocument?)field.GetValue(control) ??
+               throw new InvalidOperationException("Could not read current snapshot value.");
     }
 
     private static void SetPrivateField(object instance, string fieldName, object? value)

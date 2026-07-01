@@ -123,6 +123,23 @@ internal static class CopperfinStudioHostBridge
         return $"{arguments} --path {Quote(documentPath)}";
     }
 
+    public static string BuildAlignObjectArguments(
+        string documentPath,
+        int recordIndex,
+        string anchorUniqueId,
+        string alignmentMode,
+        IReadOnlyList<string> targetUniqueIds)
+    {
+        var arguments = $"--from-vs --json --record {recordIndex} --align-object --alignment-mode {Quote(alignmentMode)}" +
+                        $" --anchor-unique-id {Quote(anchorUniqueId)}";
+        foreach (var targetUniqueId in targetUniqueIds)
+        {
+            arguments += $" --align-target-unique-id {Quote(targetUniqueId)}";
+        }
+
+        return $"{arguments} --path {Quote(documentPath)}";
+    }
+
     public static bool Launch(string studioHostPath, string documentPath, bool readOnly = false)
     {
         var startInfo = new DiagnosticsStartInfo

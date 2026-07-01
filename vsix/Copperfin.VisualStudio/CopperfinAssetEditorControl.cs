@@ -52,6 +52,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly Button duplicateObjectButton;
     private readonly Button reorderFrontObjectButton;
     private readonly Button reorderBackObjectButton;
+    private readonly Button alignLeftObjectButton;
     private readonly Button deleteObjectButton;
     private readonly Button restoreObjectButton;
     private readonly Button buildButton;
@@ -214,6 +215,18 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             failedKey: "AssetEditor.ObjectLifecycle.ReorderBack.Failed",
             completedKey: "AssetEditor.ObjectLifecycle.ReorderBack.Completed");
 
+        alignLeftObjectButton = new Button
+        {
+            AutoSize = true,
+            Text = this.localization.Text("AssetEditor.ObjectAlignment.LeftButton"),
+            Visible = false
+        };
+        alignLeftObjectButton.Click += (_, _) => TryHandleAlignObjectCommand(
+            alignmentMode: "left",
+            executingKey: "AssetEditor.ObjectAlignment.Left.Executing",
+            failedKey: "AssetEditor.ObjectAlignment.Left.Failed",
+            completedKey: "AssetEditor.ObjectAlignment.Left.Completed");
+
         deleteObjectButton = new Button
         {
             AutoSize = true,
@@ -302,7 +315,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             Dock = DockStyle.Fill,
             FullRowSelect = true,
             HideSelection = false,
-            MultiSelect = false,
+            MultiSelect = true,
             View = View.Details
         };
         objectListView.Columns.Add(this.localization.Text("AssetEditor.Column.Object"), 240);
@@ -614,6 +627,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         buttonPanel.Controls.Add(duplicateObjectButton);
         buttonPanel.Controls.Add(reorderFrontObjectButton);
         buttonPanel.Controls.Add(reorderBackObjectButton);
+        buttonPanel.Controls.Add(alignLeftObjectButton);
         buttonPanel.Controls.Add(deleteObjectButton);
         buttonPanel.Controls.Add(restoreObjectButton);
         buttonPanel.Controls.Add(buildButton);
@@ -684,6 +698,16 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         var priorLabel = currentSnapshot.CommandUndoLabel;
         var explorerSelection = CaptureExplorerSelectionState();
         var selectedObjectRecordIndex = TryReadSelectedRecordIndex();
+        var selectedObjectUniqueIds = currentSnapshot.AssetFamily is "report" or "label"
+            ? TryGetSelectedSnapshotObjects()
+                .Select(TryReadObjectUniqueId)
+                .Where(uniqueId => !string.IsNullOrWhiteSpace(uniqueId))
+                .Cast<string>()
+                .ToList()
+            : new List<string>();
+        var focusedObjectUniqueId = currentSnapshot.AssetFamily is "report" or "label" && selectedObjectRecordIndex >= 0
+            ? TryReadObjectUniqueId(TryGetSelectedSnapshotObject()!)
+            : null;
         snapshotStatusLabel.Text = BuildUndoExecutingStatus(priorLabel);
 
         var undoResult = CopperfinStudioSnapshotClient.TryUndoCommand(
@@ -707,6 +731,18 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             designSurface.SelectRecord(selectedObjectRecordIndex);
             SyncSelectionFromSurface(selectedObjectRecordIndex);
+            if (selectedObjectUniqueIds.Count > 0)
+            {
+                var restoredRecordIndexes = selectedObjectUniqueIds
+                    .Select(uniqueId => TryReadObjectRecordIndex(currentSnapshot, uniqueId))
+                    .Where(recordIndex => recordIndex.HasValue)
+                    .Select(recordIndex => recordIndex!.Value)
+                    .ToList();
+                var focusedRecordIndex = !string.IsNullOrWhiteSpace(focusedObjectUniqueId)
+                    ? TryReadObjectRecordIndex(currentSnapshot, focusedObjectUniqueId!) ?? selectedObjectRecordIndex
+                    : selectedObjectRecordIndex;
+                RestoreSnapshotObjectSelection(restoredRecordIndexes, focusedRecordIndex);
+            }
         }
 
         return true;
@@ -1457,6 +1493,79 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         return true;
     }
 
+    private bool TryHandleAlignObjectCommand(
+        string alignmentMode,
+        string executingKey,
+        string failedKey,
+        string completedKey)
+    {
+        if (currentSnapshot?.AssetFamily is not ("report" or "label") || string.IsNullOrWhiteSpace(currentPath))
+        {
+            return false;
+        }
+
+        if (TryReadSelectedExplorerTag() is not CopperfinStudioReportSection { Deleted: false })
+        {
+            return false;
+        }
+
+        var selectedObjects = TryGetSelectedSnapshotObjects();
+        var anchorObject = TryGetSelectedSnapshotObject();
+        if (anchorObject is null || anchorObject.Deleted || selectedObjects.Count < 2)
+        {
+            return false;
+        }
+
+        var anchorUniqueId = TryReadObjectUniqueId(anchorObject);
+        var targetUniqueIds = selectedObjects
+            .Where(selectedObject => selectedObject.RecordIndex != anchorObject.RecordIndex && !selectedObject.Deleted)
+            .Select(TryReadObjectUniqueId)
+            .Where(uniqueId => !string.IsNullOrWhiteSpace(uniqueId))
+            .Cast<string>()
+            .ToList();
+        if (string.IsNullOrWhiteSpace(anchorUniqueId) || targetUniqueIds.Count != selectedObjects.Count - 1)
+        {
+            snapshotStatusLabel.Text = this.localization.Text("AssetEditor.ObjectAlignment.StableIdsRequired");
+            return false;
+        }
+
+        var explorerSelection = CaptureExplorerSelectionState();
+        snapshotStatusLabel.Text = this.localization.Text(executingKey);
+
+        var alignResult = CopperfinStudioSnapshotClient.TryAlignObject(
+            currentPath!,
+            anchorObject.RecordIndex,
+            anchorUniqueId!,
+            alignmentMode,
+            targetUniqueIds);
+        if (!alignResult.Success || alignResult.Document is null)
+        {
+            snapshotStatusLabel.Text = this.localization.Format(
+                failedKey,
+                alignResult.Error ?? string.Empty);
+            return false;
+        }
+
+        currentSnapshot = alignResult.Document;
+        detailsLabel.Text = BuildSnapshotDetailsText(new FileInfo(currentPath!), currentSnapshot);
+        snapshotStatusLabel.Text = this.localization.Format(
+            completedKey,
+            currentSnapshot.Objects.Count,
+            currentSnapshot.FieldCount);
+        var selectedRecordIndexes = new List<int> { anchorObject.RecordIndex };
+        selectedRecordIndexes.AddRange(targetUniqueIds
+            .Select(uniqueId => TryReadObjectRecordIndex(currentSnapshot, uniqueId))
+            .Where(recordIndex => recordIndex.HasValue)
+            .Select(recordIndex => recordIndex!.Value));
+        PopulateSectionList(explorerSelection);
+        SyncExplorerSelection();
+        LoadSurface();
+        designSurface.SelectRecord(anchorObject.RecordIndex);
+        SyncSelectionFromSurface(anchorObject.RecordIndex);
+        RestoreSnapshotObjectSelection(selectedRecordIndexes, anchorObject.RecordIndex);
+        return true;
+    }
+
     private bool TryHandleNudgeObjectCommand(string mode, double deltaHpos, double deltaVpos)
     {
         if (currentSnapshot?.AssetFamily is not ("report" or "label") || string.IsNullOrWhiteSpace(currentPath))
@@ -1960,14 +2069,19 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
     private void UpdateObjectLifecycleButtonVisibility()
     {
-        var selectedObject = currentSnapshot?.AssetFamily is "report" or "label"
-            ? TryGetSelectedSnapshotObject()
-            : null;
-        var showRename = selectedObject is not null;
-        var showDuplicate = selectedObject is not null;
-        var showReorder = selectedObject is not null;
-        var showDelete = selectedObject is not null && !selectedObject.Deleted;
-        var showRestore = selectedObject is not null && selectedObject.Deleted;
+        var selectedObjects = currentSnapshot?.AssetFamily is "report" or "label"
+            ? TryGetSelectedSnapshotObjects()
+            : Array.Empty<CopperfinStudioSnapshotObject>();
+        var selectedObject = selectedObjects.FirstOrDefault();
+        var singleSelection = selectedObjects.Count == 1;
+        var showRename = singleSelection && selectedObject is not null;
+        var showDuplicate = singleSelection && selectedObject is not null;
+        var showReorder = singleSelection && selectedObject is not null;
+        var showAlignLeft = selectedObjects.Count >= 2 &&
+                            selectedObjects.All(snapshotObject => !snapshotObject.Deleted) &&
+                            TryReadSelectedExplorerTag() is CopperfinStudioReportSection { Deleted: false };
+        var showDelete = singleSelection && selectedObject is not null && !selectedObject.Deleted;
+        var showRestore = singleSelection && selectedObject is not null && selectedObject.Deleted;
         renameObjectButton.Visible = showRename;
         renameObjectButton.Enabled = showRename && !string.IsNullOrWhiteSpace(currentPath);
         duplicateObjectButton.Visible = showDuplicate;
@@ -1976,6 +2090,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         reorderFrontObjectButton.Enabled = showReorder && !string.IsNullOrWhiteSpace(currentPath);
         reorderBackObjectButton.Visible = showReorder;
         reorderBackObjectButton.Enabled = showReorder && !string.IsNullOrWhiteSpace(currentPath);
+        alignLeftObjectButton.Visible = showAlignLeft;
+        alignLeftObjectButton.Enabled = showAlignLeft && !string.IsNullOrWhiteSpace(currentPath);
         deleteObjectButton.Visible = showDelete;
         deleteObjectButton.Enabled = showDelete && !string.IsNullOrWhiteSpace(currentPath);
         restoreObjectButton.Visible = showRestore;
@@ -2112,12 +2228,62 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
     }
 
-    private CopperfinStudioSnapshotObject? TryGetSelectedSnapshotObject()
+    private IReadOnlyList<CopperfinStudioSnapshotObject> TryGetSelectedSnapshotObjects()
     {
         return objectListView.SelectedItems
             .Cast<ListViewItem>()
             .Select(item => item.Tag as CopperfinStudioSnapshotObject)
-            .FirstOrDefault(item => item is not null);
+            .Where(item => item is not null)
+            .Cast<CopperfinStudioSnapshotObject>()
+            .ToList();
+    }
+
+    private CopperfinStudioSnapshotObject? TryGetSelectedSnapshotObject()
+    {
+        var selectedItem = objectListView.FocusedItem is { Selected: true }
+            ? objectListView.FocusedItem
+            : objectListView.SelectedItems
+                .Cast<ListViewItem>()
+                .OrderBy(item => item.Index)
+                .FirstOrDefault();
+        return selectedItem?.Tag as CopperfinStudioSnapshotObject;
+    }
+
+    private void RestoreSnapshotObjectSelection(IReadOnlyCollection<int> recordIndexes, int focusedRecordIndex)
+    {
+        if (recordIndexes.Count == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            suppressSelectionSync = true;
+            foreach (ListViewItem item in objectListView.Items)
+            {
+                var snapshotObject = item.Tag as CopperfinStudioSnapshotObject;
+                item.Selected = snapshotObject is not null && recordIndexes.Contains(snapshotObject.RecordIndex);
+                item.Focused = snapshotObject is not null && snapshotObject.RecordIndex == focusedRecordIndex;
+            }
+
+            var focusedObject = objectListView.Items
+                .Cast<ListViewItem>()
+                .Where(item => item.Focused && item.Selected)
+                .Select(item => item.Tag as CopperfinStudioSnapshotObject)
+                .FirstOrDefault(item => item is not null);
+            if (focusedObject is not null && currentSnapshot is not null)
+            {
+                propertyGrid.SelectedObject = CopperfinDesignerSelection.FromSnapshot(
+                    currentSnapshot.AssetFamily,
+                    focusedObject,
+                    localization);
+            }
+        }
+        finally
+        {
+            suppressSelectionSync = false;
+            UpdateObjectLifecycleButtonVisibility();
+        }
     }
 
     private static string? TryReadObjectUniqueId(CopperfinStudioSnapshotObject snapshotObject)
