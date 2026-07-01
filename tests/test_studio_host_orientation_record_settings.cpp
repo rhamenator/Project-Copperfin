@@ -603,6 +603,152 @@ void run_memo_backed_orientation_update_case(
         issue_prefix + " update should refresh selected memo-backed settings");
 }
 
+void write_synthetic_report_table_for_memo_backed_driver_json(const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "UNIQUEID", .type = 'C', .length = 40U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0\nPAPERSIZE=1\nCOLOR=1", ""}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#3064: memo-backed driver settings fixture should be created");
+}
+
+void run_memo_backed_driver_update_case(
+    const std::string& studio_host_path,
+    const std::filesystem::path& temp_root,
+    const std::string& extension,
+    const std::string& updated_driver,
+    const std::string& label,
+    const std::string& issue_prefix) {
+    const std::filesystem::path asset_path = temp_root / ("memo_driver_update" + extension);
+    write_synthetic_report_table_for_memo_backed_driver_json(asset_path);
+
+    const auto update_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", asset_path.string(),
+            "--set-property",
+            "--record", "0",
+            "--property-name", "DRIVER",
+            "--property-value", updated_driver,
+            "--json"
+        },
+        temp_root);
+
+    if (update_process.exit_code != 0) {
+        std::cerr << "studio host " << label << " memo-backed driver update " << extension << " stdout:\n"
+                  << update_process.stdout_text << "\n";
+        std::cerr << "studio host " << label << " memo-backed driver update " << extension << " stderr:\n"
+                  << update_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(update_process.exit_code == 0, issue_prefix + " update should exit successfully");
+    const auto driver_property = copperfin::vfp::query_visual_object_property({
+        .path = asset_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "DRIVER"
+    });
+    expect(driver_property.ok && driver_property.exists &&
+               driver_property.value == updated_driver &&
+               !driver_property.direct_field,
+           issue_prefix + " update should persist memo-backed DRIVER through property query");
+    expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + asset_path.filename().string() + "\"",
+                    issue_prefix + " update should return refreshed report-layout JSON");
+    if (asset_path.extension() == ".lbx") {
+        expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                        issue_prefix + " update should retain label identity");
+    }
+    expect_empty_report_layout_preview_bounds(update_process.stdout_text, issue_prefix + " update");
+    expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
+                    issue_prefix + " update should preserve page setup availability");
+    expect_contains(update_process.stdout_text, "\"orientationCode\": 0",
+                    issue_prefix + " update should preserve orientation codes");
+    expect_contains(update_process.stdout_text, "\"paperSizeCode\": 1",
+                    issue_prefix + " update should preserve paper-size codes");
+    expect_contains(update_process.stdout_text, "\"settingCount\": 4",
+                    issue_prefix + " update should preserve setting counts");
+    expect_contains(update_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                    issue_prefix + " update should preserve selected-settings availability");
+    expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                    issue_prefix + " update should preserve settings selection kind");
+    expect_contains_in_order(
+        update_process.stdout_text,
+        {
+            "\"settings\": [",
+            "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+            "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+            "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
+            "\"name\": \"DRIVER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+            "\"value\": \"" + updated_driver + "\""
+        },
+        issue_prefix + " update should append memo-backed DRIVER without losing existing settings");
+    expect_contains_in_order(
+        update_process.stdout_text,
+        {
+            "\"selectedReportSettings\": [",
+            "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+            "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+            "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
+            "\"name\": \"DRIVER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+            "\"value\": \"" + updated_driver + "\""
+        },
+        issue_prefix + " update should refresh selected memo-backed DRIVER settings");
+
+    const auto undo_process = run_process_capture(
+        studio_host_path,
+        {
+            "--from-vs",
+            "--json",
+            "--undo-mode", "command",
+            "--record", "0",
+            "--path", asset_path.string()
+        },
+        temp_root);
+
+    if (undo_process.exit_code != 0) {
+        std::cerr << "studio host " << label << " memo-backed driver undo " << extension << " stdout:\n"
+                  << undo_process.stdout_text << "\n";
+        std::cerr << "studio host " << label << " memo-backed driver undo " << extension << " stderr:\n"
+                  << undo_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(undo_process.exit_code == 0, issue_prefix + " undo should exit successfully");
+    const auto reverted_driver_property = copperfin::vfp::query_visual_object_property({
+        .path = asset_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "DRIVER"
+    });
+    expect(reverted_driver_property.ok && !reverted_driver_property.exists &&
+               reverted_driver_property.value.empty() &&
+               !reverted_driver_property.direct_field,
+           issue_prefix + " undo should remove the memo-backed DRIVER addition");
+    expect_contains(undo_process.stdout_text, "\"settingCount\": 3",
+                    issue_prefix + " undo should restore original setting counts");
+    expect_contains_in_order(
+        undo_process.stdout_text,
+        {
+            "\"settings\": [",
+            "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+            "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+            "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2"
+        },
+        issue_prefix + " undo should preserve original memo-backed settings");
+    expect_not_contains(undo_process.stdout_text,
+                        "\"name\": \"DRIVER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                        issue_prefix + " undo should remove memo-backed DRIVER provenance");
+}
+
 void test_studio_host_json_preserves_orientation_record_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -696,6 +842,20 @@ void test_studio_host_json_preserves_orientation_record_selection(const std::str
         "2",
         "label",
         "#3063: report/label record-selected memo-backed orientation settings success");
+    run_memo_backed_driver_update_case(
+        studio_host_path,
+        temp_root,
+        ".frx",
+        "cups",
+        "report",
+        "#3064: report/label record-selected memo-backed driver settings success");
+    run_memo_backed_driver_update_case(
+        studio_host_path,
+        temp_root,
+        ".lbx",
+        "cupslbl",
+        "label",
+        "#3064: report/label record-selected memo-backed driver settings success");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);

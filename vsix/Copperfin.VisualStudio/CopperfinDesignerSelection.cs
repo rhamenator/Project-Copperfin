@@ -375,6 +375,19 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             selection.AddEditableString(setting.Name, displayName, setting.Value);
         }
 
+        foreach (var settingName in GetOptionalReportStringSettingNames())
+        {
+            if (!seenNames.Add(settingName))
+            {
+                continue;
+            }
+
+            selection.AddEditableString(
+                settingName,
+                BuildReportSettingDisplayText(localization, settingName),
+                string.Empty);
+        }
+
         return selection;
     }
 
@@ -572,6 +585,13 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             "COLSPACING" or
             "GRIDV" or
             "GRIDH";
+    }
+
+    private static IEnumerable<string> GetOptionalReportStringSettingNames()
+    {
+        yield return "DRIVER";
+        yield return "DEVICE";
+        yield return "OUTPUT";
     }
 
     private static string BuildStateText(CopperfinLocalization? localization, bool deleted)
