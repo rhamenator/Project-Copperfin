@@ -771,6 +771,74 @@ internal static class Program
                 expectedOriginalLayoutValue: 6250,
                 expectedUpdatedLayoutValue: 6500,
                 expectedDeletedSectionVisibleObjectCount: 1);
+            SmokeAssetEditorDeletedPropertyRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 7,
+                expectedSectionTitle: "Title",
+                expectedSectionRecordIndex: 1,
+                expectedObjectTitle: "\"Titles By Author\"",
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedUniqueId: "_RC60MC40R",
+                propertyName: "FONTSTYLE",
+                updatedPropertyValue: 1,
+                expectedUpdatedSelectionValue: "1",
+                expectedOriginalRawValue: "3",
+                expectedUpdatedRawValue: "1",
+                expectedOriginalLayoutValue: null,
+                expectedUpdatedLayoutValue: null,
+                expectedDeletedSectionVisibleObjectCount: 1);
+            SmokeAssetEditorDeletedPropertyRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 6,
+                expectedSectionTitle: "Detail",
+                expectedSectionRecordIndex: 3,
+                expectedObjectTitle: "wiz_field",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUniqueId: "_QV30QY1DL",
+                propertyName: "FONTSTYLE",
+                updatedPropertyValue: 1,
+                expectedUpdatedSelectionValue: "1",
+                expectedOriginalRawValue: "0",
+                expectedUpdatedRawValue: "1",
+                expectedOriginalLayoutValue: null,
+                expectedUpdatedLayoutValue: null,
+                expectedDeletedSectionVisibleObjectCount: 1);
+            SmokeAssetEditorDeletedPropertyRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 7,
+                expectedSectionTitle: "Title",
+                expectedSectionRecordIndex: 1,
+                expectedObjectTitle: "\"Titles By Author\"",
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedUniqueId: "_RC60MC40R",
+                propertyName: "FONTSIZE",
+                updatedPropertyValue: 18,
+                expectedUpdatedSelectionValue: "18",
+                expectedOriginalRawValue: "20",
+                expectedUpdatedRawValue: "18",
+                expectedOriginalLayoutValue: null,
+                expectedUpdatedLayoutValue: null,
+                expectedDeletedSectionVisibleObjectCount: 1);
+            SmokeAssetEditorDeletedPropertyRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 6,
+                expectedSectionTitle: "Detail",
+                expectedSectionRecordIndex: 3,
+                expectedObjectTitle: "wiz_field",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUniqueId: "_QV30QY1DL",
+                propertyName: "FONTSIZE",
+                updatedPropertyValue: 9,
+                expectedUpdatedSelectionValue: "9",
+                expectedOriginalRawValue: "8",
+                expectedUpdatedRawValue: "9",
+                expectedOriginalLayoutValue: null,
+                expectedUpdatedLayoutValue: null,
+                expectedDeletedSectionVisibleObjectCount: 1);
             SmokeAssetEditorDeletedRenameCommandWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 7,
@@ -13155,8 +13223,8 @@ internal static class Program
         string expectedUpdatedSelectionValue,
         string expectedOriginalRawValue,
         string expectedUpdatedRawValue,
-        int expectedOriginalLayoutValue,
-        int expectedUpdatedLayoutValue,
+        int? expectedOriginalLayoutValue,
+        int? expectedUpdatedLayoutValue,
         int expectedDeletedSectionVisibleObjectCount)
     {
         if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
@@ -17018,7 +17086,7 @@ internal static class Program
         int recordIndex,
         string propertyName,
         string expectedRawPropertyValue,
-        int expectedLayoutPropertyValue,
+        int? expectedLayoutPropertyValue,
         string expectedUniqueId,
         string expectedObjectTitle,
         string expectedSectionTitle,
@@ -17054,16 +17122,19 @@ internal static class Program
             return;
         }
 
-        var layoutPropertyValue = TryGetReportLayoutObjectValue(deletedLayoutObject, propertyName);
-        Expect(layoutPropertyValue.HasValue,
-            $"{failurePrefix} for {document.Path} should expose deleted layout property {propertyName}");
-        if (!layoutPropertyValue.HasValue)
+        if (expectedLayoutPropertyValue.HasValue)
         {
-            return;
-        }
+            var layoutPropertyValue = TryGetReportLayoutObjectValue(deletedLayoutObject, propertyName);
+            Expect(layoutPropertyValue.HasValue,
+                $"{failurePrefix} for {document.Path} should expose deleted layout property {propertyName}");
+            if (!layoutPropertyValue.HasValue)
+            {
+                return;
+            }
 
-        Expect(layoutPropertyValue.Value == expectedLayoutPropertyValue,
-            $"{failurePrefix} for {document.Path} should expose deleted layout {propertyName}={expectedLayoutPropertyValue}");
+            Expect(layoutPropertyValue.Value == expectedLayoutPropertyValue.Value,
+                $"{failurePrefix} for {document.Path} should expose deleted layout {propertyName}={expectedLayoutPropertyValue.Value}");
+        }
 
         var snapshotObject = document.Objects.FirstOrDefault(candidate => candidate.RecordIndex == recordIndex);
         Expect(snapshotObject is not null,
