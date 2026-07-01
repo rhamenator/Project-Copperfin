@@ -3190,6 +3190,35 @@ internal static class Program
                     new KeyValuePair<string, string>("GROUPPARTNERSTATE", "Live")
                 });
             SmokeAssetEditorSectionMetadataSelectionWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/foxref/foxrefresultsa4.frx"),
+                recordIndex: 5,
+                expectedSectionListTitle: "Group Footer - RefID",
+                expectedProperties: new[]
+                {
+                    new KeyValuePair<string, string>("SECTIONSTATE", "Live"),
+                    new KeyValuePair<string, string>("BANDKIND", "Group Footer"),
+                    new KeyValuePair<string, string>("RECORDINDEX", "5"),
+                    new KeyValuePair<string, string>("OBJECTCOUNT", "0"),
+                    new KeyValuePair<string, string>("DELETEDOBJECTCOUNT", "0"),
+                    new KeyValuePair<string, string>("TOP", "0"),
+                    new KeyValuePair<string, string>("HEIGHT", "0"),
+                    new KeyValuePair<string, string>("GROUPROLE", "Footer"),
+                    new KeyValuePair<string, string>("GROUPINGINDEX", "1"),
+                    new KeyValuePair<string, string>("GROUPINGNESTINGDEPTH", "1"),
+                    new KeyValuePair<string, string>("EXPR", string.Empty),
+                    new KeyValuePair<string, string>("GROUPINGEXPRESSION", "RefID"),
+                    new KeyValuePair<string, string>("GROUPINGEXPRESSIONFIELD", "6"),
+                    new KeyValuePair<string, string>("GROUPINGEXPRESSIONMEMO", "23"),
+                    new KeyValuePair<string, string>("GROUPPARTNERSECTIONID", "_0RV0UV0HL"),
+                    new KeyValuePair<string, string>("GROUPPARTNERRECORD", "3"),
+                    new KeyValuePair<string, string>("GROUPPARTNERSTATE", "Live")
+                },
+                expectedMissingProperties: new[]
+                {
+                    "EXPRESSIONFIELD",
+                    "EXPRESSIONMEMO"
+                });
+            SmokeAssetEditorSectionMetadataSelectionWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 4,
                 expectedSectionListTitle: "Detail",
