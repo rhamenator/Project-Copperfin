@@ -3040,6 +3040,21 @@ internal static class Program
                 expectedObjectCount: 0);
             SmokeAssetEditorSectionRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLE3V.FRX"),
+                recordIndex: 2,
+                expectedSectionTitle: "Page Header",
+                propertyName: "HEIGHT",
+                updatedPropertyValue: 7000,
+                expectedOriginalSelectionValue: "6355",
+                expectedUpdatedSelectionValue: "7000",
+                expectedOriginalRawValue: "6355.000",
+                expectedUpdatedRawValue: "7000",
+                expectedOriginalLayoutValue: 6355,
+                expectedUpdatedLayoutValue: 7000,
+                expectedSectionCount: 4,
+                expectLabel: false,
+                expectedObjectCount: 3);
+            SmokeAssetEditorSectionRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLE3V.FRX"),
                 recordIndex: 4,
                 expectedSectionTitle: "Page Footer",
                 propertyName: "HEIGHT",
