@@ -42,6 +42,16 @@ internal static class Program
         public int SectionRelativeBottom { get; set; }
     }
 
+    private sealed class ExpectedUntouchedSectionSnapshot
+    {
+        public int RecordIndex { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public int Top { get; set; }
+        public int Height { get; set; }
+        public int ObjectCount { get; set; }
+        public ExpectedSectionGroupingMetadata? Grouping { get; set; }
+    }
+
     private static ExpectedSectionGroupingMetadata CreateBandedmGroupHeaderGrouping()
     {
         return new ExpectedSectionGroupingMetadata
@@ -129,6 +139,45 @@ internal static class Program
                 Bottom = 7291 + topDelta,
                 SectionRelativeBottom = 7291
             }
+        };
+    }
+
+    private static ExpectedUntouchedSectionSnapshot CreateBandedmUntouchedGroupFooterSection()
+    {
+        return new ExpectedUntouchedSectionSnapshot
+        {
+            RecordIndex = 7,
+            Title = "Group Footer",
+            Top = 0,
+            Height = 1355,
+            ObjectCount = 0,
+            Grouping = new ExpectedSectionGroupingMetadata
+            {
+                GroupRole = "footer",
+                GroupRoleDisplay = "Footer",
+                SectionExpression = "OneToMany",
+                GroupingIndex = 0,
+                GroupingNestingDepth = 0,
+                GroupingExpression = "OneToMany",
+                GroupingExpressionFieldIndex = 6,
+                GroupingExpressionMemoBlockNumber = 25,
+                GroupPartnerSectionId = "_RME0ORXEA",
+                GroupPartnerRecordIndex = 5,
+                GroupPartnerDeleted = false,
+                GroupPartnerStateDisplay = "Live"
+            }
+        };
+    }
+
+    private static ExpectedUntouchedSectionSnapshot CreateStylelblUntouchedColumnFooterSection()
+    {
+        return new ExpectedUntouchedSectionSnapshot
+        {
+            RecordIndex = 4,
+            Title = "Column Footer",
+            Top = 0,
+            Height = 0,
+            ObjectCount = 0
         };
     }
 
@@ -534,6 +583,10 @@ internal static class Program
                 expectedSectionCount: 5,
                 expectLabel: true,
                 expectedObjectCount: 1,
+                expectedUntouchedSections: new[]
+                {
+                    CreateStylelblUntouchedColumnFooterSection()
+                },
                 expectedOriginalContainedObjects: new[]
                 {
                     new ExpectedSectionContainedObjectGeometry
@@ -569,6 +622,10 @@ internal static class Program
                 expectLabel: false,
                 expectedObjectCount: 8,
                 expectedGrouping: CreateBandedmGroupHeaderGrouping(),
+                expectedUntouchedSections: new[]
+                {
+                    CreateBandedmUntouchedGroupFooterSection()
+                },
                 expectedOriginalContainedObjects: CreateBandedmGroupHeaderContainedObjects(0),
                 expectedUpdatedContainedObjects: CreateBandedmGroupHeaderContainedObjects(500));
             SmokeRealAssetHostBackedSectionRoundTrip(
@@ -2167,6 +2224,10 @@ internal static class Program
                 expectedSectionCount: 5,
                 expectLabel: true,
                 expectedObjectCount: 1,
+                expectedUntouchedSections: new[]
+                {
+                    CreateStylelblUntouchedColumnFooterSection()
+                },
                 expectedOriginalContainedObjects: new[]
                 {
                     new ExpectedSectionContainedObjectGeometry
@@ -2206,6 +2267,10 @@ internal static class Program
                 expectedObjectCount: 8,
                 expectedExplorerSectionTitle: "Group Header - OneToMany",
                 expectedGrouping: CreateBandedmGroupHeaderGrouping(),
+                expectedUntouchedSections: new[]
+                {
+                    CreateBandedmUntouchedGroupFooterSection()
+                },
                 expectedOriginalContainedObjects: CreateBandedmGroupHeaderContainedObjects(0),
                 expectedUpdatedContainedObjects: CreateBandedmGroupHeaderContainedObjects(500));
             SmokeAssetEditorSectionRoundTripWithRealAsset(
@@ -15383,6 +15448,7 @@ internal static class Program
         bool expectLabel,
         int expectedObjectCount,
         ExpectedSectionGroupingMetadata? expectedGrouping = null,
+        ExpectedUntouchedSectionSnapshot[]? expectedUntouchedSections = null,
         string? expectedOriginalLayoutTextValue = null,
         string? expectedUpdatedLayoutTextValue = null,
         ExpectedSectionContainedObjectGeometry[]? expectedOriginalContainedObjects = null,
@@ -15422,6 +15488,10 @@ internal static class Program
                 expectedOriginalLayoutTextValue,
                 expectedOriginalContainedObjects,
                 $"initial real asset section snapshot should preserve {propertyName}");
+            AssertRealAssetUntouchedSectionsSnapshot(
+                loaded.Document,
+                expectedUntouchedSections,
+                $"initial real asset section snapshot should preserve sibling rows while editing {propertyName}");
 
             var updateResult = CopperfinStudioSnapshotClient.TryUpdateProperty(
                 assetPath,
@@ -15449,6 +15519,10 @@ internal static class Program
                 expectedUpdatedLayoutTextValue,
                 expectedUpdatedContainedObjects,
                 $"updated real asset section snapshot should preserve {propertyName}");
+            AssertRealAssetUntouchedSectionsSnapshot(
+                updateResult.Document,
+                expectedUntouchedSections,
+                $"updated real asset section snapshot should preserve sibling rows while editing {propertyName}");
             Expect(updateResult.Document.CommandUndoAvailable,
                 $"real asset section smoke should expose undo after updating {propertyName} for {sourcePath}");
 
@@ -15474,6 +15548,10 @@ internal static class Program
                 expectedUpdatedLayoutTextValue,
                 expectedUpdatedContainedObjects,
                 $"reloaded updated real asset section snapshot should preserve {propertyName}");
+            AssertRealAssetUntouchedSectionsSnapshot(
+                reloadedAfterUpdate.Document,
+                expectedUntouchedSections,
+                $"reloaded updated real asset section snapshot should preserve sibling rows while editing {propertyName}");
             Expect(reloadedAfterUpdate.Document.CommandUndoAvailable,
                 $"reloaded updated real asset section snapshot should keep undo available for {sourcePath}");
 
@@ -15507,6 +15585,10 @@ internal static class Program
                 expectedOriginalLayoutTextValue,
                 expectedOriginalContainedObjects,
                 $"reloaded undone real asset section snapshot should preserve {propertyName}");
+            AssertRealAssetUntouchedSectionsSnapshot(
+                reloadedAfterUndo.Document,
+                expectedUntouchedSections,
+                $"reloaded undone real asset section snapshot should preserve sibling rows while editing {propertyName}");
             Expect(!reloadedAfterUndo.Document.CommandUndoAvailable,
                 $"real asset section smoke should clear undo after restoring {propertyName} for {sourcePath}");
         }
@@ -23522,6 +23604,7 @@ internal static class Program
         int expectedObjectCount,
         string? expectedExplorerSectionTitle = null,
         ExpectedSectionGroupingMetadata? expectedGrouping = null,
+        ExpectedUntouchedSectionSnapshot[]? expectedUntouchedSections = null,
         string? expectedOriginalLayoutTextValue = null,
         string? expectedUpdatedLayoutTextValue = null,
         ExpectedSectionContainedObjectGeometry[]? expectedOriginalContainedObjects = null,
@@ -23539,6 +23622,17 @@ internal static class Program
 
         try
         {
+            var loadedSnapshot = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(loadedSnapshot.Success && loadedSnapshot.Document is not null,
+                $"real asset editor section smoke should load baseline snapshot data for {sourcePath}");
+            if (loadedSnapshot.Success && loadedSnapshot.Document is not null)
+            {
+                AssertRealAssetUntouchedSectionsSnapshot(
+                    loadedSnapshot.Document,
+                    expectedUntouchedSections,
+                    $"initial real asset editor section snapshot should preserve sibling rows while editing {propertyName}");
+            }
+
             using var hostForm = new Form
             {
                 Width = 1400,
@@ -23674,6 +23768,10 @@ internal static class Program
                     expectedUpdatedLayoutTextValue,
                     expectedUpdatedContainedObjects,
                     $"reloaded edited real asset section snapshot should preserve {propertyName}");
+                AssertRealAssetUntouchedSectionsSnapshot(
+                    reloadedAfterUpdate.Document,
+                    expectedUntouchedSections,
+                    $"reloaded edited real asset section snapshot should preserve sibling rows while editing {propertyName}");
             }
 
             var undoHandled = control.TryHandleUndoCommand();
@@ -23729,6 +23827,10 @@ internal static class Program
                     expectedOriginalLayoutTextValue,
                     expectedOriginalContainedObjects,
                     $"reloaded undone editor real asset section snapshot should preserve {propertyName}");
+                AssertRealAssetUntouchedSectionsSnapshot(
+                    reloadedAfterUndo.Document,
+                    expectedUntouchedSections,
+                    $"reloaded undone editor real asset section snapshot should preserve sibling rows while editing {propertyName}");
             }
 
             TearDownForm(hostForm);
@@ -25154,6 +25256,50 @@ internal static class Program
 
         Expect(string.Equals(property.Value, expectedRawPropertyValue, StringComparison.Ordinal),
             $"{failurePrefix} for {document.Path} should expose {propertyName}={expectedRawPropertyValue}");
+    }
+
+    private static void AssertRealAssetUntouchedSectionsSnapshot(
+        CopperfinStudioSnapshotDocument document,
+        ExpectedUntouchedSectionSnapshot[]? expectedSections,
+        string failurePrefix)
+    {
+        if (expectedSections is null || expectedSections.Length == 0)
+        {
+            return;
+        }
+
+        Expect(document.ReportLayout is not null,
+            $"{failurePrefix} for {document.Path} should include a report layout");
+        if (document.ReportLayout is null)
+        {
+            return;
+        }
+
+        foreach (var expectedSection in expectedSections)
+        {
+            var section = document.ReportLayout.Sections
+                .FirstOrDefault(candidate => candidate.RecordIndex == expectedSection.RecordIndex);
+            Expect(section is not null,
+                $"{failurePrefix} for {document.Path} should preserve sibling section record {expectedSection.RecordIndex}");
+            if (section is null)
+            {
+                continue;
+            }
+
+            Expect(string.Equals(section.Title, expectedSection.Title, StringComparison.OrdinalIgnoreCase),
+                $"{failurePrefix} for {document.Path} should preserve sibling section '{expectedSection.Title}'");
+            Expect(section.Top == expectedSection.Top,
+                $"{failurePrefix} for {document.Path} should preserve sibling section top {expectedSection.Top}");
+            Expect(section.Height == expectedSection.Height,
+                $"{failurePrefix} for {document.Path} should preserve sibling section height {expectedSection.Height}");
+            Expect(section.Objects.Count == expectedSection.ObjectCount,
+                $"{failurePrefix} for {document.Path} should preserve sibling section object count {expectedSection.ObjectCount}");
+            if (expectedSection.Grouping is not null)
+            {
+                Expect(SectionMatchesExpectedGrouping(section, expectedSection.Grouping),
+                    $"{failurePrefix} for {document.Path} should preserve sibling section grouping context");
+            }
+        }
     }
 
     private static bool SectionMatchesExpectedGrouping(
