@@ -2012,6 +2012,8 @@ internal static class Program
         {
             new() { Name = "ORIENTATION", Value = "0", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 0, MemoBlockNumber = 9 },
             new() { Name = "TOPMARGIN", Value = "20", RecordIndex = 0, FieldIndex = 3, MemoBlockNumber = 0 },
+            new() { Name = "LEFTMARGIN", Value = "15", RecordIndex = 0, FieldIndex = 10, MemoBlockNumber = 0 },
+            new() { Name = "RIGHTMARGIN", Value = "25", RecordIndex = 0, FieldIndex = 11, MemoBlockNumber = 0 },
             new() { Name = "TAG", Value = "customer.country", RecordIndex = 0, FieldIndex = 9, MemoBlockNumber = 11 }
         };
         var settingsOnlySnapshot = new CopperfinStudioSnapshotDocument
@@ -2077,6 +2079,9 @@ internal static class Program
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["SORTEXPRESSIONFIELD"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "9", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["SORTEXPRESSIONMEMO"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "11", StringComparison.Ordinal),
             "Report settings explorer selection should expose explicit sort metadata from the shared settings model");
+        Expect(string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["LEFTMARGIN"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "15", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["RIGHTMARGIN"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "25", StringComparison.Ordinal),
+            "Report settings explorer selection should expose side-margin metadata from the shared settings model");
         Expect(string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["PREVIEWBOUNDS"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "L 0 T 2000 R 5200 B 8100   Size: 5200 x 6100", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["DELETEDPREVIEWBOUNDS"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "L 1000 T 2600 R 2200 B 2900   Size: 1200 x 300", StringComparison.Ordinal),
             "Report settings explorer selection should expose live and deleted preview metadata from the shared report-layout model");
@@ -2085,6 +2090,10 @@ internal static class Program
         {
             ExpectSelectionUpdate(editableSelection, "TOPMARGIN", 30, "30",
                 "Report settings property-grid selection should serialize numeric root-setting edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "LEFTMARGIN", 35, "35",
+                "Report settings property-grid selection should serialize left-margin edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "RIGHTMARGIN", 45, "45",
+                "Report settings property-grid selection should serialize right-margin edits through the shared update path");
             ExpectSelectionUpdate(editableSelection, "TAG", "customer.region", "customer.region",
                 "Report settings property-grid selection should preserve invariant string update targets");
         }
@@ -2117,6 +2126,8 @@ internal static class Program
         Expect(spanishProperties.Any(property => string.Equals(property.DisplayName, "Cantidad de configuraciones", StringComparison.Ordinal)) &&
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Orientación", StringComparison.Ordinal)) &&
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Margen superior", StringComparison.Ordinal)) &&
+               spanishProperties.Any(property => string.Equals(property.DisplayName, "Margen izquierdo", StringComparison.Ordinal)) &&
+               spanishProperties.Any(property => string.Equals(property.DisplayName, "Margen derecho", StringComparison.Ordinal)) &&
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Expresión de orden", StringComparison.Ordinal)),
             "Spanish report settings property-grid selection should localize supported root-setting labels");
         Expect(spanishProperties.Any(property => string.Equals(property.DisplayName, "Título del documento", StringComparison.Ordinal)) &&
@@ -2136,6 +2147,8 @@ internal static class Program
         Expect(portugueseProperties.Any(property => string.Equals(property.DisplayName, "Quantidade de configurações", StringComparison.Ordinal)) &&
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Orientação", StringComparison.Ordinal)) &&
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Margem superior", StringComparison.Ordinal)) &&
+               portugueseProperties.Any(property => string.Equals(property.DisplayName, "Margem esquerda", StringComparison.Ordinal)) &&
+               portugueseProperties.Any(property => string.Equals(property.DisplayName, "Margem direita", StringComparison.Ordinal)) &&
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Expressão de ordenação", StringComparison.Ordinal)),
             "Portuguese report settings property-grid selection should localize supported root-setting labels");
         Expect(portugueseProperties.Any(property => string.Equals(property.DisplayName, "Título do documento", StringComparison.Ordinal)) &&
@@ -2154,7 +2167,9 @@ internal static class Program
         var pseudoSelection = CopperfinDesignerSelection.FromReportSettings(settings, pseudoLocalization, reportLayout: settingsOnlySnapshot.ReportLayout);
         var pseudoProperties = TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().ToList();
         Expect(pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.SettingsCount"), StringComparison.Ordinal)) &&
-               pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.TopMargin"), StringComparison.Ordinal)),
+               pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.TopMargin"), StringComparison.Ordinal)) &&
+               pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.LeftMargin"), StringComparison.Ordinal)) &&
+               pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.RightMargin"), StringComparison.Ordinal)),
             "Pseudo-localized report settings property-grid selection should route new root-setting labels through the shared catalog");
         Expect(pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.DocumentTitle"), StringComparison.Ordinal)) &&
                string.Equals(pseudoProperties.First(property => string.Equals(property.Name, "DOCUMENTTITLE", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), "Customer Invoice", StringComparison.Ordinal),
@@ -2189,9 +2204,13 @@ internal static class Program
         Expect(settings[0].RecordIndex == 0 &&
                string.Equals(settings[0].Name, "ORIENTATION", StringComparison.Ordinal) &&
                string.Equals(settings[1].Value, "20", StringComparison.Ordinal) &&
-               string.Equals(settings[2].Name, "TAG", StringComparison.Ordinal) &&
-               settings[2].FieldIndex == 9 &&
-               settings[2].MemoBlockNumber == 11,
+               string.Equals(settings[2].Name, "LEFTMARGIN", StringComparison.Ordinal) &&
+               settings[2].FieldIndex == 10 &&
+               string.Equals(settings[3].Name, "RIGHTMARGIN", StringComparison.Ordinal) &&
+               settings[3].FieldIndex == 11 &&
+               string.Equals(settings[4].Name, "TAG", StringComparison.Ordinal) &&
+               settings[4].FieldIndex == 9 &&
+               settings[4].MemoBlockNumber == 11,
             "Localized report settings property-grid selection should preserve root-setting machine contracts");
     }
 
@@ -2201,6 +2220,8 @@ internal static class Program
         {
             new() { Name = "ORIENTATION", Value = "1", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 0, MemoBlockNumber = 19 },
             new() { Name = "TOPMARGIN", Value = "40", RecordIndex = 0, FieldIndex = 3, MemoBlockNumber = 0 },
+            new() { Name = "LEFTMARGIN", Value = "35", RecordIndex = 0, FieldIndex = 10, MemoBlockNumber = 0 },
+            new() { Name = "RIGHTMARGIN", Value = "45", RecordIndex = 0, FieldIndex = 11, MemoBlockNumber = 0 },
             new() { Name = "TAG", Value = "deleted.customer.country", RecordIndex = 0, FieldIndex = 9, MemoBlockNumber = 21 }
         };
         var deletedOnlySnapshot = new CopperfinStudioSnapshotDocument
@@ -2252,6 +2273,9 @@ internal static class Program
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["SORTEXPRESSIONFIELD"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "9", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["SORTEXPRESSIONMEMO"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "21", StringComparison.Ordinal),
             "Deleted report settings explorer selection should expose deleted sort metadata from the shared settings model");
+        Expect(string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["LEFTMARGIN"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "35", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["RIGHTMARGIN"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "45", StringComparison.Ordinal),
+            "Deleted report settings explorer selection should expose deleted side-margin metadata from the shared settings model");
         Expect(string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["DELETEDPREVIEWBOUNDS"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "L 1000 T 2600 R 2200 B 2900   Size: 1200 x 300", StringComparison.Ordinal),
             "Deleted report settings explorer selection should expose deleted preview metadata from the shared report-layout model");
 
@@ -2259,6 +2283,10 @@ internal static class Program
         {
             ExpectSelectionUpdate(editableSelection, "TOPMARGIN", 55, "55",
                 "Deleted report settings property-grid selection should serialize numeric deleted-root-setting edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "LEFTMARGIN", 50, "50",
+                "Deleted report settings property-grid selection should serialize deleted left-margin edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "RIGHTMARGIN", 60, "60",
+                "Deleted report settings property-grid selection should serialize deleted right-margin edits through the shared update path");
             ExpectSelectionUpdate(editableSelection, "TAG", "deleted.customer.region", "deleted.customer.region",
                 "Deleted report settings property-grid selection should preserve invariant string update targets");
         }
@@ -2346,9 +2374,13 @@ internal static class Program
         Expect(deletedSettings[0].RecordIndex == 0 &&
                string.Equals(deletedSettings[0].Name, "ORIENTATION", StringComparison.Ordinal) &&
                string.Equals(deletedSettings[1].Value, "40", StringComparison.Ordinal) &&
-               string.Equals(deletedSettings[2].Name, "TAG", StringComparison.Ordinal) &&
-               deletedSettings[2].FieldIndex == 9 &&
-               deletedSettings[2].MemoBlockNumber == 21,
+               string.Equals(deletedSettings[2].Name, "LEFTMARGIN", StringComparison.Ordinal) &&
+               deletedSettings[2].FieldIndex == 10 &&
+               string.Equals(deletedSettings[3].Name, "RIGHTMARGIN", StringComparison.Ordinal) &&
+               deletedSettings[3].FieldIndex == 11 &&
+               string.Equals(deletedSettings[4].Name, "TAG", StringComparison.Ordinal) &&
+               deletedSettings[4].FieldIndex == 9 &&
+               deletedSettings[4].MemoBlockNumber == 21,
             "Localized deleted report settings property-grid selection should preserve deleted root-setting machine contracts");
     }
 
@@ -2526,6 +2558,8 @@ internal static class Program
             Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
                    initialSelection.RecordIndex == 0 &&
                    objectListView.Items.Count == 0 &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["LEFTMARGIN"]?.GetValue(initialSelection)?.ToString(), "15", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["RIGHTMARGIN"]?.GetValue(initialSelection)?.ToString(), "25", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["DOCUMENTTITLE"]?.GetValue(initialSelection)?.ToString(), "Customer Invoice", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["SORTEXPRESSION"]?.GetValue(initialSelection)?.ToString(), "customer.country", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["SORTEXPRESSIONFIELD"]?.GetValue(initialSelection)?.ToString(), "9", StringComparison.Ordinal) &&
@@ -2539,8 +2573,8 @@ internal static class Program
                 throw new InvalidOperationException("Could not read the selected report settings from the shared asset editor.");
             }
 
-            TypeDescriptor.GetProperties(settingsSelection)["TOPMARGIN"]?.SetValue(settingsSelection, 30);
-            InvokeAssetEditorVoid(control, "ApplyPropertyGridChange", "TOPMARGIN", 20);
+            TypeDescriptor.GetProperties(settingsSelection)["LEFTMARGIN"]?.SetValue(settingsSelection, 30);
+            InvokeAssetEditorVoid(control, "ApplyPropertyGridChange", "LEFTMARGIN", 15);
             Application.DoEvents();
 
             var logLines = File.ReadAllLines(logPath);
@@ -2555,15 +2589,16 @@ internal static class Program
                    invocationArguments.Contains("--record") &&
                    invocationArguments.Contains("0") &&
                    invocationArguments.Contains("--property-name") &&
-                   invocationArguments.Contains("TOPMARGIN") &&
+                   invocationArguments.Contains("LEFTMARGIN") &&
                    invocationArguments.Contains("--property-value") &&
                    invocationArguments.Contains("30"),
-                "Editing report settings through the shared asset editor should send one invariant root-setting update through the host property contract");
+                "Editing report settings through the shared asset editor should send one invariant side-margin update through the host property contract");
 
             Expect(string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Settings", StringComparison.Ordinal) &&
                    propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
                    refreshedSelection.RecordIndex == 0 &&
-                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["TOPMARGIN"]?.GetValue(refreshedSelection)?.ToString(), "30", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["LEFTMARGIN"]?.GetValue(refreshedSelection)?.ToString(), "30", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["RIGHTMARGIN"]?.GetValue(refreshedSelection)?.ToString(), "25", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["DOCUMENTTITLE"]?.GetValue(refreshedSelection)?.ToString(), "Customer Invoice", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["SORTEXPRESSION"]?.GetValue(refreshedSelection)?.ToString(), "customer.country", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["SORTEXPRESSIONFIELD"]?.GetValue(refreshedSelection)?.ToString(), "9", StringComparison.Ordinal) &&
@@ -2657,6 +2692,8 @@ internal static class Program
                    initialSelection.RecordIndex == 0 &&
                    objectListView.Items.Count == 0 &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["SETTINGSSTATE"]?.GetValue(initialSelection)?.ToString(), "Deleted", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["LEFTMARGIN"]?.GetValue(initialSelection)?.ToString(), "35", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["RIGHTMARGIN"]?.GetValue(initialSelection)?.ToString(), "45", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["DOCUMENTTITLE"]?.GetValue(initialSelection)?.ToString(), "Deleted Customer Invoice", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["SORTEXPRESSION"]?.GetValue(initialSelection)?.ToString(), "deleted.customer.country", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["SORTEXPRESSIONFIELD"]?.GetValue(initialSelection)?.ToString(), "9", StringComparison.Ordinal) &&
@@ -2669,8 +2706,8 @@ internal static class Program
                 throw new InvalidOperationException("Could not read the selected deleted report settings from the shared asset editor.");
             }
 
-            TypeDescriptor.GetProperties(settingsSelection)["TOPMARGIN"]?.SetValue(settingsSelection, 55);
-            InvokeAssetEditorVoid(control, "ApplyPropertyGridChange", "TOPMARGIN", 40);
+            TypeDescriptor.GetProperties(settingsSelection)["RIGHTMARGIN"]?.SetValue(settingsSelection, 55);
+            InvokeAssetEditorVoid(control, "ApplyPropertyGridChange", "RIGHTMARGIN", 45);
             Application.DoEvents();
 
             var logLines = File.ReadAllLines(logPath);
@@ -2685,15 +2722,16 @@ internal static class Program
                    invocationArguments.Contains("--record") &&
                    invocationArguments.Contains("0") &&
                    invocationArguments.Contains("--property-name") &&
-                   invocationArguments.Contains("TOPMARGIN") &&
+                   invocationArguments.Contains("RIGHTMARGIN") &&
                    invocationArguments.Contains("--property-value") &&
                    invocationArguments.Contains("55"),
-                "Editing deleted report settings through the shared asset editor should send one invariant deleted root-setting update through the host property contract");
+                "Editing deleted report settings through the shared asset editor should send one invariant deleted side-margin update through the host property contract");
 
             Expect(string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Settings (deleted)", StringComparison.Ordinal) &&
                    propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
                    refreshedSelection.RecordIndex == 0 &&
-                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["TOPMARGIN"]?.GetValue(refreshedSelection)?.ToString(), "55", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["LEFTMARGIN"]?.GetValue(refreshedSelection)?.ToString(), "35", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["RIGHTMARGIN"]?.GetValue(refreshedSelection)?.ToString(), "55", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["SETTINGSSTATE"]?.GetValue(refreshedSelection)?.ToString(), "Deleted", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["DOCUMENTTITLE"]?.GetValue(refreshedSelection)?.ToString(), "Deleted Customer Invoice", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["SORTEXPRESSION"]?.GetValue(refreshedSelection)?.ToString(), "deleted.customer.country", StringComparison.Ordinal) &&
@@ -15410,6 +15448,8 @@ internal static class Program
                 {
                     new() { Name = "ORIENTATION", Value = "0", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 0, MemoBlockNumber = 9 },
                     new() { Name = "TOPMARGIN", Value = "20", RecordIndex = 0, FieldIndex = 3, MemoBlockNumber = 0 },
+                    new() { Name = "LEFTMARGIN", Value = "15", RecordIndex = 0, FieldIndex = 10, MemoBlockNumber = 0 },
+                    new() { Name = "RIGHTMARGIN", Value = "25", RecordIndex = 0, FieldIndex = 11, MemoBlockNumber = 0 },
                     new() { Name = "TAG", Value = "customer.country", RecordIndex = 0, FieldIndex = 9, MemoBlockNumber = 11 }
                 },
                 Sections = new List<CopperfinStudioReportSection>
@@ -15448,6 +15488,8 @@ internal static class Program
                 {
                     new() { Name = "ORIENTATION", Value = "1", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 0, MemoBlockNumber = 19 },
                     new() { Name = "TOPMARGIN", Value = "40", RecordIndex = 0, FieldIndex = 3, MemoBlockNumber = 0 },
+                    new() { Name = "LEFTMARGIN", Value = "35", RecordIndex = 0, FieldIndex = 10, MemoBlockNumber = 0 },
+                    new() { Name = "RIGHTMARGIN", Value = "45", RecordIndex = 0, FieldIndex = 11, MemoBlockNumber = 0 },
                     new() { Name = "TAG", Value = "deleted.customer.country", RecordIndex = 0, FieldIndex = 9, MemoBlockNumber = 21 }
                 },
                 Sections = new List<CopperfinStudioReportSection>
@@ -16961,14 +17003,14 @@ internal static class Program
     private static string BuildSettingsUpdateHostResponseJson()
     {
         return """
-{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[],"ReportLayout":{"DocumentTitle":"Customer Invoice","PreviewBoundsAvailable":true,"PreviewBoundsLeft":0,"PreviewBoundsTop":2000,"PreviewBoundsRight":5200,"PreviewBoundsBottom":8100,"PreviewBoundsWidth":5200,"PreviewBoundsHeight":6100,"DeletedPreviewBoundsAvailable":true,"DeletedPreviewBoundsLeft":1000,"DeletedPreviewBoundsTop":2600,"DeletedPreviewBoundsRight":2200,"DeletedPreviewBoundsBottom":2900,"DeletedPreviewBoundsWidth":1200,"DeletedPreviewBoundsHeight":300,"Settings":[{"Name":"ORIENTATION","Value":"0","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":0,"MemoBlockNumber":9},{"Name":"TOPMARGIN","Value":"30","RecordIndex":0,"FieldIndex":3,"MemoBlockNumber":0},{"Name":"TAG","Value":"customer.country","RecordIndex":0,"FieldIndex":9,"MemoBlockNumber":11}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[],"UnplacedObjects":[]}}}
+{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[],"ReportLayout":{"DocumentTitle":"Customer Invoice","PreviewBoundsAvailable":true,"PreviewBoundsLeft":0,"PreviewBoundsTop":2000,"PreviewBoundsRight":5200,"PreviewBoundsBottom":8100,"PreviewBoundsWidth":5200,"PreviewBoundsHeight":6100,"DeletedPreviewBoundsAvailable":true,"DeletedPreviewBoundsLeft":1000,"DeletedPreviewBoundsTop":2600,"DeletedPreviewBoundsRight":2200,"DeletedPreviewBoundsBottom":2900,"DeletedPreviewBoundsWidth":1200,"DeletedPreviewBoundsHeight":300,"Settings":[{"Name":"ORIENTATION","Value":"0","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":0,"MemoBlockNumber":9},{"Name":"TOPMARGIN","Value":"20","RecordIndex":0,"FieldIndex":3,"MemoBlockNumber":0},{"Name":"LEFTMARGIN","Value":"30","RecordIndex":0,"FieldIndex":10,"MemoBlockNumber":0},{"Name":"RIGHTMARGIN","Value":"25","RecordIndex":0,"FieldIndex":11,"MemoBlockNumber":0},{"Name":"TAG","Value":"customer.country","RecordIndex":0,"FieldIndex":9,"MemoBlockNumber":11}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[],"UnplacedObjects":[]}}}
 """;
     }
 
     private static string BuildDeletedSettingsUpdateHostResponseJson()
     {
         return """
-{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[],"ReportLayout":{"DocumentTitle":"Deleted Customer Invoice","DeletedPreviewBoundsAvailable":true,"DeletedPreviewBoundsLeft":1000,"DeletedPreviewBoundsTop":2600,"DeletedPreviewBoundsRight":2200,"DeletedPreviewBoundsBottom":2900,"DeletedPreviewBoundsWidth":1200,"DeletedPreviewBoundsHeight":300,"DeletedSettings":[{"Name":"ORIENTATION","Value":"1","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":0,"MemoBlockNumber":19},{"Name":"TOPMARGIN","Value":"55","RecordIndex":0,"FieldIndex":3,"MemoBlockNumber":0},{"Name":"TAG","Value":"deleted.customer.country","RecordIndex":0,"FieldIndex":9,"MemoBlockNumber":21}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[],"UnplacedObjects":[]}}}
+{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[],"ReportLayout":{"DocumentTitle":"Deleted Customer Invoice","DeletedPreviewBoundsAvailable":true,"DeletedPreviewBoundsLeft":1000,"DeletedPreviewBoundsTop":2600,"DeletedPreviewBoundsRight":2200,"DeletedPreviewBoundsBottom":2900,"DeletedPreviewBoundsWidth":1200,"DeletedPreviewBoundsHeight":300,"DeletedSettings":[{"Name":"ORIENTATION","Value":"1","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":0,"MemoBlockNumber":19},{"Name":"TOPMARGIN","Value":"40","RecordIndex":0,"FieldIndex":3,"MemoBlockNumber":0},{"Name":"LEFTMARGIN","Value":"35","RecordIndex":0,"FieldIndex":10,"MemoBlockNumber":0},{"Name":"RIGHTMARGIN","Value":"55","RecordIndex":0,"FieldIndex":11,"MemoBlockNumber":0},{"Name":"TAG","Value":"deleted.customer.country","RecordIndex":0,"FieldIndex":9,"MemoBlockNumber":21}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[],"UnplacedObjects":[]}}}
 """;
     }
 
