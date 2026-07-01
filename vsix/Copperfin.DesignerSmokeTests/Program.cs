@@ -724,6 +724,66 @@ internal static class Program
                 expectedSectionCount: 5,
                 expectLabel: true,
                 expectedDeletedSectionVisibleObjectCount: 1);
+            SmokeRealAssetHostBackedDeletedBatchPropertyRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 7,
+                expectedUniqueId: "_RC60MC40R",
+                expectedObjectTitle: "\"Titles By Author\"",
+                expectedSectionTitle: "Title",
+                expectedSectionRecordIndex: 1,
+                propertyChanges: new[]
+                {
+                    new KeyValuePair<string, string>("FONTSTYLE", "1"),
+                    new KeyValuePair<string, string>("FONTSIZE", "18")
+                },
+                originalRawValues: new[]
+                {
+                    new KeyValuePair<string, string>("FONTSTYLE", "3"),
+                    new KeyValuePair<string, string>("FONTSIZE", "20")
+                },
+                originalLayoutValues: new[]
+                {
+                    new KeyValuePair<string, int?>("FONTSTYLE", null),
+                    new KeyValuePair<string, int?>("FONTSIZE", null)
+                },
+                updatedLayoutValues: new[]
+                {
+                    new KeyValuePair<string, int?>("FONTSTYLE", null),
+                    new KeyValuePair<string, int?>("FONTSIZE", null)
+                },
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedDeletedSectionVisibleObjectCount: 1);
+            SmokeRealAssetHostBackedDeletedBatchPropertyRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 6,
+                expectedUniqueId: "_QV30QY1DL",
+                expectedObjectTitle: "wiz_field",
+                expectedSectionTitle: "Detail",
+                expectedSectionRecordIndex: 3,
+                propertyChanges: new[]
+                {
+                    new KeyValuePair<string, string>("FONTSTYLE", "1"),
+                    new KeyValuePair<string, string>("FONTSIZE", "9")
+                },
+                originalRawValues: new[]
+                {
+                    new KeyValuePair<string, string>("FONTSTYLE", "0"),
+                    new KeyValuePair<string, string>("FONTSIZE", "8")
+                },
+                originalLayoutValues: new[]
+                {
+                    new KeyValuePair<string, int?>("FONTSTYLE", null),
+                    new KeyValuePair<string, int?>("FONTSIZE", null)
+                },
+                updatedLayoutValues: new[]
+                {
+                    new KeyValuePair<string, int?>("FONTSTYLE", null),
+                    new KeyValuePair<string, int?>("FONTSIZE", null)
+                },
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedDeletedSectionVisibleObjectCount: 1);
             SmokeRealAssetHostBackedDeletedRenameRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 7,
@@ -1309,6 +1369,76 @@ internal static class Program
                 {
                     new KeyValuePair<string, int?>("VPOS", 6800),
                     new KeyValuePair<string, int?>("HEIGHT", 1800)
+                },
+                expectedDeletedSectionVisibleObjectCount: 1);
+            SmokeAssetEditorDeletedBatchPropertyRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 7,
+                expectedSectionTitle: "Title",
+                expectedSectionRecordIndex: 1,
+                expectedObjectTitle: "\"Titles By Author\"",
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedUniqueId: "_RC60MC40R",
+                propertyChanges: new[]
+                {
+                    new KeyValuePair<string, string>("FONTSTYLE", "1"),
+                    new KeyValuePair<string, string>("FONTSIZE", "18")
+                },
+                expectedUpdatedSelectionValues: new[]
+                {
+                    new KeyValuePair<string, string>("FONTSTYLE", "1"),
+                    new KeyValuePair<string, string>("FONTSIZE", "18")
+                },
+                expectedOriginalRawValues: new[]
+                {
+                    new KeyValuePair<string, string>("FONTSTYLE", "3"),
+                    new KeyValuePair<string, string>("FONTSIZE", "20")
+                },
+                expectedOriginalLayoutValues: new[]
+                {
+                    new KeyValuePair<string, int?>("FONTSTYLE", null),
+                    new KeyValuePair<string, int?>("FONTSIZE", null)
+                },
+                expectedUpdatedLayoutValues: new[]
+                {
+                    new KeyValuePair<string, int?>("FONTSTYLE", null),
+                    new KeyValuePair<string, int?>("FONTSIZE", null)
+                },
+                expectedDeletedSectionVisibleObjectCount: 1);
+            SmokeAssetEditorDeletedBatchPropertyRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 6,
+                expectedSectionTitle: "Detail",
+                expectedSectionRecordIndex: 3,
+                expectedObjectTitle: "wiz_field",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUniqueId: "_QV30QY1DL",
+                propertyChanges: new[]
+                {
+                    new KeyValuePair<string, string>("FONTSTYLE", "1"),
+                    new KeyValuePair<string, string>("FONTSIZE", "9")
+                },
+                expectedUpdatedSelectionValues: new[]
+                {
+                    new KeyValuePair<string, string>("FONTSTYLE", "1"),
+                    new KeyValuePair<string, string>("FONTSIZE", "9")
+                },
+                expectedOriginalRawValues: new[]
+                {
+                    new KeyValuePair<string, string>("FONTSTYLE", "0"),
+                    new KeyValuePair<string, string>("FONTSIZE", "8")
+                },
+                expectedOriginalLayoutValues: new[]
+                {
+                    new KeyValuePair<string, int?>("FONTSTYLE", null),
+                    new KeyValuePair<string, int?>("FONTSIZE", null)
+                },
+                expectedUpdatedLayoutValues: new[]
+                {
+                    new KeyValuePair<string, int?>("FONTSTYLE", null),
+                    new KeyValuePair<string, int?>("FONTSIZE", null)
                 },
                 expectedDeletedSectionVisibleObjectCount: 1);
             SmokeAssetEditorDeletedRenameCommandWithRealAsset(
