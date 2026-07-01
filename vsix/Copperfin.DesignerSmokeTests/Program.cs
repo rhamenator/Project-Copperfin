@@ -2050,6 +2050,9 @@ internal static class Program
         var settings = new List<CopperfinStudioNamedValue>
         {
             new() { Name = "ORIENTATION", Value = "0", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 0, MemoBlockNumber = 9 },
+            new() { Name = "COLS", Value = "2", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 1, MemoBlockNumber = 9 },
+            new() { Name = "COLWIDTH", Value = "3600", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 2, MemoBlockNumber = 9 },
+            new() { Name = "COLSPACING", Value = "120", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 3, MemoBlockNumber = 9 },
             new() { Name = "TOPMARGIN", Value = "20", RecordIndex = 0, FieldIndex = 3, MemoBlockNumber = 0 },
             new() { Name = "LEFTMARGIN", Value = "15", RecordIndex = 0, FieldIndex = 10, MemoBlockNumber = 0 },
             new() { Name = "RIGHTMARGIN", Value = "25", RecordIndex = 0, FieldIndex = 11, MemoBlockNumber = 0 },
@@ -2119,8 +2122,11 @@ internal static class Program
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["SORTEXPRESSIONMEMO"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "11", StringComparison.Ordinal),
             "Report settings explorer selection should expose explicit sort metadata from the shared settings model");
         Expect(string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["LEFTMARGIN"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "15", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["COLS"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "2", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["COLWIDTH"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "3600", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["COLSPACING"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "120", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["RIGHTMARGIN"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "25", StringComparison.Ordinal),
-            "Report settings explorer selection should expose side-margin metadata from the shared settings model");
+            "Report settings explorer selection should expose column-setup and side-margin metadata from the shared settings model");
         Expect(string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["PREVIEWBOUNDS"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "L 0 T 2000 R 5200 B 8100   Size: 5200 x 6100", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["DELETEDPREVIEWBOUNDS"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "L 1000 T 2600 R 2200 B 2900   Size: 1200 x 300", StringComparison.Ordinal),
             "Report settings explorer selection should expose live and deleted preview metadata from the shared report-layout model");
@@ -2129,6 +2135,12 @@ internal static class Program
         {
             ExpectSelectionUpdate(editableSelection, "TOPMARGIN", 30, "30",
                 "Report settings property-grid selection should serialize numeric root-setting edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "COLS", 3, "3",
+                "Report settings property-grid selection should serialize column-count edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "COLWIDTH", 4200, "4200",
+                "Report settings property-grid selection should serialize column-width edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "COLSPACING", 180, "180",
+                "Report settings property-grid selection should serialize column-spacing edits through the shared update path");
             ExpectSelectionUpdate(editableSelection, "LEFTMARGIN", 35, "35",
                 "Report settings property-grid selection should serialize left-margin edits through the shared update path");
             ExpectSelectionUpdate(editableSelection, "RIGHTMARGIN", 45, "45",
@@ -2164,6 +2176,9 @@ internal static class Program
         var spanishProperties = TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().ToList();
         Expect(spanishProperties.Any(property => string.Equals(property.DisplayName, "Cantidad de configuraciones", StringComparison.Ordinal)) &&
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Orientación", StringComparison.Ordinal)) &&
+               spanishProperties.Any(property => string.Equals(property.DisplayName, "Columnas", StringComparison.Ordinal)) &&
+               spanishProperties.Any(property => string.Equals(property.DisplayName, "Ancho de columna", StringComparison.Ordinal)) &&
+               spanishProperties.Any(property => string.Equals(property.DisplayName, "Espaciado de columna", StringComparison.Ordinal)) &&
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Margen superior", StringComparison.Ordinal)) &&
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Margen izquierdo", StringComparison.Ordinal)) &&
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Margen derecho", StringComparison.Ordinal)) &&
@@ -2185,6 +2200,9 @@ internal static class Program
         var portugueseProperties = TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().ToList();
         Expect(portugueseProperties.Any(property => string.Equals(property.DisplayName, "Quantidade de configurações", StringComparison.Ordinal)) &&
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Orientação", StringComparison.Ordinal)) &&
+               portugueseProperties.Any(property => string.Equals(property.DisplayName, "Colunas", StringComparison.Ordinal)) &&
+               portugueseProperties.Any(property => string.Equals(property.DisplayName, "Largura da coluna", StringComparison.Ordinal)) &&
+               portugueseProperties.Any(property => string.Equals(property.DisplayName, "Espaçamento da coluna", StringComparison.Ordinal)) &&
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Margem superior", StringComparison.Ordinal)) &&
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Margem esquerda", StringComparison.Ordinal)) &&
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Margem direita", StringComparison.Ordinal)) &&
@@ -2207,6 +2225,9 @@ internal static class Program
         var pseudoProperties = TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().ToList();
         Expect(pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.SettingsCount"), StringComparison.Ordinal)) &&
                pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.TopMargin"), StringComparison.Ordinal)) &&
+               pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Columns"), StringComparison.Ordinal)) &&
+               pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ColumnWidth"), StringComparison.Ordinal)) &&
+               pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ColumnSpacing"), StringComparison.Ordinal)) &&
                pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.LeftMargin"), StringComparison.Ordinal)) &&
                pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.RightMargin"), StringComparison.Ordinal)),
             "Pseudo-localized report settings property-grid selection should route new root-setting labels through the shared catalog");
@@ -2242,14 +2263,20 @@ internal static class Program
 
         Expect(settings[0].RecordIndex == 0 &&
                string.Equals(settings[0].Name, "ORIENTATION", StringComparison.Ordinal) &&
-               string.Equals(settings[1].Value, "20", StringComparison.Ordinal) &&
-               string.Equals(settings[2].Name, "LEFTMARGIN", StringComparison.Ordinal) &&
-               settings[2].FieldIndex == 10 &&
-               string.Equals(settings[3].Name, "RIGHTMARGIN", StringComparison.Ordinal) &&
-               settings[3].FieldIndex == 11 &&
-               string.Equals(settings[4].Name, "TAG", StringComparison.Ordinal) &&
-               settings[4].FieldIndex == 9 &&
-               settings[4].MemoBlockNumber == 11,
+               string.Equals(settings[1].Name, "COLS", StringComparison.Ordinal) &&
+               settings[1].SourceLineIndex == 1 &&
+               string.Equals(settings[2].Name, "COLWIDTH", StringComparison.Ordinal) &&
+               settings[2].SourceLineIndex == 2 &&
+               string.Equals(settings[3].Name, "COLSPACING", StringComparison.Ordinal) &&
+               settings[3].SourceLineIndex == 3 &&
+               string.Equals(settings[4].Value, "20", StringComparison.Ordinal) &&
+               string.Equals(settings[5].Name, "LEFTMARGIN", StringComparison.Ordinal) &&
+               settings[5].FieldIndex == 10 &&
+               string.Equals(settings[6].Name, "RIGHTMARGIN", StringComparison.Ordinal) &&
+               settings[6].FieldIndex == 11 &&
+               string.Equals(settings[7].Name, "TAG", StringComparison.Ordinal) &&
+               settings[7].FieldIndex == 9 &&
+               settings[7].MemoBlockNumber == 11,
             "Localized report settings property-grid selection should preserve root-setting machine contracts");
     }
 
@@ -2258,6 +2285,9 @@ internal static class Program
         var deletedSettings = new List<CopperfinStudioNamedValue>
         {
             new() { Name = "ORIENTATION", Value = "1", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 0, MemoBlockNumber = 19 },
+            new() { Name = "COLS", Value = "3", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 1, MemoBlockNumber = 19 },
+            new() { Name = "COLWIDTH", Value = "2400", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 2, MemoBlockNumber = 19 },
+            new() { Name = "COLSPACING", Value = "180", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 3, MemoBlockNumber = 19 },
             new() { Name = "TOPMARGIN", Value = "40", RecordIndex = 0, FieldIndex = 3, MemoBlockNumber = 0 },
             new() { Name = "LEFTMARGIN", Value = "35", RecordIndex = 0, FieldIndex = 10, MemoBlockNumber = 0 },
             new() { Name = "RIGHTMARGIN", Value = "45", RecordIndex = 0, FieldIndex = 11, MemoBlockNumber = 0 },
@@ -2313,8 +2343,11 @@ internal static class Program
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["SORTEXPRESSIONMEMO"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "21", StringComparison.Ordinal),
             "Deleted report settings explorer selection should expose deleted sort metadata from the shared settings model");
         Expect(string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["LEFTMARGIN"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "35", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["COLS"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "3", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["COLWIDTH"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "2400", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["COLSPACING"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "180", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["RIGHTMARGIN"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "45", StringComparison.Ordinal),
-            "Deleted report settings explorer selection should expose deleted side-margin metadata from the shared settings model");
+            "Deleted report settings explorer selection should expose deleted column-setup and side-margin metadata from the shared settings model");
         Expect(string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["DELETEDPREVIEWBOUNDS"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "L 1000 T 2600 R 2200 B 2900   Size: 1200 x 300", StringComparison.Ordinal),
             "Deleted report settings explorer selection should expose deleted preview metadata from the shared report-layout model");
 
@@ -2322,6 +2355,12 @@ internal static class Program
         {
             ExpectSelectionUpdate(editableSelection, "TOPMARGIN", 55, "55",
                 "Deleted report settings property-grid selection should serialize numeric deleted-root-setting edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "COLS", 4, "4",
+                "Deleted report settings property-grid selection should serialize deleted column-count edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "COLWIDTH", 3000, "3000",
+                "Deleted report settings property-grid selection should serialize deleted column-width edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "COLSPACING", 240, "240",
+                "Deleted report settings property-grid selection should serialize deleted column-spacing edits through the shared update path");
             ExpectSelectionUpdate(editableSelection, "LEFTMARGIN", 50, "50",
                 "Deleted report settings property-grid selection should serialize deleted left-margin edits through the shared update path");
             ExpectSelectionUpdate(editableSelection, "RIGHTMARGIN", 60, "60",
@@ -2412,14 +2451,20 @@ internal static class Program
 
         Expect(deletedSettings[0].RecordIndex == 0 &&
                string.Equals(deletedSettings[0].Name, "ORIENTATION", StringComparison.Ordinal) &&
-               string.Equals(deletedSettings[1].Value, "40", StringComparison.Ordinal) &&
-               string.Equals(deletedSettings[2].Name, "LEFTMARGIN", StringComparison.Ordinal) &&
-               deletedSettings[2].FieldIndex == 10 &&
-               string.Equals(deletedSettings[3].Name, "RIGHTMARGIN", StringComparison.Ordinal) &&
-               deletedSettings[3].FieldIndex == 11 &&
-               string.Equals(deletedSettings[4].Name, "TAG", StringComparison.Ordinal) &&
-               deletedSettings[4].FieldIndex == 9 &&
-               deletedSettings[4].MemoBlockNumber == 21,
+               string.Equals(deletedSettings[1].Name, "COLS", StringComparison.Ordinal) &&
+               deletedSettings[1].SourceLineIndex == 1 &&
+               string.Equals(deletedSettings[2].Name, "COLWIDTH", StringComparison.Ordinal) &&
+               deletedSettings[2].SourceLineIndex == 2 &&
+               string.Equals(deletedSettings[3].Name, "COLSPACING", StringComparison.Ordinal) &&
+               deletedSettings[3].SourceLineIndex == 3 &&
+               string.Equals(deletedSettings[4].Value, "40", StringComparison.Ordinal) &&
+               string.Equals(deletedSettings[5].Name, "LEFTMARGIN", StringComparison.Ordinal) &&
+               deletedSettings[5].FieldIndex == 10 &&
+               string.Equals(deletedSettings[6].Name, "RIGHTMARGIN", StringComparison.Ordinal) &&
+               deletedSettings[6].FieldIndex == 11 &&
+               string.Equals(deletedSettings[7].Name, "TAG", StringComparison.Ordinal) &&
+               deletedSettings[7].FieldIndex == 9 &&
+               deletedSettings[7].MemoBlockNumber == 21,
             "Localized deleted report settings property-grid selection should preserve deleted root-setting machine contracts");
     }
 
@@ -2597,6 +2642,9 @@ internal static class Program
             Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
                    initialSelection.RecordIndex == 0 &&
                    objectListView.Items.Count == 0 &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["COLS"]?.GetValue(initialSelection)?.ToString(), "2", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["COLWIDTH"]?.GetValue(initialSelection)?.ToString(), "3600", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["COLSPACING"]?.GetValue(initialSelection)?.ToString(), "120", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["LEFTMARGIN"]?.GetValue(initialSelection)?.ToString(), "15", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["RIGHTMARGIN"]?.GetValue(initialSelection)?.ToString(), "25", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["DOCUMENTTITLE"]?.GetValue(initialSelection)?.ToString(), "Customer Invoice", StringComparison.Ordinal) &&
@@ -2612,8 +2660,8 @@ internal static class Program
                 throw new InvalidOperationException("Could not read the selected report settings from the shared asset editor.");
             }
 
-            TypeDescriptor.GetProperties(settingsSelection)["LEFTMARGIN"]?.SetValue(settingsSelection, 30);
-            InvokeAssetEditorVoid(control, "ApplyPropertyGridChange", "LEFTMARGIN", 15);
+            TypeDescriptor.GetProperties(settingsSelection)["COLWIDTH"]?.SetValue(settingsSelection, 4200);
+            InvokeAssetEditorVoid(control, "ApplyPropertyGridChange", "COLWIDTH", 3600);
             Application.DoEvents();
 
             var logLines = File.ReadAllLines(logPath);
@@ -2628,15 +2676,18 @@ internal static class Program
                    invocationArguments.Contains("--record") &&
                    invocationArguments.Contains("0") &&
                    invocationArguments.Contains("--property-name") &&
-                   invocationArguments.Contains("LEFTMARGIN") &&
+                   invocationArguments.Contains("COLWIDTH") &&
                    invocationArguments.Contains("--property-value") &&
-                   invocationArguments.Contains("30"),
-                "Editing report settings through the shared asset editor should send one invariant side-margin update through the host property contract");
+                   invocationArguments.Contains("4200"),
+                "Editing report settings through the shared asset editor should send one invariant column-width update through the host property contract");
 
             Expect(string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Settings", StringComparison.Ordinal) &&
                    propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
                    refreshedSelection.RecordIndex == 0 &&
-                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["LEFTMARGIN"]?.GetValue(refreshedSelection)?.ToString(), "30", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["COLS"]?.GetValue(refreshedSelection)?.ToString(), "2", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["COLWIDTH"]?.GetValue(refreshedSelection)?.ToString(), "4200", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["COLSPACING"]?.GetValue(refreshedSelection)?.ToString(), "120", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["LEFTMARGIN"]?.GetValue(refreshedSelection)?.ToString(), "15", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["RIGHTMARGIN"]?.GetValue(refreshedSelection)?.ToString(), "25", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["DOCUMENTTITLE"]?.GetValue(refreshedSelection)?.ToString(), "Customer Invoice", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["SORTEXPRESSION"]?.GetValue(refreshedSelection)?.ToString(), "customer.country", StringComparison.Ordinal) &&
@@ -2648,7 +2699,7 @@ internal static class Program
                    ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") is null &&
                    ReadPrivateNullableInt(surface, "selectedRecordIndex") is null &&
                    !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
-                "Editing report settings through the shared asset editor should preserve settings-rooted selection continuity after the host-backed refresh");
+                "Editing report settings through the shared asset editor should preserve column-setup settings-rooted selection continuity after the host-backed refresh");
         }
         finally
         {
@@ -2731,6 +2782,9 @@ internal static class Program
                    initialSelection.RecordIndex == 0 &&
                    objectListView.Items.Count == 0 &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["SETTINGSSTATE"]?.GetValue(initialSelection)?.ToString(), "Deleted", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["COLS"]?.GetValue(initialSelection)?.ToString(), "3", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["COLWIDTH"]?.GetValue(initialSelection)?.ToString(), "2400", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["COLSPACING"]?.GetValue(initialSelection)?.ToString(), "180", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["LEFTMARGIN"]?.GetValue(initialSelection)?.ToString(), "35", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["RIGHTMARGIN"]?.GetValue(initialSelection)?.ToString(), "45", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["DOCUMENTTITLE"]?.GetValue(initialSelection)?.ToString(), "Deleted Customer Invoice", StringComparison.Ordinal) &&
@@ -2745,8 +2799,8 @@ internal static class Program
                 throw new InvalidOperationException("Could not read the selected deleted report settings from the shared asset editor.");
             }
 
-            TypeDescriptor.GetProperties(settingsSelection)["RIGHTMARGIN"]?.SetValue(settingsSelection, 55);
-            InvokeAssetEditorVoid(control, "ApplyPropertyGridChange", "RIGHTMARGIN", 45);
+            TypeDescriptor.GetProperties(settingsSelection)["COLSPACING"]?.SetValue(settingsSelection, 240);
+            InvokeAssetEditorVoid(control, "ApplyPropertyGridChange", "COLSPACING", 180);
             Application.DoEvents();
 
             var logLines = File.ReadAllLines(logPath);
@@ -2761,16 +2815,19 @@ internal static class Program
                    invocationArguments.Contains("--record") &&
                    invocationArguments.Contains("0") &&
                    invocationArguments.Contains("--property-name") &&
-                   invocationArguments.Contains("RIGHTMARGIN") &&
+                   invocationArguments.Contains("COLSPACING") &&
                    invocationArguments.Contains("--property-value") &&
-                   invocationArguments.Contains("55"),
-                "Editing deleted report settings through the shared asset editor should send one invariant deleted side-margin update through the host property contract");
+                   invocationArguments.Contains("240"),
+                "Editing deleted report settings through the shared asset editor should send one invariant deleted column-spacing update through the host property contract");
 
             Expect(string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Settings (deleted)", StringComparison.Ordinal) &&
                    propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
                    refreshedSelection.RecordIndex == 0 &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["COLS"]?.GetValue(refreshedSelection)?.ToString(), "3", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["COLWIDTH"]?.GetValue(refreshedSelection)?.ToString(), "2400", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["COLSPACING"]?.GetValue(refreshedSelection)?.ToString(), "240", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["LEFTMARGIN"]?.GetValue(refreshedSelection)?.ToString(), "35", StringComparison.Ordinal) &&
-                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["RIGHTMARGIN"]?.GetValue(refreshedSelection)?.ToString(), "55", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["RIGHTMARGIN"]?.GetValue(refreshedSelection)?.ToString(), "45", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["SETTINGSSTATE"]?.GetValue(refreshedSelection)?.ToString(), "Deleted", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["DOCUMENTTITLE"]?.GetValue(refreshedSelection)?.ToString(), "Deleted Customer Invoice", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["SORTEXPRESSION"]?.GetValue(refreshedSelection)?.ToString(), "deleted.customer.country", StringComparison.Ordinal) &&
@@ -2781,7 +2838,7 @@ internal static class Program
                    ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") is null &&
                    ReadPrivateNullableInt(surface, "selectedRecordIndex") is null &&
                    !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
-                "Editing deleted report settings through the shared asset editor should preserve deleted settings-rooted selection continuity after the host-backed refresh");
+                "Editing deleted report settings through the shared asset editor should preserve deleted column-setup settings-rooted continuity after the host-backed refresh");
         }
         finally
         {
@@ -16051,6 +16108,9 @@ internal static class Program
                 Settings = new List<CopperfinStudioNamedValue>
                 {
                     new() { Name = "ORIENTATION", Value = "0", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 0, MemoBlockNumber = 9 },
+                    new() { Name = "COLS", Value = "2", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 1, MemoBlockNumber = 9 },
+                    new() { Name = "COLWIDTH", Value = "3600", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 2, MemoBlockNumber = 9 },
+                    new() { Name = "COLSPACING", Value = "120", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 3, MemoBlockNumber = 9 },
                     new() { Name = "TOPMARGIN", Value = "20", RecordIndex = 0, FieldIndex = 3, MemoBlockNumber = 0 },
                     new() { Name = "LEFTMARGIN", Value = "15", RecordIndex = 0, FieldIndex = 10, MemoBlockNumber = 0 },
                     new() { Name = "RIGHTMARGIN", Value = "25", RecordIndex = 0, FieldIndex = 11, MemoBlockNumber = 0 },
@@ -16091,6 +16151,9 @@ internal static class Program
                 DeletedSettings = new List<CopperfinStudioNamedValue>
                 {
                     new() { Name = "ORIENTATION", Value = "1", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 0, MemoBlockNumber = 19 },
+                    new() { Name = "COLS", Value = "3", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 1, MemoBlockNumber = 19 },
+                    new() { Name = "COLWIDTH", Value = "2400", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 2, MemoBlockNumber = 19 },
+                    new() { Name = "COLSPACING", Value = "180", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 3, MemoBlockNumber = 19 },
                     new() { Name = "TOPMARGIN", Value = "40", RecordIndex = 0, FieldIndex = 3, MemoBlockNumber = 0 },
                     new() { Name = "LEFTMARGIN", Value = "35", RecordIndex = 0, FieldIndex = 10, MemoBlockNumber = 0 },
                     new() { Name = "RIGHTMARGIN", Value = "45", RecordIndex = 0, FieldIndex = 11, MemoBlockNumber = 0 },
@@ -17607,14 +17670,14 @@ internal static class Program
     private static string BuildSettingsUpdateHostResponseJson()
     {
         return """
-{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[],"ReportLayout":{"DocumentTitle":"Customer Invoice","PreviewBoundsAvailable":true,"PreviewBoundsLeft":0,"PreviewBoundsTop":2000,"PreviewBoundsRight":5200,"PreviewBoundsBottom":8100,"PreviewBoundsWidth":5200,"PreviewBoundsHeight":6100,"DeletedPreviewBoundsAvailable":true,"DeletedPreviewBoundsLeft":1000,"DeletedPreviewBoundsTop":2600,"DeletedPreviewBoundsRight":2200,"DeletedPreviewBoundsBottom":2900,"DeletedPreviewBoundsWidth":1200,"DeletedPreviewBoundsHeight":300,"Settings":[{"Name":"ORIENTATION","Value":"0","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":0,"MemoBlockNumber":9},{"Name":"TOPMARGIN","Value":"20","RecordIndex":0,"FieldIndex":3,"MemoBlockNumber":0},{"Name":"LEFTMARGIN","Value":"30","RecordIndex":0,"FieldIndex":10,"MemoBlockNumber":0},{"Name":"RIGHTMARGIN","Value":"25","RecordIndex":0,"FieldIndex":11,"MemoBlockNumber":0},{"Name":"TAG","Value":"customer.country","RecordIndex":0,"FieldIndex":9,"MemoBlockNumber":11}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[],"UnplacedObjects":[]}}}
+{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[],"ReportLayout":{"DocumentTitle":"Customer Invoice","PreviewBoundsAvailable":true,"PreviewBoundsLeft":0,"PreviewBoundsTop":2000,"PreviewBoundsRight":5200,"PreviewBoundsBottom":8100,"PreviewBoundsWidth":5200,"PreviewBoundsHeight":6100,"DeletedPreviewBoundsAvailable":true,"DeletedPreviewBoundsLeft":1000,"DeletedPreviewBoundsTop":2600,"DeletedPreviewBoundsRight":2200,"DeletedPreviewBoundsBottom":2900,"DeletedPreviewBoundsWidth":1200,"DeletedPreviewBoundsHeight":300,"Settings":[{"Name":"ORIENTATION","Value":"0","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":0,"MemoBlockNumber":9},{"Name":"COLS","Value":"2","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":1,"MemoBlockNumber":9},{"Name":"COLWIDTH","Value":"4200","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":2,"MemoBlockNumber":9},{"Name":"COLSPACING","Value":"120","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":3,"MemoBlockNumber":9},{"Name":"TOPMARGIN","Value":"20","RecordIndex":0,"FieldIndex":3,"MemoBlockNumber":0},{"Name":"LEFTMARGIN","Value":"15","RecordIndex":0,"FieldIndex":10,"MemoBlockNumber":0},{"Name":"RIGHTMARGIN","Value":"25","RecordIndex":0,"FieldIndex":11,"MemoBlockNumber":0},{"Name":"TAG","Value":"customer.country","RecordIndex":0,"FieldIndex":9,"MemoBlockNumber":11}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[],"UnplacedObjects":[]}}}
 """;
     }
 
     private static string BuildDeletedSettingsUpdateHostResponseJson()
     {
         return """
-{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[],"ReportLayout":{"DocumentTitle":"Deleted Customer Invoice","DeletedPreviewBoundsAvailable":true,"DeletedPreviewBoundsLeft":1000,"DeletedPreviewBoundsTop":2600,"DeletedPreviewBoundsRight":2200,"DeletedPreviewBoundsBottom":2900,"DeletedPreviewBoundsWidth":1200,"DeletedPreviewBoundsHeight":300,"DeletedSettings":[{"Name":"ORIENTATION","Value":"1","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":0,"MemoBlockNumber":19},{"Name":"TOPMARGIN","Value":"40","RecordIndex":0,"FieldIndex":3,"MemoBlockNumber":0},{"Name":"LEFTMARGIN","Value":"35","RecordIndex":0,"FieldIndex":10,"MemoBlockNumber":0},{"Name":"RIGHTMARGIN","Value":"55","RecordIndex":0,"FieldIndex":11,"MemoBlockNumber":0},{"Name":"TAG","Value":"deleted.customer.country","RecordIndex":0,"FieldIndex":9,"MemoBlockNumber":21}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[],"UnplacedObjects":[]}}}
+{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[],"ReportLayout":{"DocumentTitle":"Deleted Customer Invoice","DeletedPreviewBoundsAvailable":true,"DeletedPreviewBoundsLeft":1000,"DeletedPreviewBoundsTop":2600,"DeletedPreviewBoundsRight":2200,"DeletedPreviewBoundsBottom":2900,"DeletedPreviewBoundsWidth":1200,"DeletedPreviewBoundsHeight":300,"DeletedSettings":[{"Name":"ORIENTATION","Value":"1","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":0,"MemoBlockNumber":19},{"Name":"COLS","Value":"3","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":1,"MemoBlockNumber":19},{"Name":"COLWIDTH","Value":"2400","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":2,"MemoBlockNumber":19},{"Name":"COLSPACING","Value":"240","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":3,"MemoBlockNumber":19},{"Name":"TOPMARGIN","Value":"40","RecordIndex":0,"FieldIndex":3,"MemoBlockNumber":0},{"Name":"LEFTMARGIN","Value":"35","RecordIndex":0,"FieldIndex":10,"MemoBlockNumber":0},{"Name":"RIGHTMARGIN","Value":"45","RecordIndex":0,"FieldIndex":11,"MemoBlockNumber":0},{"Name":"TAG","Value":"deleted.customer.country","RecordIndex":0,"FieldIndex":9,"MemoBlockNumber":21}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[],"UnplacedObjects":[]}}}
 """;
     }
 
