@@ -6912,17 +6912,11 @@ internal static class Program
 
     private static void SmokeAssetEditorDeletedReportSettingsPropertyGridHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor deleted-report-settings host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDeletedSettingsUpdateSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
