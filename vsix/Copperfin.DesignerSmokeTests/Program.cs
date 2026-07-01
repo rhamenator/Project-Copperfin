@@ -146,6 +146,16 @@ internal static class Program
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"));
+            SmokeRealAssetSettingsPreviewBoundsSelection(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"));
+            SmokeRealAssetSettingsDeletedPreviewBoundsSelection(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"));
             SmokeRealAssetHostBackedPropertyRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 7,
@@ -8522,6 +8532,205 @@ internal static class Program
                objectListView.Items.Count == 0 &&
                string.Equals(ReadSelectionPropertyValue(settingsSelection, "DOCUMENTTITLE"), documentTitle, StringComparison.Ordinal),
             $"real asset settings smoke should expose shared document-title continuity for {selectedPath}");
+
+        TearDownForm(hostForm);
+    }
+
+    private static void SmokeRealAssetSettingsPreviewBoundsSelection(params string?[] sourcePaths)
+    {
+        string? selectedPath = null;
+        CopperfinStudioReportLayout? selectedLayout = null;
+        var localization = new CopperfinLocalization("en-US");
+        var settingsScopeTitle = localization.Text("AssetEditor.ReportSection.Settings");
+
+        foreach (var candidatePath in sourcePaths)
+        {
+            if (string.IsNullOrWhiteSpace(candidatePath) || !File.Exists(candidatePath))
+            {
+                continue;
+            }
+
+            var candidateSnapshot = CopperfinStudioSnapshotClient.TryLoad(candidatePath!);
+            var candidateLayout = candidateSnapshot.Document?.ReportLayout;
+            if (!candidateSnapshot.Success ||
+                candidateLayout is null ||
+                !candidateLayout.PreviewBoundsAvailable ||
+                candidateLayout.Settings.Count == 0)
+            {
+                continue;
+            }
+
+            selectedPath = candidatePath;
+            selectedLayout = candidateLayout;
+            break;
+        }
+
+        if (string.IsNullOrWhiteSpace(selectedPath) || selectedLayout is null)
+        {
+            Console.WriteLine("SKIP: real settings preview-bounds candidate with root settings metadata not found.");
+            return;
+        }
+
+        using var hostForm = new Form
+        {
+            Width = 1400,
+            Height = 1000,
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-32000, -32000)
+        };
+
+        using var control = new CopperfinAssetEditorControl
+        {
+            Dock = DockStyle.Fill
+        };
+
+        hostForm.Controls.Add(control);
+        hostForm.Show();
+        Application.DoEvents();
+        control.LoadDocument(selectedPath!);
+
+        var sectionListView = GetPrivateListView(control, "sectionListView");
+        var objectListView = GetPrivateListView(control, "objectListView");
+        var propertyGrid = GetPrivatePropertyGrid(control);
+        var loaded = WaitUntil(
+            TimeSpan.FromSeconds(8),
+            () => sectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, settingsScopeTitle, StringComparison.Ordinal)));
+        Expect(loaded, $"real asset settings smoke should surface the settings scope for {selectedPath}");
+        if (!loaded)
+        {
+            TearDownForm(hostForm);
+            return;
+        }
+
+        foreach (ListViewItem item in sectionListView.Items)
+        {
+            item.Selected = string.Equals(item.Text, settingsScopeTitle, StringComparison.Ordinal);
+        }
+
+        InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+        Application.DoEvents();
+
+        var expectedPreviewBounds = localization.Format(
+            "AssetEditor.Property.BoundsValue",
+            selectedLayout.PreviewBoundsLeft,
+            selectedLayout.PreviewBoundsTop,
+            selectedLayout.PreviewBoundsRight,
+            selectedLayout.PreviewBoundsBottom,
+            selectedLayout.PreviewBoundsWidth,
+            selectedLayout.PreviewBoundsHeight);
+
+        Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection settingsSelection &&
+               objectListView.Items.Count == 0 &&
+               string.Equals(ReadSelectionPropertyValue(settingsSelection, "PREVIEWBOUNDS"), expectedPreviewBounds, StringComparison.Ordinal),
+            $"real asset settings smoke should expose shared preview-bounds continuity for {selectedPath}");
+
+        TearDownForm(hostForm);
+    }
+
+    private static void SmokeRealAssetSettingsDeletedPreviewBoundsSelection(params string?[] sourcePaths)
+    {
+        string? selectedPath = null;
+        CopperfinStudioReportLayout? selectedLayout = null;
+        string? expectedScopeTitle = null;
+        var localization = new CopperfinLocalization("en-US");
+        var settingsScopeTitle = localization.Text("AssetEditor.ReportSection.Settings");
+        var deletedSettingsScopeTitle = localization.Format(
+            "AssetEditor.ReportSection.Deleted",
+            settingsScopeTitle);
+
+        foreach (var candidatePath in sourcePaths)
+        {
+            if (string.IsNullOrWhiteSpace(candidatePath) || !File.Exists(candidatePath))
+            {
+                continue;
+            }
+
+            var candidateSnapshot = CopperfinStudioSnapshotClient.TryLoad(candidatePath!);
+            var candidateLayout = candidateSnapshot.Document?.ReportLayout;
+            if (!candidateSnapshot.Success ||
+                candidateLayout is null ||
+                !candidateLayout.DeletedPreviewBoundsAvailable)
+            {
+                continue;
+            }
+
+            if (candidateLayout.Settings.Count > 0)
+            {
+                selectedPath = candidatePath;
+                selectedLayout = candidateLayout;
+                expectedScopeTitle = settingsScopeTitle;
+                break;
+            }
+
+            if (candidateLayout.DeletedSettings.Count > 0)
+            {
+                selectedPath = candidatePath;
+                selectedLayout = candidateLayout;
+                expectedScopeTitle = deletedSettingsScopeTitle;
+                break;
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(selectedPath) || selectedLayout is null || string.IsNullOrWhiteSpace(expectedScopeTitle))
+        {
+            Console.WriteLine("SKIP: real deleted-preview-bounds settings candidate not found.");
+            return;
+        }
+
+        using var hostForm = new Form
+        {
+            Width = 1400,
+            Height = 1000,
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-32000, -32000)
+        };
+
+        using var control = new CopperfinAssetEditorControl
+        {
+            Dock = DockStyle.Fill
+        };
+
+        hostForm.Controls.Add(control);
+        hostForm.Show();
+        Application.DoEvents();
+        control.LoadDocument(selectedPath!);
+
+        var sectionListView = GetPrivateListView(control, "sectionListView");
+        var objectListView = GetPrivateListView(control, "objectListView");
+        var propertyGrid = GetPrivatePropertyGrid(control);
+        var loaded = WaitUntil(
+            TimeSpan.FromSeconds(8),
+            () => sectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, expectedScopeTitle, StringComparison.Ordinal)));
+        Expect(loaded, $"real asset settings smoke should surface the {expectedScopeTitle} scope for {selectedPath}");
+        if (!loaded)
+        {
+            TearDownForm(hostForm);
+            return;
+        }
+
+        foreach (ListViewItem item in sectionListView.Items)
+        {
+            item.Selected = string.Equals(item.Text, expectedScopeTitle, StringComparison.Ordinal);
+        }
+
+        InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+        Application.DoEvents();
+
+        var expectedDeletedPreviewBounds = localization.Format(
+            "AssetEditor.Property.BoundsValue",
+            selectedLayout.DeletedPreviewBoundsLeft,
+            selectedLayout.DeletedPreviewBoundsTop,
+            selectedLayout.DeletedPreviewBoundsRight,
+            selectedLayout.DeletedPreviewBoundsBottom,
+            selectedLayout.DeletedPreviewBoundsWidth,
+            selectedLayout.DeletedPreviewBoundsHeight);
+
+        Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection settingsSelection &&
+               objectListView.Items.Count == 0 &&
+               string.Equals(ReadSelectionPropertyValue(settingsSelection, "DELETEDPREVIEWBOUNDS"), expectedDeletedPreviewBounds, StringComparison.Ordinal),
+            $"real asset settings smoke should expose shared deleted-preview-bounds continuity for {selectedPath}");
 
         TearDownForm(hostForm);
     }
