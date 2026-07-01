@@ -24,9 +24,15 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         public List<CopperfinStudioNamedValue> Settings { get; } = new();
     }
 
+    private sealed class ReportGroupingScope
+    {
+        public CopperfinStudioReportGrouping Grouping { get; set; } = new();
+    }
+
     private sealed class ExplorerSelectionState
     {
         public int? ReportSectionRecordIndex { get; set; }
+        public int? ReportGroupingIndex { get; set; }
         public bool ReportSettings { get; set; }
         public bool ReportSettingsDeleted { get; set; }
         public bool ReportUnplacedObjects { get; set; }
@@ -824,6 +830,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         if (currentSnapshot?.ReportLayout is { } reportLayout &&
             (reportLayout.Sections.Count > 0 ||
              reportLayout.DeletedSections.Count > 0 ||
+             reportLayout.Groupings.Count > 0 ||
              reportLayout.Settings.Count > 0 ||
              reportLayout.DeletedSettings.Count > 0 ||
              reportLayout.UnplacedObjects.Count > 0))
@@ -849,6 +856,18 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 item.SubItems.Add(section.Top.ToString());
                 item.Tag = section;
                 item.ForeColor = Color.Firebrick;
+                sectionListView.Items.Add(item);
+            }
+
+            foreach (var grouping in reportLayout.Groupings)
+            {
+                var item = new ListViewItem(BuildReportGroupingListTitle(grouping));
+                item.SubItems.Add(CountVisibleReportGroupingSections(grouping).ToString());
+                item.SubItems.Add(string.Empty);
+                item.Tag = new ReportGroupingScope
+                {
+                    Grouping = grouping
+                };
                 sectionListView.Items.Add(item);
             }
 
@@ -1006,6 +1025,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             suppressSelectionSync = true;
             var selectedExplorerTag = TryReadSelectedExplorerTag();
             var isReportScopeSelection = selectedExplorerTag is CopperfinStudioReportSection ||
+                                         selectedExplorerTag is ReportGroupingScope ||
                                          selectedExplorerTag is ReportUnplacedObjectScope ||
                                          selectedExplorerTag is ReportSettingsScope;
             PopulateObjectList(autoSelectFirstItem: !isReportScopeSelection);
@@ -1019,6 +1039,20 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
                 propertyGrid.SelectedObject = CopperfinDesignerSelection.FromReportSection(reportSection, localization);
                 designSurface.SelectReportSection(reportSection.RecordIndex);
+                return;
+            }
+
+            if (selectedExplorerTag is ReportGroupingScope groupingScope)
+            {
+                foreach (ListViewItem item in objectListView.Items)
+                {
+                    item.Selected = false;
+                }
+
+                propertyGrid.SelectedObject = CopperfinDesignerSelection.FromReportGrouping(
+                    groupingScope.Grouping,
+                    localization);
+                designSurface.SelectRecord(null);
                 return;
             }
 
@@ -1460,6 +1494,10 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             if (selectedExplorerTag is CopperfinStudioReportSection reportSection)
             {
                 designSurface.SelectReportSection(reportSection.RecordIndex);
+            }
+            else if (selectedExplorerTag is ReportGroupingScope)
+            {
+                designSurface.SelectRecord(null);
             }
             else if (selectedExplorerTag is ReportUnplacedObjectScope)
             {
@@ -1923,6 +1961,11 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                     return currentSnapshot.Objects.Where(item => sectionRecords.Contains(item.RecordIndex)).ToList();
                 }
 
+                if (selectedSection is ReportGroupingScope)
+                {
+                    return Array.Empty<CopperfinStudioSnapshotObject>();
+                }
+
                 if (selectedSection is ReportSettingsScope)
                 {
                     return Array.Empty<CopperfinStudioSnapshotObject>();
@@ -1980,6 +2023,22 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         CopperfinStudioReportSection section)
     {
         return EnumerateVisibleReportSectionRecordIndexes(reportLayout, section).Count();
+    }
+
+    private static int CountVisibleReportGroupingSections(CopperfinStudioReportGrouping grouping)
+    {
+        var count = 0;
+        if (grouping.HeaderRecordIndex.HasValue || !string.IsNullOrWhiteSpace(grouping.HeaderSectionId))
+        {
+            count++;
+        }
+
+        if (grouping.FooterRecordIndex.HasValue || !string.IsNullOrWhiteSpace(grouping.FooterSectionId))
+        {
+            count++;
+        }
+
+        return count;
     }
 
     private static IEnumerable<int> EnumerateVisibleReportSectionRecordIndexes(
@@ -2052,6 +2111,14 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             };
         }
 
+        if (selectedTag is ReportGroupingScope groupingScope)
+        {
+            return new ExplorerSelectionState
+            {
+                ReportGroupingIndex = groupingScope.Grouping.GroupingIndex
+            };
+        }
+
         if (selectedTag is ReportSettingsScope)
         {
             return new ExplorerSelectionState
@@ -2089,6 +2156,13 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 .Cast<ListViewItem>()
                 .FirstOrDefault(item => item.Tag is CopperfinStudioReportSection section &&
                                         section.RecordIndex == reportSectionRecordIndex);
+        }
+        else if (selectionState?.ReportGroupingIndex is int reportGroupingIndex)
+        {
+            selectedItem = sectionListView.Items
+                .Cast<ListViewItem>()
+                .FirstOrDefault(item => item.Tag is ReportGroupingScope scope &&
+                                        scope.Grouping.GroupingIndex == reportGroupingIndex);
         }
         else if (selectionState?.ReportSettings == true)
         {
@@ -2186,6 +2260,19 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private string BuildDeletedReportSectionListTitle(CopperfinStudioReportSection section)
     {
         return F("AssetEditor.ReportSection.Deleted", BuildReportSectionListTitle(section));
+    }
+
+    private string BuildReportGroupingListTitle(CopperfinStudioReportGrouping grouping)
+    {
+        if (string.IsNullOrWhiteSpace(grouping.Expression))
+        {
+            return F("AssetEditor.ReportSection.Grouping", grouping.GroupingIndex);
+        }
+
+        return F(
+            "AssetEditor.ReportSection.GroupingWithExpression",
+            grouping.GroupingIndex,
+            grouping.Expression);
     }
 
     private string BuildObjectListSubtitle(string assetFamily, string subtitle)

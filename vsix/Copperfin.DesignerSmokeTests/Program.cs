@@ -32,6 +32,23 @@ internal static class Program
         public string? GroupPartnerStateDisplay { get; set; }
     }
 
+    private sealed class ExpectedReportGroupingMetadata
+    {
+        public int GroupingIndex { get; set; }
+        public int GroupingNestingDepth { get; set; }
+        public string GroupingExpression { get; set; } = string.Empty;
+        public int? GroupingExpressionFieldIndex { get; set; }
+        public int GroupingExpressionMemoBlockNumber { get; set; }
+        public string HeaderSectionId { get; set; } = string.Empty;
+        public int? HeaderRecordIndex { get; set; }
+        public bool HeaderDeleted { get; set; }
+        public string FooterSectionId { get; set; } = string.Empty;
+        public int? FooterRecordIndex { get; set; }
+        public bool FooterDeleted { get; set; }
+        public string? HeaderStateDisplay { get; set; }
+        public string? FooterStateDisplay { get; set; }
+    }
+
     [STAThread]
     private static int Main()
     {
@@ -54,6 +71,7 @@ internal static class Program
         SmokeReportSectionGroupingExplorerTitles();
         SmokeReportSectionScopedObjectFiltering();
         SmokeReportSectionPropertyGridSelection();
+        SmokeReportGroupingExplorerSelection();
         SmokeReportSettingsExplorerSelection();
         SmokeDeletedReportSettingsExplorerSelection();
         SmokeAssetEditorReportSectionPropertyGridHostUpdate();
@@ -116,6 +134,8 @@ internal static class Program
                     TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
                     TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX")),
                 expectSection: "Detail");
+            SmokeRealAssetGroupingExplorerSelection(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"));
             SmokeRealAssetHostBackedPropertyRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 7,
@@ -1783,6 +1803,161 @@ internal static class Program
                snapshot.ReportLayout.Sections[0].GroupPartnerRecordIndex == 47 &&
                snapshot.ReportLayout.Sections[0].GroupPartnerDeleted,
             "Localized report section property-grid grouping partner metadata should preserve section snapshot contracts");
+    }
+
+    private static void SmokeReportGroupingExplorerSelection()
+    {
+        var grouping = new CopperfinStudioReportGrouping
+        {
+            GroupingIndex = 1,
+            NestingDepth = 2,
+            Expression = "customer.country",
+            ExpressionFieldIndex = 2,
+            ExpressionMemoBlockNumber = 7,
+            HeaderSectionId = "group_header_7",
+            HeaderRecordIndex = 41,
+            HeaderDeleted = false,
+            FooterSectionId = "group_footer_7",
+            FooterRecordIndex = 47,
+            FooterDeleted = true
+        };
+        var groupingOnlySnapshot = new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "report",
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                Groupings = new List<CopperfinStudioReportGrouping> { grouping }
+            }
+        };
+        var mixedSnapshot = new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "report",
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                Groupings = new List<CopperfinStudioReportGrouping> { grouping },
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail_1",
+                        Title = "Detail",
+                        BandKind = "detail",
+                        RecordIndex = 42,
+                        Top = 2000,
+                        Height = 5000
+                    }
+                }
+            }
+        };
+        var expectedGrouping = new ExpectedReportGroupingMetadata
+        {
+            GroupingIndex = 1,
+            GroupingNestingDepth = 2,
+            GroupingExpression = "customer.country",
+            GroupingExpressionFieldIndex = 2,
+            GroupingExpressionMemoBlockNumber = 7,
+            HeaderSectionId = "group_header_7",
+            HeaderRecordIndex = 41,
+            HeaderDeleted = false,
+            FooterSectionId = "group_footer_7",
+            FooterRecordIndex = 47,
+            FooterDeleted = true,
+            HeaderStateDisplay = "Live",
+            FooterStateDisplay = "Deleted"
+        };
+
+        using var control = new CopperfinAssetEditorControl();
+        ApplyReportSnapshotForExplorerSmoke(control, groupingOnlySnapshot);
+        var sectionListView = GetPrivateListView(control, "sectionListView");
+        var objectListView = GetPrivateListView(control, "objectListView");
+        InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+
+        var propertyGrid = GetPrivatePropertyGrid(control);
+        Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection groupingSelection &&
+               groupingSelection.RecordIndex == 41 &&
+               objectListView.Items.Count == 0 &&
+               SelectionMatchesExpectedReportGrouping(groupingSelection, expectedGrouping),
+            "Report grouping explorer selection should produce a grouping-rooted property-grid selection and clear object rows");
+
+        using var labelControl = new CopperfinAssetEditorControl();
+        var labelSnapshot = new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "label",
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                IsLabel = true,
+                Groupings = new List<CopperfinStudioReportGrouping> { grouping }
+            }
+        };
+        ApplyReportSnapshotForExplorerSmoke(labelControl, labelSnapshot);
+        GetPrivateListView(labelControl, "sectionListView").Items.Cast<ListViewItem>()
+            .First(item => string.Equals(item.Text, "Grouping 1 - customer.country", StringComparison.Ordinal))
+            .Selected = true;
+        InvokeAssetEditorVoid(labelControl, "SyncExplorerSelection");
+        var labelPropertyGrid = GetPrivatePropertyGrid(labelControl);
+        Expect(labelPropertyGrid.SelectedObject is CopperfinDesignerSelection labelSelection &&
+               labelSelection.RecordIndex == 41 &&
+               SelectionMatchesExpectedReportGrouping(labelSelection, expectedGrouping),
+            "Label grouping explorer selection should expose the same shared grouping-rooted property-grid selection");
+
+        var spanishSelection = CopperfinDesignerSelection.FromReportGrouping(grouping, new CopperfinLocalization("es-419"));
+        var spanishProperties = TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().ToList();
+        Expect(spanishProperties.Any(property => string.Equals(property.DisplayName, "Índice de agrupación", StringComparison.Ordinal)) &&
+               spanishProperties.Any(property => string.Equals(property.DisplayName, "Profundidad de agrupación", StringComparison.Ordinal)) &&
+               spanishProperties.Any(property => string.Equals(property.DisplayName, "Expresión de agrupación", StringComparison.Ordinal)) &&
+               spanishProperties.Any(property => string.Equals(property.DisplayName, "Estado de encabezado", StringComparison.Ordinal)) &&
+               string.Equals(spanishProperties.First(property => string.Equals(property.Name, "GROUPHEADERSTATE", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "Activa", StringComparison.Ordinal) &&
+               string.Equals(spanishProperties.First(property => string.Equals(property.Name, "GROUPFOOTERSTATE", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "Eliminada", StringComparison.Ordinal),
+            "Spanish report grouping property-grid selection should localize grouping metadata labels and state values");
+
+        var portugueseSelection = CopperfinDesignerSelection.FromReportGrouping(grouping, new CopperfinLocalization("pt-BR"));
+        var portugueseProperties = TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().ToList();
+        Expect(portugueseProperties.Any(property => string.Equals(property.DisplayName, "Índice de agrupamento", StringComparison.Ordinal)) &&
+               portugueseProperties.Any(property => string.Equals(property.DisplayName, "Profundidade de agrupamento", StringComparison.Ordinal)) &&
+               portugueseProperties.Any(property => string.Equals(property.DisplayName, "Expressão de agrupamento", StringComparison.Ordinal)) &&
+               portugueseProperties.Any(property => string.Equals(property.DisplayName, "Estado do cabeçalho", StringComparison.Ordinal)) &&
+               string.Equals(portugueseProperties.First(property => string.Equals(property.Name, "GROUPHEADERSTATE", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "Ativa", StringComparison.Ordinal) &&
+               string.Equals(portugueseProperties.First(property => string.Equals(property.Name, "GROUPFOOTERSTATE", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "Excluída", StringComparison.Ordinal),
+            "Portuguese report grouping property-grid selection should localize grouping metadata labels and state values");
+
+        var pseudoLocalization = new CopperfinLocalization("qps-ploc");
+        var pseudoSelection = CopperfinDesignerSelection.FromReportGrouping(grouping, pseudoLocalization);
+        var pseudoProperties = TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().ToList();
+        Expect(pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.GroupingHeaderState"), StringComparison.Ordinal)) &&
+               string.Equals(pseudoProperties.First(property => string.Equals(property.Name, "GROUPHEADERSTATE", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), pseudoLocalization.Text("AssetEditor.State.Live"), StringComparison.Ordinal) &&
+               string.Equals(pseudoProperties.First(property => string.Equals(property.Name, "GROUPFOOTERSTATE", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), pseudoLocalization.Text("AssetEditor.State.Deleted"), StringComparison.Ordinal),
+            "Pseudo-localized report grouping property-grid selection should route grouping metadata through the shared catalog");
+
+        using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
+        ApplyReportSnapshotForExplorerSmoke(spanishControl, mixedSnapshot);
+        Expect(GetPrivateListView(spanishControl, "sectionListView").Items.Cast<ListViewItem>()
+                   .Any(item => string.Equals(item.Text, "Agrupación 1 - customer.country", StringComparison.Ordinal)),
+            "Spanish report explorer should localize grouping rows");
+
+        using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
+        ApplyReportSnapshotForExplorerSmoke(portugueseControl, mixedSnapshot);
+        Expect(GetPrivateListView(portugueseControl, "sectionListView").Items.Cast<ListViewItem>()
+                   .Any(item => string.Equals(item.Text, "Agrupamento 1 - customer.country", StringComparison.Ordinal)),
+            "Portuguese report explorer should localize grouping rows");
+
+        using var pseudoControl = new CopperfinAssetEditorControl(pseudoLocalization);
+        ApplyReportSnapshotForExplorerSmoke(pseudoControl, mixedSnapshot);
+        Expect(GetPrivateListView(pseudoControl, "sectionListView").Items.Cast<ListViewItem>()
+                   .Any(item => string.Equals(item.Text, pseudoLocalization.Format("AssetEditor.ReportSection.GroupingWithExpression", 1, "customer.country"), StringComparison.Ordinal)),
+            "Pseudo-localized report explorer should route grouping rows through the shared catalog");
+
+        Expect(grouping.GroupingIndex == 1 &&
+               grouping.NestingDepth == 2 &&
+               string.Equals(grouping.Expression, "customer.country", StringComparison.Ordinal) &&
+               grouping.ExpressionFieldIndex == 2 &&
+               grouping.ExpressionMemoBlockNumber == 7 &&
+               string.Equals(grouping.HeaderSectionId, "group_header_7", StringComparison.Ordinal) &&
+               grouping.HeaderRecordIndex == 41 &&
+               !grouping.HeaderDeleted &&
+               string.Equals(grouping.FooterSectionId, "group_footer_7", StringComparison.Ordinal) &&
+               grouping.FooterRecordIndex == 47 &&
+               grouping.FooterDeleted,
+            "Localized report grouping property-grid selection should preserve grouping machine contracts");
     }
 
     private static void SmokeReportSettingsExplorerSelection()
@@ -8008,6 +8183,93 @@ internal static class Program
         TearDownForm(hostForm);
     }
 
+    private static void SmokeRealAssetGroupingExplorerSelection(string? sourcePath)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(sourcePath) ? "real grouped asset candidate" : sourcePath)} not found.");
+            return;
+        }
+
+        var loadedSnapshot = CopperfinStudioSnapshotClient.TryLoad(sourcePath!);
+        Expect(loadedSnapshot.Success && loadedSnapshot.Document?.ReportLayout?.Groupings.Count > 0,
+            $"real asset grouping smoke should load grouping metadata for {sourcePath}");
+        var loadedReportLayout = loadedSnapshot.Document?.ReportLayout;
+        if (!loadedSnapshot.Success || loadedReportLayout?.Groupings.Count <= 0)
+        {
+            return;
+        }
+
+        var reportLayout = loadedReportLayout;
+        var grouping = reportLayout!.Groupings[0];
+        var expectedExplorerTitle = string.IsNullOrWhiteSpace(grouping.Expression)
+            ? $"Grouping {grouping.GroupingIndex}"
+            : $"Grouping {grouping.GroupingIndex} - {grouping.Expression}";
+        var expectedGrouping = new ExpectedReportGroupingMetadata
+        {
+            GroupingIndex = grouping.GroupingIndex,
+            GroupingNestingDepth = grouping.NestingDepth,
+            GroupingExpression = grouping.Expression,
+            GroupingExpressionFieldIndex = grouping.ExpressionFieldIndex,
+            GroupingExpressionMemoBlockNumber = grouping.ExpressionMemoBlockNumber,
+            HeaderSectionId = grouping.HeaderSectionId,
+            HeaderRecordIndex = grouping.HeaderRecordIndex,
+            HeaderDeleted = grouping.HeaderDeleted,
+            FooterSectionId = grouping.FooterSectionId,
+            FooterRecordIndex = grouping.FooterRecordIndex,
+            FooterDeleted = grouping.FooterDeleted,
+            HeaderStateDisplay = grouping.HeaderDeleted ? "Deleted" : "Live",
+            FooterStateDisplay = grouping.FooterDeleted ? "Deleted" : "Live"
+        };
+
+        using var hostForm = new Form
+        {
+            Width = 1400,
+            Height = 1000,
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-32000, -32000)
+        };
+
+        using var control = new CopperfinAssetEditorControl
+        {
+            Dock = DockStyle.Fill
+        };
+
+        hostForm.Controls.Add(control);
+        hostForm.Show();
+        Application.DoEvents();
+        control.LoadDocument(sourcePath!);
+
+        var sectionListView = GetPrivateListView(control, "sectionListView");
+        var objectListView = GetPrivateListView(control, "objectListView");
+        var propertyGrid = GetPrivatePropertyGrid(control);
+        var loaded = WaitUntil(
+            TimeSpan.FromSeconds(8),
+            () => sectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, expectedExplorerTitle, StringComparison.Ordinal)));
+        Expect(loaded, $"real asset grouping smoke should surface explorer row '{expectedExplorerTitle}' for {sourcePath}");
+        if (!loaded)
+        {
+            TearDownForm(hostForm);
+            return;
+        }
+
+        foreach (ListViewItem item in sectionListView.Items)
+        {
+            item.Selected = string.Equals(item.Text, expectedExplorerTitle, StringComparison.Ordinal);
+        }
+
+        InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+        Application.DoEvents();
+
+        Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection groupingSelection &&
+               SelectionMatchesExpectedReportGrouping(groupingSelection, expectedGrouping) &&
+               objectListView.Items.Count == 0,
+            $"real asset grouping smoke should expose shared grouping metadata continuity for {sourcePath}");
+
+        TearDownForm(hostForm);
+    }
+
     private static void SmokeRealAssetHostBackedPropertyRoundTrip(
         string? sourcePath,
         int recordIndex,
@@ -13740,6 +14002,27 @@ internal static class Program
                string.Equals(ReadSelectionPropertyValue(selection, "GROUPPARTNERSECTIONID"), expectedGrouping.GroupPartnerSectionId, StringComparison.Ordinal) &&
                string.Equals(ReadSelectionPropertyValue(selection, "GROUPPARTNERRECORD"), expectedGrouping.GroupPartnerRecordIndex.ToString(), StringComparison.Ordinal) &&
                string.Equals(ReadSelectionPropertyValue(selection, "GROUPPARTNERSTATE"), expectedPartnerStateDisplay, StringComparison.Ordinal);
+    }
+
+    private static bool SelectionMatchesExpectedReportGrouping(
+        CopperfinDesignerSelection selection,
+        ExpectedReportGroupingMetadata expectedGrouping)
+    {
+        var expectedHeaderStateDisplay = expectedGrouping.HeaderStateDisplay ??
+                                         (expectedGrouping.HeaderDeleted ? "Deleted" : "Live");
+        var expectedFooterStateDisplay = expectedGrouping.FooterStateDisplay ??
+                                         (expectedGrouping.FooterDeleted ? "Deleted" : "Live");
+        return string.Equals(ReadSelectionPropertyValue(selection, "GROUPINGINDEX"), expectedGrouping.GroupingIndex.ToString(), StringComparison.Ordinal) &&
+               string.Equals(ReadSelectionPropertyValue(selection, "GROUPINGNESTINGDEPTH"), expectedGrouping.GroupingNestingDepth.ToString(), StringComparison.Ordinal) &&
+               string.Equals(ReadSelectionPropertyValue(selection, "GROUPINGEXPRESSION"), expectedGrouping.GroupingExpression, StringComparison.Ordinal) &&
+               string.Equals(ReadSelectionPropertyValue(selection, "GROUPINGEXPRESSIONFIELD"), expectedGrouping.GroupingExpressionFieldIndex?.ToString(), StringComparison.Ordinal) &&
+               string.Equals(ReadSelectionPropertyValue(selection, "GROUPINGEXPRESSIONMEMO"), expectedGrouping.GroupingExpressionMemoBlockNumber.ToString(), StringComparison.Ordinal) &&
+               string.Equals(ReadSelectionPropertyValue(selection, "GROUPHEADERSECTIONID"), expectedGrouping.HeaderSectionId, StringComparison.Ordinal) &&
+               string.Equals(ReadSelectionPropertyValue(selection, "GROUPHEADERRECORD"), expectedGrouping.HeaderRecordIndex?.ToString(), StringComparison.Ordinal) &&
+               string.Equals(ReadSelectionPropertyValue(selection, "GROUPHEADERSTATE"), expectedHeaderStateDisplay, StringComparison.Ordinal) &&
+               string.Equals(ReadSelectionPropertyValue(selection, "GROUPFOOTERSECTIONID"), expectedGrouping.FooterSectionId, StringComparison.Ordinal) &&
+               string.Equals(ReadSelectionPropertyValue(selection, "GROUPFOOTERRECORD"), expectedGrouping.FooterRecordIndex?.ToString(), StringComparison.Ordinal) &&
+               string.Equals(ReadSelectionPropertyValue(selection, "GROUPFOOTERSTATE"), expectedFooterStateDisplay, StringComparison.Ordinal);
     }
 
     private static string? ReadSelectionPropertyValue(CopperfinDesignerSelection selection, string propertyName)

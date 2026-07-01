@@ -344,6 +344,95 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         return selection;
     }
 
+    public static CopperfinDesignerSelection FromReportGrouping(
+        CopperfinStudioReportGrouping grouping,
+        CopperfinLocalization localization)
+    {
+        var selection = new CopperfinDesignerSelection
+        {
+            RecordIndex = grouping.HeaderRecordIndex ?? grouping.FooterRecordIndex ?? 0
+        };
+
+        selection.AddReadOnlyInt(
+            "GROUPINGINDEX",
+            localization.Text("AssetEditor.Property.GroupingIndex"),
+            grouping.GroupingIndex.ToString(CultureInfo.InvariantCulture));
+        selection.AddReadOnlyInt(
+            "GROUPINGNESTINGDEPTH",
+            localization.Text("AssetEditor.Property.GroupingNestingDepth"),
+            grouping.NestingDepth.ToString(CultureInfo.InvariantCulture));
+        selection.AddReadOnlyString(
+            "GROUPINGEXPRESSION",
+            localization.Text("AssetEditor.Property.GroupingExpression"),
+            grouping.Expression);
+
+        if (grouping.ExpressionFieldIndex.HasValue)
+        {
+            selection.AddReadOnlyInt(
+                "GROUPINGEXPRESSIONFIELD",
+                localization.Text("AssetEditor.Property.GroupingExpressionFieldIndex"),
+                grouping.ExpressionFieldIndex.Value.ToString(CultureInfo.InvariantCulture));
+        }
+
+        if (grouping.ExpressionMemoBlockNumber > 0)
+        {
+            selection.AddReadOnlyInt(
+                "GROUPINGEXPRESSIONMEMO",
+                localization.Text("AssetEditor.Property.GroupingExpressionMemoBlock"),
+                grouping.ExpressionMemoBlockNumber.ToString(CultureInfo.InvariantCulture));
+        }
+
+        if (!string.IsNullOrWhiteSpace(grouping.HeaderSectionId))
+        {
+            selection.AddReadOnlyString(
+                "GROUPHEADERSECTIONID",
+                localization.Text("AssetEditor.Property.GroupingHeaderSectionId"),
+                grouping.HeaderSectionId);
+        }
+
+        if (grouping.HeaderRecordIndex.HasValue)
+        {
+            selection.AddReadOnlyInt(
+                "GROUPHEADERRECORD",
+                localization.Text("AssetEditor.Property.GroupingHeaderRecord"),
+                grouping.HeaderRecordIndex.Value.ToString(CultureInfo.InvariantCulture));
+        }
+
+        if (!string.IsNullOrWhiteSpace(grouping.HeaderSectionId) || grouping.HeaderRecordIndex.HasValue)
+        {
+            selection.AddReadOnlyString(
+                "GROUPHEADERSTATE",
+                localization.Text("AssetEditor.Property.GroupingHeaderState"),
+                BuildStateText(localization, grouping.HeaderDeleted));
+        }
+
+        if (!string.IsNullOrWhiteSpace(grouping.FooterSectionId))
+        {
+            selection.AddReadOnlyString(
+                "GROUPFOOTERSECTIONID",
+                localization.Text("AssetEditor.Property.GroupingFooterSectionId"),
+                grouping.FooterSectionId);
+        }
+
+        if (grouping.FooterRecordIndex.HasValue)
+        {
+            selection.AddReadOnlyInt(
+                "GROUPFOOTERRECORD",
+                localization.Text("AssetEditor.Property.GroupingFooterRecord"),
+                grouping.FooterRecordIndex.Value.ToString(CultureInfo.InvariantCulture));
+        }
+
+        if (!string.IsNullOrWhiteSpace(grouping.FooterSectionId) || grouping.FooterRecordIndex.HasValue)
+        {
+            selection.AddReadOnlyString(
+                "GROUPFOOTERSTATE",
+                localization.Text("AssetEditor.Property.GroupingFooterState"),
+                BuildStateText(localization, grouping.FooterDeleted));
+        }
+
+        return selection;
+    }
+
     private static string BuildReportBandKindDisplayText(CopperfinLocalization localization, string bandKind)
     {
         var key = bandKind switch
