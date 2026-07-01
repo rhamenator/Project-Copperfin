@@ -626,6 +626,62 @@ internal static class Program
                     FieldIndex = 19,
                     MemoBlockNumber = 17
                 });
+            SmokeRealAssetHostBackedMissingSettingsRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                propertyName: "TOPMARGIN",
+                updatedValue: "7",
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "TOPMARGIN",
+                    Value = "7",
+                    RecordIndex = 0,
+                    FieldIndex = 62,
+                    MemoBlockNumber = 0
+                });
+            SmokeRealAssetHostBackedMissingSettingsRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                propertyName: "BOTMARGIN",
+                updatedValue: "9",
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "BOTMARGIN",
+                    Value = "9",
+                    RecordIndex = 0,
+                    FieldIndex = 63,
+                    MemoBlockNumber = 0
+                });
+            SmokeRealAssetHostBackedMissingSettingsRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                propertyName: "TOPMARGIN",
+                updatedValue: "7",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "TOPMARGIN",
+                    Value = "7",
+                    RecordIndex = 0,
+                    FieldIndex = 62,
+                    MemoBlockNumber = 0
+                });
+            SmokeRealAssetHostBackedMissingSettingsRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                propertyName: "BOTMARGIN",
+                updatedValue: "9",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "BOTMARGIN",
+                    Value = "9",
+                    RecordIndex = 0,
+                    FieldIndex = 63,
+                    MemoBlockNumber = 0
+                });
             SmokeRealAssetHostBackedSettingsRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 propertyName: "GRIDV",
@@ -801,6 +857,70 @@ internal static class Program
                     RecordIndex = 0,
                     FieldIndex = 19,
                     MemoBlockNumber = 17
+                });
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                propertyName: "TOPMARGIN",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: 7,
+                expectedUpdatedSelectionValue: "7",
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "TOPMARGIN",
+                    Value = "7",
+                    RecordIndex = 0,
+                    FieldIndex = 62,
+                    MemoBlockNumber = 0
+                });
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                propertyName: "BOTMARGIN",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: 9,
+                expectedUpdatedSelectionValue: "9",
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "BOTMARGIN",
+                    Value = "9",
+                    RecordIndex = 0,
+                    FieldIndex = 63,
+                    MemoBlockNumber = 0
+                });
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                propertyName: "TOPMARGIN",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: 7,
+                expectedUpdatedSelectionValue: "7",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "TOPMARGIN",
+                    Value = "7",
+                    RecordIndex = 0,
+                    FieldIndex = 62,
+                    MemoBlockNumber = 0
+                });
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                propertyName: "BOTMARGIN",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: 9,
+                expectedUpdatedSelectionValue: "9",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "BOTMARGIN",
+                    Value = "9",
+                    RecordIndex = 0,
+                    FieldIndex = 63,
+                    MemoBlockNumber = 0
                 });
             SmokeAssetEditorSettingsRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
