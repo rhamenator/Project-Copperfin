@@ -3137,6 +3137,33 @@ internal static class Program
                 },
                 expectedObjectListCount: 12);
             SmokeAssetEditorSectionMetadataSelectionWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/bandedm.FRX"),
+                recordIndex: 5,
+                expectedSectionListTitle: "Group Header - OneToMany",
+                expectedProperties: new[]
+                {
+                    new KeyValuePair<string, string>("SECTIONSTATE", "Live"),
+                    new KeyValuePair<string, string>("BANDKIND", "Group Header"),
+                    new KeyValuePair<string, string>("RECORDINDEX", "5"),
+                    new KeyValuePair<string, string>("OBJECTCOUNT", "8"),
+                    new KeyValuePair<string, string>("DELETEDOBJECTCOUNT", "0"),
+                    new KeyValuePair<string, string>("TOP", "0"),
+                    new KeyValuePair<string, string>("HEIGHT", "7605"),
+                    new KeyValuePair<string, string>("GROUPROLE", "Header"),
+                    new KeyValuePair<string, string>("GROUPINGINDEX", "0"),
+                    new KeyValuePair<string, string>("GROUPINGNESTINGDEPTH", "0"),
+                    new KeyValuePair<string, string>("EXPR", "OneToMany"),
+                    new KeyValuePair<string, string>("EXPRESSIONFIELD", "6"),
+                    new KeyValuePair<string, string>("EXPRESSIONMEMO", "25"),
+                    new KeyValuePair<string, string>("GROUPINGEXPRESSION", "OneToMany"),
+                    new KeyValuePair<string, string>("GROUPINGEXPRESSIONFIELD", "6"),
+                    new KeyValuePair<string, string>("GROUPINGEXPRESSIONMEMO", "25"),
+                    new KeyValuePair<string, string>("GROUPPARTNERSECTIONID", "_RME0ORXFY"),
+                    new KeyValuePair<string, string>("GROUPPARTNERRECORD", "7"),
+                    new KeyValuePair<string, string>("GROUPPARTNERSTATE", "Live")
+                },
+                expectedObjectListCount: 8);
+            SmokeAssetEditorSectionMetadataSelectionWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 4,
                 expectedSectionListTitle: "Detail",
