@@ -751,6 +751,19 @@ internal static class Program
                     GroupPartnerDeleted = false,
                     GroupPartnerStateDisplay = "Live"
                 });
+            SmokeAssetEditorSectionMetadataSelectionWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 3,
+                expectedSectionListTitle: "Group Header - titles_by_author.author_id",
+                expectedProperties: new[]
+                {
+                    new KeyValuePair<string, string>("EXPR", "titles_by_author.author_id"),
+                    new KeyValuePair<string, string>("EXPRESSIONFIELD", "6"),
+                    new KeyValuePair<string, string>("EXPRESSIONMEMO", "18"),
+                    new KeyValuePair<string, string>("GROUPINGEXPRESSION", "titles_by_author.author_id"),
+                    new KeyValuePair<string, string>("GROUPINGEXPRESSIONFIELD", "6"),
+                    new KeyValuePair<string, string>("GROUPINGEXPRESSIONMEMO", "18")
+                });
             SmokeAssetEditorBatchPropertyRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 7,
@@ -1586,6 +1599,8 @@ internal static class Program
                         Height = 5000,
                         DeletedObjectCount = 1,
                         Expression = "customer.company",
+                        ExpressionFieldIndex = 3,
+                        ExpressionMemoBlockNumber = 9,
                         GroupingIndex = 1,
                         GroupingNestingDepth = 2,
                         GroupRole = "header",
@@ -1655,6 +1670,10 @@ internal static class Program
                string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "EXPR", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "customer.company", StringComparison.Ordinal) &&
                string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "GROUPINGEXPRESSION", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "customer.country", StringComparison.Ordinal),
             "Spanish report section property-grid selection should separate section expression edits from grouping-expression metadata");
+        Expect(spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Campo de la expresión", StringComparison.Ordinal)) &&
+               string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "EXPRESSIONFIELD", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "3", StringComparison.Ordinal) &&
+               string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "EXPRESSIONMEMO", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "9", StringComparison.Ordinal),
+            "Spanish report section property-grid selection should expose section-expression provenance metadata");
         Expect(spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Campo de la expresión de agrupación", StringComparison.Ordinal)) &&
                string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "GROUPINGEXPRESSIONFIELD", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "2", StringComparison.Ordinal) &&
                string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "GROUPINGEXPRESSIONMEMO", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "7", StringComparison.Ordinal),
@@ -1689,6 +1708,10 @@ internal static class Program
                string.Equals(portugueseSectionProperties.First(property => string.Equals(property.Name, "EXPR", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "customer.company", StringComparison.Ordinal) &&
                string.Equals(portugueseSectionProperties.First(property => string.Equals(property.Name, "GROUPINGEXPRESSION", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "customer.country", StringComparison.Ordinal),
             "Portuguese report section property-grid selection should separate section expression edits from grouping-expression metadata");
+        Expect(portugueseSectionProperties.Any(property => string.Equals(property.DisplayName, "Campo da expressão", StringComparison.Ordinal)) &&
+               string.Equals(portugueseSectionProperties.First(property => string.Equals(property.Name, "EXPRESSIONFIELD", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "3", StringComparison.Ordinal) &&
+               string.Equals(portugueseSectionProperties.First(property => string.Equals(property.Name, "EXPRESSIONMEMO", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "9", StringComparison.Ordinal),
+            "Portuguese report section property-grid selection should expose section-expression provenance metadata");
         Expect(portugueseSectionProperties.Any(property => string.Equals(property.DisplayName, "Campo da expressão de agrupamento", StringComparison.Ordinal)) &&
                string.Equals(portugueseSectionProperties.First(property => string.Equals(property.Name, "GROUPINGEXPRESSIONFIELD", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "2", StringComparison.Ordinal) &&
                string.Equals(portugueseSectionProperties.First(property => string.Equals(property.Name, "GROUPINGEXPRESSIONMEMO", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "7", StringComparison.Ordinal),
@@ -1723,6 +1746,9 @@ internal static class Program
                pseudoSectionProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Expression"), StringComparison.Ordinal)) &&
                string.Equals(pseudoSectionProperties.First(property => string.Equals(property.Name, "GROUPINGEXPRESSION", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), "customer.country", StringComparison.Ordinal),
             "Pseudo-localized report section property-grid selection should keep section expression editing separate from grouped metadata");
+        Expect(string.Equals(pseudoSectionProperties.First(property => string.Equals(property.Name, "EXPRESSIONFIELD", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), "3", StringComparison.Ordinal) &&
+               pseudoSectionProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ExpressionMemoBlock"), StringComparison.Ordinal)),
+            "Pseudo-localized report section property-grid selection should route section-expression provenance metadata through the shared catalog");
         Expect(string.Equals(pseudoSectionProperties.First(property => string.Equals(property.Name, "GROUPINGEXPRESSIONFIELD", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), "2", StringComparison.Ordinal) &&
                pseudoSectionProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.GroupingExpressionMemoBlock"), StringComparison.Ordinal)),
             "Pseudo-localized report section property-grid selection should route grouping-expression provenance metadata through the shared catalog");
@@ -1737,6 +1763,9 @@ internal static class Program
         Expect(snapshot.ReportLayout.Sections[0].GroupingIndex == 1 &&
                snapshot.ReportLayout.Sections[0].GroupingNestingDepth == 2,
             "Localized report section property-grid grouping index metadata should preserve section snapshot contracts");
+        Expect(snapshot.ReportLayout.Sections[0].ExpressionFieldIndex == 3 &&
+               snapshot.ReportLayout.Sections[0].ExpressionMemoBlockNumber == 9,
+            "Localized report section property-grid section-expression provenance should preserve section snapshot contracts");
         Expect(snapshot.ReportLayout.Sections[0].RecordIndex == 41,
             "Localized report section property-grid record metadata should preserve section snapshot contracts");
         Expect(snapshot.ReportLayout.Sections[0].Objects.Count == 0,
@@ -6049,6 +6078,9 @@ internal static class Program
                         RecordIndex = 51,
                         Deleted = true,
                         GroupingContextAvailable = true,
+                        Expression = "customer.deleted_country",
+                        ExpressionFieldIndex = 4,
+                        ExpressionMemoBlockNumber = 10,
                         GroupingExpression = "customer.deleted_country",
                         GroupingExpressionFieldIndex = 4,
                         GroupingExpressionMemoBlockNumber = 12,
@@ -6099,7 +6131,9 @@ internal static class Program
 
             Expect(string.Equals(TypeDescriptor.GetProperties(deletedSelection)["SECTIONSTATE"]?.GetValue(deletedSelection)?.ToString(), "Deleted", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(deletedSelection)["RECORDINDEX"]?.GetValue(deletedSelection)?.ToString(), "51", StringComparison.Ordinal) &&
-                   string.Equals(TypeDescriptor.GetProperties(deletedSelection)["OBJECTCOUNT"]?.GetValue(deletedSelection)?.ToString(), "1", StringComparison.Ordinal),
+                   string.Equals(TypeDescriptor.GetProperties(deletedSelection)["OBJECTCOUNT"]?.GetValue(deletedSelection)?.ToString(), "1", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(deletedSelection)["EXPRESSIONFIELD"]?.GetValue(deletedSelection)?.ToString(), "4", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(deletedSelection)["EXPRESSIONMEMO"]?.GetValue(deletedSelection)?.ToString(), "10", StringComparison.Ordinal),
                 "Deleted report section explorer selection should expose deleted section state, record, and object-count metadata");
         }
         Expect(objectListView.Items.Cast<ListViewItem>().Select(item => item.Text).SequenceEqual(new[] { "deleted.footer.total" }),
@@ -6114,7 +6148,9 @@ internal static class Program
         var spanishDeletedSelection = CopperfinDesignerSelection.FromReportSection(snapshot.ReportLayout.DeletedSections[0], new CopperfinLocalization("es-419"));
         Expect(string.Equals(TypeDescriptor.GetProperties(spanishDeletedSelection)["SECTIONSTATE"]?.GetValue(spanishDeletedSelection)?.ToString(), "Eliminada", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(spanishDeletedSelection)["RECORDINDEX"]?.GetValue(spanishDeletedSelection)?.ToString(), "51", StringComparison.Ordinal) &&
-               string.Equals(TypeDescriptor.GetProperties(spanishDeletedSelection)["OBJECTCOUNT"]?.GetValue(spanishDeletedSelection)?.ToString(), "1", StringComparison.Ordinal),
+               string.Equals(TypeDescriptor.GetProperties(spanishDeletedSelection)["OBJECTCOUNT"]?.GetValue(spanishDeletedSelection)?.ToString(), "1", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(spanishDeletedSelection)["EXPRESSIONFIELD"]?.GetValue(spanishDeletedSelection)?.ToString(), "4", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(spanishDeletedSelection)["EXPRESSIONMEMO"]?.GetValue(spanishDeletedSelection)?.ToString(), "10", StringComparison.Ordinal),
             "Spanish deleted report section property-grid selection should localize deleted section state values and preserve record/object metadata");
 
         using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
@@ -6126,7 +6162,9 @@ internal static class Program
         var portugueseDeletedSelection = CopperfinDesignerSelection.FromReportSection(snapshot.ReportLayout.DeletedSections[0], new CopperfinLocalization("pt-BR"));
         Expect(string.Equals(TypeDescriptor.GetProperties(portugueseDeletedSelection)["SECTIONSTATE"]?.GetValue(portugueseDeletedSelection)?.ToString(), "Excluída", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(portugueseDeletedSelection)["RECORDINDEX"]?.GetValue(portugueseDeletedSelection)?.ToString(), "51", StringComparison.Ordinal) &&
-               string.Equals(TypeDescriptor.GetProperties(portugueseDeletedSelection)["OBJECTCOUNT"]?.GetValue(portugueseDeletedSelection)?.ToString(), "1", StringComparison.Ordinal),
+               string.Equals(TypeDescriptor.GetProperties(portugueseDeletedSelection)["OBJECTCOUNT"]?.GetValue(portugueseDeletedSelection)?.ToString(), "1", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(portugueseDeletedSelection)["EXPRESSIONFIELD"]?.GetValue(portugueseDeletedSelection)?.ToString(), "4", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(portugueseDeletedSelection)["EXPRESSIONMEMO"]?.GetValue(portugueseDeletedSelection)?.ToString(), "10", StringComparison.Ordinal),
             "Portuguese deleted report section property-grid selection should localize deleted section state values and preserve record/object metadata");
 
         var pseudoLocalization = new CopperfinLocalization("qps-ploc");
@@ -6139,7 +6177,9 @@ internal static class Program
         var pseudoDeletedSelection = CopperfinDesignerSelection.FromReportSection(snapshot.ReportLayout.DeletedSections[0], pseudoLocalization);
         Expect(string.Equals(TypeDescriptor.GetProperties(pseudoDeletedSelection)["SECTIONSTATE"]?.GetValue(pseudoDeletedSelection)?.ToString(), pseudoLocalization.Text("AssetEditor.State.Deleted"), StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(pseudoDeletedSelection)["RECORDINDEX"]?.GetValue(pseudoDeletedSelection)?.ToString(), "51", StringComparison.Ordinal) &&
-               string.Equals(TypeDescriptor.GetProperties(pseudoDeletedSelection)["OBJECTCOUNT"]?.GetValue(pseudoDeletedSelection)?.ToString(), "1", StringComparison.Ordinal),
+               string.Equals(TypeDescriptor.GetProperties(pseudoDeletedSelection)["OBJECTCOUNT"]?.GetValue(pseudoDeletedSelection)?.ToString(), "1", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(pseudoDeletedSelection)["EXPRESSIONFIELD"]?.GetValue(pseudoDeletedSelection)?.ToString(), "4", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(pseudoDeletedSelection)["EXPRESSIONMEMO"]?.GetValue(pseudoDeletedSelection)?.ToString(), "10", StringComparison.Ordinal),
             "Pseudo-localized deleted report section property-grid selection should route deleted section state values and preserve record/object metadata");
         Expect(snapshot.ReportLayout.DeletedSections[0].Deleted,
             "Deleted report section property-grid state values should preserve deleted section snapshot contracts");
@@ -6147,6 +6187,9 @@ internal static class Program
             "Deleted report section property-grid record metadata should preserve deleted section snapshot contracts");
         Expect(snapshot.ReportLayout.DeletedSections[0].Objects.Count == 1,
             "Deleted report section property-grid object-count metadata should preserve deleted section snapshot contracts");
+        Expect(snapshot.ReportLayout.DeletedSections[0].ExpressionFieldIndex == 4 &&
+               snapshot.ReportLayout.DeletedSections[0].ExpressionMemoBlockNumber == 10,
+            "Deleted report section property-grid section-expression provenance should preserve deleted section snapshot contracts");
     }
 
     private static void SmokeReportSurfaceScopeSelection()
@@ -11966,6 +12009,85 @@ internal static class Program
             {
             }
         }
+    }
+
+    private static void SmokeAssetEditorSectionMetadataSelectionWithRealAsset(
+        string? sourcePath,
+        int recordIndex,
+        string expectedSectionListTitle,
+        IReadOnlyList<KeyValuePair<string, string>> expectedProperties)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(sourcePath) ? "real asset editor section-metadata candidate" : sourcePath)} not found.");
+            return;
+        }
+
+        using var hostForm = new Form
+        {
+            Width = 1400,
+            Height = 1000,
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-32000, -32000)
+        };
+
+        using var control = new CopperfinAssetEditorControl
+        {
+            Dock = DockStyle.Fill
+        };
+
+        hostForm.Controls.Add(control);
+        hostForm.Show();
+        Application.DoEvents();
+        control.LoadDocument(sourcePath!);
+
+        var sectionListView = GetPrivateListView(control, "sectionListView");
+        var objectListView = GetPrivateListView(control, "objectListView");
+        var propertyGrid = GetPrivatePropertyGrid(control);
+
+        var loaded = WaitUntil(
+            TimeSpan.FromSeconds(8),
+            () => sectionListView.Items.Count > 0);
+        Expect(loaded, $"real asset editor section-metadata smoke should load section data for {sourcePath}");
+        if (!loaded)
+        {
+            return;
+        }
+
+        foreach (ListViewItem item in sectionListView.Items)
+        {
+            item.Selected = item.Tag is CopperfinStudioReportSection section &&
+                            section.RecordIndex == recordIndex;
+        }
+
+        InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+        Application.DoEvents();
+
+        var selected = WaitUntil(
+            TimeSpan.FromSeconds(8),
+            () => propertyGrid.SelectedObject is CopperfinDesignerSelection selection &&
+                  selection.RecordIndex == recordIndex &&
+                  string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, expectedSectionListTitle, StringComparison.OrdinalIgnoreCase) &&
+                  objectListView.Items.Count == 0);
+        Expect(selected,
+            $"real asset editor section-metadata smoke should produce a section-rooted selection for {sourcePath}");
+        if (!selected || propertyGrid.SelectedObject is not CopperfinDesignerSelection sectionSelection)
+        {
+            TearDownForm(hostForm);
+            return;
+        }
+
+        foreach (var expectedProperty in expectedProperties)
+        {
+            Expect(string.Equals(
+                    ReadSelectionPropertyValue(sectionSelection, expectedProperty.Key),
+                    expectedProperty.Value,
+                    StringComparison.Ordinal),
+                $"real asset editor section-metadata smoke should expose {expectedProperty.Key}={expectedProperty.Value} for {sourcePath}");
+        }
+
+        TearDownForm(hostForm);
     }
 
     private static void SmokeAssetEditorBatchPropertyRoundTripWithRealAsset(
