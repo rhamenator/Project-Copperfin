@@ -54,6 +54,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly Button reorderFrontObjectButton;
     private readonly Button reorderBackObjectButton;
     private readonly Button alignLeftObjectButton;
+    private readonly Button matchSizeObjectButton;
     private readonly Button distributeHorizontalObjectButton;
     private readonly Button snapToGridObjectButton;
     private readonly Button deleteObjectButton;
@@ -229,6 +230,18 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             executingKey: "AssetEditor.ObjectAlignment.Left.Executing",
             failedKey: "AssetEditor.ObjectAlignment.Left.Failed",
             completedKey: "AssetEditor.ObjectAlignment.Left.Completed");
+
+        matchSizeObjectButton = new Button
+        {
+            AutoSize = true,
+            Text = this.localization.Text("AssetEditor.ObjectResize.SizeButton"),
+            Visible = false
+        };
+        matchSizeObjectButton.Click += (_, _) => TryHandleResizeObjectCommand(
+            resizeMode: "size",
+            executingKey: "AssetEditor.ObjectResize.Size.Executing",
+            failedKey: "AssetEditor.ObjectResize.Size.Failed",
+            completedKey: "AssetEditor.ObjectResize.Size.Completed");
 
         distributeHorizontalObjectButton = new Button
         {
@@ -655,6 +668,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         buttonPanel.Controls.Add(reorderFrontObjectButton);
         buttonPanel.Controls.Add(reorderBackObjectButton);
         buttonPanel.Controls.Add(alignLeftObjectButton);
+        buttonPanel.Controls.Add(matchSizeObjectButton);
         buttonPanel.Controls.Add(distributeHorizontalObjectButton);
         buttonPanel.Controls.Add(snapToGridObjectButton);
         buttonPanel.Controls.Add(deleteObjectButton);
@@ -1666,6 +1680,79 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         return true;
     }
 
+    private bool TryHandleResizeObjectCommand(
+        string resizeMode,
+        string executingKey,
+        string failedKey,
+        string completedKey)
+    {
+        if (currentSnapshot?.AssetFamily is not ("report" or "label") || string.IsNullOrWhiteSpace(currentPath))
+        {
+            return false;
+        }
+
+        if (TryReadSelectedExplorerTag() is not CopperfinStudioReportSection { Deleted: false })
+        {
+            return false;
+        }
+
+        var selectedObjects = TryGetSelectedSnapshotObjects();
+        var anchorObject = TryGetSelectedSnapshotObject();
+        if (anchorObject is null || anchorObject.Deleted || selectedObjects.Count < 2)
+        {
+            return false;
+        }
+
+        var anchorUniqueId = TryReadObjectUniqueId(anchorObject);
+        var targetUniqueIds = selectedObjects
+            .Where(selectedObject => selectedObject.RecordIndex != anchorObject.RecordIndex && !selectedObject.Deleted)
+            .Select(TryReadObjectUniqueId)
+            .Where(uniqueId => !string.IsNullOrWhiteSpace(uniqueId))
+            .Cast<string>()
+            .ToList();
+        if (string.IsNullOrWhiteSpace(anchorUniqueId) || targetUniqueIds.Count != selectedObjects.Count - 1)
+        {
+            snapshotStatusLabel.Text = this.localization.Text("AssetEditor.ObjectResize.StableIdsRequired");
+            return false;
+        }
+
+        var explorerSelection = CaptureExplorerSelectionState();
+        snapshotStatusLabel.Text = this.localization.Text(executingKey);
+
+        var resizeResult = CopperfinStudioSnapshotClient.TryResizeObject(
+            currentPath!,
+            anchorObject.RecordIndex,
+            anchorUniqueId!,
+            resizeMode,
+            targetUniqueIds);
+        if (!resizeResult.Success || resizeResult.Document is null)
+        {
+            snapshotStatusLabel.Text = this.localization.Format(
+                failedKey,
+                resizeResult.Error ?? string.Empty);
+            return false;
+        }
+
+        currentSnapshot = resizeResult.Document;
+        detailsLabel.Text = BuildSnapshotDetailsText(new FileInfo(currentPath!), currentSnapshot);
+        snapshotStatusLabel.Text = this.localization.Format(
+            completedKey,
+            currentSnapshot.Objects.Count,
+            currentSnapshot.FieldCount);
+        var selectedRecordIndexes = new List<int> { anchorObject.RecordIndex };
+        selectedRecordIndexes.AddRange(targetUniqueIds
+            .Select(uniqueId => TryReadObjectRecordIndex(currentSnapshot, uniqueId))
+            .Where(recordIndex => recordIndex.HasValue)
+            .Select(recordIndex => recordIndex!.Value));
+        PopulateSectionList(explorerSelection);
+        SyncExplorerSelection();
+        LoadSurface();
+        designSurface.SelectRecord(anchorObject.RecordIndex);
+        SyncSelectionFromSurface(anchorObject.RecordIndex);
+        RestoreSnapshotObjectSelection(selectedRecordIndexes, anchorObject.RecordIndex);
+        return true;
+    }
+
     private bool TryHandleSnapObjectCommand(
         string snapMode,
         string executingKey,
@@ -2256,6 +2343,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         var showAlignLeft = selectedObjects.Count >= 2 &&
                             selectedObjects.All(snapshotObject => !snapshotObject.Deleted) &&
                             TryReadSelectedExplorerTag() is CopperfinStudioReportSection { Deleted: false };
+        var showMatchSize = selectedObjects.Count >= 2 &&
+                            selectedObjects.All(snapshotObject => !snapshotObject.Deleted) &&
+                            TryReadSelectedExplorerTag() is CopperfinStudioReportSection { Deleted: false };
         var showDistributeHorizontal = selectedObjects.Count >= 3 &&
                                        selectedObjects.All(snapshotObject => !snapshotObject.Deleted) &&
                                        TryReadSelectedExplorerTag() is CopperfinStudioReportSection { Deleted: false };
@@ -2275,6 +2365,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         reorderBackObjectButton.Enabled = showReorder && !string.IsNullOrWhiteSpace(currentPath);
         alignLeftObjectButton.Visible = showAlignLeft;
         alignLeftObjectButton.Enabled = showAlignLeft && !string.IsNullOrWhiteSpace(currentPath);
+        matchSizeObjectButton.Visible = showMatchSize;
+        matchSizeObjectButton.Enabled = showMatchSize && !string.IsNullOrWhiteSpace(currentPath);
         distributeHorizontalObjectButton.Visible = showDistributeHorizontal;
         distributeHorizontalObjectButton.Enabled = showDistributeHorizontal && !string.IsNullOrWhiteSpace(currentPath);
         snapToGridObjectButton.Visible = showSnapToGrid;

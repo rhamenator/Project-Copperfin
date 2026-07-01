@@ -92,6 +92,7 @@ internal static class Program
         SmokeAssetEditorRenameObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorReorderFrontObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorAlignLeftObjectCommandRefreshesReportShellSummary();
+        SmokeAssetEditorMatchSizeObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorDistributeHorizontallyObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorSnapToGridObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorDeleteObjectCommandRefreshesReportShellSummary();
@@ -107,6 +108,7 @@ internal static class Program
         SmokeAssetEditorRenameObjectCommandRefreshesDeletedLabelShellSummary();
         SmokeAssetEditorReorderBackObjectCommandRefreshesLabelShellSummary();
         SmokeAssetEditorAlignLeftObjectCommandRefreshesLabelShellSummary();
+        SmokeAssetEditorMatchSizeObjectCommandRefreshesLabelShellSummary();
         SmokeAssetEditorDistributeHorizontallyObjectCommandRefreshesLabelShellSummary();
         SmokeAssetEditorSnapToGridObjectCommandRefreshesLabelShellSummary();
         SmokeAssetEditorDeleteObjectCommandRefreshesLabelShellSummary();
@@ -1759,6 +1761,23 @@ internal static class Program
                 expectedUpdatedTargetRawHpos: "0",
                 expectedOriginalTargetLayoutHpos: 11979,
                 expectedUpdatedTargetLayoutHpos: 0);
+            SmokeAssetEditorResizeToAnchorSizeCommandWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Sedna/DataExplorer/DATAEXPLORERQUICKREPORT.FRX"),
+                anchorRecordIndex: 4,
+                targetRecordIndex: 5,
+                expectedSectionTitle: "Detail",
+                expectedSectionRecordIndex: 2,
+                expectedAnchorUniqueId: "_1WB13DS3B",
+                expectedTargetUniqueId: "_1WB13DS4P",
+                expectedSectionCount: 3,
+                expectedOriginalTargetRawWidth: "30312.500",
+                expectedOriginalTargetRawHeight: "1875.000",
+                expectedUpdatedTargetRawWidth: "7604.167",
+                expectedUpdatedTargetRawHeight: "1666.667",
+                expectedOriginalTargetLayoutWidth: 30312,
+                expectedOriginalTargetLayoutHeight: 1875,
+                expectedUpdatedTargetLayoutWidth: 7604,
+                expectedUpdatedTargetLayoutHeight: 1666);
             SmokeAssetEditorDistributeHorizontallyCommandWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLE3V.FRX"),
                 selectedRecordIndexes: new[] { 12, 13, 11 },
@@ -6014,6 +6033,159 @@ internal static class Program
         }
     }
 
+    private static void SmokeAssetEditorMatchSizeObjectCommandRefreshesReportShellSummary()
+    {
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            Console.WriteLine("SKIP: shared asset-editor match-size smoke requires a POSIX scriptable fake Studio host.");
+            return;
+        }
+
+        var snapshot = BuildAssetEditorResizeReportObjectSmokeSnapshot();
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
+        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var logPath = Path.Combine(tempRoot, "studio-host.log");
+        var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
+
+        try
+        {
+            File.WriteAllText(logPath, string.Empty);
+            CreateFakeStudioHostScript(scriptPath, BuildResizeToAnchorReportObjectHostResponseJson());
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", scriptPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", logPath);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+
+            ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+            SetPrivateField(control, "currentPath", assetPath);
+            GetPrivateLabel(control, "detailsLabel").Text = InvokeAssetEditorString(control, "BuildSnapshotDetailsText", new FileInfo(assetPath), snapshot);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            sectionListView.Items[0].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            InvokeAssetEditorVoid(control, "LoadSurface");
+            Application.DoEvents();
+
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var alignLeftButton = GetPrivateButton(control, "alignLeftObjectButton");
+            var matchSizeButton = GetPrivateButton(control, "matchSizeObjectButton");
+            var distributeHorizontalButton = GetPrivateButton(control, "distributeHorizontalObjectButton");
+            var duplicateButton = GetPrivateButton(control, "duplicateObjectButton");
+            var reorderFrontButton = GetPrivateButton(control, "reorderFrontObjectButton");
+            var reorderBackButton = GetPrivateButton(control, "reorderBackObjectButton");
+            var deleteButton = GetPrivateButton(control, "deleteObjectButton");
+            var restoreButton = GetPrivateButton(control, "restoreObjectButton");
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface.");
+
+            objectListView.Items[0].Selected = true;
+            objectListView.Items[0].Focused = true;
+            objectListView.Items[1].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(objectListView.Items.Cast<ListViewItem>().Take(2).Select(item => item.Text).SequenceEqual(new[] { "first.value", "middle.value" }) &&
+                   alignLeftButton.Visible &&
+                   alignLeftButton.Enabled &&
+                   matchSizeButton.Visible &&
+                   matchSizeButton.Enabled &&
+                   !distributeHorizontalButton.Visible &&
+                   !duplicateButton.Visible &&
+                   !reorderFrontButton.Visible &&
+                   !reorderBackButton.Visible &&
+                   !deleteButton.Visible &&
+                   !restoreButton.Visible &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == 6 &&
+                   string.Equals(ReadSelectionPropertyValue(initialSelection, "WIDTH"), "3200", StringComparison.Ordinal) &&
+                   string.Equals(ReadSelectionPropertyValue(initialSelection, "HEIGHT"), "700", StringComparison.Ordinal),
+                "A report match-size smoke should start from a multi-selection with the anchor row selected in the shared property grid");
+
+            matchSizeButton.PerformClick();
+            Application.DoEvents();
+
+            var logLines = File.ReadAllLines(logPath);
+            var invocationStartCount = logLines.Count(line => string.Equals(line, "BEGIN", StringComparison.Ordinal));
+            Expect(invocationStartCount == 1,
+                "Matching report object sizes through the shared asset editor should invoke the Studio host exactly once");
+
+            var invocationArguments = logLines.Skip(1).ToList();
+            Expect(invocationArguments.Contains("--from-vs") &&
+                   invocationArguments.Contains("--json") &&
+                   invocationArguments.Contains("--resize-object") &&
+                   invocationArguments.Contains("--resize-mode") &&
+                   invocationArguments.Contains("size") &&
+                   invocationArguments.Contains("--record") &&
+                   invocationArguments.Contains("6") &&
+                   invocationArguments.Contains("--anchor-unique-id") &&
+                   invocationArguments.Contains("first-field-guid") &&
+                   invocationArguments.Contains("--resize-target-unique-id") &&
+                   invocationArguments.Contains("middle-field-guid") &&
+                   invocationArguments.Contains("--path") &&
+                   invocationArguments.Contains(assetPath),
+                "Matching report object sizes through the shared asset editor should send one invariant resize-object command through the host contract");
+
+            var refreshedSnapshot = GetCurrentSnapshot(control);
+            var resizedObject = refreshedSnapshot.Objects.FirstOrDefault(item => item.RecordIndex == 7);
+            Expect(HasLabelTextContaining(control, "Matched objects to the anchor size. Snapshot loaded: 2 object rows, 5 fields.") &&
+                   string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Detail", StringComparison.Ordinal) &&
+                   objectListView.SelectedItems.Count == 2 &&
+                   string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault(item => item.Focused)?.SubItems[2].Text, "6", StringComparison.Ordinal) &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
+                   refreshedSelection.RecordIndex == 6 &&
+                   string.Equals(ReadSelectionPropertyValue(refreshedSelection, "WIDTH"), "3200", StringComparison.Ordinal) &&
+                   string.Equals(ReadSelectionPropertyValue(refreshedSelection, "HEIGHT"), "700", StringComparison.Ordinal) &&
+                   matchSizeButton.Visible &&
+                   matchSizeButton.Enabled &&
+                   resizedObject is not null &&
+                   string.Equals(TryGetSnapshotObjectPropertyValue(resizedObject, "WIDTH"), "3200", StringComparison.Ordinal) &&
+                   string.Equals(TryGetSnapshotObjectPropertyValue(resizedObject, "HEIGHT"), "700", StringComparison.Ordinal) &&
+                   string.Equals(ReadPrivateStringField(surface, "assetFamily"), "report", StringComparison.Ordinal) &&
+                   ReadPrivateNullableInt(surface, "selectedRecordIndex") == 6 &&
+                   ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
+                   !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+                "Matching report object sizes through the shared asset editor should preserve anchor selection continuity and refresh the resized target geometry");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", previousLogPath);
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeAssetEditorDistributeHorizontallyObjectCommandRefreshesReportShellSummary()
     {
         if (Path.DirectorySeparatorChar == '\\')
@@ -8114,6 +8286,159 @@ internal static class Program
                    ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
                    !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
                 "Aligning label objects left through the shared asset editor should preserve anchor selection continuity and refresh the aligned target geometry");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", previousLogPath);
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
+    private static void SmokeAssetEditorMatchSizeObjectCommandRefreshesLabelShellSummary()
+    {
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            Console.WriteLine("SKIP: shared asset-editor label match-size smoke requires a POSIX scriptable fake Studio host.");
+            return;
+        }
+
+        var snapshot = BuildAssetEditorResizeLabelObjectSmokeSnapshot();
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
+        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var logPath = Path.Combine(tempRoot, "studio-host.log");
+        var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
+
+        try
+        {
+            File.WriteAllText(logPath, string.Empty);
+            CreateFakeStudioHostScript(scriptPath, BuildResizeToAnchorLabelObjectHostResponseJson());
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", scriptPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", logPath);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+
+            ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+            SetPrivateField(control, "currentPath", assetPath);
+            GetPrivateLabel(control, "detailsLabel").Text = InvokeAssetEditorString(control, "BuildSnapshotDetailsText", new FileInfo(assetPath), snapshot);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            sectionListView.Items[0].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            InvokeAssetEditorVoid(control, "LoadSurface");
+            Application.DoEvents();
+
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var alignLeftButton = GetPrivateButton(control, "alignLeftObjectButton");
+            var matchSizeButton = GetPrivateButton(control, "matchSizeObjectButton");
+            var distributeHorizontalButton = GetPrivateButton(control, "distributeHorizontalObjectButton");
+            var duplicateButton = GetPrivateButton(control, "duplicateObjectButton");
+            var reorderFrontButton = GetPrivateButton(control, "reorderFrontObjectButton");
+            var reorderBackButton = GetPrivateButton(control, "reorderBackObjectButton");
+            var deleteButton = GetPrivateButton(control, "deleteObjectButton");
+            var restoreButton = GetPrivateButton(control, "restoreObjectButton");
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared label design surface.");
+
+            objectListView.Items[0].Selected = true;
+            objectListView.Items[0].Focused = true;
+            objectListView.Items[1].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(objectListView.Items.Cast<ListViewItem>().Take(2).Select(item => item.Text).SequenceEqual(new[] { "first.value", "middle.value" }) &&
+                   alignLeftButton.Visible &&
+                   alignLeftButton.Enabled &&
+                   matchSizeButton.Visible &&
+                   matchSizeButton.Enabled &&
+                   !distributeHorizontalButton.Visible &&
+                   !duplicateButton.Visible &&
+                   !reorderFrontButton.Visible &&
+                   !reorderBackButton.Visible &&
+                   !deleteButton.Visible &&
+                   !restoreButton.Visible &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == 6 &&
+                   string.Equals(ReadSelectionPropertyValue(initialSelection, "WIDTH"), "3400", StringComparison.Ordinal) &&
+                   string.Equals(ReadSelectionPropertyValue(initialSelection, "HEIGHT"), "600", StringComparison.Ordinal),
+                "A label match-size smoke should start from a multi-selection with the anchor row selected in the shared property grid");
+
+            matchSizeButton.PerformClick();
+            Application.DoEvents();
+
+            var logLines = File.ReadAllLines(logPath);
+            var invocationStartCount = logLines.Count(line => string.Equals(line, "BEGIN", StringComparison.Ordinal));
+            Expect(invocationStartCount == 1,
+                "Matching label object sizes through the shared asset editor should invoke the Studio host exactly once");
+
+            var invocationArguments = logLines.Skip(1).ToList();
+            Expect(invocationArguments.Contains("--from-vs") &&
+                   invocationArguments.Contains("--json") &&
+                   invocationArguments.Contains("--resize-object") &&
+                   invocationArguments.Contains("--resize-mode") &&
+                   invocationArguments.Contains("size") &&
+                   invocationArguments.Contains("--record") &&
+                   invocationArguments.Contains("6") &&
+                   invocationArguments.Contains("--anchor-unique-id") &&
+                   invocationArguments.Contains("first-field-guid") &&
+                   invocationArguments.Contains("--resize-target-unique-id") &&
+                   invocationArguments.Contains("middle-field-guid") &&
+                   invocationArguments.Contains("--path") &&
+                   invocationArguments.Contains(assetPath),
+                "Matching label object sizes through the shared asset editor should send one invariant resize-object command through the host contract");
+
+            var refreshedSnapshot = GetCurrentSnapshot(control);
+            var resizedObject = refreshedSnapshot.Objects.FirstOrDefault(item => item.RecordIndex == 7);
+            Expect(HasLabelTextContaining(control, "Matched objects to the anchor size. Snapshot loaded: 2 object rows, 5 fields.") &&
+                   string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Detail", StringComparison.Ordinal) &&
+                   objectListView.SelectedItems.Count == 2 &&
+                   string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault(item => item.Focused)?.SubItems[2].Text, "6", StringComparison.Ordinal) &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
+                   refreshedSelection.RecordIndex == 6 &&
+                   string.Equals(ReadSelectionPropertyValue(refreshedSelection, "WIDTH"), "3400", StringComparison.Ordinal) &&
+                   string.Equals(ReadSelectionPropertyValue(refreshedSelection, "HEIGHT"), "600", StringComparison.Ordinal) &&
+                   matchSizeButton.Visible &&
+                   matchSizeButton.Enabled &&
+                   resizedObject is not null &&
+                   string.Equals(TryGetSnapshotObjectPropertyValue(resizedObject, "WIDTH"), "3400", StringComparison.Ordinal) &&
+                   string.Equals(TryGetSnapshotObjectPropertyValue(resizedObject, "HEIGHT"), "600", StringComparison.Ordinal) &&
+                   string.Equals(ReadPrivateStringField(surface, "assetFamily"), "label", StringComparison.Ordinal) &&
+                   ReadPrivateNullableInt(surface, "selectedRecordIndex") == 6 &&
+                   ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
+                   !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+                "Matching label object sizes through the shared asset editor should preserve anchor selection continuity and refresh the resized target geometry");
         }
         finally
         {
@@ -17427,6 +17752,311 @@ internal static class Program
         }
     }
 
+    private static void SmokeAssetEditorResizeToAnchorSizeCommandWithRealAsset(
+        string? sourcePath,
+        int anchorRecordIndex,
+        int targetRecordIndex,
+        string expectedSectionTitle,
+        int expectedSectionRecordIndex,
+        string expectedAnchorUniqueId,
+        string expectedTargetUniqueId,
+        int expectedSectionCount,
+        string expectedOriginalTargetRawWidth,
+        string expectedOriginalTargetRawHeight,
+        string expectedUpdatedTargetRawWidth,
+        string expectedUpdatedTargetRawHeight,
+        int expectedOriginalTargetLayoutWidth,
+        int expectedOriginalTargetLayoutHeight,
+        int expectedUpdatedTargetLayoutWidth,
+        int expectedUpdatedTargetLayoutHeight)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(sourcePath) ? "real asset editor resize-to-anchor candidate" : sourcePath)} not found.");
+            return;
+        }
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmokeRealAssetEditorResizeToAnchor-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateWritableAssetCopy(sourcePath!, tempRoot);
+
+        try
+        {
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+            control.LoadDocument(assetPath);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var alignLeftButton = GetPrivateButton(control, "alignLeftObjectButton");
+            var matchSizeButton = GetPrivateButton(control, "matchSizeObjectButton");
+            var distributeHorizontalButton = GetPrivateButton(control, "distributeHorizontalObjectButton");
+            var duplicateButton = GetPrivateButton(control, "duplicateObjectButton");
+            var reorderFrontButton = GetPrivateButton(control, "reorderFrontObjectButton");
+            var reorderBackButton = GetPrivateButton(control, "reorderBackObjectButton");
+            var deleteButton = GetPrivateButton(control, "deleteObjectButton");
+            var restoreButton = GetPrivateButton(control, "restoreObjectButton");
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface for the real resize-to-anchor smoke.");
+
+            var loaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => sectionListView.Items.Count > 0);
+            Expect(loaded, $"real asset editor resize-to-anchor smoke should load section data for {sourcePath}");
+            if (!loaded)
+            {
+                return;
+            }
+
+            foreach (ListViewItem item in sectionListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioReportSection section &&
+                                section.RecordIndex == expectedSectionRecordIndex;
+            }
+
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            Application.DoEvents();
+
+            var objectsLoaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => objectListView.Items.Cast<ListViewItem>().Any(item => item.Tag is CopperfinStudioSnapshotObject snapshotObject && snapshotObject.RecordIndex == anchorRecordIndex) &&
+                      objectListView.Items.Cast<ListViewItem>().Any(item => item.Tag is CopperfinStudioSnapshotObject snapshotObject && snapshotObject.RecordIndex == targetRecordIndex));
+            Expect(objectsLoaded, $"real asset editor resize-to-anchor smoke should surface anchor and target objects for {sourcePath}");
+            if (!objectsLoaded)
+            {
+                return;
+            }
+
+            foreach (ListViewItem item in objectListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioSnapshotObject snapshotObject &&
+                                (snapshotObject.RecordIndex == anchorRecordIndex || snapshotObject.RecordIndex == targetRecordIndex);
+                item.Focused = item.Tag is CopperfinStudioSnapshotObject focusedObject &&
+                               focusedObject.RecordIndex == anchorRecordIndex;
+            }
+
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(alignLeftButton.Visible &&
+                   alignLeftButton.Enabled &&
+                   matchSizeButton.Visible &&
+                   matchSizeButton.Enabled &&
+                   !distributeHorizontalButton.Visible &&
+                   !duplicateButton.Visible &&
+                   !reorderFrontButton.Visible &&
+                   !reorderBackButton.Visible &&
+                   !deleteButton.Visible &&
+                   !restoreButton.Visible &&
+                   objectListView.SelectedItems.Count == 2 &&
+                   objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault(item => item.Focused)?.Tag is CopperfinStudioSnapshotObject initialAnchorObject &&
+                   initialAnchorObject.RecordIndex == anchorRecordIndex &&
+                   string.Equals(TryGetSnapshotObjectPropertyValue(initialAnchorObject, "UNIQUEID"), expectedAnchorUniqueId, StringComparison.Ordinal) &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == anchorRecordIndex &&
+                   string.Equals(ReadSelectionPropertyValue(initialSelection, "OBJECTSTATE"), "Live", StringComparison.Ordinal),
+                $"real asset editor resize-to-anchor smoke should start from a live multi-selection with an anchor property-grid selection for {sourcePath}");
+
+            matchSizeButton.PerformClick();
+            Application.DoEvents();
+
+            var resizedSelection = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
+                {
+                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                        refreshedSelection.RecordIndex != anchorRecordIndex)
+                    {
+                        return false;
+                    }
+
+                    var refreshedSnapshot = GetCurrentSnapshot(control);
+                    var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault();
+                    var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
+                    var selectedAnchorObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault(item => item.Focused)?.Tag as CopperfinStudioSnapshotObject;
+                    var resizedTarget = refreshedSnapshot.Objects.FirstOrDefault(item => item.RecordIndex == targetRecordIndex);
+                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                           selectedSectionModel?.RecordIndex == expectedSectionRecordIndex &&
+                           objectListView.SelectedItems.Count == 2 &&
+                           string.Equals(ReadSelectionPropertyValue(refreshedSelection, "OBJECTSTATE"), "Live", StringComparison.Ordinal) &&
+                           alignLeftButton.Visible &&
+                           alignLeftButton.Enabled &&
+                           matchSizeButton.Visible &&
+                           matchSizeButton.Enabled &&
+                           selectedAnchorObject is not null &&
+                           selectedAnchorObject.RecordIndex == anchorRecordIndex &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(selectedAnchorObject, "UNIQUEID"), expectedAnchorUniqueId, StringComparison.Ordinal) &&
+                           resizedTarget is not null &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(resizedTarget, "UNIQUEID"), expectedTargetUniqueId, StringComparison.Ordinal) &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(resizedTarget, "WIDTH"), expectedUpdatedTargetRawWidth, StringComparison.Ordinal) &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(resizedTarget, "HEIGHT"), expectedUpdatedTargetRawHeight, StringComparison.Ordinal) &&
+                           string.Equals(ReadPrivateStringField(surface, "assetFamily"), "report", StringComparison.Ordinal) &&
+                           ReadPrivateNullableInt(surface, "selectedRecordIndex") == anchorRecordIndex &&
+                           ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == expectedSectionRecordIndex &&
+                           !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected");
+                });
+            Expect(resizedSelection,
+                $"real asset editor resize-to-anchor smoke should preserve anchor selection continuity and resize the target object for {sourcePath}");
+            Expect(control.CanHandleUndoCommand(),
+                $"real asset editor resize-to-anchor smoke should expose undo after resizing for {sourcePath}");
+            if (!resizedSelection)
+            {
+                return;
+            }
+
+            var reloadedAfterResize = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterResize.Success && reloadedAfterResize.Document is not null,
+                $"real asset editor resize-to-anchor smoke should reload resized on-disk state for {sourcePath}");
+            if (reloadedAfterResize.Success && reloadedAfterResize.Document is not null)
+            {
+                var reloadedDocument = reloadedAfterResize.Document;
+                Expect(reloadedDocument.ReportLayout is not null,
+                    $"reloaded real asset editor resize-to-anchor snapshot should include a report layout for {sourcePath}");
+                if (reloadedDocument.ReportLayout is not null)
+                {
+                    Expect(!reloadedDocument.ReportLayout.IsLabel,
+                        $"reloaded real asset editor resize-to-anchor snapshot should preserve report identity for {sourcePath}");
+                    Expect(reloadedDocument.ReportLayout.Sections.Count == expectedSectionCount,
+                        $"reloaded real asset editor resize-to-anchor snapshot should preserve section counts for {sourcePath}");
+                    var reloadedSection = reloadedDocument.ReportLayout.Sections.FirstOrDefault(candidate => candidate.RecordIndex == expectedSectionRecordIndex);
+                    var reloadedLayoutObject = reloadedSection?.Objects.FirstOrDefault(candidate => candidate.RecordIndex == targetRecordIndex);
+                    Expect(reloadedSection is not null &&
+                           string.Equals(reloadedSection.Title, expectedSectionTitle, StringComparison.OrdinalIgnoreCase),
+                        $"reloaded real asset editor resize-to-anchor snapshot should preserve section '{expectedSectionTitle}' for {sourcePath}");
+                    Expect(reloadedLayoutObject is not null,
+                        $"reloaded real asset editor resize-to-anchor snapshot should preserve target layout object {targetRecordIndex} for {sourcePath}");
+                    if (reloadedLayoutObject is not null)
+                    {
+                        Expect(TryGetReportLayoutObjectValue(reloadedLayoutObject, "WIDTH") == expectedUpdatedTargetLayoutWidth &&
+                               TryGetReportLayoutObjectValue(reloadedLayoutObject, "HEIGHT") == expectedUpdatedTargetLayoutHeight,
+                            $"reloaded real asset editor resize-to-anchor snapshot should expose layout WIDTH/HEIGHT={expectedUpdatedTargetLayoutWidth}/{expectedUpdatedTargetLayoutHeight} for {sourcePath}");
+                    }
+                }
+
+                var reloadedTarget = reloadedDocument.Objects.FirstOrDefault(candidate => candidate.RecordIndex == targetRecordIndex);
+                Expect(reloadedTarget is not null,
+                    $"reloaded real asset editor resize-to-anchor snapshot should preserve raw target object {targetRecordIndex} for {sourcePath}");
+                if (reloadedTarget is not null)
+                {
+                    Expect(string.Equals(TryGetSnapshotObjectPropertyValue(reloadedTarget, "UNIQUEID"), expectedTargetUniqueId, StringComparison.Ordinal) &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(reloadedTarget, "WIDTH"), expectedUpdatedTargetRawWidth, StringComparison.Ordinal) &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(reloadedTarget, "HEIGHT"), expectedUpdatedTargetRawHeight, StringComparison.Ordinal),
+                        $"reloaded real asset editor resize-to-anchor snapshot should preserve target unique id and resized raw WIDTH/HEIGHT for {sourcePath}");
+                }
+            }
+
+            var undoHandled = control.TryHandleUndoCommand();
+            Expect(undoHandled,
+                $"real asset editor resize-to-anchor smoke should execute undo after resizing for {sourcePath}");
+            Application.DoEvents();
+
+            var undoneSelection = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
+                {
+                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                        refreshedSelection.RecordIndex != anchorRecordIndex)
+                    {
+                        return false;
+                    }
+
+                    var refreshedSnapshot = GetCurrentSnapshot(control);
+                    var selectedAnchorObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault(item => item.Focused)?.Tag as CopperfinStudioSnapshotObject;
+                    var restoredTarget = refreshedSnapshot.Objects.FirstOrDefault(item => item.RecordIndex == targetRecordIndex);
+                    return objectListView.SelectedItems.Count == 2 &&
+                           string.Equals(ReadSelectionPropertyValue(refreshedSelection, "OBJECTSTATE"), "Live", StringComparison.Ordinal) &&
+                           selectedAnchorObject is not null &&
+                           selectedAnchorObject.RecordIndex == anchorRecordIndex &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(selectedAnchorObject, "UNIQUEID"), expectedAnchorUniqueId, StringComparison.Ordinal) &&
+                           restoredTarget is not null &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(restoredTarget, "UNIQUEID"), expectedTargetUniqueId, StringComparison.Ordinal) &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(restoredTarget, "WIDTH"), expectedOriginalTargetRawWidth, StringComparison.Ordinal) &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(restoredTarget, "HEIGHT"), expectedOriginalTargetRawHeight, StringComparison.Ordinal) &&
+                           ReadPrivateNullableInt(surface, "selectedRecordIndex") == anchorRecordIndex &&
+                           ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == expectedSectionRecordIndex &&
+                           !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected");
+                });
+            Expect(undoneSelection,
+                $"real asset editor resize-to-anchor smoke should preserve anchor selection continuity after undoing for {sourcePath}");
+            Expect(!control.CanHandleUndoCommand(),
+                $"real asset editor resize-to-anchor smoke should clear undo after restoring original target geometry for {sourcePath}");
+
+            var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null,
+                $"real asset editor resize-to-anchor smoke should reload restored on-disk state for {sourcePath}");
+            if (reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null)
+            {
+                AssertRealAssetRoundTripSnapshot(
+                    reloadedAfterUndo.Document,
+                    targetRecordIndex,
+                    "WIDTH",
+                    expectedOriginalTargetRawWidth,
+                    "customerid",
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel: false,
+                    expectUnplacedObject: false,
+                    "reloaded undone real asset editor resize-to-anchor snapshot should preserve original target WIDTH");
+
+                AssertRealAssetRoundTripSnapshot(
+                    reloadedAfterUndo.Document,
+                    targetRecordIndex,
+                    "HEIGHT",
+                    expectedOriginalTargetRawHeight,
+                    "customerid",
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel: false,
+                    expectUnplacedObject: false,
+                    "reloaded undone real asset editor resize-to-anchor snapshot should preserve original target HEIGHT");
+
+                var reloadedSection = reloadedAfterUndo.Document.ReportLayout?.Sections.FirstOrDefault(candidate => candidate.RecordIndex == expectedSectionRecordIndex);
+                var reloadedLayoutObject = reloadedSection?.Objects.FirstOrDefault(candidate => candidate.RecordIndex == targetRecordIndex);
+                Expect(reloadedLayoutObject is not null,
+                    $"reloaded undone real asset editor resize-to-anchor snapshot should preserve target layout object {targetRecordIndex} for {sourcePath}");
+                if (reloadedLayoutObject is not null)
+                {
+                    Expect(TryGetReportLayoutObjectValue(reloadedLayoutObject, "WIDTH") == expectedOriginalTargetLayoutWidth &&
+                           TryGetReportLayoutObjectValue(reloadedLayoutObject, "HEIGHT") == expectedOriginalTargetLayoutHeight,
+                        $"reloaded undone real asset editor resize-to-anchor snapshot should expose layout WIDTH/HEIGHT={expectedOriginalTargetLayoutWidth}/{expectedOriginalTargetLayoutHeight} for {sourcePath}");
+                }
+            }
+
+            TearDownForm(hostForm);
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeAssetEditorSnapToGridCommandWithRealAsset(
         string? sourcePath,
         int recordIndex,
@@ -22179,6 +22809,89 @@ internal static class Program
         };
     }
 
+    private static CopperfinStudioSnapshotDocument BuildAssetEditorResizeLabelObjectSmokeSnapshot()
+    {
+        return new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "label",
+            FieldCount = 5,
+            Objects = new List<CopperfinStudioSnapshotObject>
+            {
+                new()
+                {
+                    RecordIndex = 6,
+                    Title = "first.value",
+                    Subtitle = "label",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "UNIQUEID", Value = "first-field-guid" },
+                        new() { Name = "HPOS", Value = "1400" },
+                        new() { Name = "VPOS", Value = "2600" },
+                        new() { Name = "WIDTH", Value = "3400" },
+                        new() { Name = "HEIGHT", Value = "600" },
+                        new() { Name = "EXPR", Value = "first.value" }
+                    }
+                },
+                new()
+                {
+                    RecordIndex = 7,
+                    Title = "middle.value",
+                    Subtitle = "label",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "UNIQUEID", Value = "middle-field-guid" },
+                        new() { Name = "HPOS", Value = "2500" },
+                        new() { Name = "VPOS", Value = "2600" },
+                        new() { Name = "WIDTH", Value = "4200" },
+                        new() { Name = "HEIGHT", Value = "900" },
+                        new() { Name = "EXPR", Value = "middle.value" }
+                    }
+                }
+            },
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                IsLabel = true,
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail_1",
+                        Title = "Detail",
+                        BandKind = "detail",
+                        RecordIndex = 42,
+                        Top = 2000,
+                        Height = 5000,
+                        Objects = new List<CopperfinStudioReportLayoutObject>
+                        {
+                            new()
+                            {
+                                RecordIndex = 6,
+                                ObjectKind = "label",
+                                Title = "first.value",
+                                Expression = "first.value",
+                                Left = 1400,
+                                Top = 2600,
+                                Width = 3400,
+                                Height = 600
+                            },
+                            new()
+                            {
+                                RecordIndex = 7,
+                                ObjectKind = "label",
+                                Title = "middle.value",
+                                Expression = "middle.value",
+                                Left = 2500,
+                                Top = 2600,
+                                Width = 4200,
+                                Height = 900
+                            }
+                        }
+                    }
+                }
+            }
+        };
+    }
+
     private static CopperfinStudioSnapshotDocument BuildAssetEditorDistributeLabelObjectSmokeSnapshot()
     {
         return new CopperfinStudioSnapshotDocument
@@ -22783,6 +23496,88 @@ internal static class Program
         };
     }
 
+    private static CopperfinStudioSnapshotDocument BuildAssetEditorResizeReportObjectSmokeSnapshot()
+    {
+        return new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "report",
+            FieldCount = 5,
+            Objects = new List<CopperfinStudioSnapshotObject>
+            {
+                new()
+                {
+                    RecordIndex = 6,
+                    Title = "first.value",
+                    Subtitle = "field",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "UNIQUEID", Value = "first-field-guid" },
+                        new() { Name = "HPOS", Value = "1000" },
+                        new() { Name = "VPOS", Value = "2400" },
+                        new() { Name = "WIDTH", Value = "3200" },
+                        new() { Name = "HEIGHT", Value = "700" },
+                        new() { Name = "EXPR", Value = "first.value" }
+                    }
+                },
+                new()
+                {
+                    RecordIndex = 7,
+                    Title = "middle.value",
+                    Subtitle = "field",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "UNIQUEID", Value = "middle-field-guid" },
+                        new() { Name = "HPOS", Value = "2100" },
+                        new() { Name = "VPOS", Value = "2400" },
+                        new() { Name = "WIDTH", Value = "4200" },
+                        new() { Name = "HEIGHT", Value = "900" },
+                        new() { Name = "EXPR", Value = "middle.value" }
+                    }
+                }
+            },
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail_1",
+                        Title = "Detail",
+                        BandKind = "detail",
+                        RecordIndex = 42,
+                        Top = 2000,
+                        Height = 5000,
+                        Objects = new List<CopperfinStudioReportLayoutObject>
+                        {
+                            new()
+                            {
+                                RecordIndex = 6,
+                                ObjectKind = "field",
+                                Title = "first.value",
+                                Expression = "first.value",
+                                Left = 1000,
+                                Top = 2400,
+                                Width = 3200,
+                                Height = 700
+                            },
+                            new()
+                            {
+                                RecordIndex = 7,
+                                ObjectKind = "field",
+                                Title = "middle.value",
+                                Expression = "middle.value",
+                                Left = 2100,
+                                Top = 2400,
+                                Width = 4200,
+                                Height = 900
+                            }
+                        }
+                    }
+                }
+            }
+        };
+    }
+
     private static CopperfinStudioSnapshotDocument BuildAssetEditorDistributeReportObjectSmokeSnapshot()
     {
         return new CopperfinStudioSnapshotDocument
@@ -23350,6 +24145,13 @@ internal static class Program
 """;
     }
 
+    private static string BuildResizeToAnchorLabelObjectHostResponseJson()
+    {
+        return """
+{"Status":"ok","Document":{"AssetFamily":"label","FieldCount":5,"Objects":[{"RecordIndex":6,"Title":"first.value","Subtitle":"label","Properties":[{"Name":"UNIQUEID","Value":"first-field-guid"},{"Name":"HPOS","Value":"1400"},{"Name":"VPOS","Value":"2600"},{"Name":"WIDTH","Value":"3400"},{"Name":"HEIGHT","Value":"600"},{"Name":"EXPR","Value":"first.value"}]},{"RecordIndex":7,"Title":"middle.value","Subtitle":"label","Properties":[{"Name":"UNIQUEID","Value":"middle-field-guid"},{"Name":"HPOS","Value":"2500"},{"Name":"VPOS","Value":"2600"},{"Name":"WIDTH","Value":"3400"},{"Name":"HEIGHT","Value":"600"},{"Name":"EXPR","Value":"middle.value"}]}],"ReportLayout":{"IsLabel":true,"PreviewBoundsAvailable":true,"PreviewBoundsLeft":1400,"PreviewBoundsTop":2600,"PreviewBoundsRight":5900,"PreviewBoundsBottom":3200,"PreviewBoundsWidth":4500,"PreviewBoundsHeight":600,"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":6,"ObjectKind":"label","Title":"first.value","Expression":"first.value","Left":1400,"Top":2600,"Width":3400,"Height":600},{"RecordIndex":7,"ObjectKind":"label","Title":"middle.value","Expression":"middle.value","Left":2500,"Top":2600,"Width":3400,"Height":600}]}],"DeletedSections":[],"UnplacedObjects":[]},"SelectedReportSelectionAvailable":true,"SelectedReportSelectionKind":"object","SelectedReportObjectAvailable":true,"SelectedReportObject":{"RecordIndex":6,"Title":"first.value","Subtitle":"label","Properties":[{"Name":"UNIQUEID","Value":"first-field-guid"},{"Name":"HPOS","Value":"1400"},{"Name":"VPOS","Value":"2600"},{"Name":"WIDTH","Value":"3400"},{"Name":"HEIGHT","Value":"600"},{"Name":"EXPR","Value":"first.value"}]},"SelectedReportObjectSectionAvailable":true,"SelectedReportObjectSection":{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42}}}
+""";
+    }
+
     private static string BuildDistributeHorizontalLabelObjectHostResponseJson()
     {
         return """
@@ -23417,6 +24219,13 @@ internal static class Program
     {
         return """
 {"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[{"RecordIndex":6,"Title":"first.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"first-field-guid"},{"Name":"HPOS","Value":"1000"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"3200"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"first.value"}]},{"RecordIndex":7,"Title":"middle.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"middle-field-guid"},{"Name":"HPOS","Value":"1000"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"3200"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"middle.value"}]},{"RecordIndex":8,"Title":"last.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"last-field-guid"},{"Name":"HPOS","Value":"3200"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"2700"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"last.value"}]}],"ReportLayout":{"PreviewBoundsAvailable":true,"PreviewBoundsLeft":1000,"PreviewBoundsTop":2400,"PreviewBoundsRight":5900,"PreviewBoundsBottom":3100,"PreviewBoundsWidth":4900,"PreviewBoundsHeight":700,"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":6,"ObjectKind":"field","Title":"first.value","Expression":"first.value","Left":1000,"Top":2400,"Width":3200,"Height":700},{"RecordIndex":7,"ObjectKind":"field","Title":"middle.value","Expression":"middle.value","Left":1000,"Top":2400,"Width":3200,"Height":700},{"RecordIndex":8,"ObjectKind":"field","Title":"last.value","Expression":"last.value","Left":3200,"Top":2400,"Width":2700,"Height":700}]}],"DeletedSections":[],"UnplacedObjects":[]},"SelectedReportSelectionAvailable":true,"SelectedReportSelectionKind":"object","SelectedReportObjectAvailable":true,"SelectedReportObject":{"RecordIndex":6,"Title":"first.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"first-field-guid"},{"Name":"HPOS","Value":"1000"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"3200"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"first.value"}]},"SelectedReportObjectSectionAvailable":true,"SelectedReportObjectSection":{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42}}}
+""";
+    }
+
+    private static string BuildResizeToAnchorReportObjectHostResponseJson()
+    {
+        return """
+{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[{"RecordIndex":6,"Title":"first.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"first-field-guid"},{"Name":"HPOS","Value":"1000"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"3200"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"first.value"}]},{"RecordIndex":7,"Title":"middle.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"middle-field-guid"},{"Name":"HPOS","Value":"2100"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"3200"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"middle.value"}]}],"ReportLayout":{"PreviewBoundsAvailable":true,"PreviewBoundsLeft":1000,"PreviewBoundsTop":2400,"PreviewBoundsRight":5300,"PreviewBoundsBottom":3100,"PreviewBoundsWidth":4300,"PreviewBoundsHeight":700,"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":6,"ObjectKind":"field","Title":"first.value","Expression":"first.value","Left":1000,"Top":2400,"Width":3200,"Height":700},{"RecordIndex":7,"ObjectKind":"field","Title":"middle.value","Expression":"middle.value","Left":2100,"Top":2400,"Width":3200,"Height":700}]}],"DeletedSections":[],"UnplacedObjects":[]},"SelectedReportSelectionAvailable":true,"SelectedReportSelectionKind":"object","SelectedReportObjectAvailable":true,"SelectedReportObject":{"RecordIndex":6,"Title":"first.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"first-field-guid"},{"Name":"HPOS","Value":"1000"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"3200"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"first.value"}]},"SelectedReportObjectSectionAvailable":true,"SelectedReportObjectSection":{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42}}}
 """;
     }
 

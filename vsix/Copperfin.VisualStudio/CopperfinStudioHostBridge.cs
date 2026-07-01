@@ -140,6 +140,23 @@ internal static class CopperfinStudioHostBridge
         return $"{arguments} --path {Quote(documentPath)}";
     }
 
+    public static string BuildResizeObjectArguments(
+        string documentPath,
+        int recordIndex,
+        string anchorUniqueId,
+        string resizeMode,
+        IReadOnlyList<string> targetUniqueIds)
+    {
+        var arguments = $"--from-vs --json --record {recordIndex} --resize-object --resize-mode {Quote(resizeMode)}" +
+                        $" --anchor-unique-id {Quote(anchorUniqueId)}";
+        foreach (var targetUniqueId in targetUniqueIds)
+        {
+            arguments += $" --resize-target-unique-id {Quote(targetUniqueId)}";
+        }
+
+        return $"{arguments} --path {Quote(documentPath)}";
+    }
+
     public static string BuildDistributeObjectArguments(
         string documentPath,
         int recordIndex,
