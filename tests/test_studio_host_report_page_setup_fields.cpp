@@ -12,6 +12,14 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_report_bottom_margin_fields_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_bottom_margin_fields_by_stable_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_bottom_margin_fields_by_stable_selection(argv[1]);
+    test_studio_host_json_updates_report_left_margin_fields_by_stable_selection(argv[1]);
+    test_studio_host_json_clears_report_left_margin_fields_by_stable_selection(argv[1]);
+    test_studio_host_json_updates_deleted_report_left_margin_fields_by_stable_selection(argv[1]);
+    test_studio_host_json_clears_deleted_report_left_margin_fields_by_stable_selection(argv[1]);
+    test_studio_host_json_updates_report_right_margin_fields_by_stable_selection(argv[1]);
+    test_studio_host_json_clears_report_right_margin_fields_by_stable_selection(argv[1]);
+    test_studio_host_json_updates_deleted_report_right_margin_fields_by_stable_selection(argv[1]);
+    test_studio_host_json_clears_deleted_report_right_margin_fields_by_stable_selection(argv[1]);
     test_studio_host_json_updates_report_grid_vertical_fields_by_stable_selection(argv[1]);
     test_studio_host_json_clears_report_grid_vertical_fields_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_grid_vertical_fields_by_stable_selection(argv[1]);

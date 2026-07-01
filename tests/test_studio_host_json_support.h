@@ -1016,6 +1016,20 @@ void write_synthetic_report_table_for_stable_bottom_margin_field_json(
     const std::filesystem::path& report_path);
 void write_synthetic_report_table_for_stable_deleted_bottom_margin_field_json(
     const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_left_margin_field_json(const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_deleted_left_margin_field_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_stable_left_margin_field_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_stable_deleted_left_margin_field_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_right_margin_field_json(const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_deleted_right_margin_field_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_stable_right_margin_field_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_stable_deleted_right_margin_field_json(
+    const std::filesystem::path& report_path);
 void write_synthetic_report_table_for_grid_vertical_field_json(const std::filesystem::path& report_path);
 void write_synthetic_report_table_for_deleted_grid_vertical_field_json(
     const std::filesystem::path& report_path);
@@ -1051,6 +1065,22 @@ void test_studio_host_json_clears_report_bottom_margin_fields_by_stable_selectio
 void test_studio_host_json_updates_deleted_report_bottom_margin_fields_by_stable_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_clears_deleted_report_bottom_margin_fields_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_report_left_margin_fields_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_clears_report_left_margin_fields_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_deleted_report_left_margin_fields_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_clears_deleted_report_left_margin_fields_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_report_right_margin_fields_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_clears_report_right_margin_fields_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_updates_deleted_report_right_margin_fields_by_stable_selection(
+    const std::string& studio_host_path);
+void test_studio_host_json_clears_deleted_report_right_margin_fields_by_stable_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_updates_report_grid_vertical_fields_by_stable_selection(
     const std::string& studio_host_path);
