@@ -2994,6 +2994,21 @@ internal static class Program
                     CreateStylelblUntouchedColumnFooterSection()
                 });
             SmokeAssetEditorSectionRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 5,
+                expectedSectionTitle: "Page Footer",
+                propertyName: "HEIGHT",
+                updatedPropertyValue: 500,
+                expectedOriginalSelectionValue: "0",
+                expectedUpdatedSelectionValue: "500",
+                expectedOriginalRawValue: "0.000",
+                expectedUpdatedRawValue: "500",
+                expectedOriginalLayoutValue: 0,
+                expectedUpdatedLayoutValue: 500,
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedObjectCount: 0);
+            SmokeAssetEditorSectionRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 5,
                 expectedSectionTitle: "Group Footer",
