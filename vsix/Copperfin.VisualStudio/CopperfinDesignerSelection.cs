@@ -292,6 +292,14 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             localization.Text("AssetEditor.Property.SettingsState"),
             BuildStateText(localization, deleted));
 
+        if (!string.IsNullOrWhiteSpace(reportLayout?.DocumentTitle))
+        {
+            selection.AddReadOnlyString(
+                "DOCUMENTTITLE",
+                localization.Text("AssetEditor.Property.DocumentTitle"),
+                reportLayout!.DocumentTitle);
+        }
+
         var sortSetting = settings.FirstOrDefault(setting =>
             string.Equals(setting.Name, "TAG", StringComparison.OrdinalIgnoreCase));
         if (sortSetting is not null && !string.IsNullOrWhiteSpace(sortSetting.Value))
