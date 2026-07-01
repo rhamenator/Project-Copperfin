@@ -136,6 +136,11 @@ internal static class Program
                 expectSection: "Detail");
             SmokeRealAssetGroupingExplorerSelection(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"));
+            SmokeRealAssetSettingsSortMetadataSelection(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"));
             SmokeRealAssetHostBackedPropertyRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 7,
@@ -2023,6 +2028,10 @@ internal static class Program
                objectListView.Items.Count == 0 &&
                string.Equals(sectionListView.Items.Cast<ListViewItem>().FirstOrDefault()?.Text, "Settings", StringComparison.Ordinal),
             "Report settings explorer selection should produce a settings-rooted property-grid selection and clear object rows");
+        Expect(string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["SORTEXPRESSION"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "customer.country", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["SORTEXPRESSIONFIELD"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "9", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["SORTEXPRESSIONMEMO"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "11", StringComparison.Ordinal),
+            "Report settings explorer selection should expose explicit sort metadata from the shared settings model");
         Expect(string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["PREVIEWBOUNDS"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "L 0 T 2000 R 5200 B 8100   Size: 5200 x 6100", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["DELETEDPREVIEWBOUNDS"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "L 1000 T 2600 R 2200 B 2900   Size: 1200 x 300", StringComparison.Ordinal),
             "Report settings explorer selection should expose live and deleted preview metadata from the shared report-layout model");
@@ -2064,6 +2073,11 @@ internal static class Program
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Margen superior", StringComparison.Ordinal)) &&
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Expresión de orden", StringComparison.Ordinal)),
             "Spanish report settings property-grid selection should localize supported root-setting labels");
+        Expect(spanishProperties.Any(property => string.Equals(property.DisplayName, "Expresión de orden activa", StringComparison.Ordinal)) &&
+               string.Equals(spanishProperties.First(property => string.Equals(property.Name, "SORTEXPRESSION", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "customer.country", StringComparison.Ordinal) &&
+               string.Equals(spanishProperties.First(property => string.Equals(property.Name, "SORTEXPRESSIONFIELD", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "9", StringComparison.Ordinal) &&
+               string.Equals(spanishProperties.First(property => string.Equals(property.Name, "SORTEXPRESSIONMEMO", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "11", StringComparison.Ordinal),
+            "Spanish report settings property-grid selection should localize explicit sort metadata labels");
         Expect(spanishProperties.Any(property => string.Equals(property.DisplayName, "Limites de vista previa", StringComparison.Ordinal)) &&
                string.Equals(spanishProperties.First(property => string.Equals(property.Name, "PREVIEWBOUNDS", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "Izq 0 Arr 2000 Der 5200 Ab 8100   Tamaño: 5200 x 6100", StringComparison.Ordinal),
             "Spanish report settings property-grid selection should localize preview metadata labels and values");
@@ -2075,6 +2089,11 @@ internal static class Program
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Margem superior", StringComparison.Ordinal)) &&
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Expressão de ordenação", StringComparison.Ordinal)),
             "Portuguese report settings property-grid selection should localize supported root-setting labels");
+        Expect(portugueseProperties.Any(property => string.Equals(property.DisplayName, "Expressão de ordenação ativa", StringComparison.Ordinal)) &&
+               string.Equals(portugueseProperties.First(property => string.Equals(property.Name, "SORTEXPRESSION", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "customer.country", StringComparison.Ordinal) &&
+               string.Equals(portugueseProperties.First(property => string.Equals(property.Name, "SORTEXPRESSIONFIELD", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "9", StringComparison.Ordinal) &&
+               string.Equals(portugueseProperties.First(property => string.Equals(property.Name, "SORTEXPRESSIONMEMO", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "11", StringComparison.Ordinal),
+            "Portuguese report settings property-grid selection should localize explicit sort metadata labels");
         Expect(portugueseProperties.Any(property => string.Equals(property.DisplayName, "Limites da visualização", StringComparison.Ordinal)) &&
                string.Equals(portugueseProperties.First(property => string.Equals(property.Name, "PREVIEWBOUNDS", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "E 0 T 2000 D 5200 B 8100   Tamanho: 5200 x 6100", StringComparison.Ordinal),
             "Portuguese report settings property-grid selection should localize preview metadata labels and values");
@@ -2085,6 +2104,11 @@ internal static class Program
         Expect(pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.SettingsCount"), StringComparison.Ordinal)) &&
                pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.TopMargin"), StringComparison.Ordinal)),
             "Pseudo-localized report settings property-grid selection should route new root-setting labels through the shared catalog");
+        Expect(pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ActiveSortExpression"), StringComparison.Ordinal)) &&
+               string.Equals(pseudoProperties.First(property => string.Equals(property.Name, "SORTEXPRESSION", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), "customer.country", StringComparison.Ordinal) &&
+               string.Equals(pseudoProperties.First(property => string.Equals(property.Name, "SORTEXPRESSIONFIELD", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), "9", StringComparison.Ordinal) &&
+               string.Equals(pseudoProperties.First(property => string.Equals(property.Name, "SORTEXPRESSIONMEMO", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), "11", StringComparison.Ordinal),
+            "Pseudo-localized report settings property-grid selection should route explicit sort metadata through the shared catalog");
         Expect(pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.PreviewBounds"), StringComparison.Ordinal)) &&
                string.Equals(pseudoProperties.First(property => string.Equals(property.Name, "PREVIEWBOUNDS", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), pseudoLocalization.Format("AssetEditor.Property.BoundsValue", 0, 2000, 5200, 8100, 5200, 6100), StringComparison.Ordinal),
             "Pseudo-localized report settings property-grid selection should route preview metadata through the shared catalog");
@@ -2110,7 +2134,9 @@ internal static class Program
         Expect(settings[0].RecordIndex == 0 &&
                string.Equals(settings[0].Name, "ORIENTATION", StringComparison.Ordinal) &&
                string.Equals(settings[1].Value, "20", StringComparison.Ordinal) &&
-               string.Equals(settings[2].Name, "TAG", StringComparison.Ordinal),
+               string.Equals(settings[2].Name, "TAG", StringComparison.Ordinal) &&
+               settings[2].FieldIndex == 9 &&
+               settings[2].MemoBlockNumber == 11,
             "Localized report settings property-grid selection should preserve root-setting machine contracts");
     }
 
@@ -2163,6 +2189,10 @@ internal static class Program
                string.Equals(sectionListView.Items.Cast<ListViewItem>().FirstOrDefault()?.Text, "Settings (deleted)", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(deletedSettingsSelection)["SETTINGSSTATE"]?.GetValue(deletedSettingsSelection)?.ToString(), "Deleted", StringComparison.Ordinal),
             "Deleted report settings explorer selection should produce a deleted settings-rooted property-grid selection and clear object rows");
+        Expect(string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["SORTEXPRESSION"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "deleted.customer.country", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["SORTEXPRESSIONFIELD"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "9", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["SORTEXPRESSIONMEMO"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "21", StringComparison.Ordinal),
+            "Deleted report settings explorer selection should expose deleted sort metadata from the shared settings model");
         Expect(string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["DELETEDPREVIEWBOUNDS"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "L 1000 T 2600 R 2200 B 2900   Size: 1200 x 300", StringComparison.Ordinal),
             "Deleted report settings explorer selection should expose deleted preview metadata from the shared report-layout model");
 
@@ -2197,6 +2227,9 @@ internal static class Program
         Expect(spanishProperties.Any(property => string.Equals(property.DisplayName, "Estado de las configuraciones", StringComparison.Ordinal)) &&
                string.Equals(spanishProperties.First(property => string.Equals(property.Name, "SETTINGSSTATE", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "Eliminada", StringComparison.Ordinal),
             "Spanish deleted report settings property-grid selection should localize deleted settings state");
+        Expect(spanishProperties.Any(property => string.Equals(property.DisplayName, "Expresión de orden activa", StringComparison.Ordinal)) &&
+               string.Equals(spanishProperties.First(property => string.Equals(property.Name, "SORTEXPRESSION", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "deleted.customer.country", StringComparison.Ordinal),
+            "Spanish deleted report settings property-grid selection should localize deleted sort metadata labels");
         Expect(spanishProperties.Any(property => string.Equals(property.DisplayName, "Limites de vista previa eliminada", StringComparison.Ordinal)),
             "Spanish deleted report settings property-grid selection should localize deleted preview metadata labels");
 
@@ -2205,6 +2238,9 @@ internal static class Program
         Expect(portugueseProperties.Any(property => string.Equals(property.DisplayName, "Estado das configurações", StringComparison.Ordinal)) &&
                string.Equals(portugueseProperties.First(property => string.Equals(property.Name, "SETTINGSSTATE", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "Excluída", StringComparison.Ordinal),
             "Portuguese deleted report settings property-grid selection should localize deleted settings state");
+        Expect(portugueseProperties.Any(property => string.Equals(property.DisplayName, "Expressão de ordenação ativa", StringComparison.Ordinal)) &&
+               string.Equals(portugueseProperties.First(property => string.Equals(property.Name, "SORTEXPRESSION", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "deleted.customer.country", StringComparison.Ordinal),
+            "Portuguese deleted report settings property-grid selection should localize deleted sort metadata labels");
         Expect(portugueseProperties.Any(property => string.Equals(property.DisplayName, "Limites da visualização excluída", StringComparison.Ordinal)),
             "Portuguese deleted report settings property-grid selection should localize deleted preview metadata labels");
 
@@ -2214,6 +2250,9 @@ internal static class Program
         Expect(pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.SettingsState"), StringComparison.Ordinal)) &&
                string.Equals(pseudoProperties.First(property => string.Equals(property.Name, "SETTINGSSTATE", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), pseudoLocalization.Text("AssetEditor.State.Deleted"), StringComparison.Ordinal),
             "Pseudo-localized deleted report settings property-grid selection should route deleted settings state through the shared catalog");
+        Expect(pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ActiveSortExpression"), StringComparison.Ordinal)) &&
+               string.Equals(pseudoProperties.First(property => string.Equals(property.Name, "SORTEXPRESSION", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), "deleted.customer.country", StringComparison.Ordinal),
+            "Pseudo-localized deleted report settings property-grid selection should route deleted sort metadata through the shared catalog");
         Expect(pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.DeletedPreviewBounds"), StringComparison.Ordinal)),
             "Pseudo-localized deleted report settings property-grid selection should route deleted preview metadata through the shared catalog");
 
@@ -2238,7 +2277,9 @@ internal static class Program
         Expect(deletedSettings[0].RecordIndex == 0 &&
                string.Equals(deletedSettings[0].Name, "ORIENTATION", StringComparison.Ordinal) &&
                string.Equals(deletedSettings[1].Value, "40", StringComparison.Ordinal) &&
-               string.Equals(deletedSettings[2].Name, "TAG", StringComparison.Ordinal),
+               string.Equals(deletedSettings[2].Name, "TAG", StringComparison.Ordinal) &&
+               deletedSettings[2].FieldIndex == 9 &&
+               deletedSettings[2].MemoBlockNumber == 21,
             "Localized deleted report settings property-grid selection should preserve deleted root-setting machine contracts");
     }
 
@@ -2416,6 +2457,9 @@ internal static class Program
             Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
                    initialSelection.RecordIndex == 0 &&
                    objectListView.Items.Count == 0 &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["SORTEXPRESSION"]?.GetValue(initialSelection)?.ToString(), "customer.country", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["SORTEXPRESSIONFIELD"]?.GetValue(initialSelection)?.ToString(), "9", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["SORTEXPRESSIONMEMO"]?.GetValue(initialSelection)?.ToString(), "11", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["PREVIEWBOUNDS"]?.GetValue(initialSelection)?.ToString(), "L 0 T 2000 R 5200 B 8100   Size: 5200 x 6100", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["DELETEDPREVIEWBOUNDS"]?.GetValue(initialSelection)?.ToString(), "L 1000 T 2600 R 2200 B 2900   Size: 1200 x 300", StringComparison.Ordinal),
                 "A report settings host-update smoke should start from a settings-rooted property-grid selection");
@@ -2450,6 +2494,9 @@ internal static class Program
                    propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
                    refreshedSelection.RecordIndex == 0 &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["TOPMARGIN"]?.GetValue(refreshedSelection)?.ToString(), "30", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["SORTEXPRESSION"]?.GetValue(refreshedSelection)?.ToString(), "customer.country", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["SORTEXPRESSIONFIELD"]?.GetValue(refreshedSelection)?.ToString(), "9", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["SORTEXPRESSIONMEMO"]?.GetValue(refreshedSelection)?.ToString(), "11", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["PREVIEWBOUNDS"]?.GetValue(refreshedSelection)?.ToString(), "L 0 T 2000 R 5200 B 8100   Size: 5200 x 6100", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["DELETEDPREVIEWBOUNDS"]?.GetValue(refreshedSelection)?.ToString(), "L 1000 T 2600 R 2200 B 2900   Size: 1200 x 300", StringComparison.Ordinal) &&
                    objectListView.Items.Count == 0 &&
@@ -2539,6 +2586,9 @@ internal static class Program
                    initialSelection.RecordIndex == 0 &&
                    objectListView.Items.Count == 0 &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["SETTINGSSTATE"]?.GetValue(initialSelection)?.ToString(), "Deleted", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["SORTEXPRESSION"]?.GetValue(initialSelection)?.ToString(), "deleted.customer.country", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["SORTEXPRESSIONFIELD"]?.GetValue(initialSelection)?.ToString(), "9", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["SORTEXPRESSIONMEMO"]?.GetValue(initialSelection)?.ToString(), "21", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["DELETEDPREVIEWBOUNDS"]?.GetValue(initialSelection)?.ToString(), "L 1000 T 2600 R 2200 B 2900   Size: 1200 x 300", StringComparison.Ordinal),
                 "A deleted report settings host-update smoke should start from a deleted settings-rooted property-grid selection");
 
@@ -2573,6 +2623,9 @@ internal static class Program
                    refreshedSelection.RecordIndex == 0 &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["TOPMARGIN"]?.GetValue(refreshedSelection)?.ToString(), "55", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["SETTINGSSTATE"]?.GetValue(refreshedSelection)?.ToString(), "Deleted", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["SORTEXPRESSION"]?.GetValue(refreshedSelection)?.ToString(), "deleted.customer.country", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["SORTEXPRESSIONFIELD"]?.GetValue(refreshedSelection)?.ToString(), "9", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["SORTEXPRESSIONMEMO"]?.GetValue(refreshedSelection)?.ToString(), "21", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["DELETEDPREVIEWBOUNDS"]?.GetValue(refreshedSelection)?.ToString(), "L 1000 T 2600 R 2200 B 2900   Size: 1200 x 300", StringComparison.Ordinal) &&
                    objectListView.Items.Count == 0 &&
                    ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") is null &&
@@ -8266,6 +8319,94 @@ internal static class Program
                SelectionMatchesExpectedReportGrouping(groupingSelection, expectedGrouping) &&
                objectListView.Items.Count == 0,
             $"real asset grouping smoke should expose shared grouping metadata continuity for {sourcePath}");
+
+        TearDownForm(hostForm);
+    }
+
+    private static void SmokeRealAssetSettingsSortMetadataSelection(params string?[] sourcePaths)
+    {
+        string? selectedPath = null;
+        CopperfinStudioNamedValue? sortSetting = null;
+
+        foreach (var candidatePath in sourcePaths)
+        {
+            if (string.IsNullOrWhiteSpace(candidatePath) || !File.Exists(candidatePath))
+            {
+                continue;
+            }
+
+            var candidateSnapshot = CopperfinStudioSnapshotClient.TryLoad(candidatePath!);
+            if (!candidateSnapshot.Success)
+            {
+                continue;
+            }
+
+            var candidateSortSetting = candidateSnapshot.Document?.ReportLayout?.Settings.FirstOrDefault(setting =>
+                string.Equals(setting.Name, "TAG", StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrWhiteSpace(setting.Value));
+            if (candidateSortSetting is null)
+            {
+                continue;
+            }
+
+            selectedPath = candidatePath;
+            sortSetting = candidateSortSetting;
+            break;
+        }
+
+        if (string.IsNullOrWhiteSpace(selectedPath) || sortSetting is null)
+        {
+            Console.WriteLine("SKIP: real settings sort candidate with root TAG metadata not found.");
+            return;
+        }
+
+        using var hostForm = new Form
+        {
+            Width = 1400,
+            Height = 1000,
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-32000, -32000)
+        };
+
+        using var control = new CopperfinAssetEditorControl
+        {
+            Dock = DockStyle.Fill
+        };
+
+        hostForm.Controls.Add(control);
+        hostForm.Show();
+        Application.DoEvents();
+        control.LoadDocument(selectedPath!);
+
+        var sectionListView = GetPrivateListView(control, "sectionListView");
+        var objectListView = GetPrivateListView(control, "objectListView");
+        var propertyGrid = GetPrivatePropertyGrid(control);
+        var loaded = WaitUntil(
+            TimeSpan.FromSeconds(8),
+            () => sectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, "Settings", StringComparison.Ordinal)));
+        Expect(loaded, $"real asset settings smoke should surface the settings scope for {selectedPath}");
+        if (!loaded)
+        {
+            TearDownForm(hostForm);
+            return;
+        }
+
+        foreach (ListViewItem item in sectionListView.Items)
+        {
+            item.Selected = string.Equals(item.Text, "Settings", StringComparison.Ordinal);
+        }
+
+        InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+        Application.DoEvents();
+
+        Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection settingsSelection &&
+               settingsSelection.RecordIndex == (sortSetting.RecordIndex) &&
+               objectListView.Items.Count == 0 &&
+               string.Equals(ReadSelectionPropertyValue(settingsSelection, "SORTEXPRESSION"), sortSetting.Value, StringComparison.Ordinal) &&
+               string.Equals(ReadSelectionPropertyValue(settingsSelection, "SORTEXPRESSIONFIELD"), sortSetting.FieldIndex?.ToString(), StringComparison.Ordinal) &&
+               string.Equals(ReadSelectionPropertyValue(settingsSelection, "SORTEXPRESSIONMEMO"), sortSetting.MemoBlockNumber.ToString(), StringComparison.Ordinal),
+            $"real asset settings smoke should expose shared sort metadata continuity for {selectedPath}");
 
         TearDownForm(hostForm);
     }

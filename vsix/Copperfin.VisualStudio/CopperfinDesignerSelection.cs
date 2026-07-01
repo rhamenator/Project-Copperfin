@@ -292,6 +292,32 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             localization.Text("AssetEditor.Property.SettingsState"),
             BuildStateText(localization, deleted));
 
+        var sortSetting = settings.FirstOrDefault(setting =>
+            string.Equals(setting.Name, "TAG", StringComparison.OrdinalIgnoreCase));
+        if (sortSetting is not null && !string.IsNullOrWhiteSpace(sortSetting.Value))
+        {
+            selection.AddReadOnlyString(
+                "SORTEXPRESSION",
+                localization.Text("AssetEditor.Property.ActiveSortExpression"),
+                sortSetting.Value);
+
+            if (sortSetting.FieldIndex.HasValue)
+            {
+                selection.AddReadOnlyInt(
+                    "SORTEXPRESSIONFIELD",
+                    localization.Text("AssetEditor.Property.SortExpressionFieldIndex"),
+                    sortSetting.FieldIndex.Value.ToString(CultureInfo.InvariantCulture));
+            }
+
+            if (sortSetting.MemoBlockNumber > 0)
+            {
+                selection.AddReadOnlyInt(
+                    "SORTEXPRESSIONMEMO",
+                    localization.Text("AssetEditor.Property.SortExpressionMemoBlock"),
+                    sortSetting.MemoBlockNumber.ToString(CultureInfo.InvariantCulture));
+            }
+        }
+
         if (reportLayout?.PreviewBoundsAvailable == true)
         {
             selection.AddReadOnlyString(
