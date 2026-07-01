@@ -353,6 +353,7 @@ internal static class Program
         SmokeAssetEditorDeletedReportSettingsMissingOutputHostUpdate();
         SmokeAssetEditorDeletedReportSettingsMissingPrintQualityHostUpdate();
         SmokeAssetEditorDeletedReportSettingsMissingYResolutionHostUpdate();
+        SmokeAssetEditorDeletedReportSettingsMissingTTOptionHostUpdate();
         SmokeAssetEditorDeletedReportSectionPropertyGridHostUpdate();
         SmokeAssetEditorLabelSectionPropertyGridHostUpdate();
         SmokeAssetEditorDeletedLabelSectionPropertyGridHostUpdate();
@@ -6529,6 +6530,145 @@ internal static class Program
                    ReadPrivateNullableInt(surface, "selectedRecordIndex") is null &&
                    !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
                 "Editing deleted report settings through the shared asset editor should preserve deleted settings-rooted continuity after adding missing YRESOLUTION");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", previousLogPath);
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
+    private static void SmokeAssetEditorDeletedReportSettingsMissingTTOptionHostUpdate()
+    {
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            Console.WriteLine("SKIP: shared asset-editor deleted-report-settings missing TTOPTION host-update smoke requires a POSIX scriptable fake Studio host.");
+            return;
+        }
+
+        var snapshot = BuildAssetEditorDeletedSettingsMissingTTOptionSmokeSnapshot();
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
+        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var logPath = Path.Combine(tempRoot, "studio-host.log");
+        var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
+
+        try
+        {
+            File.WriteAllText(logPath, string.Empty);
+            CreateFakeStudioHostScript(scriptPath, BuildDeletedSettingsMissingTTOptionHostResponseJson());
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", scriptPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", logPath);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+
+            ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+            SetPrivateField(control, "currentPath", assetPath);
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            var deletedSettingsItem = sectionListView.Items.Cast<ListViewItem>()
+                .First(item => string.Equals(item.Text, "Settings (deleted)", StringComparison.Ordinal));
+            deletedSettingsItem.Selected = true;
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            InvokeAssetEditorVoid(control, "LoadSurface");
+            Application.DoEvents();
+
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface.");
+
+            Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == 0 &&
+                   objectListView.Items.Count == 0 &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["SETTINGSSTATE"]?.GetValue(initialSelection)?.ToString(), "Deleted", StringComparison.Ordinal) &&
+                   string.Equals(ReadSelectionPropertyValue(initialSelection, "TTOPTION") ?? string.Empty, string.Empty, StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["DOCUMENTTITLE"]?.GetValue(initialSelection)?.ToString(), "Deleted Customer Invoice", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["SORTEXPRESSION"]?.GetValue(initialSelection)?.ToString(), "deleted.customer.country", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["SORTEXPRESSIONFIELD"]?.GetValue(initialSelection)?.ToString(), "9", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["SORTEXPRESSIONMEMO"]?.GetValue(initialSelection)?.ToString(), "21", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["DELETEDPREVIEWBOUNDS"]?.GetValue(initialSelection)?.ToString(), "L 1000 T 2600 R 2200 B 2900   Size: 1200 x 300", StringComparison.Ordinal),
+                "A deleted report settings missing TTOPTION host-update smoke should start from a deleted settings-rooted property-grid selection");
+
+            if (propertyGrid.SelectedObject is not CopperfinDesignerSelection settingsSelection)
+            {
+                throw new InvalidOperationException("Could not read the selected deleted report settings from the shared asset editor for missing TTOPTION.");
+            }
+
+            var propertyDescriptor = TypeDescriptor.GetProperties(settingsSelection)["TTOPTION"];
+            Expect(propertyDescriptor is not null,
+                "A deleted report settings missing TTOPTION host-update smoke should surface the blank editable TTOPTION property");
+            if (propertyDescriptor is null)
+            {
+                return;
+            }
+
+            propertyDescriptor.SetValue(settingsSelection, 1);
+            InvokeAssetEditorVoid(control, "ApplyPropertyGridChange", "TTOPTION", string.Empty);
+            Application.DoEvents();
+
+            var logLines = File.ReadAllLines(logPath);
+            var invocationStartCount = logLines.Count(line => string.Equals(line, "BEGIN", StringComparison.Ordinal));
+            Expect(invocationStartCount == 1,
+                "Editing deleted report settings through the shared asset editor should invoke the Studio host exactly once when adding missing TTOPTION");
+
+            var invocationArguments = logLines.Skip(1).ToList();
+            Expect(invocationArguments.Contains("--from-vs") &&
+                   invocationArguments.Contains("--json") &&
+                   invocationArguments.Contains("--set-property") &&
+                   invocationArguments.Contains("--record") &&
+                   invocationArguments.Contains("0") &&
+                   invocationArguments.Contains("--property-name") &&
+                   invocationArguments.Contains("TTOPTION") &&
+                   invocationArguments.Contains("--property-value") &&
+                   invocationArguments.Contains("1"),
+                "Editing deleted report settings through the shared asset editor should send one invariant deleted TTOPTION update through the host property contract");
+
+            Expect(string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Settings (deleted)", StringComparison.Ordinal) &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
+                   refreshedSelection.RecordIndex == 0 &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["SETTINGSSTATE"]?.GetValue(refreshedSelection)?.ToString(), "Deleted", StringComparison.Ordinal) &&
+                   string.Equals(ReadSelectionPropertyValue(refreshedSelection, "TTOPTION"), "1", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["DOCUMENTTITLE"]?.GetValue(refreshedSelection)?.ToString(), "Deleted Customer Invoice", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["SORTEXPRESSION"]?.GetValue(refreshedSelection)?.ToString(), "deleted.customer.country", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["SORTEXPRESSIONFIELD"]?.GetValue(refreshedSelection)?.ToString(), "9", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["SORTEXPRESSIONMEMO"]?.GetValue(refreshedSelection)?.ToString(), "21", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["DELETEDPREVIEWBOUNDS"]?.GetValue(refreshedSelection)?.ToString(), "L 1000 T 2600 R 2200 B 2900   Size: 1200 x 300", StringComparison.Ordinal) &&
+                   objectListView.Items.Count == 0 &&
+                   ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") is null &&
+                   ReadPrivateNullableInt(surface, "selectedRecordIndex") is null &&
+                   !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+                "Editing deleted report settings through the shared asset editor should preserve deleted settings-rooted continuity after adding missing TTOPTION");
         }
         finally
         {
@@ -28930,6 +29070,61 @@ internal static class Program
         };
     }
 
+    private static CopperfinStudioSnapshotDocument BuildAssetEditorDeletedSettingsMissingTTOptionSmokeSnapshot()
+    {
+        return new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "report",
+            FieldCount = 5,
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                DocumentTitle = "Deleted Customer Invoice",
+                DeletedPreviewBoundsAvailable = true,
+                DeletedPreviewBoundsLeft = 1000,
+                DeletedPreviewBoundsTop = 2600,
+                DeletedPreviewBoundsRight = 2200,
+                DeletedPreviewBoundsBottom = 2900,
+                DeletedPreviewBoundsWidth = 1200,
+                DeletedPreviewBoundsHeight = 300,
+                DeletedSettings = new List<CopperfinStudioNamedValue>
+                {
+                    new() { Name = "ORIENTATION", Value = "1", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 0, MemoBlockNumber = 19 },
+                    new() { Name = "COLS", Value = "3", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 1, MemoBlockNumber = 19 },
+                    new() { Name = "COLWIDTH", Value = "2400", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 2, MemoBlockNumber = 19 },
+                    new() { Name = "COLSPACING", Value = "180", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 3, MemoBlockNumber = 19 },
+                    new() { Name = "PAPERLENGTH", Value = "4318", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 4, MemoBlockNumber = 18 },
+                    new() { Name = "PAPERWIDTH", Value = "2794", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 5, MemoBlockNumber = 18 },
+                    new() { Name = "TOPMARGIN", Value = "40", RecordIndex = 0, FieldIndex = 3, MemoBlockNumber = 0 },
+                    new() { Name = "LEFTMARGIN", Value = "35", RecordIndex = 0, FieldIndex = 10, MemoBlockNumber = 0 },
+                    new() { Name = "RIGHTMARGIN", Value = "45", RecordIndex = 0, FieldIndex = 11, MemoBlockNumber = 0 },
+                    new() { Name = "TAG", Value = "deleted.customer.country", RecordIndex = 0, FieldIndex = 9, MemoBlockNumber = 21 },
+                    new() { Name = "DRIVER", Value = "deleted.winspool", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 10, MemoBlockNumber = 18 },
+                    new() { Name = "DEVICE", Value = "Deleted Printer", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 11, MemoBlockNumber = 18 },
+                    new() { Name = "OUTPUT", Value = "DPRN:", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 12, MemoBlockNumber = 18 },
+                    new() { Name = "DEFAULTSOURCE", Value = "16", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 13, MemoBlockNumber = 18 },
+                    new() { Name = "PRINTQUALITY", Value = "1200", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 14, MemoBlockNumber = 18 },
+                    new() { Name = "YRESOLUTION", Value = "1200", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 15, MemoBlockNumber = 18 },
+                    new() { Name = "COLOR", Value = "2", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 17, MemoBlockNumber = 18 },
+                    new() { Name = "ASCII", Value = "10", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 18, MemoBlockNumber = 18 },
+                    new() { Name = "COLLATE", Value = "0", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 19, MemoBlockNumber = 18 },
+                    new() { Name = "COPIES", Value = "2", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 20, MemoBlockNumber = 18 }
+                },
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail_1",
+                        Title = "Detail",
+                        BandKind = "detail",
+                        RecordIndex = 42,
+                        Top = 2000,
+                        Height = 5000
+                    }
+                }
+            }
+        };
+    }
+
     private static CopperfinStudioSnapshotDocument BuildAssetEditorObjectUpdateSmokeSnapshot()
     {
         return new CopperfinStudioSnapshotDocument
@@ -31435,6 +31630,13 @@ internal static class Program
     {
         return """
 {"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[],"ReportLayout":{"DocumentTitle":"Deleted Customer Invoice","DeletedPreviewBoundsAvailable":true,"DeletedPreviewBoundsLeft":1000,"DeletedPreviewBoundsTop":2600,"DeletedPreviewBoundsRight":2200,"DeletedPreviewBoundsBottom":2900,"DeletedPreviewBoundsWidth":1200,"DeletedPreviewBoundsHeight":300,"DeletedSettings":[{"Name":"ORIENTATION","Value":"1","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":0,"MemoBlockNumber":19},{"Name":"COLS","Value":"3","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":1,"MemoBlockNumber":19},{"Name":"COLWIDTH","Value":"2400","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":2,"MemoBlockNumber":19},{"Name":"COLSPACING","Value":"180","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":3,"MemoBlockNumber":19},{"Name":"PAPERLENGTH","Value":"4318","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":4,"MemoBlockNumber":18},{"Name":"PAPERWIDTH","Value":"2794","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":5,"MemoBlockNumber":18},{"Name":"TOPMARGIN","Value":"40","RecordIndex":0,"FieldIndex":3,"MemoBlockNumber":0},{"Name":"LEFTMARGIN","Value":"35","RecordIndex":0,"FieldIndex":10,"MemoBlockNumber":0},{"Name":"RIGHTMARGIN","Value":"45","RecordIndex":0,"FieldIndex":11,"MemoBlockNumber":0},{"Name":"TAG","Value":"deleted.customer.country","RecordIndex":0,"FieldIndex":9,"MemoBlockNumber":21},{"Name":"DRIVER","Value":"deleted.winspool","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":10,"MemoBlockNumber":18},{"Name":"DEVICE","Value":"Deleted Printer","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":11,"MemoBlockNumber":18},{"Name":"OUTPUT","Value":"DPRN:","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":12,"MemoBlockNumber":18},{"Name":"DEFAULTSOURCE","Value":"16","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":13,"MemoBlockNumber":18},{"Name":"PRINTQUALITY","Value":"1200","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":14,"MemoBlockNumber":18},{"Name":"YRESOLUTION","Value":"600","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":15,"MemoBlockNumber":18},{"Name":"TTOPTION","Value":"2","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":16,"MemoBlockNumber":18},{"Name":"COLOR","Value":"2","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":17,"MemoBlockNumber":18},{"Name":"ASCII","Value":"10","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":18,"MemoBlockNumber":18},{"Name":"COLLATE","Value":"0","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":19,"MemoBlockNumber":18},{"Name":"COPIES","Value":"2","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":20,"MemoBlockNumber":18}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[],"UnplacedObjects":[]}}}
+""";
+    }
+
+    private static string BuildDeletedSettingsMissingTTOptionHostResponseJson()
+    {
+        return """
+{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[],"ReportLayout":{"DocumentTitle":"Deleted Customer Invoice","DeletedPreviewBoundsAvailable":true,"DeletedPreviewBoundsLeft":1000,"DeletedPreviewBoundsTop":2600,"DeletedPreviewBoundsRight":2200,"DeletedPreviewBoundsBottom":2900,"DeletedPreviewBoundsWidth":1200,"DeletedPreviewBoundsHeight":300,"DeletedSettings":[{"Name":"ORIENTATION","Value":"1","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":0,"MemoBlockNumber":19},{"Name":"COLS","Value":"3","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":1,"MemoBlockNumber":19},{"Name":"COLWIDTH","Value":"2400","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":2,"MemoBlockNumber":19},{"Name":"COLSPACING","Value":"180","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":3,"MemoBlockNumber":19},{"Name":"PAPERLENGTH","Value":"4318","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":4,"MemoBlockNumber":18},{"Name":"PAPERWIDTH","Value":"2794","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":5,"MemoBlockNumber":18},{"Name":"TOPMARGIN","Value":"40","RecordIndex":0,"FieldIndex":3,"MemoBlockNumber":0},{"Name":"LEFTMARGIN","Value":"35","RecordIndex":0,"FieldIndex":10,"MemoBlockNumber":0},{"Name":"RIGHTMARGIN","Value":"45","RecordIndex":0,"FieldIndex":11,"MemoBlockNumber":0},{"Name":"TAG","Value":"deleted.customer.country","RecordIndex":0,"FieldIndex":9,"MemoBlockNumber":21},{"Name":"DRIVER","Value":"deleted.winspool","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":10,"MemoBlockNumber":18},{"Name":"DEVICE","Value":"Deleted Printer","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":11,"MemoBlockNumber":18},{"Name":"OUTPUT","Value":"DPRN:","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":12,"MemoBlockNumber":18},{"Name":"DEFAULTSOURCE","Value":"16","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":13,"MemoBlockNumber":18},{"Name":"PRINTQUALITY","Value":"1200","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":14,"MemoBlockNumber":18},{"Name":"YRESOLUTION","Value":"1200","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":15,"MemoBlockNumber":18},{"Name":"TTOPTION","Value":"1","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":16,"MemoBlockNumber":18},{"Name":"COLOR","Value":"2","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":17,"MemoBlockNumber":18},{"Name":"ASCII","Value":"10","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":18,"MemoBlockNumber":18},{"Name":"COLLATE","Value":"0","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":19,"MemoBlockNumber":18},{"Name":"COPIES","Value":"2","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":20,"MemoBlockNumber":18}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[],"UnplacedObjects":[]}}}
 """;
     }
 
