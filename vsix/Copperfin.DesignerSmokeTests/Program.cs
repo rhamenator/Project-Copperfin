@@ -10425,17 +10425,11 @@ internal static class Program
 
     private static void SmokeAssetEditorDeletedReportSectionPropertyGridHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor deleted-report-section host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDeletedReportSectionUpdateSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -10504,10 +10498,10 @@ internal static class Program
                    invocationArguments.Contains("--record") &&
                    invocationArguments.Contains("51") &&
                    invocationArguments.Contains("--property-name") &&
-                   invocationArguments.Contains("TOP") &&
+                   invocationArguments.Contains("VPOS") &&
                    invocationArguments.Contains("--property-value") &&
                    invocationArguments.Contains("9300"),
-                "Editing a deleted report section through the shared asset editor should send one invariant TOP update through the host property contract");
+                "Editing a deleted report section through the shared asset editor should send one invariant VPOS update through the host property contract");
 
             var deletedSection = snapshot.ReportLayout?.DeletedSections[0]
                 ?? throw new InvalidOperationException("Could not read the deleted report section from the shared smoke snapshot.");
