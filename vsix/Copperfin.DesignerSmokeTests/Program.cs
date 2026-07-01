@@ -516,6 +516,40 @@ internal static class Program
                 expectedSectionTitle: "Detail",
                 expectedSectionCount: 5,
                 expectLabel: true);
+            SmokeRealAssetHostBackedBatchPropertyRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 7,
+                propertyChanges: new[]
+                {
+                    new KeyValuePair<string, string>("FONTSTYLE", "1"),
+                    new KeyValuePair<string, string>("FONTSIZE", "18")
+                },
+                originalValues: new[]
+                {
+                    new KeyValuePair<string, string>("FONTSTYLE", "3"),
+                    new KeyValuePair<string, string>("FONTSIZE", "20")
+                },
+                expectedObjectTitle: "\"Titles By Author\"",
+                expectedSectionTitle: "Title",
+                expectedSectionCount: 6,
+                expectLabel: false);
+            SmokeRealAssetHostBackedBatchPropertyRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 6,
+                propertyChanges: new[]
+                {
+                    new KeyValuePair<string, string>("FONTSTYLE", "1"),
+                    new KeyValuePair<string, string>("FONTSIZE", "9")
+                },
+                originalValues: new[]
+                {
+                    new KeyValuePair<string, string>("FONTSTYLE", "0"),
+                    new KeyValuePair<string, string>("FONTSIZE", "8")
+                },
+                expectedObjectTitle: "wiz_field",
+                expectedSectionTitle: "Detail",
+                expectedSectionCount: 5,
+                expectLabel: true);
             SmokeRealAssetHostBackedPropertyRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLE3V.FRX"),
                 recordIndex: 6,
@@ -1432,6 +1466,50 @@ internal static class Program
                 {
                     new KeyValuePair<string, string>("VPOS", "6666.667"),
                     new KeyValuePair<string, string>("HEIGHT", "1666.667")
+                },
+                expectedObjectTitle: "wiz_field",
+                expectedSectionCount: 5,
+                expectLabel: true);
+            SmokeAssetEditorBatchPropertyRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 7,
+                expectedSectionTitle: "Title",
+                propertyChanges: new[]
+                {
+                    new KeyValuePair<string, string>("FONTSTYLE", "1"),
+                    new KeyValuePair<string, string>("FONTSIZE", "18")
+                },
+                expectedUpdatedSelectionValues: new[]
+                {
+                    new KeyValuePair<string, string>("FONTSTYLE", "1"),
+                    new KeyValuePair<string, string>("FONTSIZE", "18")
+                },
+                expectedOriginalRawValues: new[]
+                {
+                    new KeyValuePair<string, string>("FONTSTYLE", "3"),
+                    new KeyValuePair<string, string>("FONTSIZE", "20")
+                },
+                expectedObjectTitle: "\"Titles By Author\"",
+                expectedSectionCount: 6,
+                expectLabel: false);
+            SmokeAssetEditorBatchPropertyRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 6,
+                expectedSectionTitle: "Detail",
+                propertyChanges: new[]
+                {
+                    new KeyValuePair<string, string>("FONTSTYLE", "1"),
+                    new KeyValuePair<string, string>("FONTSIZE", "9")
+                },
+                expectedUpdatedSelectionValues: new[]
+                {
+                    new KeyValuePair<string, string>("FONTSTYLE", "1"),
+                    new KeyValuePair<string, string>("FONTSIZE", "9")
+                },
+                expectedOriginalRawValues: new[]
+                {
+                    new KeyValuePair<string, string>("FONTSTYLE", "0"),
+                    new KeyValuePair<string, string>("FONTSIZE", "8")
                 },
                 expectedObjectTitle: "wiz_field",
                 expectedSectionCount: 5,
