@@ -187,6 +187,22 @@ std::string read_text(const std::filesystem::path& path) {
     };
 }
 
+std::string normalize_line_endings(std::string text) {
+    std::string normalized;
+    normalized.reserve(text.size());
+    for (std::size_t index = 0; index < text.size(); ++index) {
+        if (text[index] == '\r') {
+            if (index + 1U < text.size() && text[index + 1U] == '\n') {
+                continue;
+            }
+            normalized.push_back('\n');
+        } else {
+            normalized.push_back(text[index]);
+        }
+    }
+    return normalized;
+}
+
 struct ProcessResult {
     int exit_code = -1;
     std::string stdout_text;
@@ -289,6 +305,40 @@ void write_synthetic_report_table_for_stable_deleted_settings_json(const std::fi
            "#2796: stable deleted settings fixture should preserve the deleted settings state");
 }
 
+void write_synthetic_report_table_for_stable_deleted_unsupported_expr_settings_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "FONTFACE", .type = 'M', .length = 4U},
+        {.name = "TOPMARGIN", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 24U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0\n* keep-this-comment\n\nXUSER=keepme\nCOLOR=1", "", "", "", "", "", "10", "unsupported-deleted-id"},
+        {"9", "1", "", "", "0", "", "2000", "", "", ""},
+        {"9", "4", "", "", "2000", "", "5000", "", "", ""},
+        {"8", "0", "customer.company", "1200", "2600", "4000", "450", "Segoe UI", "", "field-guid"},
+        {"5", "", "\"Invoice\"", "900", "100", "1800", "350", "", "", "label-guid"},
+        {"6", "", "", "50", "8000", "100", "100", "", "", ""},
+        {"5", "", "\"Deleted label\"", "1000", "2600", "1200", "300", "", "", ""}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#3095: stable deleted settings restore fixture should create unsupported EXPR layout");
+    const auto object_delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 6U, true);
+    expect(object_delete_result.ok, "#3095: stable deleted settings restore fixture should mark deleted objects");
+    const auto settings_delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 0U, true);
+    expect(settings_delete_result.ok, "#3095: stable deleted settings restore fixture should mark settings deleted");
+    expect(dbf_record_deleted(report_path, 0U),
+           "#3095: stable deleted settings restore fixture should preserve the deleted settings state");
+}
+
 void run_settings_restore_case(
     const std::string& studio_host_path,
     const std::filesystem::path& temp_root,
@@ -378,6 +428,86 @@ void run_settings_restore_case(
                     issue_prefix + " should preserve deleted object metadata");
 }
 
+void run_unsupported_expr_settings_restore_case(
+    const std::string& studio_host_path,
+    const std::filesystem::path& temp_root,
+    const std::string& file_name,
+    const std::string& label,
+    const std::string& issue_prefix) {
+    const std::filesystem::path asset_path = temp_root / file_name;
+    write_synthetic_report_table_for_stable_deleted_unsupported_expr_settings_json(asset_path);
+    expect(dbf_record_deleted(asset_path, 0U), issue_prefix + " fixture should start with deleted settings");
+
+    const auto restore_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", asset_path.string(),
+            "--restore-object",
+            "--unique-id", "unsupported-deleted-id",
+            "--json"
+        },
+        temp_root);
+
+    if (restore_process.exit_code != 0) {
+        std::cerr << "studio host " << label << " stable unsupported EXPR settings restore stdout:\n"
+                  << restore_process.stdout_text << "\n";
+        std::cerr << "studio host " << label << " stable unsupported EXPR settings restore stderr:\n"
+                  << restore_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(restore_process.exit_code == 0, issue_prefix + " should exit successfully");
+    expect(!dbf_record_deleted(asset_path, 0U), issue_prefix + " should clear the settings record delete flag");
+    const auto expr_property = copperfin::vfp::query_visual_object_property({
+        .path = asset_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "unsupported-deleted-id",
+        .property_name = "EXPR"
+    });
+    expect(expr_property.ok && expr_property.exists,
+           issue_prefix + " should leave the EXPR memo queryable after restore");
+    expect(normalize_line_endings(expr_property.value) ==
+               "ORIENTATION=0\n* keep-this-comment\n\nXUSER=keepme\nCOLOR=1",
+           issue_prefix + " should preserve raw unsupported EXPR lines across restore");
+    expect_contains(restore_process.stdout_text, "\"settingCount\": 4",
+                    issue_prefix + " should restore live key/value settings only");
+    expect_contains(restore_process.stdout_text, "\"deletedSettingCount\": 0",
+                    issue_prefix + " should clear deleted setting counts");
+    expect_contains(restore_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                    issue_prefix + " should advertise selected-settings availability");
+    expect_contains(restore_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                    issue_prefix + " should expose settings selection kind");
+    expect_contains_in_order(
+        restore_process.stdout_text,
+        {
+            "\"settings\": [",
+            "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+            "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+            "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
+            "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 8, \"sourceLineIndex\": null"
+        },
+        issue_prefix + " should restore parsed setting source-line gaps around unsupported EXPR lines");
+    expect_contains_in_order(
+        restore_process.stdout_text,
+        {
+            "\"selectedReportSettings\": [",
+            "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+            "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+            "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
+            "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 8, \"sourceLineIndex\": null"
+        },
+        issue_prefix + " should rehydrate selected parsed settings after restore");
+    expect_contains(restore_process.stdout_text, "\"pageSetupAvailable\": true",
+                    issue_prefix + " should restore live page setup availability");
+    expect_contains(restore_process.stdout_text, "\"deletedObjectCount\": 1",
+                    issue_prefix + " should preserve deleted object metadata");
+    expect_contains(restore_process.stdout_text, "\"sectionCount\": 2",
+                    issue_prefix + " should preserve live section metadata");
+    expect(restore_process.stdout_text.find("\"name\": \"* keep-this-comment\"") == std::string::npos,
+           issue_prefix + " should not fabricate comment lines as live settings");
+}
+
 void test_studio_host_json_preserves_settings_restore_stable_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -401,6 +531,18 @@ void test_studio_host_json_preserves_settings_restore_stable_selection(const std
         "settings_restore_stable.lbx",
         "label",
         "#2796: stable-selected label settings restore");
+    run_unsupported_expr_settings_restore_case(
+        studio_host_path,
+        temp_root,
+        "settings_restore_unsupported_stable.frx",
+        "report",
+        "#3095: stable-selected report settings restore should preserve unsupported EXPR lines");
+    run_unsupported_expr_settings_restore_case(
+        studio_host_path,
+        temp_root,
+        "settings_restore_unsupported_stable.lbx",
+        "label",
+        "#3095: stable-selected label settings restore should preserve unsupported EXPR lines");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
