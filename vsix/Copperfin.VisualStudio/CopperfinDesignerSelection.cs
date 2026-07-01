@@ -518,6 +518,10 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             "DRIVER" => "AssetEditor.Property.PrinterDriver",
             "DEVICE" => "AssetEditor.Property.PrinterDevice",
             "OUTPUT" => "AssetEditor.Property.PrinterOutput",
+            "DEFAULTSOURCE" => "AssetEditor.Property.DefaultSource",
+            "PRINTQUALITY" => "AssetEditor.Property.PrintQuality",
+            "YRESOLUTION" => "AssetEditor.Property.YResolution",
+            "TTOPTION" => "AssetEditor.Property.TrueTypeOption",
             "ORIENTATION" => "AssetEditor.Property.Orientation",
             "PAPERSIZE" => "AssetEditor.Property.PaperSize",
             "PAPERLENGTH" => "AssetEditor.Property.PaperLength",
@@ -543,6 +547,10 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
     private static bool IsNumericReportSetting(string settingName)
     {
         return settingName.ToUpperInvariant() is
+            "DEFAULTSOURCE" or
+            "PRINTQUALITY" or
+            "YRESOLUTION" or
+            "TTOPTION" or
             "ORIENTATION" or
             "PAPERSIZE" or
             "PAPERLENGTH" or
