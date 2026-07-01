@@ -3063,6 +3063,31 @@ internal static class Program
                 });
             SmokeAssetEditorSectionMetadataSelectionWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 1,
+                expectedSectionListTitle: "Title",
+                expectedProperties: new[]
+                {
+                    new KeyValuePair<string, string>("SECTIONSTATE", "Live"),
+                    new KeyValuePair<string, string>("BANDKIND", "Title"),
+                    new KeyValuePair<string, string>("RECORDINDEX", "1"),
+                    new KeyValuePair<string, string>("OBJECTCOUNT", "1"),
+                    new KeyValuePair<string, string>("DELETEDOBJECTCOUNT", "0"),
+                    new KeyValuePair<string, string>("TOP", "0"),
+                    new KeyValuePair<string, string>("HEIGHT", "11459")
+                },
+                expectedMissingProperties: new[]
+                {
+                    "EXPR",
+                    "EXPRESSIONFIELD",
+                    "EXPRESSIONMEMO",
+                    "GROUPINGEXPRESSION",
+                    "GROUPINGEXPRESSIONFIELD",
+                    "GROUPINGEXPRESSIONMEMO",
+                    "GROUPPARTNERSTATE"
+                },
+                expectedObjectListCount: 1);
+            SmokeAssetEditorSectionMetadataSelectionWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 3,
                 expectedSectionListTitle: "Group Header - titles_by_author.author_id",
                 expectedProperties: new[]
