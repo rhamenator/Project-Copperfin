@@ -723,7 +723,7 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
 
     private static int ParseInt(string value)
     {
-        return int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed)
+        return TryParseNormalizedInt(value, out var parsed)
             ? parsed
             : 0;
     }
@@ -739,9 +739,30 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
 
     private static string NormalizeInt(string value)
     {
-        return int.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var parsed)
+        return TryParseNormalizedInt(value, out var parsed)
             ? parsed.ToString(CultureInfo.InvariantCulture)
             : "0";
+    }
+
+    private static bool TryParseNormalizedInt(string value, out int parsed)
+    {
+        if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out parsed))
+        {
+            return true;
+        }
+
+        if (decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var decimalValue))
+        {
+            var truncated = decimal.Truncate(decimalValue);
+            if (truncated >= int.MinValue && truncated <= int.MaxValue)
+            {
+                parsed = decimal.ToInt32(truncated);
+                return true;
+            }
+        }
+
+        parsed = 0;
+        return false;
     }
 
     private static string NormalizeBool(string value)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -15665,7 +15666,9 @@ internal static class Program
                    deleteButton.Enabled &&
                    !restoreButton.Visible &&
                    propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
-                   initialSelection.RecordIndex == recordIndex,
+                   initialSelection.RecordIndex == recordIndex &&
+                   string.Equals(ReadSelectionPropertyValue(initialSelection, "HPOS"), expectedOriginalLayoutHpos.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal) &&
+                   string.Equals(ReadSelectionPropertyValue(initialSelection, "VPOS"), expectedOriginalLayoutVpos.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal),
                 $"real asset editor nudge smoke should start from a live object selection with original geometry exposed for {sourcePath}");
 
             var nudgeHandled = InvokeAssetEditorObject(control, "TryHandleNudgeObjectCommand", "both", (double)deltaHpos, (double)deltaVpos);
@@ -15693,6 +15696,8 @@ internal static class Program
                            !selectedObject.Deleted &&
                            string.Equals(selectedObject.Title, expectedObjectTitle, StringComparison.Ordinal) &&
                            string.Equals(TryGetSnapshotObjectPropertyValue(selectedObject, "UNIQUEID"), expectedUniqueId, StringComparison.Ordinal) &&
+                           string.Equals(ReadSelectionPropertyValue(refreshedSelection, "HPOS"), expectedUpdatedLayoutHpos.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal) &&
+                           string.Equals(ReadSelectionPropertyValue(refreshedSelection, "VPOS"), expectedUpdatedLayoutVpos.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal) &&
                            string.Equals(objectState, "Live", StringComparison.Ordinal) &&
                            deleteButton.Visible &&
                            deleteButton.Enabled &&
@@ -15779,6 +15784,8 @@ internal static class Program
                            !selectedObject.Deleted &&
                            string.Equals(selectedObject.Title, expectedObjectTitle, StringComparison.Ordinal) &&
                            string.Equals(TryGetSnapshotObjectPropertyValue(selectedObject, "UNIQUEID"), expectedUniqueId, StringComparison.Ordinal) &&
+                           string.Equals(ReadSelectionPropertyValue(refreshedSelection, "HPOS"), expectedOriginalLayoutHpos.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal) &&
+                           string.Equals(ReadSelectionPropertyValue(refreshedSelection, "VPOS"), expectedOriginalLayoutVpos.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal) &&
                            string.Equals(objectState, "Live", StringComparison.Ordinal) &&
                            deleteButton.Visible &&
                            deleteButton.Enabled &&
