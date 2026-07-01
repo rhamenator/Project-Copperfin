@@ -151,6 +151,8 @@ internal static class Program
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"));
+            SmokeRealAssetSettingsPaperDimensionsSelection(
+                TryResolveVfpSourceAsset("VFPSource/Sedna/DataExplorer/DATAEXPLORERQUICKREPORT.FRX"));
             SmokeRealAssetSettingsPreviewBoundsSelection(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
@@ -2053,6 +2055,8 @@ internal static class Program
             new() { Name = "COLS", Value = "2", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 1, MemoBlockNumber = 9 },
             new() { Name = "COLWIDTH", Value = "3600", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 2, MemoBlockNumber = 9 },
             new() { Name = "COLSPACING", Value = "120", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 3, MemoBlockNumber = 9 },
+            new() { Name = "PAPERLENGTH", Value = "2794", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 4, MemoBlockNumber = 8 },
+            new() { Name = "PAPERWIDTH", Value = "2159", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 5, MemoBlockNumber = 8 },
             new() { Name = "TOPMARGIN", Value = "20", RecordIndex = 0, FieldIndex = 3, MemoBlockNumber = 0 },
             new() { Name = "LEFTMARGIN", Value = "15", RecordIndex = 0, FieldIndex = 10, MemoBlockNumber = 0 },
             new() { Name = "RIGHTMARGIN", Value = "25", RecordIndex = 0, FieldIndex = 11, MemoBlockNumber = 0 },
@@ -2125,8 +2129,10 @@ internal static class Program
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["COLS"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "2", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["COLWIDTH"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "3600", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["COLSPACING"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "120", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["PAPERLENGTH"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "2794", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["PAPERWIDTH"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "2159", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["RIGHTMARGIN"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "25", StringComparison.Ordinal),
-            "Report settings explorer selection should expose column-setup and side-margin metadata from the shared settings model");
+            "Report settings explorer selection should expose column-setup, paper-dimension, and side-margin metadata from the shared settings model");
         Expect(string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["PREVIEWBOUNDS"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "L 0 T 2000 R 5200 B 8100   Size: 5200 x 6100", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["DELETEDPREVIEWBOUNDS"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "L 1000 T 2600 R 2200 B 2900   Size: 1200 x 300", StringComparison.Ordinal),
             "Report settings explorer selection should expose live and deleted preview metadata from the shared report-layout model");
@@ -2141,6 +2147,10 @@ internal static class Program
                 "Report settings property-grid selection should serialize column-width edits through the shared update path");
             ExpectSelectionUpdate(editableSelection, "COLSPACING", 180, "180",
                 "Report settings property-grid selection should serialize column-spacing edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "PAPERLENGTH", 4318, "4318",
+                "Report settings property-grid selection should serialize paper-length edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "PAPERWIDTH", 2794, "2794",
+                "Report settings property-grid selection should serialize paper-width edits through the shared update path");
             ExpectSelectionUpdate(editableSelection, "LEFTMARGIN", 35, "35",
                 "Report settings property-grid selection should serialize left-margin edits through the shared update path");
             ExpectSelectionUpdate(editableSelection, "RIGHTMARGIN", 45, "45",
@@ -2179,6 +2189,8 @@ internal static class Program
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Columnas", StringComparison.Ordinal)) &&
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Ancho de columna", StringComparison.Ordinal)) &&
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Espaciado de columna", StringComparison.Ordinal)) &&
+               spanishProperties.Any(property => string.Equals(property.DisplayName, "Largo del papel", StringComparison.Ordinal)) &&
+               spanishProperties.Any(property => string.Equals(property.DisplayName, "Ancho del papel", StringComparison.Ordinal)) &&
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Margen superior", StringComparison.Ordinal)) &&
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Margen izquierdo", StringComparison.Ordinal)) &&
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Margen derecho", StringComparison.Ordinal)) &&
@@ -2203,6 +2215,8 @@ internal static class Program
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Colunas", StringComparison.Ordinal)) &&
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Largura da coluna", StringComparison.Ordinal)) &&
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Espaçamento da coluna", StringComparison.Ordinal)) &&
+               portugueseProperties.Any(property => string.Equals(property.DisplayName, "Comprimento do papel", StringComparison.Ordinal)) &&
+               portugueseProperties.Any(property => string.Equals(property.DisplayName, "Largura do papel", StringComparison.Ordinal)) &&
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Margem superior", StringComparison.Ordinal)) &&
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Margem esquerda", StringComparison.Ordinal)) &&
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Margem direita", StringComparison.Ordinal)) &&
@@ -2228,6 +2242,8 @@ internal static class Program
                pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Columns"), StringComparison.Ordinal)) &&
                pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ColumnWidth"), StringComparison.Ordinal)) &&
                pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ColumnSpacing"), StringComparison.Ordinal)) &&
+               pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.PaperLength"), StringComparison.Ordinal)) &&
+               pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.PaperWidth"), StringComparison.Ordinal)) &&
                pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.LeftMargin"), StringComparison.Ordinal)) &&
                pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.RightMargin"), StringComparison.Ordinal)),
             "Pseudo-localized report settings property-grid selection should route new root-setting labels through the shared catalog");
@@ -2269,14 +2285,18 @@ internal static class Program
                settings[2].SourceLineIndex == 2 &&
                string.Equals(settings[3].Name, "COLSPACING", StringComparison.Ordinal) &&
                settings[3].SourceLineIndex == 3 &&
-               string.Equals(settings[4].Value, "20", StringComparison.Ordinal) &&
-               string.Equals(settings[5].Name, "LEFTMARGIN", StringComparison.Ordinal) &&
-               settings[5].FieldIndex == 10 &&
-               string.Equals(settings[6].Name, "RIGHTMARGIN", StringComparison.Ordinal) &&
-               settings[6].FieldIndex == 11 &&
-               string.Equals(settings[7].Name, "TAG", StringComparison.Ordinal) &&
-               settings[7].FieldIndex == 9 &&
-               settings[7].MemoBlockNumber == 11,
+               string.Equals(settings[4].Name, "PAPERLENGTH", StringComparison.Ordinal) &&
+               settings[4].FieldIndex == 6 &&
+               string.Equals(settings[5].Name, "PAPERWIDTH", StringComparison.Ordinal) &&
+               settings[5].FieldIndex == 6 &&
+               string.Equals(settings[6].Value, "20", StringComparison.Ordinal) &&
+               string.Equals(settings[7].Name, "LEFTMARGIN", StringComparison.Ordinal) &&
+               settings[7].FieldIndex == 10 &&
+               string.Equals(settings[8].Name, "RIGHTMARGIN", StringComparison.Ordinal) &&
+               settings[8].FieldIndex == 11 &&
+               string.Equals(settings[9].Name, "TAG", StringComparison.Ordinal) &&
+               settings[9].FieldIndex == 9 &&
+               settings[9].MemoBlockNumber == 11,
             "Localized report settings property-grid selection should preserve root-setting machine contracts");
     }
 
@@ -2288,6 +2308,8 @@ internal static class Program
             new() { Name = "COLS", Value = "3", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 1, MemoBlockNumber = 19 },
             new() { Name = "COLWIDTH", Value = "2400", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 2, MemoBlockNumber = 19 },
             new() { Name = "COLSPACING", Value = "180", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 3, MemoBlockNumber = 19 },
+            new() { Name = "PAPERLENGTH", Value = "4318", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 4, MemoBlockNumber = 18 },
+            new() { Name = "PAPERWIDTH", Value = "2794", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 5, MemoBlockNumber = 18 },
             new() { Name = "TOPMARGIN", Value = "40", RecordIndex = 0, FieldIndex = 3, MemoBlockNumber = 0 },
             new() { Name = "LEFTMARGIN", Value = "35", RecordIndex = 0, FieldIndex = 10, MemoBlockNumber = 0 },
             new() { Name = "RIGHTMARGIN", Value = "45", RecordIndex = 0, FieldIndex = 11, MemoBlockNumber = 0 },
@@ -2346,8 +2368,10 @@ internal static class Program
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["COLS"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "3", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["COLWIDTH"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "2400", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["COLSPACING"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "180", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["PAPERLENGTH"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "4318", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["PAPERWIDTH"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "2794", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["RIGHTMARGIN"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "45", StringComparison.Ordinal),
-            "Deleted report settings explorer selection should expose deleted column-setup and side-margin metadata from the shared settings model");
+            "Deleted report settings explorer selection should expose deleted column-setup, paper-dimension, and side-margin metadata from the shared settings model");
         Expect(string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["DELETEDPREVIEWBOUNDS"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "L 1000 T 2600 R 2200 B 2900   Size: 1200 x 300", StringComparison.Ordinal),
             "Deleted report settings explorer selection should expose deleted preview metadata from the shared report-layout model");
 
@@ -2361,6 +2385,10 @@ internal static class Program
                 "Deleted report settings property-grid selection should serialize deleted column-width edits through the shared update path");
             ExpectSelectionUpdate(editableSelection, "COLSPACING", 240, "240",
                 "Deleted report settings property-grid selection should serialize deleted column-spacing edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "PAPERLENGTH", 5588, "5588",
+                "Deleted report settings property-grid selection should serialize deleted paper-length edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "PAPERWIDTH", 4318, "4318",
+                "Deleted report settings property-grid selection should serialize deleted paper-width edits through the shared update path");
             ExpectSelectionUpdate(editableSelection, "LEFTMARGIN", 50, "50",
                 "Deleted report settings property-grid selection should serialize deleted left-margin edits through the shared update path");
             ExpectSelectionUpdate(editableSelection, "RIGHTMARGIN", 60, "60",
@@ -2457,14 +2485,18 @@ internal static class Program
                deletedSettings[2].SourceLineIndex == 2 &&
                string.Equals(deletedSettings[3].Name, "COLSPACING", StringComparison.Ordinal) &&
                deletedSettings[3].SourceLineIndex == 3 &&
-               string.Equals(deletedSettings[4].Value, "40", StringComparison.Ordinal) &&
-               string.Equals(deletedSettings[5].Name, "LEFTMARGIN", StringComparison.Ordinal) &&
-               deletedSettings[5].FieldIndex == 10 &&
-               string.Equals(deletedSettings[6].Name, "RIGHTMARGIN", StringComparison.Ordinal) &&
-               deletedSettings[6].FieldIndex == 11 &&
-               string.Equals(deletedSettings[7].Name, "TAG", StringComparison.Ordinal) &&
-               deletedSettings[7].FieldIndex == 9 &&
-               deletedSettings[7].MemoBlockNumber == 21,
+               string.Equals(deletedSettings[4].Name, "PAPERLENGTH", StringComparison.Ordinal) &&
+               deletedSettings[4].FieldIndex == 6 &&
+               string.Equals(deletedSettings[5].Name, "PAPERWIDTH", StringComparison.Ordinal) &&
+               deletedSettings[5].FieldIndex == 6 &&
+               string.Equals(deletedSettings[6].Value, "40", StringComparison.Ordinal) &&
+               string.Equals(deletedSettings[7].Name, "LEFTMARGIN", StringComparison.Ordinal) &&
+               deletedSettings[7].FieldIndex == 10 &&
+               string.Equals(deletedSettings[8].Name, "RIGHTMARGIN", StringComparison.Ordinal) &&
+               deletedSettings[8].FieldIndex == 11 &&
+               string.Equals(deletedSettings[9].Name, "TAG", StringComparison.Ordinal) &&
+               deletedSettings[9].FieldIndex == 9 &&
+               deletedSettings[9].MemoBlockNumber == 21,
             "Localized deleted report settings property-grid selection should preserve deleted root-setting machine contracts");
     }
 
@@ -2645,6 +2677,8 @@ internal static class Program
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["COLS"]?.GetValue(initialSelection)?.ToString(), "2", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["COLWIDTH"]?.GetValue(initialSelection)?.ToString(), "3600", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["COLSPACING"]?.GetValue(initialSelection)?.ToString(), "120", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["PAPERLENGTH"]?.GetValue(initialSelection)?.ToString(), "2794", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["PAPERWIDTH"]?.GetValue(initialSelection)?.ToString(), "2159", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["LEFTMARGIN"]?.GetValue(initialSelection)?.ToString(), "15", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["RIGHTMARGIN"]?.GetValue(initialSelection)?.ToString(), "25", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["DOCUMENTTITLE"]?.GetValue(initialSelection)?.ToString(), "Customer Invoice", StringComparison.Ordinal) &&
@@ -2687,6 +2721,8 @@ internal static class Program
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["COLS"]?.GetValue(refreshedSelection)?.ToString(), "2", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["COLWIDTH"]?.GetValue(refreshedSelection)?.ToString(), "4200", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["COLSPACING"]?.GetValue(refreshedSelection)?.ToString(), "120", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["PAPERLENGTH"]?.GetValue(refreshedSelection)?.ToString(), "2794", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["PAPERWIDTH"]?.GetValue(refreshedSelection)?.ToString(), "2159", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["LEFTMARGIN"]?.GetValue(refreshedSelection)?.ToString(), "15", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["RIGHTMARGIN"]?.GetValue(refreshedSelection)?.ToString(), "25", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["DOCUMENTTITLE"]?.GetValue(refreshedSelection)?.ToString(), "Customer Invoice", StringComparison.Ordinal) &&
@@ -2785,6 +2821,8 @@ internal static class Program
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["COLS"]?.GetValue(initialSelection)?.ToString(), "3", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["COLWIDTH"]?.GetValue(initialSelection)?.ToString(), "2400", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["COLSPACING"]?.GetValue(initialSelection)?.ToString(), "180", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["PAPERLENGTH"]?.GetValue(initialSelection)?.ToString(), "4318", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["PAPERWIDTH"]?.GetValue(initialSelection)?.ToString(), "2794", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["LEFTMARGIN"]?.GetValue(initialSelection)?.ToString(), "35", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["RIGHTMARGIN"]?.GetValue(initialSelection)?.ToString(), "45", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["DOCUMENTTITLE"]?.GetValue(initialSelection)?.ToString(), "Deleted Customer Invoice", StringComparison.Ordinal) &&
@@ -2826,6 +2864,8 @@ internal static class Program
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["COLS"]?.GetValue(refreshedSelection)?.ToString(), "3", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["COLWIDTH"]?.GetValue(refreshedSelection)?.ToString(), "2400", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["COLSPACING"]?.GetValue(refreshedSelection)?.ToString(), "240", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["PAPERLENGTH"]?.GetValue(refreshedSelection)?.ToString(), "4318", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["PAPERWIDTH"]?.GetValue(refreshedSelection)?.ToString(), "2794", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["LEFTMARGIN"]?.GetValue(refreshedSelection)?.ToString(), "35", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["RIGHTMARGIN"]?.GetValue(refreshedSelection)?.ToString(), "45", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["SETTINGSSTATE"]?.GetValue(refreshedSelection)?.ToString(), "Deleted", StringComparison.Ordinal) &&
@@ -8803,7 +8843,7 @@ internal static class Program
         hostForm.Controls.Add(control);
         hostForm.Show();
         Application.DoEvents();
-        control.LoadDocument(selectedPath);
+        control.LoadDocument(selectedPath!);
 
         var sectionListView = GetPrivateListView(control, "sectionListView");
         var objectListView = GetPrivateListView(control, "objectListView");
@@ -8834,6 +8874,102 @@ internal static class Program
                string.Equals(ReadSelectionPropertyValue(settingsSelection, "GRIDV"), expectedSettings["GRIDV"].Value, StringComparison.Ordinal) &&
                string.Equals(ReadSelectionPropertyValue(settingsSelection, "GRIDH"), expectedSettings["GRIDH"].Value, StringComparison.Ordinal),
             $"real asset settings smoke should expose shared page-setup/grid continuity for {selectedPath}");
+
+        TearDownForm(hostForm);
+    }
+
+    private static void SmokeRealAssetSettingsPaperDimensionsSelection(params string?[] sourcePaths)
+    {
+        string? selectedPath = null;
+        IReadOnlyDictionary<string, CopperfinStudioNamedValue>? expectedSettings = null;
+
+        foreach (var candidatePath in EnumerateResolvedRealReportAssetPaths(sourcePaths))
+        {
+            if (string.IsNullOrWhiteSpace(candidatePath) || !File.Exists(candidatePath))
+            {
+                continue;
+            }
+
+            var candidateSnapshot = CopperfinStudioSnapshotClient.TryLoad(candidatePath!);
+            var candidateLayout = candidateSnapshot.Document?.ReportLayout;
+            if (!candidateSnapshot.Success || candidateLayout is null)
+            {
+                continue;
+            }
+
+            var paperLength = candidateLayout.Settings.FirstOrDefault(setting =>
+                string.Equals(setting.Name, "PAPERLENGTH", StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrWhiteSpace(setting.Value));
+            var paperWidth = candidateLayout.Settings.FirstOrDefault(setting =>
+                string.Equals(setting.Name, "PAPERWIDTH", StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrWhiteSpace(setting.Value));
+
+            if (paperLength is null || paperWidth is null)
+            {
+                continue;
+            }
+
+            selectedPath = candidatePath;
+            expectedSettings = new Dictionary<string, CopperfinStudioNamedValue>(StringComparer.OrdinalIgnoreCase)
+            {
+                [paperLength.Name] = paperLength,
+                [paperWidth.Name] = paperWidth
+            };
+            break;
+        }
+
+        if (string.IsNullOrWhiteSpace(selectedPath) || expectedSettings is null)
+        {
+            Console.WriteLine("SKIP: real paper-dimension settings candidate not found.");
+            return;
+        }
+
+        using var hostForm = new Form
+        {
+            Width = 1400,
+            Height = 1000,
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-32000, -32000)
+        };
+
+        using var control = new CopperfinAssetEditorControl
+        {
+            Dock = DockStyle.Fill
+        };
+
+        hostForm.Controls.Add(control);
+        hostForm.Show();
+        Application.DoEvents();
+        control.LoadDocument(selectedPath!);
+
+        var sectionListView = GetPrivateListView(control, "sectionListView");
+        var objectListView = GetPrivateListView(control, "objectListView");
+        var propertyGrid = GetPrivatePropertyGrid(control);
+        var loaded = WaitUntil(
+            TimeSpan.FromSeconds(8),
+            () => sectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, "Settings", StringComparison.Ordinal)));
+        Expect(loaded, $"real asset paper-dimension smoke should surface the settings scope for {selectedPath}");
+        if (!loaded)
+        {
+            TearDownForm(hostForm);
+            return;
+        }
+
+        foreach (ListViewItem item in sectionListView.Items)
+        {
+            item.Selected = string.Equals(item.Text, "Settings", StringComparison.Ordinal);
+        }
+
+        InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+        Application.DoEvents();
+
+        Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection settingsSelection &&
+               settingsSelection.RecordIndex == expectedSettings["PAPERLENGTH"].RecordIndex &&
+               objectListView.Items.Count == 0 &&
+               string.Equals(ReadSelectionPropertyValue(settingsSelection, "PAPERLENGTH"), expectedSettings["PAPERLENGTH"].Value, StringComparison.Ordinal) &&
+               string.Equals(ReadSelectionPropertyValue(settingsSelection, "PAPERWIDTH"), expectedSettings["PAPERWIDTH"].Value, StringComparison.Ordinal),
+            $"real asset settings smoke should expose shared paper-dimension continuity for {selectedPath}");
 
         TearDownForm(hostForm);
     }
@@ -16111,6 +16247,8 @@ internal static class Program
                     new() { Name = "COLS", Value = "2", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 1, MemoBlockNumber = 9 },
                     new() { Name = "COLWIDTH", Value = "3600", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 2, MemoBlockNumber = 9 },
                     new() { Name = "COLSPACING", Value = "120", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 3, MemoBlockNumber = 9 },
+                    new() { Name = "PAPERLENGTH", Value = "2794", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 4, MemoBlockNumber = 8 },
+                    new() { Name = "PAPERWIDTH", Value = "2159", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 5, MemoBlockNumber = 8 },
                     new() { Name = "TOPMARGIN", Value = "20", RecordIndex = 0, FieldIndex = 3, MemoBlockNumber = 0 },
                     new() { Name = "LEFTMARGIN", Value = "15", RecordIndex = 0, FieldIndex = 10, MemoBlockNumber = 0 },
                     new() { Name = "RIGHTMARGIN", Value = "25", RecordIndex = 0, FieldIndex = 11, MemoBlockNumber = 0 },
@@ -16154,6 +16292,8 @@ internal static class Program
                     new() { Name = "COLS", Value = "3", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 1, MemoBlockNumber = 19 },
                     new() { Name = "COLWIDTH", Value = "2400", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 2, MemoBlockNumber = 19 },
                     new() { Name = "COLSPACING", Value = "180", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 3, MemoBlockNumber = 19 },
+                    new() { Name = "PAPERLENGTH", Value = "4318", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 4, MemoBlockNumber = 18 },
+                    new() { Name = "PAPERWIDTH", Value = "2794", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 5, MemoBlockNumber = 18 },
                     new() { Name = "TOPMARGIN", Value = "40", RecordIndex = 0, FieldIndex = 3, MemoBlockNumber = 0 },
                     new() { Name = "LEFTMARGIN", Value = "35", RecordIndex = 0, FieldIndex = 10, MemoBlockNumber = 0 },
                     new() { Name = "RIGHTMARGIN", Value = "45", RecordIndex = 0, FieldIndex = 11, MemoBlockNumber = 0 },
@@ -17670,14 +17810,14 @@ internal static class Program
     private static string BuildSettingsUpdateHostResponseJson()
     {
         return """
-{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[],"ReportLayout":{"DocumentTitle":"Customer Invoice","PreviewBoundsAvailable":true,"PreviewBoundsLeft":0,"PreviewBoundsTop":2000,"PreviewBoundsRight":5200,"PreviewBoundsBottom":8100,"PreviewBoundsWidth":5200,"PreviewBoundsHeight":6100,"DeletedPreviewBoundsAvailable":true,"DeletedPreviewBoundsLeft":1000,"DeletedPreviewBoundsTop":2600,"DeletedPreviewBoundsRight":2200,"DeletedPreviewBoundsBottom":2900,"DeletedPreviewBoundsWidth":1200,"DeletedPreviewBoundsHeight":300,"Settings":[{"Name":"ORIENTATION","Value":"0","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":0,"MemoBlockNumber":9},{"Name":"COLS","Value":"2","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":1,"MemoBlockNumber":9},{"Name":"COLWIDTH","Value":"4200","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":2,"MemoBlockNumber":9},{"Name":"COLSPACING","Value":"120","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":3,"MemoBlockNumber":9},{"Name":"TOPMARGIN","Value":"20","RecordIndex":0,"FieldIndex":3,"MemoBlockNumber":0},{"Name":"LEFTMARGIN","Value":"15","RecordIndex":0,"FieldIndex":10,"MemoBlockNumber":0},{"Name":"RIGHTMARGIN","Value":"25","RecordIndex":0,"FieldIndex":11,"MemoBlockNumber":0},{"Name":"TAG","Value":"customer.country","RecordIndex":0,"FieldIndex":9,"MemoBlockNumber":11}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[],"UnplacedObjects":[]}}}
+{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[],"ReportLayout":{"DocumentTitle":"Customer Invoice","PreviewBoundsAvailable":true,"PreviewBoundsLeft":0,"PreviewBoundsTop":2000,"PreviewBoundsRight":5200,"PreviewBoundsBottom":8100,"PreviewBoundsWidth":5200,"PreviewBoundsHeight":6100,"DeletedPreviewBoundsAvailable":true,"DeletedPreviewBoundsLeft":1000,"DeletedPreviewBoundsTop":2600,"DeletedPreviewBoundsRight":2200,"DeletedPreviewBoundsBottom":2900,"DeletedPreviewBoundsWidth":1200,"DeletedPreviewBoundsHeight":300,"Settings":[{"Name":"ORIENTATION","Value":"0","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":0,"MemoBlockNumber":9},{"Name":"COLS","Value":"2","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":1,"MemoBlockNumber":9},{"Name":"COLWIDTH","Value":"4200","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":2,"MemoBlockNumber":9},{"Name":"COLSPACING","Value":"120","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":3,"MemoBlockNumber":9},{"Name":"PAPERLENGTH","Value":"2794","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":4,"MemoBlockNumber":8},{"Name":"PAPERWIDTH","Value":"2159","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":5,"MemoBlockNumber":8},{"Name":"TOPMARGIN","Value":"20","RecordIndex":0,"FieldIndex":3,"MemoBlockNumber":0},{"Name":"LEFTMARGIN","Value":"15","RecordIndex":0,"FieldIndex":10,"MemoBlockNumber":0},{"Name":"RIGHTMARGIN","Value":"25","RecordIndex":0,"FieldIndex":11,"MemoBlockNumber":0},{"Name":"TAG","Value":"customer.country","RecordIndex":0,"FieldIndex":9,"MemoBlockNumber":11}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[],"UnplacedObjects":[]}}}
 """;
     }
 
     private static string BuildDeletedSettingsUpdateHostResponseJson()
     {
         return """
-{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[],"ReportLayout":{"DocumentTitle":"Deleted Customer Invoice","DeletedPreviewBoundsAvailable":true,"DeletedPreviewBoundsLeft":1000,"DeletedPreviewBoundsTop":2600,"DeletedPreviewBoundsRight":2200,"DeletedPreviewBoundsBottom":2900,"DeletedPreviewBoundsWidth":1200,"DeletedPreviewBoundsHeight":300,"DeletedSettings":[{"Name":"ORIENTATION","Value":"1","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":0,"MemoBlockNumber":19},{"Name":"COLS","Value":"3","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":1,"MemoBlockNumber":19},{"Name":"COLWIDTH","Value":"2400","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":2,"MemoBlockNumber":19},{"Name":"COLSPACING","Value":"240","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":3,"MemoBlockNumber":19},{"Name":"TOPMARGIN","Value":"40","RecordIndex":0,"FieldIndex":3,"MemoBlockNumber":0},{"Name":"LEFTMARGIN","Value":"35","RecordIndex":0,"FieldIndex":10,"MemoBlockNumber":0},{"Name":"RIGHTMARGIN","Value":"45","RecordIndex":0,"FieldIndex":11,"MemoBlockNumber":0},{"Name":"TAG","Value":"deleted.customer.country","RecordIndex":0,"FieldIndex":9,"MemoBlockNumber":21}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[],"UnplacedObjects":[]}}}
+{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[],"ReportLayout":{"DocumentTitle":"Deleted Customer Invoice","DeletedPreviewBoundsAvailable":true,"DeletedPreviewBoundsLeft":1000,"DeletedPreviewBoundsTop":2600,"DeletedPreviewBoundsRight":2200,"DeletedPreviewBoundsBottom":2900,"DeletedPreviewBoundsWidth":1200,"DeletedPreviewBoundsHeight":300,"DeletedSettings":[{"Name":"ORIENTATION","Value":"1","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":0,"MemoBlockNumber":19},{"Name":"COLS","Value":"3","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":1,"MemoBlockNumber":19},{"Name":"COLWIDTH","Value":"2400","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":2,"MemoBlockNumber":19},{"Name":"COLSPACING","Value":"240","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":3,"MemoBlockNumber":19},{"Name":"PAPERLENGTH","Value":"4318","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":4,"MemoBlockNumber":18},{"Name":"PAPERWIDTH","Value":"2794","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":5,"MemoBlockNumber":18},{"Name":"TOPMARGIN","Value":"40","RecordIndex":0,"FieldIndex":3,"MemoBlockNumber":0},{"Name":"LEFTMARGIN","Value":"35","RecordIndex":0,"FieldIndex":10,"MemoBlockNumber":0},{"Name":"RIGHTMARGIN","Value":"45","RecordIndex":0,"FieldIndex":11,"MemoBlockNumber":0},{"Name":"TAG","Value":"deleted.customer.country","RecordIndex":0,"FieldIndex":9,"MemoBlockNumber":21}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[],"UnplacedObjects":[]}}}
 """;
     }
 

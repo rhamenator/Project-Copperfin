@@ -517,6 +517,8 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         {
             "ORIENTATION" => "AssetEditor.Property.Orientation",
             "PAPERSIZE" => "AssetEditor.Property.PaperSize",
+            "PAPERLENGTH" => "AssetEditor.Property.PaperLength",
+            "PAPERWIDTH" => "AssetEditor.Property.PaperWidth",
             "TOPMARGIN" => "AssetEditor.Property.TopMargin",
             "BOTMARGIN" => "AssetEditor.Property.BottomMargin",
             "LEFTMARGIN" => "AssetEditor.Property.LeftMargin",
@@ -540,6 +542,8 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         return settingName.ToUpperInvariant() is
             "ORIENTATION" or
             "PAPERSIZE" or
+            "PAPERLENGTH" or
+            "PAPERWIDTH" or
             "TOPMARGIN" or
             "BOTMARGIN" or
             "LEFTMARGIN" or
