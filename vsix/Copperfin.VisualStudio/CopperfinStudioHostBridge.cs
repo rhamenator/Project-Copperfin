@@ -207,14 +207,42 @@ internal static class CopperfinStudioHostBridge
 
     public static bool Launch(string studioHostPath, string documentPath, bool readOnly = false)
     {
-        var startInfo = new DiagnosticsStartInfo
-        {
-            FileName = studioHostPath,
-            Arguments = BuildArguments(documentPath, readOnly),
-            UseShellExecute = false
-        };
+        var startInfo = CreateProcessStartInfo(studioHostPath, BuildArguments(documentPath, readOnly));
 
         return DiagnosticsProcess.Start(startInfo) is not null;
+    }
+
+    internal static DiagnosticsStartInfo CreateProcessStartInfo(
+        string studioHostPath,
+        string arguments,
+        bool redirectOutput = false,
+        bool createNoWindow = false,
+        bool? isWindowsOverride = null)
+    {
+        var isWindows = isWindowsOverride ?? Path.DirectorySeparatorChar == '\\';
+        var commandPath = studioHostPath;
+        var commandArguments = arguments;
+
+        if (isWindows && IsWindowsScriptWrapper(studioHostPath))
+        {
+            commandPath = Environment.GetEnvironmentVariable("COMSPEC");
+            if (string.IsNullOrWhiteSpace(commandPath))
+            {
+                commandPath = "cmd.exe";
+            }
+
+            commandArguments = $"/d /c \"{Quote(studioHostPath)}{(string.IsNullOrWhiteSpace(arguments) ? string.Empty : " " + arguments)}\"";
+        }
+
+        return new DiagnosticsStartInfo
+        {
+            FileName = commandPath,
+            Arguments = commandArguments,
+            UseShellExecute = false,
+            RedirectStandardOutput = redirectOutput,
+            RedirectStandardError = redirectOutput,
+            CreateNoWindow = createNoWindow
+        };
     }
 
     public static string DescribeAssetKind(string path, CopperfinLocalization? localization = null)
@@ -233,6 +261,13 @@ internal static class CopperfinStudioHostBridge
         };
 
         return localization.Text(key);
+    }
+
+    private static bool IsWindowsScriptWrapper(string path)
+    {
+        var extension = Path.GetExtension(path);
+        return string.Equals(extension, ".cmd", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(extension, ".bat", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string Quote(string value)

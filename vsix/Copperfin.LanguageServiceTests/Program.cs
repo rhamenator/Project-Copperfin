@@ -17,6 +17,8 @@ internal static class Program
         TestLocalizationCatalogKeepsSupportedLocaleKeysAligned();
         TestLocalizationCatalogFormatsWithInvariantCulture();
         TestLocalizationCatalogLocalizesStudioAssetKinds();
+        TestStudioHostProcessStartInfoKeepsExecutableLaunchArguments();
+        TestStudioHostProcessStartInfoWrapsWindowsBatchHosts();
         TestDottedClassMemberResolvesToLongestProjectSymbolPrefix();
         TestDottedMemberFallsBackToTrailingProcedureName();
         TestQuickInfoUsesResolvedProjectSymbolDescriptionForDottedMemberAccess();
@@ -162,6 +164,57 @@ internal static class Program
         var unsupported = new CopperfinLocalization("de-DE");
         Expect(CopperfinStudioHostBridge.DescribeAssetKind("customer.frx", unsupported) == "Visual report",
             "unsupported locales should keep English asset-kind fallback labels");
+    }
+
+    private static void TestStudioHostProcessStartInfoKeepsExecutableLaunchArguments()
+    {
+        var startInfo = CopperfinStudioHostBridge.CreateProcessStartInfo(
+            @"C:\tools\copperfin_studio_host.exe",
+            "--from-vs --path \"C:\\Samples\\invoice.frx\"",
+            redirectOutput: true,
+            createNoWindow: true,
+            isWindowsOverride: true);
+
+        Expect(startInfo.FileName == @"C:\tools\copperfin_studio_host.exe",
+            "direct Studio host executables should launch without an intermediate wrapper");
+        Expect(startInfo.Arguments == "--from-vs --path \"C:\\Samples\\invoice.frx\"",
+            "direct Studio host executables should preserve the invariant command arguments");
+        Expect(!startInfo.UseShellExecute &&
+               startInfo.RedirectStandardOutput &&
+               startInfo.RedirectStandardError &&
+               startInfo.CreateNoWindow,
+            "direct Studio host executable launch info should preserve non-shell redirected execution");
+    }
+
+    private static void TestStudioHostProcessStartInfoWrapsWindowsBatchHosts()
+    {
+        var previousComSpec = Environment.GetEnvironmentVariable("COMSPEC");
+
+        try
+        {
+            Environment.SetEnvironmentVariable("COMSPEC", @"C:\Windows\System32\cmd.exe");
+
+            var startInfo = CopperfinStudioHostBridge.CreateProcessStartInfo(
+                @"C:\temp\fake studio host.cmd",
+                "--from-vs --json --set-property --path \"C:\\Samples\\invoice.frx\"",
+                redirectOutput: true,
+                createNoWindow: true,
+                isWindowsOverride: true);
+
+            Expect(startInfo.FileName == @"C:\Windows\System32\cmd.exe",
+                "Windows batch-backed Studio hosts should launch through COMSPEC");
+            Expect(startInfo.Arguments == "/d /c \"\"C:\\temp\\fake studio host.cmd\" --from-vs --json --set-property --path \"C:\\Samples\\invoice.frx\"\"",
+                "Windows batch-backed Studio hosts should preserve the invariant command arguments inside the cmd wrapper");
+            Expect(!startInfo.UseShellExecute &&
+                   startInfo.RedirectStandardOutput &&
+                   startInfo.RedirectStandardError &&
+                   startInfo.CreateNoWindow,
+                "Windows batch-backed Studio hosts should preserve non-shell redirected execution");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COMSPEC", previousComSpec);
+        }
     }
 
     private static void TestDottedClassMemberResolvesToLongestProjectSymbolPrefix()

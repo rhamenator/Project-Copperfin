@@ -45,15 +45,11 @@ internal static class CopperfinStudioSnapshotClient
 
     private static StudioHostCommandResult RunCommand(string studioHostPath, string arguments)
     {
-        var startInfo = new ProcessStartInfo
-        {
-            FileName = studioHostPath,
-            Arguments = arguments,
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true
-        };
+        var startInfo = CopperfinStudioHostBridge.CreateProcessStartInfo(
+            studioHostPath,
+            arguments,
+            redirectOutput: true,
+            createNoWindow: true);
 
         using var process = new Process { StartInfo = startInfo };
         if (!process.Start())
