@@ -142,6 +142,37 @@ internal static class Program
         };
     }
 
+    private static ExpectedSectionContainedObjectGeometry[] CreateStyle3vPageHeaderContainedObjects(int topDelta)
+    {
+        return new[]
+        {
+            new ExpectedSectionContainedObjectGeometry
+            {
+                RecordIndex = 12,
+                Top = 2916 + topDelta,
+                SectionRelativeTop = 2916,
+                Bottom = 3332 + topDelta,
+                SectionRelativeBottom = 3332
+            },
+            new ExpectedSectionContainedObjectGeometry
+            {
+                RecordIndex = 13,
+                Top = 3541 + topDelta,
+                SectionRelativeTop = 3541,
+                Bottom = 5936 + topDelta,
+                SectionRelativeBottom = 5936
+            },
+            new ExpectedSectionContainedObjectGeometry
+            {
+                RecordIndex = 11,
+                Top = 5937 + topDelta,
+                SectionRelativeTop = 5937,
+                Bottom = 7812 + topDelta,
+                SectionRelativeBottom = 7812
+            }
+        };
+    }
+
     private static ExpectedUntouchedSectionSnapshot CreateBandedmUntouchedGroupFooterSection()
     {
         return new ExpectedUntouchedSectionSnapshot
@@ -3052,7 +3083,9 @@ internal static class Program
                 expectedUpdatedLayoutValue: 500,
                 expectedSectionCount: 4,
                 expectLabel: false,
-                expectedObjectCount: 3);
+                expectedObjectCount: 3,
+                expectedOriginalContainedObjects: CreateStyle3vPageHeaderContainedObjects(0),
+                expectedUpdatedContainedObjects: CreateStyle3vPageHeaderContainedObjects(500));
             SmokeAssetEditorSectionRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLE3V.FRX"),
                 recordIndex: 2,
