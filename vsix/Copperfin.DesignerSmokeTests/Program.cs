@@ -169,6 +169,98 @@ internal static class Program
         };
     }
 
+    private static ExpectedUntouchedSectionSnapshot CreateBandedmUpdatedGroupFooterSection()
+    {
+        return new ExpectedUntouchedSectionSnapshot
+        {
+            RecordIndex = 7,
+            Title = "Group Footer",
+            Top = 0,
+            Height = 1355,
+            ObjectCount = 0,
+            Grouping = new ExpectedSectionGroupingMetadata
+            {
+                GroupRole = "footer",
+                GroupRoleDisplay = "Footer",
+                SectionExpression = string.Empty,
+                GroupingIndex = 0,
+                GroupingNestingDepth = 0,
+                GroupingExpression = "customer.company",
+                GroupingExpressionFieldIndex = 6,
+                GroupingExpressionMemoBlockNumber = 156,
+                GroupPartnerSectionId = "_RME0ORXEA",
+                GroupPartnerRecordIndex = 5,
+                GroupPartnerDeleted = false,
+                GroupPartnerStateDisplay = "Live"
+            }
+        };
+    }
+
+    private static ExpectedSectionGroupingMetadata CreateUpdatedBandedmGroupHeaderGrouping()
+    {
+        return new ExpectedSectionGroupingMetadata
+        {
+            GroupRole = "header",
+            GroupRoleDisplay = "Header",
+            SectionExpression = "customer.company",
+            GroupingIndex = 0,
+            GroupingNestingDepth = 0,
+            GroupingExpression = "customer.company",
+            GroupingExpressionFieldIndex = 6,
+            GroupingExpressionMemoBlockNumber = 156,
+            GroupPartnerSectionId = "_RME0ORXFY",
+            GroupPartnerRecordIndex = 7,
+            GroupPartnerDeleted = false,
+            GroupPartnerStateDisplay = "Live"
+        };
+    }
+
+    private static ExpectedUntouchedSectionSnapshot CreateUndoneBandedmGroupFooterSection()
+    {
+        return new ExpectedUntouchedSectionSnapshot
+        {
+            RecordIndex = 7,
+            Title = "Group Footer",
+            Top = 0,
+            Height = 1355,
+            ObjectCount = 0,
+            Grouping = new ExpectedSectionGroupingMetadata
+            {
+                GroupRole = "footer",
+                GroupRoleDisplay = "Footer",
+                SectionExpression = string.Empty,
+                GroupingIndex = 0,
+                GroupingNestingDepth = 0,
+                GroupingExpression = "OneToMany",
+                GroupingExpressionFieldIndex = 6,
+                GroupingExpressionMemoBlockNumber = 157,
+                GroupPartnerSectionId = "_RME0ORXEA",
+                GroupPartnerRecordIndex = 5,
+                GroupPartnerDeleted = false,
+                GroupPartnerStateDisplay = "Live"
+            }
+        };
+    }
+
+    private static ExpectedSectionGroupingMetadata CreateUndoneBandedmGroupHeaderGrouping()
+    {
+        return new ExpectedSectionGroupingMetadata
+        {
+            GroupRole = "header",
+            GroupRoleDisplay = "Header",
+            SectionExpression = "OneToMany",
+            GroupingIndex = 0,
+            GroupingNestingDepth = 0,
+            GroupingExpression = "OneToMany",
+            GroupingExpressionFieldIndex = 6,
+            GroupingExpressionMemoBlockNumber = 157,
+            GroupPartnerSectionId = "_RME0ORXFY",
+            GroupPartnerRecordIndex = 7,
+            GroupPartnerDeleted = false,
+            GroupPartnerStateDisplay = "Live"
+        };
+    }
+
     private static ExpectedUntouchedSectionSnapshot CreateStylelblUntouchedColumnFooterSection()
     {
         return new ExpectedUntouchedSectionSnapshot
@@ -672,6 +764,37 @@ internal static class Program
                 {
                     CreateBandedmUntouchedGroupFooterSection()
                 },
+                expectedOriginalContainedObjects: CreateBandedmGroupHeaderContainedObjects(0),
+                expectedUpdatedContainedObjects: CreateBandedmGroupHeaderContainedObjects(0));
+            SmokeRealAssetHostBackedSectionRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/bandedm.FRX"),
+                recordIndex: 5,
+                expectedSectionTitle: "Group Header",
+                propertyName: "EXPR",
+                originalRawValue: "OneToMany",
+                updatedRawValue: "customer.company",
+                expectedOriginalLayoutValue: null,
+                expectedUpdatedLayoutValue: null,
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedObjectCount: 8,
+                expectedGrouping: CreateBandedmGroupHeaderGrouping(),
+                expectedUntouchedSections: new[]
+                {
+                    CreateBandedmUntouchedGroupFooterSection()
+                },
+                expectedUpdatedGrouping: CreateUpdatedBandedmGroupHeaderGrouping(),
+                expectedUpdatedUntouchedSections: new[]
+                {
+                    CreateBandedmUpdatedGroupFooterSection()
+                },
+                expectedUndoneGrouping: CreateUndoneBandedmGroupHeaderGrouping(),
+                expectedUndoneUntouchedSections: new[]
+                {
+                    CreateUndoneBandedmGroupFooterSection()
+                },
+                expectedOriginalLayoutTextValue: "OneToMany",
+                expectedUpdatedLayoutTextValue: "customer.company",
                 expectedOriginalContainedObjects: CreateBandedmGroupHeaderContainedObjects(0),
                 expectedUpdatedContainedObjects: CreateBandedmGroupHeaderContainedObjects(0));
             SmokeRealAssetHostBackedSectionRoundTrip(
@@ -2348,6 +2471,42 @@ internal static class Program
                 {
                     CreateBandedmUntouchedGroupFooterSection()
                 },
+                expectedOriginalContainedObjects: CreateBandedmGroupHeaderContainedObjects(0),
+                expectedUpdatedContainedObjects: CreateBandedmGroupHeaderContainedObjects(0));
+            SmokeAssetEditorSectionRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/bandedm.FRX"),
+                recordIndex: 5,
+                expectedSectionTitle: "Group Header",
+                propertyName: "EXPR",
+                updatedPropertyValue: "customer.company",
+                expectedOriginalSelectionValue: "OneToMany",
+                expectedUpdatedSelectionValue: "customer.company",
+                expectedOriginalRawValue: "OneToMany",
+                expectedUpdatedRawValue: "customer.company",
+                expectedOriginalLayoutValue: null,
+                expectedUpdatedLayoutValue: null,
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedObjectCount: 8,
+                expectedExplorerSectionTitle: "Group Header - OneToMany",
+                expectedGrouping: CreateBandedmGroupHeaderGrouping(),
+                expectedUntouchedSections: new[]
+                {
+                    CreateBandedmUntouchedGroupFooterSection()
+                },
+                expectedUpdatedExplorerSectionTitle: "Group Header - customer.company",
+                expectedUpdatedGrouping: CreateUpdatedBandedmGroupHeaderGrouping(),
+                expectedUpdatedUntouchedSections: new[]
+                {
+                    CreateBandedmUpdatedGroupFooterSection()
+                },
+                expectedUndoneGrouping: CreateUndoneBandedmGroupHeaderGrouping(),
+                expectedUndoneUntouchedSections: new[]
+                {
+                    CreateUndoneBandedmGroupFooterSection()
+                },
+                expectedOriginalLayoutTextValue: "OneToMany",
+                expectedUpdatedLayoutTextValue: "customer.company",
                 expectedOriginalContainedObjects: CreateBandedmGroupHeaderContainedObjects(0),
                 expectedUpdatedContainedObjects: CreateBandedmGroupHeaderContainedObjects(0));
             SmokeAssetEditorSectionRoundTripWithRealAsset(
@@ -15534,6 +15693,10 @@ internal static class Program
         int expectedObjectCount,
         ExpectedSectionGroupingMetadata? expectedGrouping = null,
         ExpectedUntouchedSectionSnapshot[]? expectedUntouchedSections = null,
+        ExpectedSectionGroupingMetadata? expectedUpdatedGrouping = null,
+        ExpectedUntouchedSectionSnapshot[]? expectedUpdatedUntouchedSections = null,
+        ExpectedSectionGroupingMetadata? expectedUndoneGrouping = null,
+        ExpectedUntouchedSectionSnapshot[]? expectedUndoneUntouchedSections = null,
         string? expectedOriginalLayoutTextValue = null,
         string? expectedUpdatedLayoutTextValue = null,
         ExpectedSectionContainedObjectGeometry[]? expectedOriginalContainedObjects = null,
@@ -15578,6 +15741,11 @@ internal static class Program
                 expectedUntouchedSections,
                 $"initial real asset section snapshot should preserve sibling rows while editing {propertyName}");
 
+            expectedUpdatedGrouping ??= expectedGrouping;
+            expectedUpdatedUntouchedSections ??= expectedUntouchedSections;
+            expectedUndoneGrouping ??= expectedGrouping;
+            expectedUndoneUntouchedSections ??= expectedUntouchedSections;
+
             var updateResult = CopperfinStudioSnapshotClient.TryUpdateProperty(
                 assetPath,
                 recordIndex,
@@ -15600,13 +15768,13 @@ internal static class Program
                 expectedSectionCount,
                 expectLabel,
                 expectedObjectCount,
-                expectedGrouping,
+                expectedUpdatedGrouping,
                 expectedUpdatedLayoutTextValue,
                 expectedUpdatedContainedObjects,
                 $"updated real asset section snapshot should preserve {propertyName}");
             AssertRealAssetUntouchedSectionsSnapshot(
                 updateResult.Document,
-                expectedUntouchedSections,
+                expectedUpdatedUntouchedSections,
                 $"updated real asset section snapshot should preserve sibling rows while editing {propertyName}");
             Expect(updateResult.Document.CommandUndoAvailable,
                 $"real asset section smoke should expose undo after updating {propertyName} for {sourcePath}");
@@ -15629,13 +15797,13 @@ internal static class Program
                 expectedSectionCount,
                 expectLabel,
                 expectedObjectCount,
-                expectedGrouping,
+                expectedUpdatedGrouping,
                 expectedUpdatedLayoutTextValue,
                 expectedUpdatedContainedObjects,
                 $"reloaded updated real asset section snapshot should preserve {propertyName}");
             AssertRealAssetUntouchedSectionsSnapshot(
                 reloadedAfterUpdate.Document,
-                expectedUntouchedSections,
+                expectedUpdatedUntouchedSections,
                 $"reloaded updated real asset section snapshot should preserve sibling rows while editing {propertyName}");
             Expect(reloadedAfterUpdate.Document.CommandUndoAvailable,
                 $"reloaded updated real asset section snapshot should keep undo available for {sourcePath}");
@@ -15666,13 +15834,13 @@ internal static class Program
                 expectedSectionCount,
                 expectLabel,
                 expectedObjectCount,
-                expectedGrouping,
+                expectedUndoneGrouping,
                 expectedOriginalLayoutTextValue,
                 expectedOriginalContainedObjects,
                 $"reloaded undone real asset section snapshot should preserve {propertyName}");
             AssertRealAssetUntouchedSectionsSnapshot(
                 reloadedAfterUndo.Document,
-                expectedUntouchedSections,
+                expectedUndoneUntouchedSections,
                 $"reloaded undone real asset section snapshot should preserve sibling rows while editing {propertyName}");
             Expect(!reloadedAfterUndo.Document.CommandUndoAvailable,
                 $"real asset section smoke should clear undo after restoring {propertyName} for {sourcePath}");
@@ -23690,6 +23858,11 @@ internal static class Program
         string? expectedExplorerSectionTitle = null,
         ExpectedSectionGroupingMetadata? expectedGrouping = null,
         ExpectedUntouchedSectionSnapshot[]? expectedUntouchedSections = null,
+        string? expectedUpdatedExplorerSectionTitle = null,
+        ExpectedSectionGroupingMetadata? expectedUpdatedGrouping = null,
+        ExpectedUntouchedSectionSnapshot[]? expectedUpdatedUntouchedSections = null,
+        ExpectedSectionGroupingMetadata? expectedUndoneGrouping = null,
+        ExpectedUntouchedSectionSnapshot[]? expectedUndoneUntouchedSections = null,
         string? expectedOriginalLayoutTextValue = null,
         string? expectedUpdatedLayoutTextValue = null,
         ExpectedSectionContainedObjectGeometry[]? expectedOriginalContainedObjects = null,
@@ -23742,6 +23915,11 @@ internal static class Program
             var propertyGrid = GetPrivatePropertyGrid(control);
             var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared design surface for the real section asset smoke.");
             var expectedSectionListTitle = expectedExplorerSectionTitle ?? expectedSectionTitle;
+            var expectedUpdatedSectionListTitle = expectedUpdatedExplorerSectionTitle ?? expectedSectionListTitle;
+            expectedUpdatedGrouping ??= expectedGrouping;
+            expectedUpdatedUntouchedSections ??= expectedUntouchedSections;
+            expectedUndoneGrouping ??= expectedGrouping;
+            expectedUndoneUntouchedSections ??= expectedUntouchedSections;
 
             var loaded = WaitUntil(
                 TimeSpan.FromSeconds(8),
@@ -23783,27 +23961,6 @@ internal static class Program
             InvokeAssetEditorVoid(control, "ApplyPropertyGridChange", selectionPropertyName, 0);
             Application.DoEvents();
 
-            var expectedUpdatedGrouping = expectedGrouping;
-            if (expectedGrouping is not null &&
-                string.Equals(propertyName, "EXPR", StringComparison.OrdinalIgnoreCase))
-            {
-                expectedUpdatedGrouping = new ExpectedSectionGroupingMetadata
-                {
-                    GroupRole = expectedGrouping.GroupRole,
-                    GroupRoleDisplay = expectedGrouping.GroupRoleDisplay,
-                    SectionExpression = expectedUpdatedSelectionValue,
-                    GroupingIndex = expectedGrouping.GroupingIndex,
-                    GroupingNestingDepth = expectedGrouping.GroupingNestingDepth,
-                    GroupingExpression = expectedGrouping.GroupingExpression,
-                    GroupingExpressionFieldIndex = expectedGrouping.GroupingExpressionFieldIndex,
-                    GroupingExpressionMemoBlockNumber = expectedGrouping.GroupingExpressionMemoBlockNumber,
-                    GroupPartnerSectionId = expectedGrouping.GroupPartnerSectionId,
-                    GroupPartnerRecordIndex = expectedGrouping.GroupPartnerRecordIndex,
-                    GroupPartnerDeleted = expectedGrouping.GroupPartnerDeleted,
-                    GroupPartnerStateDisplay = expectedGrouping.GroupPartnerStateDisplay
-                };
-            }
-
             var updatedSelection = WaitUntil(
                 TimeSpan.FromSeconds(8),
                 () =>
@@ -23817,9 +23974,9 @@ internal static class Program
                     var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault();
                     var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
                     var propertyValue = TypeDescriptor.GetProperties(refreshedSelection)[selectionPropertyName]?.GetValue(refreshedSelection)?.ToString();
-                    return string.Equals(selectedSection?.Text, expectedSectionListTitle, StringComparison.OrdinalIgnoreCase) &&
+                    return string.Equals(selectedSection?.Text, expectedUpdatedSectionListTitle, StringComparison.OrdinalIgnoreCase) &&
                            selectedSectionModel?.RecordIndex == recordIndex &&
-                           SectionMatchesExpectedGrouping(selectedSectionModel, expectedGrouping) &&
+                           SectionMatchesExpectedGrouping(selectedSectionModel, expectedUpdatedGrouping) &&
                            SelectionMatchesExpectedSectionGrouping(refreshedSelection, expectedUpdatedGrouping) &&
                            string.Equals(ReadPrivateStringField(surface, "assetFamily"), expectLabel ? "label" : "report", StringComparison.Ordinal) &&
                            ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == recordIndex &&
@@ -23849,13 +24006,13 @@ internal static class Program
                     expectedSectionCount,
                     expectLabel,
                     expectedObjectCount,
-                    expectedGrouping,
+                    expectedUpdatedGrouping,
                     expectedUpdatedLayoutTextValue,
                     expectedUpdatedContainedObjects,
                     $"reloaded edited real asset section snapshot should preserve {propertyName}");
                 AssertRealAssetUntouchedSectionsSnapshot(
                     reloadedAfterUpdate.Document,
-                    expectedUntouchedSections,
+                    expectedUpdatedUntouchedSections,
                     $"reloaded edited real asset section snapshot should preserve sibling rows while editing {propertyName}");
             }
 
@@ -23879,8 +24036,8 @@ internal static class Program
                     var propertyValue = TypeDescriptor.GetProperties(refreshedSelection)[selectionPropertyName]?.GetValue(refreshedSelection)?.ToString();
                     return string.Equals(selectedSection?.Text, expectedSectionListTitle, StringComparison.OrdinalIgnoreCase) &&
                            selectedSectionModel?.RecordIndex == recordIndex &&
-                           SectionMatchesExpectedGrouping(selectedSectionModel, expectedGrouping) &&
-                           SelectionMatchesExpectedSectionGrouping(refreshedSelection, expectedGrouping) &&
+                           SectionMatchesExpectedGrouping(selectedSectionModel, expectedUndoneGrouping) &&
+                           SelectionMatchesExpectedSectionGrouping(refreshedSelection, expectedUndoneGrouping) &&
                            string.Equals(ReadPrivateStringField(surface, "assetFamily"), expectLabel ? "label" : "report", StringComparison.Ordinal) &&
                            ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == recordIndex &&
                            ReadPrivateNullableInt(surface, "selectedRecordIndex") is null &&
@@ -23908,13 +24065,13 @@ internal static class Program
                     expectedSectionCount,
                     expectLabel,
                     expectedObjectCount,
-                    expectedGrouping,
+                    expectedUndoneGrouping,
                     expectedOriginalLayoutTextValue,
                     expectedOriginalContainedObjects,
                     $"reloaded undone editor real asset section snapshot should preserve {propertyName}");
                 AssertRealAssetUntouchedSectionsSnapshot(
                     reloadedAfterUndo.Document,
-                    expectedUntouchedSections,
+                    expectedUndoneUntouchedSections,
                     $"reloaded undone editor real asset section snapshot should preserve sibling rows while editing {propertyName}");
             }
 
