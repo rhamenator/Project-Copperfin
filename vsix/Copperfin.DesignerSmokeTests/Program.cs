@@ -165,6 +165,9 @@ internal static class Program
             SmokeRealAssetLabelSettingsSelection(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"));
+            SmokeRealAssetLabelSettingsPreviewBoundsSelection(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"));
             SmokeRealAssetSettingsPreviewBoundsSelection(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
@@ -9696,6 +9699,99 @@ internal static class Program
                string.Equals(ReadSelectionPropertyValue(settingsSelection, "GRIDV"), expectedSettings["GRIDV"].Value, StringComparison.Ordinal) &&
                string.Equals(ReadSelectionPropertyValue(settingsSelection, "GRIDH"), expectedSettings["GRIDH"].Value, StringComparison.Ordinal),
             $"real label settings smoke should expose shared settings continuity for {selectedPath}");
+
+        TearDownForm(hostForm);
+    }
+
+    private static void SmokeRealAssetLabelSettingsPreviewBoundsSelection(params string?[] sourcePaths)
+    {
+        string? selectedPath = null;
+        CopperfinStudioReportLayout? selectedLayout = null;
+        var localization = new CopperfinLocalization("en-US");
+        var settingsScopeTitle = localization.Text("AssetEditor.ReportSection.Settings");
+
+        foreach (var candidatePath in EnumerateResolvedRealReportAssetPaths(sourcePaths))
+        {
+            if (string.IsNullOrWhiteSpace(candidatePath) || !File.Exists(candidatePath))
+            {
+                continue;
+            }
+
+            var candidateSnapshot = CopperfinStudioSnapshotClient.TryLoad(candidatePath!);
+            var candidateLayout = candidateSnapshot.Document?.ReportLayout;
+            if (!candidateSnapshot.Success ||
+                candidateLayout is null ||
+                !candidateLayout.IsLabel ||
+                !candidateLayout.PreviewBoundsAvailable ||
+                candidateLayout.Settings.Count == 0)
+            {
+                continue;
+            }
+
+            selectedPath = candidatePath;
+            selectedLayout = candidateLayout;
+            break;
+        }
+
+        if (string.IsNullOrWhiteSpace(selectedPath) || selectedLayout is null)
+        {
+            Console.WriteLine("SKIP: real label preview-bounds settings candidate not found.");
+            return;
+        }
+
+        using var hostForm = new Form
+        {
+            Width = 1400,
+            Height = 1000,
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-32000, -32000)
+        };
+
+        using var control = new CopperfinAssetEditorControl
+        {
+            Dock = DockStyle.Fill
+        };
+
+        hostForm.Controls.Add(control);
+        hostForm.Show();
+        Application.DoEvents();
+        control.LoadDocument(selectedPath!);
+
+        var sectionListView = GetPrivateListView(control, "sectionListView");
+        var objectListView = GetPrivateListView(control, "objectListView");
+        var propertyGrid = GetPrivatePropertyGrid(control);
+        var loaded = WaitUntil(
+            TimeSpan.FromSeconds(8),
+            () => sectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, settingsScopeTitle, StringComparison.Ordinal)));
+        Expect(loaded, $"real label preview-bounds smoke should surface the settings scope for {selectedPath}");
+        if (!loaded)
+        {
+            TearDownForm(hostForm);
+            return;
+        }
+
+        foreach (ListViewItem item in sectionListView.Items)
+        {
+            item.Selected = string.Equals(item.Text, settingsScopeTitle, StringComparison.Ordinal);
+        }
+
+        InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+        Application.DoEvents();
+
+        var expectedPreviewBounds = localization.Format(
+            "AssetEditor.Property.BoundsValue",
+            selectedLayout.PreviewBoundsLeft,
+            selectedLayout.PreviewBoundsTop,
+            selectedLayout.PreviewBoundsRight,
+            selectedLayout.PreviewBoundsBottom,
+            selectedLayout.PreviewBoundsWidth,
+            selectedLayout.PreviewBoundsHeight);
+
+        Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection settingsSelection &&
+               objectListView.Items.Count == 0 &&
+               string.Equals(ReadSelectionPropertyValue(settingsSelection, "PREVIEWBOUNDS"), expectedPreviewBounds, StringComparison.Ordinal),
+            $"real label preview-bounds smoke should expose shared settings continuity for {selectedPath}");
 
         TearDownForm(hostForm);
     }
