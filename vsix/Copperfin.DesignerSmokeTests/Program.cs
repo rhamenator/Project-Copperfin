@@ -1340,19 +1340,38 @@ internal static class Program
                     DeletedPreviewBoundsWidth = 1900,
                     DeletedPreviewBoundsHeight = 1400,
                     Sections = new List<CopperfinStudioReportSection> { new(), new(), new() },
+                    DeletedSections = new List<CopperfinStudioReportSection> { new(), new() },
                     Groupings = new List<CopperfinStudioReportGrouping> { new() },
                     Settings = new List<CopperfinStudioNamedValue> { new(), new() },
-                    UnplacedObjects = new List<CopperfinStudioReportLayoutObject> { new() }
+                    DeletedSettings = new List<CopperfinStudioNamedValue> { new() },
+                    UnplacedObjects = new List<CopperfinStudioReportLayoutObject> { new() },
+                    DeletedObjects = new List<CopperfinStudioReportLayoutObject> { new(), new(), new(), new() }
                 }
             };
+
+            using var englishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("en-US"));
+            var englishDetails = InvokeAssetEditorString(englishControl, "BuildSnapshotDetailsText", info, snapshot);
+            Expect(englishDetails.IndexOf("Sections: 3", StringComparison.Ordinal) >= 0 &&
+                   englishDetails.IndexOf("Deleted sections: 2", StringComparison.Ordinal) >= 0 &&
+                   englishDetails.IndexOf("Groupings: 1", StringComparison.Ordinal) >= 0 &&
+                   englishDetails.IndexOf("Settings: 2", StringComparison.Ordinal) >= 0 &&
+                   englishDetails.IndexOf("Deleted settings: 1", StringComparison.Ordinal) >= 0 &&
+                   englishDetails.IndexOf("Unplaced objects: 1", StringComparison.Ordinal) >= 0 &&
+                   englishDetails.IndexOf("Deleted objects: 4", StringComparison.Ordinal) >= 0 &&
+                   englishDetails.IndexOf("Preview bounds:", StringComparison.Ordinal) >= 0 &&
+                   englishDetails.IndexOf("Deleted preview bounds:", StringComparison.Ordinal) >= 0,
+                "English report layout shell summary should include live and deleted report counts");
 
             using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
             var spanishDetails = InvokeAssetEditorString(spanishControl, "BuildSnapshotDetailsText", info, snapshot);
             Expect(spanishDetails.IndexOf("Tamaño:", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Secciones: 3", StringComparison.Ordinal) >= 0 &&
+                   spanishDetails.IndexOf("Secciones eliminadas: 2", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Agrupaciones: 1", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Configuraciones: 2", StringComparison.Ordinal) >= 0 &&
+                   spanishDetails.IndexOf("Configuraciones eliminadas: 1", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Objetos sin sección: 1", StringComparison.Ordinal) >= 0 &&
+                   spanishDetails.IndexOf("Objetos eliminados: 4", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Limites de vista previa:", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Limites de vista previa eliminada:", StringComparison.Ordinal) >= 0,
                 "Spanish report layout shell summary should localize file details and report counts");
@@ -1361,9 +1380,12 @@ internal static class Program
             var portugueseDetails = InvokeAssetEditorString(portugueseControl, "BuildSnapshotDetailsText", info, snapshot);
             Expect(portugueseDetails.IndexOf("Tamanho:", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Seções: 3", StringComparison.Ordinal) >= 0 &&
+                   portugueseDetails.IndexOf("Seções excluídas: 2", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Agrupamentos: 1", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Configurações: 2", StringComparison.Ordinal) >= 0 &&
+                   portugueseDetails.IndexOf("Configurações excluídas: 1", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Objetos sem seção: 1", StringComparison.Ordinal) >= 0 &&
+                   portugueseDetails.IndexOf("Objetos excluídos: 4", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Limites da visualização:", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Limites da visualização excluída:", StringComparison.Ordinal) >= 0,
                 "Portuguese report layout shell summary should localize file details and report counts");
@@ -1371,9 +1393,13 @@ internal static class Program
             var pseudoLocalization = new CopperfinLocalization("qps-ploc");
             using var pseudoControl = new CopperfinAssetEditorControl(pseudoLocalization);
             var pseudoDetails = InvokeAssetEditorString(pseudoControl, "BuildSnapshotDetailsText", info, snapshot);
-            Expect(pseudoDetails.IndexOf(pseudoLocalization.Text("AssetEditor.Details.ReportPreviewBoundsSummary").Substring(0, 6), StringComparison.Ordinal) >= 0 &&
+            Expect(pseudoDetails.IndexOf(pseudoLocalization.Text("AssetEditor.Details.ReportLayoutSummary").Substring(0, 6), StringComparison.Ordinal) >= 0 &&
+                   pseudoDetails.IndexOf("3", StringComparison.Ordinal) >= 0 &&
+                   pseudoDetails.IndexOf("2", StringComparison.Ordinal) >= 0 &&
+                   pseudoDetails.IndexOf("4", StringComparison.Ordinal) >= 0 &&
+                   pseudoDetails.IndexOf(pseudoLocalization.Text("AssetEditor.Details.ReportPreviewBoundsSummary").Substring(0, 6), StringComparison.Ordinal) >= 0 &&
                    pseudoDetails.IndexOf(pseudoLocalization.Text("AssetEditor.Details.DeletedReportPreviewBoundsSummary").Substring(0, 6), StringComparison.Ordinal) >= 0,
-                "Pseudo-localized report layout shell summary should route preview bounds through the shared catalog");
+                "Pseudo-localized report layout shell summary should route live and deleted report counts through the shared catalog");
         }
         finally
         {

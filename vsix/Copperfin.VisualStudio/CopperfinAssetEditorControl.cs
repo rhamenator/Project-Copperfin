@@ -2213,9 +2213,12 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         details += Environment.NewLine + F(
             "AssetEditor.Details.ReportLayoutSummary",
             snapshot.ReportLayout.Sections.Count,
+            snapshot.ReportLayout.DeletedSections.Count,
             snapshot.ReportLayout.Groupings.Count,
             snapshot.ReportLayout.Settings.Count,
-            snapshot.ReportLayout.UnplacedObjects.Count);
+            snapshot.ReportLayout.DeletedSettings.Count,
+            snapshot.ReportLayout.UnplacedObjects.Count,
+            snapshot.ReportLayout.DeletedObjects.Count);
 
         if (snapshot.ReportLayout.PreviewBoundsAvailable)
         {
