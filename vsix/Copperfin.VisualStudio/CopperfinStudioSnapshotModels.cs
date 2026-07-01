@@ -112,6 +112,9 @@ internal sealed class CopperfinStudioReportSection
     public string BandKind { get; set; } = string.Empty;
     public int RecordIndex { get; set; }
     public bool Deleted { get; set; }
+    public string? Expression { get; set; }
+    public int? ExpressionFieldIndex { get; set; }
+    public int ExpressionMemoBlockNumber { get; set; }
     public bool GroupingContextAvailable { get; set; }
     public int? GroupingIndex { get; set; }
     public int? GroupingNestingDepth { get; set; }

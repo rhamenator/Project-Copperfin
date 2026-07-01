@@ -158,6 +158,17 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             BuildReportBandKindDisplayText(localization, section.BandKind));
         selection.AddEditableInt("TOP", localization.Text("AssetEditor.Column.Top"), section.Top.ToString(CultureInfo.InvariantCulture));
         selection.AddEditableInt("HEIGHT", localization.Text("AssetEditor.Property.Height"), section.Height.ToString(CultureInfo.InvariantCulture));
+        if (section.GroupingContextAvailable ||
+            !string.IsNullOrWhiteSpace(section.Expression) ||
+            section.ExpressionFieldIndex.HasValue ||
+            section.ExpressionMemoBlockNumber > 0)
+        {
+            selection.AddEditableString(
+                "EXPR",
+                localization.Text("AssetEditor.Property.Expression"),
+                section.Expression ?? string.Empty);
+        }
+
         selection.AddReadOnlyInt(
             "DELETEDOBJECTCOUNT",
             localization.Text("AssetEditor.Property.DeletedObjects"),
@@ -216,8 +227,8 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             section.GroupingExpressionFieldIndex.HasValue ||
             section.GroupingExpressionMemoBlockNumber > 0)
         {
-            selection.AddEditableString(
-                "EXPR",
+            selection.AddReadOnlyString(
+                "GROUPINGEXPRESSION",
                 localization.Text("AssetEditor.Property.GroupingExpression"),
                 section.GroupingExpression ?? string.Empty);
 

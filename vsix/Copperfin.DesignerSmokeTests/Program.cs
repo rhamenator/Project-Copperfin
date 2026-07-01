@@ -20,6 +20,7 @@ internal static class Program
     {
         public string GroupRole { get; set; } = string.Empty;
         public string? GroupRoleDisplay { get; set; }
+        public string SectionExpression { get; set; } = string.Empty;
         public int GroupingIndex { get; set; }
         public int GroupingNestingDepth { get; set; }
         public string GroupingExpression { get; set; } = string.Empty;
@@ -179,6 +180,35 @@ internal static class Program
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 5,
                 expectedSectionTitle: "Group Footer",
+                propertyName: "EXPR",
+                originalRawValue: string.Empty,
+                updatedRawValue: "titles_by_author.last_name",
+                expectedOriginalLayoutValue: null,
+                expectedUpdatedLayoutValue: null,
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedObjectCount: 0,
+                expectedGrouping: new ExpectedSectionGroupingMetadata
+                {
+                    GroupRole = "footer",
+                    GroupRoleDisplay = "Footer",
+                    SectionExpression = string.Empty,
+                    GroupingIndex = 0,
+                    GroupingNestingDepth = 0,
+                    GroupingExpression = "titles_by_author.author_id",
+                    GroupingExpressionFieldIndex = 6,
+                    GroupingExpressionMemoBlockNumber = 18,
+                    GroupPartnerSectionId = "_RC60MBV9L",
+                    GroupPartnerRecordIndex = 3,
+                    GroupPartnerDeleted = false,
+                    GroupPartnerStateDisplay = "Live"
+                },
+                expectedOriginalLayoutTextValue: string.Empty,
+                expectedUpdatedLayoutTextValue: "titles_by_author.last_name");
+            SmokeRealAssetHostBackedSectionRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 5,
+                expectedSectionTitle: "Group Footer",
                 propertyName: "HEIGHT",
                 originalRawValue: "730.000",
                 updatedRawValue: "900",
@@ -191,6 +221,7 @@ internal static class Program
                 {
                     GroupRole = "footer",
                     GroupRoleDisplay = "Footer",
+                    SectionExpression = string.Empty,
                     GroupingIndex = 0,
                     GroupingNestingDepth = 0,
                     GroupingExpression = "titles_by_author.author_id",
@@ -660,6 +691,39 @@ internal static class Program
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 5,
                 expectedSectionTitle: "Group Footer",
+                propertyName: "EXPR",
+                updatedPropertyValue: "titles_by_author.last_name",
+                expectedOriginalSelectionValue: string.Empty,
+                expectedUpdatedSelectionValue: "titles_by_author.last_name",
+                expectedOriginalRawValue: string.Empty,
+                expectedUpdatedRawValue: "titles_by_author.last_name",
+                expectedOriginalLayoutValue: null,
+                expectedUpdatedLayoutValue: null,
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedObjectCount: 0,
+                expectedExplorerSectionTitle: "Group Footer - titles_by_author.author_id",
+                expectedGrouping: new ExpectedSectionGroupingMetadata
+                {
+                    GroupRole = "footer",
+                    GroupRoleDisplay = "Footer",
+                    SectionExpression = string.Empty,
+                    GroupingIndex = 0,
+                    GroupingNestingDepth = 0,
+                    GroupingExpression = "titles_by_author.author_id",
+                    GroupingExpressionFieldIndex = 6,
+                    GroupingExpressionMemoBlockNumber = 18,
+                    GroupPartnerSectionId = "_RC60MBV9L",
+                    GroupPartnerRecordIndex = 3,
+                    GroupPartnerDeleted = false,
+                    GroupPartnerStateDisplay = "Live"
+                },
+                expectedOriginalLayoutTextValue: string.Empty,
+                expectedUpdatedLayoutTextValue: "titles_by_author.last_name");
+            SmokeAssetEditorSectionRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 5,
+                expectedSectionTitle: "Group Footer",
                 propertyName: "HEIGHT",
                 updatedPropertyValue: 900,
                 expectedOriginalSelectionValue: "730",
@@ -676,6 +740,7 @@ internal static class Program
                 {
                     GroupRole = "footer",
                     GroupRoleDisplay = "Footer",
+                    SectionExpression = string.Empty,
                     GroupingIndex = 0,
                     GroupingNestingDepth = 0,
                     GroupingExpression = "titles_by_author.author_id",
@@ -1299,11 +1364,12 @@ internal static class Program
             BandKind = "detail",
             Top = 2000,
             Height = 5000,
+            Expression = "customer.company",
             GroupingContextAvailable = true,
             GroupingExpression = "customer.country"
         };
         spanishPropertyGrid.SelectedObject = CopperfinDesignerSelection.FromReportSection(reportSection, new CopperfinLocalization("es-419"));
-        Expect(InvokeAssetEditorString(spanishControl, "BuildPropertyApplyingStatus", "EXPR").IndexOf("Aplicando cambio de Expresión de agrupación", StringComparison.Ordinal) >= 0,
+        Expect(InvokeAssetEditorString(spanishControl, "BuildPropertyApplyingStatus", "EXPR").IndexOf("Aplicando cambio de Expresión", StringComparison.Ordinal) >= 0,
             "Spanish report section status text should use localized section property labels when section selection is active");
 
         using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
@@ -1326,7 +1392,7 @@ internal static class Program
             "Portuguese report object status text should use localized property labels when report-object selection is active");
 
         portuguesePropertyGrid.SelectedObject = CopperfinDesignerSelection.FromReportSection(reportSection, new CopperfinLocalization("pt-BR"));
-        Expect(InvokeAssetEditorString(portugueseControl, "BuildPropertyApplyingStatus", "EXPR").IndexOf("Aplicando alteração de Expressão de agrupamento", StringComparison.Ordinal) >= 0,
+        Expect(InvokeAssetEditorString(portugueseControl, "BuildPropertyApplyingStatus", "EXPR").IndexOf("Aplicando alteração de Expressão", StringComparison.Ordinal) >= 0,
             "Portuguese report section status text should use localized section property labels when section selection is active");
 
         var pseudoLocalization = new CopperfinLocalization("qps-ploc");
@@ -1519,6 +1585,7 @@ internal static class Program
                         Top = 2000,
                         Height = 5000,
                         DeletedObjectCount = 1,
+                        Expression = "customer.company",
                         GroupingIndex = 1,
                         GroupingNestingDepth = 2,
                         GroupRole = "header",
@@ -1584,6 +1651,10 @@ internal static class Program
                string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "GROUPINGINDEX", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "1", StringComparison.Ordinal) &&
                string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "GROUPINGNESTINGDEPTH", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "2", StringComparison.Ordinal),
             "Spanish report section property-grid selection should expose localized grouping index metadata");
+        Expect(spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Expresión", StringComparison.Ordinal)) &&
+               string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "EXPR", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "customer.company", StringComparison.Ordinal) &&
+               string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "GROUPINGEXPRESSION", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "customer.country", StringComparison.Ordinal),
+            "Spanish report section property-grid selection should separate section expression edits from grouping-expression metadata");
         Expect(spanishSectionProperties.Any(property => string.Equals(property.DisplayName, "Campo de la expresión de agrupación", StringComparison.Ordinal)) &&
                string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "GROUPINGEXPRESSIONFIELD", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "2", StringComparison.Ordinal) &&
                string.Equals(spanishSectionProperties.First(property => string.Equals(property.Name, "GROUPINGEXPRESSIONMEMO", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "7", StringComparison.Ordinal),
@@ -1614,6 +1685,10 @@ internal static class Program
                string.Equals(portugueseSectionProperties.First(property => string.Equals(property.Name, "GROUPINGINDEX", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "1", StringComparison.Ordinal) &&
                string.Equals(portugueseSectionProperties.First(property => string.Equals(property.Name, "GROUPINGNESTINGDEPTH", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "2", StringComparison.Ordinal),
             "Portuguese report section property-grid selection should expose localized grouping index metadata");
+        Expect(portugueseSectionProperties.Any(property => string.Equals(property.DisplayName, "Expressão", StringComparison.Ordinal)) &&
+               string.Equals(portugueseSectionProperties.First(property => string.Equals(property.Name, "EXPR", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "customer.company", StringComparison.Ordinal) &&
+               string.Equals(portugueseSectionProperties.First(property => string.Equals(property.Name, "GROUPINGEXPRESSION", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "customer.country", StringComparison.Ordinal),
+            "Portuguese report section property-grid selection should separate section expression edits from grouping-expression metadata");
         Expect(portugueseSectionProperties.Any(property => string.Equals(property.DisplayName, "Campo da expressão de agrupamento", StringComparison.Ordinal)) &&
                string.Equals(portugueseSectionProperties.First(property => string.Equals(property.Name, "GROUPINGEXPRESSIONFIELD", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "2", StringComparison.Ordinal) &&
                string.Equals(portugueseSectionProperties.First(property => string.Equals(property.Name, "GROUPINGEXPRESSIONMEMO", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "7", StringComparison.Ordinal),
@@ -1644,6 +1719,10 @@ internal static class Program
         Expect(string.Equals(pseudoSectionProperties.First(property => string.Equals(property.Name, "GROUPINGINDEX", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), "1", StringComparison.Ordinal) &&
                pseudoSectionProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.GroupingNestingDepth"), StringComparison.Ordinal)),
             "Pseudo-localized report section property-grid selection should route grouping index metadata through the shared catalog");
+        Expect(string.Equals(pseudoSectionProperties.First(property => string.Equals(property.Name, "EXPR", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), "customer.company", StringComparison.Ordinal) &&
+               pseudoSectionProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Expression"), StringComparison.Ordinal)) &&
+               string.Equals(pseudoSectionProperties.First(property => string.Equals(property.Name, "GROUPINGEXPRESSION", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), "customer.country", StringComparison.Ordinal),
+            "Pseudo-localized report section property-grid selection should keep section expression editing separate from grouped metadata");
         Expect(string.Equals(pseudoSectionProperties.First(property => string.Equals(property.Name, "GROUPINGEXPRESSIONFIELD", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), "2", StringComparison.Ordinal) &&
                pseudoSectionProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.GroupingExpressionMemoBlock"), StringComparison.Ordinal)),
             "Pseudo-localized report section property-grid selection should route grouping-expression provenance metadata through the shared catalog");
@@ -7503,12 +7582,14 @@ internal static class Program
         string propertyName,
         string originalRawValue,
         string updatedRawValue,
-        int expectedOriginalLayoutValue,
-        int expectedUpdatedLayoutValue,
+        int? expectedOriginalLayoutValue,
+        int? expectedUpdatedLayoutValue,
         int expectedSectionCount,
         bool expectLabel,
         int expectedObjectCount,
-        ExpectedSectionGroupingMetadata? expectedGrouping = null)
+        ExpectedSectionGroupingMetadata? expectedGrouping = null,
+        string? expectedOriginalLayoutTextValue = null,
+        string? expectedUpdatedLayoutTextValue = null)
     {
         if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
         {
@@ -7541,6 +7622,7 @@ internal static class Program
                 expectLabel,
                 expectedObjectCount,
                 expectedGrouping,
+                expectedOriginalLayoutTextValue,
                 $"initial real asset section snapshot should preserve {propertyName}");
 
             var updateResult = CopperfinStudioSnapshotClient.TryUpdateProperty(
@@ -7566,6 +7648,7 @@ internal static class Program
                 expectLabel,
                 expectedObjectCount,
                 expectedGrouping,
+                expectedUpdatedLayoutTextValue,
                 $"updated real asset section snapshot should preserve {propertyName}");
             Expect(updateResult.Document.CommandUndoAvailable,
                 $"real asset section smoke should expose undo after updating {propertyName} for {sourcePath}");
@@ -7589,6 +7672,7 @@ internal static class Program
                 expectLabel,
                 expectedObjectCount,
                 expectedGrouping,
+                expectedUpdatedLayoutTextValue,
                 $"reloaded updated real asset section snapshot should preserve {propertyName}");
             Expect(reloadedAfterUpdate.Document.CommandUndoAvailable,
                 $"reloaded updated real asset section snapshot should keep undo available for {sourcePath}");
@@ -7620,6 +7704,7 @@ internal static class Program
                 expectLabel,
                 expectedObjectCount,
                 expectedGrouping,
+                expectedOriginalLayoutTextValue,
                 $"reloaded undone real asset section snapshot should preserve {propertyName}");
             Expect(!reloadedAfterUndo.Document.CommandUndoAvailable,
                 $"real asset section smoke should clear undo after restoring {propertyName} for {sourcePath}");
@@ -11652,13 +11737,15 @@ internal static class Program
         string expectedUpdatedSelectionValue,
         string expectedOriginalRawValue,
         string expectedUpdatedRawValue,
-        int expectedOriginalLayoutValue,
-        int expectedUpdatedLayoutValue,
+        int? expectedOriginalLayoutValue,
+        int? expectedUpdatedLayoutValue,
         int expectedSectionCount,
         bool expectLabel,
         int expectedObjectCount,
         string? expectedExplorerSectionTitle = null,
-        ExpectedSectionGroupingMetadata? expectedGrouping = null)
+        ExpectedSectionGroupingMetadata? expectedGrouping = null,
+        string? expectedOriginalLayoutTextValue = null,
+        string? expectedUpdatedLayoutTextValue = null)
     {
         if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
         {
@@ -11736,6 +11823,27 @@ internal static class Program
             InvokeAssetEditorVoid(control, "ApplyPropertyGridChange", propertyName, 0);
             Application.DoEvents();
 
+            var expectedUpdatedGrouping = expectedGrouping;
+            if (expectedGrouping is not null &&
+                string.Equals(propertyName, "EXPR", StringComparison.OrdinalIgnoreCase))
+            {
+                expectedUpdatedGrouping = new ExpectedSectionGroupingMetadata
+                {
+                    GroupRole = expectedGrouping.GroupRole,
+                    GroupRoleDisplay = expectedGrouping.GroupRoleDisplay,
+                    SectionExpression = expectedUpdatedSelectionValue,
+                    GroupingIndex = expectedGrouping.GroupingIndex,
+                    GroupingNestingDepth = expectedGrouping.GroupingNestingDepth,
+                    GroupingExpression = expectedGrouping.GroupingExpression,
+                    GroupingExpressionFieldIndex = expectedGrouping.GroupingExpressionFieldIndex,
+                    GroupingExpressionMemoBlockNumber = expectedGrouping.GroupingExpressionMemoBlockNumber,
+                    GroupPartnerSectionId = expectedGrouping.GroupPartnerSectionId,
+                    GroupPartnerRecordIndex = expectedGrouping.GroupPartnerRecordIndex,
+                    GroupPartnerDeleted = expectedGrouping.GroupPartnerDeleted,
+                    GroupPartnerStateDisplay = expectedGrouping.GroupPartnerStateDisplay
+                };
+            }
+
             var updatedSelection = WaitUntil(
                 TimeSpan.FromSeconds(8),
                 () =>
@@ -11752,7 +11860,7 @@ internal static class Program
                     return string.Equals(selectedSection?.Text, expectedSectionListTitle, StringComparison.OrdinalIgnoreCase) &&
                            selectedSectionModel?.RecordIndex == recordIndex &&
                            SectionMatchesExpectedGrouping(selectedSectionModel, expectedGrouping) &&
-                           SelectionMatchesExpectedSectionGrouping(refreshedSelection, expectedGrouping) &&
+                           SelectionMatchesExpectedSectionGrouping(refreshedSelection, expectedUpdatedGrouping) &&
                            string.Equals(ReadPrivateStringField(surface, "assetFamily"), expectLabel ? "label" : "report", StringComparison.Ordinal) &&
                            ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == recordIndex &&
                            ReadPrivateNullableInt(surface, "selectedRecordIndex") is null &&
@@ -11771,18 +11879,19 @@ internal static class Program
                 $"real asset editor section smoke should reload updated on-disk state for {sourcePath}");
             if (reloadedAfterUpdate.Success && reloadedAfterUpdate.Document is not null)
             {
-                    AssertRealAssetSectionSnapshot(
-                        reloadedAfterUpdate.Document,
-                        recordIndex,
-                        expectedSectionTitle,
-                        propertyName,
+                AssertRealAssetSectionSnapshot(
+                    reloadedAfterUpdate.Document,
+                    recordIndex,
+                    expectedSectionTitle,
+                    propertyName,
                     expectedUpdatedRawValue,
-                        expectedUpdatedLayoutValue,
-                        expectedSectionCount,
-                        expectLabel,
-                        expectedObjectCount,
-                        expectedGrouping,
-                        $"reloaded edited real asset section snapshot should preserve {propertyName}");
+                    expectedUpdatedLayoutValue,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectedObjectCount,
+                    expectedGrouping,
+                    expectedUpdatedLayoutTextValue,
+                    $"reloaded edited real asset section snapshot should preserve {propertyName}");
             }
 
             var undoHandled = control.TryHandleUndoCommand();
@@ -11824,18 +11933,19 @@ internal static class Program
                 $"real asset editor section smoke should reload restored on-disk state for {sourcePath}");
             if (reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null)
             {
-                    AssertRealAssetSectionSnapshot(
-                        reloadedAfterUndo.Document,
-                        recordIndex,
-                        expectedSectionTitle,
-                        propertyName,
+                AssertRealAssetSectionSnapshot(
+                    reloadedAfterUndo.Document,
+                    recordIndex,
+                    expectedSectionTitle,
+                    propertyName,
                     expectedOriginalRawValue,
-                        expectedOriginalLayoutValue,
-                        expectedSectionCount,
-                        expectLabel,
-                        expectedObjectCount,
-                        expectedGrouping,
-                        $"reloaded undone editor real asset section snapshot should preserve {propertyName}");
+                    expectedOriginalLayoutValue,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectedObjectCount,
+                    expectedGrouping,
+                    expectedOriginalLayoutTextValue,
+                    $"reloaded undone editor real asset section snapshot should preserve {propertyName}");
             }
 
             TearDownForm(hostForm);
@@ -12836,11 +12946,12 @@ internal static class Program
         string expectedSectionTitle,
         string propertyName,
         string expectedRawPropertyValue,
-        int expectedLayoutPropertyValue,
+        int? expectedLayoutPropertyValue,
         int expectedSectionCount,
         bool expectLabel,
         int expectedObjectCount,
         ExpectedSectionGroupingMetadata? expectedGrouping,
+        string? expectedLayoutTextValue,
         string failurePrefix)
     {
         Expect(document.ReportLayout is not null,
@@ -12892,16 +13003,25 @@ internal static class Program
                 $"{failurePrefix} for {document.Path} should preserve group partner deleted state {expectedGrouping.GroupPartnerDeleted}");
         }
 
-        var layoutPropertyValue = TryGetReportSectionLayoutValue(section, propertyName);
-        Expect(layoutPropertyValue.HasValue,
-            $"{failurePrefix} for {document.Path} should expose section layout property {propertyName}");
-        if (!layoutPropertyValue.HasValue)
+        var layoutTextValue = TryGetReportSectionLayoutTextValue(section, propertyName);
+        if (layoutTextValue is not null)
         {
-            return;
+            Expect(string.Equals(layoutTextValue, expectedLayoutTextValue ?? string.Empty, StringComparison.Ordinal),
+                $"{failurePrefix} for {document.Path} should expose section {propertyName}={expectedLayoutTextValue ?? string.Empty}");
         }
+        else
+        {
+            var layoutPropertyValue = TryGetReportSectionLayoutValue(section, propertyName);
+            Expect(layoutPropertyValue.HasValue,
+                $"{failurePrefix} for {document.Path} should expose section layout property {propertyName}");
+            if (!layoutPropertyValue.HasValue || !expectedLayoutPropertyValue.HasValue)
+            {
+                return;
+            }
 
-        Expect(layoutPropertyValue.Value == expectedLayoutPropertyValue,
-            $"{failurePrefix} for {document.Path} should expose section {propertyName}={expectedLayoutPropertyValue}");
+            Expect(layoutPropertyValue.Value == expectedLayoutPropertyValue.Value,
+                $"{failurePrefix} for {document.Path} should expose section {propertyName}={expectedLayoutPropertyValue.Value}");
+        }
 
         var snapshotObject = document.Objects.FirstOrDefault(candidate => candidate.RecordIndex == recordIndex);
         Expect(snapshotObject is not null,
@@ -12961,7 +13081,8 @@ internal static class Program
         return string.Equals(ReadSelectionPropertyValue(selection, "GROUPROLE"), expectedRoleDisplay, StringComparison.Ordinal) &&
                string.Equals(ReadSelectionPropertyValue(selection, "GROUPINGINDEX"), expectedGrouping.GroupingIndex.ToString(), StringComparison.Ordinal) &&
                string.Equals(ReadSelectionPropertyValue(selection, "GROUPINGNESTINGDEPTH"), expectedGrouping.GroupingNestingDepth.ToString(), StringComparison.Ordinal) &&
-               string.Equals(ReadSelectionPropertyValue(selection, "EXPR"), expectedGrouping.GroupingExpression, StringComparison.Ordinal) &&
+               string.Equals(ReadSelectionPropertyValue(selection, "EXPR"), expectedGrouping.SectionExpression, StringComparison.Ordinal) &&
+               string.Equals(ReadSelectionPropertyValue(selection, "GROUPINGEXPRESSION"), expectedGrouping.GroupingExpression, StringComparison.Ordinal) &&
                string.Equals(ReadSelectionPropertyValue(selection, "GROUPINGEXPRESSIONFIELD"), expectedGrouping.GroupingExpressionFieldIndex?.ToString(), StringComparison.Ordinal) &&
                string.Equals(ReadSelectionPropertyValue(selection, "GROUPINGEXPRESSIONMEMO"), expectedGrouping.GroupingExpressionMemoBlockNumber.ToString(), StringComparison.Ordinal) &&
                string.Equals(ReadSelectionPropertyValue(selection, "GROUPPARTNERSECTIONID"), expectedGrouping.GroupPartnerSectionId, StringComparison.Ordinal) &&
@@ -13287,6 +13408,18 @@ internal static class Program
         if (string.Equals(propertyName, "HEIGHT", StringComparison.OrdinalIgnoreCase))
         {
             return section.Height;
+        }
+
+        return null;
+    }
+
+    private static string? TryGetReportSectionLayoutTextValue(
+        CopperfinStudioReportSection section,
+        string propertyName)
+    {
+        if (string.Equals(propertyName, "EXPR", StringComparison.OrdinalIgnoreCase))
+        {
+            return section.Expression ?? string.Empty;
         }
 
         return null;
