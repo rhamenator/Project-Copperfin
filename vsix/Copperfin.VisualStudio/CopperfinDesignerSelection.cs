@@ -270,7 +270,8 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
 
     public static CopperfinDesignerSelection FromReportSettings(
         IReadOnlyList<CopperfinStudioNamedValue> settings,
-        CopperfinLocalization localization)
+        CopperfinLocalization localization,
+        bool deleted = false)
     {
         var selection = new CopperfinDesignerSelection
         {
@@ -285,6 +286,10 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             "SETTINGCOUNT",
             localization.Text("AssetEditor.Property.SettingsCount"),
             settings.Count.ToString(CultureInfo.InvariantCulture));
+        selection.AddReadOnlyString(
+            "SETTINGSSTATE",
+            localization.Text("AssetEditor.Property.SettingsState"),
+            BuildStateText(localization, deleted));
 
         var seenNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var setting in settings)

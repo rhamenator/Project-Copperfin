@@ -78,6 +78,7 @@ internal sealed class CopperfinStudioReportLayout
     public int DeletedPreviewBoundsHeight { get; set; }
     public List<CopperfinStudioReportGrouping> Groupings { get; set; } = new();
     public List<CopperfinStudioNamedValue> Settings { get; set; } = new();
+    public List<CopperfinStudioNamedValue> DeletedSettings { get; set; } = new();
     public List<CopperfinStudioReportSection> Sections { get; set; } = new();
     public List<CopperfinStudioReportSection> DeletedSections { get; set; } = new();
     public List<CopperfinStudioReportLayoutObject> UnplacedObjects { get; set; } = new();

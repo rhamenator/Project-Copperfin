@@ -55,8 +55,10 @@ internal static class Program
         SmokeReportSectionScopedObjectFiltering();
         SmokeReportSectionPropertyGridSelection();
         SmokeReportSettingsExplorerSelection();
+        SmokeDeletedReportSettingsExplorerSelection();
         SmokeAssetEditorReportSectionPropertyGridHostUpdate();
         SmokeAssetEditorReportSettingsPropertyGridHostUpdate();
+        SmokeAssetEditorDeletedReportSettingsPropertyGridHostUpdate();
         SmokeAssetEditorDeletedReportSectionPropertyGridHostUpdate();
         SmokeAssetEditorLabelSectionPropertyGridHostUpdate();
         SmokeAssetEditorDeletedLabelSectionPropertyGridHostUpdate();
@@ -1911,6 +1913,119 @@ internal static class Program
             "Localized report settings property-grid selection should preserve root-setting machine contracts");
     }
 
+    private static void SmokeDeletedReportSettingsExplorerSelection()
+    {
+        var deletedSettings = new List<CopperfinStudioNamedValue>
+        {
+            new() { Name = "ORIENTATION", Value = "1", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 0, MemoBlockNumber = 19 },
+            new() { Name = "TOPMARGIN", Value = "40", RecordIndex = 0, FieldIndex = 3, MemoBlockNumber = 0 },
+            new() { Name = "TAG", Value = "deleted.customer.country", RecordIndex = 0, FieldIndex = 9, MemoBlockNumber = 21 }
+        };
+        var deletedOnlySnapshot = new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "report",
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                DeletedSettings = deletedSettings
+            }
+        };
+        var mixedSnapshot = new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "report",
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                Settings = new List<CopperfinStudioNamedValue>
+                {
+                    new() { Name = "ORIENTATION", Value = "0", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 0, MemoBlockNumber = 9 }
+                },
+                DeletedSettings = deletedSettings
+            }
+        };
+
+        using var control = new CopperfinAssetEditorControl();
+        ApplyReportSnapshotForExplorerSmoke(control, deletedOnlySnapshot);
+        var sectionListView = GetPrivateListView(control, "sectionListView");
+        var objectListView = GetPrivateListView(control, "objectListView");
+        InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+
+        var propertyGrid = GetPrivatePropertyGrid(control);
+        Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection deletedSettingsSelection &&
+               deletedSettingsSelection.RecordIndex == 0 &&
+               objectListView.Items.Count == 0 &&
+               string.Equals(sectionListView.Items.Cast<ListViewItem>().FirstOrDefault()?.Text, "Settings (deleted)", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(deletedSettingsSelection)["SETTINGSSTATE"]?.GetValue(deletedSettingsSelection)?.ToString(), "Deleted", StringComparison.Ordinal),
+            "Deleted report settings explorer selection should produce a deleted settings-rooted property-grid selection and clear object rows");
+
+        if (propertyGrid.SelectedObject is CopperfinDesignerSelection editableSelection)
+        {
+            ExpectSelectionUpdate(editableSelection, "TOPMARGIN", 55, "55",
+                "Deleted report settings property-grid selection should serialize numeric deleted-root-setting edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "TAG", "deleted.customer.region", "deleted.customer.region",
+                "Deleted report settings property-grid selection should preserve invariant string update targets");
+        }
+
+        using var labelControl = new CopperfinAssetEditorControl();
+        var labelSnapshot = new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "label",
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                IsLabel = true,
+                DeletedSettings = deletedSettings
+            }
+        };
+        ApplyReportSnapshotForExplorerSmoke(labelControl, labelSnapshot);
+        InvokeAssetEditorVoid(labelControl, "SyncExplorerSelection");
+        var labelPropertyGrid = GetPrivatePropertyGrid(labelControl);
+        Expect(labelPropertyGrid.SelectedObject is CopperfinDesignerSelection labelSelection &&
+               labelSelection.RecordIndex == 0 &&
+               string.Equals(TypeDescriptor.GetProperties(labelSelection)["SETTINGSSTATE"]?.GetValue(labelSelection)?.ToString(), "Deleted", StringComparison.Ordinal),
+            "Deleted label settings explorer selection should expose the same shared deleted-settings property-grid selection");
+
+        var spanishSelection = CopperfinDesignerSelection.FromReportSettings(deletedSettings, new CopperfinLocalization("es-419"), deleted: true);
+        var spanishProperties = TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().ToList();
+        Expect(spanishProperties.Any(property => string.Equals(property.DisplayName, "Estado de las configuraciones", StringComparison.Ordinal)) &&
+               string.Equals(spanishProperties.First(property => string.Equals(property.Name, "SETTINGSSTATE", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "Eliminada", StringComparison.Ordinal),
+            "Spanish deleted report settings property-grid selection should localize deleted settings state");
+
+        var portugueseSelection = CopperfinDesignerSelection.FromReportSettings(deletedSettings, new CopperfinLocalization("pt-BR"), deleted: true);
+        var portugueseProperties = TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().ToList();
+        Expect(portugueseProperties.Any(property => string.Equals(property.DisplayName, "Estado das configurações", StringComparison.Ordinal)) &&
+               string.Equals(portugueseProperties.First(property => string.Equals(property.Name, "SETTINGSSTATE", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "Excluída", StringComparison.Ordinal),
+            "Portuguese deleted report settings property-grid selection should localize deleted settings state");
+
+        var pseudoLocalization = new CopperfinLocalization("qps-ploc");
+        var pseudoSelection = CopperfinDesignerSelection.FromReportSettings(deletedSettings, pseudoLocalization, deleted: true);
+        var pseudoProperties = TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().ToList();
+        Expect(pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.SettingsState"), StringComparison.Ordinal)) &&
+               string.Equals(pseudoProperties.First(property => string.Equals(property.Name, "SETTINGSSTATE", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), pseudoLocalization.Text("AssetEditor.State.Deleted"), StringComparison.Ordinal),
+            "Pseudo-localized deleted report settings property-grid selection should route deleted settings state through the shared catalog");
+
+        using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
+        ApplyReportSnapshotForExplorerSmoke(spanishControl, mixedSnapshot);
+        Expect(GetPrivateListView(spanishControl, "sectionListView").Items.Cast<ListViewItem>()
+                   .Any(item => string.Equals(item.Text, "Configuraciones (eliminada)", StringComparison.Ordinal)),
+            "Spanish report explorer should localize the deleted settings scope row");
+
+        using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
+        ApplyReportSnapshotForExplorerSmoke(portugueseControl, mixedSnapshot);
+        Expect(GetPrivateListView(portugueseControl, "sectionListView").Items.Cast<ListViewItem>()
+                   .Any(item => string.Equals(item.Text, "Configurações (excluída)", StringComparison.Ordinal)),
+            "Portuguese report explorer should localize the deleted settings scope row");
+
+        using var pseudoControl = new CopperfinAssetEditorControl(pseudoLocalization);
+        ApplyReportSnapshotForExplorerSmoke(pseudoControl, mixedSnapshot);
+        Expect(GetPrivateListView(pseudoControl, "sectionListView").Items.Cast<ListViewItem>()
+                   .Any(item => string.Equals(item.Text, pseudoLocalization.Format("AssetEditor.ReportSection.Deleted", pseudoLocalization.Text("AssetEditor.ReportSection.Settings")), StringComparison.Ordinal)),
+            "Pseudo-localized report explorer should route the deleted settings scope row through the shared catalog");
+
+        Expect(deletedSettings[0].RecordIndex == 0 &&
+               string.Equals(deletedSettings[0].Name, "ORIENTATION", StringComparison.Ordinal) &&
+               string.Equals(deletedSettings[1].Value, "40", StringComparison.Ordinal) &&
+               string.Equals(deletedSettings[2].Name, "TAG", StringComparison.Ordinal),
+            "Localized deleted report settings property-grid selection should preserve deleted root-setting machine contracts");
+    }
+
     private static void SmokeAssetEditorReportSectionPropertyGridHostUpdate()
     {
         if (Path.DirectorySeparatorChar == '\\')
@@ -2122,6 +2237,126 @@ internal static class Program
                    ReadPrivateNullableInt(surface, "selectedRecordIndex") is null &&
                    !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
                 "Editing report settings through the shared asset editor should preserve settings-rooted selection continuity after the host-backed refresh");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", previousLogPath);
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
+    private static void SmokeAssetEditorDeletedReportSettingsPropertyGridHostUpdate()
+    {
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            Console.WriteLine("SKIP: shared asset-editor deleted-report-settings host-update smoke requires a POSIX scriptable fake Studio host.");
+            return;
+        }
+
+        var snapshot = BuildAssetEditorDeletedSettingsUpdateSmokeSnapshot();
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
+        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var logPath = Path.Combine(tempRoot, "studio-host.log");
+        var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
+
+        try
+        {
+            File.WriteAllText(logPath, string.Empty);
+            CreateFakeStudioHostScript(scriptPath, BuildDeletedSettingsUpdateHostResponseJson());
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", scriptPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", logPath);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+
+            ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+            SetPrivateField(control, "currentPath", assetPath);
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            var deletedSettingsItem = sectionListView.Items.Cast<ListViewItem>()
+                .First(item => string.Equals(item.Text, "Settings (deleted)", StringComparison.Ordinal));
+            deletedSettingsItem.Selected = true;
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            InvokeAssetEditorVoid(control, "LoadSurface");
+            Application.DoEvents();
+
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface.");
+
+            Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == 0 &&
+                   objectListView.Items.Count == 0 &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["SETTINGSSTATE"]?.GetValue(initialSelection)?.ToString(), "Deleted", StringComparison.Ordinal),
+                "A deleted report settings host-update smoke should start from a deleted settings-rooted property-grid selection");
+
+            if (propertyGrid.SelectedObject is not CopperfinDesignerSelection settingsSelection)
+            {
+                throw new InvalidOperationException("Could not read the selected deleted report settings from the shared asset editor.");
+            }
+
+            TypeDescriptor.GetProperties(settingsSelection)["TOPMARGIN"]?.SetValue(settingsSelection, 55);
+            InvokeAssetEditorVoid(control, "ApplyPropertyGridChange", "TOPMARGIN", 40);
+            Application.DoEvents();
+
+            var logLines = File.ReadAllLines(logPath);
+            var invocationStartCount = logLines.Count(line => string.Equals(line, "BEGIN", StringComparison.Ordinal));
+            Expect(invocationStartCount == 1,
+                "Editing deleted report settings through the shared asset editor should invoke the Studio host exactly once");
+
+            var invocationArguments = logLines.Skip(1).ToList();
+            Expect(invocationArguments.Contains("--from-vs") &&
+                   invocationArguments.Contains("--json") &&
+                   invocationArguments.Contains("--set-property") &&
+                   invocationArguments.Contains("--record") &&
+                   invocationArguments.Contains("0") &&
+                   invocationArguments.Contains("--property-name") &&
+                   invocationArguments.Contains("TOPMARGIN") &&
+                   invocationArguments.Contains("--property-value") &&
+                   invocationArguments.Contains("55"),
+                "Editing deleted report settings through the shared asset editor should send one invariant deleted root-setting update through the host property contract");
+
+            Expect(string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Settings (deleted)", StringComparison.Ordinal) &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
+                   refreshedSelection.RecordIndex == 0 &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["TOPMARGIN"]?.GetValue(refreshedSelection)?.ToString(), "55", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["SETTINGSSTATE"]?.GetValue(refreshedSelection)?.ToString(), "Deleted", StringComparison.Ordinal) &&
+                   objectListView.Items.Count == 0 &&
+                   ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") is null &&
+                   ReadPrivateNullableInt(surface, "selectedRecordIndex") is null &&
+                   !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+                "Editing deleted report settings through the shared asset editor should preserve deleted settings-rooted selection continuity after the host-backed refresh");
         }
         finally
         {
@@ -14271,6 +14506,36 @@ internal static class Program
         };
     }
 
+    private static CopperfinStudioSnapshotDocument BuildAssetEditorDeletedSettingsUpdateSmokeSnapshot()
+    {
+        return new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "report",
+            FieldCount = 5,
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                DeletedSettings = new List<CopperfinStudioNamedValue>
+                {
+                    new() { Name = "ORIENTATION", Value = "1", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 0, MemoBlockNumber = 19 },
+                    new() { Name = "TOPMARGIN", Value = "40", RecordIndex = 0, FieldIndex = 3, MemoBlockNumber = 0 },
+                    new() { Name = "TAG", Value = "deleted.customer.country", RecordIndex = 0, FieldIndex = 9, MemoBlockNumber = 21 }
+                },
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail_1",
+                        Title = "Detail",
+                        BandKind = "detail",
+                        RecordIndex = 42,
+                        Top = 2000,
+                        Height = 5000
+                    }
+                }
+            }
+        };
+    }
+
     private static CopperfinStudioSnapshotDocument BuildAssetEditorObjectUpdateSmokeSnapshot()
     {
         return new CopperfinStudioSnapshotDocument
@@ -15767,6 +16032,13 @@ internal static class Program
     {
         return """
 {"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[],"ReportLayout":{"Settings":[{"Name":"ORIENTATION","Value":"0","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":0,"MemoBlockNumber":9},{"Name":"TOPMARGIN","Value":"30","RecordIndex":0,"FieldIndex":3,"MemoBlockNumber":0},{"Name":"TAG","Value":"customer.country","RecordIndex":0,"FieldIndex":9,"MemoBlockNumber":11}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[],"UnplacedObjects":[]}}}
+""";
+    }
+
+    private static string BuildDeletedSettingsUpdateHostResponseJson()
+    {
+        return """
+{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[],"ReportLayout":{"DeletedSettings":[{"Name":"ORIENTATION","Value":"1","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":0,"MemoBlockNumber":19},{"Name":"TOPMARGIN","Value":"55","RecordIndex":0,"FieldIndex":3,"MemoBlockNumber":0},{"Name":"TAG","Value":"deleted.customer.country","RecordIndex":0,"FieldIndex":9,"MemoBlockNumber":21}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[],"UnplacedObjects":[]}}}
 """;
     }
 

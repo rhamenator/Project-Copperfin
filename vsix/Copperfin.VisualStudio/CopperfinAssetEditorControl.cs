@@ -20,6 +20,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private sealed class ReportSettingsScope
     {
         public int RecordIndex { get; set; }
+        public bool Deleted { get; set; }
         public List<CopperfinStudioNamedValue> Settings { get; } = new();
     }
 
@@ -27,6 +28,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     {
         public int? ReportSectionRecordIndex { get; set; }
         public bool ReportSettings { get; set; }
+        public bool ReportSettingsDeleted { get; set; }
         public bool ReportUnplacedObjects { get; set; }
         public string? ProjectGroupId { get; set; }
     }
@@ -823,6 +825,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             (reportLayout.Sections.Count > 0 ||
              reportLayout.DeletedSections.Count > 0 ||
              reportLayout.Settings.Count > 0 ||
+             reportLayout.DeletedSettings.Count > 0 ||
              reportLayout.UnplacedObjects.Count > 0))
         {
             sectionListView.Visible = true;
@@ -853,7 +856,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             {
                 var settingsScope = new ReportSettingsScope
                 {
-                    RecordIndex = reportLayout.Settings.FirstOrDefault()?.RecordIndex ?? 0
+                    RecordIndex = reportLayout.Settings.FirstOrDefault()?.RecordIndex ?? 0,
+                    Deleted = false
                 };
                 settingsScope.Settings.AddRange(reportLayout.Settings);
 
@@ -861,6 +865,23 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 item.SubItems.Add(reportLayout.Settings.Count.ToString());
                 item.SubItems.Add(string.Empty);
                 item.Tag = settingsScope;
+                sectionListView.Items.Add(item);
+            }
+
+            if (reportLayout.DeletedSettings.Count > 0)
+            {
+                var deletedSettingsScope = new ReportSettingsScope
+                {
+                    RecordIndex = reportLayout.DeletedSettings.FirstOrDefault()?.RecordIndex ?? 0,
+                    Deleted = true
+                };
+                deletedSettingsScope.Settings.AddRange(reportLayout.DeletedSettings);
+
+                var item = new ListViewItem(F("AssetEditor.ReportSection.Deleted", L("AssetEditor.ReportSection.Settings")));
+                item.SubItems.Add(reportLayout.DeletedSettings.Count.ToString());
+                item.SubItems.Add(string.Empty);
+                item.Tag = deletedSettingsScope;
+                item.ForeColor = Color.Firebrick;
                 sectionListView.Items.Add(item);
             }
 
@@ -1020,7 +1041,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                     item.Selected = false;
                 }
 
-                propertyGrid.SelectedObject = CopperfinDesignerSelection.FromReportSettings(settingsScope.Settings, localization);
+                propertyGrid.SelectedObject = CopperfinDesignerSelection.FromReportSettings(settingsScope.Settings, localization, settingsScope.Deleted);
                 designSurface.SelectRecord(null);
                 return;
             }
@@ -2031,7 +2052,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             return new ExplorerSelectionState
             {
-                ReportSettings = true
+                ReportSettings = true,
+                ReportSettingsDeleted = ((ReportSettingsScope)selectedTag).Deleted
             };
         }
 
@@ -2068,7 +2090,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             selectedItem = sectionListView.Items
                 .Cast<ListViewItem>()
-                .FirstOrDefault(item => item.Tag is ReportSettingsScope);
+                .FirstOrDefault(item => item.Tag is ReportSettingsScope scope &&
+                                        scope.Deleted == selectionState.ReportSettingsDeleted);
         }
         else if (selectionState?.ReportUnplacedObjects == true)
         {
