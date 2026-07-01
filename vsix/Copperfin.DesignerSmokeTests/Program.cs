@@ -332,6 +332,22 @@ internal static class Program
                 expectedSectionRecordIndex: 3,
                 expectedSectionCount: 5,
                 expectLabel: true);
+            SmokeRealAssetHostBackedDeletedReorderRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/bandedm.FRX"),
+                reorderedSourceRecordIndex: 28,
+                reorderedSourceUniqueId: "_QUC0L59IE",
+                reorderedSourceObjectTitle: "_QUC0L59IE",
+                companionRecordIndex: 13,
+                companionUniqueId: "_QEE1DSSPJ",
+                companionObjectTitle: "_QEE1DSSPJ",
+                expectedSectionTitle: "Title",
+                initialSectionRecordIndex: 3,
+                reorderedSectionRecordIndex: 4,
+                expectedSectionCount: 6,
+                expectedVisibleSectionObjectCount: 8,
+                expectedReorderedRecordIndex: 0,
+                expectedCompanionRecordIndex: 14,
+                expectLabel: false);
             SmokeAssetEditorPropertyGridRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 7,
@@ -482,6 +498,22 @@ internal static class Program
                 expectLabel: true,
                 expectedOriginalUniqueId: "_QV30QY1DL",
                 expectedDuplicatedUniqueId: "LDELDUP1");
+            SmokeAssetEditorDeletedReorderCommandWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/bandedm.FRX"),
+                reorderedSourceRecordIndex: 28,
+                reorderedSourceUniqueId: "_QUC0L59IE",
+                reorderedSourceObjectTitle: "_QUC0L59IE",
+                companionRecordIndex: 13,
+                companionUniqueId: "_QEE1DSSPJ",
+                companionObjectTitle: "_QEE1DSSPJ",
+                expectedSectionTitle: "Title",
+                initialSectionRecordIndex: 3,
+                reorderedSectionRecordIndex: 4,
+                expectedSectionCount: 6,
+                expectedVisibleSectionObjectCount: 8,
+                expectedReorderedRecordIndex: 0,
+                expectedCompanionRecordIndex: 14,
+                expectLabel: false);
             SmokeAssetEditorSectionRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 1,
@@ -8697,6 +8729,195 @@ internal static class Program
         }
     }
 
+    private static void SmokeRealAssetHostBackedDeletedReorderRoundTrip(
+        string? sourcePath,
+        int reorderedSourceRecordIndex,
+        string reorderedSourceUniqueId,
+        string reorderedSourceObjectTitle,
+        int companionRecordIndex,
+        string companionUniqueId,
+        string companionObjectTitle,
+        string expectedSectionTitle,
+        int initialSectionRecordIndex,
+        int reorderedSectionRecordIndex,
+        int expectedSectionCount,
+        int expectedVisibleSectionObjectCount,
+        int expectedReorderedRecordIndex,
+        int expectedCompanionRecordIndex,
+        bool expectLabel)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(sourcePath) ? "real deleted reorder candidate" : sourcePath)} not found.");
+            return;
+        }
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmokeRealAssetDeletedReorders-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateWritableAssetCopy(sourcePath!, tempRoot);
+
+        try
+        {
+            var firstDeleteResult = CopperfinStudioSnapshotClient.TryDeleteObject(
+                assetPath,
+                reorderedSourceRecordIndex,
+                reorderedSourceUniqueId);
+            Expect(firstDeleteResult.Success && firstDeleteResult.Document is not null,
+                $"real deleted reorder smoke should delete record {reorderedSourceRecordIndex} for {sourcePath}");
+            if (!firstDeleteResult.Success || firstDeleteResult.Document is null)
+            {
+                return;
+            }
+
+            var secondDeleteResult = CopperfinStudioSnapshotClient.TryDeleteObject(
+                assetPath,
+                companionRecordIndex,
+                companionUniqueId);
+            Expect(secondDeleteResult.Success && secondDeleteResult.Document is not null,
+                $"real deleted reorder smoke should delete companion record {companionRecordIndex} for {sourcePath}");
+            if (!secondDeleteResult.Success || secondDeleteResult.Document is null)
+            {
+                return;
+            }
+
+            AssertRealAssetDeletedObjectSnapshot(
+                secondDeleteResult.Document,
+                reorderedSourceRecordIndex,
+                reorderedSourceUniqueId,
+                reorderedSourceObjectTitle,
+                expectedSectionTitle,
+                initialSectionRecordIndex,
+                expectedSectionCount,
+                expectLabel,
+                expectedVisibleSectionObjectCount,
+                expectedDeletedSectionObjectCount: 2,
+                "initial deleted real asset reorder snapshot should preserve the reordered-source identity",
+                assertTitles: false);
+            AssertRealAssetDeletedObjectSnapshot(
+                secondDeleteResult.Document,
+                companionRecordIndex,
+                companionUniqueId,
+                companionObjectTitle,
+                expectedSectionTitle,
+                initialSectionRecordIndex,
+                expectedSectionCount,
+                expectLabel,
+                expectedVisibleSectionObjectCount,
+                expectedDeletedSectionObjectCount: 2,
+                "initial deleted real asset reorder snapshot should preserve the companion identity");
+            AssertRealAssetDeletedObjectOrder(
+                secondDeleteResult.Document,
+                initialSectionRecordIndex,
+                new[] { companionRecordIndex, reorderedSourceRecordIndex },
+                new[] { companionUniqueId, reorderedSourceUniqueId },
+                "initial deleted real asset reorder snapshot should preserve deleted-row order");
+
+            var reorderResult = CopperfinStudioSnapshotClient.TryReorderObject(
+                assetPath,
+                reorderedSourceRecordIndex,
+                reorderedSourceUniqueId,
+                "front");
+            Expect(reorderResult.Success && reorderResult.Document is not null,
+                $"real deleted reorder smoke should reorder deleted record {reorderedSourceRecordIndex} for {sourcePath}");
+            if (!reorderResult.Success || reorderResult.Document is null)
+            {
+                return;
+            }
+
+            AssertRealAssetDeletedObjectSnapshot(
+                reorderResult.Document,
+                expectedReorderedRecordIndex,
+                reorderedSourceUniqueId,
+                reorderedSourceObjectTitle,
+                expectedSectionTitle,
+                reorderedSectionRecordIndex,
+                expectedSectionCount,
+                expectLabel,
+                expectedVisibleSectionObjectCount,
+                expectedDeletedSectionObjectCount: 2,
+                "reordered deleted real asset snapshot should preserve the reordered-source identity",
+                assertTitles: false);
+            AssertRealAssetDeletedObjectSnapshot(
+                reorderResult.Document,
+                expectedCompanionRecordIndex,
+                companionUniqueId,
+                companionObjectTitle,
+                expectedSectionTitle,
+                reorderedSectionRecordIndex,
+                expectedSectionCount,
+                expectLabel,
+                expectedVisibleSectionObjectCount,
+                expectedDeletedSectionObjectCount: 2,
+                "reordered deleted real asset snapshot should preserve the companion identity");
+            AssertRealAssetDeletedObjectOrder(
+                reorderResult.Document,
+                reorderedSectionRecordIndex,
+                new[] { expectedReorderedRecordIndex, expectedCompanionRecordIndex },
+                new[] { reorderedSourceUniqueId, companionUniqueId },
+                "reordered deleted real asset snapshot should preserve deleted-row order");
+            Expect(!reorderResult.Document.CommandUndoAvailable,
+                $"real deleted reorder smoke should not expose command undo after reordering a deleted row for {sourcePath}");
+
+            var reloadedAfterReorder = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterReorder.Success && reloadedAfterReorder.Document is not null,
+                $"real deleted reorder smoke should reload reordered deleted snapshot data for {sourcePath}");
+            if (!reloadedAfterReorder.Success || reloadedAfterReorder.Document is null)
+            {
+                return;
+            }
+
+            AssertRealAssetDeletedObjectSnapshot(
+                reloadedAfterReorder.Document,
+                expectedReorderedRecordIndex,
+                reorderedSourceUniqueId,
+                reorderedSourceObjectTitle,
+                expectedSectionTitle,
+                reorderedSectionRecordIndex,
+                expectedSectionCount,
+                expectLabel,
+                expectedVisibleSectionObjectCount,
+                expectedDeletedSectionObjectCount: 2,
+                "reloaded reordered deleted real asset snapshot should preserve the reordered-source identity",
+                assertTitles: false);
+            AssertRealAssetDeletedObjectSnapshot(
+                reloadedAfterReorder.Document,
+                expectedCompanionRecordIndex,
+                companionUniqueId,
+                companionObjectTitle,
+                expectedSectionTitle,
+                reorderedSectionRecordIndex,
+                expectedSectionCount,
+                expectLabel,
+                expectedVisibleSectionObjectCount,
+                expectedDeletedSectionObjectCount: 2,
+                "reloaded reordered deleted real asset snapshot should preserve the companion identity");
+            AssertRealAssetDeletedObjectOrder(
+                reloadedAfterReorder.Document,
+                reorderedSectionRecordIndex,
+                new[] { expectedReorderedRecordIndex, expectedCompanionRecordIndex },
+                new[] { reorderedSourceUniqueId, companionUniqueId },
+                "reloaded reordered deleted real asset snapshot should preserve deleted-row order");
+            Expect(!reloadedAfterReorder.Document.CommandUndoAvailable,
+                $"reloaded reordered deleted real asset snapshot should not expose command undo for {sourcePath}");
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeAssetEditorPropertyGridRoundTripWithRealAsset(
         string? sourcePath,
         int recordIndex,
@@ -10160,6 +10381,317 @@ internal static class Program
         }
     }
 
+    private static void SmokeAssetEditorDeletedReorderCommandWithRealAsset(
+        string? sourcePath,
+        int reorderedSourceRecordIndex,
+        string reorderedSourceUniqueId,
+        string reorderedSourceObjectTitle,
+        int companionRecordIndex,
+        string companionUniqueId,
+        string companionObjectTitle,
+        string expectedSectionTitle,
+        int initialSectionRecordIndex,
+        int reorderedSectionRecordIndex,
+        int expectedSectionCount,
+        int expectedVisibleSectionObjectCount,
+        int expectedReorderedRecordIndex,
+        int expectedCompanionRecordIndex,
+        bool expectLabel)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(sourcePath) ? "real asset editor deleted reorder candidate" : sourcePath)} not found.");
+            return;
+        }
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmokeRealAssetEditorDeletedReorders-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateWritableAssetCopy(sourcePath!, tempRoot);
+
+        try
+        {
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+            control.LoadDocument(assetPath);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var renameButton = GetPrivateButton(control, "renameObjectButton");
+            var duplicateButton = GetPrivateButton(control, "duplicateObjectButton");
+            var reorderFrontButton = GetPrivateButton(control, "reorderFrontObjectButton");
+            var reorderBackButton = GetPrivateButton(control, "reorderBackObjectButton");
+            var deleteButton = GetPrivateButton(control, "deleteObjectButton");
+            var restoreButton = GetPrivateButton(control, "restoreObjectButton");
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface for the real deleted-reorder smoke.");
+
+            var loaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => sectionListView.Items.Count > 0);
+            Expect(loaded, $"real asset editor deleted-reorder smoke should load section data for {sourcePath}");
+            if (!loaded)
+            {
+                return;
+            }
+
+            foreach (ListViewItem item in sectionListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioReportSection section &&
+                                section.RecordIndex == initialSectionRecordIndex;
+            }
+
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            Application.DoEvents();
+
+            var objectsLoaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => objectListView.Items.Cast<ListViewItem>().Any(item =>
+                          item.Tag is CopperfinStudioSnapshotObject snapshotObject &&
+                          (snapshotObject.RecordIndex == reorderedSourceRecordIndex || snapshotObject.RecordIndex == companionRecordIndex)));
+            Expect(objectsLoaded, $"real asset editor deleted-reorder smoke should surface source objects for {sourcePath}");
+            if (!objectsLoaded)
+            {
+                return;
+            }
+
+            foreach (ListViewItem item in objectListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioSnapshotObject snapshotObject &&
+                                snapshotObject.RecordIndex == reorderedSourceRecordIndex;
+            }
+
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(renameButton.Visible &&
+                   renameButton.Enabled &&
+                   duplicateButton.Visible &&
+                   duplicateButton.Enabled &&
+                   reorderFrontButton.Visible &&
+                   reorderFrontButton.Enabled &&
+                   reorderBackButton.Visible &&
+                   reorderBackButton.Enabled &&
+                   deleteButton.Visible &&
+                   deleteButton.Enabled &&
+                   !restoreButton.Visible &&
+                   objectListView.Items.Count == expectedVisibleSectionObjectCount &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == reorderedSourceRecordIndex,
+                $"real asset editor deleted-reorder smoke should start from a live object selection with reorder commands exposed for {sourcePath}");
+
+            deleteButton.PerformClick();
+            Application.DoEvents();
+
+            var firstDeletedSelection = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
+                {
+                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                        refreshedSelection.RecordIndex != reorderedSourceRecordIndex)
+                    {
+                        return false;
+                    }
+
+                    var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault();
+                    var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
+                    var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
+                    var objectState = TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString();
+                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                           selectedSectionModel?.RecordIndex == initialSectionRecordIndex &&
+                           selectedSectionModel?.DeletedObjectCount == 1 &&
+                           selectedObject?.RecordIndex == reorderedSourceRecordIndex &&
+                           selectedObject.Deleted &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(selectedObject, "UNIQUEID"), reorderedSourceUniqueId, StringComparison.Ordinal) &&
+                           string.Equals(objectState, "Deleted", StringComparison.Ordinal) &&
+                           string.Equals(ReadPrivateStringField(surface, "assetFamily"), expectLabel ? "label" : "report", StringComparison.Ordinal) &&
+                           ReadPrivateNullableInt(surface, "selectedRecordIndex") == reorderedSourceRecordIndex &&
+                           ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == initialSectionRecordIndex &&
+                           !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected");
+                });
+            Expect(firstDeletedSelection,
+                $"real asset editor deleted-reorder smoke should preserve deleted selection continuity after the first delete for {sourcePath}");
+            if (!firstDeletedSelection)
+            {
+                return;
+            }
+
+            foreach (ListViewItem item in objectListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioSnapshotObject snapshotObject &&
+                                snapshotObject.RecordIndex == companionRecordIndex &&
+                                !snapshotObject.Deleted;
+            }
+
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+            deleteButton.PerformClick();
+            Application.DoEvents();
+
+            var secondDeletedSelection = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
+                {
+                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                        refreshedSelection.RecordIndex != companionRecordIndex)
+                    {
+                        return false;
+                    }
+
+                    var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault();
+                    var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
+                    var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
+                    var objectState = TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString();
+                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                           selectedSectionModel?.RecordIndex == initialSectionRecordIndex &&
+                           selectedSectionModel?.DeletedObjectCount == 2 &&
+                           selectedObject?.RecordIndex == companionRecordIndex &&
+                           selectedObject.Deleted &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(selectedObject, "UNIQUEID"), companionUniqueId, StringComparison.Ordinal) &&
+                           string.Equals(objectState, "Deleted", StringComparison.Ordinal) &&
+                           reorderFrontButton.Visible &&
+                           reorderFrontButton.Enabled &&
+                           reorderBackButton.Visible &&
+                           reorderBackButton.Enabled &&
+                           !deleteButton.Visible &&
+                           restoreButton.Visible &&
+                           restoreButton.Enabled &&
+                           string.Equals(ReadPrivateStringField(surface, "assetFamily"), expectLabel ? "label" : "report", StringComparison.Ordinal) &&
+                           ReadPrivateNullableInt(surface, "selectedRecordIndex") == companionRecordIndex &&
+                           ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == initialSectionRecordIndex &&
+                           !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected");
+                });
+            Expect(secondDeletedSelection,
+                $"real asset editor deleted-reorder smoke should preserve deleted selection continuity before reordering for {sourcePath}");
+            if (!secondDeletedSelection)
+            {
+                return;
+            }
+
+            foreach (ListViewItem item in objectListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioSnapshotObject snapshotObject &&
+                                snapshotObject.RecordIndex == reorderedSourceRecordIndex &&
+                                snapshotObject.Deleted;
+            }
+
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+            reorderFrontButton.PerformClick();
+            Application.DoEvents();
+
+            var reorderedSelection = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
+                {
+                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                        refreshedSelection.RecordIndex != expectedReorderedRecordIndex)
+                    {
+                        return false;
+                    }
+
+                    var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault();
+                    var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
+                    var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
+                    var objectState = TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString();
+                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                           selectedSectionModel?.RecordIndex == reorderedSectionRecordIndex &&
+                           selectedSectionModel?.DeletedObjectCount == 2 &&
+                           selectedObject?.RecordIndex == expectedReorderedRecordIndex &&
+                           selectedObject.Deleted &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(selectedObject, "UNIQUEID"), reorderedSourceUniqueId, StringComparison.Ordinal) &&
+                           string.Equals(objectState, "Deleted", StringComparison.Ordinal) &&
+                           reorderFrontButton.Visible &&
+                           reorderFrontButton.Enabled &&
+                           reorderBackButton.Visible &&
+                           reorderBackButton.Enabled &&
+                           !deleteButton.Visible &&
+                           restoreButton.Visible &&
+                           restoreButton.Enabled &&
+                           string.Equals(ReadPrivateStringField(surface, "assetFamily"), expectLabel ? "label" : "report", StringComparison.Ordinal) &&
+                           ReadPrivateNullableInt(surface, "selectedRecordIndex") == expectedReorderedRecordIndex &&
+                           ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == reorderedSectionRecordIndex &&
+                           !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected");
+                });
+            Expect(reorderedSelection,
+                $"real asset editor deleted-reorder smoke should preserve deleted section/object continuity after reordering for {sourcePath}");
+            Expect(!control.CanHandleUndoCommand(),
+                $"real asset editor deleted-reorder smoke should not expose undo after reordering a deleted row for {sourcePath}");
+            if (!reorderedSelection)
+            {
+                return;
+            }
+
+            var reloadedAfterReorder = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterReorder.Success && reloadedAfterReorder.Document is not null,
+                $"real asset editor deleted-reorder smoke should reload reordered deleted on-disk state for {sourcePath}");
+            if (reloadedAfterReorder.Success && reloadedAfterReorder.Document is not null)
+            {
+                AssertRealAssetDeletedObjectSnapshot(
+                    reloadedAfterReorder.Document,
+                    expectedReorderedRecordIndex,
+                    reorderedSourceUniqueId,
+                    reorderedSourceObjectTitle,
+                    expectedSectionTitle,
+                    reorderedSectionRecordIndex,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectedVisibleSectionObjectCount,
+                    expectedDeletedSectionObjectCount: 2,
+                    "reloaded real asset editor deleted-reorder snapshot should preserve the reordered-source identity",
+                    assertTitles: false);
+                AssertRealAssetDeletedObjectSnapshot(
+                    reloadedAfterReorder.Document,
+                    expectedCompanionRecordIndex,
+                    companionUniqueId,
+                    companionObjectTitle,
+                    expectedSectionTitle,
+                    reorderedSectionRecordIndex,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectedVisibleSectionObjectCount,
+                    expectedDeletedSectionObjectCount: 2,
+                    "reloaded real asset editor deleted-reorder snapshot should preserve the companion identity");
+                AssertRealAssetDeletedObjectOrder(
+                    reloadedAfterReorder.Document,
+                    reorderedSectionRecordIndex,
+                    new[] { expectedReorderedRecordIndex, expectedCompanionRecordIndex },
+                    new[] { reorderedSourceUniqueId, companionUniqueId },
+                    "reloaded real asset editor deleted-reorder snapshot should preserve deleted-row order");
+            }
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeAssetEditorSectionRoundTripWithRealAsset(
         string? sourcePath,
         int recordIndex,
@@ -11484,7 +12016,8 @@ internal static class Program
         bool expectLabel,
         int expectedVisibleSectionObjectCount,
         int expectedDeletedSectionObjectCount,
-        string failurePrefix)
+        string failurePrefix,
+        bool assertTitles = true)
     {
         Expect(document.ReportLayout is not null,
             $"{failurePrefix} for {document.Path} should include a report layout");
@@ -11523,8 +12056,11 @@ internal static class Program
             return;
         }
 
-        Expect(string.Equals(deletedLayoutObject.Title, expectedObjectTitle, StringComparison.Ordinal),
-            $"{failurePrefix} for {document.Path} should preserve the deleted object title");
+        if (assertTitles)
+        {
+            Expect(string.Equals(deletedLayoutObject.Title, expectedObjectTitle, StringComparison.Ordinal),
+                $"{failurePrefix} for {document.Path} should preserve the deleted object title");
+        }
         Expect(deletedLayoutObject.ContainingSectionRecordIndex == expectedSectionRecordIndex,
             $"{failurePrefix} for {document.Path} should preserve the deleted object's containing section");
 
@@ -11544,10 +12080,42 @@ internal static class Program
 
         Expect(snapshotObject.Deleted,
             $"{failurePrefix} for {document.Path} should preserve deleted object state");
-        Expect(string.Equals(snapshotObject.Title, expectedObjectTitle, StringComparison.Ordinal),
-            $"{failurePrefix} for {document.Path} should preserve the raw deleted object title");
+        if (assertTitles)
+        {
+            Expect(string.Equals(snapshotObject.Title, expectedObjectTitle, StringComparison.Ordinal),
+                $"{failurePrefix} for {document.Path} should preserve the raw deleted object title");
+        }
         Expect(string.Equals(TryGetSnapshotObjectPropertyValue(snapshotObject, "UNIQUEID"), expectedUniqueId, StringComparison.Ordinal),
             $"{failurePrefix} for {document.Path} should preserve the deleted UNIQUEID");
+    }
+
+    private static void AssertRealAssetDeletedObjectOrder(
+        CopperfinStudioSnapshotDocument document,
+        int expectedSectionRecordIndex,
+        IReadOnlyList<int> expectedRecordOrder,
+        IReadOnlyList<string> expectedUniqueIdOrder,
+        string failurePrefix)
+    {
+        Expect(document.ReportLayout is not null,
+            $"{failurePrefix} for {document.Path} should include a report layout");
+        if (document.ReportLayout is null)
+        {
+            return;
+        }
+
+        var deletedObjects = document.ReportLayout.DeletedObjects
+            .Where(candidate => candidate.ContainingSectionRecordIndex == expectedSectionRecordIndex)
+            .ToList();
+        var actualRecordOrder = deletedObjects.Select(candidate => candidate.RecordIndex).ToArray();
+        Expect(actualRecordOrder.SequenceEqual(expectedRecordOrder),
+            $"{failurePrefix} for {document.Path} should preserve deleted record order [{string.Join(", ", expectedRecordOrder)}]");
+
+        var actualUniqueIdOrder = deletedObjects
+            .Select(candidate => document.Objects.FirstOrDefault(snapshotObject => snapshotObject.RecordIndex == candidate.RecordIndex))
+            .Select(snapshotObject => snapshotObject is null ? null : TryGetSnapshotObjectPropertyValue(snapshotObject, "UNIQUEID"))
+            .ToArray();
+        Expect(actualUniqueIdOrder.SequenceEqual(expectedUniqueIdOrder),
+            $"{failurePrefix} for {document.Path} should preserve deleted UNIQUEID order [{string.Join(", ", expectedUniqueIdOrder)}]");
     }
 
     private static void AssertRealAssetDeletedObjectPropertySnapshot(

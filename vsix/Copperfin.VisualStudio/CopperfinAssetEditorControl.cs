@@ -1315,7 +1315,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
 
         var selectedObject = TryGetSelectedSnapshotObject();
-        if (selectedObject is null || selectedObject.Deleted)
+        if (selectedObject is null)
         {
             return false;
         }
@@ -1347,8 +1347,11 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         PopulateSectionList(explorerSelection);
         SyncExplorerSelection();
         LoadSurface();
-        designSurface.SelectRecord(selectedObjectRecordIndex);
-        SyncSelectionFromSurface(selectedObjectRecordIndex);
+        var reorderedRecordIndex = !string.IsNullOrWhiteSpace(uniqueId)
+            ? TryReadObjectRecordIndex(currentSnapshot, uniqueId!) ?? selectedObjectRecordIndex
+            : selectedObjectRecordIndex;
+        designSurface.SelectRecord(reorderedRecordIndex);
+        SyncSelectionFromSurface(reorderedRecordIndex);
         return true;
     }
 
@@ -1807,7 +1810,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             : null;
         var showRename = selectedObject is not null;
         var showDuplicate = selectedObject is not null;
-        var showReorder = selectedObject is not null && !selectedObject.Deleted;
+        var showReorder = selectedObject is not null;
         var showDelete = selectedObject is not null && !selectedObject.Deleted;
         var showRestore = selectedObject is not null && selectedObject.Deleted;
         renameObjectButton.Visible = showRename;
