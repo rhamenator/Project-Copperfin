@@ -3748,6 +3748,29 @@ internal static class Program
                     "GROUPPARTNERSTATE"
                 });
             SmokeAssetEditorDeletedSectionMetadataSelectionWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 5,
+                expectedProperties: new[]
+                {
+                    new KeyValuePair<string, string>("SECTIONSTATE", "Deleted"),
+                    new KeyValuePair<string, string>("BANDKIND", "Page Footer"),
+                    new KeyValuePair<string, string>("RECORDINDEX", "5"),
+                    new KeyValuePair<string, string>("OBJECTCOUNT", "0"),
+                    new KeyValuePair<string, string>("DELETEDOBJECTCOUNT", "0"),
+                    new KeyValuePair<string, string>("TOP", "0"),
+                    new KeyValuePair<string, string>("HEIGHT", "0")
+                },
+                expectedMissingProperties: new[]
+                {
+                    "EXPR",
+                    "EXPRESSIONFIELD",
+                    "EXPRESSIONMEMO",
+                    "GROUPINGEXPRESSION",
+                    "GROUPINGEXPRESSIONFIELD",
+                    "GROUPINGEXPRESSIONMEMO",
+                    "GROUPPARTNERSTATE"
+                });
+            SmokeAssetEditorDeletedSectionMetadataSelectionWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 3,
                 expectedProperties: new[]
