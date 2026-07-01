@@ -24,6 +24,9 @@ internal sealed class CopperfinStudioSnapshotDocument
     public int RecordCount { get; set; }
     public bool CommandUndoAvailable { get; set; }
     public string CommandUndoLabel { get; set; } = string.Empty;
+    public bool SelectedReportSettingsAvailable { get; set; }
+    public string SelectedReportSelectionKind { get; set; } = string.Empty;
+    public List<CopperfinStudioNamedValue>? SelectedReportSettings { get; set; }
     public List<CopperfinStudioSnapshotField> Fields { get; set; } = new();
     public CopperfinStudioReportLayout? ReportLayout { get; set; }
     public CopperfinStudioProjectWorkspace? ProjectWorkspace { get; set; }
