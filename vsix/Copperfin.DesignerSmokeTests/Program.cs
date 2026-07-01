@@ -162,6 +162,9 @@ internal static class Program
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"));
             SmokeRealAssetSettingsAuxiliaryPrintSelection(
                 TryResolveVfpSourceAsset("VFPSource/foxref/foxrefresultsa4.frx"));
+            SmokeRealAssetLabelSettingsSelection(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"));
             SmokeRealAssetSettingsPreviewBoundsSelection(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
@@ -9582,6 +9585,117 @@ internal static class Program
                string.Equals(ReadSelectionPropertyValue(settingsSelection, "COLLATE"), expectedSettings["COLLATE"].Value, StringComparison.Ordinal) &&
                string.Equals(ReadSelectionPropertyValue(settingsSelection, "COPIES"), expectedSettings["COPIES"].Value, StringComparison.Ordinal),
             $"real asset settings smoke should expose shared auxiliary-print continuity for {selectedPath}");
+
+        TearDownForm(hostForm);
+    }
+
+    private static void SmokeRealAssetLabelSettingsSelection(params string?[] sourcePaths)
+    {
+        string? selectedPath = null;
+        IReadOnlyDictionary<string, CopperfinStudioNamedValue>? expectedSettings = null;
+
+        foreach (var candidatePath in EnumerateResolvedRealReportAssetPaths(sourcePaths))
+        {
+            if (string.IsNullOrWhiteSpace(candidatePath) || !File.Exists(candidatePath))
+            {
+                continue;
+            }
+
+            var candidateSnapshot = CopperfinStudioSnapshotClient.TryLoad(candidatePath!);
+            var candidateLayout = candidateSnapshot.Document?.ReportLayout;
+            if (!candidateSnapshot.Success || candidateLayout is null || !candidateLayout.IsLabel)
+            {
+                continue;
+            }
+
+            var orientation = candidateLayout.Settings.FirstOrDefault(setting =>
+                string.Equals(setting.Name, "ORIENTATION", StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrWhiteSpace(setting.Value));
+            var paperSize = candidateLayout.Settings.FirstOrDefault(setting =>
+                string.Equals(setting.Name, "PAPERSIZE", StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrWhiteSpace(setting.Value));
+            var color = candidateLayout.Settings.FirstOrDefault(setting =>
+                string.Equals(setting.Name, "COLOR", StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrWhiteSpace(setting.Value));
+            var verticalGrid = candidateLayout.Settings.FirstOrDefault(setting =>
+                string.Equals(setting.Name, "GRIDV", StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrWhiteSpace(setting.Value));
+            var horizontalGrid = candidateLayout.Settings.FirstOrDefault(setting =>
+                string.Equals(setting.Name, "GRIDH", StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrWhiteSpace(setting.Value));
+
+            if (orientation is null || paperSize is null || color is null || verticalGrid is null || horizontalGrid is null)
+            {
+                continue;
+            }
+
+            selectedPath = candidatePath;
+            expectedSettings = new Dictionary<string, CopperfinStudioNamedValue>(StringComparer.OrdinalIgnoreCase)
+            {
+                [orientation.Name] = orientation,
+                [paperSize.Name] = paperSize,
+                [color.Name] = color,
+                [verticalGrid.Name] = verticalGrid,
+                [horizontalGrid.Name] = horizontalGrid
+            };
+            break;
+        }
+
+        if (string.IsNullOrWhiteSpace(selectedPath) || expectedSettings is null)
+        {
+            Console.WriteLine("SKIP: real label settings candidate not found.");
+            return;
+        }
+
+        using var hostForm = new Form
+        {
+            Width = 1400,
+            Height = 1000,
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-32000, -32000)
+        };
+
+        using var control = new CopperfinAssetEditorControl
+        {
+            Dock = DockStyle.Fill
+        };
+
+        hostForm.Controls.Add(control);
+        hostForm.Show();
+        Application.DoEvents();
+        control.LoadDocument(selectedPath!);
+
+        var sectionListView = GetPrivateListView(control, "sectionListView");
+        var objectListView = GetPrivateListView(control, "objectListView");
+        var propertyGrid = GetPrivatePropertyGrid(control);
+        var loaded = WaitUntil(
+            TimeSpan.FromSeconds(8),
+            () => sectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, "Settings", StringComparison.Ordinal)));
+        Expect(loaded, $"real label settings smoke should surface the settings scope for {selectedPath}");
+        if (!loaded)
+        {
+            TearDownForm(hostForm);
+            return;
+        }
+
+        foreach (ListViewItem item in sectionListView.Items)
+        {
+            item.Selected = string.Equals(item.Text, "Settings", StringComparison.Ordinal);
+        }
+
+        InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+        Application.DoEvents();
+
+        Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection settingsSelection &&
+               settingsSelection.RecordIndex == expectedSettings["ORIENTATION"].RecordIndex &&
+               objectListView.Items.Count == 0 &&
+               string.Equals(ReadSelectionPropertyValue(settingsSelection, "ORIENTATION"), expectedSettings["ORIENTATION"].Value, StringComparison.Ordinal) &&
+               string.Equals(ReadSelectionPropertyValue(settingsSelection, "PAPERSIZE"), expectedSettings["PAPERSIZE"].Value, StringComparison.Ordinal) &&
+               string.Equals(ReadSelectionPropertyValue(settingsSelection, "COLOR"), expectedSettings["COLOR"].Value, StringComparison.Ordinal) &&
+               string.Equals(ReadSelectionPropertyValue(settingsSelection, "GRIDV"), expectedSettings["GRIDV"].Value, StringComparison.Ordinal) &&
+               string.Equals(ReadSelectionPropertyValue(settingsSelection, "GRIDH"), expectedSettings["GRIDH"].Value, StringComparison.Ordinal),
+            $"real label settings smoke should expose shared settings continuity for {selectedPath}");
 
         TearDownForm(hostForm);
     }
