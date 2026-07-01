@@ -8569,7 +8569,7 @@ internal static class Program
         var localization = new CopperfinLocalization("en-US");
         var settingsScopeTitle = localization.Text("AssetEditor.ReportSection.Settings");
 
-        foreach (var candidatePath in sourcePaths)
+        foreach (var candidatePath in EnumerateResolvedRealReportAssetPaths(sourcePaths))
         {
             if (string.IsNullOrWhiteSpace(candidatePath) || !File.Exists(candidatePath))
             {
@@ -14263,6 +14263,92 @@ internal static class Program
     private static string? ResolveFirstExistingRealAssetPath(params string?[] candidates)
     {
         return candidates.FirstOrDefault(candidate => !string.IsNullOrWhiteSpace(candidate) && File.Exists(candidate));
+    }
+
+    private static IEnumerable<string> EnumerateResolvedRealReportAssetPaths(params string?[] preferredCandidates)
+    {
+        var yielded = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var candidate in preferredCandidates)
+        {
+            if (!string.IsNullOrWhiteSpace(candidate) &&
+                File.Exists(candidate) &&
+                yielded.Add(candidate!))
+            {
+                yield return candidate!;
+            }
+        }
+
+        foreach (var root in EnumerateResolvedRealAssetRoots())
+        {
+            IEnumerable<string> files;
+            try
+            {
+                files = Directory.EnumerateFiles(root, "*.*", SearchOption.AllDirectories)
+                    .Where(path =>
+                        path.EndsWith(".frx", StringComparison.OrdinalIgnoreCase) ||
+                        path.EndsWith(".lbx", StringComparison.OrdinalIgnoreCase));
+            }
+            catch (IOException)
+            {
+                continue;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                continue;
+            }
+
+            foreach (var path in files)
+            {
+                if (yielded.Add(path))
+                {
+                    yield return path;
+                }
+            }
+        }
+    }
+
+    private static IEnumerable<string> EnumerateResolvedRealAssetRoots()
+    {
+        var yielded = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        var configuredVfpSourceRoot = ExpandUserPath(Environment.GetEnvironmentVariable("COPPERFIN_VFPSOURCE_ROOT"));
+        if (!string.IsNullOrWhiteSpace(configuredVfpSourceRoot) &&
+            Directory.Exists(configuredVfpSourceRoot) &&
+            yielded.Add(configuredVfpSourceRoot!))
+        {
+            yield return configuredVfpSourceRoot!;
+        }
+
+        var vfpSourceZipPath = ResolveFirstExistingRealAssetPath(
+            ExpandUserPath(Environment.GetEnvironmentVariable("COPPERFIN_VFPSOURCE_ZIP")),
+            ExpandUserPath("~/Downloads/VFPSource.zip"));
+        if (!string.IsNullOrWhiteSpace(vfpSourceZipPath))
+        {
+            var extractedVfpSourceRoot = Path.Combine(
+                Path.GetTempPath(),
+                "CopperfinDesignerSmokeRealAssets",
+                Path.GetFileNameWithoutExtension(vfpSourceZipPath));
+            if (Directory.Exists(extractedVfpSourceRoot) &&
+                yielded.Add(extractedVfpSourceRoot))
+            {
+                yield return extractedVfpSourceRoot;
+            }
+        }
+
+        var configuredVfp9Root = ExpandUserPath(Environment.GetEnvironmentVariable("COPPERFIN_VFP9_ROOT"));
+        var defaultVfp9Root = Path.DirectorySeparatorChar == '\\'
+            ? @"C:\Program Files (x86)\Microsoft Visual FoxPro 9"
+            : null;
+        foreach (var root in new[] { configuredVfp9Root, defaultVfp9Root })
+        {
+            if (!string.IsNullOrWhiteSpace(root) &&
+                Directory.Exists(root) &&
+                yielded.Add(root!))
+            {
+                yield return root!;
+            }
+        }
     }
 
     private static void AssertRealAssetRoundTripSnapshot(
