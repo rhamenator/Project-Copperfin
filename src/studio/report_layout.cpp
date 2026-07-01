@@ -613,9 +613,6 @@ void finalize_groupings(StudioReportLayoutSnapshot& snapshot) {
     }
 
     std::sort(ordered_sections.begin(), ordered_sections.end(), [](const SectionRef& left, const SectionRef& right) {
-        if (left.section->top != right.section->top) {
-            return left.section->top < right.section->top;
-        }
         return left.section->record_index < right.section->record_index;
     });
 

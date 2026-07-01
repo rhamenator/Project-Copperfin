@@ -42,6 +42,96 @@ internal static class Program
         public int SectionRelativeBottom { get; set; }
     }
 
+    private static ExpectedSectionGroupingMetadata CreateBandedmGroupHeaderGrouping()
+    {
+        return new ExpectedSectionGroupingMetadata
+        {
+            GroupRole = "header",
+            GroupRoleDisplay = "Header",
+            SectionExpression = "OneToMany",
+            GroupingIndex = 0,
+            GroupingNestingDepth = 0,
+            GroupingExpression = "OneToMany",
+            GroupingExpressionFieldIndex = 6,
+            GroupingExpressionMemoBlockNumber = 25,
+            GroupPartnerSectionId = "_RME0ORXFY",
+            GroupPartnerRecordIndex = 7,
+            GroupPartnerDeleted = false,
+            GroupPartnerStateDisplay = "Live"
+        };
+    }
+
+    private static ExpectedSectionContainedObjectGeometry[] CreateBandedmGroupHeaderContainedObjects(int topDelta)
+    {
+        return new[]
+        {
+            new ExpectedSectionContainedObjectGeometry
+            {
+                RecordIndex = 28,
+                Top = topDelta,
+                SectionRelativeTop = 0,
+                Bottom = topDelta,
+                SectionRelativeBottom = 0
+            },
+            new ExpectedSectionContainedObjectGeometry
+            {
+                RecordIndex = 13,
+                Top = 833 + topDelta,
+                SectionRelativeTop = 833,
+                Bottom = 937 + topDelta,
+                SectionRelativeBottom = 937
+            },
+            new ExpectedSectionContainedObjectGeometry
+            {
+                RecordIndex = 14,
+                Top = 1250 + topDelta,
+                SectionRelativeTop = 1250,
+                Bottom = 1354 + topDelta,
+                SectionRelativeBottom = 1354
+            },
+            new ExpectedSectionContainedObjectGeometry
+            {
+                RecordIndex = 9,
+                Top = 1354 + topDelta,
+                SectionRelativeTop = 1354,
+                Bottom = 6874 + topDelta,
+                SectionRelativeBottom = 6874
+            },
+            new ExpectedSectionContainedObjectGeometry
+            {
+                RecordIndex = 15,
+                Top = 1875 + topDelta,
+                SectionRelativeTop = 1875,
+                Bottom = 4270 + topDelta,
+                SectionRelativeBottom = 4270
+            },
+            new ExpectedSectionContainedObjectGeometry
+            {
+                RecordIndex = 12,
+                Top = 4479 + topDelta,
+                SectionRelativeTop = 4479,
+                Bottom = 6249 + topDelta,
+                SectionRelativeBottom = 6249
+            },
+            new ExpectedSectionContainedObjectGeometry
+            {
+                RecordIndex = 19,
+                Top = 6770 + topDelta,
+                SectionRelativeTop = 6770,
+                Bottom = 6874 + topDelta,
+                SectionRelativeBottom = 6874
+            },
+            new ExpectedSectionContainedObjectGeometry
+            {
+                RecordIndex = 20,
+                Top = 7187 + topDelta,
+                SectionRelativeTop = 7187,
+                Bottom = 7291 + topDelta,
+                SectionRelativeBottom = 7291
+            }
+        };
+    }
+
     private sealed class ExpectedReportGroupingMetadata
     {
         public int GroupingIndex { get; set; }
@@ -410,21 +500,27 @@ internal static class Program
                 expectedSectionCount: 6,
                 expectLabel: false,
                 expectedObjectCount: 1,
-                expectedOriginalContainedObject: new ExpectedSectionContainedObjectGeometry
+                expectedOriginalContainedObjects: new[]
                 {
-                    RecordIndex = 7,
-                    Top = 6666,
-                    SectionRelativeTop = 6666,
-                    Bottom = 9999,
-                    SectionRelativeBottom = 9999
+                    new ExpectedSectionContainedObjectGeometry
+                    {
+                        RecordIndex = 7,
+                        Top = 6666,
+                        SectionRelativeTop = 6666,
+                        Bottom = 9999,
+                        SectionRelativeBottom = 9999
+                    }
                 },
-                expectedUpdatedContainedObject: new ExpectedSectionContainedObjectGeometry
+                expectedUpdatedContainedObjects: new[]
                 {
-                    RecordIndex = 7,
-                    Top = 7166,
-                    SectionRelativeTop = 6666,
-                    Bottom = 10499,
-                    SectionRelativeBottom = 9999
+                    new ExpectedSectionContainedObjectGeometry
+                    {
+                        RecordIndex = 7,
+                        Top = 7166,
+                        SectionRelativeTop = 6666,
+                        Bottom = 10499,
+                        SectionRelativeBottom = 9999
+                    }
                 });
             SmokeRealAssetHostBackedSectionRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
@@ -438,22 +534,43 @@ internal static class Program
                 expectedSectionCount: 5,
                 expectLabel: true,
                 expectedObjectCount: 1,
-                expectedOriginalContainedObject: new ExpectedSectionContainedObjectGeometry
+                expectedOriginalContainedObjects: new[]
                 {
-                    RecordIndex = 6,
-                    Top = 6666,
-                    SectionRelativeTop = 6666,
-                    Bottom = 8332,
-                    SectionRelativeBottom = 8332
+                    new ExpectedSectionContainedObjectGeometry
+                    {
+                        RecordIndex = 6,
+                        Top = 6666,
+                        SectionRelativeTop = 6666,
+                        Bottom = 8332,
+                        SectionRelativeBottom = 8332
+                    }
                 },
-                expectedUpdatedContainedObject: new ExpectedSectionContainedObjectGeometry
+                expectedUpdatedContainedObjects: new[]
                 {
-                    RecordIndex = 6,
-                    Top = 7066,
-                    SectionRelativeTop = 6666,
-                    Bottom = 8732,
-                    SectionRelativeBottom = 8332
+                    new ExpectedSectionContainedObjectGeometry
+                    {
+                        RecordIndex = 6,
+                        Top = 7066,
+                        SectionRelativeTop = 6666,
+                        Bottom = 8732,
+                        SectionRelativeBottom = 8332
+                    }
                 });
+            SmokeRealAssetHostBackedSectionRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/bandedm.FRX"),
+                recordIndex: 5,
+                expectedSectionTitle: "Group Header",
+                propertyName: "VPOS",
+                originalRawValue: string.Empty,
+                updatedRawValue: "500",
+                expectedOriginalLayoutValue: 0,
+                expectedUpdatedLayoutValue: 500,
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedObjectCount: 8,
+                expectedGrouping: CreateBandedmGroupHeaderGrouping(),
+                expectedOriginalContainedObjects: CreateBandedmGroupHeaderContainedObjects(0),
+                expectedUpdatedContainedObjects: CreateBandedmGroupHeaderContainedObjects(500));
             SmokeRealAssetHostBackedSectionRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 1,
@@ -982,7 +1099,7 @@ internal static class Program
                 companionObjectTitle: "_QEE1DSSPJ",
                 expectedSectionTitle: "Group Header",
                 initialSectionRecordIndex: 5,
-                reorderedSectionRecordIndex: 5,
+                reorderedSectionRecordIndex: 6,
                 expectedSectionCount: 6,
                 expectedVisibleSectionObjectCount: 8,
                 expectedReorderedRecordIndex: 0,
@@ -1709,7 +1826,7 @@ internal static class Program
                 companionObjectTitle: "_QEE1DSSPJ",
                 expectedSectionTitle: "Group Header",
                 initialSectionRecordIndex: 5,
-                reorderedSectionRecordIndex: 5,
+                reorderedSectionRecordIndex: 6,
                 expectedSectionCount: 6,
                 expectedVisibleSectionObjectCount: 8,
                 expectedReorderedRecordIndex: 0,
@@ -2013,21 +2130,27 @@ internal static class Program
                 expectedSectionCount: 6,
                 expectLabel: false,
                 expectedObjectCount: 1,
-                expectedOriginalContainedObject: new ExpectedSectionContainedObjectGeometry
+                expectedOriginalContainedObjects: new[]
                 {
-                    RecordIndex = 7,
-                    Top = 6666,
-                    SectionRelativeTop = 6666,
-                    Bottom = 9999,
-                    SectionRelativeBottom = 9999
+                    new ExpectedSectionContainedObjectGeometry
+                    {
+                        RecordIndex = 7,
+                        Top = 6666,
+                        SectionRelativeTop = 6666,
+                        Bottom = 9999,
+                        SectionRelativeBottom = 9999
+                    }
                 },
-                expectedUpdatedContainedObject: new ExpectedSectionContainedObjectGeometry
+                expectedUpdatedContainedObjects: new[]
                 {
-                    RecordIndex = 7,
-                    Top = 7166,
-                    SectionRelativeTop = 6666,
-                    Bottom = 10499,
-                    SectionRelativeBottom = 9999
+                    new ExpectedSectionContainedObjectGeometry
+                    {
+                        RecordIndex = 7,
+                        Top = 7166,
+                        SectionRelativeTop = 6666,
+                        Bottom = 10499,
+                        SectionRelativeBottom = 9999
+                    }
                 });
             SmokeAssetEditorSectionRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
@@ -2044,22 +2167,47 @@ internal static class Program
                 expectedSectionCount: 5,
                 expectLabel: true,
                 expectedObjectCount: 1,
-                expectedOriginalContainedObject: new ExpectedSectionContainedObjectGeometry
+                expectedOriginalContainedObjects: new[]
                 {
-                    RecordIndex = 6,
-                    Top = 6666,
-                    SectionRelativeTop = 6666,
-                    Bottom = 8332,
-                    SectionRelativeBottom = 8332
+                    new ExpectedSectionContainedObjectGeometry
+                    {
+                        RecordIndex = 6,
+                        Top = 6666,
+                        SectionRelativeTop = 6666,
+                        Bottom = 8332,
+                        SectionRelativeBottom = 8332
+                    }
                 },
-                expectedUpdatedContainedObject: new ExpectedSectionContainedObjectGeometry
+                expectedUpdatedContainedObjects: new[]
                 {
-                    RecordIndex = 6,
-                    Top = 7066,
-                    SectionRelativeTop = 6666,
-                    Bottom = 8732,
-                    SectionRelativeBottom = 8332
+                    new ExpectedSectionContainedObjectGeometry
+                    {
+                        RecordIndex = 6,
+                        Top = 7066,
+                        SectionRelativeTop = 6666,
+                        Bottom = 8732,
+                        SectionRelativeBottom = 8332
+                    }
                 });
+            SmokeAssetEditorSectionRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/bandedm.FRX"),
+                recordIndex: 5,
+                expectedSectionTitle: "Group Header",
+                propertyName: "VPOS",
+                updatedPropertyValue: 500,
+                expectedOriginalSelectionValue: "0",
+                expectedUpdatedSelectionValue: "500",
+                expectedOriginalRawValue: string.Empty,
+                expectedUpdatedRawValue: "500",
+                expectedOriginalLayoutValue: 0,
+                expectedUpdatedLayoutValue: 500,
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedObjectCount: 8,
+                expectedExplorerSectionTitle: "Group Header - OneToMany",
+                expectedGrouping: CreateBandedmGroupHeaderGrouping(),
+                expectedOriginalContainedObjects: CreateBandedmGroupHeaderContainedObjects(0),
+                expectedUpdatedContainedObjects: CreateBandedmGroupHeaderContainedObjects(500));
             SmokeAssetEditorSectionRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 1,
@@ -15237,8 +15385,8 @@ internal static class Program
         ExpectedSectionGroupingMetadata? expectedGrouping = null,
         string? expectedOriginalLayoutTextValue = null,
         string? expectedUpdatedLayoutTextValue = null,
-        ExpectedSectionContainedObjectGeometry? expectedOriginalContainedObject = null,
-        ExpectedSectionContainedObjectGeometry? expectedUpdatedContainedObject = null)
+        ExpectedSectionContainedObjectGeometry[]? expectedOriginalContainedObjects = null,
+        ExpectedSectionContainedObjectGeometry[]? expectedUpdatedContainedObjects = null)
     {
         if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
         {
@@ -15272,7 +15420,7 @@ internal static class Program
                 expectedObjectCount,
                 expectedGrouping,
                 expectedOriginalLayoutTextValue,
-                expectedOriginalContainedObject,
+                expectedOriginalContainedObjects,
                 $"initial real asset section snapshot should preserve {propertyName}");
 
             var updateResult = CopperfinStudioSnapshotClient.TryUpdateProperty(
@@ -15299,7 +15447,7 @@ internal static class Program
                 expectedObjectCount,
                 expectedGrouping,
                 expectedUpdatedLayoutTextValue,
-                expectedUpdatedContainedObject,
+                expectedUpdatedContainedObjects,
                 $"updated real asset section snapshot should preserve {propertyName}");
             Expect(updateResult.Document.CommandUndoAvailable,
                 $"real asset section smoke should expose undo after updating {propertyName} for {sourcePath}");
@@ -15324,7 +15472,7 @@ internal static class Program
                 expectedObjectCount,
                 expectedGrouping,
                 expectedUpdatedLayoutTextValue,
-                expectedUpdatedContainedObject,
+                expectedUpdatedContainedObjects,
                 $"reloaded updated real asset section snapshot should preserve {propertyName}");
             Expect(reloadedAfterUpdate.Document.CommandUndoAvailable,
                 $"reloaded updated real asset section snapshot should keep undo available for {sourcePath}");
@@ -15357,7 +15505,7 @@ internal static class Program
                 expectedObjectCount,
                 expectedGrouping,
                 expectedOriginalLayoutTextValue,
-                expectedOriginalContainedObject,
+                expectedOriginalContainedObjects,
                 $"reloaded undone real asset section snapshot should preserve {propertyName}");
             Expect(!reloadedAfterUndo.Document.CommandUndoAvailable,
                 $"real asset section smoke should clear undo after restoring {propertyName} for {sourcePath}");
@@ -23376,8 +23524,8 @@ internal static class Program
         ExpectedSectionGroupingMetadata? expectedGrouping = null,
         string? expectedOriginalLayoutTextValue = null,
         string? expectedUpdatedLayoutTextValue = null,
-        ExpectedSectionContainedObjectGeometry? expectedOriginalContainedObject = null,
-        ExpectedSectionContainedObjectGeometry? expectedUpdatedContainedObject = null)
+        ExpectedSectionContainedObjectGeometry[]? expectedOriginalContainedObjects = null,
+        ExpectedSectionContainedObjectGeometry[]? expectedUpdatedContainedObjects = null)
     {
         if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
         {
@@ -23524,7 +23672,7 @@ internal static class Program
                     expectedObjectCount,
                     expectedGrouping,
                     expectedUpdatedLayoutTextValue,
-                    expectedUpdatedContainedObject,
+                    expectedUpdatedContainedObjects,
                     $"reloaded edited real asset section snapshot should preserve {propertyName}");
             }
 
@@ -23579,7 +23727,7 @@ internal static class Program
                     expectedObjectCount,
                     expectedGrouping,
                     expectedOriginalLayoutTextValue,
-                    expectedOriginalContainedObject,
+                    expectedOriginalContainedObjects,
                     $"reloaded undone editor real asset section snapshot should preserve {propertyName}");
             }
 
@@ -24892,7 +25040,7 @@ internal static class Program
         int expectedObjectCount,
         ExpectedSectionGroupingMetadata? expectedGrouping,
         string? expectedLayoutTextValue,
-        ExpectedSectionContainedObjectGeometry? expectedContainedObject,
+        ExpectedSectionContainedObjectGeometry[]? expectedContainedObjects,
         string failurePrefix)
     {
         Expect(document.ReportLayout is not null,
@@ -24944,24 +25092,27 @@ internal static class Program
                 $"{failurePrefix} for {document.Path} should preserve group partner deleted state {expectedGrouping.GroupPartnerDeleted}");
         }
 
-        if (expectedContainedObject is not null)
+        if (expectedContainedObjects is not null)
         {
-            var containedObject = section.Objects.FirstOrDefault(candidate => candidate.RecordIndex == expectedContainedObject.RecordIndex);
-            Expect(containedObject is not null,
-                $"{failurePrefix} for {document.Path} should preserve section object {expectedContainedObject.RecordIndex}");
-            if (containedObject is null)
+            foreach (var expectedContainedObject in expectedContainedObjects)
             {
-                return;
-            }
+                var containedObject = section.Objects.FirstOrDefault(candidate => candidate.RecordIndex == expectedContainedObject.RecordIndex);
+                Expect(containedObject is not null,
+                    $"{failurePrefix} for {document.Path} should preserve section object {expectedContainedObject.RecordIndex}");
+                if (containedObject is null)
+                {
+                    return;
+                }
 
-            Expect(containedObject.Top == expectedContainedObject.Top,
-                $"{failurePrefix} for {document.Path} should expose contained object top {expectedContainedObject.Top}");
-            Expect(containedObject.SectionRelativeTop == expectedContainedObject.SectionRelativeTop,
-                $"{failurePrefix} for {document.Path} should expose contained object relative top {expectedContainedObject.SectionRelativeTop}");
-            Expect((containedObject.Top + containedObject.Height) == expectedContainedObject.Bottom,
-                $"{failurePrefix} for {document.Path} should expose contained object bottom {expectedContainedObject.Bottom}");
-            Expect(containedObject.SectionRelativeBottom == expectedContainedObject.SectionRelativeBottom,
-                $"{failurePrefix} for {document.Path} should expose contained object relative bottom {expectedContainedObject.SectionRelativeBottom}");
+                Expect(containedObject.Top == expectedContainedObject.Top,
+                    $"{failurePrefix} for {document.Path} should expose contained object top {expectedContainedObject.Top}");
+                Expect(containedObject.SectionRelativeTop == expectedContainedObject.SectionRelativeTop,
+                    $"{failurePrefix} for {document.Path} should expose contained object relative top {expectedContainedObject.SectionRelativeTop}");
+                Expect((containedObject.Top + containedObject.Height) == expectedContainedObject.Bottom,
+                    $"{failurePrefix} for {document.Path} should expose contained object bottom {expectedContainedObject.Bottom}");
+                Expect(containedObject.SectionRelativeBottom == expectedContainedObject.SectionRelativeBottom,
+                    $"{failurePrefix} for {document.Path} should expose contained object relative bottom {expectedContainedObject.SectionRelativeBottom}");
+            }
         }
 
         var layoutTextValue = TryGetReportSectionLayoutTextValue(section, propertyName);

@@ -1061,6 +1061,105 @@ void test_build_report_layout_resolves_grouping_expression_for_deleted_blank_foo
     }
 }
 
+void test_build_report_layout_preserves_group_pairing_when_group_header_moves_below_footer() {
+    copperfin::studio::StudioDocumentModel document;
+    document.display_name = "group_header_moved.frx";
+    document.kind = copperfin::studio::StudioAssetKind::report;
+    document.table_preview_available = true;
+
+    document.table_preview.records = {
+        {
+            .record_index = 0U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "1"),
+                value("OBJCODE", "53")
+            }
+        },
+        {
+            .record_index = 1U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "3"),
+                value("EXPR", "customer.country", 111U),
+                value("VPOS", "500.000"),
+                value("HEIGHT", "600.000"),
+                value("UNIQUEID", "country-header-guid")
+            }
+        },
+        {
+            .record_index = 2U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "4"),
+                value("VPOS", "1200.000"),
+                value("HEIGHT", "2000.000")
+            }
+        },
+        {
+            .record_index = 3U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "5"),
+                value("EXPR", "customer.country", 112U),
+                value("VPOS", "0.000"),
+                value("HEIGHT", "500.000"),
+                value("UNIQUEID", "country-footer-guid")
+            }
+        }
+    };
+
+    const auto layout = copperfin::studio::build_report_layout(document);
+    expect(layout.groupings.size() == 1U,
+           "#3058: moved group headers should keep one grouping summary");
+    expect(layout.sections.size() == 3U,
+           "#3058: moved group headers should preserve live section counts");
+    if (layout.groupings.size() == 1U) {
+        const auto& grouping = layout.groupings[0];
+        expect(grouping.grouping_index == 0U,
+               "#3058: moved group headers should preserve zero-based grouping indexes");
+        expect(grouping.expression == "customer.country",
+               "#3058: moved group headers should preserve grouping expressions");
+        expect(grouping.header_section_id == "country-header-guid" &&
+                   grouping.header_record_index == 1U &&
+                   !grouping.header_deleted,
+               "#3058: moved group headers should keep the live header in the original grouping pair");
+        expect(grouping.footer_section_id == "country-footer-guid" &&
+                   grouping.footer_record_index == 3U &&
+                   !grouping.footer_deleted,
+               "#3058: moved group headers should keep the live footer in the original grouping pair");
+    }
+
+    if (layout.sections.size() == 3U) {
+        const auto header = std::find_if(layout.sections.begin(), layout.sections.end(), [](const auto& section) {
+            return section.record_index == 1U;
+        });
+        expect(header != layout.sections.end() &&
+                   header->grouping_context_available &&
+                   header->grouping_index == 0U &&
+                   header->grouping_role == "header" &&
+                   header->grouping_partner_section_id == "country-footer-guid" &&
+                   header->grouping_partner_record_index == 3U &&
+                   !header->grouping_partner_deleted,
+               "#3058: moved group headers should preserve header grouping context and footer partner identity");
+
+        const auto footer = std::find_if(layout.sections.begin(), layout.sections.end(), [](const auto& section) {
+            return section.record_index == 3U;
+        });
+        expect(footer != layout.sections.end() &&
+                   footer->grouping_context_available &&
+                   footer->grouping_index == 0U &&
+                   footer->grouping_role == "footer" &&
+                   footer->grouping_partner_section_id == "country-header-guid" &&
+                   footer->grouping_partner_record_index == 1U &&
+                   !footer->grouping_partner_deleted,
+               "#3058: moved group headers should preserve footer grouping context and header partner identity");
+    }
+}
+
 void test_build_report_layout_counts_deleted_objects_per_section() {
     copperfin::studio::StudioDocumentModel document;
     document.display_name = "section-deleted-objects.frx";
@@ -1688,6 +1787,7 @@ int main() {
     test_build_report_layout_summarizes_groupings();
     test_build_report_layout_resolves_grouping_expression_for_blank_footer();
     test_build_report_layout_resolves_grouping_expression_for_deleted_blank_footer();
+    test_build_report_layout_preserves_group_pairing_when_group_header_moves_below_footer();
     test_build_report_layout_counts_deleted_objects_per_section();
     test_build_report_layout_preserves_live_objects_in_deleted_sections();
     test_build_report_layout_summarizes_nested_mixed_state_groupings();
