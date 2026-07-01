@@ -8401,7 +8401,7 @@ internal static class Program
         string? selectedPath = null;
         CopperfinStudioNamedValue? sortSetting = null;
 
-        foreach (var candidatePath in sourcePaths)
+        foreach (var candidatePath in EnumerateResolvedRealReportAssetPaths(sourcePaths))
         {
             if (string.IsNullOrWhiteSpace(candidatePath) || !File.Exists(candidatePath))
             {
@@ -8489,7 +8489,7 @@ internal static class Program
         string? selectedPath = null;
         string? documentTitle = null;
 
-        foreach (var candidatePath in sourcePaths)
+        foreach (var candidatePath in EnumerateResolvedRealReportAssetPaths(sourcePaths))
         {
             if (string.IsNullOrWhiteSpace(candidatePath) || !File.Exists(candidatePath))
             {
@@ -8665,7 +8665,7 @@ internal static class Program
             "AssetEditor.ReportSection.Deleted",
             settingsScopeTitle);
 
-        foreach (var candidatePath in sourcePaths)
+        foreach (var candidatePath in EnumerateResolvedRealReportAssetPaths(sourcePaths))
         {
             if (string.IsNullOrWhiteSpace(candidatePath) || !File.Exists(candidatePath))
             {
