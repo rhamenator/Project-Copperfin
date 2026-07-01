@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using DiagnosticsProcess = System.Diagnostics.Process;
 using DiagnosticsStartInfo = System.Diagnostics.ProcessStartInfo;
@@ -52,9 +53,15 @@ internal static class CopperfinStudioHostBridge
         return arguments;
     }
 
-    public static string BuildUndoArguments(string documentPath)
+    public static string BuildUndoArguments(string documentPath, int? selectedRecordIndex = null)
     {
-        return $"--from-vs --json --undo-mode command --path {Quote(documentPath)}";
+        var arguments = "--from-vs --json --undo-mode command";
+        if (selectedRecordIndex.HasValue)
+        {
+            arguments += $" --record {selectedRecordIndex.Value}";
+        }
+
+        return $"{arguments} --path {Quote(documentPath)}";
     }
 
     public static string BuildDeleteObjectArguments(string documentPath, int recordIndex, string? uniqueId = null)
@@ -95,6 +102,25 @@ internal static class CopperfinStudioHostBridge
     {
         var arguments = BuildObjectLifecycleArguments(documentPath, "--reorder-object", recordIndex, uniqueId);
         return $"{arguments} --placement {Quote(placement)}";
+    }
+
+    public static string BuildNudgeObjectArguments(
+        string documentPath,
+        int recordIndex,
+        string? uniqueId,
+        string mode,
+        double deltaHpos,
+        double deltaVpos)
+    {
+        var arguments = $"--from-vs --json --record {recordIndex} --nudge-object --nudge-mode {Quote(mode)}" +
+                        $" --delta-hpos {deltaHpos.ToString(CultureInfo.InvariantCulture)}" +
+                        $" --delta-vpos {deltaVpos.ToString(CultureInfo.InvariantCulture)}";
+        if (!string.IsNullOrWhiteSpace(uniqueId))
+        {
+            arguments += $" --nudge-target-unique-id {Quote(uniqueId!)}";
+        }
+
+        return $"{arguments} --path {Quote(documentPath)}";
     }
 
     public static bool Launch(string studioHostPath, string documentPath, bool readOnly = false)

@@ -1665,6 +1665,44 @@ internal static class Program
                 expectLabel: true,
                 expectedOriginalUniqueId: "_QV30QY1DL",
                 expectedRenamedUniqueId: "LLIVEREN1");
+            SmokeAssetEditorNudgeCommandWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 7,
+                expectedSectionTitle: "Title",
+                expectedSectionRecordIndex: 1,
+                expectedObjectTitle: "\"Titles By Author\"",
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedUniqueId: "_RC60MC40R",
+                deltaHpos: 200,
+                deltaVpos: 300,
+                expectedOriginalRawHpos: "8645.833",
+                expectedOriginalRawVpos: "6666.667",
+                expectedUpdatedRawHpos: "8845.833",
+                expectedUpdatedRawVpos: "6966.667",
+                expectedOriginalLayoutHpos: 8645,
+                expectedOriginalLayoutVpos: 6666,
+                expectedUpdatedLayoutHpos: 8845,
+                expectedUpdatedLayoutVpos: 6966);
+            SmokeAssetEditorNudgeCommandWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 6,
+                expectedSectionTitle: "Detail",
+                expectedSectionRecordIndex: 3,
+                expectedObjectTitle: "wiz_field",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUniqueId: "_QV30QY1DL",
+                deltaHpos: 200,
+                deltaVpos: 300,
+                expectedOriginalRawHpos: "6250.000",
+                expectedOriginalRawVpos: "6666.667",
+                expectedUpdatedRawHpos: "6450",
+                expectedUpdatedRawVpos: "6966.667",
+                expectedOriginalLayoutHpos: 6250,
+                expectedOriginalLayoutVpos: 6666,
+                expectedUpdatedLayoutHpos: 6450,
+                expectedUpdatedLayoutVpos: 6966);
             SmokeAssetEditorSectionRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 1,
@@ -15511,6 +15549,297 @@ internal static class Program
         {
             Environment.SetEnvironmentVariable("COPPERFIN_RENAME_OBJECT_UNIQUE_ID", previousRenameUniqueId);
 
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
+    private static void SmokeAssetEditorNudgeCommandWithRealAsset(
+        string? sourcePath,
+        int recordIndex,
+        string expectedSectionTitle,
+        int expectedSectionRecordIndex,
+        string expectedObjectTitle,
+        int expectedSectionCount,
+        bool expectLabel,
+        string expectedUniqueId,
+        int deltaHpos,
+        int deltaVpos,
+        string expectedOriginalRawHpos,
+        string expectedOriginalRawVpos,
+        string expectedUpdatedRawHpos,
+        string expectedUpdatedRawVpos,
+        int expectedOriginalLayoutHpos,
+        int expectedOriginalLayoutVpos,
+        int expectedUpdatedLayoutHpos,
+        int expectedUpdatedLayoutVpos)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(sourcePath) ? "real asset editor nudge candidate" : sourcePath)} not found.");
+            return;
+        }
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmokeRealAssetEditorNudges-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateWritableAssetCopy(sourcePath!, tempRoot);
+
+        try
+        {
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+            control.LoadDocument(assetPath);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var deleteButton = GetPrivateButton(control, "deleteObjectButton");
+            var restoreButton = GetPrivateButton(control, "restoreObjectButton");
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface for the real nudge smoke.");
+
+            var loaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => sectionListView.Items.Count > 0);
+            Expect(loaded, $"real asset editor nudge smoke should load section data for {sourcePath}");
+            if (!loaded)
+            {
+                return;
+            }
+
+            foreach (ListViewItem item in sectionListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioReportSection section &&
+                                section.RecordIndex == expectedSectionRecordIndex;
+            }
+
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            Application.DoEvents();
+
+            var objectLoaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => objectListView.Items.Cast<ListViewItem>()
+                    .Any(item => item.Tag is CopperfinStudioSnapshotObject snapshotObject &&
+                                 snapshotObject.RecordIndex == recordIndex));
+            Expect(objectLoaded, $"real asset editor nudge smoke should surface object {recordIndex} for {sourcePath}");
+            if (!objectLoaded)
+            {
+                return;
+            }
+
+            foreach (ListViewItem item in objectListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioSnapshotObject snapshotObject &&
+                                snapshotObject.RecordIndex == recordIndex;
+            }
+
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(deleteButton.Visible &&
+                   deleteButton.Enabled &&
+                   !restoreButton.Visible &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == recordIndex,
+                $"real asset editor nudge smoke should start from a live object selection with original geometry exposed for {sourcePath}");
+
+            var nudgeHandled = InvokeAssetEditorObject(control, "TryHandleNudgeObjectCommand", "both", (double)deltaHpos, (double)deltaVpos);
+            Expect(nudgeHandled is bool handled && handled,
+                $"real asset editor nudge smoke should execute the shared nudge command for {sourcePath}");
+            Application.DoEvents();
+
+            var nudgedSelection = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
+                {
+                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                        refreshedSelection.RecordIndex != recordIndex)
+                    {
+                        return false;
+                    }
+
+                    var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault();
+                    var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
+                    var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
+                    var objectState = TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString();
+                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                           selectedSectionModel?.RecordIndex == expectedSectionRecordIndex &&
+                           selectedObject?.RecordIndex == recordIndex &&
+                           !selectedObject.Deleted &&
+                           string.Equals(selectedObject.Title, expectedObjectTitle, StringComparison.Ordinal) &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(selectedObject, "UNIQUEID"), expectedUniqueId, StringComparison.Ordinal) &&
+                           string.Equals(objectState, "Live", StringComparison.Ordinal) &&
+                           deleteButton.Visible &&
+                           deleteButton.Enabled &&
+                           !restoreButton.Visible &&
+                           string.Equals(ReadPrivateStringField(surface, "assetFamily"), expectLabel ? "label" : "report", StringComparison.Ordinal) &&
+                           ReadPrivateNullableInt(surface, "selectedRecordIndex") == recordIndex &&
+                           ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == expectedSectionRecordIndex &&
+                           !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected");
+                });
+            Expect(nudgedSelection,
+                $"real asset editor nudge smoke should preserve live section/object continuity after nudging for {sourcePath}");
+            Expect(control.CanHandleUndoCommand(),
+                $"real asset editor nudge smoke should expose undo after nudging for {sourcePath}");
+            if (!nudgedSelection)
+            {
+                return;
+            }
+
+            var reloadedAfterNudge = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterNudge.Success && reloadedAfterNudge.Document is not null,
+                $"real asset editor nudge smoke should reload nudged on-disk state for {sourcePath}");
+            if (reloadedAfterNudge.Success && reloadedAfterNudge.Document is not null)
+            {
+                AssertRealAssetRoundTripSnapshot(
+                    reloadedAfterNudge.Document,
+                    recordIndex,
+                    "HPOS",
+                    expectedUpdatedRawHpos,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectUnplacedObject: false,
+                    "reloaded real asset editor nudge snapshot should preserve HPOS");
+                AssertRealAssetRoundTripSnapshot(
+                    reloadedAfterNudge.Document,
+                    recordIndex,
+                    "VPOS",
+                    expectedUpdatedRawVpos,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectUnplacedObject: false,
+                    "reloaded real asset editor nudge snapshot should preserve VPOS");
+
+                var reloadedSection = reloadedAfterNudge.Document.ReportLayout?.Sections
+                    .FirstOrDefault(candidate => candidate.RecordIndex == expectedSectionRecordIndex);
+                var reloadedLayoutObject = reloadedSection?.Objects
+                    .FirstOrDefault(candidate => candidate.RecordIndex == recordIndex);
+                Expect(reloadedLayoutObject is not null,
+                    $"reloaded real asset editor nudge snapshot should preserve layout object {recordIndex} for {sourcePath}");
+                if (reloadedLayoutObject is not null)
+                {
+                    Expect(TryGetReportLayoutObjectValue(reloadedLayoutObject, "HPOS") == expectedUpdatedLayoutHpos,
+                        $"reloaded real asset editor nudge snapshot should expose layout HPOS={expectedUpdatedLayoutHpos} for {sourcePath}");
+                    Expect(TryGetReportLayoutObjectValue(reloadedLayoutObject, "VPOS") == expectedUpdatedLayoutVpos,
+                        $"reloaded real asset editor nudge snapshot should expose layout VPOS={expectedUpdatedLayoutVpos} for {sourcePath}");
+                }
+            }
+
+            var undoHandled = control.TryHandleUndoCommand();
+            Expect(undoHandled,
+                $"real asset editor nudge smoke should execute undo after nudging for {sourcePath}");
+            Application.DoEvents();
+
+            var undoneSelection = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
+                {
+                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                        refreshedSelection.RecordIndex != recordIndex)
+                    {
+                        return false;
+                    }
+
+                    var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault();
+                    var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
+                    var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
+                    var objectState = TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString();
+                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                           selectedSectionModel?.RecordIndex == expectedSectionRecordIndex &&
+                           selectedObject?.RecordIndex == recordIndex &&
+                           !selectedObject.Deleted &&
+                           string.Equals(selectedObject.Title, expectedObjectTitle, StringComparison.Ordinal) &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(selectedObject, "UNIQUEID"), expectedUniqueId, StringComparison.Ordinal) &&
+                           string.Equals(objectState, "Live", StringComparison.Ordinal) &&
+                           deleteButton.Visible &&
+                           deleteButton.Enabled &&
+                           !restoreButton.Visible &&
+                           string.Equals(ReadPrivateStringField(surface, "assetFamily"), expectLabel ? "label" : "report", StringComparison.Ordinal) &&
+                           ReadPrivateNullableInt(surface, "selectedRecordIndex") == recordIndex &&
+                           ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == expectedSectionRecordIndex &&
+                           !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected");
+                });
+            Expect(undoneSelection,
+                $"real asset editor nudge smoke should preserve live section/object continuity after undoing nudge for {sourcePath}");
+            Expect(!control.CanHandleUndoCommand(),
+                $"real asset editor nudge smoke should clear undo after restoring original geometry for {sourcePath}");
+
+            var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null,
+                $"real asset editor nudge smoke should reload restored on-disk state for {sourcePath}");
+            if (reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null)
+            {
+                AssertRealAssetRoundTripSnapshot(
+                    reloadedAfterUndo.Document,
+                    recordIndex,
+                    "HPOS",
+                    expectedOriginalRawHpos,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectUnplacedObject: false,
+                    "reloaded undone real asset editor nudge snapshot should preserve original HPOS");
+                AssertRealAssetRoundTripSnapshot(
+                    reloadedAfterUndo.Document,
+                    recordIndex,
+                    "VPOS",
+                    expectedOriginalRawVpos,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectUnplacedObject: false,
+                    "reloaded undone real asset editor nudge snapshot should preserve original VPOS");
+
+                var reloadedSection = reloadedAfterUndo.Document.ReportLayout?.Sections
+                    .FirstOrDefault(candidate => candidate.RecordIndex == expectedSectionRecordIndex);
+                var reloadedLayoutObject = reloadedSection?.Objects
+                    .FirstOrDefault(candidate => candidate.RecordIndex == recordIndex);
+                Expect(reloadedLayoutObject is not null,
+                    $"reloaded undone real asset editor nudge snapshot should preserve layout object {recordIndex} for {sourcePath}");
+                if (reloadedLayoutObject is not null)
+                {
+                    Expect(TryGetReportLayoutObjectValue(reloadedLayoutObject, "HPOS") == expectedOriginalLayoutHpos,
+                        $"reloaded undone real asset editor nudge snapshot should expose layout HPOS={expectedOriginalLayoutHpos} for {sourcePath}");
+                    Expect(TryGetReportLayoutObjectValue(reloadedLayoutObject, "VPOS") == expectedOriginalLayoutVpos,
+                        $"reloaded undone real asset editor nudge snapshot should expose layout VPOS={expectedOriginalLayoutVpos} for {sourcePath}");
+                }
+            }
+
+            TearDownForm(hostForm);
+        }
+        finally
+        {
             try
             {
                 if (Directory.Exists(tempRoot))

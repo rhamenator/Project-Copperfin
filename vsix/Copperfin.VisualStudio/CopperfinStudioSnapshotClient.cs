@@ -283,7 +283,7 @@ internal static class CopperfinStudioSnapshotClient
             propertyChanges);
     }
 
-    public static CopperfinStudioSnapshotResult TryUndoCommand(string assetPath)
+    public static CopperfinStudioSnapshotResult TryUndoCommand(string assetPath, int? selectedRecordIndex = null)
     {
         var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
         if (string.IsNullOrWhiteSpace(studioHostPath))
@@ -295,7 +295,7 @@ internal static class CopperfinStudioSnapshotClient
             };
         }
 
-        return RunSnapshotCommand(studioHostPath!, CopperfinStudioHostBridge.BuildUndoArguments(assetPath));
+        return RunSnapshotCommand(studioHostPath!, CopperfinStudioHostBridge.BuildUndoArguments(assetPath, selectedRecordIndex));
     }
 
     public static CopperfinStudioSnapshotResult TryDeleteObject(string assetPath, int recordIndex, string? uniqueId)
@@ -393,5 +393,34 @@ internal static class CopperfinStudioSnapshotClient
         return RunSnapshotCommand(
             studioHostPath!,
             CopperfinStudioHostBridge.BuildReorderObjectArguments(assetPath, recordIndex, uniqueId, placement));
+    }
+
+    public static CopperfinStudioSnapshotResult TryNudgeObject(
+        string assetPath,
+        int recordIndex,
+        string? uniqueId,
+        string mode,
+        double deltaHpos,
+        double deltaVpos)
+    {
+        var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
+        if (string.IsNullOrWhiteSpace(studioHostPath))
+        {
+            return new CopperfinStudioSnapshotResult
+            {
+                Success = false,
+                Error = Localization.Text("AssetEditor.Dialog.StudioHostMissing")
+            };
+        }
+
+        return RunSnapshotCommand(
+            studioHostPath!,
+            CopperfinStudioHostBridge.BuildNudgeObjectArguments(
+                assetPath,
+                recordIndex,
+                uniqueId,
+                mode,
+                deltaHpos,
+                deltaVpos));
     }
 }

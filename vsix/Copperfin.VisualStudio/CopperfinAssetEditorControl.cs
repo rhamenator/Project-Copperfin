@@ -686,7 +686,11 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         var selectedObjectRecordIndex = TryReadSelectedRecordIndex();
         snapshotStatusLabel.Text = BuildUndoExecutingStatus(priorLabel);
 
-        var undoResult = CopperfinStudioSnapshotClient.TryUndoCommand(currentPath!);
+        var undoResult = CopperfinStudioSnapshotClient.TryUndoCommand(
+            currentPath!,
+            currentSnapshot.AssetFamily is "report" or "label" && selectedObjectRecordIndex >= 0
+                ? selectedObjectRecordIndex
+                : null);
         if (!undoResult.Success || undoResult.Document is null)
         {
             snapshotStatusLabel.Text = BuildUndoFailedStatus(undoResult.Error);
@@ -1450,6 +1454,54 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             : selectedObjectRecordIndex;
         designSurface.SelectRecord(reorderedRecordIndex);
         SyncSelectionFromSurface(reorderedRecordIndex);
+        return true;
+    }
+
+    private bool TryHandleNudgeObjectCommand(string mode, double deltaHpos, double deltaVpos)
+    {
+        if (currentSnapshot?.AssetFamily is not ("report" or "label") || string.IsNullOrWhiteSpace(currentPath))
+        {
+            return false;
+        }
+
+        var selectedObject = TryGetSelectedSnapshotObject();
+        if (selectedObject is null)
+        {
+            return false;
+        }
+
+        var explorerSelection = CaptureExplorerSelectionState();
+        var selectedObjectRecordIndex = selectedObject.RecordIndex;
+        var uniqueId = TryReadObjectUniqueId(selectedObject);
+        var propertyNames = string.Equals(mode, "horizontal", StringComparison.OrdinalIgnoreCase)
+            ? new[] { "HPOS" }
+            : string.Equals(mode, "vertical", StringComparison.OrdinalIgnoreCase)
+                ? new[] { "VPOS" }
+                : new[] { "HPOS", "VPOS" };
+        var statusLabel = ResolvePropertyStatusLabels(propertyNames);
+        snapshotStatusLabel.Text = BuildPropertyApplyingStatusLabel(statusLabel);
+
+        var nudgeResult = CopperfinStudioSnapshotClient.TryNudgeObject(
+            currentPath!,
+            selectedObjectRecordIndex,
+            uniqueId,
+            mode,
+            deltaHpos,
+            deltaVpos);
+        if (!nudgeResult.Success || nudgeResult.Document is null)
+        {
+            snapshotStatusLabel.Text = BuildPropertyUpdateFailedStatus(nudgeResult.Error);
+            return false;
+        }
+
+        currentSnapshot = nudgeResult.Document;
+        detailsLabel.Text = BuildSnapshotDetailsText(new FileInfo(currentPath!), currentSnapshot);
+        snapshotStatusLabel.Text = BuildPropertyUpdatedStatusLabel(statusLabel, currentSnapshot);
+        PopulateSectionList(explorerSelection);
+        SyncExplorerSelection();
+        LoadSurface();
+        designSurface.SelectRecord(selectedObjectRecordIndex);
+        SyncSelectionFromSurface(selectedObjectRecordIndex);
         return true;
     }
 
