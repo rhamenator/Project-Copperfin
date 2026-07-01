@@ -515,6 +515,7 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
     {
         var key = settingName.ToUpperInvariant() switch
         {
+            "COLOR" => "AssetEditor.Property.Color",
             "DRIVER" => "AssetEditor.Property.PrinterDriver",
             "DEVICE" => "AssetEditor.Property.PrinterDevice",
             "OUTPUT" => "AssetEditor.Property.PrinterOutput",
@@ -547,6 +548,7 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
     private static bool IsNumericReportSetting(string settingName)
     {
         return settingName.ToUpperInvariant() is
+            "COLOR" or
             "DEFAULTSOURCE" or
             "PRINTQUALITY" or
             "YRESOLUTION" or
