@@ -228,6 +228,16 @@ internal static class Program
                 expectLabel: false,
                 expectedOriginalSectionObjectCount: 1,
                 expectedUpdatedSectionObjectCount: 2);
+            SmokeRealAssetHostBackedDuplicateRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 6,
+                duplicateUniqueId: "LDUPREAL1",
+                expectedSourceObjectTitle: "wiz_field",
+                expectedSectionTitle: "Detail",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedOriginalSectionObjectCount: 1,
+                expectedUpdatedSectionObjectCount: 2);
             SmokeRealAssetHostBackedDeleteRestoreRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 7,
@@ -585,6 +595,16 @@ internal static class Program
                 expectedSectionTitle: "Title",
                 expectedSectionCount: 6,
                 expectLabel: false,
+                expectedOriginalSectionObjectCount: 1,
+                expectedUpdatedSectionObjectCount: 2);
+            SmokeAssetEditorDuplicateCommandWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 6,
+                duplicateUniqueId: "LDUPREAL1",
+                expectedSourceObjectTitle: "wiz_field",
+                expectedSectionTitle: "Detail",
+                expectedSectionCount: 5,
+                expectLabel: true,
                 expectedOriginalSectionObjectCount: 1,
                 expectedUpdatedSectionObjectCount: 2);
             SmokeProjectEditorWithRealAsset(
@@ -10851,7 +10871,7 @@ internal static class Program
             var duplicateButton = GetPrivateButton(control, "duplicateObjectButton");
             var deleteButton = GetPrivateButton(control, "deleteObjectButton");
             var restoreButton = GetPrivateButton(control, "restoreObjectButton");
-            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface for the real duplicate smoke.");
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report/label design surface for the real duplicate smoke.");
 
             var loaded = WaitUntil(
                 TimeSpan.FromSeconds(8),
@@ -10927,7 +10947,7 @@ internal static class Program
                            deleteButton.Visible &&
                            deleteButton.Enabled &&
                            !restoreButton.Visible &&
-                           string.Equals(ReadPrivateStringField(surface, "assetFamily"), "report", StringComparison.Ordinal) &&
+                           string.Equals(ReadPrivateStringField(surface, "assetFamily"), expectLabel ? "label" : "report", StringComparison.Ordinal) &&
                            ReadPrivateNullableInt(surface, "selectedRecordIndex") == refreshedSelection.RecordIndex &&
                            !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected");
                 });
