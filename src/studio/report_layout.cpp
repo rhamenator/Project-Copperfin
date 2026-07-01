@@ -382,6 +382,8 @@ void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValu
     append_direct_setting("PAPERSIZE");
     append_direct_setting("TOPMARGIN");
     append_direct_setting("BOTMARGIN");
+    append_direct_setting("LEFTMARGIN");
+    append_direct_setting("RIGHTMARGIN");
     append_direct_setting("GRIDV");
     append_direct_setting("GRIDH");
     append_direct_setting("COLS");
@@ -491,6 +493,12 @@ void finalize_page_setup_summary(StudioReportLayoutSnapshot& snapshot) {
         snapshot.page_setup_available = true;
         snapshot.bottom_margin_available = true;
         snapshot.bottom_margin = value;
+    });
+    apply_setting("LEFTMARGIN", [&](int) {
+        snapshot.page_setup_available = true;
+    });
+    apply_setting("RIGHTMARGIN", [&](int) {
+        snapshot.page_setup_available = true;
     });
     apply_setting("GRIDV", [&](int value) {
         snapshot.page_setup_available = true;

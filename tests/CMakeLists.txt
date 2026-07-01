@@ -3163,6 +3163,10 @@ copperfin_add_test(test_report_layout_sort_settings cf_design_model
     test_report_layout_sort_settings.cpp
 )
 
+copperfin_add_test(test_report_layout_side_margin_settings cf_design_model
+    test_report_layout_side_margin_settings.cpp
+)
+
 copperfin_add_test(test_project_workspace cf_design_model
     test_project_workspace.cpp
 )

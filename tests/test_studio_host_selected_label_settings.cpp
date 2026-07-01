@@ -206,16 +206,18 @@ void write_synthetic_report_table_for_layout_json(const std::filesystem::path& r
         {.name = "FONTFACE", .type = 'M', .length = 4U},
         {.name = "TOPMARGIN", .type = 'N', .length = 10U},
         {.name = "TAG", .type = 'M', .length = 4U},
+        {.name = "LEFTMARGIN", .type = 'N', .length = 10U},
+        {.name = "RIGHTMARGIN", .type = 'N', .length = 10U},
         {.name = "UNIQUEID", .type = 'C', .length = 24U}
     };
     const std::vector<std::vector<std::string>> records{
-        {"1", "53", "ORIENTATION=0\nPAPERSIZE=1\nBOTMARGIN=20\nGRIDV=4\nGRIDH=8", "", "", "", "", "", "10", "customer.country", ""},
-        {"9", "1", "", "", "0", "", "2000", "", "", "", ""},
-        {"9", "4", "", "", "2000", "", "5000", "", "", "", ""},
-        {"8", "0", "customer.company", "1200", "2600", "4000", "450", "Segoe UI", "", "", "field-guid"},
-        {"5", "", "\"Invoice\"", "900", "100", "1800", "350", "", "", "", "label-guid"},
-        {"6", "", "", "50", "8000", "100", "100", "", "", "", ""},
-        {"5", "", "\"Deleted label\"", "1000", "2600", "1200", "300", "", "", "", ""}
+        {"1", "53", "ORIENTATION=0\nPAPERSIZE=1\nBOTMARGIN=20\nGRIDV=4\nGRIDH=8", "", "", "", "", "", "10", "customer.country", "15", "25", ""},
+        {"9", "1", "", "", "0", "", "2000", "", "", "", "", "", ""},
+        {"9", "4", "", "", "2000", "", "5000", "", "", "", "", "", ""},
+        {"8", "0", "customer.company", "1200", "2600", "4000", "450", "Segoe UI", "", "", "", "", "field-guid"},
+        {"5", "", "\"Invoice\"", "900", "100", "1800", "350", "", "", "", "", "", "label-guid"},
+        {"6", "", "", "50", "8000", "100", "100", "", "", "", "", "", ""},
+        {"5", "", "\"Deleted label\"", "1000", "2600", "1200", "300", "", "", "", "", "", ""}
     };
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
@@ -315,6 +317,10 @@ void test_studio_host_json_preserves_selected_label_settings(const std::string& 
                     "#1496: selected label settings should expose direct setting provenance");
     expect_contains(settings_process.stdout_text, "\"name\": \"TAG\", \"recordIndex\": 0, \"fieldIndex\": 9, \"sourceLineIndex\": null, \"memoBlockNumber\": 2, \"value\": \"customer.country\"",
                     "#2908: selected label settings should expose direct TAG sort-setting provenance");
+    expect_contains(settings_process.stdout_text, "\"name\": \"LEFTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 10, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"15\"",
+                    "#3014: selected label settings should expose direct LEFTMARGIN provenance");
+    expect_contains(settings_process.stdout_text, "\"name\": \"RIGHTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 11, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"25\"",
+                    "#3014: selected label settings should expose direct RIGHTMARGIN provenance");
     expect_contains(settings_process.stdout_text, "\"sectionCount\": 2",
                     "#1496: selected label settings JSON should preserve live section metadata");
     expect_contains(settings_process.stdout_text, "\"unplacedObjectCount\": 1",
@@ -389,7 +395,7 @@ void test_studio_host_json_preserves_selected_label_settings(const std::string& 
                     "#1505: selected deleted label settings should serialize null containing-object sections");
     expect_contains(deleted_settings_process.stdout_text, "\"settingCount\": 0",
                     "#1497: deleted selected label settings JSON should not expose live settings");
-    expect_contains(deleted_settings_process.stdout_text, "\"deletedSettingCount\": 7",
+    expect_contains(deleted_settings_process.stdout_text, "\"deletedSettingCount\": 9",
                     "#1497: deleted selected label settings JSON should expose deleted setting counts");
     expect_contains_in_order(
         deleted_settings_process.stdout_text,
@@ -407,10 +413,14 @@ void test_studio_host_json_preserves_selected_label_settings(const std::string& 
             "\"recordIndex\": 0",
             "\"name\": \"TOPMARGIN\"",
             "\"recordIndex\": 0",
+            "\"name\": \"LEFTMARGIN\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"RIGHTMARGIN\"",
+            "\"recordIndex\": 0",
             "\"name\": \"TAG\"",
             "\"recordIndex\": 0"
         },
-        "#2908: deleted label settings selections should expose selected deleted TAG-setting provenance");
+        "#3014: deleted label settings selections should expose selected deleted side-margin and TAG provenance");
     expect_contains(deleted_settings_process.stdout_text, "\"sectionCount\": 2",
                     "#1497: deleted selected label settings JSON should preserve live section metadata");
     expect_contains(deleted_settings_process.stdout_text, "\"deletedObjectCount\": 1",
