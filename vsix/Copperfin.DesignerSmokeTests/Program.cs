@@ -268,6 +268,46 @@ internal static class Program
                 expectedSectionTitle: "Detail",
                 expectedSectionCount: 5,
                 expectLabel: true);
+            SmokeRealAssetHostBackedPropertyRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 7,
+                propertyName: "FONTSTYLE",
+                originalValue: "3",
+                updatedValue: "1",
+                expectedObjectTitle: "\"Titles By Author\"",
+                expectedSectionTitle: "Title",
+                expectedSectionCount: 6,
+                expectLabel: false);
+            SmokeRealAssetHostBackedPropertyRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 6,
+                propertyName: "FONTSTYLE",
+                originalValue: "0",
+                updatedValue: "1",
+                expectedObjectTitle: "wiz_field",
+                expectedSectionTitle: "Detail",
+                expectedSectionCount: 5,
+                expectLabel: true);
+            SmokeRealAssetHostBackedPropertyRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 7,
+                propertyName: "FONTSIZE",
+                originalValue: "20",
+                updatedValue: "18",
+                expectedObjectTitle: "\"Titles By Author\"",
+                expectedSectionTitle: "Title",
+                expectedSectionCount: 6,
+                expectLabel: false);
+            SmokeRealAssetHostBackedPropertyRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 6,
+                propertyName: "FONTSIZE",
+                originalValue: "8",
+                updatedValue: "9",
+                expectedObjectTitle: "wiz_field",
+                expectedSectionTitle: "Detail",
+                expectedSectionCount: 5,
+                expectLabel: true);
             SmokeRealAssetHostBackedSectionRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 1,
@@ -620,6 +660,58 @@ internal static class Program
                 expectedUpdatedSelectionValue: "Calibri",
                 expectedUpdatedRawValue: "Calibri",
                 expectedOriginalRawValue: "Arial",
+                expectedObjectTitle: "wiz_field",
+                expectedSectionCount: 5,
+                expectLabel: true);
+            SmokeAssetEditorPropertyGridRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 7,
+                expectedSectionTitle: "Title",
+                propertyName: "FONTSTYLE",
+                updatedPropertyValue: 1,
+                expectedOriginalSelectionValue: "3",
+                expectedUpdatedSelectionValue: "1",
+                expectedUpdatedRawValue: "1",
+                expectedOriginalRawValue: "3",
+                expectedObjectTitle: "\"Titles By Author\"",
+                expectedSectionCount: 6,
+                expectLabel: false);
+            SmokeAssetEditorPropertyGridRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 6,
+                expectedSectionTitle: "Detail",
+                propertyName: "FONTSTYLE",
+                updatedPropertyValue: 1,
+                expectedOriginalSelectionValue: "0",
+                expectedUpdatedSelectionValue: "1",
+                expectedUpdatedRawValue: "1",
+                expectedOriginalRawValue: "0",
+                expectedObjectTitle: "wiz_field",
+                expectedSectionCount: 5,
+                expectLabel: true);
+            SmokeAssetEditorPropertyGridRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 7,
+                expectedSectionTitle: "Title",
+                propertyName: "FONTSIZE",
+                updatedPropertyValue: 18,
+                expectedOriginalSelectionValue: "20",
+                expectedUpdatedSelectionValue: "18",
+                expectedUpdatedRawValue: "18",
+                expectedOriginalRawValue: "20",
+                expectedObjectTitle: "\"Titles By Author\"",
+                expectedSectionCount: 6,
+                expectLabel: false);
+            SmokeAssetEditorPropertyGridRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 6,
+                expectedSectionTitle: "Detail",
+                propertyName: "FONTSIZE",
+                updatedPropertyValue: 9,
+                expectedOriginalSelectionValue: "8",
+                expectedUpdatedSelectionValue: "9",
+                expectedUpdatedRawValue: "9",
+                expectedOriginalRawValue: "8",
                 expectedObjectTitle: "wiz_field",
                 expectedSectionCount: 5,
                 expectLabel: true);
