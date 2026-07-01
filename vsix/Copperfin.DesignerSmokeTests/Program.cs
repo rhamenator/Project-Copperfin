@@ -302,6 +302,26 @@ internal static class Program
                 expectedSectionCount: 5,
                 expectLabel: true,
                 expectedDeletedSectionVisibleObjectCount: 1);
+            SmokeRealAssetHostBackedDeletedDuplicateRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 7,
+                expectedOriginalUniqueId: "_RC60MC40R",
+                expectedDuplicatedUniqueId: "RDELDUP1",
+                expectedObjectTitle: "\"Titles By Author\"",
+                expectedSectionTitle: "Title",
+                expectedSectionRecordIndex: 1,
+                expectedSectionCount: 6,
+                expectLabel: false);
+            SmokeRealAssetHostBackedDeletedDuplicateRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 6,
+                expectedOriginalUniqueId: "_QV30QY1DL",
+                expectedDuplicatedUniqueId: "LDELDUP1",
+                expectedObjectTitle: "wiz_field",
+                expectedSectionTitle: "Detail",
+                expectedSectionRecordIndex: 3,
+                expectedSectionCount: 5,
+                expectLabel: true);
             SmokeAssetEditorPropertyGridRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 7,
@@ -432,6 +452,26 @@ internal static class Program
                 expectedOriginalUniqueId: "_QV30QY1DL",
                 expectedRenamedUniqueId: "LDELREN1",
                 expectedDeletedSectionVisibleObjectCount: 1);
+            SmokeAssetEditorDeletedDuplicateCommandWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 7,
+                expectedSectionTitle: "Title",
+                expectedSectionRecordIndex: 1,
+                expectedObjectTitle: "\"Titles By Author\"",
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedOriginalUniqueId: "_RC60MC40R",
+                expectedDuplicatedUniqueId: "RDELDUP1");
+            SmokeAssetEditorDeletedDuplicateCommandWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 6,
+                expectedSectionTitle: "Detail",
+                expectedSectionRecordIndex: 3,
+                expectedObjectTitle: "wiz_field",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedOriginalUniqueId: "_QV30QY1DL",
+                expectedDuplicatedUniqueId: "LDELDUP1");
             SmokeAssetEditorSectionRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 1,
@@ -8397,6 +8437,246 @@ internal static class Program
         }
     }
 
+    private static void SmokeRealAssetHostBackedDeletedDuplicateRoundTrip(
+        string? sourcePath,
+        int recordIndex,
+        string expectedOriginalUniqueId,
+        string expectedDuplicatedUniqueId,
+        string expectedObjectTitle,
+        string expectedSectionTitle,
+        int expectedSectionRecordIndex,
+        int expectedSectionCount,
+        bool expectLabel)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(sourcePath) ? "real deleted duplicate candidate" : sourcePath)} not found.");
+            return;
+        }
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmokeRealAssetDeletedDuplicates-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateWritableAssetCopy(sourcePath!, tempRoot);
+
+        try
+        {
+            var deleteResult = CopperfinStudioSnapshotClient.TryDeleteObject(
+                assetPath,
+                recordIndex,
+                expectedOriginalUniqueId);
+            Expect(deleteResult.Success && deleteResult.Document is not null,
+                $"real deleted duplicate smoke should delete record {recordIndex} for {sourcePath}");
+            if (!deleteResult.Success || deleteResult.Document is null)
+            {
+                return;
+            }
+
+            AssertRealAssetDeletedObjectSnapshot(
+                deleteResult.Document,
+                recordIndex,
+                expectedOriginalUniqueId,
+                expectedObjectTitle,
+                expectedSectionTitle,
+                expectedSectionRecordIndex,
+                expectedSectionCount,
+                expectLabel,
+                expectedVisibleSectionObjectCount: 1,
+                "initial deleted real asset duplicate snapshot should preserve original identity");
+
+            var duplicateResult = CopperfinStudioSnapshotClient.TryDuplicateObject(
+                assetPath,
+                recordIndex,
+                expectedOriginalUniqueId,
+                expectedDuplicatedUniqueId);
+            Expect(duplicateResult.Success && duplicateResult.Document is not null,
+                $"real deleted duplicate smoke should duplicate deleted record {recordIndex} for {sourcePath}");
+            if (!duplicateResult.Success || duplicateResult.Document is null)
+            {
+                return;
+            }
+
+            var duplicatedObject = FindSnapshotObjectByUniqueId(duplicateResult.Document, expectedDuplicatedUniqueId);
+            Expect(duplicatedObject is not null,
+                $"real deleted duplicate smoke should surface duplicated deleted UNIQUEID {expectedDuplicatedUniqueId} for {sourcePath}");
+            if (duplicatedObject is null)
+            {
+                return;
+            }
+
+            Expect(duplicatedObject.RecordIndex != recordIndex,
+                $"real deleted duplicate smoke should assign a distinct record to the duplicated deleted row for {sourcePath}");
+
+            AssertRealAssetDeletedObjectSnapshot(
+                duplicateResult.Document,
+                recordIndex,
+                expectedOriginalUniqueId,
+                expectedObjectTitle,
+                expectedSectionTitle,
+                expectedSectionRecordIndex,
+                expectedSectionCount,
+                expectLabel,
+                expectedVisibleSectionObjectCount: 2,
+                expectedDeletedSectionObjectCount: 2,
+                "duplicated deleted real asset snapshot should preserve original deleted identity");
+            AssertRealAssetDeletedObjectSnapshot(
+                duplicateResult.Document,
+                duplicatedObject.RecordIndex,
+                expectedDuplicatedUniqueId,
+                expectedObjectTitle,
+                expectedSectionTitle,
+                expectedSectionRecordIndex,
+                expectedSectionCount,
+                expectLabel,
+                expectedVisibleSectionObjectCount: 2,
+                expectedDeletedSectionObjectCount: 2,
+                "duplicated deleted real asset snapshot should preserve duplicated deleted identity");
+            Expect(!duplicateResult.Document.CommandUndoAvailable,
+                $"real deleted duplicate smoke should not expose command undo after duplicating a deleted row for {sourcePath}");
+
+            var reloadedAfterDuplicate = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterDuplicate.Success && reloadedAfterDuplicate.Document is not null,
+                $"real deleted duplicate smoke should reload duplicated deleted snapshot data for {sourcePath}");
+            if (!reloadedAfterDuplicate.Success || reloadedAfterDuplicate.Document is null)
+            {
+                return;
+            }
+
+            var reloadedDuplicatedObject = FindSnapshotObjectByUniqueId(reloadedAfterDuplicate.Document, expectedDuplicatedUniqueId);
+            Expect(reloadedDuplicatedObject is not null,
+                $"reloaded deleted duplicate snapshot should preserve duplicated UNIQUEID {expectedDuplicatedUniqueId} for {sourcePath}");
+            if (reloadedDuplicatedObject is null)
+            {
+                return;
+            }
+
+            AssertRealAssetDeletedObjectSnapshot(
+                reloadedAfterDuplicate.Document,
+                recordIndex,
+                expectedOriginalUniqueId,
+                expectedObjectTitle,
+                expectedSectionTitle,
+                expectedSectionRecordIndex,
+                expectedSectionCount,
+                expectLabel,
+                expectedVisibleSectionObjectCount: 2,
+                expectedDeletedSectionObjectCount: 2,
+                "reloaded duplicated deleted real asset snapshot should preserve original deleted identity");
+            AssertRealAssetDeletedObjectSnapshot(
+                reloadedAfterDuplicate.Document,
+                reloadedDuplicatedObject.RecordIndex,
+                expectedDuplicatedUniqueId,
+                expectedObjectTitle,
+                expectedSectionTitle,
+                expectedSectionRecordIndex,
+                expectedSectionCount,
+                expectLabel,
+                expectedVisibleSectionObjectCount: 2,
+                expectedDeletedSectionObjectCount: 2,
+                "reloaded duplicated deleted real asset snapshot should preserve duplicated deleted identity");
+            Expect(!reloadedAfterDuplicate.Document.CommandUndoAvailable,
+                $"reloaded deleted duplicate snapshot should not expose command undo for {sourcePath}");
+
+            var restoreResult = CopperfinStudioSnapshotClient.TryRestoreObject(
+                assetPath,
+                duplicatedObject.RecordIndex,
+                expectedDuplicatedUniqueId);
+            Expect(restoreResult.Success && restoreResult.Document is not null,
+                $"real deleted duplicate smoke should restore duplicated record {duplicatedObject.RecordIndex} for {sourcePath}");
+            if (!restoreResult.Success || restoreResult.Document is null)
+            {
+                return;
+            }
+
+            AssertRealAssetDeletedObjectSnapshot(
+                restoreResult.Document,
+                recordIndex,
+                expectedOriginalUniqueId,
+                expectedObjectTitle,
+                expectedSectionTitle,
+                expectedSectionRecordIndex,
+                expectedSectionCount,
+                expectLabel,
+                expectedVisibleSectionObjectCount: 2,
+                "restored deleted duplicate snapshot should preserve the original deleted source row");
+            AssertRealAssetRoundTripSnapshot(
+                restoreResult.Document,
+                duplicatedObject.RecordIndex,
+                "UNIQUEID",
+                expectedDuplicatedUniqueId,
+                expectedObjectTitle,
+                expectedSectionTitle,
+                expectedSectionCount,
+                expectLabel,
+                expectUnplacedObject: false,
+                "restored deleted duplicate snapshot should preserve the restored duplicated identity");
+            AssertRealAssetSectionObjectCount(
+                restoreResult.Document,
+                expectedSectionTitle,
+                expectedObjectCount: 1,
+                "restored deleted duplicate snapshot should preserve section live object counts");
+
+            var reloadedAfterRestore = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterRestore.Success && reloadedAfterRestore.Document is not null,
+                $"real deleted duplicate smoke should reload restored live snapshot data for {sourcePath}");
+            if (!reloadedAfterRestore.Success || reloadedAfterRestore.Document is null)
+            {
+                return;
+            }
+
+            var reloadedRestoredObject = FindSnapshotObjectByUniqueId(reloadedAfterRestore.Document, expectedDuplicatedUniqueId);
+            Expect(reloadedRestoredObject is not null,
+                $"reloaded restored deleted duplicate snapshot should preserve duplicated UNIQUEID {expectedDuplicatedUniqueId} for {sourcePath}");
+            if (reloadedRestoredObject is null)
+            {
+                return;
+            }
+
+            AssertRealAssetDeletedObjectSnapshot(
+                reloadedAfterRestore.Document,
+                recordIndex,
+                expectedOriginalUniqueId,
+                expectedObjectTitle,
+                expectedSectionTitle,
+                expectedSectionRecordIndex,
+                expectedSectionCount,
+                expectLabel,
+                expectedVisibleSectionObjectCount: 2,
+                "reloaded restored deleted duplicate snapshot should preserve the original deleted source row");
+            AssertRealAssetRoundTripSnapshot(
+                reloadedAfterRestore.Document,
+                reloadedRestoredObject.RecordIndex,
+                "UNIQUEID",
+                expectedDuplicatedUniqueId,
+                expectedObjectTitle,
+                expectedSectionTitle,
+                expectedSectionCount,
+                expectLabel,
+                expectUnplacedObject: false,
+                "reloaded restored deleted duplicate snapshot should preserve the restored duplicated identity");
+            AssertRealAssetSectionObjectCount(
+                reloadedAfterRestore.Document,
+                expectedSectionTitle,
+                expectedObjectCount: 1,
+                "reloaded restored deleted duplicate snapshot should preserve section live object counts");
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeAssetEditorPropertyGridRoundTripWithRealAsset(
         string? sourcePath,
         int recordIndex,
@@ -9518,6 +9798,331 @@ internal static class Program
         finally
         {
             Environment.SetEnvironmentVariable("COPPERFIN_RENAME_OBJECT_UNIQUE_ID", previousRenameUniqueId);
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
+    private static void SmokeAssetEditorDeletedDuplicateCommandWithRealAsset(
+        string? sourcePath,
+        int recordIndex,
+        string expectedSectionTitle,
+        int expectedSectionRecordIndex,
+        string expectedObjectTitle,
+        int expectedSectionCount,
+        bool expectLabel,
+        string expectedOriginalUniqueId,
+        string expectedDuplicatedUniqueId)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(sourcePath) ? "real asset editor deleted duplicate candidate" : sourcePath)} not found.");
+            return;
+        }
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmokeRealAssetEditorDeletedDuplicates-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateWritableAssetCopy(sourcePath!, tempRoot);
+        var previousDuplicateUniqueId = Environment.GetEnvironmentVariable("COPPERFIN_DUPLICATE_OBJECT_UNIQUE_ID");
+
+        try
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_DUPLICATE_OBJECT_UNIQUE_ID", expectedDuplicatedUniqueId);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+            control.LoadDocument(assetPath);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var renameButton = GetPrivateButton(control, "renameObjectButton");
+            var duplicateButton = GetPrivateButton(control, "duplicateObjectButton");
+            var deleteButton = GetPrivateButton(control, "deleteObjectButton");
+            var restoreButton = GetPrivateButton(control, "restoreObjectButton");
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface for the real deleted-duplicate smoke.");
+
+            var loaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => sectionListView.Items.Count > 0);
+            Expect(loaded, $"real asset editor deleted-duplicate smoke should load section data for {sourcePath}");
+            if (!loaded)
+            {
+                return;
+            }
+
+            foreach (ListViewItem item in sectionListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioReportSection section &&
+                                section.RecordIndex == expectedSectionRecordIndex;
+            }
+
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            Application.DoEvents();
+
+            var objectLoaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => objectListView.Items.Cast<ListViewItem>()
+                    .Any(item => item.Tag is CopperfinStudioSnapshotObject snapshotObject &&
+                                 snapshotObject.RecordIndex == recordIndex));
+            Expect(objectLoaded, $"real asset editor deleted-duplicate smoke should surface object {recordIndex} for {sourcePath}");
+            if (!objectLoaded)
+            {
+                return;
+            }
+
+            foreach (ListViewItem item in objectListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioSnapshotObject snapshotObject &&
+                                snapshotObject.RecordIndex == recordIndex;
+            }
+
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(renameButton.Visible &&
+                   renameButton.Enabled &&
+                   duplicateButton.Visible &&
+                   duplicateButton.Enabled &&
+                   deleteButton.Visible &&
+                   deleteButton.Enabled &&
+                   !restoreButton.Visible &&
+                   objectListView.Items.Count == 1 &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == recordIndex,
+                $"real asset editor deleted-duplicate smoke should start from a live object selection with rename, duplicate, and delete exposed for {sourcePath}");
+
+            deleteButton.PerformClick();
+            Application.DoEvents();
+
+            var deletedSelection = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
+                {
+                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                        refreshedSelection.RecordIndex != recordIndex)
+                    {
+                        return false;
+                    }
+
+                    var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault();
+                    var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
+                    var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
+                    var objectState = TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString();
+                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                           selectedSectionModel?.RecordIndex == expectedSectionRecordIndex &&
+                           selectedSectionModel?.DeletedObjectCount == 1 &&
+                           selectedObject?.RecordIndex == recordIndex &&
+                           selectedObject.Deleted &&
+                           string.Equals(selectedObject.Title, expectedObjectTitle, StringComparison.Ordinal) &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(selectedObject, "UNIQUEID"), expectedOriginalUniqueId, StringComparison.Ordinal) &&
+                           string.Equals(objectState, "Deleted", StringComparison.Ordinal) &&
+                           objectListView.Items.Count == 1 &&
+                           renameButton.Visible &&
+                           renameButton.Enabled &&
+                           duplicateButton.Visible &&
+                           duplicateButton.Enabled &&
+                           !deleteButton.Visible &&
+                           restoreButton.Visible &&
+                           restoreButton.Enabled &&
+                           string.Equals(ReadPrivateStringField(surface, "assetFamily"), expectLabel ? "label" : "report", StringComparison.Ordinal) &&
+                           ReadPrivateNullableInt(surface, "selectedRecordIndex") == recordIndex &&
+                           ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == expectedSectionRecordIndex &&
+                           !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected");
+                });
+            Expect(deletedSelection,
+                $"real asset editor deleted-duplicate smoke should preserve deleted selection continuity before duplicating for {sourcePath}");
+
+            duplicateButton.PerformClick();
+            Application.DoEvents();
+
+            int duplicatedRecordIndex = -1;
+            var duplicatedSelection = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
+                {
+                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                        refreshedSelection.RecordIndex == recordIndex)
+                    {
+                        return false;
+                    }
+
+                    var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault();
+                    var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
+                    var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
+                    var objectState = TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString();
+                    var selectedUniqueId = selectedObject is null
+                        ? null
+                        : TryGetSnapshotObjectPropertyValue(selectedObject, "UNIQUEID");
+                    if (string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                        selectedSectionModel?.RecordIndex == expectedSectionRecordIndex &&
+                        selectedSectionModel?.DeletedObjectCount == 2 &&
+                        selectedObject?.RecordIndex == refreshedSelection.RecordIndex &&
+                        selectedObject.Deleted &&
+                        string.Equals(selectedObject.Title, expectedObjectTitle, StringComparison.Ordinal) &&
+                        string.Equals(selectedUniqueId, expectedDuplicatedUniqueId, StringComparison.Ordinal) &&
+                        string.Equals(objectState, "Deleted", StringComparison.Ordinal) &&
+                        objectListView.Items.Count == 2 &&
+                        renameButton.Visible &&
+                        renameButton.Enabled &&
+                        duplicateButton.Visible &&
+                        duplicateButton.Enabled &&
+                        !deleteButton.Visible &&
+                        restoreButton.Visible &&
+                        restoreButton.Enabled &&
+                        string.Equals(ReadPrivateStringField(surface, "assetFamily"), expectLabel ? "label" : "report", StringComparison.Ordinal) &&
+                        ReadPrivateNullableInt(surface, "selectedRecordIndex") == refreshedSelection.RecordIndex &&
+                        ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == expectedSectionRecordIndex &&
+                        !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"))
+                    {
+                        duplicatedRecordIndex = refreshedSelection.RecordIndex;
+                        return true;
+                    }
+
+                    return false;
+                });
+            Expect(duplicatedSelection,
+                $"real asset editor deleted-duplicate smoke should preserve deleted section/object continuity after duplicating for {sourcePath}");
+            Expect(!control.CanHandleUndoCommand(),
+                $"real asset editor deleted-duplicate smoke should not expose undo after duplicating a deleted row for {sourcePath}");
+            if (!duplicatedSelection)
+            {
+                return;
+            }
+
+            var reloadedAfterDuplicate = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterDuplicate.Success && reloadedAfterDuplicate.Document is not null,
+                $"real asset editor deleted-duplicate smoke should reload duplicated deleted on-disk state for {sourcePath}");
+            if (reloadedAfterDuplicate.Success && reloadedAfterDuplicate.Document is not null)
+            {
+                AssertRealAssetDeletedObjectSnapshot(
+                    reloadedAfterDuplicate.Document,
+                    recordIndex,
+                    expectedOriginalUniqueId,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionRecordIndex,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectedVisibleSectionObjectCount: 2,
+                    expectedDeletedSectionObjectCount: 2,
+                    "reloaded real asset editor deleted-duplicate snapshot should preserve original deleted identity");
+                AssertRealAssetDeletedObjectSnapshot(
+                    reloadedAfterDuplicate.Document,
+                    duplicatedRecordIndex,
+                    expectedDuplicatedUniqueId,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionRecordIndex,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectedVisibleSectionObjectCount: 2,
+                    expectedDeletedSectionObjectCount: 2,
+                    "reloaded real asset editor deleted-duplicate snapshot should preserve duplicated deleted identity");
+            }
+
+            restoreButton.PerformClick();
+            Application.DoEvents();
+
+            var restoredSelection = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
+                {
+                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                        refreshedSelection.RecordIndex != duplicatedRecordIndex)
+                    {
+                        return false;
+                    }
+
+                    var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault();
+                    var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
+                    var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
+                    var objectState = TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString();
+                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                           selectedSectionModel?.RecordIndex == expectedSectionRecordIndex &&
+                           selectedSectionModel?.DeletedObjectCount == 1 &&
+                           selectedObject?.RecordIndex == duplicatedRecordIndex &&
+                           !selectedObject.Deleted &&
+                           string.Equals(selectedObject.Title, expectedObjectTitle, StringComparison.Ordinal) &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(selectedObject, "UNIQUEID"), expectedDuplicatedUniqueId, StringComparison.Ordinal) &&
+                           string.Equals(objectState, "Live", StringComparison.Ordinal) &&
+                           objectListView.Items.Count == 2 &&
+                           renameButton.Visible &&
+                           renameButton.Enabled &&
+                           duplicateButton.Visible &&
+                           duplicateButton.Enabled &&
+                           deleteButton.Visible &&
+                           deleteButton.Enabled &&
+                           !restoreButton.Visible &&
+                           string.Equals(ReadPrivateStringField(surface, "assetFamily"), expectLabel ? "label" : "report", StringComparison.Ordinal) &&
+                           ReadPrivateNullableInt(surface, "selectedRecordIndex") == duplicatedRecordIndex &&
+                           ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == expectedSectionRecordIndex &&
+                           !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected");
+                });
+            Expect(restoredSelection,
+                $"real asset editor deleted-duplicate smoke should preserve live continuity after restoring the duplicated row for {sourcePath}");
+
+            var reloadedAfterRestore = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterRestore.Success && reloadedAfterRestore.Document is not null,
+                $"real asset editor deleted-duplicate smoke should reload restored live state for {sourcePath}");
+            if (reloadedAfterRestore.Success && reloadedAfterRestore.Document is not null)
+            {
+                AssertRealAssetDeletedObjectSnapshot(
+                    reloadedAfterRestore.Document,
+                    recordIndex,
+                    expectedOriginalUniqueId,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionRecordIndex,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectedVisibleSectionObjectCount: 2,
+                    "reloaded restored real asset editor deleted-duplicate snapshot should preserve the original deleted source row");
+                AssertRealAssetRoundTripSnapshot(
+                    reloadedAfterRestore.Document,
+                    duplicatedRecordIndex,
+                    "UNIQUEID",
+                    expectedDuplicatedUniqueId,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectUnplacedObject: false,
+                    "reloaded restored real asset editor deleted-duplicate snapshot should preserve duplicated live identity");
+            }
+
+            TearDownForm(hostForm);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_DUPLICATE_OBJECT_UNIQUE_ID", previousDuplicateUniqueId);
 
             try
             {
@@ -10834,6 +11439,33 @@ internal static class Program
         int expectedVisibleSectionObjectCount,
         string failurePrefix)
     {
+        AssertRealAssetDeletedObjectSnapshot(
+            document,
+            recordIndex,
+            expectedUniqueId,
+            expectedObjectTitle,
+            expectedSectionTitle,
+            expectedSectionRecordIndex,
+            expectedSectionCount,
+            expectLabel,
+            expectedVisibleSectionObjectCount,
+            expectedDeletedSectionObjectCount: 1,
+            failurePrefix);
+    }
+
+    private static void AssertRealAssetDeletedObjectSnapshot(
+        CopperfinStudioSnapshotDocument document,
+        int recordIndex,
+        string expectedUniqueId,
+        string expectedObjectTitle,
+        string expectedSectionTitle,
+        int expectedSectionRecordIndex,
+        int expectedSectionCount,
+        bool expectLabel,
+        int expectedVisibleSectionObjectCount,
+        int expectedDeletedSectionObjectCount,
+        string failurePrefix)
+    {
         Expect(document.ReportLayout is not null,
             $"{failurePrefix} for {document.Path} should include a report layout");
         if (document.ReportLayout is null)
@@ -10859,8 +11491,8 @@ internal static class Program
 
         Expect(string.Equals(section.Title, expectedSectionTitle, StringComparison.OrdinalIgnoreCase),
             $"{failurePrefix} for {document.Path} should preserve containing section '{expectedSectionTitle}'");
-        Expect(section.DeletedObjectCount == 1,
-            $"{failurePrefix} for {document.Path} should expose one deleted object in section '{expectedSectionTitle}'");
+        Expect(section.DeletedObjectCount == expectedDeletedSectionObjectCount,
+            $"{failurePrefix} for {document.Path} should expose {expectedDeletedSectionObjectCount} deleted objects in section '{expectedSectionTitle}'");
 
         var deletedLayoutObject = document.ReportLayout.DeletedObjects
             .FirstOrDefault(candidate => candidate.RecordIndex == recordIndex);
