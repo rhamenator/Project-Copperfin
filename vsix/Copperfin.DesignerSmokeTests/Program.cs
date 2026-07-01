@@ -97,6 +97,7 @@ internal static class Program
         SmokeAssetEditorMatchHeightObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorMatchSizeObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorDistributeHorizontallyObjectCommandRefreshesReportShellSummary();
+        SmokeAssetEditorDistributeVerticallyObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorSnapToGridObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorDeleteObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorRestoreObjectCommandRefreshesReportShellSummary();
@@ -116,6 +117,7 @@ internal static class Program
         SmokeAssetEditorMatchHeightObjectCommandRefreshesLabelShellSummary();
         SmokeAssetEditorMatchSizeObjectCommandRefreshesLabelShellSummary();
         SmokeAssetEditorDistributeHorizontallyObjectCommandRefreshesLabelShellSummary();
+        SmokeAssetEditorDistributeVerticallyObjectCommandRefreshesLabelShellSummary();
         SmokeAssetEditorSnapToGridObjectCommandRefreshesLabelShellSummary();
         SmokeAssetEditorDeleteObjectCommandRefreshesLabelShellSummary();
         SmokeAssetEditorRestoreObjectCommandRefreshesLabelShellSummary();
@@ -1846,6 +1848,19 @@ internal static class Program
                 expectedUpdatedFocusedRawHpos: "364.583",
                 expectedOriginalFocusedLayoutHpos: 416,
                 expectedUpdatedFocusedLayoutHpos: 364);
+            SmokeAssetEditorDistributeVerticallyCommandWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLE3V.FRX"),
+                selectedRecordIndexes: new[] { 12, 13, 11 },
+                focusedRecordIndex: 13,
+                expectedSectionTitle: "Page Header",
+                expectedSectionRecordIndex: 2,
+                expectedFocusedObjectTitle: "\"TITLE\"",
+                expectedSectionCount: 4,
+                expectedFocusedUniqueId: "_QVL0O0NVK",
+                expectedOriginalFocusedRawVpos: "3541.667",
+                expectedUpdatedFocusedRawVpos: "4427.083",
+                expectedOriginalFocusedLayoutVpos: 3541,
+                expectedUpdatedFocusedLayoutVpos: 4427);
             SmokeAssetEditorSectionRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 1,
@@ -6851,6 +6866,169 @@ internal static class Program
         }
     }
 
+    private static void SmokeAssetEditorDistributeVerticallyObjectCommandRefreshesReportShellSummary()
+    {
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            Console.WriteLine("SKIP: shared asset-editor distribute-vertical smoke requires a POSIX scriptable fake Studio host.");
+            return;
+        }
+
+        var snapshot = BuildAssetEditorDistributeVerticalReportObjectSmokeSnapshot();
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
+        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var logPath = Path.Combine(tempRoot, "studio-host.log");
+        var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
+
+        try
+        {
+            File.WriteAllText(logPath, string.Empty);
+            CreateFakeStudioHostScript(scriptPath, BuildDistributeVerticalReportObjectHostResponseJson());
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", scriptPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", logPath);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+
+            ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+            SetPrivateField(control, "currentPath", assetPath);
+            GetPrivateLabel(control, "detailsLabel").Text = InvokeAssetEditorString(control, "BuildSnapshotDetailsText", new FileInfo(assetPath), snapshot);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            sectionListView.Items[0].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            InvokeAssetEditorVoid(control, "LoadSurface");
+            Application.DoEvents();
+
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var alignLeftButton = GetPrivateButton(control, "alignLeftObjectButton");
+            var distributeHorizontalButton = GetPrivateButton(control, "distributeHorizontalObjectButton");
+            var distributeVerticalButton = GetPrivateButton(control, "distributeVerticalObjectButton");
+            var duplicateButton = GetPrivateButton(control, "duplicateObjectButton");
+            var reorderFrontButton = GetPrivateButton(control, "reorderFrontObjectButton");
+            var reorderBackButton = GetPrivateButton(control, "reorderBackObjectButton");
+            var deleteButton = GetPrivateButton(control, "deleteObjectButton");
+            var restoreButton = GetPrivateButton(control, "restoreObjectButton");
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface.");
+
+            objectListView.Items[0].Selected = true;
+            objectListView.Items[1].Selected = true;
+            objectListView.Items[1].Focused = true;
+            objectListView.Items[2].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(objectListView.Items.Cast<ListViewItem>().Select(item => item.Text).SequenceEqual(new[] { "first.value", "middle.value", "last.value" }) &&
+                   alignLeftButton.Visible &&
+                   alignLeftButton.Enabled &&
+                   distributeHorizontalButton.Visible &&
+                   distributeHorizontalButton.Enabled &&
+                   distributeVerticalButton.Visible &&
+                   distributeVerticalButton.Enabled &&
+                   !duplicateButton.Visible &&
+                   !reorderFrontButton.Visible &&
+                   !reorderBackButton.Visible &&
+                   !deleteButton.Visible &&
+                   !restoreButton.Visible &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == 7 &&
+                   string.Equals(ReadSelectionPropertyValue(initialSelection, "VPOS"), "2700", StringComparison.Ordinal),
+                "A report distribute-vertical smoke should start from a three-object live selection with the focused row selected in the shared property grid");
+
+            distributeVerticalButton.PerformClick();
+            Application.DoEvents();
+
+            var logLines = File.ReadAllLines(logPath);
+            var invocationStartCount = logLines.Count(line => string.Equals(line, "BEGIN", StringComparison.Ordinal));
+            Expect(invocationStartCount == 1,
+                "Distributing report objects vertically through the shared asset editor should invoke the Studio host exactly once");
+
+            var invocationArguments = logLines.Skip(1).ToList();
+            Expect(invocationArguments.Contains("--from-vs") &&
+                   invocationArguments.Contains("--json") &&
+                   invocationArguments.Contains("--distribute-object") &&
+                   invocationArguments.Contains("--distribution-mode") &&
+                   invocationArguments.Contains("vertical") &&
+                   invocationArguments.Contains("--record") &&
+                   invocationArguments.Contains("7") &&
+                   invocationArguments.Count(argument => string.Equals(argument, "--distribute-target-unique-id", StringComparison.Ordinal)) == 3 &&
+                   invocationArguments.Contains("first-field-guid") &&
+                   invocationArguments.Contains("middle-field-guid") &&
+                   invocationArguments.Contains("last-field-guid") &&
+                   invocationArguments.Contains("--path") &&
+                   invocationArguments.Contains(assetPath),
+                "Distributing report objects vertically through the shared asset editor should send one invariant distribute-object command through the host contract");
+
+            var refreshedSnapshot = GetCurrentSnapshot(control);
+            var distributedObject = refreshedSnapshot.Objects.FirstOrDefault(item => item.RecordIndex == 7);
+            Expect(HasLabelTextContaining(control, "Distributed objects vertically. Snapshot loaded: 3 object rows, 5 fields.") &&
+                   string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Detail", StringComparison.Ordinal) &&
+                   objectListView.SelectedItems.Count == 3 &&
+                   string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault(item => item.Focused)?.SubItems[2].Text, "7", StringComparison.Ordinal) &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
+                   refreshedSelection.RecordIndex == 7 &&
+                   string.Equals(ReadSelectionPropertyValue(refreshedSelection, "VPOS"), "3300", StringComparison.Ordinal) &&
+                   alignLeftButton.Visible &&
+                   alignLeftButton.Enabled &&
+                   distributeHorizontalButton.Visible &&
+                   distributeHorizontalButton.Enabled &&
+                   distributeVerticalButton.Visible &&
+                   distributeVerticalButton.Enabled &&
+                   !duplicateButton.Visible &&
+                   !reorderFrontButton.Visible &&
+                   !reorderBackButton.Visible &&
+                   !deleteButton.Visible &&
+                   !restoreButton.Visible &&
+                   distributedObject is not null &&
+                   string.Equals(TryGetSnapshotObjectPropertyValue(distributedObject, "UNIQUEID"), "middle-field-guid", StringComparison.Ordinal) &&
+                   string.Equals(TryGetSnapshotObjectPropertyValue(distributedObject, "VPOS"), "3300", StringComparison.Ordinal) &&
+                   string.Equals(TryGetSnapshotObjectPropertyValue(distributedObject, "HPOS"), "1600", StringComparison.Ordinal) &&
+                   string.Equals(ReadPrivateStringField(surface, "assetFamily"), "report", StringComparison.Ordinal) &&
+                   ReadPrivateNullableInt(surface, "selectedRecordIndex") == 7 &&
+                   ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
+                   !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+                "Distributing report objects vertically through the shared asset editor should preserve focused multi-selection continuity and refresh the distributed geometry");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", previousLogPath);
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeAssetEditorSnapToGridObjectCommandRefreshesReportShellSummary()
     {
         if (Path.DirectorySeparatorChar == '\\')
@@ -9558,6 +9736,169 @@ internal static class Program
                    ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
                    !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
                 "Distributing label objects horizontally through the shared asset editor should preserve focused multi-selection continuity and refresh the distributed geometry");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", previousLogPath);
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
+    private static void SmokeAssetEditorDistributeVerticallyObjectCommandRefreshesLabelShellSummary()
+    {
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            Console.WriteLine("SKIP: shared asset-editor label distribute-vertical smoke requires a POSIX scriptable fake Studio host.");
+            return;
+        }
+
+        var snapshot = BuildAssetEditorDistributeVerticalLabelObjectSmokeSnapshot();
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
+        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var logPath = Path.Combine(tempRoot, "studio-host.log");
+        var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
+
+        try
+        {
+            File.WriteAllText(logPath, string.Empty);
+            CreateFakeStudioHostScript(scriptPath, BuildDistributeVerticalLabelObjectHostResponseJson());
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", scriptPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", logPath);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+
+            ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+            SetPrivateField(control, "currentPath", assetPath);
+            GetPrivateLabel(control, "detailsLabel").Text = InvokeAssetEditorString(control, "BuildSnapshotDetailsText", new FileInfo(assetPath), snapshot);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            sectionListView.Items[0].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            InvokeAssetEditorVoid(control, "LoadSurface");
+            Application.DoEvents();
+
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var alignLeftButton = GetPrivateButton(control, "alignLeftObjectButton");
+            var distributeHorizontalButton = GetPrivateButton(control, "distributeHorizontalObjectButton");
+            var distributeVerticalButton = GetPrivateButton(control, "distributeVerticalObjectButton");
+            var duplicateButton = GetPrivateButton(control, "duplicateObjectButton");
+            var reorderFrontButton = GetPrivateButton(control, "reorderFrontObjectButton");
+            var reorderBackButton = GetPrivateButton(control, "reorderBackObjectButton");
+            var deleteButton = GetPrivateButton(control, "deleteObjectButton");
+            var restoreButton = GetPrivateButton(control, "restoreObjectButton");
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface.");
+
+            objectListView.Items[0].Selected = true;
+            objectListView.Items[1].Selected = true;
+            objectListView.Items[1].Focused = true;
+            objectListView.Items[2].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(objectListView.Items.Cast<ListViewItem>().Select(item => item.Text).SequenceEqual(new[] { "first.value", "middle.value", "last.value" }) &&
+                   alignLeftButton.Visible &&
+                   alignLeftButton.Enabled &&
+                   distributeHorizontalButton.Visible &&
+                   distributeHorizontalButton.Enabled &&
+                   distributeVerticalButton.Visible &&
+                   distributeVerticalButton.Enabled &&
+                   !duplicateButton.Visible &&
+                   !reorderFrontButton.Visible &&
+                   !reorderBackButton.Visible &&
+                   !deleteButton.Visible &&
+                   !restoreButton.Visible &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == 7 &&
+                   string.Equals(ReadSelectionPropertyValue(initialSelection, "VPOS"), "2600", StringComparison.Ordinal),
+                "A label distribute-vertical smoke should start from a three-object live selection with the focused row selected in the shared property grid");
+
+            distributeVerticalButton.PerformClick();
+            Application.DoEvents();
+
+            var logLines = File.ReadAllLines(logPath);
+            var invocationStartCount = logLines.Count(line => string.Equals(line, "BEGIN", StringComparison.Ordinal));
+            Expect(invocationStartCount == 1,
+                "Distributing label objects vertically through the shared asset editor should invoke the Studio host exactly once");
+
+            var invocationArguments = logLines.Skip(1).ToList();
+            Expect(invocationArguments.Contains("--from-vs") &&
+                   invocationArguments.Contains("--json") &&
+                   invocationArguments.Contains("--distribute-object") &&
+                   invocationArguments.Contains("--distribution-mode") &&
+                   invocationArguments.Contains("vertical") &&
+                   invocationArguments.Contains("--record") &&
+                   invocationArguments.Contains("7") &&
+                   invocationArguments.Count(argument => string.Equals(argument, "--distribute-target-unique-id", StringComparison.Ordinal)) == 3 &&
+                   invocationArguments.Contains("first-field-guid") &&
+                   invocationArguments.Contains("middle-field-guid") &&
+                   invocationArguments.Contains("last-field-guid") &&
+                   invocationArguments.Contains("--path") &&
+                   invocationArguments.Contains(assetPath),
+                "Distributing label objects vertically through the shared asset editor should send one invariant distribute-object command through the host contract");
+
+            var refreshedSnapshot = GetCurrentSnapshot(control);
+            var distributedObject = refreshedSnapshot.Objects.FirstOrDefault(item => item.RecordIndex == 7);
+            Expect(HasLabelTextContaining(control, "Distributed objects vertically. Snapshot loaded: 3 object rows, 5 fields.") &&
+                   string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Detail", StringComparison.Ordinal) &&
+                   objectListView.SelectedItems.Count == 3 &&
+                   string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault(item => item.Focused)?.SubItems[2].Text, "7", StringComparison.Ordinal) &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
+                   refreshedSelection.RecordIndex == 7 &&
+                   string.Equals(ReadSelectionPropertyValue(refreshedSelection, "VPOS"), "3200", StringComparison.Ordinal) &&
+                   alignLeftButton.Visible &&
+                   alignLeftButton.Enabled &&
+                   distributeHorizontalButton.Visible &&
+                   distributeHorizontalButton.Enabled &&
+                   distributeVerticalButton.Visible &&
+                   distributeVerticalButton.Enabled &&
+                   !duplicateButton.Visible &&
+                   !reorderFrontButton.Visible &&
+                   !reorderBackButton.Visible &&
+                   !deleteButton.Visible &&
+                   !restoreButton.Visible &&
+                   distributedObject is not null &&
+                   string.Equals(TryGetSnapshotObjectPropertyValue(distributedObject, "UNIQUEID"), "middle-field-guid", StringComparison.Ordinal) &&
+                   string.Equals(TryGetSnapshotObjectPropertyValue(distributedObject, "VPOS"), "3200", StringComparison.Ordinal) &&
+                   string.Equals(TryGetSnapshotObjectPropertyValue(distributedObject, "HPOS"), "1900", StringComparison.Ordinal) &&
+                   string.Equals(ReadPrivateStringField(surface, "assetFamily"), "label", StringComparison.Ordinal) &&
+                   ReadPrivateNullableInt(surface, "selectedRecordIndex") == 7 &&
+                   ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
+                   !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+                "Distributing label objects vertically through the shared asset editor should preserve focused multi-selection continuity and refresh the distributed geometry");
         }
         finally
         {
@@ -18987,6 +19328,288 @@ internal static class Program
         }
     }
 
+    private static void SmokeAssetEditorDistributeVerticallyCommandWithRealAsset(
+        string? sourcePath,
+        IReadOnlyList<int> selectedRecordIndexes,
+        int focusedRecordIndex,
+        string expectedSectionTitle,
+        int expectedSectionRecordIndex,
+        string expectedFocusedObjectTitle,
+        int expectedSectionCount,
+        string expectedFocusedUniqueId,
+        string expectedOriginalFocusedRawVpos,
+        string expectedUpdatedFocusedRawVpos,
+        int expectedOriginalFocusedLayoutVpos,
+        int expectedUpdatedFocusedLayoutVpos)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(sourcePath) ? "real asset editor distribute-vertical candidate" : sourcePath)} not found.");
+            return;
+        }
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmokeRealAssetEditorDistributeVertical-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateWritableAssetCopy(sourcePath!, tempRoot);
+
+        try
+        {
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+            control.LoadDocument(assetPath);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var alignLeftButton = GetPrivateButton(control, "alignLeftObjectButton");
+            var distributeVerticalButton = GetPrivateButton(control, "distributeVerticalObjectButton");
+            var duplicateButton = GetPrivateButton(control, "duplicateObjectButton");
+            var reorderFrontButton = GetPrivateButton(control, "reorderFrontObjectButton");
+            var reorderBackButton = GetPrivateButton(control, "reorderBackObjectButton");
+            var deleteButton = GetPrivateButton(control, "deleteObjectButton");
+            var restoreButton = GetPrivateButton(control, "restoreObjectButton");
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface for the real distribute-vertical smoke.");
+
+            var loaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => sectionListView.Items.Count > 0);
+            Expect(loaded, $"real asset editor distribute-vertical smoke should load section data for {sourcePath}");
+            if (!loaded)
+            {
+                return;
+            }
+
+            foreach (ListViewItem item in sectionListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioReportSection section &&
+                                section.RecordIndex == expectedSectionRecordIndex;
+            }
+
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            Application.DoEvents();
+
+            var objectsLoaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => selectedRecordIndexes.All(recordIndex =>
+                    objectListView.Items.Cast<ListViewItem>().Any(item =>
+                        item.Tag is CopperfinStudioSnapshotObject snapshotObject &&
+                        snapshotObject.RecordIndex == recordIndex)));
+            Expect(objectsLoaded, $"real asset editor distribute-vertical smoke should surface all selected objects for {sourcePath}");
+            if (!objectsLoaded)
+            {
+                return;
+            }
+
+            foreach (ListViewItem item in objectListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioSnapshotObject snapshotObject &&
+                                selectedRecordIndexes.Contains(snapshotObject.RecordIndex);
+                item.Focused = item.Tag is CopperfinStudioSnapshotObject focusedObject &&
+                               focusedObject.RecordIndex == focusedRecordIndex;
+            }
+
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(alignLeftButton.Visible &&
+                   alignLeftButton.Enabled &&
+                   distributeVerticalButton.Visible &&
+                   distributeVerticalButton.Enabled &&
+                   !duplicateButton.Visible &&
+                   !reorderFrontButton.Visible &&
+                   !reorderBackButton.Visible &&
+                   !deleteButton.Visible &&
+                   !restoreButton.Visible &&
+                   objectListView.SelectedItems.Count == selectedRecordIndexes.Count &&
+                   objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault(item => item.Focused)?.Tag is CopperfinStudioSnapshotObject initialFocusedObject &&
+                   initialFocusedObject.RecordIndex == focusedRecordIndex &&
+                   string.Equals(initialFocusedObject.Title, expectedFocusedObjectTitle, StringComparison.Ordinal) &&
+                   string.Equals(TryGetSnapshotObjectPropertyValue(initialFocusedObject, "UNIQUEID"), expectedFocusedUniqueId, StringComparison.Ordinal) &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == focusedRecordIndex &&
+                   string.Equals(ReadSelectionPropertyValue(initialSelection, "VPOS"), expectedOriginalFocusedLayoutVpos.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal),
+                $"real asset editor distribute-vertical smoke should start from a focused live multi-selection for {sourcePath}");
+
+            distributeVerticalButton.PerformClick();
+            Application.DoEvents();
+
+            var distributedSelection = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
+                {
+                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                        refreshedSelection.RecordIndex != focusedRecordIndex)
+                    {
+                        return false;
+                    }
+
+                    var refreshedSnapshot = GetCurrentSnapshot(control);
+                    var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault();
+                    var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
+                    var selectedFocusedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault(item => item.Focused)?.Tag as CopperfinStudioSnapshotObject;
+                    var distributedFocusedObject = refreshedSnapshot.Objects.FirstOrDefault(item => item.RecordIndex == focusedRecordIndex);
+                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                           selectedSectionModel?.RecordIndex == expectedSectionRecordIndex &&
+                           objectListView.SelectedItems.Count == selectedRecordIndexes.Count &&
+                           string.Equals(ReadSelectionPropertyValue(refreshedSelection, "OBJECTSTATE"), "Live", StringComparison.Ordinal) &&
+                           alignLeftButton.Visible &&
+                           alignLeftButton.Enabled &&
+                           distributeVerticalButton.Visible &&
+                           distributeVerticalButton.Enabled &&
+                           selectedFocusedObject is not null &&
+                           selectedFocusedObject.RecordIndex == focusedRecordIndex &&
+                           string.Equals(selectedFocusedObject.Title, expectedFocusedObjectTitle, StringComparison.Ordinal) &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(selectedFocusedObject, "UNIQUEID"), expectedFocusedUniqueId, StringComparison.Ordinal) &&
+                           distributedFocusedObject is not null &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(distributedFocusedObject, "UNIQUEID"), expectedFocusedUniqueId, StringComparison.Ordinal) &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(distributedFocusedObject, "VPOS"), expectedUpdatedFocusedRawVpos, StringComparison.Ordinal) &&
+                           string.Equals(ReadSelectionPropertyValue(refreshedSelection, "VPOS"), expectedUpdatedFocusedLayoutVpos.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal) &&
+                           string.Equals(ReadPrivateStringField(surface, "assetFamily"), "report", StringComparison.Ordinal) &&
+                           ReadPrivateNullableInt(surface, "selectedRecordIndex") == focusedRecordIndex &&
+                           ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == expectedSectionRecordIndex &&
+                           !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected");
+                });
+            Expect(distributedSelection,
+                $"real asset editor distribute-vertical smoke should preserve focused multi-selection continuity and distribute geometry for {sourcePath}");
+            Expect(control.CanHandleUndoCommand(),
+                $"real asset editor distribute-vertical smoke should expose undo after distributing for {sourcePath}");
+            if (!distributedSelection)
+            {
+                return;
+            }
+
+            var reloadedAfterDistribute = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterDistribute.Success && reloadedAfterDistribute.Document is not null,
+                $"real asset editor distribute-vertical smoke should reload distributed on-disk state for {sourcePath}");
+            if (reloadedAfterDistribute.Success && reloadedAfterDistribute.Document is not null)
+            {
+                AssertRealAssetRoundTripSnapshot(
+                    reloadedAfterDistribute.Document,
+                    focusedRecordIndex,
+                    "VPOS",
+                    expectedUpdatedFocusedRawVpos,
+                    expectedFocusedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel: false,
+                    expectUnplacedObject: false,
+                    "reloaded real asset editor distribute-vertical snapshot should preserve focused VPOS");
+
+                var reloadedSection = reloadedAfterDistribute.Document.ReportLayout?.Sections
+                    .FirstOrDefault(candidate => candidate.RecordIndex == expectedSectionRecordIndex);
+                var reloadedLayoutObject = reloadedSection?.Objects
+                    .FirstOrDefault(candidate => candidate.RecordIndex == focusedRecordIndex);
+                Expect(reloadedLayoutObject is not null,
+                    $"reloaded real asset editor distribute-vertical snapshot should preserve focused layout object {focusedRecordIndex} for {sourcePath}");
+                if (reloadedLayoutObject is not null)
+                {
+                    Expect(TryGetReportLayoutObjectValue(reloadedLayoutObject, "VPOS") == expectedUpdatedFocusedLayoutVpos,
+                        $"reloaded real asset editor distribute-vertical snapshot should expose layout VPOS={expectedUpdatedFocusedLayoutVpos} for {sourcePath}");
+                }
+            }
+
+            var undoHandled = control.TryHandleUndoCommand();
+            Expect(undoHandled,
+                $"real asset editor distribute-vertical smoke should execute undo after distributing for {sourcePath}");
+            Application.DoEvents();
+
+            var undoneSelection = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
+                {
+                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                        refreshedSelection.RecordIndex != focusedRecordIndex)
+                    {
+                        return false;
+                    }
+
+                    var refreshedSnapshot = GetCurrentSnapshot(control);
+                    var selectedFocusedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault(item => item.Focused)?.Tag as CopperfinStudioSnapshotObject;
+                    var restoredFocusedObject = refreshedSnapshot.Objects.FirstOrDefault(item => item.RecordIndex == focusedRecordIndex);
+                    return objectListView.SelectedItems.Count == selectedRecordIndexes.Count &&
+                           string.Equals(ReadSelectionPropertyValue(refreshedSelection, "OBJECTSTATE"), "Live", StringComparison.Ordinal) &&
+                           selectedFocusedObject is not null &&
+                           selectedFocusedObject.RecordIndex == focusedRecordIndex &&
+                           string.Equals(selectedFocusedObject.Title, expectedFocusedObjectTitle, StringComparison.Ordinal) &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(selectedFocusedObject, "UNIQUEID"), expectedFocusedUniqueId, StringComparison.Ordinal) &&
+                           restoredFocusedObject is not null &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(restoredFocusedObject, "UNIQUEID"), expectedFocusedUniqueId, StringComparison.Ordinal) &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(restoredFocusedObject, "VPOS"), expectedOriginalFocusedRawVpos, StringComparison.Ordinal) &&
+                           string.Equals(ReadSelectionPropertyValue(refreshedSelection, "VPOS"), expectedOriginalFocusedLayoutVpos.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal) &&
+                           ReadPrivateNullableInt(surface, "selectedRecordIndex") == focusedRecordIndex &&
+                           ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == expectedSectionRecordIndex &&
+                           !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected");
+                });
+            Expect(undoneSelection,
+                $"real asset editor distribute-vertical smoke should preserve focused multi-selection continuity after undoing for {sourcePath}");
+            Expect(!control.CanHandleUndoCommand(),
+                $"real asset editor distribute-vertical smoke should clear undo after restoring original geometry for {sourcePath}");
+
+            var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null,
+                $"real asset editor distribute-vertical smoke should reload restored on-disk state for {sourcePath}");
+            if (reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null)
+            {
+                AssertRealAssetRoundTripSnapshot(
+                    reloadedAfterUndo.Document,
+                    focusedRecordIndex,
+                    "VPOS",
+                    expectedOriginalFocusedRawVpos,
+                    expectedFocusedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel: false,
+                    expectUnplacedObject: false,
+                    "reloaded undone real asset editor distribute-vertical snapshot should preserve original focused VPOS");
+
+                var reloadedSection = reloadedAfterUndo.Document.ReportLayout?.Sections
+                    .FirstOrDefault(candidate => candidate.RecordIndex == expectedSectionRecordIndex);
+                var reloadedLayoutObject = reloadedSection?.Objects
+                    .FirstOrDefault(candidate => candidate.RecordIndex == focusedRecordIndex);
+                Expect(reloadedLayoutObject is not null,
+                    $"reloaded undone real asset editor distribute-vertical snapshot should preserve focused layout object {focusedRecordIndex} for {sourcePath}");
+                if (reloadedLayoutObject is not null)
+                {
+                    Expect(TryGetReportLayoutObjectValue(reloadedLayoutObject, "VPOS") == expectedOriginalFocusedLayoutVpos,
+                        $"reloaded undone real asset editor distribute-vertical snapshot should expose layout VPOS={expectedOriginalFocusedLayoutVpos} for {sourcePath}");
+                }
+            }
+
+            TearDownForm(hostForm);
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeAssetEditorResizeToAnchorSizeCommandWithRealAsset(
         string? sourcePath,
         int anchorRecordIndex,
@@ -25463,6 +26086,115 @@ internal static class Program
         };
     }
 
+    private static CopperfinStudioSnapshotDocument BuildAssetEditorDistributeVerticalLabelObjectSmokeSnapshot()
+    {
+        return new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "label",
+            FieldCount = 5,
+            Objects = new List<CopperfinStudioSnapshotObject>
+            {
+                new()
+                {
+                    RecordIndex = 6,
+                    Title = "first.value",
+                    Subtitle = "label",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "UNIQUEID", Value = "first-field-guid" },
+                        new() { Name = "HPOS", Value = "1400" },
+                        new() { Name = "VPOS", Value = "2200" },
+                        new() { Name = "WIDTH", Value = "3400" },
+                        new() { Name = "HEIGHT", Value = "600" },
+                        new() { Name = "EXPR", Value = "first.value" }
+                    }
+                },
+                new()
+                {
+                    RecordIndex = 7,
+                    Title = "middle.value",
+                    Subtitle = "label",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "UNIQUEID", Value = "middle-field-guid" },
+                        new() { Name = "HPOS", Value = "1900" },
+                        new() { Name = "VPOS", Value = "2600" },
+                        new() { Name = "WIDTH", Value = "3400" },
+                        new() { Name = "HEIGHT", Value = "600" },
+                        new() { Name = "EXPR", Value = "middle.value" }
+                    }
+                },
+                new()
+                {
+                    RecordIndex = 8,
+                    Title = "last.value",
+                    Subtitle = "label",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "UNIQUEID", Value = "last-field-guid" },
+                        new() { Name = "HPOS", Value = "3600" },
+                        new() { Name = "VPOS", Value = "4200" },
+                        new() { Name = "WIDTH", Value = "3200" },
+                        new() { Name = "HEIGHT", Value = "600" },
+                        new() { Name = "EXPR", Value = "last.value" }
+                    }
+                }
+            },
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                IsLabel = true,
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail_1",
+                        Title = "Detail",
+                        BandKind = "detail",
+                        RecordIndex = 42,
+                        Top = 2000,
+                        Height = 5000,
+                        Objects = new List<CopperfinStudioReportLayoutObject>
+                        {
+                            new()
+                            {
+                                RecordIndex = 6,
+                                ObjectKind = "label",
+                                Title = "first.value",
+                                Expression = "first.value",
+                                Left = 1400,
+                                Top = 2200,
+                                Width = 3400,
+                                Height = 600
+                            },
+                            new()
+                            {
+                                RecordIndex = 7,
+                                ObjectKind = "label",
+                                Title = "middle.value",
+                                Expression = "middle.value",
+                                Left = 1900,
+                                Top = 2600,
+                                Width = 3400,
+                                Height = 600
+                            },
+                            new()
+                            {
+                                RecordIndex = 8,
+                                ObjectKind = "label",
+                                Title = "last.value",
+                                Expression = "last.value",
+                                Left = 3600,
+                                Top = 4200,
+                                Width = 3200,
+                                Height = 600
+                            }
+                        }
+                    }
+                }
+            }
+        };
+    }
+
     private static CopperfinStudioSnapshotDocument BuildAssetEditorAlignTopReportObjectSmokeSnapshot()
     {
         return new CopperfinStudioSnapshotDocument
@@ -25751,6 +26483,114 @@ internal static class Program
                                 Expression = "last.value",
                                 Left = 3200,
                                 Top = 2400,
+                                Width = 2700,
+                                Height = 700
+                            }
+                        }
+                    }
+                }
+            }
+        };
+    }
+
+    private static CopperfinStudioSnapshotDocument BuildAssetEditorDistributeVerticalReportObjectSmokeSnapshot()
+    {
+        return new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "report",
+            FieldCount = 5,
+            Objects = new List<CopperfinStudioSnapshotObject>
+            {
+                new()
+                {
+                    RecordIndex = 6,
+                    Title = "first.value",
+                    Subtitle = "field",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "UNIQUEID", Value = "first-field-guid" },
+                        new() { Name = "HPOS", Value = "1000" },
+                        new() { Name = "VPOS", Value = "2400" },
+                        new() { Name = "WIDTH", Value = "3200" },
+                        new() { Name = "HEIGHT", Value = "700" },
+                        new() { Name = "EXPR", Value = "first.value" }
+                    }
+                },
+                new()
+                {
+                    RecordIndex = 7,
+                    Title = "middle.value",
+                    Subtitle = "field",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "UNIQUEID", Value = "middle-field-guid" },
+                        new() { Name = "HPOS", Value = "1600" },
+                        new() { Name = "VPOS", Value = "2700" },
+                        new() { Name = "WIDTH", Value = "3200" },
+                        new() { Name = "HEIGHT", Value = "700" },
+                        new() { Name = "EXPR", Value = "middle.value" }
+                    }
+                },
+                new()
+                {
+                    RecordIndex = 8,
+                    Title = "last.value",
+                    Subtitle = "field",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "UNIQUEID", Value = "last-field-guid" },
+                        new() { Name = "HPOS", Value = "3200" },
+                        new() { Name = "VPOS", Value = "4200" },
+                        new() { Name = "WIDTH", Value = "2700" },
+                        new() { Name = "HEIGHT", Value = "700" },
+                        new() { Name = "EXPR", Value = "last.value" }
+                    }
+                }
+            },
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail_1",
+                        Title = "Detail",
+                        BandKind = "detail",
+                        RecordIndex = 42,
+                        Top = 2000,
+                        Height = 5000,
+                        Objects = new List<CopperfinStudioReportLayoutObject>
+                        {
+                            new()
+                            {
+                                RecordIndex = 6,
+                                ObjectKind = "field",
+                                Title = "first.value",
+                                Expression = "first.value",
+                                Left = 1000,
+                                Top = 2400,
+                                Width = 3200,
+                                Height = 700
+                            },
+                            new()
+                            {
+                                RecordIndex = 7,
+                                ObjectKind = "field",
+                                Title = "middle.value",
+                                Expression = "middle.value",
+                                Left = 1600,
+                                Top = 2700,
+                                Width = 3200,
+                                Height = 700
+                            },
+                            new()
+                            {
+                                RecordIndex = 8,
+                                ObjectKind = "field",
+                                Title = "last.value",
+                                Expression = "last.value",
+                                Left = 3200,
+                                Top = 4200,
                                 Width = 2700,
                                 Height = 700
                             }
@@ -26255,6 +27095,13 @@ internal static class Program
 """;
     }
 
+    private static string BuildDistributeVerticalLabelObjectHostResponseJson()
+    {
+        return """
+{"Status":"ok","Document":{"AssetFamily":"label","FieldCount":5,"Objects":[{"RecordIndex":6,"Title":"first.value","Subtitle":"label","Properties":[{"Name":"UNIQUEID","Value":"first-field-guid"},{"Name":"HPOS","Value":"1400"},{"Name":"VPOS","Value":"2200"},{"Name":"WIDTH","Value":"3400"},{"Name":"HEIGHT","Value":"600"},{"Name":"EXPR","Value":"first.value"}]},{"RecordIndex":7,"Title":"middle.value","Subtitle":"label","Properties":[{"Name":"UNIQUEID","Value":"middle-field-guid"},{"Name":"HPOS","Value":"1900"},{"Name":"VPOS","Value":"3200"},{"Name":"WIDTH","Value":"3400"},{"Name":"HEIGHT","Value":"600"},{"Name":"EXPR","Value":"middle.value"}]},{"RecordIndex":8,"Title":"last.value","Subtitle":"label","Properties":[{"Name":"UNIQUEID","Value":"last-field-guid"},{"Name":"HPOS","Value":"3600"},{"Name":"VPOS","Value":"4200"},{"Name":"WIDTH","Value":"3200"},{"Name":"HEIGHT","Value":"600"},{"Name":"EXPR","Value":"last.value"}]}],"ReportLayout":{"IsLabel":true,"PreviewBoundsAvailable":true,"PreviewBoundsLeft":1400,"PreviewBoundsTop":2200,"PreviewBoundsRight":6800,"PreviewBoundsBottom":4800,"PreviewBoundsWidth":5400,"PreviewBoundsHeight":2600,"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":6,"ObjectKind":"label","Title":"first.value","Expression":"first.value","Left":1400,"Top":2200,"Width":3400,"Height":600},{"RecordIndex":7,"ObjectKind":"label","Title":"middle.value","Expression":"middle.value","Left":1900,"Top":3200,"Width":3400,"Height":600},{"RecordIndex":8,"ObjectKind":"label","Title":"last.value","Expression":"last.value","Left":3600,"Top":4200,"Width":3200,"Height":600}]}],"DeletedSections":[],"UnplacedObjects":[]},"SelectedReportSelectionAvailable":true,"SelectedReportSelectionKind":"object","SelectedReportObjectAvailable":true,"SelectedReportObject":{"RecordIndex":7,"Title":"middle.value","Subtitle":"label","Properties":[{"Name":"UNIQUEID","Value":"middle-field-guid"},{"Name":"HPOS","Value":"1900"},{"Name":"VPOS","Value":"3200"},{"Name":"WIDTH","Value":"3400"},{"Name":"HEIGHT","Value":"600"},{"Name":"EXPR","Value":"middle.value"}]},"SelectedReportObjectSectionAvailable":true,"SelectedReportObjectSection":{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42}}}
+""";
+    }
+
     private static string BuildSnapToGridLabelObjectHostResponseJson()
     {
         return """
@@ -26350,6 +27197,13 @@ internal static class Program
     {
         return """
 {"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[{"RecordIndex":6,"Title":"first.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"first-field-guid"},{"Name":"HPOS","Value":"1000"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"3200"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"first.value"}]},{"RecordIndex":7,"Title":"middle.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"middle-field-guid"},{"Name":"HPOS","Value":"2100"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"3200"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"middle.value"}]},{"RecordIndex":8,"Title":"last.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"last-field-guid"},{"Name":"HPOS","Value":"3200"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"2700"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"last.value"}]}],"ReportLayout":{"PreviewBoundsAvailable":true,"PreviewBoundsLeft":1000,"PreviewBoundsTop":2400,"PreviewBoundsRight":5900,"PreviewBoundsBottom":3100,"PreviewBoundsWidth":4900,"PreviewBoundsHeight":700,"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":6,"ObjectKind":"field","Title":"first.value","Expression":"first.value","Left":1000,"Top":2400,"Width":3200,"Height":700},{"RecordIndex":7,"ObjectKind":"field","Title":"middle.value","Expression":"middle.value","Left":2100,"Top":2400,"Width":3200,"Height":700},{"RecordIndex":8,"ObjectKind":"field","Title":"last.value","Expression":"last.value","Left":3200,"Top":2400,"Width":2700,"Height":700}]}],"DeletedSections":[],"UnplacedObjects":[]},"SelectedReportSelectionAvailable":true,"SelectedReportSelectionKind":"object","SelectedReportObjectAvailable":true,"SelectedReportObject":{"RecordIndex":7,"Title":"middle.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"middle-field-guid"},{"Name":"HPOS","Value":"2100"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"3200"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"middle.value"}]},"SelectedReportObjectSectionAvailable":true,"SelectedReportObjectSection":{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42}}}
+""";
+    }
+
+    private static string BuildDistributeVerticalReportObjectHostResponseJson()
+    {
+        return """
+{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[{"RecordIndex":6,"Title":"first.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"first-field-guid"},{"Name":"HPOS","Value":"1000"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"3200"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"first.value"}]},{"RecordIndex":7,"Title":"middle.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"middle-field-guid"},{"Name":"HPOS","Value":"1600"},{"Name":"VPOS","Value":"3300"},{"Name":"WIDTH","Value":"3200"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"middle.value"}]},{"RecordIndex":8,"Title":"last.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"last-field-guid"},{"Name":"HPOS","Value":"3200"},{"Name":"VPOS","Value":"4200"},{"Name":"WIDTH","Value":"2700"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"last.value"}]}],"ReportLayout":{"PreviewBoundsAvailable":true,"PreviewBoundsLeft":1000,"PreviewBoundsTop":2400,"PreviewBoundsRight":5900,"PreviewBoundsBottom":4900,"PreviewBoundsWidth":4900,"PreviewBoundsHeight":2500,"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":6,"ObjectKind":"field","Title":"first.value","Expression":"first.value","Left":1000,"Top":2400,"Width":3200,"Height":700},{"RecordIndex":7,"ObjectKind":"field","Title":"middle.value","Expression":"middle.value","Left":1600,"Top":3300,"Width":3200,"Height":700},{"RecordIndex":8,"ObjectKind":"field","Title":"last.value","Expression":"last.value","Left":3200,"Top":4200,"Width":2700,"Height":700}]}],"DeletedSections":[],"UnplacedObjects":[]},"SelectedReportSelectionAvailable":true,"SelectedReportSelectionKind":"object","SelectedReportObjectAvailable":true,"SelectedReportObject":{"RecordIndex":7,"Title":"middle.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"middle-field-guid"},{"Name":"HPOS","Value":"1600"},{"Name":"VPOS","Value":"3300"},{"Name":"WIDTH","Value":"3200"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"middle.value"}]},"SelectedReportObjectSectionAvailable":true,"SelectedReportObjectSection":{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42}}}
 """;
     }
 
