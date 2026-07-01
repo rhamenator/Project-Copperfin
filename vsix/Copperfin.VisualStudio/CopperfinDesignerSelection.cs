@@ -577,7 +577,7 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         yield return new ReportSettingDescriptor { Name = "TTOPTION", LocalizationKey = "AssetEditor.Property.TrueTypeOption", Numeric = true, MaterializeWhenMissing = true };
         yield return new ReportSettingDescriptor { Name = "ORIENTATION", LocalizationKey = "AssetEditor.Property.Orientation", Numeric = true, MaterializeWhenMissing = true };
         yield return new ReportSettingDescriptor { Name = "PAPERSIZE", LocalizationKey = "AssetEditor.Property.PaperSize", Numeric = true, MaterializeWhenMissing = true };
-        yield return new ReportSettingDescriptor { Name = "PAPERLENGTH", LocalizationKey = "AssetEditor.Property.PaperLength", Numeric = true, MaterializeWhenMissing = false };
+        yield return new ReportSettingDescriptor { Name = "PAPERLENGTH", LocalizationKey = "AssetEditor.Property.PaperLength", Numeric = true, MaterializeWhenMissing = true };
         yield return new ReportSettingDescriptor { Name = "PAPERWIDTH", LocalizationKey = "AssetEditor.Property.PaperWidth", Numeric = true, MaterializeWhenMissing = false };
         yield return new ReportSettingDescriptor { Name = "TOPMARGIN", LocalizationKey = "AssetEditor.Property.TopMargin", Numeric = true, MaterializeWhenMissing = true };
         yield return new ReportSettingDescriptor { Name = "BOTMARGIN", LocalizationKey = "AssetEditor.Property.BottomMargin", Numeric = true, MaterializeWhenMissing = true };
