@@ -3100,7 +3100,9 @@ internal static class Program
                 expectedUpdatedLayoutValue: 7000,
                 expectedSectionCount: 4,
                 expectLabel: false,
-                expectedObjectCount: 3);
+                expectedObjectCount: 3,
+                expectedOriginalContainedObjects: CreateStyle3vPageHeaderContainedObjects(0),
+                expectedUpdatedContainedObjects: CreateStyle3vPageHeaderContainedObjects(0));
             SmokeAssetEditorSectionRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLE3V.FRX"),
                 recordIndex: 4,
