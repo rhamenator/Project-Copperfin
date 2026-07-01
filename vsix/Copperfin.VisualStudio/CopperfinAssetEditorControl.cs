@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -54,6 +55,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly Button reorderBackObjectButton;
     private readonly Button alignLeftObjectButton;
     private readonly Button distributeHorizontalObjectButton;
+    private readonly Button snapToGridObjectButton;
     private readonly Button deleteObjectButton;
     private readonly Button restoreObjectButton;
     private readonly Button buildButton;
@@ -239,6 +241,18 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             executingKey: "AssetEditor.ObjectDistribution.Horizontal.Executing",
             failedKey: "AssetEditor.ObjectDistribution.Horizontal.Failed",
             completedKey: "AssetEditor.ObjectDistribution.Horizontal.Completed");
+
+        snapToGridObjectButton = new Button
+        {
+            AutoSize = true,
+            Text = this.localization.Text("AssetEditor.ObjectSnap.GridButton"),
+            Visible = false
+        };
+        snapToGridObjectButton.Click += (_, _) => TryHandleSnapObjectCommand(
+            snapMode: "both",
+            executingKey: "AssetEditor.ObjectSnap.Grid.Executing",
+            failedKey: "AssetEditor.ObjectSnap.Grid.Failed",
+            completedKey: "AssetEditor.ObjectSnap.Grid.Completed");
 
         deleteObjectButton = new Button
         {
@@ -642,6 +656,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         buttonPanel.Controls.Add(reorderBackObjectButton);
         buttonPanel.Controls.Add(alignLeftObjectButton);
         buttonPanel.Controls.Add(distributeHorizontalObjectButton);
+        buttonPanel.Controls.Add(snapToGridObjectButton);
         buttonPanel.Controls.Add(deleteObjectButton);
         buttonPanel.Controls.Add(restoreObjectButton);
         buttonPanel.Controls.Add(buildButton);
@@ -1651,6 +1666,82 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         return true;
     }
 
+    private bool TryHandleSnapObjectCommand(
+        string snapMode,
+        string executingKey,
+        string failedKey,
+        string completedKey)
+    {
+        if (currentSnapshot?.AssetFamily is not ("report" or "label") || string.IsNullOrWhiteSpace(currentPath))
+        {
+            return false;
+        }
+
+        var selectedObjects = TryGetSelectedSnapshotObjects();
+        var focusedObject = TryGetSelectedSnapshotObject();
+        if (focusedObject is null || focusedObject.Deleted || selectedObjects.Count < 1)
+        {
+            return false;
+        }
+
+        if (!TryReadReportGridDimensions(currentSnapshot, out var gridWidth, out var gridHeight))
+        {
+            snapshotStatusLabel.Text = this.localization.Text("AssetEditor.ObjectSnap.GridSettingsRequired");
+            return false;
+        }
+
+        var focusedUniqueId = TryReadObjectUniqueId(focusedObject);
+        var targetUniqueIds = selectedObjects
+            .Where(selectedObject => !selectedObject.Deleted)
+            .Select(TryReadObjectUniqueId)
+            .Where(uniqueId => !string.IsNullOrWhiteSpace(uniqueId))
+            .Cast<string>()
+            .ToList();
+        if (string.IsNullOrWhiteSpace(focusedUniqueId) || targetUniqueIds.Count != selectedObjects.Count)
+        {
+            snapshotStatusLabel.Text = this.localization.Text("AssetEditor.ObjectSnap.StableIdsRequired");
+            return false;
+        }
+
+        var explorerSelection = CaptureExplorerSelectionState();
+        snapshotStatusLabel.Text = this.localization.Text(executingKey);
+
+        var snapResult = CopperfinStudioSnapshotClient.TrySnapObject(
+            currentPath!,
+            focusedObject.RecordIndex,
+            snapMode,
+            gridWidth,
+            gridHeight,
+            targetUniqueIds);
+        if (!snapResult.Success || snapResult.Document is null)
+        {
+            snapshotStatusLabel.Text = this.localization.Format(
+                failedKey,
+                snapResult.Error ?? string.Empty);
+            return false;
+        }
+
+        currentSnapshot = snapResult.Document;
+        detailsLabel.Text = BuildSnapshotDetailsText(new FileInfo(currentPath!), currentSnapshot);
+        snapshotStatusLabel.Text = this.localization.Format(
+            completedKey,
+            currentSnapshot.Objects.Count,
+            currentSnapshot.FieldCount);
+        var selectedRecordIndexes = targetUniqueIds
+            .Select(uniqueId => TryReadObjectRecordIndex(currentSnapshot, uniqueId))
+            .Where(recordIndex => recordIndex.HasValue)
+            .Select(recordIndex => recordIndex!.Value)
+            .ToList();
+        var refreshedFocusedRecordIndex = TryReadObjectRecordIndex(currentSnapshot, focusedUniqueId!) ?? focusedObject.RecordIndex;
+        PopulateSectionList(explorerSelection);
+        SyncExplorerSelection();
+        LoadSurface();
+        designSurface.SelectRecord(refreshedFocusedRecordIndex);
+        SyncSelectionFromSurface(refreshedFocusedRecordIndex);
+        RestoreSnapshotObjectSelection(selectedRecordIndexes, refreshedFocusedRecordIndex);
+        return true;
+    }
+
     private bool TryHandleNudgeObjectCommand(string mode, double deltaHpos, double deltaVpos)
     {
         if (currentSnapshot?.AssetFamily is not ("report" or "label") || string.IsNullOrWhiteSpace(currentPath))
@@ -2168,6 +2259,10 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         var showDistributeHorizontal = selectedObjects.Count >= 3 &&
                                        selectedObjects.All(snapshotObject => !snapshotObject.Deleted) &&
                                        TryReadSelectedExplorerTag() is CopperfinStudioReportSection { Deleted: false };
+        var showSnapToGrid = selectedObjects.Count >= 1 &&
+                             selectedObjects.All(snapshotObject => !snapshotObject.Deleted) &&
+                             currentSnapshot is not null &&
+                             TryReadReportGridDimensions(currentSnapshot, out _, out _);
         var showDelete = singleSelection && selectedObject is not null && !selectedObject.Deleted;
         var showRestore = singleSelection && selectedObject is not null && selectedObject.Deleted;
         renameObjectButton.Visible = showRename;
@@ -2182,6 +2277,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         alignLeftObjectButton.Enabled = showAlignLeft && !string.IsNullOrWhiteSpace(currentPath);
         distributeHorizontalObjectButton.Visible = showDistributeHorizontal;
         distributeHorizontalObjectButton.Enabled = showDistributeHorizontal && !string.IsNullOrWhiteSpace(currentPath);
+        snapToGridObjectButton.Visible = showSnapToGrid;
+        snapToGridObjectButton.Enabled = showSnapToGrid && !string.IsNullOrWhiteSpace(currentPath);
         deleteObjectButton.Visible = showDelete;
         deleteObjectButton.Enabled = showDelete && !string.IsNullOrWhiteSpace(currentPath);
         restoreObjectButton.Visible = showRestore;
@@ -2391,6 +2488,25 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             .FirstOrDefault(snapshotObject =>
                 string.Equals(TryReadObjectUniqueId(snapshotObject), uniqueId, StringComparison.OrdinalIgnoreCase))
             ?.RecordIndex;
+    }
+
+    private static bool TryReadReportGridDimensions(CopperfinStudioSnapshotDocument snapshot, out double gridWidth, out double gridHeight)
+    {
+        gridWidth = 0.0;
+        gridHeight = 0.0;
+        return TryReadReportGridDimension(snapshot, "GRIDH", out gridWidth) &&
+               TryReadReportGridDimension(snapshot, "GRIDV", out gridHeight);
+    }
+
+    private static bool TryReadReportGridDimension(CopperfinStudioSnapshotDocument snapshot, string settingName, out double value)
+    {
+        value = 0.0;
+        var rawValue = snapshot.ReportLayout?.Settings
+            .FirstOrDefault(setting => string.Equals(setting.Name, settingName, StringComparison.OrdinalIgnoreCase))
+            ?.Value;
+        return !string.IsNullOrWhiteSpace(rawValue) &&
+               double.TryParse(rawValue, NumberStyles.Float, CultureInfo.InvariantCulture, out value) &&
+               value > 0.0;
     }
 
     private static string CreateDuplicateObjectUniqueId()

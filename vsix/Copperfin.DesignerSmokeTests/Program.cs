@@ -93,6 +93,7 @@ internal static class Program
         SmokeAssetEditorReorderFrontObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorAlignLeftObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorDistributeHorizontallyObjectCommandRefreshesReportShellSummary();
+        SmokeAssetEditorSnapToGridObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorDeleteObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorRestoreObjectCommandRefreshesReportShellSummary();
         SmokeAssetEditorLabelObjectPropertyGridHostUpdate();
@@ -107,6 +108,7 @@ internal static class Program
         SmokeAssetEditorReorderBackObjectCommandRefreshesLabelShellSummary();
         SmokeAssetEditorAlignLeftObjectCommandRefreshesLabelShellSummary();
         SmokeAssetEditorDistributeHorizontallyObjectCommandRefreshesLabelShellSummary();
+        SmokeAssetEditorSnapToGridObjectCommandRefreshesLabelShellSummary();
         SmokeAssetEditorDeleteObjectCommandRefreshesLabelShellSummary();
         SmokeAssetEditorRestoreObjectCommandRefreshesLabelShellSummary();
         SmokeAssetEditorDeletedReportObjectPropertyGridHostUpdate();
@@ -1708,6 +1710,40 @@ internal static class Program
                 expectedOriginalLayoutVpos: 6666,
                 expectedUpdatedLayoutHpos: 6450,
                 expectedUpdatedLayoutVpos: 6966);
+            SmokeAssetEditorSnapToGridCommandWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLE3V.FRX"),
+                recordIndex: 13,
+                expectedSectionTitle: "Page Header",
+                expectedSectionRecordIndex: 2,
+                expectedObjectTitle: "\"TITLE\"",
+                expectedSectionCount: 4,
+                expectLabel: false,
+                expectedUniqueId: "_QVL0O0NVK",
+                expectedOriginalRawHpos: "416.667",
+                expectedOriginalRawVpos: "3541.667",
+                expectedUpdatedRawHpos: "420",
+                expectedUpdatedRawVpos: "3540",
+                expectedOriginalLayoutHpos: 416,
+                expectedOriginalLayoutVpos: 3541,
+                expectedUpdatedLayoutHpos: 420,
+                expectedUpdatedLayoutVpos: 3540);
+            SmokeAssetEditorSnapToGridCommandWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 6,
+                expectedSectionTitle: "Detail",
+                expectedSectionRecordIndex: 3,
+                expectedObjectTitle: "wiz_field",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUniqueId: "_QV30QY1DL",
+                expectedOriginalRawHpos: "6250.000",
+                expectedOriginalRawVpos: "6666.667",
+                expectedUpdatedRawHpos: "6252",
+                expectedUpdatedRawVpos: "6672",
+                expectedOriginalLayoutHpos: 6250,
+                expectedOriginalLayoutVpos: 6666,
+                expectedUpdatedLayoutHpos: 6252,
+                expectedUpdatedLayoutVpos: 6672);
             SmokeAssetEditorAlignLeftCommandWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Sedna/DataExplorer/DATAEXPLORERQUICKREPORT.FRX"),
                 anchorRecordIndex: 4,
@@ -6134,6 +6170,172 @@ internal static class Program
         }
     }
 
+    private static void SmokeAssetEditorSnapToGridObjectCommandRefreshesReportShellSummary()
+    {
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            Console.WriteLine("SKIP: shared asset-editor snap-to-grid smoke requires a POSIX scriptable fake Studio host.");
+            return;
+        }
+
+        var snapshot = BuildAssetEditorSnapReportObjectSmokeSnapshot();
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
+        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var logPath = Path.Combine(tempRoot, "studio-host.log");
+        var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
+
+        try
+        {
+            File.WriteAllText(logPath, string.Empty);
+            CreateFakeStudioHostScript(scriptPath, BuildSnapToGridReportObjectHostResponseJson());
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", scriptPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", logPath);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+
+            ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+            SetPrivateField(control, "currentPath", assetPath);
+            GetPrivateLabel(control, "detailsLabel").Text = InvokeAssetEditorString(control, "BuildSnapshotDetailsText", new FileInfo(assetPath), snapshot);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            sectionListView.Items[0].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            InvokeAssetEditorVoid(control, "LoadSurface");
+            Application.DoEvents();
+
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var alignLeftButton = GetPrivateButton(control, "alignLeftObjectButton");
+            var distributeHorizontalButton = GetPrivateButton(control, "distributeHorizontalObjectButton");
+            var snapToGridButton = GetPrivateButton(control, "snapToGridObjectButton");
+            var duplicateButton = GetPrivateButton(control, "duplicateObjectButton");
+            var reorderFrontButton = GetPrivateButton(control, "reorderFrontObjectButton");
+            var reorderBackButton = GetPrivateButton(control, "reorderBackObjectButton");
+            var deleteButton = GetPrivateButton(control, "deleteObjectButton");
+            var restoreButton = GetPrivateButton(control, "restoreObjectButton");
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface.");
+
+            objectListView.Items[0].Selected = true;
+            objectListView.Items[0].Focused = true;
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(objectListView.Items.Cast<ListViewItem>().Select(item => item.Text).SequenceEqual(new[] { "snap.value" }) &&
+                   !alignLeftButton.Visible &&
+                   !distributeHorizontalButton.Visible &&
+                   snapToGridButton.Visible &&
+                   snapToGridButton.Enabled &&
+                   duplicateButton.Visible &&
+                   duplicateButton.Enabled &&
+                   reorderFrontButton.Visible &&
+                   reorderFrontButton.Enabled &&
+                   reorderBackButton.Visible &&
+                   reorderBackButton.Enabled &&
+                   deleteButton.Visible &&
+                   deleteButton.Enabled &&
+                   !restoreButton.Visible &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == 7 &&
+                   string.Equals(ReadSelectionPropertyValue(initialSelection, "HPOS"), "1001", StringComparison.Ordinal) &&
+                   string.Equals(ReadSelectionPropertyValue(initialSelection, "VPOS"), "2405", StringComparison.Ordinal),
+                "A report snap-to-grid smoke should start from a single live selection with grid-backed geometry exposed in the shared property grid");
+
+            snapToGridButton.PerformClick();
+            Application.DoEvents();
+
+            var logLines = File.ReadAllLines(logPath);
+            var invocationStartCount = logLines.Count(line => string.Equals(line, "BEGIN", StringComparison.Ordinal));
+            Expect(invocationStartCount == 1,
+                "Snapping a report object to grid through the shared asset editor should invoke the Studio host exactly once");
+
+            var invocationArguments = logLines.Skip(1).ToList();
+            Expect(invocationArguments.Contains("--from-vs") &&
+                   invocationArguments.Contains("--json") &&
+                   invocationArguments.Contains("--snap-object") &&
+                   invocationArguments.Contains("--snap-mode") &&
+                   invocationArguments.Contains("both") &&
+                   invocationArguments.Contains("--grid-width") &&
+                   invocationArguments.Contains("12") &&
+                   invocationArguments.Contains("--grid-height") &&
+                   invocationArguments.Contains("12") &&
+                   invocationArguments.Contains("--record") &&
+                   invocationArguments.Contains("7") &&
+                   invocationArguments.Count(argument => string.Equals(argument, "--snap-target-unique-id", StringComparison.Ordinal)) == 1 &&
+                   invocationArguments.Contains("snap-field-guid") &&
+                   invocationArguments.Contains("--path") &&
+                   invocationArguments.Contains(assetPath),
+                "Snapping a report object to grid through the shared asset editor should send one invariant snap-object command through the host contract");
+
+            var refreshedSnapshot = GetCurrentSnapshot(control);
+            var snappedObject = refreshedSnapshot.Objects.FirstOrDefault(item => item.RecordIndex == 7);
+            Expect(HasLabelTextContaining(control, "Snapped objects to the report grid. Snapshot loaded: 1 object rows, 5 fields.") &&
+                   string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Detail", StringComparison.Ordinal) &&
+                   objectListView.SelectedItems.Count == 1 &&
+                   string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.SubItems[2].Text, "7", StringComparison.Ordinal) &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
+                   refreshedSelection.RecordIndex == 7 &&
+                   string.Equals(ReadSelectionPropertyValue(refreshedSelection, "HPOS"), "1008", StringComparison.Ordinal) &&
+                   string.Equals(ReadSelectionPropertyValue(refreshedSelection, "VPOS"), "2400", StringComparison.Ordinal) &&
+                   snapToGridButton.Visible &&
+                   snapToGridButton.Enabled &&
+                   duplicateButton.Visible &&
+                   duplicateButton.Enabled &&
+                   reorderFrontButton.Visible &&
+                   reorderFrontButton.Enabled &&
+                   reorderBackButton.Visible &&
+                   reorderBackButton.Enabled &&
+                   deleteButton.Visible &&
+                   deleteButton.Enabled &&
+                   !restoreButton.Visible &&
+                   snappedObject is not null &&
+                   string.Equals(TryGetSnapshotObjectPropertyValue(snappedObject, "HPOS"), "1008", StringComparison.Ordinal) &&
+                   string.Equals(TryGetSnapshotObjectPropertyValue(snappedObject, "VPOS"), "2400", StringComparison.Ordinal) &&
+                   string.Equals(ReadPrivateStringField(surface, "assetFamily"), "report", StringComparison.Ordinal) &&
+                   ReadPrivateNullableInt(surface, "selectedRecordIndex") == 7 &&
+                   ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
+                   !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+                "Snapping a report object to grid through the shared asset editor should preserve live selection continuity and refresh snapped geometry");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", previousLogPath);
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeAssetEditorLabelSectionPropertyGridHostUpdate()
     {
         if (Path.DirectorySeparatorChar == '\\')
@@ -8068,6 +8270,172 @@ internal static class Program
                    ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
                    !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
                 "Distributing label objects horizontally through the shared asset editor should preserve focused multi-selection continuity and refresh the distributed geometry");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", previousLogPath);
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
+    private static void SmokeAssetEditorSnapToGridObjectCommandRefreshesLabelShellSummary()
+    {
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            Console.WriteLine("SKIP: shared asset-editor label snap-to-grid smoke requires a POSIX scriptable fake Studio host.");
+            return;
+        }
+
+        var snapshot = BuildAssetEditorSnapLabelObjectSmokeSnapshot();
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
+        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var logPath = Path.Combine(tempRoot, "studio-host.log");
+        var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
+
+        try
+        {
+            File.WriteAllText(logPath, string.Empty);
+            CreateFakeStudioHostScript(scriptPath, BuildSnapToGridLabelObjectHostResponseJson());
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", scriptPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", logPath);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+
+            ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+            SetPrivateField(control, "currentPath", assetPath);
+            GetPrivateLabel(control, "detailsLabel").Text = InvokeAssetEditorString(control, "BuildSnapshotDetailsText", new FileInfo(assetPath), snapshot);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            sectionListView.Items[0].Selected = true;
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            InvokeAssetEditorVoid(control, "LoadSurface");
+            Application.DoEvents();
+
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var alignLeftButton = GetPrivateButton(control, "alignLeftObjectButton");
+            var distributeHorizontalButton = GetPrivateButton(control, "distributeHorizontalObjectButton");
+            var snapToGridButton = GetPrivateButton(control, "snapToGridObjectButton");
+            var duplicateButton = GetPrivateButton(control, "duplicateObjectButton");
+            var reorderFrontButton = GetPrivateButton(control, "reorderFrontObjectButton");
+            var reorderBackButton = GetPrivateButton(control, "reorderBackObjectButton");
+            var deleteButton = GetPrivateButton(control, "deleteObjectButton");
+            var restoreButton = GetPrivateButton(control, "restoreObjectButton");
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared label design surface.");
+
+            objectListView.Items[0].Selected = true;
+            objectListView.Items[0].Focused = true;
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(objectListView.Items.Cast<ListViewItem>().Select(item => item.Text).SequenceEqual(new[] { "snap.value" }) &&
+                   !alignLeftButton.Visible &&
+                   !distributeHorizontalButton.Visible &&
+                   snapToGridButton.Visible &&
+                   snapToGridButton.Enabled &&
+                   duplicateButton.Visible &&
+                   duplicateButton.Enabled &&
+                   reorderFrontButton.Visible &&
+                   reorderFrontButton.Enabled &&
+                   reorderBackButton.Visible &&
+                   reorderBackButton.Enabled &&
+                   deleteButton.Visible &&
+                   deleteButton.Enabled &&
+                   !restoreButton.Visible &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == 7 &&
+                   string.Equals(ReadSelectionPropertyValue(initialSelection, "HPOS"), "1901", StringComparison.Ordinal) &&
+                   string.Equals(ReadSelectionPropertyValue(initialSelection, "VPOS"), "2605", StringComparison.Ordinal),
+                "A label snap-to-grid smoke should start from a single live selection with grid-backed geometry exposed in the shared property grid");
+
+            snapToGridButton.PerformClick();
+            Application.DoEvents();
+
+            var logLines = File.ReadAllLines(logPath);
+            var invocationStartCount = logLines.Count(line => string.Equals(line, "BEGIN", StringComparison.Ordinal));
+            Expect(invocationStartCount == 1,
+                "Snapping a label object to grid through the shared asset editor should invoke the Studio host exactly once");
+
+            var invocationArguments = logLines.Skip(1).ToList();
+            Expect(invocationArguments.Contains("--from-vs") &&
+                   invocationArguments.Contains("--json") &&
+                   invocationArguments.Contains("--snap-object") &&
+                   invocationArguments.Contains("--snap-mode") &&
+                   invocationArguments.Contains("both") &&
+                   invocationArguments.Contains("--grid-width") &&
+                   invocationArguments.Contains("12") &&
+                   invocationArguments.Contains("--grid-height") &&
+                   invocationArguments.Contains("12") &&
+                   invocationArguments.Contains("--record") &&
+                   invocationArguments.Contains("7") &&
+                   invocationArguments.Count(argument => string.Equals(argument, "--snap-target-unique-id", StringComparison.Ordinal)) == 1 &&
+                   invocationArguments.Contains("snap-field-guid") &&
+                   invocationArguments.Contains("--path") &&
+                   invocationArguments.Contains(assetPath),
+                "Snapping a label object to grid through the shared asset editor should send one invariant snap-object command through the host contract");
+
+            var refreshedSnapshot = GetCurrentSnapshot(control);
+            var snappedObject = refreshedSnapshot.Objects.FirstOrDefault(item => item.RecordIndex == 7);
+            Expect(HasLabelTextContaining(control, "Snapped objects to the report grid. Snapshot loaded: 1 object rows, 5 fields.") &&
+                   string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Detail", StringComparison.Ordinal) &&
+                   objectListView.SelectedItems.Count == 1 &&
+                   string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.SubItems[2].Text, "7", StringComparison.Ordinal) &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
+                   refreshedSelection.RecordIndex == 7 &&
+                   string.Equals(ReadSelectionPropertyValue(refreshedSelection, "HPOS"), "1908", StringComparison.Ordinal) &&
+                   string.Equals(ReadSelectionPropertyValue(refreshedSelection, "VPOS"), "2604", StringComparison.Ordinal) &&
+                   snapToGridButton.Visible &&
+                   snapToGridButton.Enabled &&
+                   duplicateButton.Visible &&
+                   duplicateButton.Enabled &&
+                   reorderFrontButton.Visible &&
+                   reorderFrontButton.Enabled &&
+                   reorderBackButton.Visible &&
+                   reorderBackButton.Enabled &&
+                   deleteButton.Visible &&
+                   deleteButton.Enabled &&
+                   !restoreButton.Visible &&
+                   snappedObject is not null &&
+                   string.Equals(TryGetSnapshotObjectPropertyValue(snappedObject, "HPOS"), "1908", StringComparison.Ordinal) &&
+                   string.Equals(TryGetSnapshotObjectPropertyValue(snappedObject, "VPOS"), "2604", StringComparison.Ordinal) &&
+                   string.Equals(ReadPrivateStringField(surface, "assetFamily"), "label", StringComparison.Ordinal) &&
+                   ReadPrivateNullableInt(surface, "selectedRecordIndex") == 7 &&
+                   ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
+                   !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+                "Snapping a label object to grid through the shared asset editor should preserve live selection continuity and refresh snapped geometry");
         }
         finally
         {
@@ -17059,6 +17427,306 @@ internal static class Program
         }
     }
 
+    private static void SmokeAssetEditorSnapToGridCommandWithRealAsset(
+        string? sourcePath,
+        int recordIndex,
+        string expectedSectionTitle,
+        int expectedSectionRecordIndex,
+        string expectedObjectTitle,
+        int expectedSectionCount,
+        bool expectLabel,
+        string expectedUniqueId,
+        string expectedOriginalRawHpos,
+        string expectedOriginalRawVpos,
+        string expectedUpdatedRawHpos,
+        string expectedUpdatedRawVpos,
+        int expectedOriginalLayoutHpos,
+        int expectedOriginalLayoutVpos,
+        int expectedUpdatedLayoutHpos,
+        int expectedUpdatedLayoutVpos)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(sourcePath) ? "real asset editor snap-to-grid candidate" : sourcePath)} not found.");
+            return;
+        }
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmokeRealAssetEditorSnapToGrid-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateWritableAssetCopy(sourcePath!, tempRoot);
+
+        try
+        {
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+            control.LoadDocument(assetPath);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var snapToGridButton = GetPrivateButton(control, "snapToGridObjectButton");
+            var deleteButton = GetPrivateButton(control, "deleteObjectButton");
+            var restoreButton = GetPrivateButton(control, "restoreObjectButton");
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface for the real snap-to-grid smoke.");
+
+            var loaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => sectionListView.Items.Count > 0);
+            Expect(loaded, $"real asset editor snap-to-grid smoke should load section data for {sourcePath}");
+            if (!loaded)
+            {
+                return;
+            }
+
+            foreach (ListViewItem item in sectionListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioReportSection section &&
+                                section.RecordIndex == expectedSectionRecordIndex;
+            }
+
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            Application.DoEvents();
+
+            var objectLoaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => objectListView.Items.Cast<ListViewItem>()
+                    .Any(item => item.Tag is CopperfinStudioSnapshotObject snapshotObject &&
+                                 snapshotObject.RecordIndex == recordIndex));
+            Expect(objectLoaded, $"real asset editor snap-to-grid smoke should surface object {recordIndex} for {sourcePath}");
+            if (!objectLoaded)
+            {
+                return;
+            }
+
+            foreach (ListViewItem item in objectListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioSnapshotObject snapshotObject &&
+                                snapshotObject.RecordIndex == recordIndex;
+            }
+
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(snapToGridButton.Visible &&
+                   snapToGridButton.Enabled &&
+                   deleteButton.Visible &&
+                   deleteButton.Enabled &&
+                   !restoreButton.Visible &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == recordIndex &&
+                   string.Equals(ReadSelectionPropertyValue(initialSelection, "HPOS"), expectedOriginalLayoutHpos.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal) &&
+                   string.Equals(ReadSelectionPropertyValue(initialSelection, "VPOS"), expectedOriginalLayoutVpos.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal),
+                $"real asset editor snap-to-grid smoke should start from a live object selection with original geometry exposed for {sourcePath}");
+
+            snapToGridButton.PerformClick();
+            Application.DoEvents();
+
+            var snappedSelection = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
+                {
+                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                        refreshedSelection.RecordIndex != recordIndex)
+                    {
+                        return false;
+                    }
+
+                    var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault();
+                    var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
+                    var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
+                    var objectState = TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString();
+                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                           selectedSectionModel?.RecordIndex == expectedSectionRecordIndex &&
+                           selectedObject?.RecordIndex == recordIndex &&
+                           !selectedObject.Deleted &&
+                           string.Equals(selectedObject.Title, expectedObjectTitle, StringComparison.Ordinal) &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(selectedObject, "UNIQUEID"), expectedUniqueId, StringComparison.Ordinal) &&
+                           string.Equals(ReadSelectionPropertyValue(refreshedSelection, "HPOS"), expectedUpdatedLayoutHpos.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal) &&
+                           string.Equals(ReadSelectionPropertyValue(refreshedSelection, "VPOS"), expectedUpdatedLayoutVpos.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal) &&
+                           string.Equals(objectState, "Live", StringComparison.Ordinal) &&
+                           snapToGridButton.Visible &&
+                           snapToGridButton.Enabled &&
+                           deleteButton.Visible &&
+                           deleteButton.Enabled &&
+                           !restoreButton.Visible &&
+                           string.Equals(ReadPrivateStringField(surface, "assetFamily"), expectLabel ? "label" : "report", StringComparison.Ordinal) &&
+                           ReadPrivateNullableInt(surface, "selectedRecordIndex") == recordIndex &&
+                           ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == expectedSectionRecordIndex &&
+                           !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected");
+                });
+            Expect(snappedSelection,
+                $"real asset editor snap-to-grid smoke should preserve live section/object continuity after snapping for {sourcePath}");
+            Expect(control.CanHandleUndoCommand(),
+                $"real asset editor snap-to-grid smoke should expose undo after snapping for {sourcePath}");
+            if (!snappedSelection)
+            {
+                return;
+            }
+
+            var reloadedAfterSnap = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterSnap.Success && reloadedAfterSnap.Document is not null,
+                $"real asset editor snap-to-grid smoke should reload snapped on-disk state for {sourcePath}");
+            if (reloadedAfterSnap.Success && reloadedAfterSnap.Document is not null)
+            {
+                AssertRealAssetRoundTripSnapshot(
+                    reloadedAfterSnap.Document,
+                    recordIndex,
+                    "HPOS",
+                    expectedUpdatedRawHpos,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectUnplacedObject: false,
+                    "reloaded real asset editor snap-to-grid snapshot should preserve HPOS");
+                AssertRealAssetRoundTripSnapshot(
+                    reloadedAfterSnap.Document,
+                    recordIndex,
+                    "VPOS",
+                    expectedUpdatedRawVpos,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectUnplacedObject: false,
+                    "reloaded real asset editor snap-to-grid snapshot should preserve VPOS");
+
+                var reloadedSection = reloadedAfterSnap.Document.ReportLayout?.Sections
+                    .FirstOrDefault(candidate => candidate.RecordIndex == expectedSectionRecordIndex);
+                var reloadedLayoutObject = reloadedSection?.Objects
+                    .FirstOrDefault(candidate => candidate.RecordIndex == recordIndex);
+                Expect(reloadedLayoutObject is not null,
+                    $"reloaded real asset editor snap-to-grid snapshot should preserve layout object {recordIndex} for {sourcePath}");
+                if (reloadedLayoutObject is not null)
+                {
+                    Expect(TryGetReportLayoutObjectValue(reloadedLayoutObject, "HPOS") == expectedUpdatedLayoutHpos,
+                        $"reloaded real asset editor snap-to-grid snapshot should expose layout HPOS={expectedUpdatedLayoutHpos} for {sourcePath}");
+                    Expect(TryGetReportLayoutObjectValue(reloadedLayoutObject, "VPOS") == expectedUpdatedLayoutVpos,
+                        $"reloaded real asset editor snap-to-grid snapshot should expose layout VPOS={expectedUpdatedLayoutVpos} for {sourcePath}");
+                }
+            }
+
+            var undoHandled = control.TryHandleUndoCommand();
+            Expect(undoHandled,
+                $"real asset editor snap-to-grid smoke should execute undo after snapping for {sourcePath}");
+            Application.DoEvents();
+
+            var undoneSelection = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
+                {
+                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                        refreshedSelection.RecordIndex != recordIndex)
+                    {
+                        return false;
+                    }
+
+                    var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault();
+                    var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
+                    var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
+                    var objectState = TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString();
+                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                           selectedSectionModel?.RecordIndex == expectedSectionRecordIndex &&
+                           selectedObject?.RecordIndex == recordIndex &&
+                           !selectedObject.Deleted &&
+                           string.Equals(selectedObject.Title, expectedObjectTitle, StringComparison.Ordinal) &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(selectedObject, "UNIQUEID"), expectedUniqueId, StringComparison.Ordinal) &&
+                           string.Equals(ReadSelectionPropertyValue(refreshedSelection, "HPOS"), expectedOriginalLayoutHpos.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal) &&
+                           string.Equals(ReadSelectionPropertyValue(refreshedSelection, "VPOS"), expectedOriginalLayoutVpos.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal) &&
+                           string.Equals(objectState, "Live", StringComparison.Ordinal) &&
+                           snapToGridButton.Visible &&
+                           snapToGridButton.Enabled &&
+                           deleteButton.Visible &&
+                           deleteButton.Enabled &&
+                           !restoreButton.Visible &&
+                           string.Equals(ReadPrivateStringField(surface, "assetFamily"), expectLabel ? "label" : "report", StringComparison.Ordinal) &&
+                           ReadPrivateNullableInt(surface, "selectedRecordIndex") == recordIndex &&
+                           ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == expectedSectionRecordIndex &&
+                           !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected");
+                });
+            Expect(undoneSelection,
+                $"real asset editor snap-to-grid smoke should preserve live section/object continuity after undoing snap for {sourcePath}");
+            Expect(!control.CanHandleUndoCommand(),
+                $"real asset editor snap-to-grid smoke should clear undo after restoring original geometry for {sourcePath}");
+
+            var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null,
+                $"real asset editor snap-to-grid smoke should reload restored on-disk state for {sourcePath}");
+            if (reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null)
+            {
+                AssertRealAssetRoundTripSnapshot(
+                    reloadedAfterUndo.Document,
+                    recordIndex,
+                    "HPOS",
+                    expectedOriginalRawHpos,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectUnplacedObject: false,
+                    "reloaded undone real asset editor snap-to-grid snapshot should preserve original HPOS");
+                AssertRealAssetRoundTripSnapshot(
+                    reloadedAfterUndo.Document,
+                    recordIndex,
+                    "VPOS",
+                    expectedOriginalRawVpos,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectUnplacedObject: false,
+                    "reloaded undone real asset editor snap-to-grid snapshot should preserve original VPOS");
+
+                var reloadedSection = reloadedAfterUndo.Document.ReportLayout?.Sections
+                    .FirstOrDefault(candidate => candidate.RecordIndex == expectedSectionRecordIndex);
+                var reloadedLayoutObject = reloadedSection?.Objects
+                    .FirstOrDefault(candidate => candidate.RecordIndex == recordIndex);
+                Expect(reloadedLayoutObject is not null,
+                    $"reloaded undone real asset editor snap-to-grid snapshot should preserve layout object {recordIndex} for {sourcePath}");
+                if (reloadedLayoutObject is not null)
+                {
+                    Expect(TryGetReportLayoutObjectValue(reloadedLayoutObject, "HPOS") == expectedOriginalLayoutHpos,
+                        $"reloaded undone real asset editor snap-to-grid snapshot should expose layout HPOS={expectedOriginalLayoutHpos} for {sourcePath}");
+                    Expect(TryGetReportLayoutObjectValue(reloadedLayoutObject, "VPOS") == expectedOriginalLayoutVpos,
+                        $"reloaded undone real asset editor snap-to-grid snapshot should expose layout VPOS={expectedOriginalLayoutVpos} for {sourcePath}");
+                }
+            }
+
+            TearDownForm(hostForm);
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeAssetEditorDeletedDuplicateCommandWithRealAsset(
         string? sourcePath,
         int recordIndex,
@@ -21620,6 +22288,68 @@ internal static class Program
         };
     }
 
+    private static CopperfinStudioSnapshotDocument BuildAssetEditorSnapLabelObjectSmokeSnapshot()
+    {
+        return new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "label",
+            FieldCount = 5,
+            Objects = new List<CopperfinStudioSnapshotObject>
+            {
+                new()
+                {
+                    RecordIndex = 7,
+                    Title = "snap.value",
+                    Subtitle = "label",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "UNIQUEID", Value = "snap-field-guid" },
+                        new() { Name = "HPOS", Value = "1901" },
+                        new() { Name = "VPOS", Value = "2605" },
+                        new() { Name = "WIDTH", Value = "3400" },
+                        new() { Name = "HEIGHT", Value = "600" },
+                        new() { Name = "EXPR", Value = "snap.value" }
+                    }
+                }
+            },
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                IsLabel = true,
+                Settings = new List<CopperfinStudioNamedValue>
+                {
+                    new() { Name = "GRIDH", Value = "12", RecordIndex = 0 },
+                    new() { Name = "GRIDV", Value = "12", RecordIndex = 0 }
+                },
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail_1",
+                        Title = "Detail",
+                        BandKind = "detail",
+                        RecordIndex = 42,
+                        Top = 2000,
+                        Height = 5000,
+                        Objects = new List<CopperfinStudioReportLayoutObject>
+                        {
+                            new()
+                            {
+                                RecordIndex = 7,
+                                ObjectKind = "label",
+                                Title = "snap.value",
+                                Expression = "snap.value",
+                                Left = 1901,
+                                Top = 2605,
+                                Width = 3400,
+                                Height = 600
+                            }
+                        }
+                    }
+                }
+            }
+        };
+    }
+
     private static CopperfinStudioSnapshotDocument BuildAssetEditorRestoreLabelObjectSmokeSnapshot()
     {
         return new CopperfinStudioSnapshotDocument
@@ -22161,6 +22891,67 @@ internal static class Program
         };
     }
 
+    private static CopperfinStudioSnapshotDocument BuildAssetEditorSnapReportObjectSmokeSnapshot()
+    {
+        return new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "report",
+            FieldCount = 5,
+            Objects = new List<CopperfinStudioSnapshotObject>
+            {
+                new()
+                {
+                    RecordIndex = 7,
+                    Title = "snap.value",
+                    Subtitle = "field",
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "UNIQUEID", Value = "snap-field-guid" },
+                        new() { Name = "HPOS", Value = "1001" },
+                        new() { Name = "VPOS", Value = "2405" },
+                        new() { Name = "WIDTH", Value = "3200" },
+                        new() { Name = "HEIGHT", Value = "700" },
+                        new() { Name = "EXPR", Value = "snap.value" }
+                    }
+                }
+            },
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                Settings = new List<CopperfinStudioNamedValue>
+                {
+                    new() { Name = "GRIDH", Value = "12", RecordIndex = 0 },
+                    new() { Name = "GRIDV", Value = "12", RecordIndex = 0 }
+                },
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail_1",
+                        Title = "Detail",
+                        BandKind = "detail",
+                        RecordIndex = 42,
+                        Top = 2000,
+                        Height = 5000,
+                        Objects = new List<CopperfinStudioReportLayoutObject>
+                        {
+                            new()
+                            {
+                                RecordIndex = 7,
+                                ObjectKind = "field",
+                                Title = "snap.value",
+                                Expression = "snap.value",
+                                Left = 1001,
+                                Top = 2405,
+                                Width = 3200,
+                                Height = 700
+                            }
+                        }
+                    }
+                }
+            }
+        };
+    }
+
     private static CopperfinStudioSnapshotDocument BuildAssetEditorDeleteReportObjectSmokeSnapshot()
     {
         return new CopperfinStudioSnapshotDocument
@@ -22566,6 +23357,13 @@ internal static class Program
 """;
     }
 
+    private static string BuildSnapToGridLabelObjectHostResponseJson()
+    {
+        return """
+{"Status":"ok","Document":{"AssetFamily":"label","FieldCount":5,"Objects":[{"RecordIndex":7,"Title":"snap.value","Subtitle":"label","Properties":[{"Name":"UNIQUEID","Value":"snap-field-guid"},{"Name":"HPOS","Value":"1908"},{"Name":"VPOS","Value":"2604"},{"Name":"WIDTH","Value":"3400"},{"Name":"HEIGHT","Value":"600"},{"Name":"EXPR","Value":"snap.value"}]}],"ReportLayout":{"IsLabel":true,"PreviewBoundsAvailable":true,"PreviewBoundsLeft":1908,"PreviewBoundsTop":2604,"PreviewBoundsRight":5308,"PreviewBoundsBottom":3204,"PreviewBoundsWidth":3400,"PreviewBoundsHeight":600,"Settings":[{"Name":"GRIDH","Value":"12","RecordIndex":0},{"Name":"GRIDV","Value":"12","RecordIndex":0}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":7,"ObjectKind":"label","Title":"snap.value","Expression":"snap.value","Left":1908,"Top":2604,"Width":3400,"Height":600}]}],"DeletedSections":[],"UnplacedObjects":[]},"SelectedReportSelectionAvailable":true,"SelectedReportSelectionKind":"object","SelectedReportObjectAvailable":true,"SelectedReportObject":{"RecordIndex":7,"Title":"snap.value","Subtitle":"label","Properties":[{"Name":"UNIQUEID","Value":"snap-field-guid"},{"Name":"HPOS","Value":"1908"},{"Name":"VPOS","Value":"2604"},{"Name":"WIDTH","Value":"3400"},{"Name":"HEIGHT","Value":"600"},{"Name":"EXPR","Value":"snap.value"}]},"SelectedReportObjectSectionAvailable":true,"SelectedReportObjectSection":{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42}}}
+""";
+    }
+
     private static string BuildDuplicateLabelObjectHostResponseJson()
     {
         return """
@@ -22626,6 +23424,13 @@ internal static class Program
     {
         return """
 {"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[{"RecordIndex":6,"Title":"first.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"first-field-guid"},{"Name":"HPOS","Value":"1000"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"3200"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"first.value"}]},{"RecordIndex":7,"Title":"middle.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"middle-field-guid"},{"Name":"HPOS","Value":"2100"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"3200"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"middle.value"}]},{"RecordIndex":8,"Title":"last.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"last-field-guid"},{"Name":"HPOS","Value":"3200"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"2700"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"last.value"}]}],"ReportLayout":{"PreviewBoundsAvailable":true,"PreviewBoundsLeft":1000,"PreviewBoundsTop":2400,"PreviewBoundsRight":5900,"PreviewBoundsBottom":3100,"PreviewBoundsWidth":4900,"PreviewBoundsHeight":700,"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":6,"ObjectKind":"field","Title":"first.value","Expression":"first.value","Left":1000,"Top":2400,"Width":3200,"Height":700},{"RecordIndex":7,"ObjectKind":"field","Title":"middle.value","Expression":"middle.value","Left":2100,"Top":2400,"Width":3200,"Height":700},{"RecordIndex":8,"ObjectKind":"field","Title":"last.value","Expression":"last.value","Left":3200,"Top":2400,"Width":2700,"Height":700}]}],"DeletedSections":[],"UnplacedObjects":[]},"SelectedReportSelectionAvailable":true,"SelectedReportSelectionKind":"object","SelectedReportObjectAvailable":true,"SelectedReportObject":{"RecordIndex":7,"Title":"middle.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"middle-field-guid"},{"Name":"HPOS","Value":"2100"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"3200"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"middle.value"}]},"SelectedReportObjectSectionAvailable":true,"SelectedReportObjectSection":{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42}}}
+""";
+    }
+
+    private static string BuildSnapToGridReportObjectHostResponseJson()
+    {
+        return """
+{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[{"RecordIndex":7,"Title":"snap.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"snap-field-guid"},{"Name":"HPOS","Value":"1008"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"3200"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"snap.value"}]}],"ReportLayout":{"PreviewBoundsAvailable":true,"PreviewBoundsLeft":1008,"PreviewBoundsTop":2400,"PreviewBoundsRight":4208,"PreviewBoundsBottom":3100,"PreviewBoundsWidth":3200,"PreviewBoundsHeight":700,"Settings":[{"Name":"GRIDH","Value":"12","RecordIndex":0},{"Name":"GRIDV","Value":"12","RecordIndex":0}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[{"RecordIndex":7,"ObjectKind":"field","Title":"snap.value","Expression":"snap.value","Left":1008,"Top":2400,"Width":3200,"Height":700}]}],"DeletedSections":[],"UnplacedObjects":[]},"SelectedReportSelectionAvailable":true,"SelectedReportSelectionKind":"object","SelectedReportObjectAvailable":true,"SelectedReportObject":{"RecordIndex":7,"Title":"snap.value","Subtitle":"field","Properties":[{"Name":"UNIQUEID","Value":"snap-field-guid"},{"Name":"HPOS","Value":"1008"},{"Name":"VPOS","Value":"2400"},{"Name":"WIDTH","Value":"3200"},{"Name":"HEIGHT","Value":"700"},{"Name":"EXPR","Value":"snap.value"}]},"SelectedReportObjectSectionAvailable":true,"SelectedReportObjectSection":{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42}}}
 """;
     }
 

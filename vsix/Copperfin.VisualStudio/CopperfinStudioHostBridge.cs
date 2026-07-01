@@ -155,6 +155,25 @@ internal static class CopperfinStudioHostBridge
         return $"{arguments} --path {Quote(documentPath)}";
     }
 
+    public static string BuildSnapObjectArguments(
+        string documentPath,
+        int recordIndex,
+        string snapMode,
+        double gridWidth,
+        double gridHeight,
+        IReadOnlyList<string> targetUniqueIds)
+    {
+        var arguments = $"--from-vs --json --record {recordIndex} --snap-object --snap-mode {Quote(snapMode)}" +
+                        $" --grid-width {gridWidth.ToString(CultureInfo.InvariantCulture)}" +
+                        $" --grid-height {gridHeight.ToString(CultureInfo.InvariantCulture)}";
+        foreach (var targetUniqueId in targetUniqueIds)
+        {
+            arguments += $" --snap-target-unique-id {Quote(targetUniqueId)}";
+        }
+
+        return $"{arguments} --path {Quote(documentPath)}";
+    }
+
     public static bool Launch(string studioHostPath, string documentPath, bool readOnly = false)
     {
         var startInfo = new DiagnosticsStartInfo
