@@ -64,6 +64,20 @@ internal static class CopperfinStudioHostBridge
         return $"{arguments} --path {Quote(documentPath)}";
     }
 
+    public static string BuildDeletedStatesArguments(
+        string documentPath,
+        IReadOnlyList<KeyValuePair<string, bool>> deletedStateChanges)
+    {
+        var arguments = $"--path {Quote(documentPath)} --deleted-states";
+        foreach (var deletedStateChange in deletedStateChanges)
+        {
+            arguments += $" --deleted-state-target-unique-id {Quote(deletedStateChange.Key)}";
+            arguments += $" --deleted-state {(deletedStateChange.Value ? "true" : "false")}";
+        }
+
+        return $"{arguments} --json";
+    }
+
     public static string BuildDeleteObjectArguments(string documentPath, int recordIndex, string? uniqueId = null)
     {
         return BuildObjectLifecycleArguments(documentPath, "--delete-object", recordIndex, uniqueId);

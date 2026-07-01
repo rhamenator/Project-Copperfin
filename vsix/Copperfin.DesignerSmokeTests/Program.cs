@@ -3090,6 +3090,23 @@ internal static class Program
                     "EXPRESSIONFIELD",
                     "EXPRESSIONMEMO"
                 });
+            SmokeAssetEditorDeletedSectionMetadataSelectionWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 5,
+                expectedProperties: new[]
+                {
+                    new KeyValuePair<string, string>("SECTIONSTATE", "Deleted"),
+                    new KeyValuePair<string, string>("EXPR", string.Empty),
+                    new KeyValuePair<string, string>("GROUPINGEXPRESSION", "titles_by_author.author_id"),
+                    new KeyValuePair<string, string>("GROUPINGEXPRESSIONFIELD", "6"),
+                    new KeyValuePair<string, string>("GROUPINGEXPRESSIONMEMO", "18"),
+                    new KeyValuePair<string, string>("GROUPPARTNERSTATE", "Live")
+                },
+                expectedMissingProperties: new[]
+                {
+                    "EXPRESSIONFIELD",
+                    "EXPRESSIONMEMO"
+                });
             SmokeAssetEditorBatchPropertyRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 7,
@@ -28360,6 +28377,163 @@ internal static class Program
         }
 
         TearDownForm(hostForm);
+    }
+
+    private static void SmokeAssetEditorDeletedSectionMetadataSelectionWithRealAsset(
+        string? sourcePath,
+        int recordIndex,
+        IReadOnlyList<KeyValuePair<string, string>> expectedProperties,
+        IReadOnlyList<string>? expectedMissingProperties = null)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(sourcePath) ? "real deleted section-metadata candidate" : sourcePath)} not found.");
+            return;
+        }
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmokeRealDeletedSectionMetadata-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateWritableAssetCopy(sourcePath!, tempRoot);
+
+        try
+        {
+            var initialSnapshot = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(initialSnapshot.Success && initialSnapshot.Document?.ReportLayout is not null,
+                $"real deleted section-metadata smoke should load initial snapshot data for {sourcePath}");
+            if (!initialSnapshot.Success || initialSnapshot.Document?.ReportLayout is null)
+            {
+                return;
+            }
+
+            var liveSection = initialSnapshot.Document.ReportLayout.Sections
+                .FirstOrDefault(section => section.RecordIndex == recordIndex);
+            Expect(liveSection is not null && !string.IsNullOrWhiteSpace(liveSection.Id),
+                $"real deleted section-metadata smoke should resolve section identity for {sourcePath}");
+            if (liveSection is null || string.IsNullOrWhiteSpace(liveSection.Id))
+            {
+                return;
+            }
+
+            var deleteResult = CopperfinStudioSnapshotClient.TryUpdateDeletedStates(
+                assetPath,
+                new[]
+                {
+                    new KeyValuePair<string, bool>(liveSection.Id, true)
+                });
+            Expect(deleteResult.Success && deleteResult.Document?.ReportLayout is not null,
+                $"real deleted section-metadata smoke should delete section {recordIndex} for {sourcePath}");
+            if (!deleteResult.Success || deleteResult.Document?.ReportLayout is null)
+            {
+                return;
+            }
+
+            var deletedSection = deleteResult.Document.ReportLayout.DeletedSections
+                .FirstOrDefault(section => section.RecordIndex == recordIndex);
+            Expect(deletedSection is not null,
+                $"real deleted section-metadata smoke should surface deleted section {recordIndex} for {sourcePath}");
+            if (deletedSection is null)
+            {
+                return;
+            }
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+            control.LoadDocument(assetPath);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+
+            var loaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => sectionListView.Items.Cast<ListViewItem>().Any(item =>
+                    item.Tag is CopperfinStudioReportSection section &&
+                    section.RecordIndex == recordIndex &&
+                    section.Deleted));
+            Expect(loaded, $"real deleted section-metadata smoke should load deleted section data for {sourcePath}");
+            if (!loaded)
+            {
+                TearDownForm(hostForm);
+                return;
+            }
+
+            foreach (ListViewItem item in sectionListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioReportSection section &&
+                                section.RecordIndex == recordIndex &&
+                                section.Deleted;
+            }
+
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            Application.DoEvents();
+
+            var expectedSectionListTitle = InvokeAssetEditorString(control, "BuildDeletedReportSectionListTitle", deletedSection);
+            var selected = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => propertyGrid.SelectedObject is CopperfinDesignerSelection selection &&
+                      selection.RecordIndex == recordIndex &&
+                      string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, expectedSectionListTitle, StringComparison.Ordinal) &&
+                      objectListView.Items.Count == 0);
+            Expect(selected,
+                $"real deleted section-metadata smoke should produce a deleted section-rooted selection for {sourcePath}");
+            if (!selected || propertyGrid.SelectedObject is not CopperfinDesignerSelection sectionSelection)
+            {
+                TearDownForm(hostForm);
+                return;
+            }
+
+            foreach (var expectedProperty in expectedProperties)
+            {
+                Expect(string.Equals(
+                        ReadSelectionPropertyValue(sectionSelection, expectedProperty.Key),
+                        expectedProperty.Value,
+                        StringComparison.Ordinal),
+                    $"real deleted section-metadata smoke should expose {expectedProperty.Key}={expectedProperty.Value} for {sourcePath}");
+            }
+
+            if (expectedMissingProperties is not null)
+            {
+                foreach (var missingProperty in expectedMissingProperties)
+                {
+                    Expect(
+                        TypeDescriptor.GetProperties(sectionSelection)[missingProperty] is null,
+                        $"real deleted section-metadata smoke should omit {missingProperty} for {sourcePath}");
+                }
+            }
+
+            TearDownForm(hostForm);
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
     }
 
     private static void SmokeAssetEditorBatchPropertyRoundTripWithRealAsset(
