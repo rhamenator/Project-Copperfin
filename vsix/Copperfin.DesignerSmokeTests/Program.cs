@@ -589,6 +589,58 @@ internal static class Program
                     MemoBlockNumber = 18
                 },
                 expectRawSnapshotProperty: false);
+            SmokeRealAssetHostBackedSettingsRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                propertyName: "PAPERSIZE",
+                originalValue: "1",
+                updatedValue: "5",
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "PAPERSIZE",
+                    Value = "5",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 1,
+                    MemoBlockNumber = 142
+                },
+                expectedUndoneSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "PAPERSIZE",
+                    Value = "1",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 1,
+                    MemoBlockNumber = 143
+                },
+                expectRawSnapshotProperty: false);
+            SmokeRealAssetHostBackedSettingsRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                propertyName: "PAPERSIZE",
+                originalValue: "1",
+                updatedValue: "9",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "PAPERSIZE",
+                    Value = "9",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 1,
+                    MemoBlockNumber = 17
+                },
+                expectedUndoneSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "PAPERSIZE",
+                    Value = "1",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 1,
+                    MemoBlockNumber = 18
+                },
+                expectRawSnapshotProperty: false);
             SmokeRealAssetHostBackedMissingSettingsRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 propertyName: "DRIVER",
@@ -980,6 +1032,64 @@ internal static class Program
                     RecordIndex = 0,
                     FieldIndex = 6,
                     SourceLineIndex = 0,
+                    MemoBlockNumber = 18
+                },
+                expectRawSnapshotProperty: false);
+            SmokeAssetEditorSettingsRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                propertyName: "PAPERSIZE",
+                expectedOriginalSelectionValue: "1",
+                updatedPropertyValue: 5,
+                expectedUpdatedSelectionValue: "5",
+                expectedOriginalRawValue: "1",
+                expectedUpdatedRawValue: "5",
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "PAPERSIZE",
+                    Value = "5",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 1,
+                    MemoBlockNumber = 142
+                },
+                expectedUndoneSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "PAPERSIZE",
+                    Value = "1",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 1,
+                    MemoBlockNumber = 143
+                },
+                expectRawSnapshotProperty: false);
+            SmokeAssetEditorSettingsRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                propertyName: "PAPERSIZE",
+                expectedOriginalSelectionValue: "1",
+                updatedPropertyValue: 9,
+                expectedUpdatedSelectionValue: "9",
+                expectedOriginalRawValue: "1",
+                expectedUpdatedRawValue: "9",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "PAPERSIZE",
+                    Value = "9",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 1,
+                    MemoBlockNumber = 17
+                },
+                expectedUndoneSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "PAPERSIZE",
+                    Value = "1",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 1,
                     MemoBlockNumber = 18
                 },
                 expectRawSnapshotProperty: false);
