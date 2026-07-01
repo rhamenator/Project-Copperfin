@@ -3074,6 +3074,22 @@ internal static class Program
                     new KeyValuePair<string, string>("GROUPINGEXPRESSIONFIELD", "6"),
                     new KeyValuePair<string, string>("GROUPINGEXPRESSIONMEMO", "18")
                 });
+            SmokeAssetEditorSectionMetadataSelectionWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 5,
+                expectedSectionListTitle: "Group Footer - titles_by_author.author_id",
+                expectedProperties: new[]
+                {
+                    new KeyValuePair<string, string>("EXPR", string.Empty),
+                    new KeyValuePair<string, string>("GROUPINGEXPRESSION", "titles_by_author.author_id"),
+                    new KeyValuePair<string, string>("GROUPINGEXPRESSIONFIELD", "6"),
+                    new KeyValuePair<string, string>("GROUPINGEXPRESSIONMEMO", "18")
+                },
+                expectedMissingProperties: new[]
+                {
+                    "EXPRESSIONFIELD",
+                    "EXPRESSIONMEMO"
+                });
             SmokeAssetEditorBatchPropertyRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 7,
@@ -28260,7 +28276,8 @@ internal static class Program
         string? sourcePath,
         int recordIndex,
         string expectedSectionListTitle,
-        IReadOnlyList<KeyValuePair<string, string>> expectedProperties)
+        IReadOnlyList<KeyValuePair<string, string>> expectedProperties,
+        IReadOnlyList<string>? expectedMissingProperties = null)
     {
         if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
         {
@@ -28330,6 +28347,16 @@ internal static class Program
                     expectedProperty.Value,
                     StringComparison.Ordinal),
                 $"real asset editor section-metadata smoke should expose {expectedProperty.Key}={expectedProperty.Value} for {sourcePath}");
+        }
+
+        if (expectedMissingProperties is not null)
+        {
+            foreach (var missingProperty in expectedMissingProperties)
+            {
+                Expect(
+                    TypeDescriptor.GetProperties(sectionSelection)[missingProperty] is null,
+                    $"real asset editor section-metadata smoke should omit {missingProperty} for {sourcePath}");
+            }
         }
 
         TearDownForm(hostForm);
