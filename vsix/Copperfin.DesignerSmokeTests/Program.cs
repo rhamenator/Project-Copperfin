@@ -598,6 +598,34 @@ internal static class Program
                     MemoBlockNumber = 17
                 },
                 expectRawSnapshotProperty: false);
+            SmokeRealAssetHostBackedMissingSettingsRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                propertyName: "TAG",
+                updatedValue: "customer.region",
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "TAG",
+                    Value = "customer.region",
+                    RecordIndex = 0,
+                    FieldIndex = 19,
+                    MemoBlockNumber = 142
+                });
+            SmokeRealAssetHostBackedMissingSettingsRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                propertyName: "TAG",
+                updatedValue: "label.region",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "TAG",
+                    Value = "label.region",
+                    RecordIndex = 0,
+                    FieldIndex = 19,
+                    MemoBlockNumber = 17
+                });
             SmokeRealAssetHostBackedSettingsRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 propertyName: "GRIDV",
@@ -742,6 +770,38 @@ internal static class Program
                     MemoBlockNumber = 17
                 },
                 expectRawSnapshotProperty: false);
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                propertyName: "TAG",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: "customer.region",
+                expectedUpdatedSelectionValue: "customer.region",
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "TAG",
+                    Value = "customer.region",
+                    RecordIndex = 0,
+                    FieldIndex = 19,
+                    MemoBlockNumber = 142
+                });
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                propertyName: "TAG",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: "label.region",
+                expectedUpdatedSelectionValue: "label.region",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "TAG",
+                    Value = "label.region",
+                    RecordIndex = 0,
+                    FieldIndex = 19,
+                    MemoBlockNumber = 17
+                });
             SmokeAssetEditorSettingsRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 propertyName: "GRIDV",

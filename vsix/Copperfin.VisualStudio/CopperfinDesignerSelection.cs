@@ -588,7 +588,7 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         yield return new ReportSettingDescriptor { Name = "COLSPACING", LocalizationKey = "AssetEditor.Property.ColumnSpacing", Numeric = true, MaterializeWhenMissing = true };
         yield return new ReportSettingDescriptor { Name = "GRIDV", LocalizationKey = "AssetEditor.Property.VerticalGrid", Numeric = true, MaterializeWhenMissing = true };
         yield return new ReportSettingDescriptor { Name = "GRIDH", LocalizationKey = "AssetEditor.Property.HorizontalGrid", Numeric = true, MaterializeWhenMissing = true };
-        yield return new ReportSettingDescriptor { Name = "TAG", LocalizationKey = "AssetEditor.Property.SortExpression", Numeric = false, MaterializeWhenMissing = false };
+        yield return new ReportSettingDescriptor { Name = "TAG", LocalizationKey = "AssetEditor.Property.SortExpression", Numeric = false, MaterializeWhenMissing = true };
     }
 
     private static string BuildStateText(CopperfinLocalization? localization, bool deleted)
