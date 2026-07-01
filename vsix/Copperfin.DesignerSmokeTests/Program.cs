@@ -146,6 +146,11 @@ internal static class Program
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"));
+            SmokeRealAssetSettingsPageSetupSelection(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"));
             SmokeRealAssetSettingsPreviewBoundsSelection(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
@@ -8596,6 +8601,148 @@ internal static class Program
                objectListView.Items.Count == 0 &&
                string.Equals(ReadSelectionPropertyValue(settingsSelection, "DOCUMENTTITLE"), documentTitle, StringComparison.Ordinal),
             $"real asset settings smoke should expose shared document-title continuity for {selectedPath}");
+
+        TearDownForm(hostForm);
+    }
+
+    private static void SmokeRealAssetSettingsPageSetupSelection(params string?[] sourcePaths)
+    {
+        var reportSettings = new Dictionary<string, CopperfinStudioNamedValue>(StringComparer.OrdinalIgnoreCase);
+        var labelSettings = new Dictionary<string, CopperfinStudioNamedValue>(StringComparer.OrdinalIgnoreCase);
+        string? reportPath = null;
+        string? labelPath = null;
+        const string reportAssetFamily = "report";
+        const string labelAssetFamily = "label";
+        var requiredSettingNames = new[]
+        {
+            "ORIENTATION",
+            "PAPERSIZE",
+            "GRIDV",
+            "GRIDH"
+        };
+
+        foreach (var candidatePath in EnumerateResolvedRealReportAssetPaths(sourcePaths))
+        {
+            if ((reportPath is not null && labelPath is not null) ||
+                string.IsNullOrWhiteSpace(candidatePath) ||
+                !File.Exists(candidatePath))
+            {
+                continue;
+            }
+
+            var candidateSnapshot = CopperfinStudioSnapshotClient.TryLoad(candidatePath!);
+            var candidateDocument = candidateSnapshot.Document;
+            var candidateLayout = candidateDocument?.ReportLayout;
+            if (!candidateSnapshot.Success || candidateDocument is null || candidateLayout is null)
+            {
+                continue;
+            }
+
+            var candidateSettings = requiredSettingNames
+                .Select(settingName => candidateLayout.Settings.FirstOrDefault(setting =>
+                    string.Equals(setting.Name, settingName, StringComparison.OrdinalIgnoreCase) &&
+                    !string.IsNullOrWhiteSpace(setting.Value)))
+                .ToList();
+            if (candidateSettings.Any(setting => setting is null))
+            {
+                continue;
+            }
+
+            var destinationPath = candidateDocument.AssetFamily switch
+            {
+                reportAssetFamily when reportPath is null => candidatePath,
+                labelAssetFamily when labelPath is null => candidatePath,
+                _ => null
+            };
+            if (destinationPath is null)
+            {
+                continue;
+            }
+
+            var destinationSettings = candidateDocument.AssetFamily switch
+            {
+                reportAssetFamily => reportSettings,
+                labelAssetFamily => labelSettings,
+                _ => throw new InvalidOperationException("Unexpected real asset family for page-setup settings continuity smoke.")
+            };
+
+            foreach (var setting in candidateSettings)
+            {
+                destinationSettings[setting!.Name] = setting;
+            }
+
+            if (string.Equals(candidateDocument.AssetFamily, reportAssetFamily, StringComparison.OrdinalIgnoreCase))
+            {
+                reportPath = destinationPath;
+            }
+            else if (string.Equals(candidateDocument.AssetFamily, labelAssetFamily, StringComparison.OrdinalIgnoreCase))
+            {
+                labelPath = destinationPath;
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(reportPath) || string.IsNullOrWhiteSpace(labelPath))
+        {
+            Console.WriteLine("SKIP: real page-setup settings candidates for both report and label assets not found.");
+            return;
+        }
+
+        VerifyRealAssetSettingsPageSetupSelection(reportPath!, reportSettings);
+        VerifyRealAssetSettingsPageSetupSelection(labelPath!, labelSettings);
+    }
+
+    private static void VerifyRealAssetSettingsPageSetupSelection(
+        string selectedPath,
+        IReadOnlyDictionary<string, CopperfinStudioNamedValue> expectedSettings)
+    {
+        using var hostForm = new Form
+        {
+            Width = 1400,
+            Height = 1000,
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-32000, -32000)
+        };
+
+        using var control = new CopperfinAssetEditorControl
+        {
+            Dock = DockStyle.Fill
+        };
+
+        hostForm.Controls.Add(control);
+        hostForm.Show();
+        Application.DoEvents();
+        control.LoadDocument(selectedPath);
+
+        var sectionListView = GetPrivateListView(control, "sectionListView");
+        var objectListView = GetPrivateListView(control, "objectListView");
+        var propertyGrid = GetPrivatePropertyGrid(control);
+        var loaded = WaitUntil(
+            TimeSpan.FromSeconds(8),
+            () => sectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, "Settings", StringComparison.Ordinal)));
+        Expect(loaded, $"real asset settings smoke should surface the settings scope for {selectedPath}");
+        if (!loaded)
+        {
+            TearDownForm(hostForm);
+            return;
+        }
+
+        foreach (ListViewItem item in sectionListView.Items)
+        {
+            item.Selected = string.Equals(item.Text, "Settings", StringComparison.Ordinal);
+        }
+
+        InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+        Application.DoEvents();
+
+        Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection settingsSelection &&
+               settingsSelection.RecordIndex == expectedSettings["ORIENTATION"].RecordIndex &&
+               objectListView.Items.Count == 0 &&
+               string.Equals(ReadSelectionPropertyValue(settingsSelection, "ORIENTATION"), expectedSettings["ORIENTATION"].Value, StringComparison.Ordinal) &&
+               string.Equals(ReadSelectionPropertyValue(settingsSelection, "PAPERSIZE"), expectedSettings["PAPERSIZE"].Value, StringComparison.Ordinal) &&
+               string.Equals(ReadSelectionPropertyValue(settingsSelection, "GRIDV"), expectedSettings["GRIDV"].Value, StringComparison.Ordinal) &&
+               string.Equals(ReadSelectionPropertyValue(settingsSelection, "GRIDH"), expectedSettings["GRIDH"].Value, StringComparison.Ordinal),
+            $"real asset settings smoke should expose shared page-setup/grid continuity for {selectedPath}");
 
         TearDownForm(hostForm);
     }
