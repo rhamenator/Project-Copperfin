@@ -981,6 +981,8 @@ internal static class Program
                     TryResolveVfpSourceAsset("VFPSource/addlabel/addlabel.pjx"),
                     TryResolveVfpSourceAsset("VFPSource/tasklist/tasklist.PJX")),
                 expectGroups: new[] { "Forms", "Programs", "Class Libraries", "Classes", "Other Assets" });
+            SmokeProgramEditorWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/tasklist/main.prg"));
             SmokeProjectDebuggerWithRealAsset(
                 ResolveFirstExistingRealAssetPath(
                     TryResolveVfp9InstallAsset(@"Samples\Solution\solution.pjx"),
@@ -1372,8 +1374,11 @@ internal static class Program
                BuildGuidanceText(spanishControl, "label").IndexOf("objetos de etiqueta", StringComparison.Ordinal) >= 0 &&
                BuildGuidanceText(spanishControl, "menu").IndexOf("estructuras de menú", StringComparison.Ordinal) >= 0 &&
                BuildGuidanceText(spanishControl, "project").IndexOf("espacios de trabajo agrupados", StringComparison.Ordinal) >= 0 &&
+               BuildGuidanceText(spanishControl, "program").IndexOf("programas PRG", StringComparison.Ordinal) >= 0 &&
                BuildGuidanceText(spanishControl, "unknown").IndexOf("instantánea estructurada", StringComparison.Ordinal) >= 0,
             "Spanish asset-family guidance should localize all static guidance cases");
+        Expect(CopperfinStudioHostBridge.DescribeAssetKind("main.prg", new CopperfinLocalization("es-419")) == "Programa visual",
+            "Spanish asset-kind labels should localize PRG assets as first-class program documents");
 
         using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
         Expect(BuildGuidanceText(portugueseControl, "form").IndexOf("objetos de formulário", StringComparison.Ordinal) >= 0 &&
@@ -1382,8 +1387,17 @@ internal static class Program
                BuildGuidanceText(portugueseControl, "label").IndexOf("objetos de etiqueta", StringComparison.Ordinal) >= 0 &&
                BuildGuidanceText(portugueseControl, "menu").IndexOf("estruturas de menu", StringComparison.Ordinal) >= 0 &&
                BuildGuidanceText(portugueseControl, "project").IndexOf("espaços de trabalho agrupados", StringComparison.Ordinal) >= 0 &&
+               BuildGuidanceText(portugueseControl, "program").IndexOf("programas PRG", StringComparison.Ordinal) >= 0 &&
                BuildGuidanceText(portugueseControl, "unknown").IndexOf("instantâneo estruturado", StringComparison.Ordinal) >= 0,
             "Portuguese asset-family guidance should localize all static guidance cases");
+        Expect(CopperfinStudioHostBridge.DescribeAssetKind("main.prg", new CopperfinLocalization("pt-BR")) == "Programa visual",
+            "Portuguese asset-kind labels should localize PRG assets as first-class program documents");
+
+        var pseudoLocalization = new CopperfinLocalization("qps-ploc");
+        using var pseudoControl = new CopperfinAssetEditorControl(pseudoLocalization);
+        Expect(BuildGuidanceText(pseudoControl, "program").StartsWith("[!! ", StringComparison.Ordinal) &&
+               CopperfinStudioHostBridge.DescribeAssetKind("main.prg", pseudoLocalization).StartsWith("[!! ", StringComparison.Ordinal),
+            "Pseudo-localized program guidance and asset-kind labels should route through the shared catalog");
     }
 
     private static void SmokeLocalizedReportLayoutShellSummary()
@@ -16055,6 +16069,62 @@ internal static class Program
         var databaseSummary = FindRichTextBoxes(control)
             .FirstOrDefault(box => box.Text.IndexOf("Copperfin Database Federation", StringComparison.OrdinalIgnoreCase) >= 0);
         Expect(databaseSummary is not null, $"project editor should surface a database pane for {path}");
+
+        TearDownForm(hostForm);
+    }
+
+    private static void SmokeProgramEditorWithRealAsset(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(path) ? "real program asset candidate" : path)} not found.");
+            return;
+        }
+
+        var loadedSnapshot = CopperfinStudioSnapshotClient.TryLoad(path!);
+        Expect(loadedSnapshot.Success && loadedSnapshot.Document is not null,
+            $"program editor smoke should load snapshot data for {path}");
+        if (!loadedSnapshot.Success || loadedSnapshot.Document is null)
+        {
+            return;
+        }
+
+        Expect(string.Equals(loadedSnapshot.Document.Kind, "program", StringComparison.Ordinal) &&
+               string.Equals(loadedSnapshot.Document.AssetFamily, "program", StringComparison.Ordinal),
+            $"program editor smoke should preserve the native program document identity for {path}");
+
+        using var hostForm = new Form
+        {
+            Width = 1400,
+            Height = 1000,
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-32000, -32000)
+        };
+
+        using var control = new CopperfinAssetEditorControl
+        {
+            Dock = DockStyle.Fill
+        };
+
+        hostForm.Controls.Add(control);
+        hostForm.Show();
+        Application.DoEvents();
+        control.LoadDocument(path!);
+
+        var loaded = WaitUntil(
+            TimeSpan.FromSeconds(8),
+            () => HasLabelText(control, "Visual program") &&
+                  HasLabelTextContaining(control, "PRG program sources") &&
+                  HasLabelTextContaining(control, "Snapshot loaded: 0 object rows, 0 fields, 0 companion indexes."));
+        Expect(loaded, $"program editor smoke should load program-specific editor guidance for {path}");
+
+        Expect(HasLabelText(control, "Visual program"),
+            $"program editor smoke should title PRG assets as visual programs for {path}");
+        Expect(HasLabelTextContaining(control, "PRG program sources"),
+            $"program editor smoke should surface program-specific guidance for {path}");
+        Expect(!FindButtons(control).Any(button => button.Visible && button.Text == "Build Copperfin Project"),
+            $"program editor smoke should keep PRG assets on the direct program path rather than the project workflow shell for {path}");
 
         TearDownForm(hostForm);
     }

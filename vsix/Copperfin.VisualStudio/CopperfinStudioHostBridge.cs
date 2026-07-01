@@ -120,6 +120,7 @@ internal static class CopperfinStudioHostBridge
             ".frx" => "Studio.AssetKind.Report",
             ".lbx" => "Studio.AssetKind.Label",
             ".mnx" => "Studio.AssetKind.Menu",
+            ".prg" => "Studio.AssetKind.Program",
             _ => "Studio.AssetKind.Generic"
         };
 

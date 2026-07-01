@@ -1560,6 +1560,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             "label" => this.localization.Text("AssetEditor.Guidance.Label"),
             "menu" => this.localization.Text("AssetEditor.Guidance.Menu"),
             "project" => this.localization.Text("AssetEditor.Guidance.Project"),
+            "program" => this.localization.Text("AssetEditor.Guidance.Program"),
             _ => this.localization.Text("AssetEditor.Guidance.Generic")
         };
     }
