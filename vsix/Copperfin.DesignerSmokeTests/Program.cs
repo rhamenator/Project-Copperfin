@@ -348,6 +348,23 @@ internal static class Program
                 expectedReorderedRecordIndex: 0,
                 expectedCompanionRecordIndex: 14,
                 expectLabel: false);
+            SmokeRealAssetHostBackedReorderRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLE2V.FRX"),
+                reorderedSourceRecordIndex: 6,
+                reorderedSourceUniqueId: "_QEE1DR6KY",
+                reorderedSourceObjectTitle: "DATE()",
+                companionRecordIndex: 7,
+                companionUniqueId: "_QEE1DUBXM",
+                companionObjectTitle: "_QEE1DUBXM",
+                expectedSectionTitle: "Title",
+                initialSectionRecordIndex: 1,
+                reorderedSectionRecordIndex: 2,
+                expectedSectionCount: 4,
+                expectedSectionObjectCount: 3,
+                expectedInitialSectionRecordOrder: new[] { 7, 8, 6 },
+                expectedReorderedSectionRecordOrder: new[] { 7, 8, 0 },
+                expectedReorderedRecordIndex: 0,
+                expectLabel: false);
             SmokeAssetEditorPropertyGridRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 7,
@@ -513,6 +530,22 @@ internal static class Program
                 expectedVisibleSectionObjectCount: 8,
                 expectedReorderedRecordIndex: 0,
                 expectedCompanionRecordIndex: 14,
+                expectLabel: false);
+            SmokeAssetEditorReorderCommandWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLE2V.FRX"),
+                reorderedSourceRecordIndex: 6,
+                reorderedSourceUniqueId: "_QEE1DR6KY",
+                reorderedSourceObjectTitle: "DATE()",
+                companionRecordIndex: 7,
+                companionUniqueId: "_QEE1DUBXM",
+                companionObjectTitle: "_QEE1DUBXM",
+                expectedSectionTitle: "Title",
+                initialSectionRecordIndex: 1,
+                reorderedSectionRecordIndex: 2,
+                expectedSectionCount: 4,
+                expectedSectionObjectCount: 3,
+                expectedReorderedSectionRecordOrder: new[] { 7, 8, 0 },
+                expectedReorderedRecordIndex: 0,
                 expectLabel: false);
             SmokeAssetEditorSectionRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
@@ -10381,6 +10414,188 @@ internal static class Program
         }
     }
 
+    private static void SmokeRealAssetHostBackedReorderRoundTrip(
+        string? sourcePath,
+        int reorderedSourceRecordIndex,
+        string reorderedSourceUniqueId,
+        string reorderedSourceObjectTitle,
+        int companionRecordIndex,
+        string companionUniqueId,
+        string companionObjectTitle,
+        string expectedSectionTitle,
+        int initialSectionRecordIndex,
+        int reorderedSectionRecordIndex,
+        int expectedSectionCount,
+        int expectedSectionObjectCount,
+        IReadOnlyList<int> expectedInitialSectionRecordOrder,
+        IReadOnlyList<int> expectedReorderedSectionRecordOrder,
+        int expectedReorderedRecordIndex,
+        bool expectLabel)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(sourcePath) ? "real live reorder candidate" : sourcePath)} not found.");
+            return;
+        }
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmokeRealAssetReorders-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateWritableAssetCopy(sourcePath!, tempRoot);
+
+        try
+        {
+            var loaded = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(loaded.Success && loaded.Document is not null,
+                $"real live reorder smoke should load snapshot data for {sourcePath}");
+            if (!loaded.Success || loaded.Document is null)
+            {
+                return;
+            }
+
+            AssertRealAssetRoundTripSnapshot(
+                loaded.Document,
+                reorderedSourceRecordIndex,
+                "UNIQUEID",
+                reorderedSourceUniqueId,
+                reorderedSourceObjectTitle,
+                expectedSectionTitle,
+                expectedSectionCount,
+                expectLabel,
+                expectUnplacedObject: false,
+                $"initial real live reorder snapshot should preserve the reordered-source identity");
+            AssertRealAssetRoundTripSnapshot(
+                loaded.Document,
+                companionRecordIndex,
+                "UNIQUEID",
+                companionUniqueId,
+                companionObjectTitle,
+                expectedSectionTitle,
+                expectedSectionCount,
+                expectLabel,
+                expectUnplacedObject: false,
+                $"initial real live reorder snapshot should preserve the companion identity");
+            AssertRealAssetSectionObjectCount(
+                loaded.Document,
+                expectedSectionTitle,
+                expectedSectionObjectCount,
+                $"initial real live reorder snapshot should preserve section object counts");
+            AssertRealAssetSectionRecordOrder(
+                loaded.Document,
+                expectedSectionTitle,
+                initialSectionRecordIndex,
+                expectedInitialSectionRecordOrder,
+                $"initial real live reorder snapshot should preserve section record order");
+
+            var reorderResult = CopperfinStudioSnapshotClient.TryReorderObject(
+                assetPath,
+                reorderedSourceRecordIndex,
+                reorderedSourceUniqueId,
+                "front");
+            Expect(reorderResult.Success && reorderResult.Document is not null,
+                $"real live reorder smoke should reorder record {reorderedSourceRecordIndex} for {sourcePath}");
+            if (!reorderResult.Success || reorderResult.Document is null)
+            {
+                return;
+            }
+
+            AssertRealAssetRoundTripSnapshot(
+                reorderResult.Document,
+                expectedReorderedRecordIndex,
+                "UNIQUEID",
+                reorderedSourceUniqueId,
+                reorderedSourceObjectTitle,
+                expectedSectionTitle,
+                expectedSectionCount,
+                expectLabel,
+                expectUnplacedObject: false,
+                $"reordered real live asset snapshot should preserve the reordered-source identity");
+            AssertRealAssetRoundTripSnapshot(
+                reorderResult.Document,
+                companionRecordIndex,
+                "UNIQUEID",
+                companionUniqueId,
+                companionObjectTitle,
+                expectedSectionTitle,
+                expectedSectionCount,
+                expectLabel,
+                expectUnplacedObject: false,
+                $"reordered real live asset snapshot should preserve the companion identity");
+            AssertRealAssetSectionObjectCount(
+                reorderResult.Document,
+                expectedSectionTitle,
+                expectedSectionObjectCount,
+                $"reordered real live asset snapshot should preserve section object counts");
+            AssertRealAssetSectionRecordOrder(
+                reorderResult.Document,
+                expectedSectionTitle,
+                reorderedSectionRecordIndex,
+                expectedReorderedSectionRecordOrder,
+                $"reordered real live asset snapshot should preserve section record order");
+            Expect(!reorderResult.Document.CommandUndoAvailable,
+                $"real live reorder smoke should not expose command undo after reordering {sourcePath}");
+
+            var reloadedAfterReorder = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterReorder.Success && reloadedAfterReorder.Document is not null,
+                $"real live reorder smoke should reload reordered snapshot data for {sourcePath}");
+            if (!reloadedAfterReorder.Success || reloadedAfterReorder.Document is null)
+            {
+                return;
+            }
+
+            AssertRealAssetRoundTripSnapshot(
+                reloadedAfterReorder.Document,
+                expectedReorderedRecordIndex,
+                "UNIQUEID",
+                reorderedSourceUniqueId,
+                reorderedSourceObjectTitle,
+                expectedSectionTitle,
+                expectedSectionCount,
+                expectLabel,
+                expectUnplacedObject: false,
+                $"reloaded reordered real live asset snapshot should preserve the reordered-source identity");
+            AssertRealAssetRoundTripSnapshot(
+                reloadedAfterReorder.Document,
+                companionRecordIndex,
+                "UNIQUEID",
+                companionUniqueId,
+                companionObjectTitle,
+                expectedSectionTitle,
+                expectedSectionCount,
+                expectLabel,
+                expectUnplacedObject: false,
+                $"reloaded reordered real live asset snapshot should preserve the companion identity");
+            AssertRealAssetSectionObjectCount(
+                reloadedAfterReorder.Document,
+                expectedSectionTitle,
+                expectedSectionObjectCount,
+                $"reloaded reordered real live asset snapshot should preserve section object counts");
+            AssertRealAssetSectionRecordOrder(
+                reloadedAfterReorder.Document,
+                expectedSectionTitle,
+                reorderedSectionRecordIndex,
+                expectedReorderedSectionRecordOrder,
+                $"reloaded reordered real live asset snapshot should preserve section record order");
+            Expect(!reloadedAfterReorder.Document.CommandUndoAvailable,
+                $"reloaded real live reorder snapshot should not expose command undo for {sourcePath}");
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeAssetEditorDeletedReorderCommandWithRealAsset(
         string? sourcePath,
         int reorderedSourceRecordIndex,
@@ -10673,6 +10888,233 @@ internal static class Program
                     new[] { reorderedSourceUniqueId, companionUniqueId },
                     "reloaded real asset editor deleted-reorder snapshot should preserve deleted-row order");
             }
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
+    private static void SmokeAssetEditorReorderCommandWithRealAsset(
+        string? sourcePath,
+        int reorderedSourceRecordIndex,
+        string reorderedSourceUniqueId,
+        string reorderedSourceObjectTitle,
+        int companionRecordIndex,
+        string companionUniqueId,
+        string companionObjectTitle,
+        string expectedSectionTitle,
+        int initialSectionRecordIndex,
+        int reorderedSectionRecordIndex,
+        int expectedSectionCount,
+        int expectedSectionObjectCount,
+        IReadOnlyList<int> expectedReorderedSectionRecordOrder,
+        int expectedReorderedRecordIndex,
+        bool expectLabel)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(sourcePath) ? "real asset editor live reorder candidate" : sourcePath)} not found.");
+            return;
+        }
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmokeRealAssetEditorReorders-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateWritableAssetCopy(sourcePath!, tempRoot);
+
+        try
+        {
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+            control.LoadDocument(assetPath);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var reorderFrontButton = GetPrivateButton(control, "reorderFrontObjectButton");
+            var reorderBackButton = GetPrivateButton(control, "reorderBackObjectButton");
+            var deleteButton = GetPrivateButton(control, "deleteObjectButton");
+            var restoreButton = GetPrivateButton(control, "restoreObjectButton");
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface for the real live-reorder smoke.");
+
+            var loaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => sectionListView.Items.Count > 0);
+            Expect(loaded, $"real asset editor live-reorder smoke should load section data for {sourcePath}");
+            if (!loaded)
+            {
+                return;
+            }
+
+            foreach (ListViewItem item in sectionListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioReportSection section &&
+                                section.RecordIndex == initialSectionRecordIndex;
+            }
+
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            Application.DoEvents();
+
+            var objectLoaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => objectListView.Items.Cast<ListViewItem>()
+                    .Any(item => item.Tag is CopperfinStudioSnapshotObject snapshotObject &&
+                                 snapshotObject.RecordIndex == reorderedSourceRecordIndex));
+            Expect(objectLoaded, $"real asset editor live-reorder smoke should surface object {reorderedSourceRecordIndex} for {sourcePath}");
+            if (!objectLoaded)
+            {
+                return;
+            }
+
+            foreach (ListViewItem item in objectListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioSnapshotObject snapshotObject &&
+                                snapshotObject.RecordIndex == reorderedSourceRecordIndex;
+            }
+
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            var initialSectionModel = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioReportSection;
+            var initialObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
+            Expect(reorderFrontButton.Visible &&
+                   reorderFrontButton.Enabled &&
+                   reorderBackButton.Visible &&
+                   reorderBackButton.Enabled &&
+                   deleteButton.Visible &&
+                   deleteButton.Enabled &&
+                   !restoreButton.Visible &&
+                   objectListView.Items.Count == expectedSectionObjectCount &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == reorderedSourceRecordIndex &&
+                   initialSectionModel?.RecordIndex == initialSectionRecordIndex &&
+                   initialObject is not null &&
+                   string.Equals(TryGetSnapshotObjectPropertyValue(initialObject, "UNIQUEID"), reorderedSourceUniqueId, StringComparison.Ordinal),
+                $"real asset editor live-reorder smoke should start from a live object selection with reorder commands exposed for {sourcePath}");
+
+            reorderFrontButton.PerformClick();
+            Application.DoEvents();
+
+            var reorderedSelection = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
+                {
+                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                        refreshedSelection.RecordIndex != expectedReorderedRecordIndex)
+                    {
+                        return false;
+                    }
+
+                    var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault();
+                    var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
+                    var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
+                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                           selectedSectionModel?.RecordIndex == reorderedSectionRecordIndex &&
+                           objectListView.Items.Count == expectedSectionObjectCount &&
+                           selectedObject?.RecordIndex == expectedReorderedRecordIndex &&
+                           !selectedObject.Deleted &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(selectedObject, "UNIQUEID"), reorderedSourceUniqueId, StringComparison.Ordinal) &&
+                           string.Equals(selectedObject.Title, reorderedSourceObjectTitle, StringComparison.Ordinal) &&
+                           reorderFrontButton.Visible &&
+                           reorderFrontButton.Enabled &&
+                           reorderBackButton.Visible &&
+                           reorderBackButton.Enabled &&
+                           deleteButton.Visible &&
+                           deleteButton.Enabled &&
+                           !restoreButton.Visible &&
+                           string.Equals(ReadPrivateStringField(surface, "assetFamily"), expectLabel ? "label" : "report", StringComparison.Ordinal) &&
+                           ReadPrivateNullableInt(surface, "selectedRecordIndex") == expectedReorderedRecordIndex &&
+                           ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == reorderedSectionRecordIndex &&
+                           !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected");
+                });
+            Expect(reorderedSelection,
+                $"real asset editor live-reorder smoke should preserve section/object continuity after reordering for {sourcePath}");
+            Expect(!control.CanHandleUndoCommand(),
+                $"real asset editor live-reorder smoke should not expose undo after reordering a live row for {sourcePath}");
+            if (!reorderedSelection)
+            {
+                return;
+            }
+
+            var reorderedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
+            var companionObject = objectListView.Items.Cast<ListViewItem>()
+                .Select(item => item.Tag as CopperfinStudioSnapshotObject)
+                .FirstOrDefault(snapshotObject => snapshotObject?.RecordIndex == companionRecordIndex);
+            Expect(reorderedObject is not null &&
+                   companionObject is not null &&
+                   string.Equals(TryGetSnapshotObjectPropertyValue(reorderedObject, "UNIQUEID"), reorderedSourceUniqueId, StringComparison.Ordinal) &&
+                   string.Equals(TryGetSnapshotObjectPropertyValue(companionObject, "UNIQUEID"), companionUniqueId, StringComparison.Ordinal) &&
+                   string.Equals(companionObject.Title, companionObjectTitle, StringComparison.Ordinal),
+                $"real asset editor live-reorder smoke should preserve source and companion identities after reordering for {sourcePath}");
+
+            var reloadedAfterReorder = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterReorder.Success && reloadedAfterReorder.Document is not null,
+                $"real asset editor live-reorder smoke should reload reordered on-disk state for {sourcePath}");
+            if (reloadedAfterReorder.Success && reloadedAfterReorder.Document is not null)
+            {
+                AssertRealAssetRoundTripSnapshot(
+                    reloadedAfterReorder.Document,
+                    expectedReorderedRecordIndex,
+                    "UNIQUEID",
+                    reorderedSourceUniqueId,
+                    reorderedSourceObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectUnplacedObject: false,
+                    $"reloaded real asset editor live-reorder snapshot should preserve the reordered-source identity");
+                AssertRealAssetRoundTripSnapshot(
+                    reloadedAfterReorder.Document,
+                    companionRecordIndex,
+                    "UNIQUEID",
+                    companionUniqueId,
+                    companionObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectUnplacedObject: false,
+                    $"reloaded real asset editor live-reorder snapshot should preserve the companion identity");
+                AssertRealAssetSectionObjectCount(
+                    reloadedAfterReorder.Document,
+                    expectedSectionTitle,
+                    expectedSectionObjectCount,
+                    $"reloaded real asset editor live-reorder snapshot should preserve section object counts");
+                AssertRealAssetSectionRecordOrder(
+                    reloadedAfterReorder.Document,
+                    expectedSectionTitle,
+                    reorderedSectionRecordIndex,
+                    expectedReorderedSectionRecordOrder,
+                    $"reloaded real asset editor live-reorder snapshot should preserve section record order");
+            }
+
+            TearDownForm(hostForm);
         }
         finally
         {
@@ -11977,6 +12419,36 @@ internal static class Program
 
         Expect(section.Objects.Count == expectedObjectCount,
             $"{failurePrefix} for {document.Path} should expose {expectedObjectCount} objects in section '{expectedSectionTitle}'");
+    }
+
+    private static void AssertRealAssetSectionRecordOrder(
+        CopperfinStudioSnapshotDocument document,
+        string expectedSectionTitle,
+        int expectedSectionRecordIndex,
+        IReadOnlyList<int> expectedRecordOrder,
+        string failurePrefix)
+    {
+        Expect(document.ReportLayout is not null,
+            $"{failurePrefix} for {document.Path} should include a report layout");
+        if (document.ReportLayout is null)
+        {
+            return;
+        }
+
+        var section = document.ReportLayout.Sections
+            .FirstOrDefault(candidate => string.Equals(candidate.Title, expectedSectionTitle, StringComparison.OrdinalIgnoreCase));
+        Expect(section is not null,
+            $"{failurePrefix} for {document.Path} should preserve section '{expectedSectionTitle}'");
+        if (section is null)
+        {
+            return;
+        }
+
+        Expect(section.RecordIndex == expectedSectionRecordIndex,
+            $"{failurePrefix} for {document.Path} should preserve section record {expectedSectionRecordIndex}");
+        var actualRecordOrder = section.Objects.Select(candidate => candidate.RecordIndex).ToArray();
+        Expect(actualRecordOrder.SequenceEqual(expectedRecordOrder),
+            $"{failurePrefix} for {document.Path} should preserve section record order [{string.Join(", ", expectedRecordOrder)}]");
     }
 
     private static void AssertRealAssetDeletedObjectSnapshot(
