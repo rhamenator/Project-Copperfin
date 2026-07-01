@@ -1882,6 +1882,23 @@ internal static class Program
                 expectedOriginalLayoutVpos: 3541,
                 expectedUpdatedLayoutHpos: 416,
                 expectedUpdatedLayoutVpos: 3540);
+            SmokeAssetEditorSnapVerticallyCommandWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 6,
+                expectedSectionTitle: "Detail",
+                expectedSectionRecordIndex: 3,
+                expectedObjectTitle: "wiz_field",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUniqueId: "_QV30QY1DL",
+                expectedOriginalRawHpos: "6250.000",
+                expectedOriginalRawVpos: "6666.667",
+                expectedUpdatedRawHpos: "6250.000",
+                expectedUpdatedRawVpos: "6672",
+                expectedOriginalLayoutHpos: 6250,
+                expectedOriginalLayoutVpos: 6666,
+                expectedUpdatedLayoutHpos: 6250,
+                expectedUpdatedLayoutVpos: 6672);
             SmokeAssetEditorSnapHorizontallyCommandWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLE3V.FRX"),
                 recordIndex: 13,
@@ -1899,6 +1916,23 @@ internal static class Program
                 expectedOriginalLayoutVpos: 3541,
                 expectedUpdatedLayoutHpos: 420,
                 expectedUpdatedLayoutVpos: 3541);
+            SmokeAssetEditorSnapHorizontallyCommandWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 6,
+                expectedSectionTitle: "Detail",
+                expectedSectionRecordIndex: 3,
+                expectedObjectTitle: "wiz_field",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUniqueId: "_QV30QY1DL",
+                expectedOriginalRawHpos: "6250.000",
+                expectedOriginalRawVpos: "6666.667",
+                expectedUpdatedRawHpos: "6252",
+                expectedUpdatedRawVpos: "6666.667",
+                expectedOriginalLayoutHpos: 6250,
+                expectedOriginalLayoutVpos: 6666,
+                expectedUpdatedLayoutHpos: 6252,
+                expectedUpdatedLayoutVpos: 6666);
             SmokeAssetEditorSectionRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 1,
