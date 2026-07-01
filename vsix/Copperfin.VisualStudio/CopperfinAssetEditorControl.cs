@@ -61,6 +61,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly Button distributeHorizontalObjectButton;
     private readonly Button distributeVerticalObjectButton;
     private readonly Button snapHorizontalObjectButton;
+    private readonly Button snapVerticalObjectButton;
     private readonly Button snapToGridObjectButton;
     private readonly Button deleteObjectButton;
     private readonly Button restoreObjectButton;
@@ -319,6 +320,18 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             executingKey: "AssetEditor.ObjectSnap.Horizontal.Executing",
             failedKey: "AssetEditor.ObjectSnap.Horizontal.Failed",
             completedKey: "AssetEditor.ObjectSnap.Horizontal.Completed");
+
+        snapVerticalObjectButton = new Button
+        {
+            AutoSize = true,
+            Text = this.localization.Text("AssetEditor.ObjectSnap.VerticalButton"),
+            Visible = false
+        };
+        snapVerticalObjectButton.Click += (_, _) => TryHandleSnapObjectCommand(
+            snapMode: "vertical",
+            executingKey: "AssetEditor.ObjectSnap.Vertical.Executing",
+            failedKey: "AssetEditor.ObjectSnap.Vertical.Failed",
+            completedKey: "AssetEditor.ObjectSnap.Vertical.Completed");
 
         snapToGridObjectButton = new Button
         {
@@ -740,6 +753,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         buttonPanel.Controls.Add(distributeHorizontalObjectButton);
         buttonPanel.Controls.Add(distributeVerticalObjectButton);
         buttonPanel.Controls.Add(snapHorizontalObjectButton);
+        buttonPanel.Controls.Add(snapVerticalObjectButton);
         buttonPanel.Controls.Add(snapToGridObjectButton);
         buttonPanel.Controls.Add(deleteObjectButton);
         buttonPanel.Controls.Add(restoreObjectButton);
@@ -2439,6 +2453,10 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                                  selectedObjects.All(snapshotObject => !snapshotObject.Deleted) &&
                                  currentSnapshot is not null &&
                                  TryReadReportGridDimensions(currentSnapshot, out _, out _);
+        var showSnapVertical = selectedObjects.Count >= 1 &&
+                               selectedObjects.All(snapshotObject => !snapshotObject.Deleted) &&
+                               currentSnapshot is not null &&
+                               TryReadReportGridDimensions(currentSnapshot, out _, out _);
         var showDelete = singleSelection && selectedObject is not null && !selectedObject.Deleted;
         var showRestore = singleSelection && selectedObject is not null && selectedObject.Deleted;
         renameObjectButton.Visible = showRename;
@@ -2465,6 +2483,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         distributeVerticalObjectButton.Enabled = showDistributeVertical && !string.IsNullOrWhiteSpace(currentPath);
         snapHorizontalObjectButton.Visible = showSnapHorizontal;
         snapHorizontalObjectButton.Enabled = showSnapHorizontal && !string.IsNullOrWhiteSpace(currentPath);
+        snapVerticalObjectButton.Visible = showSnapVertical;
+        snapVerticalObjectButton.Enabled = showSnapVertical && !string.IsNullOrWhiteSpace(currentPath);
         snapToGridObjectButton.Visible = showSnapToGrid;
         snapToGridObjectButton.Enabled = showSnapToGrid && !string.IsNullOrWhiteSpace(currentPath);
         deleteObjectButton.Visible = showDelete;
