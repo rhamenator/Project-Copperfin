@@ -181,6 +181,33 @@ internal static class Program
         };
     }
 
+    private static ExpectedUntouchedSectionSnapshot CreateByAuthorUntouchedGroupHeaderSection()
+    {
+        return new ExpectedUntouchedSectionSnapshot
+        {
+            RecordIndex = 3,
+            Title = "Group Header",
+            Top = 0,
+            Height = 2709,
+            ObjectCount = 0,
+            Grouping = new ExpectedSectionGroupingMetadata
+            {
+                GroupRole = "header",
+                GroupRoleDisplay = "Header",
+                SectionExpression = "titles_by_author.author_id",
+                GroupingIndex = 0,
+                GroupingNestingDepth = 0,
+                GroupingExpression = "titles_by_author.author_id",
+                GroupingExpressionFieldIndex = 6,
+                GroupingExpressionMemoBlockNumber = 18,
+                GroupPartnerSectionId = "_RC60MBVB4",
+                GroupPartnerRecordIndex = 5,
+                GroupPartnerDeleted = false,
+                GroupPartnerStateDisplay = "Live"
+            }
+        };
+    }
+
     private sealed class ExpectedReportGroupingMetadata
     {
         public int GroupingIndex { get; set; }
@@ -651,7 +678,11 @@ internal static class Program
                 expectedUpdatedLayoutValue: 9600,
                 expectedSectionCount: 5,
                 expectLabel: true,
-                expectedObjectCount: 1);
+                expectedObjectCount: 1,
+                expectedUntouchedSections: new[]
+                {
+                    CreateStylelblUntouchedColumnFooterSection()
+                });
             SmokeRealAssetHostBackedSectionRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 5,
@@ -678,6 +709,10 @@ internal static class Program
                     GroupPartnerRecordIndex = 3,
                     GroupPartnerDeleted = false,
                     GroupPartnerStateDisplay = "Live"
+                },
+                expectedUntouchedSections: new[]
+                {
+                    CreateByAuthorUntouchedGroupHeaderSection()
                 },
                 expectedOriginalLayoutTextValue: string.Empty,
                 expectedUpdatedLayoutTextValue: "titles_by_author.last_name");
@@ -2302,7 +2337,11 @@ internal static class Program
                 expectedUpdatedLayoutValue: 9600,
                 expectedSectionCount: 5,
                 expectLabel: true,
-                expectedObjectCount: 1);
+                expectedObjectCount: 1,
+                expectedUntouchedSections: new[]
+                {
+                    CreateStylelblUntouchedColumnFooterSection()
+                });
             SmokeAssetEditorSectionRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 5,
@@ -2333,6 +2372,10 @@ internal static class Program
                     GroupPartnerRecordIndex = 3,
                     GroupPartnerDeleted = false,
                     GroupPartnerStateDisplay = "Live"
+                },
+                expectedUntouchedSections: new[]
+                {
+                    CreateByAuthorUntouchedGroupHeaderSection()
                 },
                 expectedOriginalLayoutTextValue: string.Empty,
                 expectedUpdatedLayoutTextValue: "titles_by_author.last_name");
