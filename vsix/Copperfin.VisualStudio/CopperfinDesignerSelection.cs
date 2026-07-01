@@ -268,6 +268,46 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         return selection;
     }
 
+    public static CopperfinDesignerSelection FromReportSettings(
+        IReadOnlyList<CopperfinStudioNamedValue> settings,
+        CopperfinLocalization localization)
+    {
+        var selection = new CopperfinDesignerSelection
+        {
+            RecordIndex = settings.FirstOrDefault()?.RecordIndex ?? 0
+        };
+
+        selection.AddReadOnlyInt(
+            "RECORDINDEX",
+            localization.Text("AssetEditor.Column.Record"),
+            selection.RecordIndex.ToString(CultureInfo.InvariantCulture));
+        selection.AddReadOnlyInt(
+            "SETTINGCOUNT",
+            localization.Text("AssetEditor.Property.SettingsCount"),
+            settings.Count.ToString(CultureInfo.InvariantCulture));
+
+        var seenNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var setting in settings)
+        {
+            if (string.IsNullOrWhiteSpace(setting.Name) || !seenNames.Add(setting.Name))
+            {
+                continue;
+            }
+
+            var displayName = BuildReportSettingDisplayText(localization, setting.Name);
+            if (IsNumericReportSetting(setting.Name) &&
+                int.TryParse(setting.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out _))
+            {
+                selection.AddEditableInt(setting.Name, displayName, setting.Value);
+                continue;
+            }
+
+            selection.AddEditableString(setting.Name, displayName, setting.Value);
+        }
+
+        return selection;
+    }
+
     private static string BuildReportBandKindDisplayText(CopperfinLocalization localization, string bandKind)
     {
         var key = bandKind switch
@@ -310,6 +350,46 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         }
 
         return groupRole.Replace('_', ' ');
+    }
+
+    private static string BuildReportSettingDisplayText(CopperfinLocalization localization, string settingName)
+    {
+        var key = settingName.ToUpperInvariant() switch
+        {
+            "ORIENTATION" => "AssetEditor.Property.Orientation",
+            "PAPERSIZE" => "AssetEditor.Property.PaperSize",
+            "TOPMARGIN" => "AssetEditor.Property.TopMargin",
+            "BOTMARGIN" => "AssetEditor.Property.BottomMargin",
+            "LEFTMARGIN" => "AssetEditor.Property.LeftMargin",
+            "RIGHTMARGIN" => "AssetEditor.Property.RightMargin",
+            "COLS" => "AssetEditor.Property.Columns",
+            "COLWIDTH" => "AssetEditor.Property.ColumnWidth",
+            "COLSPACING" => "AssetEditor.Property.ColumnSpacing",
+            "GRIDV" => "AssetEditor.Property.VerticalGrid",
+            "GRIDH" => "AssetEditor.Property.HorizontalGrid",
+            "TAG" => "AssetEditor.Property.SortExpression",
+            _ => string.Empty
+        };
+
+        return string.IsNullOrWhiteSpace(key)
+            ? settingName
+            : localization.Text(key);
+    }
+
+    private static bool IsNumericReportSetting(string settingName)
+    {
+        return settingName.ToUpperInvariant() is
+            "ORIENTATION" or
+            "PAPERSIZE" or
+            "TOPMARGIN" or
+            "BOTMARGIN" or
+            "LEFTMARGIN" or
+            "RIGHTMARGIN" or
+            "COLS" or
+            "COLWIDTH" or
+            "COLSPACING" or
+            "GRIDV" or
+            "GRIDH";
     }
 
     private static string BuildStateText(CopperfinLocalization? localization, bool deleted)

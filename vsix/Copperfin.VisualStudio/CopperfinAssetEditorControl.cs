@@ -17,9 +17,16 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         public List<int> RecordIndexes { get; } = new();
     }
 
+    private sealed class ReportSettingsScope
+    {
+        public int RecordIndex { get; set; }
+        public List<CopperfinStudioNamedValue> Settings { get; } = new();
+    }
+
     private sealed class ExplorerSelectionState
     {
         public int? ReportSectionRecordIndex { get; set; }
+        public bool ReportSettings { get; set; }
         public bool ReportUnplacedObjects { get; set; }
         public string? ProjectGroupId { get; set; }
     }
@@ -813,7 +820,10 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         sectionListView.Items.Clear();
 
         if (currentSnapshot?.ReportLayout is { } reportLayout &&
-            (reportLayout.Sections.Count > 0 || reportLayout.DeletedSections.Count > 0 || reportLayout.UnplacedObjects.Count > 0))
+            (reportLayout.Sections.Count > 0 ||
+             reportLayout.DeletedSections.Count > 0 ||
+             reportLayout.Settings.Count > 0 ||
+             reportLayout.UnplacedObjects.Count > 0))
         {
             sectionListView.Visible = true;
             leftExplorerSplit.Panel1Collapsed = false;
@@ -836,6 +846,21 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 item.SubItems.Add(section.Top.ToString());
                 item.Tag = section;
                 item.ForeColor = Color.Firebrick;
+                sectionListView.Items.Add(item);
+            }
+
+            if (reportLayout.Settings.Count > 0)
+            {
+                var settingsScope = new ReportSettingsScope
+                {
+                    RecordIndex = reportLayout.Settings.FirstOrDefault()?.RecordIndex ?? 0
+                };
+                settingsScope.Settings.AddRange(reportLayout.Settings);
+
+                var item = new ListViewItem(L("AssetEditor.ReportSection.Settings"));
+                item.SubItems.Add(reportLayout.Settings.Count.ToString());
+                item.SubItems.Add(string.Empty);
+                item.Tag = settingsScope;
                 sectionListView.Items.Add(item);
             }
 
@@ -959,8 +984,10 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             suppressSelectionSync = true;
             var selectedExplorerTag = TryReadSelectedExplorerTag();
-            var isReportSectionSelection = selectedExplorerTag is CopperfinStudioReportSection || selectedExplorerTag is ReportUnplacedObjectScope;
-            PopulateObjectList(autoSelectFirstItem: !isReportSectionSelection);
+            var isReportScopeSelection = selectedExplorerTag is CopperfinStudioReportSection ||
+                                         selectedExplorerTag is ReportUnplacedObjectScope ||
+                                         selectedExplorerTag is ReportSettingsScope;
+            PopulateObjectList(autoSelectFirstItem: !isReportScopeSelection);
 
             if (selectedExplorerTag is CopperfinStudioReportSection reportSection)
             {
@@ -983,6 +1010,18 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
                 propertyGrid.SelectedObject = null;
                 designSurface.SelectUnplacedObjects();
+                return;
+            }
+
+            if (selectedExplorerTag is ReportSettingsScope settingsScope)
+            {
+                foreach (ListViewItem item in objectListView.Items)
+                {
+                    item.Selected = false;
+                }
+
+                propertyGrid.SelectedObject = CopperfinDesignerSelection.FromReportSettings(settingsScope.Settings, localization);
+                designSurface.SelectRecord(null);
                 return;
             }
         }
@@ -1859,6 +1898,11 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                     return currentSnapshot.Objects.Where(item => sectionRecords.Contains(item.RecordIndex)).ToList();
                 }
 
+                if (selectedSection is ReportSettingsScope)
+                {
+                    return Array.Empty<CopperfinStudioSnapshotObject>();
+                }
+
                 if (selectedSection is ReportUnplacedObjectScope unplacedScope)
                 {
                     var unplacedRecords = unplacedScope.RecordIndexes.ToHashSet();
@@ -1983,6 +2027,14 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             };
         }
 
+        if (selectedTag is ReportSettingsScope)
+        {
+            return new ExplorerSelectionState
+            {
+                ReportSettings = true
+            };
+        }
+
         if (selectedTag is ReportUnplacedObjectScope)
         {
             return new ExplorerSelectionState
@@ -2011,6 +2063,12 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 .Cast<ListViewItem>()
                 .FirstOrDefault(item => item.Tag is CopperfinStudioReportSection section &&
                                         section.RecordIndex == reportSectionRecordIndex);
+        }
+        else if (selectionState?.ReportSettings == true)
+        {
+            selectedItem = sectionListView.Items
+                .Cast<ListViewItem>()
+                .FirstOrDefault(item => item.Tag is ReportSettingsScope);
         }
         else if (selectionState?.ReportUnplacedObjects == true)
         {

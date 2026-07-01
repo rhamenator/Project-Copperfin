@@ -54,7 +54,9 @@ internal static class Program
         SmokeReportSectionGroupingExplorerTitles();
         SmokeReportSectionScopedObjectFiltering();
         SmokeReportSectionPropertyGridSelection();
+        SmokeReportSettingsExplorerSelection();
         SmokeAssetEditorReportSectionPropertyGridHostUpdate();
+        SmokeAssetEditorReportSettingsPropertyGridHostUpdate();
         SmokeAssetEditorDeletedReportSectionPropertyGridHostUpdate();
         SmokeAssetEditorLabelSectionPropertyGridHostUpdate();
         SmokeAssetEditorDeletedLabelSectionPropertyGridHostUpdate();
@@ -1781,6 +1783,134 @@ internal static class Program
             "Localized report section property-grid grouping partner metadata should preserve section snapshot contracts");
     }
 
+    private static void SmokeReportSettingsExplorerSelection()
+    {
+        var settings = new List<CopperfinStudioNamedValue>
+        {
+            new() { Name = "ORIENTATION", Value = "0", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 0, MemoBlockNumber = 9 },
+            new() { Name = "TOPMARGIN", Value = "20", RecordIndex = 0, FieldIndex = 3, MemoBlockNumber = 0 },
+            new() { Name = "TAG", Value = "customer.country", RecordIndex = 0, FieldIndex = 9, MemoBlockNumber = 11 }
+        };
+        var settingsOnlySnapshot = new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "report",
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                Settings = settings
+            }
+        };
+        var mixedSnapshot = new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "report",
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                Settings = settings,
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail_1",
+                        Title = "Detail",
+                        BandKind = "detail",
+                        RecordIndex = 42,
+                        Top = 2000,
+                        Height = 5000
+                    }
+                }
+            }
+        };
+
+        using var control = new CopperfinAssetEditorControl();
+        ApplyReportSnapshotForExplorerSmoke(control, settingsOnlySnapshot);
+        var sectionListView = GetPrivateListView(control, "sectionListView");
+        var objectListView = GetPrivateListView(control, "objectListView");
+        InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+
+        var propertyGrid = GetPrivatePropertyGrid(control);
+        Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection settingsSelection &&
+               settingsSelection.RecordIndex == 0 &&
+               objectListView.Items.Count == 0 &&
+               string.Equals(sectionListView.Items.Cast<ListViewItem>().FirstOrDefault()?.Text, "Settings", StringComparison.Ordinal),
+            "Report settings explorer selection should produce a settings-rooted property-grid selection and clear object rows");
+
+        if (propertyGrid.SelectedObject is CopperfinDesignerSelection editableSelection)
+        {
+            ExpectSelectionUpdate(editableSelection, "TOPMARGIN", 30, "30",
+                "Report settings property-grid selection should serialize numeric root-setting edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "TAG", "customer.region", "customer.region",
+                "Report settings property-grid selection should preserve invariant string update targets");
+        }
+
+        using var labelControl = new CopperfinAssetEditorControl();
+        var labelSnapshot = new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "label",
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                IsLabel = true,
+                Settings = settings
+            }
+        };
+        ApplyReportSnapshotForExplorerSmoke(labelControl, labelSnapshot);
+        var labelSectionListView = GetPrivateListView(labelControl, "sectionListView");
+        var labelSettingsItem = labelSectionListView.Items.Cast<ListViewItem>()
+            .First(item => string.Equals(item.Text, "Settings", StringComparison.Ordinal));
+        labelSettingsItem.Selected = true;
+        InvokeAssetEditorVoid(labelControl, "SyncExplorerSelection");
+        var labelPropertyGrid = GetPrivatePropertyGrid(labelControl);
+        Expect(labelPropertyGrid.SelectedObject is CopperfinDesignerSelection labelSelection &&
+               labelSelection.RecordIndex == 0 &&
+               string.Equals(labelSectionListView.Items.Cast<ListViewItem>().FirstOrDefault()?.Text, "Settings", StringComparison.Ordinal),
+            "Label settings explorer selection should expose the same shared settings-rooted property-grid selection");
+
+        var spanishSelection = CopperfinDesignerSelection.FromReportSettings(settings, new CopperfinLocalization("es-419"));
+        var spanishProperties = TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().ToList();
+        Expect(spanishProperties.Any(property => string.Equals(property.DisplayName, "Cantidad de configuraciones", StringComparison.Ordinal)) &&
+               spanishProperties.Any(property => string.Equals(property.DisplayName, "Orientación", StringComparison.Ordinal)) &&
+               spanishProperties.Any(property => string.Equals(property.DisplayName, "Margen superior", StringComparison.Ordinal)) &&
+               spanishProperties.Any(property => string.Equals(property.DisplayName, "Expresión de orden", StringComparison.Ordinal)),
+            "Spanish report settings property-grid selection should localize supported root-setting labels");
+
+        var portugueseSelection = CopperfinDesignerSelection.FromReportSettings(settings, new CopperfinLocalization("pt-BR"));
+        var portugueseProperties = TypeDescriptor.GetProperties(portugueseSelection).Cast<PropertyDescriptor>().ToList();
+        Expect(portugueseProperties.Any(property => string.Equals(property.DisplayName, "Quantidade de configurações", StringComparison.Ordinal)) &&
+               portugueseProperties.Any(property => string.Equals(property.DisplayName, "Orientação", StringComparison.Ordinal)) &&
+               portugueseProperties.Any(property => string.Equals(property.DisplayName, "Margem superior", StringComparison.Ordinal)) &&
+               portugueseProperties.Any(property => string.Equals(property.DisplayName, "Expressão de ordenação", StringComparison.Ordinal)),
+            "Portuguese report settings property-grid selection should localize supported root-setting labels");
+
+        var pseudoLocalization = new CopperfinLocalization("qps-ploc");
+        var pseudoSelection = CopperfinDesignerSelection.FromReportSettings(settings, pseudoLocalization);
+        var pseudoProperties = TypeDescriptor.GetProperties(pseudoSelection).Cast<PropertyDescriptor>().ToList();
+        Expect(pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.SettingsCount"), StringComparison.Ordinal)) &&
+               pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.TopMargin"), StringComparison.Ordinal)),
+            "Pseudo-localized report settings property-grid selection should route new root-setting labels through the shared catalog");
+
+        using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
+        ApplyReportSnapshotForExplorerSmoke(spanishControl, mixedSnapshot);
+        Expect(GetPrivateListView(spanishControl, "sectionListView").Items.Cast<ListViewItem>()
+                   .Any(item => string.Equals(item.Text, "Configuraciones", StringComparison.Ordinal)),
+            "Spanish report explorer should localize the settings scope row");
+
+        using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
+        ApplyReportSnapshotForExplorerSmoke(portugueseControl, mixedSnapshot);
+        Expect(GetPrivateListView(portugueseControl, "sectionListView").Items.Cast<ListViewItem>()
+                   .Any(item => string.Equals(item.Text, "Configurações", StringComparison.Ordinal)),
+            "Portuguese report explorer should localize the settings scope row");
+
+        using var pseudoControl = new CopperfinAssetEditorControl(pseudoLocalization);
+        ApplyReportSnapshotForExplorerSmoke(pseudoControl, mixedSnapshot);
+        Expect(GetPrivateListView(pseudoControl, "sectionListView").Items.Cast<ListViewItem>()
+                   .Any(item => string.Equals(item.Text, pseudoLocalization.Text("AssetEditor.ReportSection.Settings"), StringComparison.Ordinal)),
+            "Pseudo-localized report explorer should route the settings scope row through the shared catalog");
+
+        Expect(settings[0].RecordIndex == 0 &&
+               string.Equals(settings[0].Name, "ORIENTATION", StringComparison.Ordinal) &&
+               string.Equals(settings[1].Value, "20", StringComparison.Ordinal) &&
+               string.Equals(settings[2].Name, "TAG", StringComparison.Ordinal),
+            "Localized report settings property-grid selection should preserve root-setting machine contracts");
+    }
+
     private static void SmokeAssetEditorReportSectionPropertyGridHostUpdate()
     {
         if (Path.DirectorySeparatorChar == '\\')
@@ -1874,6 +2004,124 @@ internal static class Program
 
             Expect(string.Equals(sectionListView.SelectedItems[0].SubItems[2].Text, "3200", StringComparison.Ordinal),
                 "Editing a report section through the shared asset editor should refresh the visible section geometry from the returned snapshot");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", previousLogPath);
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
+    private static void SmokeAssetEditorReportSettingsPropertyGridHostUpdate()
+    {
+        if (Path.DirectorySeparatorChar == '\\')
+        {
+            Console.WriteLine("SKIP: shared asset-editor report-settings host-update smoke requires a POSIX scriptable fake Studio host.");
+            return;
+        }
+
+        var snapshot = BuildAssetEditorSettingsUpdateSmokeSnapshot();
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
+        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var logPath = Path.Combine(tempRoot, "studio-host.log");
+        var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
+
+        try
+        {
+            File.WriteAllText(logPath, string.Empty);
+            CreateFakeStudioHostScript(scriptPath, BuildSettingsUpdateHostResponseJson());
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", scriptPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", logPath);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+
+            ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+            SetPrivateField(control, "currentPath", assetPath);
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            var settingsItem = sectionListView.Items.Cast<ListViewItem>()
+                .First(item => string.Equals(item.Text, "Settings", StringComparison.Ordinal));
+            settingsItem.Selected = true;
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            InvokeAssetEditorVoid(control, "LoadSurface");
+            Application.DoEvents();
+
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface.");
+
+            Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == 0 &&
+                   objectListView.Items.Count == 0,
+                "A report settings host-update smoke should start from a settings-rooted property-grid selection");
+
+            if (propertyGrid.SelectedObject is not CopperfinDesignerSelection settingsSelection)
+            {
+                throw new InvalidOperationException("Could not read the selected report settings from the shared asset editor.");
+            }
+
+            TypeDescriptor.GetProperties(settingsSelection)["TOPMARGIN"]?.SetValue(settingsSelection, 30);
+            InvokeAssetEditorVoid(control, "ApplyPropertyGridChange", "TOPMARGIN", 20);
+            Application.DoEvents();
+
+            var logLines = File.ReadAllLines(logPath);
+            var invocationStartCount = logLines.Count(line => string.Equals(line, "BEGIN", StringComparison.Ordinal));
+            Expect(invocationStartCount == 1,
+                "Editing report settings through the shared asset editor should invoke the Studio host exactly once");
+
+            var invocationArguments = logLines.Skip(1).ToList();
+            Expect(invocationArguments.Contains("--from-vs") &&
+                   invocationArguments.Contains("--json") &&
+                   invocationArguments.Contains("--set-property") &&
+                   invocationArguments.Contains("--record") &&
+                   invocationArguments.Contains("0") &&
+                   invocationArguments.Contains("--property-name") &&
+                   invocationArguments.Contains("TOPMARGIN") &&
+                   invocationArguments.Contains("--property-value") &&
+                   invocationArguments.Contains("30"),
+                "Editing report settings through the shared asset editor should send one invariant root-setting update through the host property contract");
+
+            Expect(string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Settings", StringComparison.Ordinal) &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
+                   refreshedSelection.RecordIndex == 0 &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["TOPMARGIN"]?.GetValue(refreshedSelection)?.ToString(), "30", StringComparison.Ordinal) &&
+                   objectListView.Items.Count == 0 &&
+                   ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") is null &&
+                   ReadPrivateNullableInt(surface, "selectedRecordIndex") is null &&
+                   !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+                "Editing report settings through the shared asset editor should preserve settings-rooted selection continuity after the host-backed refresh");
         }
         finally
         {
@@ -13993,6 +14241,36 @@ internal static class Program
         };
     }
 
+    private static CopperfinStudioSnapshotDocument BuildAssetEditorSettingsUpdateSmokeSnapshot()
+    {
+        return new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "report",
+            FieldCount = 5,
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                Settings = new List<CopperfinStudioNamedValue>
+                {
+                    new() { Name = "ORIENTATION", Value = "0", RecordIndex = 0, FieldIndex = 2, SourceLineIndex = 0, MemoBlockNumber = 9 },
+                    new() { Name = "TOPMARGIN", Value = "20", RecordIndex = 0, FieldIndex = 3, MemoBlockNumber = 0 },
+                    new() { Name = "TAG", Value = "customer.country", RecordIndex = 0, FieldIndex = 9, MemoBlockNumber = 11 }
+                },
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail_1",
+                        Title = "Detail",
+                        BandKind = "detail",
+                        RecordIndex = 42,
+                        Top = 2000,
+                        Height = 5000
+                    }
+                }
+            }
+        };
+    }
+
     private static CopperfinStudioSnapshotDocument BuildAssetEditorObjectUpdateSmokeSnapshot()
     {
         return new CopperfinStudioSnapshotDocument
@@ -15482,6 +15760,13 @@ internal static class Program
     {
         return """
 {"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[{"RecordIndex":6,"Title":"customer.company","Subtitle":"field","Properties":[{"Name":"HPOS","Value":"1200"},{"Name":"VPOS","Value":"3800"},{"Name":"WIDTH","Value":"4000"},{"Name":"HEIGHT","Value":"500"},{"Name":"EXPR","Value":"customer.company"}]}],"ReportLayout":{"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":3200,"Height":5000,"Objects":[{"RecordIndex":6,"ObjectKind":"field","Title":"customer.company","Expression":"customer.company","Left":1200,"Top":3800,"Width":4000,"Height":500}]}],"DeletedSections":[],"UnplacedObjects":[]}}}
+""";
+    }
+
+    private static string BuildSettingsUpdateHostResponseJson()
+    {
+        return """
+{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[],"ReportLayout":{"Settings":[{"Name":"ORIENTATION","Value":"0","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":0,"MemoBlockNumber":9},{"Name":"TOPMARGIN","Value":"30","RecordIndex":0,"FieldIndex":3,"MemoBlockNumber":0},{"Name":"TAG","Value":"customer.country","RecordIndex":0,"FieldIndex":9,"MemoBlockNumber":11}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[],"UnplacedObjects":[]}}}
 """;
     }
 

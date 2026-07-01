@@ -103,6 +103,10 @@ internal sealed class CopperfinStudioNamedValue
 {
     public string Name { get; set; } = string.Empty;
     public string Value { get; set; } = string.Empty;
+    public int RecordIndex { get; set; }
+    public int? FieldIndex { get; set; }
+    public int? SourceLineIndex { get; set; }
+    public int MemoBlockNumber { get; set; }
 }
 
 internal sealed class CopperfinStudioReportSection
