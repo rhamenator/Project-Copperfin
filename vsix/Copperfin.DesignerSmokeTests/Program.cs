@@ -656,6 +656,25 @@ internal static class Program
                 expectedOriginalContainedObjects: CreateBandedmGroupHeaderContainedObjects(0),
                 expectedUpdatedContainedObjects: CreateBandedmGroupHeaderContainedObjects(500));
             SmokeRealAssetHostBackedSectionRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/bandedm.FRX"),
+                recordIndex: 5,
+                expectedSectionTitle: "Group Header",
+                propertyName: "HEIGHT",
+                originalRawValue: "7605.000",
+                updatedRawValue: "8000",
+                expectedOriginalLayoutValue: 7605,
+                expectedUpdatedLayoutValue: 8000,
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedObjectCount: 8,
+                expectedGrouping: CreateBandedmGroupHeaderGrouping(),
+                expectedUntouchedSections: new[]
+                {
+                    CreateBandedmUntouchedGroupFooterSection()
+                },
+                expectedOriginalContainedObjects: CreateBandedmGroupHeaderContainedObjects(0),
+                expectedUpdatedContainedObjects: CreateBandedmGroupHeaderContainedObjects(0));
+            SmokeRealAssetHostBackedSectionRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 1,
                 expectedSectionTitle: "Title",
@@ -2308,6 +2327,29 @@ internal static class Program
                 },
                 expectedOriginalContainedObjects: CreateBandedmGroupHeaderContainedObjects(0),
                 expectedUpdatedContainedObjects: CreateBandedmGroupHeaderContainedObjects(500));
+            SmokeAssetEditorSectionRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/bandedm.FRX"),
+                recordIndex: 5,
+                expectedSectionTitle: "Group Header",
+                propertyName: "HEIGHT",
+                updatedPropertyValue: 8000,
+                expectedOriginalSelectionValue: "7605",
+                expectedUpdatedSelectionValue: "8000",
+                expectedOriginalRawValue: "7605.000",
+                expectedUpdatedRawValue: "8000",
+                expectedOriginalLayoutValue: 7605,
+                expectedUpdatedLayoutValue: 8000,
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedObjectCount: 8,
+                expectedExplorerSectionTitle: "Group Header - OneToMany",
+                expectedGrouping: CreateBandedmGroupHeaderGrouping(),
+                expectedUntouchedSections: new[]
+                {
+                    CreateBandedmUntouchedGroupFooterSection()
+                },
+                expectedOriginalContainedObjects: CreateBandedmGroupHeaderContainedObjects(0),
+                expectedUpdatedContainedObjects: CreateBandedmGroupHeaderContainedObjects(0));
             SmokeAssetEditorSectionRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 1,
