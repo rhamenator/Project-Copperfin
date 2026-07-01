@@ -3367,6 +3367,32 @@ internal static class Program
                 },
                 expectedObjectListCount: 2);
             SmokeAssetEditorDeletedSectionMetadataSelectionWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/foxref/foxrefresultsa4.frx"),
+                recordIndex: 3,
+                expectedProperties: new[]
+                {
+                    new KeyValuePair<string, string>("SECTIONSTATE", "Deleted"),
+                    new KeyValuePair<string, string>("BANDKIND", "Group Header"),
+                    new KeyValuePair<string, string>("RECORDINDEX", "3"),
+                    new KeyValuePair<string, string>("OBJECTCOUNT", "0"),
+                    new KeyValuePair<string, string>("DELETEDOBJECTCOUNT", "0"),
+                    new KeyValuePair<string, string>("TOP", "0"),
+                    new KeyValuePair<string, string>("HEIGHT", "2084"),
+                    new KeyValuePair<string, string>("GROUPROLE", "Header"),
+                    new KeyValuePair<string, string>("GROUPINGINDEX", "1"),
+                    new KeyValuePair<string, string>("GROUPINGNESTINGDEPTH", "1"),
+                    new KeyValuePair<string, string>("EXPR", "RefID"),
+                    new KeyValuePair<string, string>("EXPRESSIONFIELD", "6"),
+                    new KeyValuePair<string, string>("EXPRESSIONMEMO", "23"),
+                    new KeyValuePair<string, string>("GROUPINGEXPRESSION", "RefID"),
+                    new KeyValuePair<string, string>("GROUPINGEXPRESSIONFIELD", "6"),
+                    new KeyValuePair<string, string>("GROUPINGEXPRESSIONMEMO", "23"),
+                    new KeyValuePair<string, string>("GROUPPARTNERSECTIONID", "_0RV0UV0IG"),
+                    new KeyValuePair<string, string>("GROUPPARTNERRECORD", "5"),
+                    new KeyValuePair<string, string>("GROUPPARTNERSTATE", "Live")
+                },
+                expectedObjectListCount: 0);
+            SmokeAssetEditorDeletedSectionMetadataSelectionWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLE3V.FRX"),
                 recordIndex: 2,
                 expectedProperties: new[]
