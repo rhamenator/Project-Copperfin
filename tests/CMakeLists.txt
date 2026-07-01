@@ -1912,6 +1912,22 @@ add_test(
     COMMAND $<TARGET_FILE:test_studio_host_page_margin_record_settings> $<TARGET_FILE:copperfin_studio_host>
 )
 
+add_executable(test_studio_host_side_margin_record_settings
+    test_studio_host_side_margin_record_settings.cpp
+)
+target_link_libraries(test_studio_host_side_margin_record_settings PRIVATE cf_vfp_assets)
+
+if(MSVC)
+    target_compile_options(test_studio_host_side_margin_record_settings PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_side_margin_record_settings PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_side_margin_record_settings
+    COMMAND $<TARGET_FILE:test_studio_host_side_margin_record_settings> $<TARGET_FILE:copperfin_studio_host>
+)
+
 add_executable(test_studio_host_bottom_margin_stable_settings
     test_studio_host_bottom_margin_stable_settings.cpp
 )
