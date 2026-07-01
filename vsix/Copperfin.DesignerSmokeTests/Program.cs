@@ -484,6 +484,58 @@ internal static class Program
                 expectLabel: true);
             SmokeRealAssetHostBackedSettingsRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                propertyName: "ORIENTATION",
+                originalValue: "1",
+                updatedValue: "0",
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "ORIENTATION",
+                    Value = "0",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 0,
+                    MemoBlockNumber = 142
+                },
+                expectedUndoneSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "ORIENTATION",
+                    Value = "1",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 0,
+                    MemoBlockNumber = 143
+                },
+                expectRawSnapshotProperty: false);
+            SmokeRealAssetHostBackedSettingsRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                propertyName: "ORIENTATION",
+                originalValue: "0",
+                updatedValue: "1",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "ORIENTATION",
+                    Value = "1",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 0,
+                    MemoBlockNumber = 17
+                },
+                expectedUndoneSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "ORIENTATION",
+                    Value = "0",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 0,
+                    MemoBlockNumber = 18
+                },
+                expectRawSnapshotProperty: false);
+            SmokeRealAssetHostBackedSettingsRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 propertyName: "GRIDV",
                 originalValue: "12",
                 updatedValue: "14",
@@ -496,6 +548,64 @@ internal static class Program
                 updatedValue: "16",
                 expectedSectionCount: 5,
                 expectLabel: true);
+            SmokeAssetEditorSettingsRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                propertyName: "ORIENTATION",
+                expectedOriginalSelectionValue: "1",
+                updatedPropertyValue: 0,
+                expectedUpdatedSelectionValue: "0",
+                expectedOriginalRawValue: "1",
+                expectedUpdatedRawValue: "0",
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "ORIENTATION",
+                    Value = "0",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 0,
+                    MemoBlockNumber = 142
+                },
+                expectedUndoneSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "ORIENTATION",
+                    Value = "1",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 0,
+                    MemoBlockNumber = 143
+                },
+                expectRawSnapshotProperty: false);
+            SmokeAssetEditorSettingsRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                propertyName: "ORIENTATION",
+                expectedOriginalSelectionValue: "0",
+                updatedPropertyValue: 1,
+                expectedUpdatedSelectionValue: "1",
+                expectedOriginalRawValue: "0",
+                expectedUpdatedRawValue: "1",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "ORIENTATION",
+                    Value = "1",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 0,
+                    MemoBlockNumber = 17
+                },
+                expectedUndoneSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "ORIENTATION",
+                    Value = "0",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 0,
+                    MemoBlockNumber = 18
+                },
+                expectRawSnapshotProperty: false);
             SmokeAssetEditorSettingsRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 propertyName: "GRIDV",
@@ -15543,7 +15653,10 @@ internal static class Program
         string originalValue,
         string updatedValue,
         int expectedSectionCount,
-        bool expectLabel)
+        bool expectLabel,
+        CopperfinStudioNamedValue? expectedUpdatedSetting = null,
+        CopperfinStudioNamedValue? expectedUndoneSetting = null,
+        bool expectRawSnapshotProperty = true)
     {
         if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
         {
@@ -15574,6 +15687,9 @@ internal static class Program
                 return;
             }
 
+            expectedUpdatedSetting ??= initialSetting;
+            expectedUndoneSetting ??= initialSetting;
+
             AssertRealAssetSettingsSnapshot(
                 loaded.Document,
                 initialSetting,
@@ -15581,6 +15697,7 @@ internal static class Program
                 expectedSectionCount,
                 expectLabel,
                 requireSelectedSettings: false,
+                expectRawSnapshotProperty: expectRawSnapshotProperty,
                 $"initial real asset settings snapshot should preserve {propertyName}");
 
             var updateResult = CopperfinStudioSnapshotClient.TryUpdateProperty(
@@ -15597,11 +15714,12 @@ internal static class Program
 
             AssertRealAssetSettingsSnapshot(
                 updateResult.Document,
-                initialSetting,
+                expectedUpdatedSetting,
                 updatedValue,
                 expectedSectionCount,
                 expectLabel,
                 requireSelectedSettings: true,
+                expectRawSnapshotProperty: expectRawSnapshotProperty,
                 $"updated real asset settings snapshot should preserve {propertyName}");
             Expect(updateResult.Document.CommandUndoAvailable,
                 $"real asset settings smoke should expose undo after updating {propertyName} for {sourcePath}");
@@ -15616,11 +15734,12 @@ internal static class Program
 
             AssertRealAssetSettingsSnapshot(
                 reloadedAfterUpdate.Document,
-                initialSetting,
+                expectedUpdatedSetting,
                 updatedValue,
                 expectedSectionCount,
                 expectLabel,
                 requireSelectedSettings: false,
+                expectRawSnapshotProperty: expectRawSnapshotProperty,
                 $"reloaded updated real asset settings snapshot should preserve {propertyName}");
             Expect(reloadedAfterUpdate.Document.CommandUndoAvailable,
                 $"reloaded updated real asset settings snapshot should keep undo available for {sourcePath}");
@@ -15635,11 +15754,12 @@ internal static class Program
 
             AssertRealAssetSettingsSnapshot(
                 undoResult.Document,
-                initialSetting,
+                expectedUndoneSetting,
                 originalValue,
                 expectedSectionCount,
                 expectLabel,
                 requireSelectedSettings: false,
+                expectRawSnapshotProperty: expectRawSnapshotProperty,
                 $"undone real asset settings snapshot should preserve {propertyName}");
 
             var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
@@ -15652,11 +15772,12 @@ internal static class Program
 
             AssertRealAssetSettingsSnapshot(
                 reloadedAfterUndo.Document,
-                initialSetting,
+                expectedUndoneSetting,
                 originalValue,
                 expectedSectionCount,
                 expectLabel,
                 requireSelectedSettings: false,
+                expectRawSnapshotProperty: expectRawSnapshotProperty,
                 $"reloaded undone real asset settings snapshot should preserve {propertyName}");
             Expect(!reloadedAfterUndo.Document.CommandUndoAvailable,
                 $"real asset settings smoke should clear undo after restoring {propertyName} for {sourcePath}");
@@ -17870,7 +17991,10 @@ internal static class Program
         string expectedOriginalRawValue,
         string expectedUpdatedRawValue,
         int expectedSectionCount,
-        bool expectLabel)
+        bool expectLabel,
+        CopperfinStudioNamedValue? expectedUpdatedSetting = null,
+        CopperfinStudioNamedValue? expectedUndoneSetting = null,
+        bool expectRawSnapshotProperty = true)
     {
         if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
         {
@@ -17901,6 +18025,9 @@ internal static class Program
             {
                 return;
             }
+
+            expectedUpdatedSetting ??= initialSetting;
+            expectedUndoneSetting ??= initialSetting;
 
             using var hostForm = new Form
             {
@@ -17987,11 +18114,12 @@ internal static class Program
             {
                 AssertRealAssetSettingsSnapshot(
                     reloadedAfterUpdate.Document,
-                    initialSetting,
+                    expectedUpdatedSetting,
                     expectedUpdatedRawValue,
                     expectedSectionCount,
                     expectLabel,
                     requireSelectedSettings: false,
+                    expectRawSnapshotProperty: expectRawSnapshotProperty,
                     $"reloaded edited real asset settings snapshot should preserve {propertyName}");
             }
 
@@ -18030,11 +18158,12 @@ internal static class Program
             {
                 AssertRealAssetSettingsSnapshot(
                     reloadedAfterUndo.Document,
-                    initialSetting,
+                    expectedUndoneSetting,
                     expectedOriginalRawValue,
                     expectedSectionCount,
                     expectLabel,
                     requireSelectedSettings: false,
+                    expectRawSnapshotProperty: expectRawSnapshotProperty,
                     $"reloaded undone editor real asset settings snapshot should preserve {propertyName}");
             }
 
@@ -25295,6 +25424,7 @@ internal static class Program
         int expectedSectionCount,
         bool expectLabel,
         bool requireSelectedSettings,
+        bool expectRawSnapshotProperty,
         string failurePrefix)
     {
         Expect(document.ReportLayout is not null,
@@ -25324,6 +25454,11 @@ internal static class Program
                layoutSetting.MemoBlockNumber == expectedSetting.MemoBlockNumber &&
                string.Equals(layoutSetting.Value, expectedPropertyValue, StringComparison.Ordinal),
             $"{failurePrefix} for {document.Path} should preserve settings metadata for {expectedSetting.Name}");
+
+        if (!expectRawSnapshotProperty)
+        {
+            return;
+        }
 
         var snapshotObject = document.Objects.FirstOrDefault(candidate => candidate.RecordIndex == expectedSetting.RecordIndex);
         Expect(snapshotObject is not null,

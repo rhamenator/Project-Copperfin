@@ -256,6 +256,21 @@ void write_synthetic_report_table_for_deleted_orientation_field_json(
     expect(delete_result.ok, "#2782: deleted orientation settings fixture should mark settings deleted");
 }
 
+void write_synthetic_report_table_for_memo_backed_orientation_json(const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "UNIQUEID", .type = 'C', .length = 40U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0\nPAPERSIZE=1\nTOPMARGIN=10\nBOTMARGIN=20\nGRIDV=4\nGRIDH=8", ""}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#3063: memo-backed orientation settings fixture should be created");
+}
+
 void run_orientation_update_case(
     const std::string& studio_host_path,
     const std::filesystem::path& temp_root,
@@ -487,8 +502,105 @@ void run_orientation_clear_case(
             issue_prefix + " clear should refresh selected deleted settings");
         expect_not_contains(clear_process.stdout_text,
                             "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 3",
-                            issue_prefix + " clear should remove direct orientation settings");
+            issue_prefix + " clear should remove direct orientation settings");
     }
+}
+
+void run_memo_backed_orientation_update_case(
+    const std::string& studio_host_path,
+    const std::filesystem::path& temp_root,
+    const std::string& extension,
+    const std::string& updated_orientation,
+    const std::string& label,
+    const std::string& issue_prefix) {
+    const std::filesystem::path asset_path = temp_root / ("memo_orientation_update" + extension);
+    write_synthetic_report_table_for_memo_backed_orientation_json(asset_path);
+
+    const auto update_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", asset_path.string(),
+            "--set-property",
+            "--record", "0",
+            "--property-name", "ORIENTATION",
+            "--property-value", updated_orientation,
+            "--json"
+        },
+        temp_root);
+
+    if (update_process.exit_code != 0) {
+        std::cerr << "studio host " << label << " memo-backed orientation update " << extension << " stdout:\n"
+                  << update_process.stdout_text << "\n";
+        std::cerr << "studio host " << label << " memo-backed orientation update " << extension << " stderr:\n"
+                  << update_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(update_process.exit_code == 0, issue_prefix + " update should exit successfully");
+    const auto orientation_property = copperfin::vfp::query_visual_object_property({
+        .path = asset_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "ORIENTATION"
+    });
+    expect(orientation_property.ok && orientation_property.exists &&
+               orientation_property.value == updated_orientation &&
+               !orientation_property.direct_field,
+           issue_prefix + " update should persist memo-backed ORIENTATION through property query");
+    expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + asset_path.filename().string() + "\"",
+                    issue_prefix + " update should return refreshed report-layout JSON");
+    if (asset_path.extension() == ".lbx") {
+        expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                        issue_prefix + " update should retain label identity");
+    }
+    expect_empty_report_layout_preview_bounds(update_process.stdout_text, issue_prefix + " update");
+    expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
+                    issue_prefix + " update should preserve page setup availability");
+    expect_contains(update_process.stdout_text, "\"orientationCode\": " + updated_orientation,
+                    issue_prefix + " update should refresh orientation codes");
+    expect_contains(update_process.stdout_text, "\"paperSizeCode\": 1",
+                    issue_prefix + " update should preserve paper-size codes");
+    expect_contains(update_process.stdout_text, "\"topMargin\": 10",
+                    issue_prefix + " update should preserve top margins");
+    expect_contains(update_process.stdout_text, "\"bottomMargin\": 20",
+                    issue_prefix + " update should preserve bottom margins");
+    expect_contains(update_process.stdout_text, "\"gridVertical\": 4",
+                    issue_prefix + " update should preserve vertical grid spacing");
+    expect_contains(update_process.stdout_text, "\"gridHorizontal\": 8",
+                    issue_prefix + " update should preserve horizontal grid spacing");
+    expect_contains(update_process.stdout_text, "\"settingCount\": 6",
+                    issue_prefix + " update should preserve setting counts");
+    expect_contains(update_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                    issue_prefix + " update should preserve selected-settings availability");
+    expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                    issue_prefix + " update should preserve settings selection kind");
+    expect_contains_in_order(
+        update_process.stdout_text,
+        {
+            "\"settings\": [",
+            "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+            "\"value\": \"" + updated_orientation + "\"",
+            "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+            "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
+            "\"name\": \"BOTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+            "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
+            "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 5"
+        },
+        issue_prefix + " update should preserve memo-backed setting provenance");
+    expect_contains_in_order(
+        update_process.stdout_text,
+        {
+            "\"selectedReportSettings\": [",
+            "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+            "\"value\": \"" + updated_orientation + "\"",
+            "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+            "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
+            "\"name\": \"BOTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+            "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
+            "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 5"
+        },
+        issue_prefix + " update should refresh selected memo-backed settings");
 }
 
 void test_studio_host_json_preserves_orientation_record_selection(const std::string& studio_host_path) {
@@ -570,6 +682,20 @@ void test_studio_host_json_preserves_orientation_record_selection(const std::str
         true,
         "label",
         "#2782: report/label record-selected deleted orientation settings success");
+    run_memo_backed_orientation_update_case(
+        studio_host_path,
+        temp_root,
+        ".frx",
+        "1",
+        "report",
+        "#3063: report/label record-selected memo-backed orientation settings success");
+    run_memo_backed_orientation_update_case(
+        studio_host_path,
+        temp_root,
+        ".lbx",
+        "2",
+        "label",
+        "#3063: report/label record-selected memo-backed orientation settings success");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);

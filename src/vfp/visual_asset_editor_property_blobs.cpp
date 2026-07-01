@@ -36,6 +36,90 @@ bool is_report_layout_object_record(const DbfRecord& record) {
     return objtype == 5 || objtype == 6 || objtype == 7 || objtype == 8 || objtype == 17 || objtype == 18;
 }
 
+bool is_report_settings_record(const DbfRecord& record) {
+    return parse_record_int_or_default(record, "OBJTYPE") == 1 &&
+           parse_record_int_or_default(record, "OBJCODE") == 53;
+}
+
+bool is_known_report_settings_expr_property(const std::string& normalized_property_name) {
+    static constexpr std::array<std::string_view, 18> known_settings{
+        "ascii",
+        "collate",
+        "color",
+        "copies",
+        "defaultsource",
+        "device",
+        "driver",
+        "gridh",
+        "gridv",
+        "orientation",
+        "output",
+        "papersize",
+        "printquality",
+        "ttoption",
+        "yresolution",
+        "cols",
+        "colwidth",
+        "colspacing"
+    };
+
+    return std::find(known_settings.begin(), known_settings.end(), normalized_property_name) != known_settings.end();
+}
+
+std::string serialize_report_settings_blob(const std::vector<VisualPropertyAssignment>& properties) {
+    std::ostringstream stream;
+    for (const auto& property : properties) {
+        if (property.name.empty()) {
+            continue;
+        }
+
+        stream << property.name << "=" << property.value << "\r\n";
+    }
+    return stream.str();
+}
+
+std::optional<VisualPropertyState> read_report_settings_expr_property_state(
+    const DbfRecord& record,
+    const std::string& property_name) {
+    if (!is_report_settings_record(record)) {
+        return std::nullopt;
+    }
+
+    const auto expr_field = std::find_if(record.values.begin(), record.values.end(), [](const DbfRecordValue& value) {
+        return normalize_visual_property_name(value.field_name) == "expr";
+    });
+    if (expr_field == record.values.end()) {
+        return std::nullopt;
+    }
+
+    const std::string requested_property_name = normalize_visual_property_name(property_name);
+    const auto assignments = parse_visual_property_blob(expr_field->display_value);
+    const auto property = std::find_if(assignments.begin(), assignments.end(), [&](const VisualPropertyAssignment& assignment) {
+        return normalize_visual_property_name(assignment.name) == requested_property_name;
+    });
+    if (property != assignments.end()) {
+        return VisualPropertyState{
+            .exists = true,
+            .direct_field = false,
+            .property_name = property->name,
+            .value = property->value,
+            .record_deleted = record.deleted
+        };
+    }
+
+    if (!is_known_report_settings_expr_property(requested_property_name)) {
+        return std::nullopt;
+    }
+
+    return VisualPropertyState{
+        .exists = false,
+        .direct_field = false,
+        .property_name = trim_both(property_name),
+        .value = {},
+        .record_deleted = record.deleted
+    };
+}
+
 struct ReportSectionGeometry {
     std::size_t record_index = 0U;
     int top = 0;
@@ -317,6 +401,13 @@ std::optional<VisualPropertyState> read_current_visual_property_state(
         };
     }
 
+    if (is_report_layout_asset_path(path)) {
+        const auto report_settings_state = read_report_settings_expr_property_state(record, property_name);
+        if (report_settings_state.has_value()) {
+            return report_settings_state;
+        }
+    }
+
     if (!is_property_blob_asset_path(path)) {
         return std::nullopt;
     }
@@ -349,6 +440,63 @@ std::optional<VisualPropertyState> read_current_visual_property_state(
         .value = property->value,
         .record_deleted = record.deleted
     };
+}
+
+VisualAssetEditResult replace_report_settings_expr_property(
+    const VisualObjectEditRequest& request,
+    const DbfRecord& record,
+    std::size_t record_index,
+    bool record_undo_entry,
+    bool remove_property_if_missing) {
+    const auto expr_field = std::find_if(record.values.begin(), record.values.end(), [](const DbfRecordValue& value) {
+        return normalize_visual_property_name(value.field_name) == "expr";
+    });
+    if (expr_field == record.values.end()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.MemoFieldMissing", {{"fieldName", "EXPR"}})};
+    }
+
+    auto assignments = parse_visual_property_blob(expr_field->display_value);
+    const std::string requested_property_name = normalize_visual_property_name(request.property_name);
+    auto assignment_it = std::find_if(assignments.begin(), assignments.end(), [&](const VisualPropertyAssignment& assignment) {
+        return normalize_visual_property_name(assignment.name) == requested_property_name;
+    });
+
+    const bool exists = assignment_it != assignments.end();
+    const std::string prior_value = exists ? assignment_it->value : std::string{};
+    if (!exists && remove_property_if_missing) {
+        return {.ok = true, .error = {}};
+    }
+    if (exists && prior_value == request.property_value) {
+        return {.ok = true, .error = {}};
+    }
+
+    if (record_undo_entry) {
+        std::string error;
+        if (!record_visual_asset_undo_entry(request.path, {
+                .record_index = record_index,
+                .property_name = request.property_name,
+                .prior_value = prior_value,
+                .prior_value_exists = exists,
+                .label = visual_asset_text("VisualAssetEditor.Undo.PropertyLabel", {{"propertyName", request.property_name}}),
+                .grouped_changes = {}
+            }, error)) {
+            return {.ok = false, .error = error};
+        }
+    }
+
+    if (!exists) {
+        assignments.push_back({.name = request.property_name, .value = request.property_value});
+    } else if (remove_property_if_missing) {
+        assignments.erase(assignment_it);
+    } else {
+        assignment_it->value = request.property_value;
+    }
+
+    return replace_memo_field_value(
+        request.path,
+        record_index,
+        "EXPR",
+        serialize_report_settings_blob(assignments));
 }
 
 bool direct_field_change_is_noop(
@@ -458,6 +606,7 @@ VisualAssetEditResult apply_visual_object_property_change(
     }
 
     const auto fields = read_raw_field_descriptors(table_bytes);
+    const auto& record = table_result.table.records[record_index];
     const auto direct_field_it = find_direct_visual_property_field(fields, request.property_name);
     if (direct_field_it != fields.end()) {
         const auto header_result = parse_dbf_header(table_bytes);
@@ -499,11 +648,22 @@ VisualAssetEditResult apply_visual_object_property_change(
         return replace_field_value(request.path, record_index, *direct_field_it, request.property_value);
     }
 
+    if (is_report_layout_asset_path(request.path)) {
+        const auto report_settings_state = read_report_settings_expr_property_state(record, request.property_name);
+        if (report_settings_state.has_value()) {
+            return replace_report_settings_expr_property(
+                request,
+                record,
+                record_index,
+                record_undo_entry,
+                remove_property_if_missing);
+        }
+    }
+
     if (!is_property_blob_asset_path(request.path)) {
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.NotWritableField")};
     }
 
-    const auto& record = table_result.table.records[record_index];
     auto properties_it = std::find_if(record.values.begin(), record.values.end(), [](const DbfRecordValue& value) {
         return value.field_name == "PROPERTIES";
     });
