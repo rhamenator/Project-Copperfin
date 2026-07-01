@@ -1,6 +1,223 @@
 #include "visual_asset_editor_support.h"
 
+#include <limits>
+
 namespace copperfin::vfp {
+namespace {
+
+bool is_report_layout_asset_path(const std::string& path) {
+    std::string ext = std::filesystem::path(path).extension().string();
+    std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char ch) {
+        return static_cast<char>(std::tolower(ch));
+    });
+    return ext == ".frx" || ext == ".lbx";
+}
+
+int parse_record_int_or_default(const DbfRecord& record, const std::string& field_name) {
+    const auto* value = find_record_value(record, field_name);
+    if (value == nullptr) {
+        return 0;
+    }
+
+    const auto parsed = parse_visual_geometry_number(value->display_value);
+    if (!parsed.has_value()) {
+        return 0;
+    }
+
+    return static_cast<int>(std::llround(*parsed));
+}
+
+bool is_report_band_record(const DbfRecord& record) {
+    return parse_record_int_or_default(record, "OBJTYPE") == 9;
+}
+
+bool is_report_layout_object_record(const DbfRecord& record) {
+    const int objtype = parse_record_int_or_default(record, "OBJTYPE");
+    return objtype == 5 || objtype == 6 || objtype == 7 || objtype == 8 || objtype == 17 || objtype == 18;
+}
+
+struct ReportSectionGeometry {
+    std::size_t record_index = 0U;
+    int top = 0;
+    int height = 0;
+};
+
+std::size_t find_report_section_index(
+    const std::vector<ReportSectionGeometry>& sections,
+    int top,
+    int height) {
+    std::size_t best_index = sections.size();
+    for (std::size_t index = 0U; index < sections.size(); ++index) {
+        const auto& section = sections[index];
+        const int section_bottom = section.top + std::max(section.height, 1);
+        const int object_bottom = top + std::max(height, 1);
+        const bool begins_inside = top >= section.top && top < section_bottom;
+        const bool overlaps = object_bottom > section.top && top < section_bottom;
+        if (begins_inside || overlaps) {
+            if (best_index >= sections.size()) {
+                best_index = index;
+                continue;
+            }
+
+            const auto& best_section = sections[best_index];
+            const int best_bottom = best_section.top + std::max(best_section.height, 1);
+            if (section.top > best_section.top ||
+                (section.top == best_section.top && section_bottom > best_bottom) ||
+                (section.top == best_section.top && section_bottom == best_bottom &&
+                 section.record_index > best_section.record_index)) {
+                best_index = index;
+            }
+        }
+    }
+
+    return best_index;
+}
+
+std::optional<double> parse_effective_section_top_value(const std::string& property_value) {
+    const std::string trimmed = trim_both(property_value);
+    if (trimmed.empty()) {
+        return 0.0;
+    }
+
+    return parse_visual_geometry_number(trimmed);
+}
+
+double read_visual_geometry_number_or_default(
+    const DbfRecord& record,
+    const std::string& field_name,
+    double fallback_value) {
+    const auto* value = find_record_value(record, field_name);
+    if (value == nullptr) {
+        return fallback_value;
+    }
+
+    const auto parsed = parse_visual_geometry_number(value->display_value);
+    return parsed.has_value() ? *parsed : fallback_value;
+}
+
+std::optional<VisualObjectBatchEditRequest> build_section_top_batch_update(
+    const VisualObjectEditRequest& request,
+    const DbfTable& table,
+    std::size_t section_record_index) {
+    if (!is_report_layout_asset_path(request.path) ||
+        section_record_index >= table.records.size() ||
+        !is_report_band_record(table.records[section_record_index])) {
+        return std::nullopt;
+    }
+
+    const auto new_top = parse_effective_section_top_value(request.property_value);
+    if (!new_top.has_value()) {
+        return std::nullopt;
+    }
+
+    const auto& target_record = table.records[section_record_index];
+    const double current_top = read_visual_geometry_number_or_default(
+        target_record,
+        "VPOS",
+        static_cast<double>(parse_record_int_or_default(target_record, "VPOS")));
+    const double delta = *new_top - current_top;
+    if (std::abs(delta) < 0.0000001) {
+        return std::nullopt;
+    }
+
+    std::vector<ReportSectionGeometry> live_sections;
+    std::vector<ReportSectionGeometry> deleted_sections;
+    for (const auto& record : table.records) {
+        if (!is_report_band_record(record)) {
+            continue;
+        }
+
+        auto& sections = record.deleted ? deleted_sections : live_sections;
+        sections.push_back(ReportSectionGeometry{
+            record.record_index,
+            parse_record_int_or_default(record, "VPOS"),
+            std::max(0, parse_record_int_or_default(record, "HEIGHT"))
+        });
+    }
+
+    const auto sort_sections = [](std::vector<ReportSectionGeometry>& sections) {
+        std::sort(sections.begin(), sections.end(), [](const ReportSectionGeometry& left,
+                                                       const ReportSectionGeometry& right) {
+            if (left.top != right.top) {
+                return left.top < right.top;
+            }
+            return left.record_index < right.record_index;
+        });
+    };
+    sort_sections(live_sections);
+    sort_sections(deleted_sections);
+
+    const bool target_deleted = target_record.deleted;
+    const auto& target_sections = target_deleted ? deleted_sections : live_sections;
+    const auto target_it = std::find_if(
+        target_sections.begin(),
+        target_sections.end(),
+        [&](const ReportSectionGeometry& candidate) {
+            return candidate.record_index == section_record_index;
+        });
+    if (target_it == target_sections.end()) {
+        return std::nullopt;
+    }
+
+    const std::size_t target_section_index =
+        static_cast<std::size_t>(std::distance(target_sections.begin(), target_it));
+
+    VisualObjectBatchEditRequest batch{
+        .path = request.path,
+        .objects = {
+            {
+                .record_index = section_record_index,
+                .object_name = {},
+                .unique_id = {},
+                .properties = {
+                    {
+                        .property_name = request.property_name,
+                        .property_value = request.property_value
+                    }
+                }
+            }
+        }
+    };
+
+    for (const auto& record : table.records) {
+        if (!is_report_layout_object_record(record)) {
+            continue;
+        }
+
+        const int object_top = parse_record_int_or_default(record, "VPOS");
+        const int object_height = std::max(0, parse_record_int_or_default(record, "HEIGHT"));
+        const std::size_t live_section_index = find_report_section_index(live_sections, object_top, object_height);
+        const std::size_t deleted_section_index = find_report_section_index(deleted_sections, object_top, object_height);
+
+        const bool belongs_to_target = target_deleted
+            ? live_section_index >= live_sections.size() && deleted_section_index == target_section_index
+            : live_section_index == target_section_index;
+        if (!belongs_to_target) {
+            continue;
+        }
+
+        const double current_object_top = read_visual_geometry_number_or_default(
+            record,
+            "VPOS",
+            static_cast<double>(object_top));
+        batch.objects.push_back({
+            .record_index = record.record_index,
+            .object_name = {},
+            .unique_id = {},
+            .properties = {
+                {
+                    .property_name = "VPOS",
+                    .property_value = format_visual_geometry_number(current_object_top + delta)
+                }
+            }
+        });
+    }
+
+    return batch.objects.size() > 1U ? std::optional<VisualObjectBatchEditRequest>(std::move(batch)) : std::nullopt;
+}
+
+}  // namespace
+
 VisualAssetEditResult find_unique_visual_property_assignment_index(
     const std::vector<VisualPropertyAssignment>& assignments,
     const std::string& property_name,
@@ -212,6 +429,27 @@ VisualAssetEditResult apply_visual_object_property_change(
     }
     if (record_index >= table_result.table.records.size()) {
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.RecordUnavailable")};
+    }
+
+    const std::string normalized_property_name = normalize_visual_property_name(request.property_name);
+    if (record_undo_entry && normalized_property_name == "vpos") {
+        const auto& target_record = table_result.table.records[record_index];
+        if (is_report_layout_asset_path(request.path) && is_report_band_record(target_record)) {
+            const auto full_table_result =
+                parse_dbf_table_from_file(request.path, std::numeric_limits<std::size_t>::max());
+            if (!full_table_result.ok) {
+                return {.ok = false, .error = full_table_result.error};
+            }
+            if (record_index >= full_table_result.table.records.size()) {
+                return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.RecordUnavailable")};
+            }
+
+            const auto batch_update =
+                build_section_top_batch_update(request, full_table_result.table, record_index);
+            if (batch_update.has_value()) {
+                return update_visual_object_batch(*batch_update);
+            }
+        }
     }
 
     const auto table_bytes = read_binary_file(request.path);

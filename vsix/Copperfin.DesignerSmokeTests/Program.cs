@@ -33,6 +33,15 @@ internal static class Program
         public string? GroupPartnerStateDisplay { get; set; }
     }
 
+    private sealed class ExpectedSectionContainedObjectGeometry
+    {
+        public int RecordIndex { get; set; }
+        public int Top { get; set; }
+        public int SectionRelativeTop { get; set; }
+        public int Bottom { get; set; }
+        public int SectionRelativeBottom { get; set; }
+    }
+
     private sealed class ExpectedReportGroupingMetadata
     {
         public int GroupingIndex { get; set; }
@@ -389,6 +398,62 @@ internal static class Program
                 expectedSectionTitle: "Detail",
                 expectedSectionCount: 5,
                 expectLabel: true);
+            SmokeRealAssetHostBackedSectionRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 1,
+                expectedSectionTitle: "Title",
+                propertyName: "VPOS",
+                originalRawValue: string.Empty,
+                updatedRawValue: "500",
+                expectedOriginalLayoutValue: 0,
+                expectedUpdatedLayoutValue: 500,
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedObjectCount: 1,
+                expectedOriginalContainedObject: new ExpectedSectionContainedObjectGeometry
+                {
+                    RecordIndex = 7,
+                    Top = 6666,
+                    SectionRelativeTop = 6666,
+                    Bottom = 9999,
+                    SectionRelativeBottom = 9999
+                },
+                expectedUpdatedContainedObject: new ExpectedSectionContainedObjectGeometry
+                {
+                    RecordIndex = 7,
+                    Top = 7166,
+                    SectionRelativeTop = 6666,
+                    Bottom = 10499,
+                    SectionRelativeBottom = 9999
+                });
+            SmokeRealAssetHostBackedSectionRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 3,
+                expectedSectionTitle: "Detail",
+                propertyName: "VPOS",
+                originalRawValue: string.Empty,
+                updatedRawValue: "400",
+                expectedOriginalLayoutValue: 0,
+                expectedUpdatedLayoutValue: 400,
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedObjectCount: 1,
+                expectedOriginalContainedObject: new ExpectedSectionContainedObjectGeometry
+                {
+                    RecordIndex = 6,
+                    Top = 6666,
+                    SectionRelativeTop = 6666,
+                    Bottom = 8332,
+                    SectionRelativeBottom = 8332
+                },
+                expectedUpdatedContainedObject: new ExpectedSectionContainedObjectGeometry
+                {
+                    RecordIndex = 6,
+                    Top = 7066,
+                    SectionRelativeTop = 6666,
+                    Bottom = 8732,
+                    SectionRelativeBottom = 8332
+                });
             SmokeRealAssetHostBackedSectionRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 1,
@@ -915,9 +980,9 @@ internal static class Program
                 companionRecordIndex: 13,
                 companionUniqueId: "_QEE1DSSPJ",
                 companionObjectTitle: "_QEE1DSSPJ",
-                expectedSectionTitle: "Title",
-                initialSectionRecordIndex: 3,
-                reorderedSectionRecordIndex: 4,
+                expectedSectionTitle: "Group Header",
+                initialSectionRecordIndex: 5,
+                reorderedSectionRecordIndex: 5,
                 expectedSectionCount: 6,
                 expectedVisibleSectionObjectCount: 8,
                 expectedReorderedRecordIndex: 0,
@@ -1642,9 +1707,9 @@ internal static class Program
                 companionRecordIndex: 13,
                 companionUniqueId: "_QEE1DSSPJ",
                 companionObjectTitle: "_QEE1DSSPJ",
-                expectedSectionTitle: "Title",
-                initialSectionRecordIndex: 3,
-                reorderedSectionRecordIndex: 4,
+                expectedSectionTitle: "Group Header",
+                initialSectionRecordIndex: 5,
+                reorderedSectionRecordIndex: 5,
                 expectedSectionCount: 6,
                 expectedVisibleSectionObjectCount: 8,
                 expectedReorderedRecordIndex: 0,
@@ -1933,6 +1998,68 @@ internal static class Program
                 expectedOriginalLayoutVpos: 6666,
                 expectedUpdatedLayoutHpos: 6252,
                 expectedUpdatedLayoutVpos: 6666);
+            SmokeAssetEditorSectionRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 1,
+                expectedSectionTitle: "Title",
+                propertyName: "VPOS",
+                updatedPropertyValue: 500,
+                expectedOriginalSelectionValue: "0",
+                expectedUpdatedSelectionValue: "500",
+                expectedOriginalRawValue: string.Empty,
+                expectedUpdatedRawValue: "500",
+                expectedOriginalLayoutValue: 0,
+                expectedUpdatedLayoutValue: 500,
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedObjectCount: 1,
+                expectedOriginalContainedObject: new ExpectedSectionContainedObjectGeometry
+                {
+                    RecordIndex = 7,
+                    Top = 6666,
+                    SectionRelativeTop = 6666,
+                    Bottom = 9999,
+                    SectionRelativeBottom = 9999
+                },
+                expectedUpdatedContainedObject: new ExpectedSectionContainedObjectGeometry
+                {
+                    RecordIndex = 7,
+                    Top = 7166,
+                    SectionRelativeTop = 6666,
+                    Bottom = 10499,
+                    SectionRelativeBottom = 9999
+                });
+            SmokeAssetEditorSectionRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 3,
+                expectedSectionTitle: "Detail",
+                propertyName: "VPOS",
+                updatedPropertyValue: 400,
+                expectedOriginalSelectionValue: "0",
+                expectedUpdatedSelectionValue: "400",
+                expectedOriginalRawValue: string.Empty,
+                expectedUpdatedRawValue: "400",
+                expectedOriginalLayoutValue: 0,
+                expectedUpdatedLayoutValue: 400,
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedObjectCount: 1,
+                expectedOriginalContainedObject: new ExpectedSectionContainedObjectGeometry
+                {
+                    RecordIndex = 6,
+                    Top = 6666,
+                    SectionRelativeTop = 6666,
+                    Bottom = 8332,
+                    SectionRelativeBottom = 8332
+                },
+                expectedUpdatedContainedObject: new ExpectedSectionContainedObjectGeometry
+                {
+                    RecordIndex = 6,
+                    Top = 7066,
+                    SectionRelativeTop = 6666,
+                    Bottom = 8732,
+                    SectionRelativeBottom = 8332
+                });
             SmokeAssetEditorSectionRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 1,
@@ -15109,7 +15236,9 @@ internal static class Program
         int expectedObjectCount,
         ExpectedSectionGroupingMetadata? expectedGrouping = null,
         string? expectedOriginalLayoutTextValue = null,
-        string? expectedUpdatedLayoutTextValue = null)
+        string? expectedUpdatedLayoutTextValue = null,
+        ExpectedSectionContainedObjectGeometry? expectedOriginalContainedObject = null,
+        ExpectedSectionContainedObjectGeometry? expectedUpdatedContainedObject = null)
     {
         if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
         {
@@ -15143,6 +15272,7 @@ internal static class Program
                 expectedObjectCount,
                 expectedGrouping,
                 expectedOriginalLayoutTextValue,
+                expectedOriginalContainedObject,
                 $"initial real asset section snapshot should preserve {propertyName}");
 
             var updateResult = CopperfinStudioSnapshotClient.TryUpdateProperty(
@@ -15169,6 +15299,7 @@ internal static class Program
                 expectedObjectCount,
                 expectedGrouping,
                 expectedUpdatedLayoutTextValue,
+                expectedUpdatedContainedObject,
                 $"updated real asset section snapshot should preserve {propertyName}");
             Expect(updateResult.Document.CommandUndoAvailable,
                 $"real asset section smoke should expose undo after updating {propertyName} for {sourcePath}");
@@ -15193,6 +15324,7 @@ internal static class Program
                 expectedObjectCount,
                 expectedGrouping,
                 expectedUpdatedLayoutTextValue,
+                expectedUpdatedContainedObject,
                 $"reloaded updated real asset section snapshot should preserve {propertyName}");
             Expect(reloadedAfterUpdate.Document.CommandUndoAvailable,
                 $"reloaded updated real asset section snapshot should keep undo available for {sourcePath}");
@@ -15225,6 +15357,7 @@ internal static class Program
                 expectedObjectCount,
                 expectedGrouping,
                 expectedOriginalLayoutTextValue,
+                expectedOriginalContainedObject,
                 $"reloaded undone real asset section snapshot should preserve {propertyName}");
             Expect(!reloadedAfterUndo.Document.CommandUndoAvailable,
                 $"real asset section smoke should clear undo after restoring {propertyName} for {sourcePath}");
@@ -23242,7 +23375,9 @@ internal static class Program
         string? expectedExplorerSectionTitle = null,
         ExpectedSectionGroupingMetadata? expectedGrouping = null,
         string? expectedOriginalLayoutTextValue = null,
-        string? expectedUpdatedLayoutTextValue = null)
+        string? expectedUpdatedLayoutTextValue = null,
+        ExpectedSectionContainedObjectGeometry? expectedOriginalContainedObject = null,
+        ExpectedSectionContainedObjectGeometry? expectedUpdatedContainedObject = null)
     {
         if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
         {
@@ -23308,7 +23443,8 @@ internal static class Program
                 return;
             }
 
-            var initialSelectionValue = TypeDescriptor.GetProperties(sectionSelection)[propertyName]?.GetValue(sectionSelection)?.ToString();
+            var selectionPropertyName = NormalizeSectionSelectionPropertyName(propertyName);
+            var initialSelectionValue = TypeDescriptor.GetProperties(sectionSelection)[selectionPropertyName]?.GetValue(sectionSelection)?.ToString();
             Expect(string.Equals(initialSelectionValue, expectedOriginalSelectionValue, StringComparison.Ordinal),
                 $"real asset editor section smoke should expose original property-grid value {propertyName} for {sourcePath}");
             Expect(string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, expectedSectionListTitle, StringComparison.OrdinalIgnoreCase) &&
@@ -23316,8 +23452,8 @@ internal static class Program
                    SelectionMatchesExpectedSectionGrouping(sectionSelection, expectedGrouping),
                 $"real asset editor section smoke should expose grouped section metadata for {sourcePath}");
 
-            TypeDescriptor.GetProperties(sectionSelection)[propertyName]?.SetValue(sectionSelection, updatedPropertyValue);
-            InvokeAssetEditorVoid(control, "ApplyPropertyGridChange", propertyName, 0);
+            TypeDescriptor.GetProperties(sectionSelection)[selectionPropertyName]?.SetValue(sectionSelection, updatedPropertyValue);
+            InvokeAssetEditorVoid(control, "ApplyPropertyGridChange", selectionPropertyName, 0);
             Application.DoEvents();
 
             var expectedUpdatedGrouping = expectedGrouping;
@@ -23353,7 +23489,7 @@ internal static class Program
 
                     var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault();
                     var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
-                    var propertyValue = TypeDescriptor.GetProperties(refreshedSelection)[propertyName]?.GetValue(refreshedSelection)?.ToString();
+                    var propertyValue = TypeDescriptor.GetProperties(refreshedSelection)[selectionPropertyName]?.GetValue(refreshedSelection)?.ToString();
                     return string.Equals(selectedSection?.Text, expectedSectionListTitle, StringComparison.OrdinalIgnoreCase) &&
                            selectedSectionModel?.RecordIndex == recordIndex &&
                            SectionMatchesExpectedGrouping(selectedSectionModel, expectedGrouping) &&
@@ -23388,6 +23524,7 @@ internal static class Program
                     expectedObjectCount,
                     expectedGrouping,
                     expectedUpdatedLayoutTextValue,
+                    expectedUpdatedContainedObject,
                     $"reloaded edited real asset section snapshot should preserve {propertyName}");
             }
 
@@ -23408,7 +23545,7 @@ internal static class Program
 
                     var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault();
                     var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
-                    var propertyValue = TypeDescriptor.GetProperties(refreshedSelection)[propertyName]?.GetValue(refreshedSelection)?.ToString();
+                    var propertyValue = TypeDescriptor.GetProperties(refreshedSelection)[selectionPropertyName]?.GetValue(refreshedSelection)?.ToString();
                     return string.Equals(selectedSection?.Text, expectedSectionListTitle, StringComparison.OrdinalIgnoreCase) &&
                            selectedSectionModel?.RecordIndex == recordIndex &&
                            SectionMatchesExpectedGrouping(selectedSectionModel, expectedGrouping) &&
@@ -23442,6 +23579,7 @@ internal static class Program
                     expectedObjectCount,
                     expectedGrouping,
                     expectedOriginalLayoutTextValue,
+                    expectedOriginalContainedObject,
                     $"reloaded undone editor real asset section snapshot should preserve {propertyName}");
             }
 
@@ -24754,6 +24892,7 @@ internal static class Program
         int expectedObjectCount,
         ExpectedSectionGroupingMetadata? expectedGrouping,
         string? expectedLayoutTextValue,
+        ExpectedSectionContainedObjectGeometry? expectedContainedObject,
         string failurePrefix)
     {
         Expect(document.ReportLayout is not null,
@@ -24803,6 +24942,26 @@ internal static class Program
                 $"{failurePrefix} for {document.Path} should preserve group partner record {expectedGrouping.GroupPartnerRecordIndex}");
             Expect(section.GroupPartnerDeleted == expectedGrouping.GroupPartnerDeleted,
                 $"{failurePrefix} for {document.Path} should preserve group partner deleted state {expectedGrouping.GroupPartnerDeleted}");
+        }
+
+        if (expectedContainedObject is not null)
+        {
+            var containedObject = section.Objects.FirstOrDefault(candidate => candidate.RecordIndex == expectedContainedObject.RecordIndex);
+            Expect(containedObject is not null,
+                $"{failurePrefix} for {document.Path} should preserve section object {expectedContainedObject.RecordIndex}");
+            if (containedObject is null)
+            {
+                return;
+            }
+
+            Expect(containedObject.Top == expectedContainedObject.Top,
+                $"{failurePrefix} for {document.Path} should expose contained object top {expectedContainedObject.Top}");
+            Expect(containedObject.SectionRelativeTop == expectedContainedObject.SectionRelativeTop,
+                $"{failurePrefix} for {document.Path} should expose contained object relative top {expectedContainedObject.SectionRelativeTop}");
+            Expect((containedObject.Top + containedObject.Height) == expectedContainedObject.Bottom,
+                $"{failurePrefix} for {document.Path} should expose contained object bottom {expectedContainedObject.Bottom}");
+            Expect(containedObject.SectionRelativeBottom == expectedContainedObject.SectionRelativeBottom,
+                $"{failurePrefix} for {document.Path} should expose contained object relative bottom {expectedContainedObject.SectionRelativeBottom}");
         }
 
         var layoutTextValue = TryGetReportSectionLayoutTextValue(section, propertyName);
@@ -24916,6 +25075,13 @@ internal static class Program
     private static string? ReadSelectionPropertyValue(CopperfinDesignerSelection selection, string propertyName)
     {
         return TypeDescriptor.GetProperties(selection)[propertyName]?.GetValue(selection)?.ToString();
+    }
+
+    private static string NormalizeSectionSelectionPropertyName(string propertyName)
+    {
+        return string.Equals(propertyName, "VPOS", StringComparison.OrdinalIgnoreCase)
+            ? "TOP"
+            : propertyName;
     }
 
     private static void AssertRealAssetUnplacedObjectCount(
@@ -25226,7 +25392,8 @@ internal static class Program
         CopperfinStudioReportSection section,
         string propertyName)
     {
-        if (string.Equals(propertyName, "TOP", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(propertyName, "TOP", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(propertyName, "VPOS", StringComparison.OrdinalIgnoreCase))
         {
             return section.Top;
         }

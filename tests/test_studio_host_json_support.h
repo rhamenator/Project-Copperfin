@@ -1335,6 +1335,8 @@ void test_studio_host_json_updates_deleted_report_section_tops_by_record_selecti
 void test_studio_host_json_clears_deleted_report_section_tops_by_record_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_clears_report_section_tops_by_record_selection(const std::string& studio_host_path);
+void test_studio_host_json_preserves_realistic_zero_top_section_object_membership_on_top_update(
+    const std::string& studio_host_path);
 void test_studio_host_json_updates_report_section_heights_and_tops_by_stable_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_clears_report_section_heights_and_tops_by_stable_selection(
@@ -1531,6 +1533,7 @@ void test_studio_host_json_suppresses_unresolved_report_memo_placeholders(
 
 // ==== Report layout JSON tests: shared fixtures and generic numeric/layout checks ====
 void write_synthetic_report_table_for_layout_json(const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_zero_top_section_reflow_json(const std::filesystem::path& report_path);
 void write_synthetic_report_table_for_stable_deleted_layout_json(const std::filesystem::path& report_path);
 void write_synthetic_report_table_for_malformed_numeric_layout_json(
     const std::filesystem::path& report_path);

@@ -400,6 +400,7 @@ std::size_t find_section_index(
     const std::vector<StudioReportSectionSnapshot>& sections,
     int top,
     int height) {
+    std::size_t best_index = sections.size();
     for (std::size_t index = 0; index < sections.size(); ++index) {
         const auto& section = sections[index];
         const int section_bottom = section.top + std::max(section.height, 1);
@@ -407,10 +408,22 @@ std::size_t find_section_index(
         const bool begins_inside = top >= section.top && top < section_bottom;
         const bool overlaps = object_bottom > section.top && top < section_bottom;
         if (begins_inside || overlaps) {
-            return index;
+            if (best_index >= sections.size()) {
+                best_index = index;
+                continue;
+            }
+
+            const auto& best_section = sections[best_index];
+            const int best_bottom = best_section.top + std::max(best_section.height, 1);
+            if (section.top > best_section.top ||
+                (section.top == best_section.top && section_bottom > best_bottom) ||
+                (section.top == best_section.top && section_bottom == best_bottom &&
+                 section.record_index > best_section.record_index)) {
+                best_index = index;
+            }
         }
     }
-    return sections.size();
+    return best_index;
 }
 
 void expand_preview_bounds(StudioReportLayoutSnapshot& snapshot, int left, int top, int right, int bottom) {

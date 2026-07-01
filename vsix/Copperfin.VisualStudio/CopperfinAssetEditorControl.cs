@@ -854,6 +854,10 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         PopulateSectionList(explorerSelection);
         SyncExplorerSelection();
         LoadSurface();
+        if (selectedObjectRecordIndex < 0)
+        {
+            SyncExplorerSelection();
+        }
         if (selectedObjectRecordIndex >= 0)
         {
             designSurface.SelectRecord(selectedObjectRecordIndex);

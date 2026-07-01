@@ -31,6 +31,32 @@ void write_synthetic_report_table_for_layout_json(const std::filesystem::path& r
     expect(delete_result.ok, "#1452: synthetic FRX table should mark deleted layout objects");
 }
 
+void write_synthetic_report_table_for_zero_top_section_reflow_json(const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "FONTFACE", .type = 'M', .length = 4U},
+        {.name = "TOPMARGIN", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 24U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0\nPAPERSIZE=1", "", "", "", "", "", "10", ""},
+        {"9", "0", "", "", "", "", "11459", "", "", "title-section-guid"},
+        {"9", "1", "", "", "", "", "4480", "", "", "page-header-guid"},
+        {"9", "4", "", "", "", "", "1875", "", "", "detail-guid"},
+        {"9", "7", "", "", "", "", "6875", "", "", "page-footer-guid"},
+        {"5", "", "\"Deep title\"", "8645.833", "6666.667", "19687.500", "3333.333", "Times New Roman", "", "title-object-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#3057: synthetic FRX/LBX table for zero-top section reflow should be created");
+}
+
 void write_synthetic_report_table_for_stable_deleted_layout_json(const std::filesystem::path& report_path) {
     write_synthetic_report_table_for_layout_json(report_path);
     const auto unique_id_result = copperfin::vfp::update_visual_object_property({

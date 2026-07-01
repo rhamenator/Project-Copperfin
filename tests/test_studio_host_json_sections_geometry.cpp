@@ -198,6 +198,105 @@ void test_studio_host_json_clears_report_section_heights_by_record_selection(con
     }
 }
 
+void test_studio_host_json_preserves_realistic_zero_top_section_object_membership_on_top_update(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_zero_top_section_reflow_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
+    const auto run_zero_top_reflow_update = [&](const fs::path& asset_path,
+                                                const std::string& title,
+                                                const std::string& label) {
+        write_synthetic_report_table_for_zero_top_section_reflow_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--record", "1",
+                "--property-name", "VPOS",
+                "--property-value", "500",
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " zero-top section reflow stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " zero-top section reflow stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#3057: zero-top report/label section top update should exit successfully");
+        const auto section_top = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 1U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "VPOS"
+        });
+        expect(section_top.ok && section_top.exists && section_top.value == "500",
+               "#3057: zero-top report/label section top update should persist the section VPOS");
+        const auto object_top = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 5U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "VPOS"
+        });
+        expect(object_top.ok && object_top.exists && object_top.value == "7166.667",
+               "#3057: zero-top report/label section top update should move contained object VPOS with the section");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#3057: zero-top report/label section top update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#3057: zero-top label section top update should retain label identity");
+        }
+        expect_contains(update_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#3057: zero-top report/label section top update should preserve selected section availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportSection\": {",
+                        "#3057: zero-top report/label section top update should preserve selected section JSON");
+        expect_contains(update_process.stdout_text, "\"recordIndex\": 1",
+                        "#3057: zero-top report/label section top update should keep the title section selected");
+        expect_contains(update_process.stdout_text, "\"top\": 500",
+                        "#3057: zero-top report/label section top update should refresh selected section top");
+        expect_contains(update_process.stdout_text, "\"height\": 11459",
+                        "#3057: zero-top report/label section top update should preserve selected section height");
+        expect_contains(update_process.stdout_text, "\"bottom\": 11959",
+                        "#3057: zero-top report/label section top update should refresh selected section bottom");
+        expect_contains(update_process.stdout_text, "\"objectCount\": 1",
+                        "#3057: zero-top report/label section top update should preserve target section object counts");
+        expect_contains(update_process.stdout_text, "\"recordIndex\": 5",
+                        "#3057: zero-top report/label section top update should keep the deep title object in the selected section");
+        expect_contains(update_process.stdout_text, "\"sectionRelativeTop\": 6666",
+                        "#3057: zero-top report/label section top update should preserve contained-object relative top");
+        expect_contains(update_process.stdout_text, "\"sectionRelativeBottom\": 9999",
+                        "#3057: zero-top report/label section top update should preserve contained-object relative bottom");
+        expect_contains(update_process.stdout_text, "\"top\": 7166",
+                        "#3057: zero-top report/label section top update should refresh contained-object absolute top");
+    };
+
+    run_zero_top_reflow_update(
+        temp_root / "zero_top_section_reflow.frx",
+        "zero_top_section_reflow.frx",
+        "report");
+    run_zero_top_reflow_update(
+        temp_root / "zero_top_section_reflow.lbx",
+        "zero_top_section_reflow.lbx",
+        "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_report_section_tops_by_record_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -267,11 +366,11 @@ void test_studio_host_json_updates_report_section_tops_by_record_selection(const
                         "#1915: report/label section top update should preserve deleted preview availability");
         expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsLeft\": 1000",
                         "#1915: report/label section top update should preserve deleted preview left bounds");
-        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsTop\": 3100",
                         "#1915: report/label section top update should preserve deleted preview top bounds");
         expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
                         "#1915: report/label section top update should preserve deleted preview right bounds");
-        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2900",
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsBottom\": 3400",
                         "#1915: report/label section top update should preserve deleted preview bottom bounds");
         expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1200",
                         "#1915: report/label section top update should preserve deleted preview widths");
@@ -290,8 +389,8 @@ void test_studio_host_json_updates_report_section_tops_by_record_selection(const
                 "\"height\": 5000",
                 "\"bottom\": 7500",
                 "\"objectCount\": 1",
-                "\"sectionRelativeTop\": 100",
-                "\"sectionRelativeBottom\": 550"
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 1050"
             },
             "#1526: report/label section top update should refresh section and relative object geometry");
     };
@@ -363,11 +462,11 @@ void test_studio_host_json_clears_report_section_tops_by_record_selection(const 
                         "#1916: report/label section top clear should preserve deleted preview availability");
         expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsLeft\": 1000",
                         "#1916: report/label section top clear should preserve deleted preview left bounds");
-        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsTop\": 600",
                         "#1916: report/label section top clear should preserve deleted preview top bounds");
         expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
                         "#1916: report/label section top clear should preserve deleted preview right bounds");
-        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2900",
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsBottom\": 900",
                         "#1916: report/label section top clear should preserve deleted preview bottom bounds");
         expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1200",
                         "#1916: report/label section top clear should preserve deleted preview widths");
@@ -388,9 +487,11 @@ void test_studio_host_json_clears_report_section_tops_by_record_selection(const 
                 "\"top\": 0",
                 "\"height\": 5000",
                 "\"bottom\": 5000",
-                "\"objectCount\": 1",
-                "\"sectionRelativeTop\": 2600",
-                "\"sectionRelativeBottom\": 3050"
+                "\"objectCount\": 2",
+                "\"sectionRelativeTop\": 100",
+                "\"sectionRelativeBottom\": 450",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 1050"
             },
             "#1565: report/label section top clear should refresh selected section geometry and relative object metadata");
     };
@@ -576,8 +677,8 @@ void test_studio_host_json_updates_report_section_heights_and_tops_by_stable_sel
                 "\"height\": 5000",
                 "\"bottom\": 7500",
                 "\"objectCount\": 3",
-                "\"sectionRelativeTop\": 100",
-                "\"sectionRelativeBottom\": 300"
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 800"
             },
             "#1824: report/label stable section top update should refresh selected-section and relative object geometry");
     };
@@ -767,8 +868,8 @@ void test_studio_host_json_clears_report_section_heights_and_tops_by_stable_sele
                 "\"height\": 5000",
                 "\"bottom\": 5000",
                 "\"objectCount\": 3",
-                "\"sectionRelativeTop\": 2600",
-                "\"sectionRelativeBottom\": 2800"
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 800"
             },
             "#1824: report/label stable section top clear should refresh selected-section and relative object geometry");
     };
