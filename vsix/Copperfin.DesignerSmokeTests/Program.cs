@@ -3042,6 +3042,21 @@ internal static class Program
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLE3V.FRX"),
                 recordIndex: 2,
                 expectedSectionTitle: "Page Header",
+                propertyName: "VPOS",
+                updatedPropertyValue: 500,
+                expectedOriginalSelectionValue: "0",
+                expectedUpdatedSelectionValue: "500",
+                expectedOriginalRawValue: string.Empty,
+                expectedUpdatedRawValue: "500",
+                expectedOriginalLayoutValue: 0,
+                expectedUpdatedLayoutValue: 500,
+                expectedSectionCount: 4,
+                expectLabel: false,
+                expectedObjectCount: 3);
+            SmokeAssetEditorSectionRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLE3V.FRX"),
+                recordIndex: 2,
+                expectedSectionTitle: "Page Header",
                 propertyName: "HEIGHT",
                 updatedPropertyValue: 7000,
                 expectedOriginalSelectionValue: "6355",
@@ -4869,7 +4884,7 @@ internal static class Program
         {
             TypeDescriptor.GetProperties(editableSelection)["TOP"]?.SetValue(editableSelection, 3200);
             Expect(editableSelection.TryGetUpdate("TOP", out var topTarget, out var topValue) &&
-                   string.Equals(topTarget, "TOP", StringComparison.Ordinal) &&
+                   string.Equals(topTarget, "VPOS", StringComparison.Ordinal) &&
                    string.Equals(topValue, "3200", StringComparison.Ordinal),
                 "Report section property-grid selection should serialize TOP edits through the shared update path");
 

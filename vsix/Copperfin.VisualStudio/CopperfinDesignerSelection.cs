@@ -19,6 +19,7 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
     private sealed class SelectionField
     {
         public string Name { get; set; } = string.Empty;
+        public string TargetName { get; set; } = string.Empty;
         public string DisplayName { get; set; } = string.Empty;
         public Type ValueType { get; set; } = typeof(string);
         public bool IsReadOnly { get; set; }
@@ -164,7 +165,11 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             "BANDKIND",
             localization.Text("AssetEditor.Property.BandKind"),
             BuildReportBandKindDisplayText(localization, section.BandKind));
-        selection.AddEditableInt("TOP", localization.Text("AssetEditor.Column.Top"), section.Top.ToString(CultureInfo.InvariantCulture));
+        selection.AddEditableInt(
+            "TOP",
+            localization.Text("AssetEditor.Column.Top"),
+            section.Top.ToString(CultureInfo.InvariantCulture),
+            targetName: "VPOS");
         selection.AddEditableInt("HEIGHT", localization.Text("AssetEditor.Property.Height"), section.Height.ToString(CultureInfo.InvariantCulture));
         if (section.GroupingContextAvailable ||
             !string.IsNullOrWhiteSpace(section.Expression) ||
@@ -611,7 +616,7 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             return false;
         }
 
-        targetName = field.Name;
+        targetName = string.IsNullOrWhiteSpace(field.TargetName) ? field.Name : field.TargetName;
         serializedValue = field.Serialize(field.Deserialize(field.CurrentValue));
         return true;
     }
@@ -685,11 +690,12 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         });
     }
 
-    private void AddEditableInt(string name, string displayName, string value)
+    private void AddEditableInt(string name, string displayName, string value, string? targetName = null)
     {
         AddField(new SelectionField
         {
             Name = name,
+            TargetName = string.IsNullOrWhiteSpace(targetName) ? name : targetName!,
             DisplayName = displayName,
             ValueType = typeof(int),
             IsReadOnly = false,
