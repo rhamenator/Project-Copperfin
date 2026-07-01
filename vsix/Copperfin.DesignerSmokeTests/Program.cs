@@ -719,6 +719,38 @@ internal static class Program
                 expectRawSnapshotProperty: false);
             SmokeRealAssetHostBackedMissingSettingsRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                propertyName: "TTOPTION",
+                updatedValue: "2",
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "TTOPTION",
+                    Value = "2",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 142
+                },
+                expectRawSnapshotProperty: false);
+            SmokeRealAssetHostBackedMissingSettingsRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                propertyName: "TTOPTION",
+                updatedValue: "3",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "TTOPTION",
+                    Value = "3",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 17
+                },
+                expectRawSnapshotProperty: false);
+            SmokeRealAssetHostBackedMissingSettingsRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 propertyName: "TAG",
                 updatedValue: "customer.region",
                 expectedSectionCount: 6,
@@ -1011,6 +1043,42 @@ internal static class Program
                 {
                     Name = "YRESOLUTION",
                     Value = "1200",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 17
+                },
+                expectRawSnapshotProperty: false);
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                propertyName: "TTOPTION",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: 2,
+                expectedUpdatedSelectionValue: "2",
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "TTOPTION",
+                    Value = "2",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 142
+                },
+                expectRawSnapshotProperty: false);
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                propertyName: "TTOPTION",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: 3,
+                expectedUpdatedSelectionValue: "3",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "TTOPTION",
+                    Value = "3",
                     RecordIndex = 0,
                     FieldIndex = 6,
                     SourceLineIndex = 3,
