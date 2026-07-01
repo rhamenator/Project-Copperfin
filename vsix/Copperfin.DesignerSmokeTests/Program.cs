@@ -176,11 +176,16 @@ internal static class Program
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"));
-            SmokeRealAssetSettingsDeletedPreviewBoundsSelection(
+            SmokeRealAssetDeletedPreviewBoundsSelectionAfterDelete(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
-                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
-                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
-                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"));
+                recordIndex: 7,
+                expectedUniqueId: "_RC60MC40R",
+                expectLabel: false);
+            SmokeRealAssetDeletedPreviewBoundsSelectionAfterDelete(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 6,
+                expectedUniqueId: "_QV30QY1DL",
+                expectLabel: true);
             SmokeRealAssetHostBackedSettingsRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 propertyName: "GRIDV",
@@ -10080,6 +10085,140 @@ internal static class Program
             $"real asset settings smoke should expose shared deleted-preview-bounds continuity for {selectedPath}");
 
         TearDownForm(hostForm);
+    }
+
+    private static void SmokeRealAssetDeletedPreviewBoundsSelectionAfterDelete(
+        string? sourcePath,
+        int recordIndex,
+        string expectedUniqueId,
+        bool expectLabel)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(sourcePath) ? "real deleted-preview candidate" : sourcePath)} not found.");
+            return;
+        }
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmokeRealDeletedPreviewWrites-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateWritableAssetCopy(sourcePath!, tempRoot);
+        var localization = new CopperfinLocalization("en-US");
+        var settingsScopeTitle = localization.Text("AssetEditor.ReportSection.Settings");
+        var deletedSettingsScopeTitle = localization.Format(
+            "AssetEditor.ReportSection.Deleted",
+            settingsScopeTitle);
+
+        try
+        {
+            var deleteResult = CopperfinStudioSnapshotClient.TryDeleteObject(
+                assetPath,
+                recordIndex,
+                expectedUniqueId);
+            Expect(deleteResult.Success && deleteResult.Document?.ReportLayout is not null,
+                $"real deleted-preview smoke should delete record {recordIndex} for {sourcePath}");
+            if (!deleteResult.Success || deleteResult.Document?.ReportLayout is null)
+            {
+                return;
+            }
+
+            var reloadedAfterDelete = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterDelete.Success && reloadedAfterDelete.Document?.ReportLayout is not null,
+                $"real deleted-preview smoke should reload deleted snapshot data for {sourcePath}");
+            if (!reloadedAfterDelete.Success || reloadedAfterDelete.Document?.ReportLayout is null)
+            {
+                return;
+            }
+
+            var reportLayout = reloadedAfterDelete.Document.ReportLayout;
+            Expect(reportLayout.IsLabel == expectLabel,
+                $"real deleted-preview smoke should preserve report/label identity for {sourcePath}");
+            Expect(reportLayout.DeletedPreviewBoundsAvailable,
+                $"real deleted-preview smoke should expose deleted preview bounds after deletion for {sourcePath}");
+
+            var expectedScopeTitle = reportLayout.Settings.Count > 0
+                ? settingsScopeTitle
+                : reportLayout.DeletedSettings.Count > 0
+                    ? deletedSettingsScopeTitle
+                    : null;
+            Expect(!string.IsNullOrWhiteSpace(expectedScopeTitle),
+                $"real deleted-preview smoke should expose a settings scope after deletion for {sourcePath}");
+            if (string.IsNullOrWhiteSpace(expectedScopeTitle))
+            {
+                return;
+            }
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+            control.LoadDocument(assetPath);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var loaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => sectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, expectedScopeTitle, StringComparison.Ordinal)));
+            Expect(loaded, $"real deleted-preview smoke should surface the {expectedScopeTitle} scope for {sourcePath}");
+            if (!loaded)
+            {
+                TearDownForm(hostForm);
+                return;
+            }
+
+            foreach (ListViewItem item in sectionListView.Items)
+            {
+                item.Selected = string.Equals(item.Text, expectedScopeTitle, StringComparison.Ordinal);
+            }
+
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            Application.DoEvents();
+
+            var expectedDeletedPreviewBounds = localization.Format(
+                "AssetEditor.Property.BoundsValue",
+                reportLayout.DeletedPreviewBoundsLeft,
+                reportLayout.DeletedPreviewBoundsTop,
+                reportLayout.DeletedPreviewBoundsRight,
+                reportLayout.DeletedPreviewBoundsBottom,
+                reportLayout.DeletedPreviewBoundsWidth,
+                reportLayout.DeletedPreviewBoundsHeight);
+
+            Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection settingsSelection &&
+                   objectListView.Items.Count == 0 &&
+                   string.Equals(ReadSelectionPropertyValue(settingsSelection, "DELETEDPREVIEWBOUNDS"), expectedDeletedPreviewBounds, StringComparison.Ordinal),
+                $"real deleted-preview smoke should expose shared deleted-preview-bounds continuity for {sourcePath}");
+
+            TearDownForm(hostForm);
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
     }
 
     private static void SmokeRealAssetHostBackedPropertyRoundTrip(
