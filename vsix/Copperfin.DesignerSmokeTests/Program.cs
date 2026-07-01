@@ -3039,6 +3039,21 @@ internal static class Program
                 expectLabel: true,
                 expectedObjectCount: 0);
             SmokeAssetEditorSectionRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLE3V.FRX"),
+                recordIndex: 4,
+                expectedSectionTitle: "Page Footer",
+                propertyName: "HEIGHT",
+                updatedPropertyValue: 3200,
+                expectedOriginalSelectionValue: "2917",
+                expectedUpdatedSelectionValue: "3200",
+                expectedOriginalRawValue: "2917.000",
+                expectedUpdatedRawValue: "3200",
+                expectedOriginalLayoutValue: 2917,
+                expectedUpdatedLayoutValue: 3200,
+                expectedSectionCount: 4,
+                expectLabel: false,
+                expectedObjectCount: 0);
+            SmokeAssetEditorSectionRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 5,
                 expectedSectionTitle: "Group Footer",
