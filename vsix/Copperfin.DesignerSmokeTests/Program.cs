@@ -238,6 +238,24 @@ internal static class Program
                 expectLabel: true,
                 expectedOriginalSectionObjectCount: 1,
                 expectedUpdatedSectionObjectCount: 2);
+            SmokeRealAssetHostBackedRenameRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 7,
+                expectedOriginalUniqueId: "_RC60MC40R",
+                expectedRenamedUniqueId: "RLIVEREN1",
+                expectedObjectTitle: "\"Titles By Author\"",
+                expectedSectionTitle: "Title",
+                expectedSectionCount: 6,
+                expectLabel: false);
+            SmokeRealAssetHostBackedRenameRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 6,
+                expectedOriginalUniqueId: "_QV30QY1DL",
+                expectedRenamedUniqueId: "LLIVEREN1",
+                expectedObjectTitle: "wiz_field",
+                expectedSectionTitle: "Detail",
+                expectedSectionCount: 5,
+                expectLabel: true);
             SmokeRealAssetHostBackedDeleteRestoreRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 7,
@@ -547,6 +565,26 @@ internal static class Program
                 expectedReorderedSectionRecordOrder: new[] { 7, 8, 0 },
                 expectedReorderedRecordIndex: 0,
                 expectLabel: false);
+            SmokeAssetEditorRenameCommandWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 7,
+                expectedSectionTitle: "Title",
+                expectedSectionRecordIndex: 1,
+                expectedObjectTitle: "\"Titles By Author\"",
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedOriginalUniqueId: "_RC60MC40R",
+                expectedRenamedUniqueId: "RLIVEREN1");
+            SmokeAssetEditorRenameCommandWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 6,
+                expectedSectionTitle: "Detail",
+                expectedSectionRecordIndex: 3,
+                expectedObjectTitle: "wiz_field",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedOriginalUniqueId: "_QV30QY1DL",
+                expectedRenamedUniqueId: "LLIVEREN1");
             SmokeAssetEditorSectionRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 1,
@@ -7987,6 +8025,158 @@ internal static class Program
         }
     }
 
+    private static void SmokeRealAssetHostBackedRenameRoundTrip(
+        string? sourcePath,
+        int recordIndex,
+        string expectedOriginalUniqueId,
+        string expectedRenamedUniqueId,
+        string expectedObjectTitle,
+        string expectedSectionTitle,
+        int expectedSectionCount,
+        bool expectLabel)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(sourcePath) ? "real asset rename candidate" : sourcePath)} not found.");
+            return;
+        }
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmokeRealAssetRenames-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateWritableAssetCopy(sourcePath!, tempRoot);
+
+        try
+        {
+            var loaded = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(loaded.Success && loaded.Document is not null,
+                $"real asset rename smoke should load snapshot data for {sourcePath}");
+            if (!loaded.Success || loaded.Document is null)
+            {
+                return;
+            }
+
+            AssertRealAssetRoundTripSnapshot(
+                loaded.Document,
+                recordIndex,
+                "UNIQUEID",
+                expectedOriginalUniqueId,
+                expectedObjectTitle,
+                expectedSectionTitle,
+                expectedSectionCount,
+                expectLabel,
+                expectUnplacedObject: false,
+                $"initial real asset rename snapshot should preserve source object identity");
+
+            var renameResult = CopperfinStudioSnapshotClient.TryRenameObject(
+                assetPath,
+                recordIndex,
+                expectedOriginalUniqueId,
+                expectedRenamedUniqueId);
+            Expect(renameResult.Success && renameResult.Document is not null,
+                $"real asset rename smoke should rename record {recordIndex} for {sourcePath}");
+            if (!renameResult.Success || renameResult.Document is null)
+            {
+                return;
+            }
+
+            AssertRealAssetRoundTripSnapshot(
+                renameResult.Document,
+                recordIndex,
+                "UNIQUEID",
+                expectedRenamedUniqueId,
+                expectedObjectTitle,
+                expectedSectionTitle,
+                expectedSectionCount,
+                expectLabel,
+                expectUnplacedObject: false,
+                $"renamed real asset snapshot should preserve renamed identity");
+            Expect(renameResult.Document.CommandUndoAvailable,
+                $"real asset rename smoke should expose undo after renaming {recordIndex} for {sourcePath}");
+
+            var reloadedAfterRename = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterRename.Success && reloadedAfterRename.Document is not null,
+                $"real asset rename smoke should reload renamed snapshot data for {sourcePath}");
+            if (!reloadedAfterRename.Success || reloadedAfterRename.Document is null)
+            {
+                return;
+            }
+
+            AssertRealAssetRoundTripSnapshot(
+                reloadedAfterRename.Document,
+                recordIndex,
+                "UNIQUEID",
+                expectedRenamedUniqueId,
+                expectedObjectTitle,
+                expectedSectionTitle,
+                expectedSectionCount,
+                expectLabel,
+                expectUnplacedObject: false,
+                $"reloaded renamed real asset snapshot should preserve renamed identity");
+            Expect(reloadedAfterRename.Document.CommandUndoAvailable,
+                $"reloaded real asset rename snapshot should keep undo available for {sourcePath}");
+
+            var undoResult = CopperfinStudioSnapshotClient.TryUndoCommand(assetPath);
+            Expect(undoResult.Success && undoResult.Document is not null,
+                $"real asset rename smoke should undo rename for {sourcePath}");
+            if (!undoResult.Success || undoResult.Document is null)
+            {
+                return;
+            }
+
+            AssertRealAssetRoundTripSnapshot(
+                undoResult.Document,
+                recordIndex,
+                "UNIQUEID",
+                expectedOriginalUniqueId,
+                expectedObjectTitle,
+                expectedSectionTitle,
+                expectedSectionCount,
+                expectLabel,
+                expectUnplacedObject: false,
+                $"undone real asset rename snapshot should preserve original identity");
+            Expect(!undoResult.Document.CommandUndoAvailable,
+                $"undone real asset rename snapshot should clear command undo for {sourcePath}");
+
+            var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null,
+                $"real asset rename smoke should reload restored identity for {sourcePath}");
+            if (!reloadedAfterUndo.Success || reloadedAfterUndo.Document is null)
+            {
+                return;
+            }
+
+            AssertRealAssetRoundTripSnapshot(
+                reloadedAfterUndo.Document,
+                recordIndex,
+                "UNIQUEID",
+                expectedOriginalUniqueId,
+                expectedObjectTitle,
+                expectedSectionTitle,
+                expectedSectionCount,
+                expectLabel,
+                expectUnplacedObject: false,
+                $"reloaded undone real asset rename snapshot should preserve original identity");
+            Expect(!reloadedAfterUndo.Document.CommandUndoAvailable,
+                $"reloaded undone real asset rename snapshot should clear command undo for {sourcePath}");
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void SmokeRealAssetHostBackedDeleteRestoreRoundTrip(
         string? sourcePath,
         int recordIndex,
@@ -10065,6 +10255,248 @@ internal static class Program
                     expectLabel,
                     expectUnplacedObject: false,
                     "reloaded restored real asset editor deleted-rename snapshot should preserve original identity");
+            }
+
+            TearDownForm(hostForm);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_RENAME_OBJECT_UNIQUE_ID", previousRenameUniqueId);
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
+    private static void SmokeAssetEditorRenameCommandWithRealAsset(
+        string? sourcePath,
+        int recordIndex,
+        string expectedSectionTitle,
+        int expectedSectionRecordIndex,
+        string expectedObjectTitle,
+        int expectedSectionCount,
+        bool expectLabel,
+        string expectedOriginalUniqueId,
+        string expectedRenamedUniqueId)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(sourcePath) ? "real asset editor rename candidate" : sourcePath)} not found.");
+            return;
+        }
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmokeRealAssetEditorRenames-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateWritableAssetCopy(sourcePath!, tempRoot);
+        var previousRenameUniqueId = Environment.GetEnvironmentVariable("COPPERFIN_RENAME_OBJECT_UNIQUE_ID");
+
+        try
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_RENAME_OBJECT_UNIQUE_ID", expectedRenamedUniqueId);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+            control.LoadDocument(assetPath);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var renameButton = GetPrivateButton(control, "renameObjectButton");
+            var duplicateButton = GetPrivateButton(control, "duplicateObjectButton");
+            var deleteButton = GetPrivateButton(control, "deleteObjectButton");
+            var restoreButton = GetPrivateButton(control, "restoreObjectButton");
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface for the real rename smoke.");
+
+            var loaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => sectionListView.Items.Count > 0);
+            Expect(loaded, $"real asset editor rename smoke should load section data for {sourcePath}");
+            if (!loaded)
+            {
+                return;
+            }
+
+            foreach (ListViewItem item in sectionListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioReportSection section &&
+                                section.RecordIndex == expectedSectionRecordIndex;
+            }
+
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            Application.DoEvents();
+
+            var objectLoaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => objectListView.Items.Cast<ListViewItem>()
+                    .Any(item => item.Tag is CopperfinStudioSnapshotObject snapshotObject &&
+                                 snapshotObject.RecordIndex == recordIndex));
+            Expect(objectLoaded, $"real asset editor rename smoke should surface object {recordIndex} for {sourcePath}");
+            if (!objectLoaded)
+            {
+                return;
+            }
+
+            foreach (ListViewItem item in objectListView.Items)
+            {
+                item.Selected = item.Tag is CopperfinStudioSnapshotObject snapshotObject &&
+                                snapshotObject.RecordIndex == recordIndex;
+            }
+
+            InvokeAssetEditorVoid(control, "SyncSelectionFromList");
+            Application.DoEvents();
+
+            Expect(renameButton.Visible &&
+                   renameButton.Enabled &&
+                   duplicateButton.Visible &&
+                   duplicateButton.Enabled &&
+                   deleteButton.Visible &&
+                   deleteButton.Enabled &&
+                   !restoreButton.Visible &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == recordIndex,
+                $"real asset editor rename smoke should start from a live object selection with rename, duplicate, and delete exposed for {sourcePath}");
+
+            renameButton.PerformClick();
+            Application.DoEvents();
+
+            var renamedSelection = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
+                {
+                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                        refreshedSelection.RecordIndex != recordIndex)
+                    {
+                        return false;
+                    }
+
+                    var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault();
+                    var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
+                    var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
+                    var objectState = TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString();
+                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                           selectedSectionModel?.RecordIndex == expectedSectionRecordIndex &&
+                           selectedObject?.RecordIndex == recordIndex &&
+                           !selectedObject.Deleted &&
+                           string.Equals(selectedObject.Title, expectedObjectTitle, StringComparison.Ordinal) &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(selectedObject, "UNIQUEID"), expectedRenamedUniqueId, StringComparison.Ordinal) &&
+                           string.Equals(objectState, "Live", StringComparison.Ordinal) &&
+                           renameButton.Visible &&
+                           renameButton.Enabled &&
+                           duplicateButton.Visible &&
+                           duplicateButton.Enabled &&
+                           deleteButton.Visible &&
+                           deleteButton.Enabled &&
+                           !restoreButton.Visible &&
+                           string.Equals(ReadPrivateStringField(surface, "assetFamily"), expectLabel ? "label" : "report", StringComparison.Ordinal) &&
+                           ReadPrivateNullableInt(surface, "selectedRecordIndex") == recordIndex &&
+                           ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == expectedSectionRecordIndex &&
+                           !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected");
+                });
+            Expect(renamedSelection,
+                $"real asset editor rename smoke should preserve live selection continuity after renaming for {sourcePath}");
+            Expect(control.CanHandleUndoCommand(),
+                $"real asset editor rename smoke should expose undo after renaming for {sourcePath}");
+            if (!renamedSelection)
+            {
+                return;
+            }
+
+            var reloadedAfterRename = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterRename.Success && reloadedAfterRename.Document is not null,
+                $"real asset editor rename smoke should reload renamed on-disk state for {sourcePath}");
+            if (reloadedAfterRename.Success && reloadedAfterRename.Document is not null)
+            {
+                AssertRealAssetRoundTripSnapshot(
+                    reloadedAfterRename.Document,
+                    recordIndex,
+                    "UNIQUEID",
+                    expectedRenamedUniqueId,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectUnplacedObject: false,
+                    $"reloaded real asset editor rename snapshot should preserve renamed identity");
+            }
+
+            var undoHandled = control.TryHandleUndoCommand();
+            Expect(undoHandled,
+                $"real asset editor rename smoke should execute undo after renaming for {sourcePath}");
+            Application.DoEvents();
+
+            var undoneSelection = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () =>
+                {
+                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                        refreshedSelection.RecordIndex != recordIndex)
+                    {
+                        return false;
+                    }
+
+                    var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault();
+                    var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
+                    var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
+                    var objectState = TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString();
+                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                           selectedSectionModel?.RecordIndex == expectedSectionRecordIndex &&
+                           selectedObject?.RecordIndex == recordIndex &&
+                           !selectedObject.Deleted &&
+                           string.Equals(selectedObject.Title, expectedObjectTitle, StringComparison.Ordinal) &&
+                           string.Equals(TryGetSnapshotObjectPropertyValue(selectedObject, "UNIQUEID"), expectedOriginalUniqueId, StringComparison.Ordinal) &&
+                           string.Equals(objectState, "Live", StringComparison.Ordinal) &&
+                           string.Equals(ReadPrivateStringField(surface, "assetFamily"), expectLabel ? "label" : "report", StringComparison.Ordinal) &&
+                           ReadPrivateNullableInt(surface, "selectedRecordIndex") == recordIndex &&
+                           ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == expectedSectionRecordIndex &&
+                           !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected");
+                });
+            Expect(undoneSelection,
+                $"real asset editor rename smoke should preserve live selection continuity after undoing rename for {sourcePath}");
+            Expect(!control.CanHandleUndoCommand(),
+                $"real asset editor rename smoke should clear undo after restoring the original identity for {sourcePath}");
+
+            var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null,
+                $"real asset editor rename smoke should reload restored on-disk state for {sourcePath}");
+            if (reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null)
+            {
+                AssertRealAssetRoundTripSnapshot(
+                    reloadedAfterUndo.Document,
+                    recordIndex,
+                    "UNIQUEID",
+                    expectedOriginalUniqueId,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectUnplacedObject: false,
+                    $"reloaded undone real asset editor rename snapshot should preserve original identity");
             }
 
             TearDownForm(hostForm);
