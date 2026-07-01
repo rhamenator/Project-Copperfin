@@ -73,6 +73,10 @@ struct ReportSettingsExprLine {
     bool is_assignment = false;
 };
 
+bool is_report_settings_comment_like_name(const std::string& name) {
+    return name.rfind("*", 0U) == 0U || name.rfind("&&", 0U) == 0U;
+}
+
 std::vector<ReportSettingsExprLine> parse_report_settings_expr_lines(const std::string& text) {
     std::vector<ReportSettingsExprLine> lines;
     std::size_t start = 0U;
@@ -90,9 +94,17 @@ std::vector<ReportSettingsExprLine> parse_report_settings_expr_lines(const std::
             });
         } else {
             const std::string name = trim_both(line.substr(0U, equals));
+            const std::string value = trim_both(line.substr(equals + 1U));
             if (name.empty()) {
                 lines.push_back({
                     .raw_line = line,
+                    .name = {},
+                    .value = {},
+                    .is_assignment = false
+                });
+            } else if (value.empty() && is_report_settings_comment_like_name(name)) {
+                lines.push_back({
+                    .raw_line = name,
                     .name = {},
                     .value = {},
                     .is_assignment = false
@@ -101,7 +113,7 @@ std::vector<ReportSettingsExprLine> parse_report_settings_expr_lines(const std::
                 lines.push_back({
                     .raw_line = {},
                     .name = name,
-                    .value = trim_both(line.substr(equals + 1U)),
+                    .value = value,
                     .is_assignment = true
                 });
             }

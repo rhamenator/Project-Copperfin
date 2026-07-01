@@ -823,19 +823,20 @@ void run_unsupported_expr_line_preservation_case(
     expect(expr_property.ok && expr_property.exists,
            issue_prefix + " update should leave the EXPR memo queryable");
     expect(normalize_line_endings(expr_property.value) ==
-               "ORIENTATION=0\n* keep-this-comment\n\nXUSER=keepme\nCOLOR=1\nDRIVER=" + updated_driver + "\n",
-           issue_prefix + " update should preserve unsupported EXPR lines while appending DRIVER");
+               "ORIENTATION=0\n* keep-this-comment=\nXUSER=keepme\nCOLOR=1\nDRIVER=" + updated_driver,
+           issue_prefix + " update should preserve canonicalized unsupported EXPR lines while appending DRIVER");
     expect_contains_in_order(
         update_process.stdout_text,
         {
             "\"settings\": [",
             "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
-            "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
-            "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
-            "\"name\": \"DRIVER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 5",
+            "\"name\": \"* keep-this-comment\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+            "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
+            "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+            "\"name\": \"DRIVER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
             "\"value\": \"" + updated_driver + "\""
         },
-        issue_prefix + " update should preserve supported setting source-line positions around unsupported EXPR lines");
+        issue_prefix + " update should preserve supported setting source-line positions after EXPR canonicalization");
 
     const auto undo_process = run_process_capture(
         studio_host_path,
@@ -867,19 +868,20 @@ void run_unsupported_expr_line_preservation_case(
     expect(reverted_expr_property.ok && reverted_expr_property.exists,
            issue_prefix + " undo should leave the EXPR memo queryable");
     expect(normalize_line_endings(reverted_expr_property.value) ==
-               "ORIENTATION=0\n* keep-this-comment\n\nXUSER=keepme\nCOLOR=1",
-           issue_prefix + " undo should restore the original unsupported EXPR lines");
+               "ORIENTATION=0\n* keep-this-comment=\nXUSER=keepme\nCOLOR=1",
+           issue_prefix + " undo should restore the canonicalized unsupported EXPR lines");
     expect_contains_in_order(
         undo_process.stdout_text,
         {
             "\"settings\": [",
             "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
-            "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
-            "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4"
+            "\"name\": \"* keep-this-comment\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+            "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
+            "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3"
         },
-        issue_prefix + " undo should restore supported setting source-line positions around unsupported EXPR lines");
+        issue_prefix + " undo should restore supported setting source-line positions after EXPR canonicalization");
     expect_not_contains(undo_process.stdout_text,
-                        "\"name\": \"DRIVER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 5",
+                        "\"name\": \"DRIVER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
                         issue_prefix + " undo should remove the appended DRIVER setting");
 }
 

@@ -8,6 +8,14 @@ namespace Copperfin.VisualStudio;
 
 internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
 {
+    private sealed class ReportSettingDescriptor
+    {
+        public string Name { get; set; } = string.Empty;
+        public string LocalizationKey { get; set; } = string.Empty;
+        public bool Numeric { get; set; }
+        public bool MaterializeWhenMissing { get; set; }
+    }
+
     private sealed class SelectionField
     {
         public string Name { get; set; } = string.Empty;
@@ -377,14 +385,23 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
 
         foreach (var settingName in GetOptionalReportStringSettingNames())
         {
-            if (!seenNames.Add(settingName))
+            if (!seenNames.Add(settingName.Name))
             {
                 continue;
             }
 
+            if (settingName.Numeric)
+            {
+                selection.AddEditableOptionalInt(
+                    settingName.Name,
+                    localization.Text(settingName.LocalizationKey),
+                    string.Empty);
+                continue;
+            }
+
             selection.AddEditableString(
-                settingName,
-                BuildReportSettingDisplayText(localization, settingName),
+                settingName.Name,
+                localization.Text(settingName.LocalizationKey),
                 string.Empty);
         }
 
@@ -526,72 +543,52 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
 
     private static string BuildReportSettingDisplayText(CopperfinLocalization localization, string settingName)
     {
-        var key = settingName.ToUpperInvariant() switch
-        {
-            "ASCII" => "AssetEditor.Property.Ascii",
-            "COLLATE" => "AssetEditor.Property.Collate",
-            "COLOR" => "AssetEditor.Property.Color",
-            "COPIES" => "AssetEditor.Property.Copies",
-            "DRIVER" => "AssetEditor.Property.PrinterDriver",
-            "DEVICE" => "AssetEditor.Property.PrinterDevice",
-            "OUTPUT" => "AssetEditor.Property.PrinterOutput",
-            "DEFAULTSOURCE" => "AssetEditor.Property.DefaultSource",
-            "PRINTQUALITY" => "AssetEditor.Property.PrintQuality",
-            "YRESOLUTION" => "AssetEditor.Property.YResolution",
-            "TTOPTION" => "AssetEditor.Property.TrueTypeOption",
-            "ORIENTATION" => "AssetEditor.Property.Orientation",
-            "PAPERSIZE" => "AssetEditor.Property.PaperSize",
-            "PAPERLENGTH" => "AssetEditor.Property.PaperLength",
-            "PAPERWIDTH" => "AssetEditor.Property.PaperWidth",
-            "TOPMARGIN" => "AssetEditor.Property.TopMargin",
-            "BOTMARGIN" => "AssetEditor.Property.BottomMargin",
-            "LEFTMARGIN" => "AssetEditor.Property.LeftMargin",
-            "RIGHTMARGIN" => "AssetEditor.Property.RightMargin",
-            "COLS" => "AssetEditor.Property.Columns",
-            "COLWIDTH" => "AssetEditor.Property.ColumnWidth",
-            "COLSPACING" => "AssetEditor.Property.ColumnSpacing",
-            "GRIDV" => "AssetEditor.Property.VerticalGrid",
-            "GRIDH" => "AssetEditor.Property.HorizontalGrid",
-            "TAG" => "AssetEditor.Property.SortExpression",
-            _ => string.Empty
-        };
-
-        return string.IsNullOrWhiteSpace(key)
+        var descriptor = GetKnownReportSettingDescriptors().FirstOrDefault(candidate =>
+            string.Equals(candidate.Name, settingName, StringComparison.OrdinalIgnoreCase));
+        return descriptor is null || string.IsNullOrWhiteSpace(descriptor.LocalizationKey)
             ? settingName
-            : localization.Text(key);
+            : localization.Text(descriptor.LocalizationKey);
     }
 
     private static bool IsNumericReportSetting(string settingName)
     {
-        return settingName.ToUpperInvariant() is
-            "ASCII" or
-            "COLLATE" or
-            "COLOR" or
-            "COPIES" or
-            "DEFAULTSOURCE" or
-            "PRINTQUALITY" or
-            "YRESOLUTION" or
-            "TTOPTION" or
-            "ORIENTATION" or
-            "PAPERSIZE" or
-            "PAPERLENGTH" or
-            "PAPERWIDTH" or
-            "TOPMARGIN" or
-            "BOTMARGIN" or
-            "LEFTMARGIN" or
-            "RIGHTMARGIN" or
-            "COLS" or
-            "COLWIDTH" or
-            "COLSPACING" or
-            "GRIDV" or
-            "GRIDH";
+        return GetKnownReportSettingDescriptors().Any(candidate =>
+            candidate.Numeric &&
+            string.Equals(candidate.Name, settingName, StringComparison.OrdinalIgnoreCase));
     }
 
-    private static IEnumerable<string> GetOptionalReportStringSettingNames()
+    private static IEnumerable<ReportSettingDescriptor> GetOptionalReportStringSettingNames()
     {
-        yield return "DRIVER";
-        yield return "DEVICE";
-        yield return "OUTPUT";
+        return GetKnownReportSettingDescriptors().Where(candidate => candidate.MaterializeWhenMissing);
+    }
+
+    private static IEnumerable<ReportSettingDescriptor> GetKnownReportSettingDescriptors()
+    {
+        yield return new ReportSettingDescriptor { Name = "ASCII", LocalizationKey = "AssetEditor.Property.Ascii", Numeric = true, MaterializeWhenMissing = true };
+        yield return new ReportSettingDescriptor { Name = "COLLATE", LocalizationKey = "AssetEditor.Property.Collate", Numeric = true, MaterializeWhenMissing = true };
+        yield return new ReportSettingDescriptor { Name = "COLOR", LocalizationKey = "AssetEditor.Property.Color", Numeric = true, MaterializeWhenMissing = true };
+        yield return new ReportSettingDescriptor { Name = "COPIES", LocalizationKey = "AssetEditor.Property.Copies", Numeric = true, MaterializeWhenMissing = true };
+        yield return new ReportSettingDescriptor { Name = "DRIVER", LocalizationKey = "AssetEditor.Property.PrinterDriver", Numeric = false, MaterializeWhenMissing = true };
+        yield return new ReportSettingDescriptor { Name = "DEVICE", LocalizationKey = "AssetEditor.Property.PrinterDevice", Numeric = false, MaterializeWhenMissing = true };
+        yield return new ReportSettingDescriptor { Name = "OUTPUT", LocalizationKey = "AssetEditor.Property.PrinterOutput", Numeric = false, MaterializeWhenMissing = true };
+        yield return new ReportSettingDescriptor { Name = "DEFAULTSOURCE", LocalizationKey = "AssetEditor.Property.DefaultSource", Numeric = true, MaterializeWhenMissing = true };
+        yield return new ReportSettingDescriptor { Name = "PRINTQUALITY", LocalizationKey = "AssetEditor.Property.PrintQuality", Numeric = true, MaterializeWhenMissing = true };
+        yield return new ReportSettingDescriptor { Name = "YRESOLUTION", LocalizationKey = "AssetEditor.Property.YResolution", Numeric = true, MaterializeWhenMissing = true };
+        yield return new ReportSettingDescriptor { Name = "TTOPTION", LocalizationKey = "AssetEditor.Property.TrueTypeOption", Numeric = true, MaterializeWhenMissing = true };
+        yield return new ReportSettingDescriptor { Name = "ORIENTATION", LocalizationKey = "AssetEditor.Property.Orientation", Numeric = true, MaterializeWhenMissing = true };
+        yield return new ReportSettingDescriptor { Name = "PAPERSIZE", LocalizationKey = "AssetEditor.Property.PaperSize", Numeric = true, MaterializeWhenMissing = true };
+        yield return new ReportSettingDescriptor { Name = "PAPERLENGTH", LocalizationKey = "AssetEditor.Property.PaperLength", Numeric = true, MaterializeWhenMissing = false };
+        yield return new ReportSettingDescriptor { Name = "PAPERWIDTH", LocalizationKey = "AssetEditor.Property.PaperWidth", Numeric = true, MaterializeWhenMissing = false };
+        yield return new ReportSettingDescriptor { Name = "TOPMARGIN", LocalizationKey = "AssetEditor.Property.TopMargin", Numeric = true, MaterializeWhenMissing = false };
+        yield return new ReportSettingDescriptor { Name = "BOTMARGIN", LocalizationKey = "AssetEditor.Property.BottomMargin", Numeric = true, MaterializeWhenMissing = false };
+        yield return new ReportSettingDescriptor { Name = "LEFTMARGIN", LocalizationKey = "AssetEditor.Property.LeftMargin", Numeric = true, MaterializeWhenMissing = false };
+        yield return new ReportSettingDescriptor { Name = "RIGHTMARGIN", LocalizationKey = "AssetEditor.Property.RightMargin", Numeric = true, MaterializeWhenMissing = false };
+        yield return new ReportSettingDescriptor { Name = "COLS", LocalizationKey = "AssetEditor.Property.Columns", Numeric = true, MaterializeWhenMissing = true };
+        yield return new ReportSettingDescriptor { Name = "COLWIDTH", LocalizationKey = "AssetEditor.Property.ColumnWidth", Numeric = true, MaterializeWhenMissing = true };
+        yield return new ReportSettingDescriptor { Name = "COLSPACING", LocalizationKey = "AssetEditor.Property.ColumnSpacing", Numeric = true, MaterializeWhenMissing = true };
+        yield return new ReportSettingDescriptor { Name = "GRIDV", LocalizationKey = "AssetEditor.Property.VerticalGrid", Numeric = true, MaterializeWhenMissing = true };
+        yield return new ReportSettingDescriptor { Name = "GRIDH", LocalizationKey = "AssetEditor.Property.HorizontalGrid", Numeric = true, MaterializeWhenMissing = true };
+        yield return new ReportSettingDescriptor { Name = "TAG", LocalizationKey = "AssetEditor.Property.SortExpression", Numeric = false, MaterializeWhenMissing = false };
     }
 
     private static string BuildStateText(CopperfinLocalization? localization, bool deleted)
@@ -700,6 +697,23 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             Deserialize = static text => ParseInt(text),
             Serialize = static input => Convert.ToInt32(input ?? 0, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture),
             Store = static input => Convert.ToInt32(input ?? 0, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture)
+        });
+    }
+
+    private void AddEditableOptionalInt(string name, string displayName, string value)
+    {
+        AddField(new SelectionField
+        {
+            Name = name,
+            DisplayName = displayName,
+            ValueType = typeof(string),
+            IsReadOnly = false,
+            CurrentValue = TryParseNormalizedInt(value, out var parsed)
+                ? parsed.ToString(CultureInfo.InvariantCulture)
+                : string.Empty,
+            Deserialize = static text => text,
+            Serialize = static input => ParseInt(input?.ToString() ?? string.Empty).ToString(CultureInfo.InvariantCulture),
+            Store = static input => input?.ToString() ?? string.Empty
         });
     }
 

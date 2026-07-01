@@ -566,6 +566,38 @@ internal static class Program
                     MemoBlockNumber = 17
                 },
                 expectRawSnapshotProperty: false);
+            SmokeRealAssetHostBackedMissingSettingsRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                propertyName: "DEFAULTSOURCE",
+                updatedValue: "15",
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "DEFAULTSOURCE",
+                    Value = "15",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 142
+                },
+                expectRawSnapshotProperty: false);
+            SmokeRealAssetHostBackedMissingSettingsRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                propertyName: "DEFAULTSOURCE",
+                updatedValue: "16",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "DEFAULTSOURCE",
+                    Value = "16",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 17
+                },
+                expectRawSnapshotProperty: false);
             SmokeRealAssetHostBackedSettingsRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 propertyName: "GRIDV",
@@ -668,6 +700,42 @@ internal static class Program
                 {
                     Name = "DRIVER",
                     Value = "cupslbl",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 17
+                },
+                expectRawSnapshotProperty: false);
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                propertyName: "DEFAULTSOURCE",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: 15,
+                expectedUpdatedSelectionValue: "15",
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "DEFAULTSOURCE",
+                    Value = "15",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 142
+                },
+                expectRawSnapshotProperty: false);
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                propertyName: "DEFAULTSOURCE",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: 16,
+                expectedUpdatedSelectionValue: "16",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "DEFAULTSOURCE",
+                    Value = "16",
                     RecordIndex = 0,
                     FieldIndex = 6,
                     SourceLineIndex = 3,
@@ -18390,7 +18458,7 @@ internal static class Program
         string? sourcePath,
         string propertyName,
         string expectedOriginalSelectionValue,
-        string updatedPropertyValue,
+        object updatedPropertyValue,
         string expectedUpdatedSelectionValue,
         int expectedSectionCount,
         bool expectLabel,
