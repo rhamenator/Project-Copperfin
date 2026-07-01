@@ -783,6 +783,38 @@ internal static class Program
                 expectRawSnapshotProperty: false);
             SmokeRealAssetHostBackedMissingSettingsRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                propertyName: "DEVICE",
+                updatedValue: "report-device",
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "DEVICE",
+                    Value = "report-device",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 142
+                },
+                expectRawSnapshotProperty: false);
+            SmokeRealAssetHostBackedMissingSettingsRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                propertyName: "DEVICE",
+                updatedValue: "label-device",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "DEVICE",
+                    Value = "label-device",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 17
+                },
+                expectRawSnapshotProperty: false);
+            SmokeRealAssetHostBackedMissingSettingsRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 propertyName: "TAG",
                 updatedValue: "customer.region",
                 expectedSectionCount: 6,
@@ -1147,6 +1179,42 @@ internal static class Program
                 {
                     Name = "OUTPUT",
                     Value = "label.out",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 17
+                },
+                expectRawSnapshotProperty: false);
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                propertyName: "DEVICE",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: "report-device",
+                expectedUpdatedSelectionValue: "report-device",
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "DEVICE",
+                    Value = "report-device",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 142
+                },
+                expectRawSnapshotProperty: false);
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                propertyName: "DEVICE",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: "label-device",
+                expectedUpdatedSelectionValue: "label-device",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "DEVICE",
+                    Value = "label-device",
                     RecordIndex = 0,
                     FieldIndex = 6,
                     SourceLineIndex = 3,
