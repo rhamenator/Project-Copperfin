@@ -183,6 +183,22 @@ std::string read_text(const std::filesystem::path& path) {
     };
 }
 
+std::string normalize_line_endings(std::string text) {
+    std::string normalized;
+    normalized.reserve(text.size());
+    for (std::size_t index = 0; index < text.size(); ++index) {
+        if (text[index] == '\r') {
+            if (index + 1U < text.size() && text[index + 1U] == '\n') {
+                continue;
+            }
+            normalized.push_back('\n');
+        } else {
+            normalized.push_back(text[index]);
+        }
+    }
+    return normalized;
+}
+
 bool dbf_record_deleted(const std::filesystem::path& table_path, std::size_t record_index) {
     const auto table_result =
         copperfin::vfp::parse_dbf_table_from_file(table_path.string(), record_index + 1U);
@@ -297,6 +313,62 @@ void write_synthetic_report_table_for_stable_deleted_orientation_field_json(
            "#2774: stable deleted orientation fixture should seed a settings unique id");
     expect(dbf_record_deleted(report_path, 0U),
            "#2774: stable deleted orientation fixture should preserve the deleted settings state");
+}
+
+void write_synthetic_report_table_for_unsupported_expr_line_preservation(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "UNIQUEID", .type = 'C', .length = 40U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0\n* keep-this-comment\n\nXUSER=keepme\nCOLOR=1", ""}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#3094: unsupported EXPR-line preservation fixture should be created");
+}
+
+void write_synthetic_report_table_for_deleted_unsupported_expr_line_preservation(
+    const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_unsupported_expr_line_preservation(report_path);
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 0U, true);
+    expect(delete_result.ok, "#3094: deleted unsupported EXPR-line preservation fixture should mark settings deleted");
+}
+
+void write_synthetic_report_table_for_stable_unsupported_expr_line_preservation(
+    const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_unsupported_expr_line_preservation(report_path);
+    const auto unique_id_result = copperfin::vfp::update_visual_object_property({
+        .path = report_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "UNIQUEID",
+        .property_value = "settings-guid"
+    });
+    expect(unique_id_result.ok, "#3094: stable unsupported EXPR fixture should seed a settings unique id");
+    expect(!dbf_record_deleted(report_path, 0U),
+           "#3094: stable unsupported EXPR fixture should preserve the live settings state");
+}
+
+void write_synthetic_report_table_for_stable_deleted_unsupported_expr_line_preservation(
+    const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_deleted_unsupported_expr_line_preservation(report_path);
+    const auto unique_id_result = copperfin::vfp::update_visual_object_property({
+        .path = report_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "UNIQUEID",
+        .property_value = "deleted-settings-guid"
+    });
+    expect(unique_id_result.ok,
+           "#3094: stable deleted unsupported EXPR fixture should seed a settings unique id");
+    expect(dbf_record_deleted(report_path, 0U),
+           "#3094: stable deleted unsupported EXPR fixture should preserve the deleted settings state");
 }
 
 void run_orientation_update_case(
@@ -501,6 +573,195 @@ void run_orientation_clear_case(
                         issue_prefix + " clear should remove direct ORIENTATION provenance");
 }
 
+void run_unsupported_expr_line_preservation_case(
+    const std::string& studio_host_path,
+    const std::filesystem::path& temp_root,
+    const std::string& extension,
+    const std::string& updated_driver,
+    bool deleted,
+    const std::string& label,
+    const std::string& issue_prefix) {
+    const std::filesystem::path asset_path =
+        temp_root / ((deleted ? "deleted_" : "") + std::string("stable_expr_preservation") + extension);
+    if (deleted) {
+        write_synthetic_report_table_for_stable_deleted_unsupported_expr_line_preservation(asset_path);
+    } else {
+        write_synthetic_report_table_for_stable_unsupported_expr_line_preservation(asset_path);
+    }
+
+    const std::string unique_id = deleted ? "deleted-settings-guid" : "settings-guid";
+    const auto update_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", asset_path.string(),
+            "--set-property",
+            "--unique-id", unique_id,
+            "--property-name", "DRIVER",
+            "--property-value", updated_driver,
+            "--json"
+        },
+        temp_root);
+
+    if (update_process.exit_code != 0) {
+        std::cerr << "studio host " << label << " stable unsupported EXPR-line preservation update " << extension
+                  << " stdout:\n" << update_process.stdout_text << "\n";
+        std::cerr << "studio host " << label << " stable unsupported EXPR-line preservation update " << extension
+                  << " stderr:\n" << update_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(update_process.exit_code == 0, issue_prefix + " update should exit successfully");
+    const auto expr_property = copperfin::vfp::query_visual_object_property({
+        .path = asset_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = unique_id,
+        .property_name = "EXPR"
+    });
+    expect(expr_property.ok && expr_property.exists,
+           issue_prefix + " update should leave the EXPR memo queryable");
+    expect(normalize_line_endings(expr_property.value) ==
+               "ORIENTATION=0\n* keep-this-comment\n\nXUSER=keepme\nCOLOR=1\nDRIVER=" + updated_driver,
+           issue_prefix + " update should preserve raw unsupported EXPR lines while appending DRIVER");
+    if (!deleted) {
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
+                "\"name\": \"DRIVER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 5",
+                "\"value\": \"" + updated_driver + "\""
+            },
+            issue_prefix + " update should preserve parsed setting source-line gaps around unsupported EXPR lines");
+        expect_not_contains(update_process.stdout_text,
+                            "\"name\": \"* keep-this-comment\", \"recordIndex\": 0, \"fieldIndex\": 2",
+                            issue_prefix + " update should not fabricate comment lines as parsed settings");
+    } else {
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
+                        issue_prefix + " update should not fabricate live page setup");
+        expect_contains(update_process.stdout_text, "\"settingCount\": 0",
+                        issue_prefix + " update should not fabricate live settings");
+        expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 4",
+                        issue_prefix + " update should preserve deleted setting counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        issue_prefix + " update should preserve selected-settings availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        issue_prefix + " update should preserve settings selection kind");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"deletedSettings\": [",
+                "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
+                "\"name\": \"DRIVER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 5",
+                "\"value\": \"" + updated_driver + "\""
+            },
+            issue_prefix + " update should preserve deleted parsed setting source-line gaps around unsupported EXPR lines");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
+                "\"name\": \"DRIVER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 5",
+                "\"value\": \"" + updated_driver + "\""
+            },
+            issue_prefix + " update should refresh selected deleted parsed settings after EXPR preservation");
+        expect_not_contains(update_process.stdout_text,
+                            "\"name\": \"* keep-this-comment\", \"recordIndex\": 0, \"fieldIndex\": 2",
+                            issue_prefix + " update should not fabricate deleted comment lines as parsed settings");
+    }
+
+    const auto clear_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", asset_path.string(),
+            "--clear-property",
+            "--unique-id", unique_id,
+            "--property-name", "DRIVER",
+            "--json"
+        },
+        temp_root);
+
+    if (clear_process.exit_code != 0) {
+        std::cerr << "studio host " << label << " stable unsupported EXPR-line preservation clear " << extension
+                  << " stdout:\n" << clear_process.stdout_text << "\n";
+        std::cerr << "studio host " << label << " stable unsupported EXPR-line preservation clear " << extension
+                  << " stderr:\n" << clear_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(clear_process.exit_code == 0, issue_prefix + " clear should exit successfully");
+    const auto reverted_expr_property = copperfin::vfp::query_visual_object_property({
+        .path = asset_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = unique_id,
+        .property_name = "EXPR"
+    });
+    expect(reverted_expr_property.ok && reverted_expr_property.exists,
+           issue_prefix + " clear should leave the EXPR memo queryable");
+    expect(normalize_line_endings(reverted_expr_property.value) ==
+               "ORIENTATION=0\n* keep-this-comment\n\nXUSER=keepme\nCOLOR=1",
+           issue_prefix + " clear should restore the raw unsupported EXPR lines");
+    if (!deleted) {
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4"
+            },
+            issue_prefix + " clear should restore parsed setting source-line gaps around unsupported EXPR lines");
+        expect_not_contains(clear_process.stdout_text,
+                            "\"name\": \"DRIVER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 5",
+                            issue_prefix + " clear should remove the appended DRIVER setting");
+        expect_not_contains(clear_process.stdout_text,
+                            "\"name\": \"* keep-this-comment\", \"recordIndex\": 0, \"fieldIndex\": 2",
+                            issue_prefix + " clear should not fabricate comment lines as parsed settings");
+    } else {
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
+                        issue_prefix + " clear should not fabricate live page setup");
+        expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
+                        issue_prefix + " clear should keep live settings absent");
+        expect_contains(clear_process.stdout_text, "\"deletedSettingCount\": 3",
+                        issue_prefix + " clear should restore deleted setting counts");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        issue_prefix + " clear should preserve selected-settings availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        issue_prefix + " clear should preserve settings selection kind");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"deletedSettings\": [",
+                "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4"
+            },
+            issue_prefix + " clear should restore deleted parsed setting source-line gaps around unsupported EXPR lines");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4"
+            },
+            issue_prefix + " clear should refresh selected deleted parsed settings after EXPR preservation");
+        expect_not_contains(clear_process.stdout_text,
+                            "\"name\": \"DRIVER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 5",
+                            issue_prefix + " clear should remove the appended deleted DRIVER setting");
+        expect_not_contains(clear_process.stdout_text,
+                            "\"name\": \"* keep-this-comment\", \"recordIndex\": 0, \"fieldIndex\": 2",
+                            issue_prefix + " clear should not fabricate deleted comment lines as parsed settings");
+    }
+}
+
 void test_studio_host_json_preserves_orientation_stable_settings(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -580,6 +841,38 @@ void test_studio_host_json_preserves_orientation_stable_settings(const std::stri
         true,
         "label",
         "#2774: report/label stable deleted orientation settings success");
+    run_unsupported_expr_line_preservation_case(
+        studio_host_path,
+        temp_root,
+        ".frx",
+        "cups",
+        false,
+        "report",
+        "#3094: report/label stable EXPR unsupported-line preservation success");
+    run_unsupported_expr_line_preservation_case(
+        studio_host_path,
+        temp_root,
+        ".lbx",
+        "cupslbl",
+        false,
+        "label",
+        "#3094: report/label stable EXPR unsupported-line preservation success");
+    run_unsupported_expr_line_preservation_case(
+        studio_host_path,
+        temp_root,
+        ".frx",
+        "cups",
+        true,
+        "report",
+        "#3094: report/label stable deleted EXPR unsupported-line preservation success");
+    run_unsupported_expr_line_preservation_case(
+        studio_host_path,
+        temp_root,
+        ".lbx",
+        "cupslbl",
+        true,
+        "label",
+        "#3094: report/label stable deleted EXPR unsupported-line preservation success");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
