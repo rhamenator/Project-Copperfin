@@ -160,6 +160,8 @@ internal static class Program
             SmokeRealAssetSettingsColorSelection(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"));
+            SmokeRealAssetSettingsAuxiliaryPrintSelection(
+                TryResolveVfpSourceAsset("VFPSource/foxref/foxrefresultsa4.frx"));
             SmokeRealAssetSettingsPreviewBoundsSelection(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
@@ -2075,7 +2077,10 @@ internal static class Program
             new() { Name = "PRINTQUALITY", Value = "600", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 14, MemoBlockNumber = 8 },
             new() { Name = "YRESOLUTION", Value = "600", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 15, MemoBlockNumber = 8 },
             new() { Name = "TTOPTION", Value = "3", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 16, MemoBlockNumber = 8 },
-            new() { Name = "COLOR", Value = "1", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 17, MemoBlockNumber = 8 }
+            new() { Name = "COLOR", Value = "1", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 17, MemoBlockNumber = 8 },
+            new() { Name = "ASCII", Value = "9", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 18, MemoBlockNumber = 8 },
+            new() { Name = "COLLATE", Value = "1", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 19, MemoBlockNumber = 8 },
+            new() { Name = "COPIES", Value = "1", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 20, MemoBlockNumber = 8 }
         };
         var settingsOnlySnapshot = new CopperfinStudioSnapshotDocument
         {
@@ -2154,8 +2159,11 @@ internal static class Program
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["YRESOLUTION"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "600", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["TTOPTION"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "3", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["COLOR"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "1", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["ASCII"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "9", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["COLLATE"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "1", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["COPIES"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "1", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["RIGHTMARGIN"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "25", StringComparison.Ordinal),
-            "Report settings explorer selection should expose column-setup, paper-dimension, printer-identity, print-profile, color, and side-margin metadata from the shared settings model");
+            "Report settings explorer selection should expose column-setup, paper-dimension, printer-identity, print-profile, auxiliary print, color, and side-margin metadata from the shared settings model");
         Expect(string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["PREVIEWBOUNDS"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "L 0 T 2000 R 5200 B 8100   Size: 5200 x 6100", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["DELETEDPREVIEWBOUNDS"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "L 1000 T 2600 R 2200 B 2900   Size: 1200 x 300", StringComparison.Ordinal),
             "Report settings explorer selection should expose live and deleted preview metadata from the shared report-layout model");
@@ -2190,6 +2198,12 @@ internal static class Program
                 "Report settings property-grid selection should serialize TrueType-option edits through the shared update path");
             ExpectSelectionUpdate(editableSelection, "COLOR", 0, "0",
                 "Report settings property-grid selection should serialize color-mode edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "ASCII", 7, "7",
+                "Report settings property-grid selection should serialize ASCII-mode edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "COLLATE", 0, "0",
+                "Report settings property-grid selection should serialize collate edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "COPIES", 2, "2",
+                "Report settings property-grid selection should serialize copies edits through the shared update path");
             ExpectSelectionUpdate(editableSelection, "LEFTMARGIN", 35, "35",
                 "Report settings property-grid selection should serialize left-margin edits through the shared update path");
             ExpectSelectionUpdate(editableSelection, "RIGHTMARGIN", 45, "45",
@@ -2238,6 +2252,9 @@ internal static class Program
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Resolución Y", StringComparison.Ordinal)) &&
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Opción TrueType", StringComparison.Ordinal)) &&
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Color", StringComparison.Ordinal)) &&
+               spanishProperties.Any(property => string.Equals(property.DisplayName, "ASCII", StringComparison.Ordinal)) &&
+               spanishProperties.Any(property => string.Equals(property.DisplayName, "Intercalar", StringComparison.Ordinal)) &&
+               spanishProperties.Any(property => string.Equals(property.DisplayName, "Copias", StringComparison.Ordinal)) &&
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Margen superior", StringComparison.Ordinal)) &&
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Margen izquierdo", StringComparison.Ordinal)) &&
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Margen derecho", StringComparison.Ordinal)) &&
@@ -2272,6 +2289,9 @@ internal static class Program
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Resolução Y", StringComparison.Ordinal)) &&
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Opção TrueType", StringComparison.Ordinal)) &&
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Cor", StringComparison.Ordinal)) &&
+               portugueseProperties.Any(property => string.Equals(property.DisplayName, "ASCII", StringComparison.Ordinal)) &&
+               portugueseProperties.Any(property => string.Equals(property.DisplayName, "Intercalar", StringComparison.Ordinal)) &&
+               portugueseProperties.Any(property => string.Equals(property.DisplayName, "Cópias", StringComparison.Ordinal)) &&
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Margem superior", StringComparison.Ordinal)) &&
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Margem esquerda", StringComparison.Ordinal)) &&
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Margem direita", StringComparison.Ordinal)) &&
@@ -2307,6 +2327,9 @@ internal static class Program
                pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.YResolution"), StringComparison.Ordinal)) &&
                pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.TrueTypeOption"), StringComparison.Ordinal)) &&
                pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Color"), StringComparison.Ordinal)) &&
+               pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Ascii"), StringComparison.Ordinal)) &&
+               pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Collate"), StringComparison.Ordinal)) &&
+               pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Copies"), StringComparison.Ordinal)) &&
                pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.LeftMargin"), StringComparison.Ordinal)) &&
                pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.RightMargin"), StringComparison.Ordinal)),
             "Pseudo-localized report settings property-grid selection should route new root-setting labels through the shared catalog");
@@ -2375,7 +2398,13 @@ internal static class Program
                string.Equals(settings[16].Name, "TTOPTION", StringComparison.Ordinal) &&
                settings[16].FieldIndex == 6 &&
                string.Equals(settings[17].Name, "COLOR", StringComparison.Ordinal) &&
-               settings[17].FieldIndex == 6,
+               settings[17].FieldIndex == 6 &&
+               string.Equals(settings[18].Name, "ASCII", StringComparison.Ordinal) &&
+               settings[18].FieldIndex == 6 &&
+               string.Equals(settings[19].Name, "COLLATE", StringComparison.Ordinal) &&
+               settings[19].FieldIndex == 6 &&
+               string.Equals(settings[20].Name, "COPIES", StringComparison.Ordinal) &&
+               settings[20].FieldIndex == 6,
             "Localized report settings property-grid selection should preserve root-setting machine contracts");
     }
 
@@ -2400,7 +2429,10 @@ internal static class Program
             new() { Name = "PRINTQUALITY", Value = "1200", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 14, MemoBlockNumber = 18 },
             new() { Name = "YRESOLUTION", Value = "1200", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 15, MemoBlockNumber = 18 },
             new() { Name = "TTOPTION", Value = "2", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 16, MemoBlockNumber = 18 },
-            new() { Name = "COLOR", Value = "2", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 17, MemoBlockNumber = 18 }
+            new() { Name = "COLOR", Value = "2", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 17, MemoBlockNumber = 18 },
+            new() { Name = "ASCII", Value = "10", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 18, MemoBlockNumber = 18 },
+            new() { Name = "COLLATE", Value = "0", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 19, MemoBlockNumber = 18 },
+            new() { Name = "COPIES", Value = "2", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 20, MemoBlockNumber = 18 }
         };
         var deletedOnlySnapshot = new CopperfinStudioSnapshotDocument
         {
@@ -2465,8 +2497,11 @@ internal static class Program
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["YRESOLUTION"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "1200", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["TTOPTION"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "2", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["COLOR"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "2", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["ASCII"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "10", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["COLLATE"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "0", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["COPIES"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "2", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["RIGHTMARGIN"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "45", StringComparison.Ordinal),
-            "Deleted report settings explorer selection should expose deleted column-setup, paper-dimension, printer-identity, print-profile, color, and side-margin metadata from the shared settings model");
+            "Deleted report settings explorer selection should expose deleted column-setup, paper-dimension, printer-identity, print-profile, auxiliary print, color, and side-margin metadata from the shared settings model");
         Expect(string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["DELETEDPREVIEWBOUNDS"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "L 1000 T 2600 R 2200 B 2900   Size: 1200 x 300", StringComparison.Ordinal),
             "Deleted report settings explorer selection should expose deleted preview metadata from the shared report-layout model");
 
@@ -2500,6 +2535,12 @@ internal static class Program
                 "Deleted report settings property-grid selection should serialize deleted TrueType-option edits through the shared update path");
             ExpectSelectionUpdate(editableSelection, "COLOR", 1, "1",
                 "Deleted report settings property-grid selection should serialize deleted color-mode edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "ASCII", 8, "8",
+                "Deleted report settings property-grid selection should serialize deleted ASCII-mode edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "COLLATE", 1, "1",
+                "Deleted report settings property-grid selection should serialize deleted collate edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "COPIES", 3, "3",
+                "Deleted report settings property-grid selection should serialize deleted copies edits through the shared update path");
             ExpectSelectionUpdate(editableSelection, "LEFTMARGIN", 50, "50",
                 "Deleted report settings property-grid selection should serialize deleted left-margin edits through the shared update path");
             ExpectSelectionUpdate(editableSelection, "RIGHTMARGIN", 60, "60",
@@ -2623,7 +2664,13 @@ internal static class Program
                string.Equals(deletedSettings[16].Name, "TTOPTION", StringComparison.Ordinal) &&
                deletedSettings[16].FieldIndex == 6 &&
                string.Equals(deletedSettings[17].Name, "COLOR", StringComparison.Ordinal) &&
-               deletedSettings[17].FieldIndex == 6,
+               deletedSettings[17].FieldIndex == 6 &&
+               string.Equals(deletedSettings[18].Name, "ASCII", StringComparison.Ordinal) &&
+               deletedSettings[18].FieldIndex == 6 &&
+               string.Equals(deletedSettings[19].Name, "COLLATE", StringComparison.Ordinal) &&
+               deletedSettings[19].FieldIndex == 6 &&
+               string.Equals(deletedSettings[20].Name, "COPIES", StringComparison.Ordinal) &&
+               deletedSettings[20].FieldIndex == 6,
             "Localized deleted report settings property-grid selection should preserve deleted root-setting machine contracts");
     }
 
@@ -2814,6 +2861,9 @@ internal static class Program
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["YRESOLUTION"]?.GetValue(initialSelection)?.ToString(), "600", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["TTOPTION"]?.GetValue(initialSelection)?.ToString(), "3", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["COLOR"]?.GetValue(initialSelection)?.ToString(), "1", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["ASCII"]?.GetValue(initialSelection)?.ToString(), "9", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["COLLATE"]?.GetValue(initialSelection)?.ToString(), "1", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["COPIES"]?.GetValue(initialSelection)?.ToString(), "1", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["LEFTMARGIN"]?.GetValue(initialSelection)?.ToString(), "15", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["RIGHTMARGIN"]?.GetValue(initialSelection)?.ToString(), "25", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["DOCUMENTTITLE"]?.GetValue(initialSelection)?.ToString(), "Customer Invoice", StringComparison.Ordinal) &&
@@ -2866,6 +2916,9 @@ internal static class Program
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["YRESOLUTION"]?.GetValue(refreshedSelection)?.ToString(), "600", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["TTOPTION"]?.GetValue(refreshedSelection)?.ToString(), "3", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["COLOR"]?.GetValue(refreshedSelection)?.ToString(), "1", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["ASCII"]?.GetValue(refreshedSelection)?.ToString(), "9", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["COLLATE"]?.GetValue(refreshedSelection)?.ToString(), "1", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["COPIES"]?.GetValue(refreshedSelection)?.ToString(), "1", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["LEFTMARGIN"]?.GetValue(refreshedSelection)?.ToString(), "15", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["RIGHTMARGIN"]?.GetValue(refreshedSelection)?.ToString(), "25", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["DOCUMENTTITLE"]?.GetValue(refreshedSelection)?.ToString(), "Customer Invoice", StringComparison.Ordinal) &&
@@ -2974,6 +3027,9 @@ internal static class Program
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["YRESOLUTION"]?.GetValue(initialSelection)?.ToString(), "1200", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["TTOPTION"]?.GetValue(initialSelection)?.ToString(), "2", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["COLOR"]?.GetValue(initialSelection)?.ToString(), "2", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["ASCII"]?.GetValue(initialSelection)?.ToString(), "10", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["COLLATE"]?.GetValue(initialSelection)?.ToString(), "0", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(initialSelection)["COPIES"]?.GetValue(initialSelection)?.ToString(), "2", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["LEFTMARGIN"]?.GetValue(initialSelection)?.ToString(), "35", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["RIGHTMARGIN"]?.GetValue(initialSelection)?.ToString(), "45", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(initialSelection)["DOCUMENTTITLE"]?.GetValue(initialSelection)?.ToString(), "Deleted Customer Invoice", StringComparison.Ordinal) &&
@@ -3025,6 +3081,9 @@ internal static class Program
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["YRESOLUTION"]?.GetValue(refreshedSelection)?.ToString(), "1200", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["TTOPTION"]?.GetValue(refreshedSelection)?.ToString(), "2", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["COLOR"]?.GetValue(refreshedSelection)?.ToString(), "2", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["ASCII"]?.GetValue(refreshedSelection)?.ToString(), "10", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["COLLATE"]?.GetValue(refreshedSelection)?.ToString(), "0", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["COPIES"]?.GetValue(refreshedSelection)?.ToString(), "2", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["LEFTMARGIN"]?.GetValue(refreshedSelection)?.ToString(), "35", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["RIGHTMARGIN"]?.GetValue(refreshedSelection)?.ToString(), "45", StringComparison.Ordinal) &&
                    string.Equals(TypeDescriptor.GetProperties(refreshedSelection)["SETTINGSSTATE"]?.GetValue(refreshedSelection)?.ToString(), "Deleted", StringComparison.Ordinal) &&
@@ -9423,6 +9482,106 @@ internal static class Program
                objectListView.Items.Count == 0 &&
                string.Equals(ReadSelectionPropertyValue(settingsSelection, "COLOR"), expectedColor.Value, StringComparison.Ordinal),
             $"real asset settings smoke should expose shared color continuity for {selectedPath}");
+
+        TearDownForm(hostForm);
+    }
+
+    private static void SmokeRealAssetSettingsAuxiliaryPrintSelection(params string?[] sourcePaths)
+    {
+        string? selectedPath = null;
+        IReadOnlyDictionary<string, CopperfinStudioNamedValue>? expectedSettings = null;
+
+        foreach (var candidatePath in EnumerateResolvedRealReportAssetPaths(sourcePaths))
+        {
+            if (string.IsNullOrWhiteSpace(candidatePath) || !File.Exists(candidatePath))
+            {
+                continue;
+            }
+
+            var candidateSnapshot = CopperfinStudioSnapshotClient.TryLoad(candidatePath!);
+            var candidateLayout = candidateSnapshot.Document?.ReportLayout;
+            if (!candidateSnapshot.Success || candidateLayout is null)
+            {
+                continue;
+            }
+
+            var ascii = candidateLayout.Settings.FirstOrDefault(setting =>
+                string.Equals(setting.Name, "ASCII", StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrWhiteSpace(setting.Value));
+            var collate = candidateLayout.Settings.FirstOrDefault(setting =>
+                string.Equals(setting.Name, "COLLATE", StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrWhiteSpace(setting.Value));
+            var copies = candidateLayout.Settings.FirstOrDefault(setting =>
+                string.Equals(setting.Name, "COPIES", StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrWhiteSpace(setting.Value));
+            if (ascii is null || collate is null || copies is null)
+            {
+                continue;
+            }
+
+            selectedPath = candidatePath;
+            expectedSettings = new Dictionary<string, CopperfinStudioNamedValue>(StringComparer.OrdinalIgnoreCase)
+            {
+                [ascii.Name] = ascii,
+                [collate.Name] = collate,
+                [copies.Name] = copies
+            };
+            break;
+        }
+
+        if (string.IsNullOrWhiteSpace(selectedPath) || expectedSettings is null)
+        {
+            Console.WriteLine("SKIP: real auxiliary-print settings candidate not found.");
+            return;
+        }
+
+        using var hostForm = new Form
+        {
+            Width = 1400,
+            Height = 1000,
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-32000, -32000)
+        };
+
+        using var control = new CopperfinAssetEditorControl
+        {
+            Dock = DockStyle.Fill
+        };
+
+        hostForm.Controls.Add(control);
+        hostForm.Show();
+        Application.DoEvents();
+        control.LoadDocument(selectedPath!);
+
+        var sectionListView = GetPrivateListView(control, "sectionListView");
+        var objectListView = GetPrivateListView(control, "objectListView");
+        var propertyGrid = GetPrivatePropertyGrid(control);
+        var loaded = WaitUntil(
+            TimeSpan.FromSeconds(8),
+            () => sectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, "Settings", StringComparison.Ordinal)));
+        Expect(loaded, $"real asset auxiliary-print smoke should surface the settings scope for {selectedPath}");
+        if (!loaded)
+        {
+            TearDownForm(hostForm);
+            return;
+        }
+
+        foreach (ListViewItem item in sectionListView.Items)
+        {
+            item.Selected = string.Equals(item.Text, "Settings", StringComparison.Ordinal);
+        }
+
+        InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+        Application.DoEvents();
+
+        Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection settingsSelection &&
+               settingsSelection.RecordIndex == expectedSettings["ASCII"].RecordIndex &&
+               objectListView.Items.Count == 0 &&
+               string.Equals(ReadSelectionPropertyValue(settingsSelection, "ASCII"), expectedSettings["ASCII"].Value, StringComparison.Ordinal) &&
+               string.Equals(ReadSelectionPropertyValue(settingsSelection, "COLLATE"), expectedSettings["COLLATE"].Value, StringComparison.Ordinal) &&
+               string.Equals(ReadSelectionPropertyValue(settingsSelection, "COPIES"), expectedSettings["COPIES"].Value, StringComparison.Ordinal),
+            $"real asset settings smoke should expose shared auxiliary-print continuity for {selectedPath}");
 
         TearDownForm(hostForm);
     }
@@ -16713,7 +16872,10 @@ internal static class Program
                     new() { Name = "PRINTQUALITY", Value = "600", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 14, MemoBlockNumber = 8 },
                     new() { Name = "YRESOLUTION", Value = "600", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 15, MemoBlockNumber = 8 },
                     new() { Name = "TTOPTION", Value = "3", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 16, MemoBlockNumber = 8 },
-                    new() { Name = "COLOR", Value = "1", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 17, MemoBlockNumber = 8 }
+                    new() { Name = "COLOR", Value = "1", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 17, MemoBlockNumber = 8 },
+                    new() { Name = "ASCII", Value = "9", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 18, MemoBlockNumber = 8 },
+                    new() { Name = "COLLATE", Value = "1", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 19, MemoBlockNumber = 8 },
+                    new() { Name = "COPIES", Value = "1", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 20, MemoBlockNumber = 8 }
                 },
                 Sections = new List<CopperfinStudioReportSection>
                 {
@@ -16766,7 +16928,10 @@ internal static class Program
                     new() { Name = "PRINTQUALITY", Value = "1200", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 14, MemoBlockNumber = 18 },
                     new() { Name = "YRESOLUTION", Value = "1200", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 15, MemoBlockNumber = 18 },
                     new() { Name = "TTOPTION", Value = "2", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 16, MemoBlockNumber = 18 },
-                    new() { Name = "COLOR", Value = "2", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 17, MemoBlockNumber = 18 }
+                    new() { Name = "COLOR", Value = "2", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 17, MemoBlockNumber = 18 },
+                    new() { Name = "ASCII", Value = "10", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 18, MemoBlockNumber = 18 },
+                    new() { Name = "COLLATE", Value = "0", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 19, MemoBlockNumber = 18 },
+                    new() { Name = "COPIES", Value = "2", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 20, MemoBlockNumber = 18 }
                 },
                 Sections = new List<CopperfinStudioReportSection>
                 {
@@ -18279,14 +18444,14 @@ internal static class Program
     private static string BuildSettingsUpdateHostResponseJson()
     {
         return """
-{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[],"ReportLayout":{"DocumentTitle":"Customer Invoice","PreviewBoundsAvailable":true,"PreviewBoundsLeft":0,"PreviewBoundsTop":2000,"PreviewBoundsRight":5200,"PreviewBoundsBottom":8100,"PreviewBoundsWidth":5200,"PreviewBoundsHeight":6100,"DeletedPreviewBoundsAvailable":true,"DeletedPreviewBoundsLeft":1000,"DeletedPreviewBoundsTop":2600,"DeletedPreviewBoundsRight":2200,"DeletedPreviewBoundsBottom":2900,"DeletedPreviewBoundsWidth":1200,"DeletedPreviewBoundsHeight":300,"Settings":[{"Name":"ORIENTATION","Value":"0","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":0,"MemoBlockNumber":9},{"Name":"COLS","Value":"2","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":1,"MemoBlockNumber":9},{"Name":"COLWIDTH","Value":"4200","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":2,"MemoBlockNumber":9},{"Name":"COLSPACING","Value":"120","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":3,"MemoBlockNumber":9},{"Name":"PAPERLENGTH","Value":"2794","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":4,"MemoBlockNumber":8},{"Name":"PAPERWIDTH","Value":"2159","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":5,"MemoBlockNumber":8},{"Name":"TOPMARGIN","Value":"20","RecordIndex":0,"FieldIndex":3,"MemoBlockNumber":0},{"Name":"LEFTMARGIN","Value":"15","RecordIndex":0,"FieldIndex":10,"MemoBlockNumber":0},{"Name":"RIGHTMARGIN","Value":"25","RecordIndex":0,"FieldIndex":11,"MemoBlockNumber":0},{"Name":"TAG","Value":"customer.country","RecordIndex":0,"FieldIndex":9,"MemoBlockNumber":11},{"Name":"DRIVER","Value":"winspool","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":10,"MemoBlockNumber":8},{"Name":"DEVICE","Value":"FinePrint 2000","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":11,"MemoBlockNumber":8},{"Name":"OUTPUT","Value":"FPR4:","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":12,"MemoBlockNumber":8},{"Name":"DEFAULTSOURCE","Value":"15","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":13,"MemoBlockNumber":8},{"Name":"PRINTQUALITY","Value":"600","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":14,"MemoBlockNumber":8},{"Name":"YRESOLUTION","Value":"600","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":15,"MemoBlockNumber":8},{"Name":"TTOPTION","Value":"3","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":16,"MemoBlockNumber":8},{"Name":"COLOR","Value":"1","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":17,"MemoBlockNumber":8}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[],"UnplacedObjects":[]}}}
+{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[],"ReportLayout":{"DocumentTitle":"Customer Invoice","PreviewBoundsAvailable":true,"PreviewBoundsLeft":0,"PreviewBoundsTop":2000,"PreviewBoundsRight":5200,"PreviewBoundsBottom":8100,"PreviewBoundsWidth":5200,"PreviewBoundsHeight":6100,"DeletedPreviewBoundsAvailable":true,"DeletedPreviewBoundsLeft":1000,"DeletedPreviewBoundsTop":2600,"DeletedPreviewBoundsRight":2200,"DeletedPreviewBoundsBottom":2900,"DeletedPreviewBoundsWidth":1200,"DeletedPreviewBoundsHeight":300,"Settings":[{"Name":"ORIENTATION","Value":"0","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":0,"MemoBlockNumber":9},{"Name":"COLS","Value":"2","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":1,"MemoBlockNumber":9},{"Name":"COLWIDTH","Value":"4200","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":2,"MemoBlockNumber":9},{"Name":"COLSPACING","Value":"120","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":3,"MemoBlockNumber":9},{"Name":"PAPERLENGTH","Value":"2794","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":4,"MemoBlockNumber":8},{"Name":"PAPERWIDTH","Value":"2159","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":5,"MemoBlockNumber":8},{"Name":"TOPMARGIN","Value":"20","RecordIndex":0,"FieldIndex":3,"MemoBlockNumber":0},{"Name":"LEFTMARGIN","Value":"15","RecordIndex":0,"FieldIndex":10,"MemoBlockNumber":0},{"Name":"RIGHTMARGIN","Value":"25","RecordIndex":0,"FieldIndex":11,"MemoBlockNumber":0},{"Name":"TAG","Value":"customer.country","RecordIndex":0,"FieldIndex":9,"MemoBlockNumber":11},{"Name":"DRIVER","Value":"winspool","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":10,"MemoBlockNumber":8},{"Name":"DEVICE","Value":"FinePrint 2000","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":11,"MemoBlockNumber":8},{"Name":"OUTPUT","Value":"FPR4:","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":12,"MemoBlockNumber":8},{"Name":"DEFAULTSOURCE","Value":"15","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":13,"MemoBlockNumber":8},{"Name":"PRINTQUALITY","Value":"600","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":14,"MemoBlockNumber":8},{"Name":"YRESOLUTION","Value":"600","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":15,"MemoBlockNumber":8},{"Name":"TTOPTION","Value":"3","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":16,"MemoBlockNumber":8},{"Name":"COLOR","Value":"1","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":17,"MemoBlockNumber":8},{"Name":"ASCII","Value":"9","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":18,"MemoBlockNumber":8},{"Name":"COLLATE","Value":"1","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":19,"MemoBlockNumber":8},{"Name":"COPIES","Value":"1","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":20,"MemoBlockNumber":8}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[],"UnplacedObjects":[]}}}
 """;
     }
 
     private static string BuildDeletedSettingsUpdateHostResponseJson()
     {
         return """
-{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[],"ReportLayout":{"DocumentTitle":"Deleted Customer Invoice","DeletedPreviewBoundsAvailable":true,"DeletedPreviewBoundsLeft":1000,"DeletedPreviewBoundsTop":2600,"DeletedPreviewBoundsRight":2200,"DeletedPreviewBoundsBottom":2900,"DeletedPreviewBoundsWidth":1200,"DeletedPreviewBoundsHeight":300,"DeletedSettings":[{"Name":"ORIENTATION","Value":"1","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":0,"MemoBlockNumber":19},{"Name":"COLS","Value":"3","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":1,"MemoBlockNumber":19},{"Name":"COLWIDTH","Value":"2400","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":2,"MemoBlockNumber":19},{"Name":"COLSPACING","Value":"240","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":3,"MemoBlockNumber":19},{"Name":"PAPERLENGTH","Value":"4318","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":4,"MemoBlockNumber":18},{"Name":"PAPERWIDTH","Value":"2794","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":5,"MemoBlockNumber":18},{"Name":"TOPMARGIN","Value":"40","RecordIndex":0,"FieldIndex":3,"MemoBlockNumber":0},{"Name":"LEFTMARGIN","Value":"35","RecordIndex":0,"FieldIndex":10,"MemoBlockNumber":0},{"Name":"RIGHTMARGIN","Value":"45","RecordIndex":0,"FieldIndex":11,"MemoBlockNumber":0},{"Name":"TAG","Value":"deleted.customer.country","RecordIndex":0,"FieldIndex":9,"MemoBlockNumber":21},{"Name":"DRIVER","Value":"deleted.winspool","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":10,"MemoBlockNumber":18},{"Name":"DEVICE","Value":"Deleted Printer","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":11,"MemoBlockNumber":18},{"Name":"OUTPUT","Value":"DPRN:","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":12,"MemoBlockNumber":18},{"Name":"DEFAULTSOURCE","Value":"16","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":13,"MemoBlockNumber":18},{"Name":"PRINTQUALITY","Value":"1200","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":14,"MemoBlockNumber":18},{"Name":"YRESOLUTION","Value":"1200","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":15,"MemoBlockNumber":18},{"Name":"TTOPTION","Value":"2","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":16,"MemoBlockNumber":18},{"Name":"COLOR","Value":"2","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":17,"MemoBlockNumber":18}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[],"UnplacedObjects":[]}}}
+{"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[],"ReportLayout":{"DocumentTitle":"Deleted Customer Invoice","DeletedPreviewBoundsAvailable":true,"DeletedPreviewBoundsLeft":1000,"DeletedPreviewBoundsTop":2600,"DeletedPreviewBoundsRight":2200,"DeletedPreviewBoundsBottom":2900,"DeletedPreviewBoundsWidth":1200,"DeletedPreviewBoundsHeight":300,"DeletedSettings":[{"Name":"ORIENTATION","Value":"1","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":0,"MemoBlockNumber":19},{"Name":"COLS","Value":"3","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":1,"MemoBlockNumber":19},{"Name":"COLWIDTH","Value":"2400","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":2,"MemoBlockNumber":19},{"Name":"COLSPACING","Value":"240","RecordIndex":0,"FieldIndex":2,"SourceLineIndex":3,"MemoBlockNumber":19},{"Name":"PAPERLENGTH","Value":"4318","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":4,"MemoBlockNumber":18},{"Name":"PAPERWIDTH","Value":"2794","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":5,"MemoBlockNumber":18},{"Name":"TOPMARGIN","Value":"40","RecordIndex":0,"FieldIndex":3,"MemoBlockNumber":0},{"Name":"LEFTMARGIN","Value":"35","RecordIndex":0,"FieldIndex":10,"MemoBlockNumber":0},{"Name":"RIGHTMARGIN","Value":"45","RecordIndex":0,"FieldIndex":11,"MemoBlockNumber":0},{"Name":"TAG","Value":"deleted.customer.country","RecordIndex":0,"FieldIndex":9,"MemoBlockNumber":21},{"Name":"DRIVER","Value":"deleted.winspool","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":10,"MemoBlockNumber":18},{"Name":"DEVICE","Value":"Deleted Printer","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":11,"MemoBlockNumber":18},{"Name":"OUTPUT","Value":"DPRN:","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":12,"MemoBlockNumber":18},{"Name":"DEFAULTSOURCE","Value":"16","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":13,"MemoBlockNumber":18},{"Name":"PRINTQUALITY","Value":"1200","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":14,"MemoBlockNumber":18},{"Name":"YRESOLUTION","Value":"1200","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":15,"MemoBlockNumber":18},{"Name":"TTOPTION","Value":"2","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":16,"MemoBlockNumber":18},{"Name":"COLOR","Value":"2","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":17,"MemoBlockNumber":18},{"Name":"ASCII","Value":"10","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":18,"MemoBlockNumber":18},{"Name":"COLLATE","Value":"0","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":19,"MemoBlockNumber":18},{"Name":"COPIES","Value":"2","RecordIndex":0,"FieldIndex":6,"SourceLineIndex":20,"MemoBlockNumber":18}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000,"Objects":[]}],"DeletedSections":[],"UnplacedObjects":[]}}}
 """;
     }
 

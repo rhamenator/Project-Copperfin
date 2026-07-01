@@ -515,7 +515,10 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
     {
         var key = settingName.ToUpperInvariant() switch
         {
+            "ASCII" => "AssetEditor.Property.Ascii",
+            "COLLATE" => "AssetEditor.Property.Collate",
             "COLOR" => "AssetEditor.Property.Color",
+            "COPIES" => "AssetEditor.Property.Copies",
             "DRIVER" => "AssetEditor.Property.PrinterDriver",
             "DEVICE" => "AssetEditor.Property.PrinterDevice",
             "OUTPUT" => "AssetEditor.Property.PrinterOutput",
@@ -548,7 +551,10 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
     private static bool IsNumericReportSetting(string settingName)
     {
         return settingName.ToUpperInvariant() is
+            "ASCII" or
+            "COLLATE" or
             "COLOR" or
+            "COPIES" or
             "DEFAULTSOURCE" or
             "PRINTQUALITY" or
             "YRESOLUTION" or
