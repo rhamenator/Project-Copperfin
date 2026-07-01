@@ -450,4 +450,29 @@ internal static class CopperfinStudioSnapshotClient
                 alignmentMode,
                 targetUniqueIds));
     }
+
+    public static CopperfinStudioSnapshotResult TryDistributeObject(
+        string assetPath,
+        int recordIndex,
+        string distributionMode,
+        IReadOnlyList<string> targetUniqueIds)
+    {
+        var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
+        if (string.IsNullOrWhiteSpace(studioHostPath))
+        {
+            return new CopperfinStudioSnapshotResult
+            {
+                Success = false,
+                Error = Localization.Text("AssetEditor.Dialog.StudioHostMissing")
+            };
+        }
+
+        return RunSnapshotCommand(
+            studioHostPath!,
+            CopperfinStudioHostBridge.BuildDistributeObjectArguments(
+                assetPath,
+                recordIndex,
+                distributionMode,
+                targetUniqueIds));
+    }
 }

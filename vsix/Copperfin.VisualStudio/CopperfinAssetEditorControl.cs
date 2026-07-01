@@ -53,6 +53,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly Button reorderFrontObjectButton;
     private readonly Button reorderBackObjectButton;
     private readonly Button alignLeftObjectButton;
+    private readonly Button distributeHorizontalObjectButton;
     private readonly Button deleteObjectButton;
     private readonly Button restoreObjectButton;
     private readonly Button buildButton;
@@ -226,6 +227,18 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             executingKey: "AssetEditor.ObjectAlignment.Left.Executing",
             failedKey: "AssetEditor.ObjectAlignment.Left.Failed",
             completedKey: "AssetEditor.ObjectAlignment.Left.Completed");
+
+        distributeHorizontalObjectButton = new Button
+        {
+            AutoSize = true,
+            Text = this.localization.Text("AssetEditor.ObjectDistribution.HorizontalButton"),
+            Visible = false
+        };
+        distributeHorizontalObjectButton.Click += (_, _) => TryHandleDistributeObjectCommand(
+            distributionMode: "horizontal",
+            executingKey: "AssetEditor.ObjectDistribution.Horizontal.Executing",
+            failedKey: "AssetEditor.ObjectDistribution.Horizontal.Failed",
+            completedKey: "AssetEditor.ObjectDistribution.Horizontal.Completed");
 
         deleteObjectButton = new Button
         {
@@ -628,6 +641,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         buttonPanel.Controls.Add(reorderFrontObjectButton);
         buttonPanel.Controls.Add(reorderBackObjectButton);
         buttonPanel.Controls.Add(alignLeftObjectButton);
+        buttonPanel.Controls.Add(distributeHorizontalObjectButton);
         buttonPanel.Controls.Add(deleteObjectButton);
         buttonPanel.Controls.Add(restoreObjectButton);
         buttonPanel.Controls.Add(buildButton);
@@ -1566,6 +1580,77 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         return true;
     }
 
+    private bool TryHandleDistributeObjectCommand(
+        string distributionMode,
+        string executingKey,
+        string failedKey,
+        string completedKey)
+    {
+        if (currentSnapshot?.AssetFamily is not ("report" or "label") || string.IsNullOrWhiteSpace(currentPath))
+        {
+            return false;
+        }
+
+        if (TryReadSelectedExplorerTag() is not CopperfinStudioReportSection { Deleted: false })
+        {
+            return false;
+        }
+
+        var selectedObjects = TryGetSelectedSnapshotObjects();
+        var focusedObject = TryGetSelectedSnapshotObject();
+        if (focusedObject is null || focusedObject.Deleted || selectedObjects.Count < 3)
+        {
+            return false;
+        }
+
+        var targetUniqueIds = selectedObjects
+            .Where(selectedObject => !selectedObject.Deleted)
+            .Select(TryReadObjectUniqueId)
+            .Where(uniqueId => !string.IsNullOrWhiteSpace(uniqueId))
+            .Cast<string>()
+            .ToList();
+        if (targetUniqueIds.Count != selectedObjects.Count)
+        {
+            snapshotStatusLabel.Text = this.localization.Text("AssetEditor.ObjectDistribution.StableIdsRequired");
+            return false;
+        }
+
+        var explorerSelection = CaptureExplorerSelectionState();
+        snapshotStatusLabel.Text = this.localization.Text(executingKey);
+
+        var distributeResult = CopperfinStudioSnapshotClient.TryDistributeObject(
+            currentPath!,
+            focusedObject.RecordIndex,
+            distributionMode,
+            targetUniqueIds);
+        if (!distributeResult.Success || distributeResult.Document is null)
+        {
+            snapshotStatusLabel.Text = this.localization.Format(
+                failedKey,
+                distributeResult.Error ?? string.Empty);
+            return false;
+        }
+
+        currentSnapshot = distributeResult.Document;
+        detailsLabel.Text = BuildSnapshotDetailsText(new FileInfo(currentPath!), currentSnapshot);
+        snapshotStatusLabel.Text = this.localization.Format(
+            completedKey,
+            currentSnapshot.Objects.Count,
+            currentSnapshot.FieldCount);
+        var selectedRecordIndexes = targetUniqueIds
+            .Select(uniqueId => TryReadObjectRecordIndex(currentSnapshot, uniqueId))
+            .Where(recordIndex => recordIndex.HasValue)
+            .Select(recordIndex => recordIndex!.Value)
+            .ToList();
+        PopulateSectionList(explorerSelection);
+        SyncExplorerSelection();
+        LoadSurface();
+        designSurface.SelectRecord(focusedObject.RecordIndex);
+        SyncSelectionFromSurface(focusedObject.RecordIndex);
+        RestoreSnapshotObjectSelection(selectedRecordIndexes, focusedObject.RecordIndex);
+        return true;
+    }
+
     private bool TryHandleNudgeObjectCommand(string mode, double deltaHpos, double deltaVpos)
     {
         if (currentSnapshot?.AssetFamily is not ("report" or "label") || string.IsNullOrWhiteSpace(currentPath))
@@ -2080,6 +2165,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         var showAlignLeft = selectedObjects.Count >= 2 &&
                             selectedObjects.All(snapshotObject => !snapshotObject.Deleted) &&
                             TryReadSelectedExplorerTag() is CopperfinStudioReportSection { Deleted: false };
+        var showDistributeHorizontal = selectedObjects.Count >= 3 &&
+                                       selectedObjects.All(snapshotObject => !snapshotObject.Deleted) &&
+                                       TryReadSelectedExplorerTag() is CopperfinStudioReportSection { Deleted: false };
         var showDelete = singleSelection && selectedObject is not null && !selectedObject.Deleted;
         var showRestore = singleSelection && selectedObject is not null && selectedObject.Deleted;
         renameObjectButton.Visible = showRename;
@@ -2092,6 +2180,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         reorderBackObjectButton.Enabled = showReorder && !string.IsNullOrWhiteSpace(currentPath);
         alignLeftObjectButton.Visible = showAlignLeft;
         alignLeftObjectButton.Enabled = showAlignLeft && !string.IsNullOrWhiteSpace(currentPath);
+        distributeHorizontalObjectButton.Visible = showDistributeHorizontal;
+        distributeHorizontalObjectButton.Enabled = showDistributeHorizontal && !string.IsNullOrWhiteSpace(currentPath);
         deleteObjectButton.Visible = showDelete;
         deleteObjectButton.Enabled = showDelete && !string.IsNullOrWhiteSpace(currentPath);
         restoreObjectButton.Visible = showRestore;
