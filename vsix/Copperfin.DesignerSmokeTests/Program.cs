@@ -6644,17 +6644,11 @@ internal static class Program
 
     private static void SmokeAssetEditorReportSectionPropertyGridHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor report-section host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorSectionUpdateSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -6719,10 +6713,10 @@ internal static class Program
                    invocationArguments.Contains("--record") &&
                    invocationArguments.Contains("42") &&
                    invocationArguments.Contains("--property-name") &&
-                   invocationArguments.Contains("TOP") &&
+                   invocationArguments.Contains("VPOS") &&
                    invocationArguments.Contains("--property-value") &&
                    invocationArguments.Contains("3200"),
-                "Editing a report section through the shared asset editor should send one invariant TOP update through the host property contract");
+                "Editing a report section through the shared asset editor should send one invariant VPOS update through the host property contract");
 
             Expect(string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Detail", StringComparison.Ordinal) &&
                    propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
@@ -6759,17 +6753,11 @@ internal static class Program
 
     private static void SmokeAssetEditorReportSettingsPropertyGridHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor report-settings host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorSettingsUpdateSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -36840,9 +36828,34 @@ internal static class Program
 """;
     }
 
-    private static void CreateFakeStudioHostScript(string scriptPath, string responseJson)
+    private static string CreateFakeStudioHostScriptPath(string tempRoot, bool? isWindowsOverride = null)
     {
-        var script = string.Join(
+        var extension = IsWindowsPlatform(isWindowsOverride) ? ".cmd" : ".sh";
+        return Path.Combine(tempRoot, "fake-studio-host" + extension);
+    }
+
+    private static void CreateFakeStudioHostScript(string scriptPath, string responseJson, bool? isWindowsOverride = null)
+    {
+        var isWindows = IsWindowsPlatform(isWindowsOverride);
+        var script = isWindows
+            ? BuildFakeStudioHostBatchScript(responseJson)
+            : BuildFakeStudioHostPosixScript(responseJson);
+
+        File.WriteAllText(scriptPath, script);
+        if (!isWindows)
+        {
+            MakeExecutable(scriptPath);
+        }
+    }
+
+    private static bool IsWindowsPlatform(bool? isWindowsOverride = null)
+    {
+        return isWindowsOverride ?? Path.DirectorySeparatorChar == '\\';
+    }
+
+    private static string BuildFakeStudioHostPosixScript(string responseJson)
+    {
+        return string.Join(
             "\n",
             "#!/usr/bin/env bash",
             "set -e",
@@ -36857,9 +36870,44 @@ internal static class Program
             responseJson,
             "JSON",
             string.Empty);
+    }
 
-        File.WriteAllText(scriptPath, script);
-        MakeExecutable(scriptPath);
+    private static string BuildFakeStudioHostBatchScript(string responseJson)
+    {
+        var lines = new List<string>
+        {
+            "@echo off",
+            "if \"%COPPERFIN_SMOKE_LOG%\"==\"\" exit /b 1",
+            ">> \"%COPPERFIN_SMOKE_LOG%\" echo BEGIN",
+            ":args",
+            "if \"%~1\"==\"\" goto output",
+            ">> \"%COPPERFIN_SMOKE_LOG%\" echo %~1",
+            "shift",
+            "goto args",
+            ":output"
+        };
+
+        foreach (var line in responseJson.Replace("\r\n", "\n").Split('\n'))
+        {
+            lines.Add("echo(" + EscapeBatchEchoLine(line));
+        }
+
+        lines.Add("exit /b 0");
+        lines.Add(string.Empty);
+        return string.Join("\r\n", lines);
+    }
+
+    private static string EscapeBatchEchoLine(string line)
+    {
+        return line
+            .Replace("^", "^^")
+            .Replace("&", "^&")
+            .Replace("|", "^|")
+            .Replace("<", "^<")
+            .Replace(">", "^>")
+            .Replace("(", "^(")
+            .Replace(")", "^)")
+            .Replace("%", "%%");
     }
 
     private static void MakeExecutable(string path)
