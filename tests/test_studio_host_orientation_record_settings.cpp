@@ -651,6 +651,13 @@ void write_synthetic_report_table_for_unsupported_expr_line_preservation(const s
     expect(create_result.ok, "#3065: unsupported EXPR-line preservation fixture should be created");
 }
 
+void write_synthetic_report_table_for_deleted_unsupported_expr_line_preservation(
+    const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_unsupported_expr_line_preservation(report_path);
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 0U, true);
+    expect(delete_result.ok, "#3093: deleted unsupported EXPR-line preservation fixture should mark settings deleted");
+}
+
 void run_memo_backed_driver_update_case(
     const std::string& studio_host_path,
     const std::filesystem::path& temp_root,
@@ -787,10 +794,16 @@ void run_unsupported_expr_line_preservation_case(
     const std::filesystem::path& temp_root,
     const std::string& extension,
     const std::string& updated_driver,
+    bool deleted,
     const std::string& label,
     const std::string& issue_prefix) {
-    const std::filesystem::path asset_path = temp_root / ("expr_preservation" + extension);
-    write_synthetic_report_table_for_unsupported_expr_line_preservation(asset_path);
+    const std::filesystem::path asset_path =
+        temp_root / ((deleted ? "deleted_" : "") + std::string("expr_preservation") + extension);
+    if (deleted) {
+        write_synthetic_report_table_for_deleted_unsupported_expr_line_preservation(asset_path);
+    } else {
+        write_synthetic_report_table_for_unsupported_expr_line_preservation(asset_path);
+    }
 
     const auto update_process = run_process_capture(
         studio_host_path,
@@ -823,20 +836,60 @@ void run_unsupported_expr_line_preservation_case(
     expect(expr_property.ok && expr_property.exists,
            issue_prefix + " update should leave the EXPR memo queryable");
     expect(normalize_line_endings(expr_property.value) ==
-               "ORIENTATION=0\n* keep-this-comment=\nXUSER=keepme\nCOLOR=1\nDRIVER=" + updated_driver,
-           issue_prefix + " update should preserve canonicalized unsupported EXPR lines while appending DRIVER");
-    expect_contains_in_order(
-        update_process.stdout_text,
-        {
-            "\"settings\": [",
-            "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
-            "\"name\": \"* keep-this-comment\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
-            "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
-            "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
-            "\"name\": \"DRIVER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
-            "\"value\": \"" + updated_driver + "\""
-        },
-        issue_prefix + " update should preserve supported setting source-line positions after EXPR canonicalization");
+               "ORIENTATION=0\n* keep-this-comment\n\nXUSER=keepme\nCOLOR=1\nDRIVER=" + updated_driver,
+           issue_prefix + " update should preserve raw unsupported EXPR lines while appending DRIVER");
+    if (!deleted) {
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"settings\": [",
+                "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
+                "\"name\": \"DRIVER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 5",
+                "\"value\": \"" + updated_driver + "\""
+            },
+            issue_prefix + " update should preserve parsed setting source-line gaps around unsupported EXPR lines");
+        expect_not_contains(update_process.stdout_text,
+                            "\"name\": \"* keep-this-comment\", \"recordIndex\": 0, \"fieldIndex\": 2",
+                            issue_prefix + " update should not fabricate comment lines as parsed settings");
+    } else {
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
+                        issue_prefix + " update should not fabricate live page setup");
+        expect_contains(update_process.stdout_text, "\"settingCount\": 0",
+                        issue_prefix + " update should not fabricate live settings");
+        expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 4",
+                        issue_prefix + " update should preserve deleted setting counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        issue_prefix + " update should preserve selected-settings availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        issue_prefix + " update should preserve settings selection kind");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"deletedSettings\": [",
+                "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
+                "\"name\": \"DRIVER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 5",
+                "\"value\": \"" + updated_driver + "\""
+            },
+            issue_prefix + " update should preserve deleted parsed setting source-line gaps around unsupported EXPR lines");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
+                "\"name\": \"DRIVER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 5",
+                "\"value\": \"" + updated_driver + "\""
+            },
+            issue_prefix + " update should refresh selected deleted parsed settings after EXPR preservation");
+        expect_not_contains(update_process.stdout_text,
+                            "\"name\": \"* keep-this-comment\", \"recordIndex\": 0, \"fieldIndex\": 2",
+                            issue_prefix + " update should not fabricate deleted comment lines as parsed settings");
+    }
 
     const auto undo_process = run_process_capture(
         studio_host_path,
@@ -868,21 +921,60 @@ void run_unsupported_expr_line_preservation_case(
     expect(reverted_expr_property.ok && reverted_expr_property.exists,
            issue_prefix + " undo should leave the EXPR memo queryable");
     expect(normalize_line_endings(reverted_expr_property.value) ==
-               "ORIENTATION=0\n* keep-this-comment=\nXUSER=keepme\nCOLOR=1",
-           issue_prefix + " undo should restore the canonicalized unsupported EXPR lines");
-    expect_contains_in_order(
-        undo_process.stdout_text,
-        {
-            "\"settings\": [",
-            "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
-            "\"name\": \"* keep-this-comment\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
-            "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
-            "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3"
-        },
-        issue_prefix + " undo should restore supported setting source-line positions after EXPR canonicalization");
-    expect_not_contains(undo_process.stdout_text,
-                        "\"name\": \"DRIVER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
-                        issue_prefix + " undo should remove the appended DRIVER setting");
+               "ORIENTATION=0\n* keep-this-comment\n\nXUSER=keepme\nCOLOR=1",
+           issue_prefix + " undo should restore the raw unsupported EXPR lines");
+    if (!deleted) {
+        expect_contains_in_order(
+            undo_process.stdout_text,
+            {
+                "\"settings\": [",
+                "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4"
+            },
+            issue_prefix + " undo should restore parsed setting source-line gaps around unsupported EXPR lines");
+        expect_not_contains(undo_process.stdout_text,
+                            "\"name\": \"DRIVER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 5",
+                            issue_prefix + " undo should remove the appended DRIVER setting");
+        expect_not_contains(undo_process.stdout_text,
+                            "\"name\": \"* keep-this-comment\", \"recordIndex\": 0, \"fieldIndex\": 2",
+                            issue_prefix + " undo should not fabricate comment lines as parsed settings");
+    } else {
+        expect_contains(undo_process.stdout_text, "\"pageSetupAvailable\": false",
+                        issue_prefix + " undo should not fabricate live page setup");
+        expect_contains(undo_process.stdout_text, "\"settingCount\": 0",
+                        issue_prefix + " undo should keep live settings absent");
+        expect_contains(undo_process.stdout_text, "\"deletedSettingCount\": 3",
+                        issue_prefix + " undo should restore deleted setting counts");
+        expect_contains(undo_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        issue_prefix + " undo should preserve selected-settings availability");
+        expect_contains(undo_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        issue_prefix + " undo should preserve settings selection kind");
+        expect_contains_in_order(
+            undo_process.stdout_text,
+            {
+                "\"deletedSettings\": [",
+                "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4"
+            },
+            issue_prefix + " undo should restore deleted parsed setting source-line gaps around unsupported EXPR lines");
+        expect_contains_in_order(
+            undo_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4"
+            },
+            issue_prefix + " undo should refresh selected deleted parsed settings after EXPR preservation");
+        expect_not_contains(undo_process.stdout_text,
+                            "\"name\": \"DRIVER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 5",
+                            issue_prefix + " undo should remove the appended deleted DRIVER setting");
+        expect_not_contains(undo_process.stdout_text,
+                            "\"name\": \"* keep-this-comment\", \"recordIndex\": 0, \"fieldIndex\": 2",
+                            issue_prefix + " undo should not fabricate deleted comment lines as parsed settings");
+    }
 }
 
 void test_studio_host_json_preserves_orientation_record_selection(const std::string& studio_host_path) {
@@ -997,6 +1089,7 @@ void test_studio_host_json_preserves_orientation_record_selection(const std::str
         temp_root,
         ".frx",
         "cups",
+        false,
         "report",
         "#3065: report/label record-selected EXPR unsupported-line preservation success");
     run_unsupported_expr_line_preservation_case(
@@ -1004,8 +1097,25 @@ void test_studio_host_json_preserves_orientation_record_selection(const std::str
         temp_root,
         ".lbx",
         "cupslbl",
+        false,
         "label",
         "#3065: report/label record-selected EXPR unsupported-line preservation success");
+    run_unsupported_expr_line_preservation_case(
+        studio_host_path,
+        temp_root,
+        ".frx",
+        "cups",
+        true,
+        "report",
+        "#3093: report/label record-selected deleted EXPR unsupported-line preservation success");
+    run_unsupported_expr_line_preservation_case(
+        studio_host_path,
+        temp_root,
+        ".lbx",
+        "cupslbl",
+        true,
+        "label",
+        "#3093: report/label record-selected deleted EXPR unsupported-line preservation success");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
