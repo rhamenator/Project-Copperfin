@@ -183,6 +183,22 @@ std::string read_text(const std::filesystem::path& path) {
     };
 }
 
+std::string normalize_line_endings(std::string text) {
+    std::string normalized;
+    normalized.reserve(text.size());
+    for (std::size_t index = 0; index < text.size(); ++index) {
+        if (text[index] == '\r') {
+            if (index + 1U < text.size() && text[index + 1U] == '\n') {
+                continue;
+            }
+            normalized.push_back('\n');
+        } else {
+            normalized.push_back(text[index]);
+        }
+    }
+    return normalized;
+}
+
 bool dbf_record_deleted(const std::filesystem::path& table_path, std::size_t record_index) {
     const auto table_result =
         copperfin::vfp::parse_dbf_table_from_file(table_path.string(), record_index + 1U);
@@ -307,6 +323,73 @@ void write_synthetic_report_table_for_stable_deleted_settings_json(const std::fi
     expect(unique_id_result.ok, "#2776: stable deleted settings fixture should seed a deleted settings unique id");
     expect(dbf_record_deleted(report_path, 0U),
            "#2776: stable deleted settings fixture should preserve the deleted settings state");
+}
+
+void write_synthetic_report_table_for_unsupported_settings_json(const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "FONTFACE", .type = 'M', .length = 4U},
+        {.name = "TOPMARGIN", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 24U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0\n* keep-this-comment\n\nPAPERSIZE=1\nXUSER=keepme\nBOTMARGIN=20\nGRIDV=4\nGRIDH=8", "", "", "", "", "", "10", ""},
+        {"9", "1", "", "", "0", "", "2000", "", "", ""},
+        {"9", "4", "", "", "2000", "", "5000", "", "", ""},
+        {"8", "0", "customer.company", "1200", "2600", "4000", "450", "Segoe UI", "", "field-guid"},
+        {"5", "", "\"Invoice\"", "900", "100", "1800", "350", "", "", "label-guid"},
+        {"6", "", "", "50", "8000", "100", "100", "", "", ""},
+        {"5", "", "\"Deleted label\"", "1000", "2600", "1200", "300", "", "", ""}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#3098: unsupported settings memo fixture should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 6U, true);
+    expect(delete_result.ok, "#3098: unsupported settings memo fixture should mark deleted objects");
+}
+
+void write_synthetic_report_table_for_deleted_unsupported_settings_json(const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_unsupported_settings_json(report_path);
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 0U, true);
+    expect(delete_result.ok, "#3098: deleted unsupported settings fixture should mark report settings deleted");
+}
+
+void write_synthetic_report_table_for_stable_unsupported_settings_json(const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_unsupported_settings_json(report_path);
+    const auto unique_id_result = copperfin::vfp::update_visual_object_property({
+        .path = report_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "UNIQUEID",
+        .property_value = "unsupported-settings-id"
+    });
+    expect(unique_id_result.ok, "#3098: stable unsupported settings fixture should seed a settings unique id");
+    expect(!dbf_record_deleted(report_path, 0U),
+           "#3098: stable unsupported settings fixture should preserve the live settings state");
+}
+
+void write_synthetic_report_table_for_stable_deleted_unsupported_settings_json(
+    const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_deleted_unsupported_settings_json(report_path);
+    const auto unique_id_result = copperfin::vfp::update_visual_object_property({
+        .path = report_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "UNIQUEID",
+        .property_value = "unsupported-del-id"
+    });
+    expect(unique_id_result.ok,
+           "#3098: stable deleted unsupported settings fixture should seed a settings unique id");
+    expect(dbf_record_deleted(report_path, 0U),
+           "#3098: stable deleted unsupported settings fixture should preserve the deleted settings state");
 }
 
 void run_settings_memo_update_case(
@@ -520,6 +603,197 @@ void run_settings_memo_clear_case(
     }
 }
 
+void run_unsupported_settings_memo_update_case(
+    const std::string& studio_host_path,
+    const std::filesystem::path& temp_root,
+    const std::string& extension,
+    const std::string& updated_settings,
+    bool deleted,
+    const std::string& label,
+    const std::string& issue_prefix) {
+    const std::filesystem::path asset_path =
+        temp_root / ((deleted ? "deleted_" : "") + std::string("unsupported_settings_memo_stable_update") + extension);
+    if (deleted) {
+        write_synthetic_report_table_for_stable_deleted_unsupported_settings_json(asset_path);
+    } else {
+        write_synthetic_report_table_for_stable_unsupported_settings_json(asset_path);
+    }
+
+    const std::string unique_id = deleted ? "unsupported-del-id" : "unsupported-settings-id";
+    const auto update_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", asset_path.string(),
+            "--set-property",
+            "--unique-id", unique_id,
+            "--property-name", "EXPR",
+            "--property-value", updated_settings,
+            "--json"
+        },
+        temp_root);
+
+    if (update_process.exit_code != 0) {
+        std::cerr << "studio host " << label << " stable unsupported settings memo update " << extension << " stdout:\n"
+                  << update_process.stdout_text << "\n";
+        std::cerr << "studio host " << label << " stable unsupported settings memo update " << extension << " stderr:\n"
+                  << update_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(update_process.exit_code == 0, issue_prefix + " update should exit successfully");
+    const auto expr_property = copperfin::vfp::query_visual_object_property({
+        .path = asset_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = unique_id,
+        .property_name = "EXPR"
+    });
+    expect(expr_property.ok && expr_property.exists,
+           issue_prefix + " update should leave the EXPR memo queryable");
+    expect(normalize_line_endings(expr_property.value) == updated_settings,
+           issue_prefix + " update should preserve the raw unsupported EXPR text");
+    if (!deleted) {
+        expect_contains(update_process.stdout_text, "\"settingCount\": 8",
+                        issue_prefix + " update should expose parsed key/value settings only");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"settings\": [",
+                "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
+                "\"name\": \"BOTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 5",
+                "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 6",
+                "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 7",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 8",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 8, \"sourceLineIndex\": null"
+            },
+            issue_prefix + " update should preserve source-line gaps around unsupported lines");
+    } else {
+        expect_contains(update_process.stdout_text, "\"settingCount\": 0",
+                        issue_prefix + " update should not fabricate live settings");
+        expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 8",
+                        issue_prefix + " update should expose deleted parsed key/value settings only");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"deletedSettings\": [",
+                "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
+                "\"name\": \"BOTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 5",
+                "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 6",
+                "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 7",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 8",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 8, \"sourceLineIndex\": null"
+            },
+            issue_prefix + " update should preserve deleted source-line gaps around unsupported lines");
+    }
+    expect_contains(update_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                    issue_prefix + " update should preserve selected-settings availability");
+    expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                    issue_prefix + " update should preserve settings selection kind");
+    expect_contains_in_order(
+        update_process.stdout_text,
+        {
+            "\"selectedReportSettings\": [",
+            "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+            "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+            "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
+            "\"name\": \"BOTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 5",
+            "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 6",
+            "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 7",
+            "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 8",
+            "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 8, \"sourceLineIndex\": null"
+        },
+        issue_prefix + " update should refresh selected parsed settings without comment lines");
+    expect_not_contains(update_process.stdout_text,
+                        "\"name\": \"* keep-this-comment\"",
+                        issue_prefix + " update should not fabricate comment lines as settings");
+}
+
+void run_unsupported_settings_memo_clear_case(
+    const std::string& studio_host_path,
+    const std::filesystem::path& temp_root,
+    const std::string& extension,
+    bool deleted,
+    const std::string& label,
+    const std::string& issue_prefix) {
+    const std::filesystem::path asset_path =
+        temp_root / ((deleted ? "deleted_" : "") + std::string("unsupported_settings_memo_stable_clear") + extension);
+    if (deleted) {
+        write_synthetic_report_table_for_stable_deleted_unsupported_settings_json(asset_path);
+    } else {
+        write_synthetic_report_table_for_stable_unsupported_settings_json(asset_path);
+    }
+
+    const std::string unique_id = deleted ? "unsupported-del-id" : "unsupported-settings-id";
+    const auto clear_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", asset_path.string(),
+            "--clear-property",
+            "--unique-id", unique_id,
+            "--property-name", "EXPR",
+            "--json"
+        },
+        temp_root);
+
+    if (clear_process.exit_code != 0) {
+        std::cerr << "studio host " << label << " stable unsupported settings memo clear " << extension << " stdout:\n"
+                  << clear_process.stdout_text << "\n";
+        std::cerr << "studio host " << label << " stable unsupported settings memo clear " << extension << " stderr:\n"
+                  << clear_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(clear_process.exit_code == 0, issue_prefix + " clear should exit successfully");
+    const auto expr_property = copperfin::vfp::query_visual_object_property({
+        .path = asset_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = unique_id,
+        .property_name = "EXPR"
+    });
+    expect(expr_property.ok && expr_property.exists && expr_property.direct_field,
+           issue_prefix + " clear should preserve the direct EXPR field carrier");
+    if (!deleted) {
+        expect_contains(clear_process.stdout_text, "\"settingCount\": 1",
+                        issue_prefix + " clear should remove memo-derived settings after unsupported input");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"settings\": [",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 8, \"sourceLineIndex\": null"
+            },
+            issue_prefix + " clear should preserve only the direct-field carrier");
+    } else {
+        expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
+                        issue_prefix + " clear should not fabricate live settings");
+        expect_contains(clear_process.stdout_text, "\"deletedSettingCount\": 1",
+                        issue_prefix + " clear should preserve only the deleted direct-field carrier");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"deletedSettings\": [",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 8, \"sourceLineIndex\": null"
+            },
+            issue_prefix + " clear should preserve only the deleted direct-field carrier");
+    }
+    expect_contains(clear_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                    issue_prefix + " clear should preserve selected-settings availability");
+    expect_contains_in_order(
+        clear_process.stdout_text,
+        {
+            "\"selectedReportSettings\": [",
+            "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 8, \"sourceLineIndex\": null"
+        },
+        issue_prefix + " clear should preserve the selected direct-field carrier");
+    expect_not_contains(clear_process.stdout_text,
+                        "\"name\": \"* keep-this-comment\"",
+                        issue_prefix + " clear should not fabricate comment lines as settings");
+}
+
 void test_studio_host_json_preserves_settings_memo_stable_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -534,6 +808,16 @@ void test_studio_host_json_preserves_settings_memo_stable_selection(const std::s
     const std::string updated_settings =
         "ORIENTATION=1\n"
         "PAPERSIZE=9\n"
+        "BOTMARGIN=32\n"
+        "GRIDV=6\n"
+        "GRIDH=10\n"
+        "TOPMARGIN=14";
+    const std::string unsupported_updated_settings =
+        "ORIENTATION=1\n"
+        "* keep-this-comment\n"
+        "\n"
+        "PAPERSIZE=9\n"
+        "XUSER=keepme\n"
         "BOTMARGIN=32\n"
         "GRIDV=6\n"
         "GRIDH=10\n"
@@ -607,6 +891,66 @@ void test_studio_host_json_preserves_settings_memo_stable_selection(const std::s
         true,
         "label",
         "#2776: report/label stable deleted settings memo success");
+    run_unsupported_settings_memo_update_case(
+        studio_host_path,
+        temp_root,
+        ".frx",
+        unsupported_updated_settings,
+        false,
+        "report",
+        "#3098: report/label stable settings memo should handle unsupported lines");
+    run_unsupported_settings_memo_update_case(
+        studio_host_path,
+        temp_root,
+        ".lbx",
+        unsupported_updated_settings,
+        false,
+        "label",
+        "#3098: report/label stable settings memo should handle unsupported lines");
+    run_unsupported_settings_memo_clear_case(
+        studio_host_path,
+        temp_root,
+        ".frx",
+        false,
+        "report",
+        "#3098: report/label stable settings memo clear should handle unsupported lines");
+    run_unsupported_settings_memo_clear_case(
+        studio_host_path,
+        temp_root,
+        ".lbx",
+        false,
+        "label",
+        "#3098: report/label stable settings memo clear should handle unsupported lines");
+    run_unsupported_settings_memo_update_case(
+        studio_host_path,
+        temp_root,
+        ".frx",
+        unsupported_updated_settings,
+        true,
+        "report",
+        "#3098: report/label stable deleted settings memo should handle unsupported lines");
+    run_unsupported_settings_memo_update_case(
+        studio_host_path,
+        temp_root,
+        ".lbx",
+        unsupported_updated_settings,
+        true,
+        "label",
+        "#3098: report/label stable deleted settings memo should handle unsupported lines");
+    run_unsupported_settings_memo_clear_case(
+        studio_host_path,
+        temp_root,
+        ".frx",
+        true,
+        "report",
+        "#3098: report/label stable deleted settings memo clear should handle unsupported lines");
+    run_unsupported_settings_memo_clear_case(
+        studio_host_path,
+        temp_root,
+        ".lbx",
+        true,
+        "label",
+        "#3098: report/label stable deleted settings memo clear should handle unsupported lines");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
