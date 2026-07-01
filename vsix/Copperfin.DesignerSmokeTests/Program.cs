@@ -911,6 +911,20 @@ internal static class Program
                 updatedValue: "16",
                 expectedSectionCount: 5,
                 expectLabel: true);
+            SmokeRealAssetHostBackedSettingsRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                propertyName: "GRIDH",
+                originalValue: "12",
+                updatedValue: "14",
+                expectedSectionCount: 6,
+                expectLabel: false);
+            SmokeRealAssetHostBackedSettingsRoundTrip(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                propertyName: "GRIDH",
+                originalValue: "12",
+                updatedValue: "16",
+                expectedSectionCount: 5,
+                expectLabel: true);
             SmokeAssetEditorSettingsRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 propertyName: "ORIENTATION",
@@ -1330,6 +1344,26 @@ internal static class Program
             SmokeAssetEditorSettingsRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
                 propertyName: "GRIDV",
+                expectedOriginalSelectionValue: "12",
+                updatedPropertyValue: 16,
+                expectedUpdatedSelectionValue: "16",
+                expectedOriginalRawValue: "12",
+                expectedUpdatedRawValue: "16",
+                expectedSectionCount: 5,
+                expectLabel: true);
+            SmokeAssetEditorSettingsRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                propertyName: "GRIDH",
+                expectedOriginalSelectionValue: "12",
+                updatedPropertyValue: 14,
+                expectedUpdatedSelectionValue: "14",
+                expectedOriginalRawValue: "12",
+                expectedUpdatedRawValue: "14",
+                expectedSectionCount: 6,
+                expectLabel: false);
+            SmokeAssetEditorSettingsRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                propertyName: "GRIDH",
                 expectedOriginalSelectionValue: "12",
                 updatedPropertyValue: 16,
                 expectedUpdatedSelectionValue: "16",
