@@ -66,14 +66,74 @@ bool is_known_report_settings_expr_property(const std::string& normalized_proper
     return std::find(known_settings.begin(), known_settings.end(), normalized_property_name) != known_settings.end();
 }
 
-std::string serialize_report_settings_blob(const std::vector<VisualPropertyAssignment>& properties) {
-    std::ostringstream stream;
-    for (const auto& property : properties) {
-        if (property.name.empty()) {
-            continue;
+struct ReportSettingsExprLine {
+    std::string raw_line;
+    std::string name;
+    std::string value;
+    bool is_assignment = false;
+};
+
+std::vector<ReportSettingsExprLine> parse_report_settings_expr_lines(const std::string& text) {
+    std::vector<ReportSettingsExprLine> lines;
+    std::size_t start = 0U;
+    while (start < text.size()) {
+        const std::size_t end = text.find_first_of("\r\n", start);
+        const std::string line = end == std::string::npos ? text.substr(start) : text.substr(start, end - start);
+
+        const auto equals = line.find('=');
+        if (equals == std::string::npos) {
+            lines.push_back({
+                .raw_line = line,
+                .name = {},
+                .value = {},
+                .is_assignment = false
+            });
+        } else {
+            const std::string name = trim_both(line.substr(0U, equals));
+            if (name.empty()) {
+                lines.push_back({
+                    .raw_line = line,
+                    .name = {},
+                    .value = {},
+                    .is_assignment = false
+                });
+            } else {
+                lines.push_back({
+                    .raw_line = {},
+                    .name = name,
+                    .value = trim_both(line.substr(equals + 1U)),
+                    .is_assignment = true
+                });
+            }
         }
 
-        stream << property.name << "=" << property.value << "\r\n";
+        if (end == std::string::npos) {
+            break;
+        }
+
+        start = end + 1U;
+        if (start < text.size() &&
+            ((text[end] == '\r' && text[start] == '\n') || (text[end] == '\n' && text[start] == '\r'))) {
+            ++start;
+        }
+    }
+    return lines;
+}
+
+std::string serialize_report_settings_blob(const std::vector<ReportSettingsExprLine>& lines) {
+    std::ostringstream stream;
+    for (const auto& line : lines) {
+        if (line.is_assignment) {
+            if (line.name.empty()) {
+                continue;
+            }
+
+            stream << line.name << "=" << line.value;
+        } else {
+            stream << line.raw_line;
+        }
+
+        stream << "\r\n";
     }
     return stream.str();
 }
@@ -455,10 +515,11 @@ VisualAssetEditResult replace_report_settings_expr_property(
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.MemoFieldMissing", {{"fieldName", "EXPR"}})};
     }
 
-    auto assignments = parse_visual_property_blob(expr_field->display_value);
+    auto assignments = parse_report_settings_expr_lines(expr_field->display_value);
     const std::string requested_property_name = normalize_visual_property_name(request.property_name);
-    auto assignment_it = std::find_if(assignments.begin(), assignments.end(), [&](const VisualPropertyAssignment& assignment) {
-        return normalize_visual_property_name(assignment.name) == requested_property_name;
+    auto assignment_it = std::find_if(assignments.begin(), assignments.end(), [&](const ReportSettingsExprLine& assignment) {
+        return assignment.is_assignment &&
+               normalize_visual_property_name(assignment.name) == requested_property_name;
     });
 
     const bool exists = assignment_it != assignments.end();
@@ -485,7 +546,12 @@ VisualAssetEditResult replace_report_settings_expr_property(
     }
 
     if (!exists) {
-        assignments.push_back({.name = request.property_name, .value = request.property_value});
+        assignments.push_back({
+            .raw_line = {},
+            .name = request.property_name,
+            .value = request.property_value,
+            .is_assignment = true
+        });
     } else if (remove_property_if_missing) {
         assignments.erase(assignment_it);
     } else {

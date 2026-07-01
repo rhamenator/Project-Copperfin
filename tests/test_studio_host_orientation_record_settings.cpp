@@ -618,6 +618,39 @@ void write_synthetic_report_table_for_memo_backed_driver_json(const std::filesys
     expect(create_result.ok, "#3064: memo-backed driver settings fixture should be created");
 }
 
+std::string normalize_line_endings(std::string text) {
+    std::string normalized;
+    normalized.reserve(text.size());
+    for (std::size_t index = 0; index < text.size(); ++index) {
+        if (text[index] == '\r') {
+            if ((index + 1U) < text.size() && text[index + 1U] == '\n') {
+                ++index;
+            }
+            normalized.push_back('\n');
+            continue;
+        }
+
+        normalized.push_back(text[index]);
+    }
+
+    return normalized;
+}
+
+void write_synthetic_report_table_for_unsupported_expr_line_preservation(const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "UNIQUEID", .type = 'C', .length = 40U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0\n* keep-this-comment\n\nXUSER=keepme\nCOLOR=1", ""}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#3065: unsupported EXPR-line preservation fixture should be created");
+}
+
 void run_memo_backed_driver_update_case(
     const std::string& studio_host_path,
     const std::filesystem::path& temp_root,
@@ -749,6 +782,107 @@ void run_memo_backed_driver_update_case(
                         issue_prefix + " undo should remove memo-backed DRIVER provenance");
 }
 
+void run_unsupported_expr_line_preservation_case(
+    const std::string& studio_host_path,
+    const std::filesystem::path& temp_root,
+    const std::string& extension,
+    const std::string& updated_driver,
+    const std::string& label,
+    const std::string& issue_prefix) {
+    const std::filesystem::path asset_path = temp_root / ("expr_preservation" + extension);
+    write_synthetic_report_table_for_unsupported_expr_line_preservation(asset_path);
+
+    const auto update_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", asset_path.string(),
+            "--set-property",
+            "--record", "0",
+            "--property-name", "DRIVER",
+            "--property-value", updated_driver,
+            "--json"
+        },
+        temp_root);
+
+    if (update_process.exit_code != 0) {
+        std::cerr << "studio host " << label << " unsupported EXPR-line preservation update " << extension << " stdout:\n"
+                  << update_process.stdout_text << "\n";
+        std::cerr << "studio host " << label << " unsupported EXPR-line preservation update " << extension << " stderr:\n"
+                  << update_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(update_process.exit_code == 0, issue_prefix + " update should exit successfully");
+    const auto expr_property = copperfin::vfp::query_visual_object_property({
+        .path = asset_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "EXPR"
+    });
+    expect(expr_property.ok && expr_property.exists,
+           issue_prefix + " update should leave the EXPR memo queryable");
+    expect(normalize_line_endings(expr_property.value) ==
+               "ORIENTATION=0\n* keep-this-comment\n\nXUSER=keepme\nCOLOR=1\nDRIVER=" + updated_driver + "\n",
+           issue_prefix + " update should preserve unsupported EXPR lines while appending DRIVER");
+    expect_contains_in_order(
+        update_process.stdout_text,
+        {
+            "\"settings\": [",
+            "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+            "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+            "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
+            "\"name\": \"DRIVER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 5",
+            "\"value\": \"" + updated_driver + "\""
+        },
+        issue_prefix + " update should preserve supported setting source-line positions around unsupported EXPR lines");
+
+    const auto undo_process = run_process_capture(
+        studio_host_path,
+        {
+            "--from-vs",
+            "--json",
+            "--undo-mode", "command",
+            "--record", "0",
+            "--path", asset_path.string()
+        },
+        temp_root);
+
+    if (undo_process.exit_code != 0) {
+        std::cerr << "studio host " << label << " unsupported EXPR-line preservation undo " << extension << " stdout:\n"
+                  << undo_process.stdout_text << "\n";
+        std::cerr << "studio host " << label << " unsupported EXPR-line preservation undo " << extension << " stderr:\n"
+                  << undo_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(undo_process.exit_code == 0, issue_prefix + " undo should exit successfully");
+    const auto reverted_expr_property = copperfin::vfp::query_visual_object_property({
+        .path = asset_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "EXPR"
+    });
+    expect(reverted_expr_property.ok && reverted_expr_property.exists,
+           issue_prefix + " undo should leave the EXPR memo queryable");
+    expect(normalize_line_endings(reverted_expr_property.value) ==
+               "ORIENTATION=0\n* keep-this-comment\n\nXUSER=keepme\nCOLOR=1",
+           issue_prefix + " undo should restore the original unsupported EXPR lines");
+    expect_contains_in_order(
+        undo_process.stdout_text,
+        {
+            "\"settings\": [",
+            "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+            "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+            "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4"
+        },
+        issue_prefix + " undo should restore supported setting source-line positions around unsupported EXPR lines");
+    expect_not_contains(undo_process.stdout_text,
+                        "\"name\": \"DRIVER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 5",
+                        issue_prefix + " undo should remove the appended DRIVER setting");
+}
+
 void test_studio_host_json_preserves_orientation_record_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -856,6 +990,20 @@ void test_studio_host_json_preserves_orientation_record_selection(const std::str
         "cupslbl",
         "label",
         "#3064: report/label record-selected memo-backed driver settings success");
+    run_unsupported_expr_line_preservation_case(
+        studio_host_path,
+        temp_root,
+        ".frx",
+        "cups",
+        "report",
+        "#3065: report/label record-selected EXPR unsupported-line preservation success");
+    run_unsupported_expr_line_preservation_case(
+        studio_host_path,
+        temp_root,
+        ".lbx",
+        "cupslbl",
+        "label",
+        "#3065: report/label record-selected EXPR unsupported-line preservation success");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
