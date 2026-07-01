@@ -1,4 +1,5 @@
 #include "copperfin/vfp/dbf_table.h"
+#include "copperfin/vfp/visual_asset_editor.h"
 
 #include <cstdlib>
 #include <filesystem>
@@ -144,6 +145,22 @@ std::string read_text(const std::filesystem::path& path) {
     };
 }
 
+std::string normalize_line_endings(std::string text) {
+    std::string normalized;
+    normalized.reserve(text.size());
+    for (std::size_t index = 0; index < text.size(); ++index) {
+        if (text[index] == '\r') {
+            if (index + 1U < text.size() && text[index + 1U] == '\n') {
+                continue;
+            }
+            normalized.push_back('\n');
+        } else {
+            normalized.push_back(text[index]);
+        }
+    }
+    return normalized;
+}
+
 struct ProcessResult {
     int exit_code = -1;
     std::string stdout_text;
@@ -219,6 +236,32 @@ void write_deleted_sort_settings_fixture(
     write_sort_settings_fixture(asset_path, settings_guid);
     const auto delete_result = copperfin::vfp::set_record_deleted_flag(asset_path.string(), 0U, true);
     expect(delete_result.ok, "#2910: deleted TAG sort-settings fixture should mark the root record deleted");
+}
+
+void write_unsupported_sort_settings_fixture(
+    const std::filesystem::path& asset_path,
+    const std::string& settings_guid) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "TAG", .type = 'M', .length = 4U},
+        {.name = "UNIQUEID", .type = 'C', .length = 24U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=1\n* keep-this-comment\n\nPAPERSIZE=9\nXUSER=keepme", "customer.country", settings_guid}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(asset_path.string(), fields, records);
+    expect(create_result.ok, "#3099: unsupported TAG sort-settings fixture should be created");
+}
+
+void write_deleted_unsupported_sort_settings_fixture(
+    const std::filesystem::path& asset_path,
+    const std::string& settings_guid) {
+    write_unsupported_sort_settings_fixture(asset_path, settings_guid);
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(asset_path.string(), 0U, true);
+    expect(delete_result.ok, "#3099: deleted unsupported TAG sort-settings fixture should mark the root record deleted");
 }
 
 void expect_live_sort_setting_json(
@@ -311,6 +354,108 @@ void expect_deleted_sort_setting_json(
             "\"value\": \"" + expected_tag + "\""
         },
         issue_prefix + " should expose refreshed deleted TAG provenance in selected settings");
+}
+
+void expect_live_unsupported_sort_setting_json(
+    const std::string& text,
+    const std::string& title,
+    const std::string& expected_tag,
+    const std::string& issue_prefix,
+    bool label_asset) {
+    expect_contains(text, "\"documentTitle\": \"" + title + "\"",
+                    issue_prefix + " should preserve document titles");
+    if (label_asset) {
+        expect_contains(text, "\"isLabel\": true",
+                        issue_prefix + " should retain label identity");
+    }
+    expect_contains(text, "\"selectedReportSettingsAvailable\": true",
+                    issue_prefix + " should preserve selected-settings availability");
+    expect_contains(text, "\"selectedReportSelectionKind\": \"settings\"",
+                    issue_prefix + " should preserve settings selection kind");
+    expect_contains(text, "\"pageSetupAvailable\": true",
+                    issue_prefix + " should preserve memo-derived page setup");
+    expect_contains(text, "\"orientationCode\": 1",
+                    issue_prefix + " should preserve memo-derived orientation");
+    expect_contains(text, "\"paperSizeCode\": 9",
+                    issue_prefix + " should preserve memo-derived paper size");
+    expect_contains(text, "\"settingCount\": 4",
+                    issue_prefix + " should expose supported settings plus the TAG direct field");
+    expect_contains(text, "\"deletedSettingCount\": 0",
+                    issue_prefix + " should keep deleted setting counts empty");
+    expect_contains_in_order(
+        text,
+        {
+            "\"settings\": [",
+            "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+            "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+            "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
+            "\"name\": \"TAG\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null",
+            "\"value\": \"" + expected_tag + "\""
+        },
+        issue_prefix + " should preserve source-line gaps around unsupported EXPR lines");
+    expect_contains_in_order(
+        text,
+        {
+            "\"selectedReportSettings\": [",
+            "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+            "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+            "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
+            "\"name\": \"TAG\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null",
+            "\"value\": \"" + expected_tag + "\""
+        },
+        issue_prefix + " should preserve selected settings without comment rows");
+    expect_not_contains(text,
+                        "\"name\": \"* keep-this-comment\"",
+                        issue_prefix + " should not fabricate comment rows as settings");
+}
+
+void expect_deleted_unsupported_sort_setting_json(
+    const std::string& text,
+    const std::string& title,
+    const std::string& expected_tag,
+    const std::string& issue_prefix,
+    bool label_asset) {
+    expect_contains(text, "\"documentTitle\": \"" + title + "\"",
+                    issue_prefix + " should preserve document titles");
+    if (label_asset) {
+        expect_contains(text, "\"isLabel\": true",
+                        issue_prefix + " should retain label identity");
+    }
+    expect_contains(text, "\"selectedReportSettingsAvailable\": true",
+                    issue_prefix + " should preserve selected-settings availability");
+    expect_contains(text, "\"selectedReportSelectionKind\": \"settings\"",
+                    issue_prefix + " should preserve settings selection kind");
+    expect_contains(text, "\"pageSetupAvailable\": false",
+                    issue_prefix + " should not fabricate live page setup for deleted roots");
+    expect_contains(text, "\"settingCount\": 0",
+                    issue_prefix + " should keep live setting counts empty");
+    expect_contains(text, "\"deletedSettingCount\": 4",
+                    issue_prefix + " should expose deleted supported settings plus TAG");
+    expect_contains_in_order(
+        text,
+        {
+            "\"deletedSettings\": [",
+            "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+            "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+            "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
+            "\"name\": \"TAG\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null",
+            "\"value\": \"" + expected_tag + "\""
+        },
+        issue_prefix + " should preserve deleted source-line gaps around unsupported EXPR lines");
+    expect_contains_in_order(
+        text,
+        {
+            "\"selectedReportSettings\": [",
+            "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+            "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+            "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
+            "\"name\": \"TAG\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null",
+            "\"value\": \"" + expected_tag + "\""
+        },
+        issue_prefix + " should preserve selected deleted settings without comment rows");
+    expect_not_contains(text,
+                        "\"name\": \"* keep-this-comment\"",
+                        issue_prefix + " should not fabricate deleted comment rows as settings");
 }
 
 void test_updates_report_sort_settings_by_record_selection(const std::string& studio_host_path) {
@@ -617,6 +762,283 @@ void test_clears_deleted_report_sort_settings_by_record_selection(const std::str
     }
 }
 
+void test_updates_report_sort_settings_preserve_unsupported_expr_lines_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_sort_settings_unsupported_update_record_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
+    const std::string expected_expr =
+        "ORIENTATION=1\n"
+        "* keep-this-comment\n"
+        "\n"
+        "PAPERSIZE=9\n"
+        "XUSER=keepme";
+
+    const auto run_update = [&](const fs::path& asset_path,
+                                const std::string& title,
+                                const std::string& label,
+                                bool label_asset,
+                                bool deleted) {
+        if (deleted) {
+            write_deleted_unsupported_sort_settings_fixture(asset_path, "unsup-del-guid");
+        } else {
+            write_unsupported_sort_settings_fixture(asset_path, "unsup-sort-guid");
+        }
+
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--record", "0",
+                "--property-name", "TAG",
+                "--property-value", "customer.region",
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " record unsupported TAG update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " record unsupported TAG update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#3099: record TAG update should exit successfully when unsupported EXPR lines are present");
+        const auto expr_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "EXPR"
+        });
+        expect(expr_property.ok && expr_property.exists,
+               "#3099: record TAG update should keep the EXPR memo queryable");
+        expect(normalize_line_endings(expr_property.value) == expected_expr,
+               "#3099: record TAG update should preserve unsupported EXPR comment and blank lines");
+
+        const auto reopen_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "0", "--json"},
+            temp_root);
+        expect(reopen_process.exit_code == 0,
+               "#3099: record TAG update reopen should exit successfully with unsupported EXPR lines");
+        if (deleted) {
+            expect_deleted_unsupported_sort_setting_json(
+                reopen_process.stdout_text,
+                title,
+                "customer.region",
+                "#3099: record deleted TAG update reopen JSON",
+                label_asset);
+        } else {
+            expect_live_unsupported_sort_setting_json(
+                reopen_process.stdout_text,
+                title,
+                "customer.region",
+                "#3099: record TAG update reopen JSON",
+                label_asset);
+        }
+    };
+
+    run_update(temp_root / "unsupported_sort_update_record.frx",
+               "unsupported_sort_update_record.frx",
+               "report",
+               false,
+               false);
+    run_update(temp_root / "unsupported_sort_update_record.lbx",
+               "unsupported_sort_update_record.lbx",
+               "label",
+               true,
+               false);
+    run_update(temp_root / "deleted_unsupported_sort_update_record.frx",
+               "deleted_unsupported_sort_update_record.frx",
+               "report",
+               false,
+               true);
+    run_update(temp_root / "deleted_unsupported_sort_update_record.lbx",
+               "deleted_unsupported_sort_update_record.lbx",
+               "label",
+               true,
+               true);
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_clears_report_sort_settings_preserve_unsupported_expr_lines_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_sort_settings_unsupported_clear_record_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
+    const std::string expected_expr =
+        "ORIENTATION=1\n"
+        "* keep-this-comment\n"
+        "\n"
+        "PAPERSIZE=9\n"
+        "XUSER=keepme";
+
+    const auto run_clear = [&](const fs::path& asset_path,
+                               const std::string& title,
+                               const std::string& label,
+                               bool label_asset,
+                               bool deleted) {
+        if (deleted) {
+            write_deleted_unsupported_sort_settings_fixture(asset_path, "unsup-del-guid");
+        } else {
+            write_unsupported_sort_settings_fixture(asset_path, "unsup-sort-guid");
+        }
+
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--record", "0",
+                "--property-name", "TAG",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " record unsupported TAG clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " record unsupported TAG clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#3099: record TAG clear should exit successfully when unsupported EXPR lines are present");
+        const auto expr_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "EXPR"
+        });
+        expect(expr_property.ok && expr_property.exists,
+               "#3099: record TAG clear should keep the EXPR memo queryable");
+        expect(normalize_line_endings(expr_property.value) == expected_expr,
+               "#3099: record TAG clear should preserve unsupported EXPR comment and blank lines");
+
+        const auto reopen_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "0", "--json"},
+            temp_root);
+        expect(reopen_process.exit_code == 0,
+               "#3099: record TAG clear reopen should exit successfully with unsupported EXPR lines");
+        if (deleted) {
+            expect_contains(reopen_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#3099: record deleted TAG clear reopen JSON should preserve document titles");
+            if (label_asset) {
+                expect_contains(reopen_process.stdout_text, "\"isLabel\": true",
+                                "#3099: label record deleted TAG clear reopen JSON should retain label identity");
+            }
+            expect_contains(reopen_process.stdout_text, "\"pageSetupAvailable\": false",
+                            "#3099: record deleted TAG clear reopen JSON should not fabricate live page setup");
+            expect_contains(reopen_process.stdout_text, "\"settingCount\": 0",
+                            "#3099: record deleted TAG clear reopen JSON should keep live setting counts empty");
+            expect_contains(reopen_process.stdout_text, "\"deletedSettingCount\": 3",
+                            "#3099: record deleted TAG clear reopen JSON should preserve supported deleted settings");
+            expect_contains_in_order(
+                reopen_process.stdout_text,
+                {
+                    "\"deletedSettings\": [",
+                    "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                    "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                    "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4"
+                },
+                "#3099: record deleted TAG clear reopen JSON should preserve deleted source-line gaps");
+            expect_contains_in_order(
+                reopen_process.stdout_text,
+                {
+                    "\"selectedReportSettings\": [",
+                    "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                    "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                    "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4"
+                },
+                "#3099: record deleted TAG clear reopen JSON should preserve selected deleted settings");
+        } else {
+            expect_contains(reopen_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#3099: record TAG clear reopen JSON should preserve document titles");
+            if (label_asset) {
+                expect_contains(reopen_process.stdout_text, "\"isLabel\": true",
+                                "#3099: label record TAG clear reopen JSON should retain label identity");
+            }
+            expect_contains(reopen_process.stdout_text, "\"pageSetupAvailable\": true",
+                            "#3099: record TAG clear reopen JSON should preserve memo-derived page setup");
+            expect_contains(reopen_process.stdout_text, "\"settingCount\": 3",
+                            "#3099: record TAG clear reopen JSON should preserve supported live settings");
+            expect_contains(reopen_process.stdout_text, "\"deletedSettingCount\": 0",
+                            "#3099: record TAG clear reopen JSON should keep deleted setting counts empty");
+            expect_contains_in_order(
+                reopen_process.stdout_text,
+                {
+                    "\"settings\": [",
+                    "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                    "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                    "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4"
+                },
+                "#3099: record TAG clear reopen JSON should preserve live source-line gaps");
+            expect_contains_in_order(
+                reopen_process.stdout_text,
+                {
+                    "\"selectedReportSettings\": [",
+                    "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                    "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                    "\"name\": \"XUSER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4"
+                },
+                "#3099: record TAG clear reopen JSON should preserve selected live settings");
+        }
+        expect_not_contains(reopen_process.stdout_text,
+                            "\"name\": \"TAG\", \"recordIndex\": 0, \"fieldIndex\": 3",
+                            "#3099: record TAG clear reopen JSON should remove TAG provenance");
+        expect_not_contains(reopen_process.stdout_text,
+                            "\"name\": \"* keep-this-comment\"",
+                            "#3099: record TAG clear reopen JSON should not fabricate comment rows as settings");
+    };
+
+    run_clear(temp_root / "unsupported_sort_clear_record.frx",
+              "unsupported_sort_clear_record.frx",
+              "report",
+              false,
+              false);
+    run_clear(temp_root / "unsupported_sort_clear_record.lbx",
+              "unsupported_sort_clear_record.lbx",
+              "label",
+              true,
+              false);
+    run_clear(temp_root / "deleted_unsupported_sort_clear_record.frx",
+              "deleted_unsupported_sort_clear_record.frx",
+              "report",
+              false,
+              true);
+    run_clear(temp_root / "deleted_unsupported_sort_clear_record.lbx",
+              "deleted_unsupported_sort_clear_record.lbx",
+              "label",
+              true,
+              true);
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -629,6 +1051,8 @@ int main(int argc, char** argv) {
     test_clears_report_sort_settings_by_record_selection(argv[1]);
     test_updates_deleted_report_sort_settings_by_record_selection(argv[1]);
     test_clears_deleted_report_sort_settings_by_record_selection(argv[1]);
+    test_updates_report_sort_settings_preserve_unsupported_expr_lines_by_record_selection(argv[1]);
+    test_clears_report_sort_settings_preserve_unsupported_expr_lines_by_record_selection(argv[1]);
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
