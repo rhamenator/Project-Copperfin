@@ -3116,6 +3116,30 @@ internal static class Program
                 },
                 expectedObjectListCount: 1);
             SmokeAssetEditorDeletedSectionMetadataSelectionWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 3,
+                expectedProperties: new[]
+                {
+                    new KeyValuePair<string, string>("SECTIONSTATE", "Deleted"),
+                    new KeyValuePair<string, string>("BANDKIND", "Detail"),
+                    new KeyValuePair<string, string>("RECORDINDEX", "3"),
+                    new KeyValuePair<string, string>("OBJECTCOUNT", "1"),
+                    new KeyValuePair<string, string>("DELETEDOBJECTCOUNT", "0"),
+                    new KeyValuePair<string, string>("TOP", "0"),
+                    new KeyValuePair<string, string>("HEIGHT", "10000")
+                },
+                expectedMissingProperties: new[]
+                {
+                    "EXPR",
+                    "EXPRESSIONFIELD",
+                    "EXPRESSIONMEMO",
+                    "GROUPINGEXPRESSION",
+                    "GROUPINGEXPRESSIONFIELD",
+                    "GROUPINGEXPRESSIONMEMO",
+                    "GROUPPARTNERSTATE"
+                },
+                expectedObjectListCount: 1);
+            SmokeAssetEditorDeletedSectionMetadataSelectionWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 3,
                 expectedProperties: new[]
@@ -28423,7 +28447,8 @@ internal static class Program
         string? sourcePath,
         int recordIndex,
         IReadOnlyList<KeyValuePair<string, string>> expectedProperties,
-        IReadOnlyList<string>? expectedMissingProperties = null)
+        IReadOnlyList<string>? expectedMissingProperties = null,
+        int expectedObjectListCount = 0)
     {
         if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
         {
@@ -28528,7 +28553,7 @@ internal static class Program
                 () => propertyGrid.SelectedObject is CopperfinDesignerSelection selection &&
                       selection.RecordIndex == recordIndex &&
                       string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, expectedSectionListTitle, StringComparison.Ordinal) &&
-                      objectListView.Items.Count == 0);
+                      objectListView.Items.Count == expectedObjectListCount);
             Expect(selected,
                 $"real deleted section-metadata smoke should produce a deleted section-rooted selection for {sourcePath}");
             if (!selected || propertyGrid.SelectedObject is not CopperfinDesignerSelection sectionSelection)
