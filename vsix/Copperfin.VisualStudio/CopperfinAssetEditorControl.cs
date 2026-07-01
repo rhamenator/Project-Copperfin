@@ -54,6 +54,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly Button reorderFrontObjectButton;
     private readonly Button reorderBackObjectButton;
     private readonly Button alignLeftObjectButton;
+    private readonly Button alignTopObjectButton;
     private readonly Button matchWidthObjectButton;
     private readonly Button matchHeightObjectButton;
     private readonly Button matchSizeObjectButton;
@@ -232,6 +233,18 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             executingKey: "AssetEditor.ObjectAlignment.Left.Executing",
             failedKey: "AssetEditor.ObjectAlignment.Left.Failed",
             completedKey: "AssetEditor.ObjectAlignment.Left.Completed");
+
+        alignTopObjectButton = new Button
+        {
+            AutoSize = true,
+            Text = this.localization.Text("AssetEditor.ObjectAlignment.TopButton"),
+            Visible = false
+        };
+        alignTopObjectButton.Click += (_, _) => TryHandleAlignObjectCommand(
+            alignmentMode: "top",
+            executingKey: "AssetEditor.ObjectAlignment.Top.Executing",
+            failedKey: "AssetEditor.ObjectAlignment.Top.Failed",
+            completedKey: "AssetEditor.ObjectAlignment.Top.Completed");
 
         matchWidthObjectButton = new Button
         {
@@ -694,6 +707,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         buttonPanel.Controls.Add(reorderFrontObjectButton);
         buttonPanel.Controls.Add(reorderBackObjectButton);
         buttonPanel.Controls.Add(alignLeftObjectButton);
+        buttonPanel.Controls.Add(alignTopObjectButton);
         buttonPanel.Controls.Add(matchWidthObjectButton);
         buttonPanel.Controls.Add(matchHeightObjectButton);
         buttonPanel.Controls.Add(matchSizeObjectButton);
@@ -2371,6 +2385,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         var showAlignLeft = selectedObjects.Count >= 2 &&
                             selectedObjects.All(snapshotObject => !snapshotObject.Deleted) &&
                             TryReadSelectedExplorerTag() is CopperfinStudioReportSection { Deleted: false };
+        var showAlignTop = selectedObjects.Count >= 2 &&
+                           selectedObjects.All(snapshotObject => !snapshotObject.Deleted) &&
+                           TryReadSelectedExplorerTag() is CopperfinStudioReportSection { Deleted: false };
         var showMatchWidth = selectedObjects.Count >= 2 &&
                              selectedObjects.All(snapshotObject => !snapshotObject.Deleted) &&
                              TryReadSelectedExplorerTag() is CopperfinStudioReportSection { Deleted: false };
@@ -2399,6 +2416,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         reorderBackObjectButton.Enabled = showReorder && !string.IsNullOrWhiteSpace(currentPath);
         alignLeftObjectButton.Visible = showAlignLeft;
         alignLeftObjectButton.Enabled = showAlignLeft && !string.IsNullOrWhiteSpace(currentPath);
+        alignTopObjectButton.Visible = showAlignTop;
+        alignTopObjectButton.Enabled = showAlignTop && !string.IsNullOrWhiteSpace(currentPath);
         matchWidthObjectButton.Visible = showMatchWidth;
         matchWidthObjectButton.Enabled = showMatchWidth && !string.IsNullOrWhiteSpace(currentPath);
         matchHeightObjectButton.Visible = showMatchHeight;
