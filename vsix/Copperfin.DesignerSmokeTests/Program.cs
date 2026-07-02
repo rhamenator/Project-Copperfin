@@ -22912,6 +22912,29 @@ internal static class Program
 
         try
         {
+            var loaded = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(loaded.Success && loaded.Document is not null,
+                $"real deleted reorder smoke should load snapshot data for {sourcePath}");
+            if (!loaded.Success || loaded.Document is null)
+            {
+                return;
+            }
+
+            Expect(loaded.Document.ReportLayout?.PreviewBoundsAvailable == true,
+                $"initial deleted reorder snapshot should preserve live preview bounds for {sourcePath}");
+            if (loaded.Document.ReportLayout?.PreviewBoundsAvailable != true)
+            {
+                return;
+            }
+
+            var initialLayout = loaded.Document.ReportLayout;
+            var expectedPreviewBoundsLeft = initialLayout.PreviewBoundsLeft;
+            var expectedPreviewBoundsTop = initialLayout.PreviewBoundsTop;
+            var expectedPreviewBoundsRight = initialLayout.PreviewBoundsRight;
+            var expectedPreviewBoundsBottom = initialLayout.PreviewBoundsBottom;
+            var expectedPreviewBoundsWidth = initialLayout.PreviewBoundsWidth;
+            var expectedPreviewBoundsHeight = initialLayout.PreviewBoundsHeight;
+
             var firstDeleteResult = CopperfinStudioSnapshotClient.TryDeleteObject(
                 assetPath,
                 reorderedSourceRecordIndex,
@@ -22965,6 +22988,18 @@ internal static class Program
                 new[] { companionRecordIndex, reorderedSourceRecordIndex },
                 new[] { companionUniqueId, reorderedSourceUniqueId },
                 "initial deleted real asset reorder snapshot should preserve deleted-row order");
+            AssertRealAssetPreviewBoundsGeometry(
+                secondDeleteResult.Document,
+                expectedPreviewBoundsLeft,
+                expectedPreviewBoundsTop,
+                expectedPreviewBoundsRight,
+                expectedPreviewBoundsBottom,
+                expectedPreviewBoundsWidth,
+                expectedPreviewBoundsHeight,
+                "initial deleted real asset reorder snapshot should preserve live preview metadata");
+            AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
+                secondDeleteResult.Document,
+                "initial deleted real asset reorder snapshot should preserve deleted preview metadata");
 
             var reorderResult = CopperfinStudioSnapshotClient.TryReorderObject(
                 assetPath,
@@ -23009,6 +23044,18 @@ internal static class Program
                 new[] { expectedReorderedRecordIndex, expectedCompanionRecordIndex },
                 new[] { reorderedSourceUniqueId, companionUniqueId },
                 "reordered deleted real asset snapshot should preserve deleted-row order");
+            AssertRealAssetPreviewBoundsGeometry(
+                reorderResult.Document,
+                expectedPreviewBoundsLeft,
+                expectedPreviewBoundsTop,
+                expectedPreviewBoundsRight,
+                expectedPreviewBoundsBottom,
+                expectedPreviewBoundsWidth,
+                expectedPreviewBoundsHeight,
+                "reordered deleted real asset snapshot should preserve live preview metadata");
+            AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
+                reorderResult.Document,
+                "reordered deleted real asset snapshot should preserve deleted preview metadata");
             Expect(!reorderResult.Document.CommandUndoAvailable,
                 $"real deleted reorder smoke should not expose command undo after reordering a deleted row for {sourcePath}");
 
@@ -23051,6 +23098,18 @@ internal static class Program
                 new[] { expectedReorderedRecordIndex, expectedCompanionRecordIndex },
                 new[] { reorderedSourceUniqueId, companionUniqueId },
                 "reloaded reordered deleted real asset snapshot should preserve deleted-row order");
+            AssertRealAssetPreviewBoundsGeometry(
+                reloadedAfterReorder.Document,
+                expectedPreviewBoundsLeft,
+                expectedPreviewBoundsTop,
+                expectedPreviewBoundsRight,
+                expectedPreviewBoundsBottom,
+                expectedPreviewBoundsWidth,
+                expectedPreviewBoundsHeight,
+                "reloaded reordered deleted real asset snapshot should preserve live preview metadata");
+            AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
+                reloadedAfterReorder.Document,
+                "reloaded reordered deleted real asset snapshot should preserve deleted preview metadata");
             Expect(!reloadedAfterReorder.Document.CommandUndoAvailable,
                 $"reloaded reordered deleted real asset snapshot should not expose command undo for {sourcePath}");
         }
