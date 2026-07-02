@@ -181,6 +181,98 @@ void test_materialize_excluded_xasset_startup_package() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_vfp_style_parent_relative_assets_resolve_and_stage_under_content_root() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_vfp_parent_relative";
+    const fs::path source_root = temp_root / "VFPSource";
+    const fs::path project_dir = source_root / "addlabel";
+    const fs::path shared_dir = source_root / "wzcommon";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+    fs::create_directories(shared_dir);
+
+    write_text(project_dir / "main.prg", "DO FORM registry\n");
+    write_text(shared_dir / "registry.vcx", "synthetic shared class library");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "addlabel.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "AddLabel";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "AddLabel";
+    workspace.build_plan.output_path = (output_dir / "AddLabel.exe").string();
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"},
+        {.record_index = 2U, .name = R"(..\wzcommon\registry.vcx)", .relative_path = R"(..\wzcommon\registry.vcx)", .type_title = "Class Library"}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false);
+
+    expect(plan.ok, "VFP-style parent-relative plan should be created");
+
+    const auto shared_asset = std::find_if(plan.assets.begin(), plan.assets.end(), [](const auto& asset) {
+        return asset.record_index == 2U;
+    });
+    expect(shared_asset != plan.assets.end(), "VFP-style parent-relative asset should be present in the plan");
+    if (shared_asset != plan.assets.end()) {
+        expect(shared_asset->source_path == (shared_dir / "registry.vcx").lexically_normal().string(),
+               "VFP-style parent-relative asset should resolve to its sibling source file");
+        expect(shared_asset->relative_path == "wzcommon/registry.vcx",
+               "VFP-style parent-relative asset should stage under a safe package-relative path");
+        expect(shared_asset->staged_path == (fs::path(plan.content_root) / "wzcommon" / "registry.vcx").lexically_normal().string(),
+               "VFP-style parent-relative asset should stage beneath the content root");
+    }
+
+    const bool has_missing_asset_warning = std::any_of(
+        plan.warnings.begin(),
+        plan.warnings.end(),
+        [](const std::string& warning) {
+            return warning.find(runtime_pipeline_english_catalog().translate(
+                "Runtime.Package.Warning.MissingProjectAsset")) != std::string::npos;
+        });
+    expect(!has_missing_asset_warning,
+           "resolved VFP-style parent-relative assets should not emit missing-asset warnings");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+
+    expect(result.ok, "VFP-style parent-relative package should materialize");
+    if (result.ok) {
+        const fs::path content_root(result.plan.content_root);
+        expect(fs::exists(content_root / "wzcommon" / "registry.vcx"),
+               "VFP-style parent-relative asset should be copied under content/");
+        expect(!fs::exists(fs::path(result.plan.package_root) / "wzcommon" / "registry.vcx"),
+               "VFP-style parent-relative asset should not escape the content root");
+
+        const std::string runtime_manifest = read_text(result.plan.manifest_path);
+        expect(runtime_manifest.find("asset=2|wzcommon/registry.vcx|") != std::string::npos,
+               "runtime manifest should record the sanitized package-relative path");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_startup_dbf_companion_assets_are_staged() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_dbf_companions";

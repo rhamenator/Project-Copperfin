@@ -4,6 +4,102 @@ namespace copperfin::runtime {
 
 namespace runtime_pipeline_detail {
 
+namespace {
+
+std::string normalize_vfp_separators(std::string value) {
+    std::replace(value.begin(), value.end(), '\\', '/');
+    return value;
+}
+
+bool is_windows_drive_absolute_path(const std::string& value) {
+    return value.size() >= 3U &&
+        std::isalpha(static_cast<unsigned char>(value[0])) != 0 &&
+        value[1] == ':' &&
+        (value[2] == '\\' || value[2] == '/');
+}
+
+bool is_unc_path(const std::string& value) {
+    return value.size() >= 2U &&
+        ((value[0] == '\\' && value[1] == '\\') || (value[0] == '/' && value[1] == '/'));
+}
+
+bool is_vfp_absolute_path(const std::string& value) {
+    return is_windows_drive_absolute_path(value) ||
+        is_unc_path(value) ||
+        std::filesystem::path(value).is_absolute();
+}
+
+std::filesystem::path resolve_vfp_path_from_base(
+    const std::filesystem::path& base_dir,
+    const std::string& value) {
+    if (trim_copy(value).empty()) {
+        return {};
+    }
+
+    const std::string normalized = normalize_vfp_separators(value);
+    const std::filesystem::path candidate(normalized);
+    if (!is_vfp_absolute_path(normalized) && candidate.is_relative()) {
+        return (base_dir / candidate).lexically_normal();
+    }
+
+    if (std::filesystem::exists(candidate)) {
+        return candidate.lexically_normal();
+    }
+
+    if (!candidate.filename().empty()) {
+        return (base_dir / candidate.filename()).lexically_normal();
+    }
+
+    return candidate.lexically_normal();
+}
+
+std::string sanitize_package_relative_path(const std::string& value) {
+    if (trim_copy(value).empty()) {
+        return {};
+    }
+
+    std::string normalized = normalize_vfp_separators(value);
+    if (is_vfp_absolute_path(normalized)) {
+        normalized = std::filesystem::path(normalized).filename().generic_string();
+    }
+
+    std::vector<std::string> segments;
+    for (const auto& part : std::filesystem::path(normalized)) {
+        const std::string segment = part.generic_string();
+        if (segment.empty() || segment == "." || segment == "/") {
+            continue;
+        }
+
+        if (segment == "..") {
+            if (!segments.empty()) {
+                segments.pop_back();
+            }
+            continue;
+        }
+
+        segments.push_back(segment);
+    }
+
+    if (segments.empty()) {
+        const std::string file_name = std::filesystem::path(normalized).filename().generic_string();
+        if (!file_name.empty() && file_name != "." && file_name != "..") {
+            return file_name;
+        }
+        return {};
+    }
+
+    std::ostringstream stream;
+    for (std::size_t index = 0; index < segments.size(); ++index) {
+        if (index != 0U) {
+            stream << '/';
+        }
+        stream << segments[index];
+    }
+    return stream.str();
+}
+
+}  // namespace
+
 BuildOutputKind parse_build_output_kind(const std::string& value) {
     const std::string normalized = lowercase_copy(trim_copy(value));
     if (normalized == "dll") {
@@ -231,8 +327,11 @@ std::string resolve_project_item_source(
     const std::filesystem::path base_dir = std::filesystem::path(document.path).parent_path();
 
     if (!entry.relative_path.empty()) {
-        const std::filesystem::path from_relative = base_dir / entry.relative_path;
+        const std::filesystem::path from_relative = resolve_vfp_path_from_base(base_dir, entry.relative_path);
         if (std::filesystem::exists(from_relative)) {
+            return from_relative.lexically_normal().string();
+        }
+        if (entry.name.empty()) {
             return from_relative.lexically_normal().string();
         }
     }
@@ -241,23 +340,16 @@ std::string resolve_project_item_source(
         return {};
     }
 
-    const std::filesystem::path raw(entry.name);
-    if (raw.is_absolute()) {
-        if (std::filesystem::exists(raw)) {
-            return raw.lexically_normal().string();
-        }
-
-        const std::filesystem::path from_filename = base_dir / raw.filename();
-        return from_filename.lexically_normal().string();
-    }
-
-    return (base_dir / raw).lexically_normal().string();
+    return resolve_vfp_path_from_base(base_dir, entry.name).string();
 }
 
 std::string relative_asset_path(const studio::StudioProjectEntry& entry) {
     const std::string path = !entry.relative_path.empty() ? entry.relative_path : entry.name;
     if (!path.empty()) {
-        return path;
+        const std::string sanitized = sanitize_package_relative_path(path);
+        if (!sanitized.empty()) {
+            return sanitized;
+        }
     }
     return "record_" + std::to_string(entry.record_index) + ".asset";
 }
