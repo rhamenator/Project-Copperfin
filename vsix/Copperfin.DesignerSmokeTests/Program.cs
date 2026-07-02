@@ -29430,6 +29430,21 @@ internal static class Program
         {
             Environment.SetEnvironmentVariable("COPPERFIN_DUPLICATE_OBJECT_UNIQUE_ID", expectedDuplicatedUniqueId);
 
+            var initialSnapshot = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(initialSnapshot.Success && initialSnapshot.Document is not null,
+                $"real asset editor deleted-duplicate smoke should load initial snapshot data for {sourcePath}");
+            if (!initialSnapshot.Success || initialSnapshot.Document is null || initialSnapshot.Document.ReportLayout is null)
+            {
+                return;
+            }
+
+            var expectedPreviewBoundsLeft = initialSnapshot.Document.ReportLayout.PreviewBoundsLeft;
+            var expectedPreviewBoundsTop = initialSnapshot.Document.ReportLayout.PreviewBoundsTop;
+            var expectedPreviewBoundsRight = initialSnapshot.Document.ReportLayout.PreviewBoundsRight;
+            var expectedPreviewBoundsBottom = initialSnapshot.Document.ReportLayout.PreviewBoundsBottom;
+            var expectedPreviewBoundsWidth = initialSnapshot.Document.ReportLayout.PreviewBoundsWidth;
+            var expectedPreviewBoundsHeight = initialSnapshot.Document.ReportLayout.PreviewBoundsHeight;
+
             using var hostForm = new Form
             {
                 Width = 1400,
@@ -29525,7 +29540,7 @@ internal static class Program
                     var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
                     var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
                     var objectState = TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString();
-                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                    return string.Equals(selectedSectionModel?.Title, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
                            selectedSectionModel?.RecordIndex == expectedSectionRecordIndex &&
                            selectedSectionModel?.DeletedObjectCount == 1 &&
                            selectedObject?.RecordIndex == recordIndex &&
@@ -29548,6 +29563,31 @@ internal static class Program
                 });
             Expect(deletedSelection,
                 $"real asset editor deleted-duplicate smoke should preserve deleted selection continuity before duplicating for {sourcePath}");
+            if (!deletedSelection)
+            {
+                return;
+            }
+
+            var snapshotAfterDelete = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(snapshotAfterDelete.Success && snapshotAfterDelete.Document is not null,
+                $"real asset editor deleted-duplicate smoke should load deleted on-disk state before duplicating for {sourcePath}");
+            if (snapshotAfterDelete.Success && snapshotAfterDelete.Document is not null)
+            {
+                AssertRealAssetDeletedObjectSnapshot(
+                    snapshotAfterDelete.Document,
+                    recordIndex,
+                    expectedOriginalUniqueId,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionRecordIndex,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectedVisibleSectionObjectCount: 1,
+                    "updated real asset editor deleted-duplicate snapshot before duplicating should preserve original identity");
+                AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
+                    snapshotAfterDelete.Document,
+                    "updated real asset editor deleted-duplicate snapshot before duplicating should preserve deleted preview metadata");
+            }
 
             duplicateButton.PerformClick();
             Application.DoEvents();
@@ -29570,7 +29610,7 @@ internal static class Program
                     var selectedUniqueId = selectedObject is null
                         ? null
                         : TryGetSnapshotObjectPropertyValue(selectedObject, "UNIQUEID");
-                    if (string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                    if (string.Equals(selectedSectionModel?.Title, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
                         selectedSectionModel?.RecordIndex == expectedSectionRecordIndex &&
                         selectedSectionModel?.DeletedObjectCount == 2 &&
                         selectedObject?.RecordIndex == refreshedSelection.RecordIndex &&
@@ -29606,6 +29646,40 @@ internal static class Program
                 return;
             }
 
+            var updatedAfterDuplicate = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(updatedAfterDuplicate.Success && updatedAfterDuplicate.Document is not null,
+                $"real asset editor deleted-duplicate smoke should load duplicated deleted on-disk state before reload verification for {sourcePath}");
+            if (updatedAfterDuplicate.Success && updatedAfterDuplicate.Document is not null)
+            {
+                AssertRealAssetDeletedObjectSnapshot(
+                    updatedAfterDuplicate.Document,
+                    recordIndex,
+                    expectedOriginalUniqueId,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionRecordIndex,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectedVisibleSectionObjectCount: 2,
+                    expectedDeletedSectionObjectCount: 2,
+                    "updated real asset editor deleted-duplicate snapshot should preserve original deleted identity");
+                AssertRealAssetDeletedObjectSnapshot(
+                    updatedAfterDuplicate.Document,
+                    duplicatedRecordIndex,
+                    expectedDuplicatedUniqueId,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionRecordIndex,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectedVisibleSectionObjectCount: 2,
+                    expectedDeletedSectionObjectCount: 2,
+                    "updated real asset editor deleted-duplicate snapshot should preserve duplicated deleted identity");
+                AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
+                    updatedAfterDuplicate.Document,
+                    "updated real asset editor deleted-duplicate snapshot should preserve deleted preview metadata");
+            }
+
             var reloadedAfterDuplicate = CopperfinStudioSnapshotClient.TryLoad(assetPath);
             Expect(reloadedAfterDuplicate.Success && reloadedAfterDuplicate.Document is not null,
                 $"real asset editor deleted-duplicate smoke should reload duplicated deleted on-disk state for {sourcePath}");
@@ -29635,6 +29709,9 @@ internal static class Program
                     expectedVisibleSectionObjectCount: 2,
                     expectedDeletedSectionObjectCount: 2,
                     "reloaded real asset editor deleted-duplicate snapshot should preserve duplicated deleted identity");
+                AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
+                    reloadedAfterDuplicate.Document,
+                    "reloaded real asset editor deleted-duplicate snapshot should preserve deleted preview metadata");
             }
 
             restoreButton.PerformClick();
@@ -29654,7 +29731,7 @@ internal static class Program
                     var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
                     var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
                     var objectState = TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString();
-                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                    return string.Equals(selectedSectionModel?.Title, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
                            selectedSectionModel?.RecordIndex == expectedSectionRecordIndex &&
                            selectedSectionModel?.DeletedObjectCount == 1 &&
                            selectedObject?.RecordIndex == duplicatedRecordIndex &&
@@ -29677,6 +29754,51 @@ internal static class Program
                 });
             Expect(restoredSelection,
                 $"real asset editor deleted-duplicate smoke should preserve live continuity after restoring the duplicated row for {sourcePath}");
+            if (!restoredSelection)
+            {
+                return;
+            }
+
+            var updatedAfterRestore = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(updatedAfterRestore.Success && updatedAfterRestore.Document is not null,
+                $"real asset editor deleted-duplicate smoke should load restored live state before reload verification for {sourcePath}");
+            if (updatedAfterRestore.Success && updatedAfterRestore.Document is not null)
+            {
+                AssertRealAssetDeletedObjectSnapshot(
+                    updatedAfterRestore.Document,
+                    recordIndex,
+                    expectedOriginalUniqueId,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionRecordIndex,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectedVisibleSectionObjectCount: 2,
+                    "updated restored real asset editor deleted-duplicate snapshot should preserve the original deleted source row");
+                AssertRealAssetRoundTripSnapshot(
+                    updatedAfterRestore.Document,
+                    duplicatedRecordIndex,
+                    "UNIQUEID",
+                    expectedDuplicatedUniqueId,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectUnplacedObject: false,
+                    "updated restored real asset editor deleted-duplicate snapshot should preserve duplicated live identity");
+                AssertRealAssetPreviewBoundsGeometry(
+                    updatedAfterRestore.Document,
+                    expectedPreviewBoundsLeft,
+                    expectedPreviewBoundsTop,
+                    expectedPreviewBoundsRight,
+                    expectedPreviewBoundsBottom,
+                    expectedPreviewBoundsWidth,
+                    expectedPreviewBoundsHeight,
+                    "updated restored real asset editor deleted-duplicate snapshot should preserve live preview metadata");
+                AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
+                    updatedAfterRestore.Document,
+                    "updated restored real asset editor deleted-duplicate snapshot should preserve remaining deleted preview metadata");
+            }
 
             var reloadedAfterRestore = CopperfinStudioSnapshotClient.TryLoad(assetPath);
             Expect(reloadedAfterRestore.Success && reloadedAfterRestore.Document is not null,
@@ -29705,6 +29827,18 @@ internal static class Program
                     expectLabel,
                     expectUnplacedObject: false,
                     "reloaded restored real asset editor deleted-duplicate snapshot should preserve duplicated live identity");
+                AssertRealAssetPreviewBoundsGeometry(
+                    reloadedAfterRestore.Document,
+                    expectedPreviewBoundsLeft,
+                    expectedPreviewBoundsTop,
+                    expectedPreviewBoundsRight,
+                    expectedPreviewBoundsBottom,
+                    expectedPreviewBoundsWidth,
+                    expectedPreviewBoundsHeight,
+                    "reloaded restored real asset editor deleted-duplicate snapshot should preserve live preview metadata");
+                AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
+                    reloadedAfterRestore.Document,
+                    "reloaded restored real asset editor deleted-duplicate snapshot should preserve remaining deleted preview metadata");
             }
 
             TearDownForm(hostForm);
