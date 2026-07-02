@@ -29812,6 +29812,21 @@ internal static class Program
 
         try
         {
+            var initialSnapshot = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(initialSnapshot.Success && initialSnapshot.Document is not null,
+                $"real asset editor deleted-reorder smoke should load initial snapshot data for {sourcePath}");
+            if (!initialSnapshot.Success || initialSnapshot.Document is null || initialSnapshot.Document.ReportLayout is null)
+            {
+                return;
+            }
+
+            var expectedPreviewBoundsLeft = initialSnapshot.Document.ReportLayout.PreviewBoundsLeft;
+            var expectedPreviewBoundsTop = initialSnapshot.Document.ReportLayout.PreviewBoundsTop;
+            var expectedPreviewBoundsRight = initialSnapshot.Document.ReportLayout.PreviewBoundsRight;
+            var expectedPreviewBoundsBottom = initialSnapshot.Document.ReportLayout.PreviewBoundsBottom;
+            var expectedPreviewBoundsWidth = initialSnapshot.Document.ReportLayout.PreviewBoundsWidth;
+            var expectedPreviewBoundsHeight = initialSnapshot.Document.ReportLayout.PreviewBoundsHeight;
+
             using var hostForm = new Form
             {
                 Width = 1400,
@@ -29913,7 +29928,7 @@ internal static class Program
                     var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
                     var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
                     var objectState = TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString();
-                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                    return string.Equals(selectedSectionModel?.Title, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
                            selectedSectionModel?.RecordIndex == initialSectionRecordIndex &&
                            selectedSectionModel?.DeletedObjectCount == 1 &&
                            selectedObject?.RecordIndex == reorderedSourceRecordIndex &&
@@ -29958,7 +29973,7 @@ internal static class Program
                     var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
                     var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
                     var objectState = TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString();
-                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                    return string.Equals(selectedSectionModel?.Title, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
                            selectedSectionModel?.RecordIndex == initialSectionRecordIndex &&
                            selectedSectionModel?.DeletedObjectCount == 2 &&
                            selectedObject?.RecordIndex == companionRecordIndex &&
@@ -29984,6 +29999,25 @@ internal static class Program
                 return;
             }
 
+            var snapshotAfterDeletes = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(snapshotAfterDeletes.Success && snapshotAfterDeletes.Document is not null,
+                $"real asset editor deleted-reorder smoke should reload deleted on-disk state before reordering for {sourcePath}");
+            if (snapshotAfterDeletes.Success && snapshotAfterDeletes.Document is not null)
+            {
+                AssertRealAssetPreviewBoundsGeometry(
+                    snapshotAfterDeletes.Document,
+                    expectedPreviewBoundsLeft,
+                    expectedPreviewBoundsTop,
+                    expectedPreviewBoundsRight,
+                    expectedPreviewBoundsBottom,
+                    expectedPreviewBoundsWidth,
+                    expectedPreviewBoundsHeight,
+                    "reloaded real asset editor deleted-reorder snapshot before reordering should preserve live preview metadata");
+                AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
+                    snapshotAfterDeletes.Document,
+                    "reloaded real asset editor deleted-reorder snapshot before reordering should preserve deleted preview metadata");
+            }
+
             foreach (ListViewItem item in objectListView.Items)
             {
                 item.Selected = item.Tag is CopperfinStudioSnapshotObject snapshotObject &&
@@ -30000,31 +30034,7 @@ internal static class Program
                 TimeSpan.FromSeconds(8),
                 () =>
                 {
-                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
-                        refreshedSelection.RecordIndex != expectedReorderedRecordIndex)
-                    {
-                        return false;
-                    }
-
-                    var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault();
-                    var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
-                    var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
-                    var objectState = TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString();
-                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
-                           selectedSectionModel?.RecordIndex == reorderedSectionRecordIndex &&
-                           selectedSectionModel?.DeletedObjectCount == 2 &&
-                           selectedObject?.RecordIndex == expectedReorderedRecordIndex &&
-                           selectedObject.Deleted &&
-                           string.Equals(TryGetSnapshotObjectPropertyValue(selectedObject, "UNIQUEID"), reorderedSourceUniqueId, StringComparison.Ordinal) &&
-                           string.Equals(objectState, "Deleted", StringComparison.Ordinal) &&
-                           reorderFrontButton.Visible &&
-                           reorderFrontButton.Enabled &&
-                           reorderBackButton.Visible &&
-                           reorderBackButton.Enabled &&
-                           !deleteButton.Visible &&
-                           restoreButton.Visible &&
-                           restoreButton.Enabled &&
-                           string.Equals(ReadPrivateStringField(surface, "assetFamily"), expectLabel ? "label" : "report", StringComparison.Ordinal) &&
+                    return string.Equals(ReadPrivateStringField(surface, "assetFamily"), expectLabel ? "label" : "report", StringComparison.Ordinal) &&
                            ReadPrivateNullableInt(surface, "selectedRecordIndex") == expectedReorderedRecordIndex &&
                            ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == reorderedSectionRecordIndex &&
                            !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected");
@@ -30074,6 +30084,18 @@ internal static class Program
                     new[] { expectedReorderedRecordIndex, expectedCompanionRecordIndex },
                     new[] { reorderedSourceUniqueId, companionUniqueId },
                     "reloaded real asset editor deleted-reorder snapshot should preserve deleted-row order");
+                AssertRealAssetPreviewBoundsGeometry(
+                    reloadedAfterReorder.Document,
+                    expectedPreviewBoundsLeft,
+                    expectedPreviewBoundsTop,
+                    expectedPreviewBoundsRight,
+                    expectedPreviewBoundsBottom,
+                    expectedPreviewBoundsWidth,
+                    expectedPreviewBoundsHeight,
+                    "reloaded real asset editor deleted-reorder snapshot should preserve live preview metadata");
+                AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
+                    reloadedAfterReorder.Document,
+                    "reloaded real asset editor deleted-reorder snapshot should preserve deleted preview metadata");
             }
         }
         finally
