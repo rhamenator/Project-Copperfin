@@ -31067,14 +31067,12 @@ internal static class Program
             ExpandUserPath("~/Downloads/VFPSource.zip"));
         if (!string.IsNullOrWhiteSpace(vfpSourceZipPath))
         {
-            var extractedVfpSourceRoot = Path.Combine(
-                Path.GetTempPath(),
-                "CopperfinDesignerSmokeRealAssets",
-                Path.GetFileNameWithoutExtension(vfpSourceZipPath));
-            if (Directory.Exists(extractedVfpSourceRoot) &&
-                yielded.Add(extractedVfpSourceRoot))
+            var extractedVfpSourceRoot = TryExtractArchiveRoot(vfpSourceZipPath!, "VFPSource");
+            if (!string.IsNullOrWhiteSpace(extractedVfpSourceRoot) &&
+                Directory.Exists(extractedVfpSourceRoot) &&
+                yielded.Add(extractedVfpSourceRoot!))
             {
-                yield return extractedVfpSourceRoot;
+                yield return extractedVfpSourceRoot!;
             }
         }
 
@@ -32070,9 +32068,7 @@ internal static class Program
         var archiveDirectory = normalizedRelativePath.Substring(0, directorySeparatorIndex + 1);
         var assetFileName = normalizedRelativePath.Substring(directorySeparatorIndex + 1);
         var extractionRoot = Path.Combine(
-            Path.GetTempPath(),
-            "CopperfinDesignerSmokeRealAssets",
-            Path.GetFileNameWithoutExtension(zipPath),
+            GetArchiveExtractionBaseRoot(zipPath),
             archiveDirectory.Replace('/', Path.DirectorySeparatorChar));
         var extractedAssetPath = Path.Combine(extractionRoot, assetFileName);
         var extractedAssetInfo = new FileInfo(extractedAssetPath);
@@ -32118,6 +32114,72 @@ internal static class Program
         }
 
         return File.Exists(extractedAssetPath) ? extractedAssetPath : null;
+    }
+
+    private static string? TryExtractArchiveRoot(string zipPath, string archiveRoot)
+    {
+        var normalizedArchiveRoot = archiveRoot.Replace('\\', '/').Trim('/');
+        if (string.IsNullOrWhiteSpace(normalizedArchiveRoot))
+        {
+            return null;
+        }
+
+        var archivePrefix = normalizedArchiveRoot + "/";
+        var extractionRoot = Path.Combine(
+            GetArchiveExtractionBaseRoot(zipPath),
+            normalizedArchiveRoot.Replace('/', Path.DirectorySeparatorChar));
+        var completionMarker = Path.Combine(extractionRoot, ".copperfin-extract-complete");
+        if (File.Exists(completionMarker))
+        {
+            return extractionRoot;
+        }
+
+        Directory.CreateDirectory(extractionRoot);
+
+        using var archive = ZipFile.OpenRead(zipPath);
+        var matchingEntries = archive.Entries
+            .Where(entry => entry.FullName.StartsWith(archivePrefix, StringComparison.OrdinalIgnoreCase) &&
+                            !string.IsNullOrEmpty(entry.Name))
+            .ToList();
+        if (matchingEntries.Count == 0)
+        {
+            return null;
+        }
+
+        foreach (var entry in matchingEntries)
+        {
+            var relativeEntryPath = entry.FullName.Substring(archivePrefix.Length).Replace('/', Path.DirectorySeparatorChar);
+            var destinationPath = Path.Combine(extractionRoot, relativeEntryPath);
+            var destinationDirectory = Path.GetDirectoryName(destinationPath);
+            if (!string.IsNullOrWhiteSpace(destinationDirectory))
+            {
+                Directory.CreateDirectory(destinationDirectory!);
+            }
+
+            if (File.Exists(destinationPath))
+            {
+                var existingAttributes = File.GetAttributes(destinationPath);
+                if ((existingAttributes & FileAttributes.ReadOnly) != 0)
+                {
+                    File.SetAttributes(destinationPath, existingAttributes & ~FileAttributes.ReadOnly);
+                }
+            }
+
+            entry.ExtractToFile(destinationPath, overwrite: true);
+            var extractedAttributes = File.GetAttributes(destinationPath);
+            File.SetAttributes(destinationPath, extractedAttributes | FileAttributes.ReadOnly);
+        }
+
+        File.WriteAllText(completionMarker, "complete");
+        return extractionRoot;
+    }
+
+    private static string GetArchiveExtractionBaseRoot(string zipPath)
+    {
+        return Path.Combine(
+            Path.GetTempPath(),
+            "CopperfinDesignerSmokeRealAssets",
+            Path.GetFileNameWithoutExtension(zipPath));
     }
 
     private static string? ExpandUserPath(string? path)
