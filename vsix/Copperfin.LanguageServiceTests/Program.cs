@@ -37,6 +37,7 @@ internal static class Program
         TestInstanceStyleProjectMethodFallbackAvoidsAmbiguousMatches();
         TestIncludedHeaderOutsideProjectRootFeedsDefineResolution();
         TestCrossFileProjectBoundaryResolvesProcedureDefinition();
+        TestLanguageServiceMetadataLocalizesThroughCatalogs();
 
         if (failures != 0)
         {
@@ -825,6 +826,60 @@ internal static class Program
         }
         finally
         {
+            TryDelete(root);
+        }
+    }
+
+    private static void TestLanguageServiceMetadataLocalizesThroughCatalogs()
+    {
+        var previousLocale = Environment.GetEnvironmentVariable("COPPERFIN_UI_LOCALE");
+        var root = CreateProjectRoot("localized_language_service_metadata");
+        try
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_UI_LOCALE", "es-419");
+            FoxProIntelliSenseCatalog.ClearCacheForTests();
+
+            var sourcePath = Path.Combine(root, "main.prg");
+            File.WriteAllText(
+                sourcePath,
+                "USE data/orderslive.dbf IN 0 SHARED" + Environment.NewLine +
+                "nResult = SQLEXEC(nConn, \"SELECT id, company FROM customer\", \"sqlorders\")" + Environment.NewLine);
+
+            var aliasDescription = FoxProIntelliSenseCatalog.DescribeToken(sourcePath, "orderslive");
+            Expect(
+                string.Equals(aliasDescription, "Alias de área de trabajo conocido detectado en el código fuente del proyecto.", StringComparison.Ordinal),
+                "language-service quick info should localize project alias descriptions through the shared catalogs");
+
+            var completions = FoxProIntelliSenseCatalog.BuildEntries(sourcePath, "SELECT ", "ord");
+            var ordersLive = completions.FirstOrDefault(entry => entry.DisplayText == "orderslive");
+            Expect(ordersLive is not null, "language-service completions should still include the inferred USE alias in localized mode");
+            if (ordersLive is not null)
+            {
+                Expect(
+                    string.Equals(ordersLive.Description, "Alias de área de trabajo conocido del código fuente del proyecto.", StringComparison.Ordinal),
+                    "language-service completion metadata should localize context-specific alias descriptions");
+                Expect(ordersLive.Kind == "alias", "language-service completion kinds must remain locale-invariant");
+            }
+
+            var signatures = FoxProIntelliSenseCatalog.GetSignatures(sourcePath, "MESSAGEBOX");
+            Expect(signatures.Count == 1, "built-in language-service signature help should remain available in localized mode");
+            if (signatures.Count == 1)
+            {
+                Expect(
+                    string.Equals(signatures[0].Documentation, "Muestra un cuadro de diálogo modal y devuelve el botón presionado.", StringComparison.Ordinal),
+                    "built-in language-service signature documentation should localize through the shared catalogs");
+                Expect(
+                    string.Equals(signatures[0].Parameters[0].Documentation, "Texto del mensaje que se mostrará.", StringComparison.Ordinal),
+                    "built-in language-service parameter documentation should localize through the shared catalogs");
+                Expect(
+                    string.Equals(signatures[0].Content, "MESSAGEBOX(cMessage [, nDialogBoxType [, cTitleBarText]])", StringComparison.Ordinal),
+                    "language-service signature content must remain locale-invariant");
+            }
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_UI_LOCALE", previousLocale);
+            FoxProIntelliSenseCatalog.ClearCacheForTests();
             TryDelete(root);
         }
     }

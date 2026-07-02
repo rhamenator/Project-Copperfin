@@ -65,132 +65,133 @@ internal static class FoxProIntelliSenseCatalog
     private static readonly Regex MemberAccessRegex = new(@"([A-Za-z_][A-Za-z0-9_]*)\.$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex AliasIdentifierRegex = new(@"^[A-Za-z_][A-Za-z0-9_\.]*$", RegexOptions.Compiled);
 
-    private static readonly (string Name, string Description)[] Keywords =
+    private static readonly (string Name, string DescriptionKey)[] Keywords =
     {
-        ("SELECT", "Command: selects a work area or evaluates a SELECT() call depending on context."),
-        ("USE", "Command: opens a table, free table, cursor, or closes one with USE IN."),
-        ("IN", "Keyword: targets a work area or alias in commands like USE IN and GO ... IN."),
-        ("ALIAS", "Keyword: assigns or references a work-area alias."),
-        ("DO", "Command: runs a procedure, program, or form."),
-        ("DO FORM", "Command: runs a form and enters its event lifecycle."),
-        ("REPORT FORM", "Command: runs a report, often with PREVIEW."),
-        ("LABEL FORM", "Command: runs a label layout."),
-        ("SET", "Command: updates runtime state such as SAFETY, DELETED, EXCLUSIVE, and TALK."),
-        ("SET DATASESSION TO", "Command: switches into a specific data session."),
-        ("READ EVENTS", "Command: enters the event loop."),
-        ("CLEAR EVENTS", "Command: exits the event loop."),
-        ("PUBLIC", "Command: declares global variables."),
-        ("LOCAL", "Command: declares local variables."),
-        ("RETURN", "Command: returns from a procedure or function."),
-        ("DEFINE CLASS", "Command: defines a class in source."),
-        ("ENDDEFINE", "Command: ends a class definition."),
-        ("IF", "Keyword: starts a conditional block."),
-        ("ELSE", "Keyword: alternate branch within IF."),
-        ("ENDIF", "Keyword: ends a conditional block."),
-        ("FOR", "Keyword: starts a numeric loop."),
-        ("ENDFOR", "Keyword: ends a numeric loop."),
-        ("ON ERROR", "Command: installs an error handler."),
-        ("CREATEOBJECT", "Function-style activation of a COM or Copperfin automation object."),
-        ("GETOBJECT", "Function-style bind to an existing COM or moniker-based automation object."),
-        ("SQLCONNECT", "Function: opens a SQL pass-through connection."),
-        ("SQLSTRINGCONNECT", "Function: opens SQL pass-through with a raw connection string."),
-        ("SQLEXEC", "Function: executes SQL pass-through and optionally materializes a cursor alias."),
-        ("SQLDISCONNECT", "Function: closes a SQL pass-through connection.")
+        ("SELECT", "LanguageService.IntelliSense.Keyword.Select"),
+        ("USE", "LanguageService.IntelliSense.Keyword.Use"),
+        ("IN", "LanguageService.IntelliSense.Keyword.In"),
+        ("ALIAS", "LanguageService.IntelliSense.Keyword.Alias"),
+        ("DO", "LanguageService.IntelliSense.Keyword.Do"),
+        ("DO FORM", "LanguageService.IntelliSense.Keyword.DoForm"),
+        ("REPORT FORM", "LanguageService.IntelliSense.Keyword.ReportForm"),
+        ("LABEL FORM", "LanguageService.IntelliSense.Keyword.LabelForm"),
+        ("SET", "LanguageService.IntelliSense.Keyword.Set"),
+        ("SET DATASESSION TO", "LanguageService.IntelliSense.Keyword.SetDataSessionTo"),
+        ("READ EVENTS", "LanguageService.IntelliSense.Keyword.ReadEvents"),
+        ("CLEAR EVENTS", "LanguageService.IntelliSense.Keyword.ClearEvents"),
+        ("PUBLIC", "LanguageService.IntelliSense.Keyword.Public"),
+        ("LOCAL", "LanguageService.IntelliSense.Keyword.Local"),
+        ("RETURN", "LanguageService.IntelliSense.Keyword.Return"),
+        ("DEFINE CLASS", "LanguageService.IntelliSense.Keyword.DefineClass"),
+        ("ENDDEFINE", "LanguageService.IntelliSense.Keyword.EndDefine"),
+        ("IF", "LanguageService.IntelliSense.Keyword.If"),
+        ("ELSE", "LanguageService.IntelliSense.Keyword.Else"),
+        ("ENDIF", "LanguageService.IntelliSense.Keyword.EndIf"),
+        ("FOR", "LanguageService.IntelliSense.Keyword.For"),
+        ("ENDFOR", "LanguageService.IntelliSense.Keyword.EndFor"),
+        ("ON ERROR", "LanguageService.IntelliSense.Keyword.OnError"),
+        ("CREATEOBJECT", "LanguageService.IntelliSense.Keyword.CreateObject"),
+        ("GETOBJECT", "LanguageService.IntelliSense.Keyword.GetObject"),
+        ("SQLCONNECT", "LanguageService.IntelliSense.Keyword.SqlConnect"),
+        ("SQLSTRINGCONNECT", "LanguageService.IntelliSense.Keyword.SqlStringConnect"),
+        ("SQLEXEC", "LanguageService.IntelliSense.Keyword.SqlExec"),
+        ("SQLDISCONNECT", "LanguageService.IntelliSense.Keyword.SqlDisconnect")
     };
 
-    private static readonly (string Name, string Description)[] Functions =
+    private static readonly (string Name, string DescriptionKey)[] Functions =
     {
-        ("ALIAS()", "Returns the current alias, or a named work area's alias when passed an argument."),
-        ("SELECT()", "Returns the current work area, or resolves/selects a requested work area."),
-        ("RECCOUNT()", "Returns the number of records in the current or named work area."),
-        ("RECNO()", "Returns the current record number in the current or named work area."),
-        ("EOF()", "Returns .T. when positioned after the last record."),
-        ("BOF()", "Returns .T. when positioned before the first record."),
-        ("ALLTRIM()", "Trims leading and trailing spaces."),
-        ("JUSTPATH()", "Returns the directory portion of a path."),
-        ("MESSAGE()", "Returns the current error message text."),
-        ("MESSAGEBOX()", "Displays a dialog and returns the button choice."),
-        ("SYS()", "Accesses VFP system services and metadata."),
-        ("STR()", "Converts a number to a string."),
-        ("DATE()", "Returns the current date."),
-        ("DAY()", "Returns the day part of a date."),
-        ("MONTH()", "Returns the month part of a date."),
-        ("YEAR()", "Returns the year part of a date."),
-        ("CMONTH()", "Returns the month name for a date."),
-        ("IIF()", "Evaluates one of two expressions based on a condition."),
-        ("FILE()", "Checks whether a file exists."),
-        ("CURSORGETPROP()", "Returns metadata for an open cursor or remote cursor adapter."),
-        ("CREATEOBJECT()", "Creates a COM or Copperfin automation object."),
-        ("GETOBJECT()", "Binds to a running automation object or moniker.")
+        ("ALIAS()", "LanguageService.IntelliSense.Function.Alias"),
+        ("SELECT()", "LanguageService.IntelliSense.Function.Select"),
+        ("RECCOUNT()", "LanguageService.IntelliSense.Function.RecCount"),
+        ("RECNO()", "LanguageService.IntelliSense.Function.RecNo"),
+        ("EOF()", "LanguageService.IntelliSense.Function.Eof"),
+        ("BOF()", "LanguageService.IntelliSense.Function.Bof"),
+        ("ALLTRIM()", "LanguageService.IntelliSense.Function.AllTrim"),
+        ("JUSTPATH()", "LanguageService.IntelliSense.Function.JustPath"),
+        ("MESSAGE()", "LanguageService.IntelliSense.Function.Message"),
+        ("MESSAGEBOX()", "LanguageService.IntelliSense.Function.MessageBox"),
+        ("SYS()", "LanguageService.IntelliSense.Function.Sys"),
+        ("STR()", "LanguageService.IntelliSense.Function.Str"),
+        ("DATE()", "LanguageService.IntelliSense.Function.Date"),
+        ("DAY()", "LanguageService.IntelliSense.Function.Day"),
+        ("MONTH()", "LanguageService.IntelliSense.Function.Month"),
+        ("YEAR()", "LanguageService.IntelliSense.Function.Year"),
+        ("CMONTH()", "LanguageService.IntelliSense.Function.CMonth"),
+        ("IIF()", "LanguageService.IntelliSense.Function.Iif"),
+        ("FILE()", "LanguageService.IntelliSense.Function.File"),
+        ("CURSORGETPROP()", "LanguageService.IntelliSense.Function.CursorGetProp"),
+        ("CREATEOBJECT()", "LanguageService.IntelliSense.Function.CreateObject"),
+        ("GETOBJECT()", "LanguageService.IntelliSense.Function.GetObject")
     };
 
-    private static readonly (string Name, string Description)[] SetKeywords =
+    private static readonly (string Name, string DescriptionKey)[] SetKeywords =
     {
-        ("DELETED", "SET option controlling deleted-record visibility."),
-        ("SAFETY", "SET option controlling overwrite prompts."),
-        ("EXCLUSIVE", "SET option controlling shared/exclusive opens."),
-        ("TALK", "SET option controlling command chatter."),
-        ("EXACT", "SET option controlling exact string matching."),
-        ("MULTILOCKS", "SET option controlling optimistic locking behavior."),
-        ("PATH", "SET option controlling search paths."),
-        ("DEFAULT TO", "SET subcommand for the default directory."),
-        ("DATASESSION TO", "SET subcommand for the current data session.")
+        ("DELETED", "LanguageService.IntelliSense.Set.Deleted"),
+        ("SAFETY", "LanguageService.IntelliSense.Set.Safety"),
+        ("EXCLUSIVE", "LanguageService.IntelliSense.Set.Exclusive"),
+        ("TALK", "LanguageService.IntelliSense.Set.Talk"),
+        ("EXACT", "LanguageService.IntelliSense.Set.Exact"),
+        ("MULTILOCKS", "LanguageService.IntelliSense.Set.MultiLocks"),
+        ("PATH", "LanguageService.IntelliSense.Set.Path"),
+        ("DEFAULT TO", "LanguageService.IntelliSense.Set.DefaultTo"),
+        ("DATASESSION TO", "LanguageService.IntelliSense.Set.DataSessionTo")
     };
 
-    private static readonly (string Name, string Description)[] GenericObjectMembers =
+    private static readonly (string Name, string DescriptionKey)[] GenericObjectMembers =
     {
-        ("Visible", "Common automation property controlling object visibility."),
-        ("Caption", "Common automation property for title text."),
-        ("Value", "Common automation property for current value."),
-        ("Count", "Common automation property for collection size."),
-        ("Item()", "Common automation method for retrieving a child item."),
-        ("Add()", "Common automation method for creating or appending a child object."),
-        ("Open()", "Common automation method for opening a child object or document."),
-        ("Close()", "Common automation method for closing an object or document."),
-        ("Execute()", "Common automation method for command-style invocation."),
-        ("Refresh()", "Common automation method for refreshing state."),
-        ("Quit()", "Common automation method for shutting down an automation server."),
-        ("Workbooks", "Common Excel automation collection."),
-        ("ActiveWorkbook", "Common Excel automation property."),
-        ("Documents", "Common Office automation collection.")
+        ("Visible", "LanguageService.IntelliSense.Member.Visible"),
+        ("Caption", "LanguageService.IntelliSense.Member.Caption"),
+        ("Value", "LanguageService.IntelliSense.Member.Value"),
+        ("Count", "LanguageService.IntelliSense.Member.Count"),
+        ("Item()", "LanguageService.IntelliSense.Member.Item"),
+        ("Add()", "LanguageService.IntelliSense.Member.Add"),
+        ("Open()", "LanguageService.IntelliSense.Member.Open"),
+        ("Close()", "LanguageService.IntelliSense.Member.Close"),
+        ("Execute()", "LanguageService.IntelliSense.Member.Execute"),
+        ("Refresh()", "LanguageService.IntelliSense.Member.Refresh"),
+        ("Quit()", "LanguageService.IntelliSense.Member.Quit"),
+        ("Workbooks", "LanguageService.IntelliSense.Member.Workbooks"),
+        ("ActiveWorkbook", "LanguageService.IntelliSense.Member.ActiveWorkbook"),
+        ("Documents", "LanguageService.IntelliSense.Member.Documents")
     };
 
-    private static readonly FoxProSignatureEntry[] SignatureEntries =
+    private static readonly SignatureTemplate[] SignatureTemplates =
     {
-        CreateSignature("ALIAS", "ALIAS([nWorkArea | cAlias])", "Returns the alias for the current or specified work area.", ("nWorkArea | cAlias", "Optional work area number or alias to resolve.")),
-        CreateSignature("SELECT", "SELECT([nWorkArea | cAlias])", "Returns or resolves a work area by number or alias.", ("nWorkArea | cAlias", "Optional work area number or alias.")),
-        CreateSignature("RECCOUNT", "RECCOUNT([cAlias])", "Returns the number of records in the current or named work area.", ("cAlias", "Optional alias to inspect.")),
-        CreateSignature("RECNO", "RECNO([cAlias])", "Returns the current record number in the current or named work area.", ("cAlias", "Optional alias to inspect.")),
-        CreateSignature("EOF", "EOF([cAlias])", "Returns .T. when positioned after the last record.", ("cAlias", "Optional alias to inspect.")),
-        CreateSignature("BOF", "BOF([cAlias])", "Returns .T. when positioned before the first record.", ("cAlias", "Optional alias to inspect.")),
-        CreateSignature("CREATEOBJECT", "CREATEOBJECT(cClass [, eInitParameter1 [, eInitParameterN]])", "Creates a COM or Copperfin automation object.", ("cClass", "ProgID or class name to instantiate."), ("eInitParameter1", "Optional constructor-style argument."), ("eInitParameterN", "Additional optional constructor-style arguments.")),
-        CreateSignature("GETOBJECT", "GETOBJECT([cFileName] [, cClass])", "Binds to an existing automation object or document moniker.", ("cFileName", "Optional document path or moniker."), ("cClass", "Optional class or ProgID filter.")),
-        CreateSignature("SQLCONNECT", "SQLCONNECT(cDataSourceName [, cUserId [, cPassword [, lShared]]])", "Opens an ODBC or connection-manager session for SQL pass-through.", ("cDataSourceName", "DSN or connection identifier."), ("cUserId", "Optional user name."), ("cPassword", "Optional password."), ("lShared", "Optional shared-connection flag.")),
-        CreateSignature("SQLSTRINGCONNECT", "SQLSTRINGCONNECT(cConnectString [, lShared])", "Opens SQL pass-through with a raw connection string.", ("cConnectString", "Raw ODBC-style connection string."), ("lShared", "Optional shared-connection flag.")),
-        CreateSignature("SQLEXEC", "SQLEXEC(nConnectionHandle, cCommand [, cCursorName])", "Executes SQL pass-through and optionally materializes a result cursor.", ("nConnectionHandle", "Connection handle returned by SQLCONNECT or SQLSTRINGCONNECT."), ("cCommand", "SQL text to execute."), ("cCursorName", "Optional target cursor alias.")),
-        CreateSignature("SQLDISCONNECT", "SQLDISCONNECT([nConnectionHandle])", "Closes one SQL pass-through connection or all of them.", ("nConnectionHandle", "Optional connection handle to close.")),
-        CreateSignature("CURSORGETPROP", "CURSORGETPROP(cProperty [, cCursorName])", "Returns metadata for a cursor or remote view.", ("cProperty", "Property name to query."), ("cCursorName", "Optional cursor alias.")),
-        CreateSignature("MESSAGEBOX", "MESSAGEBOX(cMessage [, nDialogBoxType [, cTitleBarText]])", "Displays a modal dialog and returns the pressed button.", ("cMessage", "Message text to display."), ("nDialogBoxType", "Optional button/icon/style flags."), ("cTitleBarText", "Optional dialog title.")),
-        CreateSignature("SYS", "SYS(nFunction [, eExpression1 [, eExpressionN]])", "Calls a Visual FoxPro system service by numeric identifier.", ("nFunction", "System function number."), ("eExpression1", "Optional first argument."), ("eExpressionN", "Additional optional arguments.")),
-        CreateSignature("IIF", "IIF(lExpression, eTrueValue, eFalseValue)", "Returns one of two expressions based on a condition.", ("lExpression", "Condition to evaluate."), ("eTrueValue", "Value when the condition is true."), ("eFalseValue", "Value when the condition is false."))
+        CreateSignatureTemplate("ALIAS", "ALIAS([nWorkArea | cAlias])", "LanguageService.IntelliSense.Signature.Alias.Documentation", ("nWorkArea | cAlias", "LanguageService.IntelliSense.Signature.Alias.Parameter.WorkAreaOrAlias")),
+        CreateSignatureTemplate("SELECT", "SELECT([nWorkArea | cAlias])", "LanguageService.IntelliSense.Signature.Select.Documentation", ("nWorkArea | cAlias", "LanguageService.IntelliSense.Signature.Select.Parameter.WorkAreaOrAlias")),
+        CreateSignatureTemplate("RECCOUNT", "RECCOUNT([cAlias])", "LanguageService.IntelliSense.Signature.RecCount.Documentation", ("cAlias", "LanguageService.IntelliSense.Signature.RecCount.Parameter.Alias")),
+        CreateSignatureTemplate("RECNO", "RECNO([cAlias])", "LanguageService.IntelliSense.Signature.RecNo.Documentation", ("cAlias", "LanguageService.IntelliSense.Signature.RecNo.Parameter.Alias")),
+        CreateSignatureTemplate("EOF", "EOF([cAlias])", "LanguageService.IntelliSense.Signature.Eof.Documentation", ("cAlias", "LanguageService.IntelliSense.Signature.Eof.Parameter.Alias")),
+        CreateSignatureTemplate("BOF", "BOF([cAlias])", "LanguageService.IntelliSense.Signature.Bof.Documentation", ("cAlias", "LanguageService.IntelliSense.Signature.Bof.Parameter.Alias")),
+        CreateSignatureTemplate("CREATEOBJECT", "CREATEOBJECT(cClass [, eInitParameter1 [, eInitParameterN]])", "LanguageService.IntelliSense.Signature.CreateObject.Documentation", ("cClass", "LanguageService.IntelliSense.Signature.CreateObject.Parameter.Class"), ("eInitParameter1", "LanguageService.IntelliSense.Signature.CreateObject.Parameter.Init1"), ("eInitParameterN", "LanguageService.IntelliSense.Signature.CreateObject.Parameter.InitN")),
+        CreateSignatureTemplate("GETOBJECT", "GETOBJECT([cFileName] [, cClass])", "LanguageService.IntelliSense.Signature.GetObject.Documentation", ("cFileName", "LanguageService.IntelliSense.Signature.GetObject.Parameter.FileName"), ("cClass", "LanguageService.IntelliSense.Signature.GetObject.Parameter.Class")),
+        CreateSignatureTemplate("SQLCONNECT", "SQLCONNECT(cDataSourceName [, cUserId [, cPassword [, lShared]]])", "LanguageService.IntelliSense.Signature.SqlConnect.Documentation", ("cDataSourceName", "LanguageService.IntelliSense.Signature.SqlConnect.Parameter.DataSourceName"), ("cUserId", "LanguageService.IntelliSense.Signature.SqlConnect.Parameter.UserId"), ("cPassword", "LanguageService.IntelliSense.Signature.SqlConnect.Parameter.Password"), ("lShared", "LanguageService.IntelliSense.Signature.SqlConnect.Parameter.Shared")),
+        CreateSignatureTemplate("SQLSTRINGCONNECT", "SQLSTRINGCONNECT(cConnectString [, lShared])", "LanguageService.IntelliSense.Signature.SqlStringConnect.Documentation", ("cConnectString", "LanguageService.IntelliSense.Signature.SqlStringConnect.Parameter.ConnectString"), ("lShared", "LanguageService.IntelliSense.Signature.SqlStringConnect.Parameter.Shared")),
+        CreateSignatureTemplate("SQLEXEC", "SQLEXEC(nConnectionHandle, cCommand [, cCursorName])", "LanguageService.IntelliSense.Signature.SqlExec.Documentation", ("nConnectionHandle", "LanguageService.IntelliSense.Signature.SqlExec.Parameter.ConnectionHandle"), ("cCommand", "LanguageService.IntelliSense.Signature.SqlExec.Parameter.Command"), ("cCursorName", "LanguageService.IntelliSense.Signature.SqlExec.Parameter.CursorName")),
+        CreateSignatureTemplate("SQLDISCONNECT", "SQLDISCONNECT([nConnectionHandle])", "LanguageService.IntelliSense.Signature.SqlDisconnect.Documentation", ("nConnectionHandle", "LanguageService.IntelliSense.Signature.SqlDisconnect.Parameter.ConnectionHandle")),
+        CreateSignatureTemplate("CURSORGETPROP", "CURSORGETPROP(cProperty [, cCursorName])", "LanguageService.IntelliSense.Signature.CursorGetProp.Documentation", ("cProperty", "LanguageService.IntelliSense.Signature.CursorGetProp.Parameter.Property"), ("cCursorName", "LanguageService.IntelliSense.Signature.CursorGetProp.Parameter.CursorName")),
+        CreateSignatureTemplate("MESSAGEBOX", "MESSAGEBOX(cMessage [, nDialogBoxType [, cTitleBarText]])", "LanguageService.IntelliSense.Signature.MessageBox.Documentation", ("cMessage", "LanguageService.IntelliSense.Signature.MessageBox.Parameter.Message"), ("nDialogBoxType", "LanguageService.IntelliSense.Signature.MessageBox.Parameter.DialogBoxType"), ("cTitleBarText", "LanguageService.IntelliSense.Signature.MessageBox.Parameter.TitleBarText")),
+        CreateSignatureTemplate("SYS", "SYS(nFunction [, eExpression1 [, eExpressionN]])", "LanguageService.IntelliSense.Signature.Sys.Documentation", ("nFunction", "LanguageService.IntelliSense.Signature.Sys.Parameter.Function"), ("eExpression1", "LanguageService.IntelliSense.Signature.Sys.Parameter.Expression1"), ("eExpressionN", "LanguageService.IntelliSense.Signature.Sys.Parameter.ExpressionN")),
+        CreateSignatureTemplate("IIF", "IIF(lExpression, eTrueValue, eFalseValue)", "LanguageService.IntelliSense.Signature.Iif.Documentation", ("lExpression", "LanguageService.IntelliSense.Signature.Iif.Parameter.Expression"), ("eTrueValue", "LanguageService.IntelliSense.Signature.Iif.Parameter.TrueValue"), ("eFalseValue", "LanguageService.IntelliSense.Signature.Iif.Parameter.FalseValue"))
     };
 
-    private static readonly Dictionary<string, IReadOnlyList<FoxProSignatureEntry>> SignatureLookup =
-        SignatureEntries.GroupBy(entry => NormalizeLookupToken(entry.Name), StringComparer.OrdinalIgnoreCase)
-            .ToDictionary(group => group.Key, group => (IReadOnlyList<FoxProSignatureEntry>)group.ToList(), StringComparer.OrdinalIgnoreCase);
+    private static readonly Dictionary<string, IReadOnlyList<SignatureTemplate>> SignatureTemplateLookup =
+        SignatureTemplates.GroupBy(entry => NormalizeLookupToken(entry.Name), StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(group => group.Key, group => (IReadOnlyList<SignatureTemplate>)group.ToList(), StringComparer.OrdinalIgnoreCase);
 
     private static readonly ConcurrentDictionary<string, ProjectSymbolIndex> Cache = new(StringComparer.OrdinalIgnoreCase);
 
     public static IReadOnlyList<FoxProCompletionEntry> BuildEntries(string? filePath, string linePrefix, string tokenPrefix)
     {
+        var localization = CopperfinLocalization.FromEnvironment();
         var prefix = tokenPrefix ?? string.Empty;
         var completions = new Dictionary<string, FoxProCompletionEntry>(StringComparer.OrdinalIgnoreCase);
-        AddEntries(completions, Keywords, "keyword", priority: 200);
-        AddEntries(completions, Functions, "function", priority: 180);
+        AddEntries(completions, Keywords, "keyword", priority: 200, localization);
+        AddEntries(completions, Functions, "function", priority: 180, localization);
 
         if (LooksLikeSetContext(linePrefix))
         {
-            AddEntries(completions, SetKeywords, "set", priority: 20);
+            AddEntries(completions, SetKeywords, "set", priority: 20, localization);
         }
 
         if (!string.IsNullOrWhiteSpace(filePath))
@@ -198,15 +199,15 @@ internal static class FoxProIntelliSenseCatalog
             var index = GetProjectIndex(filePath!);
             if (LooksLikeMemberAccess(linePrefix))
             {
-                AddProjectMemberEntries(completions, index);
+                AddProjectMemberEntries(completions, index, localization);
             }
-            AddContextualProjectEntries(completions, index, linePrefix);
-            AddSymbolEntries(completions, index);
+            AddContextualProjectEntries(completions, index, linePrefix, localization);
+            AddSymbolEntries(completions, index, localization);
         }
 
         if (LooksLikeMemberAccess(linePrefix))
         {
-            AddEntries(completions, GenericObjectMembers, "member", priority: 20);
+            AddEntries(completions, GenericObjectMembers, "member", priority: 20, localization);
         }
 
         return completions.Values
@@ -229,12 +230,13 @@ internal static class FoxProIntelliSenseCatalog
             return string.Empty;
         }
 
+        var localization = CopperfinLocalization.FromEnvironment();
         var key = NormalizeLookupToken(token);
         foreach (var item in Keywords)
         {
             if (TokenMatches(item.Name, key))
             {
-                return item.Description;
+                return localization.Text(item.DescriptionKey);
             }
         }
 
@@ -242,7 +244,7 @@ internal static class FoxProIntelliSenseCatalog
         {
             if (TokenMatches(item.Name, key))
             {
-                return item.Description;
+                return localization.Text(item.DescriptionKey);
             }
         }
 
@@ -250,7 +252,7 @@ internal static class FoxProIntelliSenseCatalog
         {
             if (TokenMatches(item.Name, key))
             {
-                return item.Description;
+                return localization.Text(item.DescriptionKey);
             }
         }
 
@@ -258,7 +260,7 @@ internal static class FoxProIntelliSenseCatalog
         {
             if (TokenMatches(item.Name, key))
             {
-                return item.Description;
+                return localization.Text(item.DescriptionKey);
             }
         }
 
@@ -272,47 +274,47 @@ internal static class FoxProIntelliSenseCatalog
 
             if (index.Procedures.Contains(key))
             {
-                return "Project procedure or function symbol.";
+                return localization.Text("LanguageService.IntelliSense.Project.ProcedureOrFunctionSymbol");
             }
 
             if (index.Classes.Contains(key))
             {
-                return "Project class symbol.";
+                return localization.Text("LanguageService.IntelliSense.Project.ClassSymbol");
             }
 
             if (index.Defines.Contains(key))
             {
-                return "Project preprocessor symbol.";
+                return localization.Text("LanguageService.IntelliSense.Project.PreprocessorSymbol");
             }
 
             if (index.Aliases.Contains(key))
             {
-                return "Known work-area alias discovered in project source.";
+                return localization.Text("LanguageService.IntelliSense.Project.WorkAreaAliasDiscovered");
             }
 
             if (index.Tables.Contains(key))
             {
-                return "Project table or database asset.";
+                return localization.Text("LanguageService.IntelliSense.Project.TableAsset");
             }
 
             if (index.Forms.Contains(key))
             {
-                return "Project form asset.";
+                return localization.Text("LanguageService.IntelliSense.Project.FormAsset");
             }
 
             if (index.Reports.Contains(key))
             {
-                return "Project report asset.";
+                return localization.Text("LanguageService.IntelliSense.Project.ReportAsset");
             }
 
             if (index.Labels.Contains(key))
             {
-                return "Project label asset.";
+                return localization.Text("LanguageService.IntelliSense.Project.LabelAsset");
             }
 
             if (index.Menus.Contains(key))
             {
-                return "Project menu asset.";
+                return localization.Text("LanguageService.IntelliSense.Project.MenuAsset");
             }
         }
 
@@ -321,18 +323,19 @@ internal static class FoxProIntelliSenseCatalog
 
     public static IReadOnlyList<FoxProSignatureEntry> GetSignatures(string? filePath, string invocationName)
     {
+        var localization = CopperfinLocalization.FromEnvironment();
         var key = NormalizeLookupToken(invocationName);
-        if (SignatureLookup.TryGetValue(key, out var signatures))
+        if (SignatureTemplateLookup.TryGetValue(key, out var signatureTemplates))
         {
-            return signatures;
+            return LocalizeSignatures(signatureTemplates, localization);
         }
 
         if (invocationName.IndexOf('.') >= 0)
         {
             var memberName = invocationName.Split('.').Last();
-            if (SignatureLookup.TryGetValue(NormalizeLookupToken(memberName), out signatures))
+            if (SignatureTemplateLookup.TryGetValue(NormalizeLookupToken(memberName), out signatureTemplates))
             {
-                return signatures;
+                return LocalizeSignatures(signatureTemplates, localization);
             }
         }
 
@@ -366,64 +369,70 @@ internal static class FoxProIntelliSenseCatalog
         return TryResolveDefinitionCandidate(index, NormalizeLookupToken(token), out definition);
     }
 
+    internal static void ClearCacheForTests()
+    {
+        Cache.Clear();
+    }
+
     private static void AddContextualProjectEntries(
         IDictionary<string, FoxProCompletionEntry> completions,
         ProjectSymbolIndex index,
-        string linePrefix)
+        string linePrefix,
+        CopperfinLocalization localization)
     {
         var upper = linePrefix.TrimStart().ToUpperInvariant();
         if (upper.StartsWith("DO FORM ", StringComparison.Ordinal))
         {
-            AddEntries(completions, index.Forms.Select(name => (name, "Project form asset.")), "asset", priority: 0);
+            AddEntries(completions, index.Forms.Select(name => (name, "LanguageService.IntelliSense.Project.FormAsset")), "asset", priority: 0, localization);
             return;
         }
 
         if (upper.StartsWith("REPORT FORM ", StringComparison.Ordinal))
         {
-            AddEntries(completions, index.Reports.Select(name => (name, "Project report asset.")), "asset", priority: 0);
+            AddEntries(completions, index.Reports.Select(name => (name, "LanguageService.IntelliSense.Project.ReportAsset")), "asset", priority: 0, localization);
             return;
         }
 
         if (upper.StartsWith("LABEL FORM ", StringComparison.Ordinal))
         {
-            AddEntries(completions, index.Labels.Select(name => (name, "Project label asset.")), "asset", priority: 0);
+            AddEntries(completions, index.Labels.Select(name => (name, "LanguageService.IntelliSense.Project.LabelAsset")), "asset", priority: 0, localization);
             return;
         }
 
         if (upper.StartsWith("USE ", StringComparison.Ordinal))
         {
-            AddEntries(completions, index.Tables.Select(name => (name, "Project table or database asset.")), "asset", priority: 0);
-            AddEntries(completions, index.Aliases.Select(name => (name, "Known alias from project source.")), "alias", priority: 0);
+            AddEntries(completions, index.Tables.Select(name => (name, "LanguageService.IntelliSense.Project.TableAsset")), "asset", priority: 0, localization);
+            AddEntries(completions, index.Aliases.Select(name => (name, "LanguageService.IntelliSense.Project.AliasFromProjectSource")), "alias", priority: 0, localization);
             return;
         }
 
         if (upper.StartsWith("SELECT ", StringComparison.Ordinal))
         {
-            AddEntries(completions, index.Aliases.Select(name => (name, "Known work-area alias from project source.")), "alias", priority: 0);
-            AddEntries(completions, index.Tables.Select(name => (name, "Project table or database asset.")), "asset", priority: 0);
+            AddEntries(completions, index.Aliases.Select(name => (name, "LanguageService.IntelliSense.Project.WorkAreaAliasFromProjectSource")), "alias", priority: 0, localization);
+            AddEntries(completions, index.Tables.Select(name => (name, "LanguageService.IntelliSense.Project.TableAsset")), "asset", priority: 0, localization);
             return;
         }
 
         if (upper.StartsWith("DO ", StringComparison.Ordinal) && !upper.StartsWith("DO FORM ", StringComparison.Ordinal))
         {
-            AddEntries(completions, index.Procedures.Select(name => (name, "Procedure/function/program symbol in the active project.")), "symbol", priority: 0);
-            AddEntries(completions, index.Menus.Select(name => (name, "Project menu asset.")), "asset", priority: 0);
+            AddEntries(completions, index.Procedures.Select(name => (name, "LanguageService.IntelliSense.Project.ProcedureFunctionProgramSymbol")), "symbol", priority: 0, localization);
+            AddEntries(completions, index.Menus.Select(name => (name, "LanguageService.IntelliSense.Project.MenuAsset")), "asset", priority: 0, localization);
         }
     }
 
-    private static void AddSymbolEntries(IDictionary<string, FoxProCompletionEntry> completions, ProjectSymbolIndex index)
+    private static void AddSymbolEntries(IDictionary<string, FoxProCompletionEntry> completions, ProjectSymbolIndex index, CopperfinLocalization localization)
     {
-        AddEntries(completions, index.Procedures.Select(name => (name, "Procedure/function symbol in the active project.")), "symbol", priority: 100);
-        AddEntries(completions, index.Classes.Select(name => (name, "Class symbol in the active project.")), "class", priority: 100);
-        AddEntries(completions, index.Defines.Select(name => (name, "Preprocessor symbol in the active project.")), "define", priority: 100);
-        AddEntries(completions, index.Aliases.Select(name => (name, "Known alias from USE ... ALIAS statements.")), "alias", priority: 100);
+        AddEntries(completions, index.Procedures.Select(name => (name, "LanguageService.IntelliSense.Project.ProcedureFunctionSymbol")), "symbol", priority: 100, localization);
+        AddEntries(completions, index.Classes.Select(name => (name, "LanguageService.IntelliSense.Project.ClassSymbolInActiveProject")), "class", priority: 100, localization);
+        AddEntries(completions, index.Defines.Select(name => (name, "LanguageService.IntelliSense.Project.PreprocessorSymbolInActiveProject")), "define", priority: 100, localization);
+        AddEntries(completions, index.Aliases.Select(name => (name, "LanguageService.IntelliSense.Project.AliasFromUseAlias")), "alias", priority: 100, localization);
     }
 
-    private static void AddProjectMemberEntries(IDictionary<string, FoxProCompletionEntry> completions, ProjectSymbolIndex index)
+    private static void AddProjectMemberEntries(IDictionary<string, FoxProCompletionEntry> completions, ProjectSymbolIndex index, CopperfinLocalization localization)
     {
         AddEntries(
             completions,
-            index.Methods.Select(method => (ExtractMethodName(method), $"Project method member from {ExtractContainingType(method)}.")),
+            index.Methods.Select(method => (ExtractMethodName(method), localization.Format("LanguageService.IntelliSense.Project.MethodMemberFromType", ExtractContainingType(method)))),
             "member",
             priority: 0);
     }
@@ -447,7 +456,9 @@ internal static class FoxProIntelliSenseCatalog
     private static string ExtractContainingType(string qualifiedMethodName)
     {
         var separator = qualifiedMethodName.LastIndexOf('.');
-        return separator >= 0 ? qualifiedMethodName.Substring(0, separator) : "the active project";
+        return separator >= 0
+            ? qualifiedMethodName.Substring(0, separator)
+            : CopperfinLocalization.FromEnvironment().Text("LanguageService.IntelliSense.Project.ActiveProject");
     }
 
     private static void AddEntries(
@@ -481,16 +492,28 @@ internal static class FoxProIntelliSenseCatalog
         }
     }
 
+    private static void AddEntries(
+        IDictionary<string, FoxProCompletionEntry> completions,
+        IEnumerable<(string Name, string DescriptionKey)> source,
+        string kind,
+        int priority,
+        CopperfinLocalization localization)
+    {
+        AddEntries(completions, source.Select(item => (item.Name, localization.Text(item.DescriptionKey))), kind, priority);
+    }
+
     private static ProjectSymbolIndex GetProjectIndex(string filePath)
     {
         var root = ResolveProjectRoot(filePath);
+        var localization = CopperfinLocalization.FromEnvironment();
+        var cacheKey = root + "|" + localization.Locale;
         return Cache.AddOrUpdate(
-            root,
-            _ => BuildProjectIndex(root),
-            (_, existing) => existing.ShouldRefresh ? BuildProjectIndex(root) : existing);
+            cacheKey,
+            _ => BuildProjectIndex(root, localization),
+            (_, existing) => existing.ShouldRefresh ? BuildProjectIndex(root, localization) : existing);
     }
 
-    private static ProjectSymbolIndex BuildProjectIndex(string root)
+    private static ProjectSymbolIndex BuildProjectIndex(string root, CopperfinLocalization localization)
     {
         var index = new ProjectSymbolIndex
         {
@@ -504,27 +527,27 @@ internal static class FoxProIntelliSenseCatalog
             var extension = Path.GetExtension(file);
             if (FormExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
             {
-                AddAsset(index.Forms, index, Path.GetFileNameWithoutExtension(file), "form asset", file, "Project form asset.");
+                AddAsset(index.Forms, index, Path.GetFileNameWithoutExtension(file), "form asset", file, localization.Text("LanguageService.IntelliSense.Project.FormAsset"));
                 continue;
             }
             if (ReportExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
             {
-                AddAsset(index.Reports, index, Path.GetFileNameWithoutExtension(file), "report asset", file, "Project report asset.");
+                AddAsset(index.Reports, index, Path.GetFileNameWithoutExtension(file), "report asset", file, localization.Text("LanguageService.IntelliSense.Project.ReportAsset"));
                 continue;
             }
             if (LabelExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
             {
-                AddAsset(index.Labels, index, Path.GetFileNameWithoutExtension(file), "label asset", file, "Project label asset.");
+                AddAsset(index.Labels, index, Path.GetFileNameWithoutExtension(file), "label asset", file, localization.Text("LanguageService.IntelliSense.Project.LabelAsset"));
                 continue;
             }
             if (MenuExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
             {
-                AddAsset(index.Menus, index, Path.GetFileNameWithoutExtension(file), "menu asset", file, "Project menu asset.");
+                AddAsset(index.Menus, index, Path.GetFileNameWithoutExtension(file), "menu asset", file, localization.Text("LanguageService.IntelliSense.Project.MenuAsset"));
                 continue;
             }
             if (TableExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
             {
-                AddAsset(index.Tables, index, Path.GetFileNameWithoutExtension(file), "table asset", file, "Project table or database asset.");
+                AddAsset(index.Tables, index, Path.GetFileNameWithoutExtension(file), "table asset", file, localization.Text("LanguageService.IntelliSense.Project.TableAsset"));
                 continue;
             }
             if (!TextExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
@@ -532,13 +555,13 @@ internal static class FoxProIntelliSenseCatalog
                 continue;
             }
 
-            ScanTextFile(file, root, index, scannedFiles);
+            ScanTextFile(file, root, index, scannedFiles, localization);
         }
 
         return index;
     }
 
-    private static void ScanTextFile(string path, string root, ProjectSymbolIndex index, ISet<string> scannedFiles)
+    private static void ScanTextFile(string path, string root, ProjectSymbolIndex index, ISet<string> scannedFiles, CopperfinLocalization localization)
     {
         string normalizedPath;
         try
@@ -575,7 +598,7 @@ internal static class FoxProIntelliSenseCatalog
             {
                 currentClassName = classMatch.Groups[1].Value;
                 index.Classes.Add(currentClassName);
-                TryAddDefinition(index.Definitions, currentClassName, "class", normalizedPath, lineIndex + 1, classMatch.Groups[1].Index + 1, $"Project class symbol deriving from {classMatch.Groups[2].Value}.");
+                TryAddDefinition(index.Definitions, currentClassName, "class", normalizedPath, lineIndex + 1, classMatch.Groups[1].Index + 1, localization.Format("LanguageService.IntelliSense.Project.ClassSymbolDerivingFrom", classMatch.Groups[2].Value));
                 continue;
             }
 
@@ -592,8 +615,8 @@ internal static class FoxProIntelliSenseCatalog
                 {
                     var methodName = $"{currentClassName}.{methodProcedureMatch.Groups[1].Value}";
                     index.Methods.Add(methodName);
-                    TryAddDefinition(index.Definitions, methodName, "method", normalizedPath, lineIndex + 1, methodProcedureMatch.Groups[1].Index + 1, $"Project method symbol on class {currentClassName}.");
-                    TryAddProjectSignature(index.Signatures, methodName, lines, lineIndex, "Project method signature discovered in source.");
+                    TryAddDefinition(index.Definitions, methodName, "method", normalizedPath, lineIndex + 1, methodProcedureMatch.Groups[1].Index + 1, localization.Format("LanguageService.IntelliSense.Project.MethodSymbolOnClass", currentClassName));
+                    TryAddProjectSignature(index.Signatures, methodName, lines, lineIndex, localization.Text("LanguageService.IntelliSense.Project.MethodSignatureDiscovered"));
                     continue;
                 }
 
@@ -602,8 +625,8 @@ internal static class FoxProIntelliSenseCatalog
                 {
                     var methodName = $"{currentClassName}.{methodFunctionMatch.Groups[1].Value}";
                     index.Methods.Add(methodName);
-                    TryAddDefinition(index.Definitions, methodName, "method", normalizedPath, lineIndex + 1, methodFunctionMatch.Groups[1].Index + 1, $"Project method symbol on class {currentClassName}.");
-                    TryAddProjectSignature(index.Signatures, methodName, lines, lineIndex, "Project method signature discovered in source.");
+                    TryAddDefinition(index.Definitions, methodName, "method", normalizedPath, lineIndex + 1, methodFunctionMatch.Groups[1].Index + 1, localization.Format("LanguageService.IntelliSense.Project.MethodSymbolOnClass", currentClassName));
+                    TryAddProjectSignature(index.Signatures, methodName, lines, lineIndex, localization.Text("LanguageService.IntelliSense.Project.MethodSignatureDiscovered"));
                     continue;
                 }
             }
@@ -613,8 +636,8 @@ internal static class FoxProIntelliSenseCatalog
             {
                 var name = procedureMatch.Groups[1].Value;
                 index.Procedures.Add(name);
-                TryAddDefinition(index.Definitions, name, "procedure", normalizedPath, lineIndex + 1, procedureMatch.Groups[1].Index + 1, "Project procedure symbol.");
-                TryAddProjectSignature(index.Signatures, name, lines, lineIndex, "Project procedure signature discovered in source.");
+                TryAddDefinition(index.Definitions, name, "procedure", normalizedPath, lineIndex + 1, procedureMatch.Groups[1].Index + 1, localization.Text("LanguageService.IntelliSense.Project.ProcedureSymbol"));
+                TryAddProjectSignature(index.Signatures, name, lines, lineIndex, localization.Text("LanguageService.IntelliSense.Project.ProcedureSignatureDiscovered"));
             }
 
             var functionMatch = FunctionRegex.Match(line);
@@ -622,16 +645,16 @@ internal static class FoxProIntelliSenseCatalog
             {
                 var name = functionMatch.Groups[1].Value;
                 index.Procedures.Add(name);
-                TryAddDefinition(index.Definitions, name, "function", normalizedPath, lineIndex + 1, functionMatch.Groups[1].Index + 1, "Project function symbol.");
-                TryAddProjectSignature(index.Signatures, name, lines, lineIndex, "Project function signature discovered in source.");
+                TryAddDefinition(index.Definitions, name, "function", normalizedPath, lineIndex + 1, functionMatch.Groups[1].Index + 1, localization.Text("LanguageService.IntelliSense.Project.FunctionSymbol"));
+                TryAddProjectSignature(index.Signatures, name, lines, lineIndex, localization.Text("LanguageService.IntelliSense.Project.FunctionSignatureDiscovered"));
             }
 
-            AddMatch(index.Defines, index.Definitions, DefineRegex, line, normalizedPath, lineIndex + 1, "define", "Project preprocessor symbol.");
-            AddMatch(index.Aliases, index.Definitions, UseAliasRegex, line, normalizedPath, lineIndex + 1, "alias", "Known work-area alias discovered in project source.");
-            TryAddImplicitUseAlias(index, line, normalizedPath, lineIndex + 1);
-            AddMatch(index.Aliases, index.Definitions, CreateCursorRegex, line, normalizedPath, lineIndex + 1, "alias", "Known cursor alias discovered in project source.");
-            AddMatch(index.Aliases, index.Definitions, IntoCursorRegex, line, normalizedPath, lineIndex + 1, "alias", "Known cursor alias discovered in project source.");
-            TryAddSqlExecCursorAlias(index, line, normalizedPath, lineIndex + 1);
+            AddMatch(index.Defines, index.Definitions, DefineRegex, line, normalizedPath, lineIndex + 1, "define", localization.Text("LanguageService.IntelliSense.Project.PreprocessorSymbol"));
+            AddMatch(index.Aliases, index.Definitions, UseAliasRegex, line, normalizedPath, lineIndex + 1, "alias", localization.Text("LanguageService.IntelliSense.Project.WorkAreaAliasDiscovered"));
+            TryAddImplicitUseAlias(index, line, normalizedPath, lineIndex + 1, localization);
+            AddMatch(index.Aliases, index.Definitions, CreateCursorRegex, line, normalizedPath, lineIndex + 1, "alias", localization.Text("LanguageService.IntelliSense.Project.CursorAliasDiscovered"));
+            AddMatch(index.Aliases, index.Definitions, IntoCursorRegex, line, normalizedPath, lineIndex + 1, "alias", localization.Text("LanguageService.IntelliSense.Project.CursorAliasDiscovered"));
+            TryAddSqlExecCursorAlias(index, line, normalizedPath, lineIndex + 1, localization);
 
             var includeMatch = IncludeRegex.Match(line);
             if (includeMatch.Success)
@@ -640,13 +663,13 @@ internal static class FoxProIntelliSenseCatalog
                 if (!string.IsNullOrWhiteSpace(includePath) &&
                     TextExtensions.Contains(Path.GetExtension(includePath), StringComparer.OrdinalIgnoreCase))
                 {
-                    ScanTextFile(includePath, root, index, scannedFiles);
+                    ScanTextFile(includePath, root, index, scannedFiles, localization);
                 }
             }
         }
     }
 
-    private static void TryAddImplicitUseAlias(ProjectSymbolIndex index, string line, string path, int lineNumber)
+    private static void TryAddImplicitUseAlias(ProjectSymbolIndex index, string line, string path, int lineNumber, CopperfinLocalization localization)
     {
         if (UseAliasRegex.IsMatch(line))
         {
@@ -672,10 +695,10 @@ internal static class FoxProIntelliSenseCatalog
             path,
             lineNumber,
             match.Groups[1].Index + 1,
-            "Known work-area alias discovered in project source.");
+            localization.Text("LanguageService.IntelliSense.Project.WorkAreaAliasDiscovered"));
     }
 
-    private static void TryAddSqlExecCursorAlias(ProjectSymbolIndex index, string line, string path, int lineNumber)
+    private static void TryAddSqlExecCursorAlias(ProjectSymbolIndex index, string line, string path, int lineNumber, CopperfinLocalization localization)
     {
         var match = SqlExecInvocationRegex.Match(line);
         if (!match.Success)
@@ -702,7 +725,7 @@ internal static class FoxProIntelliSenseCatalog
             path,
             lineNumber,
             arguments[2].ColumnNumber,
-            "Known cursor alias discovered in project source.");
+            localization.Text("LanguageService.IntelliSense.Project.CursorAliasDiscovered"));
     }
 
     private static bool TryInferAliasFromUseOperand(string operand, out string alias)
@@ -1178,6 +1201,25 @@ internal static class FoxProIntelliSenseCatalog
         };
     }
 
+    private static IReadOnlyList<FoxProSignatureEntry> LocalizeSignatures(
+        IReadOnlyList<SignatureTemplate> templates,
+        CopperfinLocalization localization)
+    {
+        return templates
+            .Select(template => new FoxProSignatureEntry
+            {
+                Name = template.Name,
+                Content = template.Content,
+                Documentation = localization.Text(template.DocumentationKey),
+                Parameters = template.Parameters.Select(parameter => new FoxProParameterEntry
+                {
+                    Name = parameter.Name,
+                    Documentation = localization.Text(parameter.DocumentationKey)
+                }).ToList()
+            })
+            .ToList();
+    }
+
     private static string TryReadProjectParameterList(IReadOnlyList<string> lines, int definitionLineIndex)
     {
         for (var lineIndex = definitionLineIndex + 1; lineIndex < lines.Count; lineIndex++)
@@ -1227,18 +1269,18 @@ internal static class FoxProIntelliSenseCatalog
         return candidate.Trim();
     }
 
-    private static FoxProSignatureEntry CreateSignature(string name, string content, string documentation, params (string Name, string Documentation)[] parameters)
+    private static SignatureTemplate CreateSignatureTemplate(
+        string name,
+        string content,
+        string documentationKey,
+        params (string Name, string DocumentationKey)[] parameters)
     {
-        return new FoxProSignatureEntry
+        return new SignatureTemplate
         {
             Name = name,
             Content = content,
-            Documentation = documentation,
-            Parameters = parameters.Select(parameter => new FoxProParameterEntry
-            {
-                Name = parameter.Name,
-                Documentation = parameter.Documentation
-            }).ToList()
+            DocumentationKey = documentationKey,
+            Parameters = parameters.Select(parameter => new SignatureParameterTemplate(parameter.Name, parameter.DocumentationKey)).ToList()
         };
     }
 
@@ -1260,6 +1302,27 @@ internal static class FoxProIntelliSenseCatalog
         public Dictionary<string, IReadOnlyList<FoxProSignatureEntry>> Signatures { get; } = new(StringComparer.OrdinalIgnoreCase);
 
         public bool ShouldRefresh => (DateTime.UtcNow - BuiltAtUtc) > TimeSpan.FromSeconds(15);
+    }
+
+    private sealed class SignatureTemplate
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Content { get; set; } = string.Empty;
+        public string DocumentationKey { get; set; } = string.Empty;
+        public IReadOnlyList<SignatureParameterTemplate> Parameters { get; set; } = Array.Empty<SignatureParameterTemplate>();
+    }
+
+    private readonly struct SignatureParameterTemplate
+    {
+        public SignatureParameterTemplate(string name, string documentationKey)
+        {
+            Name = name;
+            DocumentationKey = documentationKey;
+        }
+
+        public string Name { get; }
+
+        public string DocumentationKey { get; }
     }
 
     private readonly struct InvocationArgument
