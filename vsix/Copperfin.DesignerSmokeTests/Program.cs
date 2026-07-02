@@ -30368,6 +30368,7 @@ internal static class Program
         {
             Dock = DockStyle.Fill
         };
+        control.SuppressProjectWorkflowDialogs = true;
 
         hostForm.Controls.Add(control);
         hostForm.Show();
@@ -30377,7 +30378,15 @@ internal static class Program
         var loaded = WaitUntil(
             TimeSpan.FromSeconds(8),
             () => FindListViews(control).Any(list => list.Items.Count > 0) &&
-                  FindRichTextBoxes(control).Any(box => !string.IsNullOrWhiteSpace(box.Text)));
+                  FindRichTextBoxes(control).Any(box => box.Text.IndexOf("Copperfin Project Workspace", StringComparison.OrdinalIgnoreCase) >= 0) &&
+                  FindRichTextBoxes(control).Any(box => box.Text.IndexOf("Copperfin Task List", StringComparison.OrdinalIgnoreCase) >= 0) &&
+                  FindRichTextBoxes(control).Any(box => box.Text.IndexOf("Copperfin Code References", StringComparison.OrdinalIgnoreCase) >= 0) &&
+                  FindRichTextBoxes(control).Any(box => box.Text.IndexOf("Copperfin Data Explorer", StringComparison.OrdinalIgnoreCase) >= 0) &&
+                  FindRichTextBoxes(control).Any(box => box.Text.IndexOf("Copperfin Object Browser", StringComparison.OrdinalIgnoreCase) >= 0) &&
+                  FindRichTextBoxes(control).Any(box => box.Text.IndexOf("Copperfin Toolbox And Add-ins", StringComparison.OrdinalIgnoreCase) >= 0) &&
+                  FindRichTextBoxes(control).Any(box => box.Text.IndexOf("Copperfin Builders", StringComparison.OrdinalIgnoreCase) >= 0) &&
+                  FindRichTextBoxes(control).Any(box => box.Text.IndexOf("Copperfin Coverage", StringComparison.OrdinalIgnoreCase) >= 0) &&
+                  FindRichTextBoxes(control).Any(box => box.Text.IndexOf("Copperfin Database Federation", StringComparison.OrdinalIgnoreCase) >= 0));
         Expect(loaded, $"project editor should load grouped workspace data for {path}");
 
         var groupFound = FindListViews(control)
@@ -30389,6 +30398,49 @@ internal static class Program
         Expect(projectButtons.Contains("Build Copperfin Project"), $"project editor should expose a build command for {path}");
         Expect(projectButtons.Contains("Run Copperfin Project"), $"project editor should expose a run command for {path}");
         Expect(projectButtons.Contains("Debug Copperfin Project"), $"project editor should expose a debug command for {path}");
+        var buildButton = FindButtons(control).FirstOrDefault(button => button.Text == "Build Copperfin Project");
+        Expect(buildButton is not null, $"project editor should surface a buildable project command for {path}");
+        if (buildButton is not null)
+        {
+            buildButton.PerformClick();
+            var buildLoaded = WaitUntil(
+                TimeSpan.FromSeconds(30),
+                () =>
+                {
+                    var workflowResult = GetPrivateField<CopperfinProjectExecutionResult>(control, "currentProjectWorkflowResult");
+                    var statusLabel = GetPrivateField<Label>(control, "snapshotStatusLabel");
+                    return workflowResult is not null &&
+                           workflowResult.Success &&
+                           statusLabel is not null &&
+                           string.Equals(statusLabel.Text, workflowResult.Message, StringComparison.Ordinal);
+                });
+            Expect(buildLoaded, $"project editor build command should preserve a completed workflow result for {path}");
+            var workflowResult = GetPrivateField<CopperfinProjectExecutionResult>(control, "currentProjectWorkflowResult");
+            Expect(workflowResult is not null, $"project editor should retain the latest build workflow result for {path}");
+            if (workflowResult is not null)
+            {
+                Expect(!string.IsNullOrWhiteSpace(workflowResult.OutputDirectory) && Directory.Exists(workflowResult.OutputDirectory),
+                    $"project editor build command should preserve an output directory for {path}");
+                Expect(!string.IsNullOrWhiteSpace(workflowResult.ManifestPath) && File.Exists(workflowResult.ManifestPath),
+                    $"project editor build command should preserve a runtime manifest for {path}");
+                Expect(!string.IsNullOrWhiteSpace(workflowResult.LauncherPath) && File.Exists(workflowResult.LauncherPath),
+                    $"project editor build command should preserve a launcher path for {path}");
+                Expect(!string.IsNullOrWhiteSpace(workflowResult.DebugManifestPath) && File.Exists(workflowResult.DebugManifestPath),
+                    $"project editor build command should preserve a debug manifest for {path}");
+                Expect(workflowResult.WarningCount == 0,
+                    $"project editor build command should inherit a warning-free build for {path}");
+                Expect(workflowResult.Warnings.Count == 0,
+                    $"project editor build command should not inherit build warning lines for {path}");
+                if (!string.IsNullOrWhiteSpace(workflowResult.ManifestPath) && File.Exists(workflowResult.ManifestPath))
+                {
+                    var manifestText = File.ReadAllText(workflowResult.ManifestPath);
+                    Expect(manifestText.IndexOf("warning=", StringComparison.OrdinalIgnoreCase) < 0,
+                        $"project editor build manifest should remain warning-free for {path}");
+                    Expect(manifestText.IndexOf("asset=6|wzcommon/registry.vcx|", StringComparison.Ordinal) >= 0,
+                        $"project editor build manifest should stage the shared class dependency for {path}");
+                }
+            }
+        }
         var runButton = FindButtons(control).FirstOrDefault(button => button.Text == "Run Copperfin Project");
         Expect(runButton is not null, $"project editor should surface a runnable project command for {path}");
         if (runButton is not null)

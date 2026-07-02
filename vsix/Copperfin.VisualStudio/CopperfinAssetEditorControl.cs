@@ -114,6 +114,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
     }
 
+    internal bool SuppressProjectWorkflowDialogs { get; set; }
+
     public CopperfinAssetEditorControl(CopperfinLocalization? localization = null)
     {
         this.localization = localization ?? CopperfinLocalization.FromEnvironment();
@@ -2306,11 +2308,15 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         snapshotStatusLabel.Text = result.Message;
         if (!result.Success)
         {
-            MessageBox.Show(this, result.Message, DialogTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            if (!SuppressProjectWorkflowDialogs)
+            {
+                MessageBox.Show(this, result.Message, DialogTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+
             return;
         }
 
-        if (operation == CopperfinProjectOperation.Build)
+        if (operation == CopperfinProjectOperation.Build && !SuppressProjectWorkflowDialogs)
         {
             MessageBox.Show(
                 this,
