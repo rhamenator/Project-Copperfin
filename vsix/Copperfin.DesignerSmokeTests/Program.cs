@@ -30739,6 +30739,49 @@ internal static class Program
                 Expect(manifestText.IndexOf("asset=6|wzcommon/registry.vcx|", StringComparison.Ordinal) >= 0,
                     $"project debugger manifest should stage the shared class dependency for {path}");
             }
+
+            var initialDebugManifestPath = debugSession.DebugManifestPath;
+            var restartButton = GetPrivateButton(control, "debugRestartButton");
+            Expect(restartButton.Enabled, $"project debugger restart should remain enabled for {path}");
+            restartButton.PerformClick();
+            var restarted = WaitUntil(
+                TimeSpan.FromSeconds(30),
+                () =>
+                {
+                    var restartedSession = GetPrivateField<CopperfinRuntimeDebugSession>(control, "currentDebugSession");
+                    return restartedSession is not null &&
+                           !ReferenceEquals(restartedSession, debugSession) &&
+                           restartedSession.Success &&
+                           string.Equals(restartedSession.Commands.LastOrDefault(), "continue", StringComparison.Ordinal) &&
+                           !string.IsNullOrWhiteSpace(restartedSession.DebugManifestPath) &&
+                           !string.Equals(restartedSession.DebugManifestPath, initialDebugManifestPath, StringComparison.Ordinal);
+                });
+            Expect(restarted, $"project debugger restart should materialize a fresh debug session for {path}");
+
+            var restartedSession = GetPrivateField<CopperfinRuntimeDebugSession>(control, "currentDebugSession");
+            Expect(restartedSession is not null, $"project debugger restart should retain the refreshed debug session for {path}");
+            if (restartedSession is not null)
+            {
+                Expect(!string.IsNullOrWhiteSpace(restartedSession.ManifestPath) && File.Exists(restartedSession.ManifestPath),
+                    $"project debugger restart should preserve the runtime manifest path for {path}");
+                Expect(!string.IsNullOrWhiteSpace(restartedSession.DebugManifestPath) && File.Exists(restartedSession.DebugManifestPath),
+                    $"project debugger restart should preserve a debug manifest path for {path}");
+                Expect(restartedSession.BuildWarningCount == 0,
+                    $"project debugger restart should inherit a warning-free build for {path}");
+                Expect(restartedSession.BuildWarnings.Count == 0,
+                    $"project debugger restart should not inherit build warning lines for {path}");
+                Expect(restartedSession.Commands.Count == 1 &&
+                       string.Equals(restartedSession.Commands[0], "continue", StringComparison.Ordinal),
+                    $"project debugger restart should reset command history for {path}");
+                if (!string.IsNullOrWhiteSpace(restartedSession.ManifestPath) && File.Exists(restartedSession.ManifestPath))
+                {
+                    var restartedManifestText = File.ReadAllText(restartedSession.ManifestPath);
+                    Expect(restartedManifestText.IndexOf("warning=", StringComparison.OrdinalIgnoreCase) < 0,
+                        $"project debugger restart manifest should remain warning-free for {path}");
+                    Expect(restartedManifestText.IndexOf("asset=6|wzcommon/registry.vcx|", StringComparison.Ordinal) >= 0,
+                        $"project debugger restart manifest should stage the shared class dependency for {path}");
+                }
+            }
         }
         if (debuggerSummary is not null)
         {
