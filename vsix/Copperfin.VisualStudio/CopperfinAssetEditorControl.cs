@@ -3095,7 +3095,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             foreach (var frame in state.Frames)
             {
-                summary.AppendLine($"- {frame.RoutineName} @ {frame.Location}");
+                summary.AppendLine(F("AssetEditor.Summary.StackFrameLine", frame.RoutineName, frame.Location));
                 if (frame.Locals.Count == 0)
                 {
                     summary.AppendLine(F("AssetEditor.Summary.FrameLocalsNone", L("AssetEditor.Summary.LabelLocals")));
@@ -3120,7 +3120,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             foreach (var global in state.Globals)
             {
-                summary.AppendLine($"- {global.Name} = {global.Value}");
+                summary.AppendLine(F("AssetEditor.Summary.GlobalLine", global.Name, global.Value));
             }
         }
 
@@ -3173,7 +3173,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             foreach (var task in insights.TaskItems.Take(40))
             {
-                summary.AppendLine($"- [{task.Category}] {Path.GetFileName(task.FilePath)}:{task.Line}  {task.Message}");
+                summary.AppendLine(F("AssetEditor.Summary.TaskItemLine", task.Category, Path.GetFileName(task.FilePath), task.Line, task.Message));
             }
             if (insights.TaskItems.Count > 40)
             {
@@ -3187,7 +3187,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             summary.AppendLine(L("AssetEditor.Summary.ScanWarnings"));
             foreach (var warning in insights.Warnings.Take(10))
             {
-                summary.AppendLine($"- {warning}");
+                summary.AppendLine(F("AssetEditor.Summary.BulletLine", warning));
             }
         }
 
@@ -3218,7 +3218,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             foreach (var symbol in insights.DefinedSymbols.Take(40))
             {
-                summary.AppendLine($"- [{symbol.Kind}] {symbol.Name}  {Path.GetFileName(symbol.FilePath)}:{symbol.Line}");
+                summary.AppendLine(F("AssetEditor.Summary.SymbolLine", symbol.Kind, symbol.Name, Path.GetFileName(symbol.FilePath), symbol.Line));
             }
             if (insights.DefinedSymbols.Count > 40)
             {
@@ -3236,7 +3236,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             foreach (var symbol in insights.RuntimeReferences.Take(40))
             {
-                summary.AppendLine($"- [{symbol.Kind}] {symbol.Name}  {Path.GetFileName(symbol.FilePath)}:{symbol.Line}");
+                summary.AppendLine(F("AssetEditor.Summary.SymbolLine", symbol.Kind, symbol.Name, Path.GetFileName(symbol.FilePath), symbol.Line));
             }
             if (insights.RuntimeReferences.Count > 40)
             {
@@ -3289,10 +3289,10 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             foreach (var asset in filteredAssets.Take(40))
             {
                 var excludedSuffix = asset.Excluded ? L("AssetEditor.Summary.ExcludedSuffix") : string.Empty;
-                summary.AppendLine($"- [{asset.Kind}] {asset.Title}{excludedSuffix}");
+                summary.AppendLine(F("AssetEditor.Summary.DataAssetLine", asset.Kind, asset.Title, excludedSuffix));
                 if (!string.IsNullOrWhiteSpace(asset.FilePath))
                 {
-                    summary.AppendLine($"  {asset.FilePath}");
+                    summary.AppendLine(F("AssetEditor.Summary.IndentedLine", asset.FilePath));
                 }
             }
             if (filteredAssets.Count > 40)
@@ -3354,14 +3354,14 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             foreach (var node in filteredNodes.Take(50))
             {
-                summary.AppendLine($"- [{node.Kind}] {node.Title}");
+                summary.AppendLine(F("AssetEditor.Summary.ObjectNodeLine", node.Kind, node.Title));
                 if (!string.IsNullOrWhiteSpace(node.Detail))
                 {
-                    summary.AppendLine($"  {node.Detail}");
+                    summary.AppendLine(F("AssetEditor.Summary.IndentedLine", node.Detail));
                 }
                 if (!string.IsNullOrWhiteSpace(node.FilePath))
                 {
-                    summary.AppendLine($"  {Path.GetFileName(node.FilePath)}");
+                    summary.AppendLine(F("AssetEditor.Summary.IndentedLine", Path.GetFileName(node.FilePath)));
                 }
             }
             if (filteredNodes.Count > 50)
@@ -3400,7 +3400,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         summary.AppendLine(L("AssetEditor.Summary.AddInSurfaces"));
         foreach (var feature in snapshot.ExtensibilityProfile.AiFeatures.Take(6))
         {
-            summary.AppendLine($"- {feature.Title}: {feature.Description}");
+            summary.AppendLine(F("AssetEditor.Summary.AddInSurfaceLine", feature.Title, feature.Description));
         }
 
         if (insights is not null && insights.RuntimeReferences.Count > 0)
@@ -3409,7 +3409,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             summary.AppendLine(L("AssetEditor.Summary.HighValueShortcuts"));
             foreach (var reference in insights.RuntimeReferences.Take(6))
             {
-                summary.AppendLine($"- [{reference.Kind}] {reference.Name}");
+                summary.AppendLine(F("AssetEditor.Summary.ShortcutLine", reference.Kind, reference.Name));
             }
         }
 
@@ -3434,7 +3434,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             summary.AppendLine(L("AssetEditor.Summary.CurrentBuilderTargets"));
             foreach (var node in insights.ObjectNodes.Take(8))
             {
-                summary.AppendLine($"- [{node.Kind}] {node.Title}");
+                summary.AppendLine(F("AssetEditor.Summary.ObjectNodeLine", node.Kind, node.Title));
             }
         }
 
@@ -3467,7 +3467,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         summary.AppendLine(L("AssetEditor.Summary.RecentCoverageSignals"));
         foreach (var location in executedLocations.Take(12))
         {
-            summary.AppendLine($"- {location}");
+            summary.AppendLine(F("AssetEditor.Summary.BulletLine", location));
         }
 
         if (executedLocations.Count == 0)
@@ -3516,8 +3516,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         summary.AppendLine(L("AssetEditor.Summary.ConnectorTargets"));
         foreach (var connector in filteredConnectors.Take(10))
         {
-            summary.AppendLine($"- [{connector.Family}] {connector.Title}");
-            summary.AppendLine($"  {connector.TranslationStory}");
+            summary.AppendLine(F("AssetEditor.Summary.ConnectorLine", connector.Family, connector.Title));
+            summary.AppendLine(F("AssetEditor.Summary.IndentedLine", connector.TranslationStory));
         }
         if (filteredConnectors.Count == 0)
         {
@@ -3528,8 +3528,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         summary.AppendLine(L("AssetEditor.Summary.QueryTranslationPaths"));
         foreach (var path in filteredPaths.Take(8))
         {
-            summary.AppendLine($"- {path.Title} ({path.Complexity})");
-            summary.AppendLine($"  {path.Strategy}");
+            summary.AppendLine(F("AssetEditor.Summary.QueryPathLine", path.Title, path.Complexity));
+            summary.AppendLine(F("AssetEditor.Summary.IndentedLine", path.Strategy));
         }
         if (filteredPaths.Count == 0)
         {
@@ -3540,7 +3540,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         summary.AppendLine(L("AssetEditor.Summary.Guardrails"));
         foreach (var guardrail in snapshot.DatabaseProfile.Guardrails.Take(6))
         {
-            summary.AppendLine($"- {guardrail}");
+            summary.AppendLine(F("AssetEditor.Summary.BulletLine", guardrail));
         }
 
         return summary.ToString();
