@@ -29019,6 +29019,13 @@ internal static class Program
                 return;
             }
 
+            Expect(loaded.Document.ReportLayout?.PreviewBoundsAvailable == true,
+                $"initial real live reorder snapshot should preserve live preview bounds for {sourcePath}");
+            if (loaded.Document.ReportLayout?.PreviewBoundsAvailable != true)
+            {
+                return;
+            }
+
             AssertRealAssetRoundTripSnapshot(
                 loaded.Document,
                 reorderedSourceRecordIndex,
@@ -29052,6 +29059,22 @@ internal static class Program
                 initialSectionRecordIndex,
                 expectedInitialSectionRecordOrder,
                 $"initial real live reorder snapshot should preserve section record order");
+            var initialLayout = loaded.Document.ReportLayout;
+            var expectedPreviewBoundsLeft = initialLayout.PreviewBoundsLeft;
+            var expectedPreviewBoundsTop = initialLayout.PreviewBoundsTop;
+            var expectedPreviewBoundsRight = initialLayout.PreviewBoundsRight;
+            var expectedPreviewBoundsBottom = initialLayout.PreviewBoundsBottom;
+            var expectedPreviewBoundsWidth = initialLayout.PreviewBoundsWidth;
+            var expectedPreviewBoundsHeight = initialLayout.PreviewBoundsHeight;
+            AssertRealAssetPreviewBoundsGeometry(
+                loaded.Document,
+                expectedPreviewBoundsLeft,
+                expectedPreviewBoundsTop,
+                expectedPreviewBoundsRight,
+                expectedPreviewBoundsBottom,
+                expectedPreviewBoundsWidth,
+                expectedPreviewBoundsHeight,
+                $"initial real live reorder snapshot should preserve live preview metadata");
 
             var reorderResult = CopperfinStudioSnapshotClient.TryReorderObject(
                 assetPath,
@@ -29098,6 +29121,15 @@ internal static class Program
                 reorderedSectionRecordIndex,
                 expectedReorderedSectionRecordOrder,
                 $"reordered real live asset snapshot should preserve section record order");
+            AssertRealAssetPreviewBoundsGeometry(
+                reorderResult.Document,
+                expectedPreviewBoundsLeft,
+                expectedPreviewBoundsTop,
+                expectedPreviewBoundsRight,
+                expectedPreviewBoundsBottom,
+                expectedPreviewBoundsWidth,
+                expectedPreviewBoundsHeight,
+                $"reordered real live asset snapshot should preserve live preview metadata");
             Expect(!reorderResult.Document.CommandUndoAvailable,
                 $"real live reorder smoke should not expose command undo after reordering {sourcePath}");
 
@@ -29142,6 +29174,15 @@ internal static class Program
                 reorderedSectionRecordIndex,
                 expectedReorderedSectionRecordOrder,
                 $"reloaded reordered real live asset snapshot should preserve section record order");
+            AssertRealAssetPreviewBoundsGeometry(
+                reloadedAfterReorder.Document,
+                expectedPreviewBoundsLeft,
+                expectedPreviewBoundsTop,
+                expectedPreviewBoundsRight,
+                expectedPreviewBoundsBottom,
+                expectedPreviewBoundsWidth,
+                expectedPreviewBoundsHeight,
+                $"reloaded reordered real live asset snapshot should preserve live preview metadata");
             Expect(!reloadedAfterReorder.Document.CommandUndoAvailable,
                 $"reloaded real live reorder snapshot should not expose command undo for {sourcePath}");
         }
