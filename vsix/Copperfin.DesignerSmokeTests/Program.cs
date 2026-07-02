@@ -22357,6 +22357,29 @@ internal static class Program
 
         try
         {
+            var loaded = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(loaded.Success && loaded.Document is not null,
+                $"real deleted rename smoke should load snapshot data for {sourcePath}");
+            if (!loaded.Success || loaded.Document is null)
+            {
+                return;
+            }
+
+            Expect(loaded.Document.ReportLayout?.PreviewBoundsAvailable == true,
+                $"initial deleted rename snapshot should preserve live preview bounds for {sourcePath}");
+            if (loaded.Document.ReportLayout?.PreviewBoundsAvailable != true)
+            {
+                return;
+            }
+
+            var initialLayout = loaded.Document.ReportLayout;
+            var expectedPreviewBoundsLeft = initialLayout.PreviewBoundsLeft;
+            var expectedPreviewBoundsTop = initialLayout.PreviewBoundsTop;
+            var expectedPreviewBoundsRight = initialLayout.PreviewBoundsRight;
+            var expectedPreviewBoundsBottom = initialLayout.PreviewBoundsBottom;
+            var expectedPreviewBoundsWidth = initialLayout.PreviewBoundsWidth;
+            var expectedPreviewBoundsHeight = initialLayout.PreviewBoundsHeight;
+
             var deleteResult = CopperfinStudioSnapshotClient.TryDeleteObject(
                 assetPath,
                 recordIndex,
@@ -22379,6 +22402,9 @@ internal static class Program
                 expectLabel,
                 expectedDeletedSectionVisibleObjectCount,
                 "initial deleted real asset rename snapshot should preserve original identity");
+            AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
+                deleteResult.Document,
+                "initial deleted real asset rename snapshot should preserve deleted preview metadata");
 
             var renameResult = CopperfinStudioSnapshotClient.TryRenameObject(
                 assetPath,
@@ -22403,6 +22429,9 @@ internal static class Program
                 expectLabel,
                 expectedDeletedSectionVisibleObjectCount,
                 "renamed deleted real asset snapshot should preserve renamed identity");
+            AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
+                renameResult.Document,
+                "renamed deleted real asset snapshot should preserve deleted preview metadata");
             Expect(renameResult.Document.CommandUndoAvailable,
                 $"real deleted rename smoke should expose undo after renaming {recordIndex} for {sourcePath}");
 
@@ -22425,6 +22454,9 @@ internal static class Program
                 expectLabel,
                 expectedDeletedSectionVisibleObjectCount,
                 "reloaded renamed deleted real asset snapshot should preserve renamed identity");
+            AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
+                reloadedAfterRename.Document,
+                "reloaded renamed deleted real asset snapshot should preserve deleted preview metadata");
             Expect(reloadedAfterRename.Document.CommandUndoAvailable,
                 $"reloaded deleted rename snapshot should keep undo available for {sourcePath}");
 
@@ -22447,6 +22479,9 @@ internal static class Program
                 expectLabel,
                 expectedDeletedSectionVisibleObjectCount,
                 "undone deleted real asset rename snapshot should preserve original identity");
+            AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
+                undoResult.Document,
+                "undone deleted real asset rename snapshot should preserve deleted preview metadata");
             Expect(!undoResult.Document.CommandUndoAvailable,
                 $"undone deleted rename snapshot should clear command undo for {sourcePath}");
 
@@ -22469,6 +22504,9 @@ internal static class Program
                 expectLabel,
                 expectedDeletedSectionVisibleObjectCount,
                 "reloaded undone deleted real asset rename snapshot should preserve original identity");
+            AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
+                reloadedAfterUndo.Document,
+                "reloaded undone deleted real asset rename snapshot should preserve deleted preview metadata");
 
             var restoreResult = CopperfinStudioSnapshotClient.TryRestoreObject(
                 assetPath,
@@ -22492,6 +22530,15 @@ internal static class Program
                 expectLabel,
                 expectUnplacedObject: false,
                 "restored deleted-rename real asset snapshot should preserve original identity");
+            AssertRealAssetLivePreviewBounds(
+                restoreResult.Document,
+                expectedPreviewBoundsLeft,
+                expectedPreviewBoundsTop,
+                expectedPreviewBoundsRight,
+                expectedPreviewBoundsBottom,
+                expectedPreviewBoundsWidth,
+                expectedPreviewBoundsHeight,
+                "restored deleted-rename real asset snapshot should preserve live preview metadata");
 
             var reloadedAfterRestore = CopperfinStudioSnapshotClient.TryLoad(assetPath);
             Expect(reloadedAfterRestore.Success && reloadedAfterRestore.Document is not null,
@@ -22512,6 +22559,15 @@ internal static class Program
                 expectLabel,
                 expectUnplacedObject: false,
                 "reloaded restored deleted-rename real asset snapshot should preserve original identity");
+            AssertRealAssetLivePreviewBounds(
+                reloadedAfterRestore.Document,
+                expectedPreviewBoundsLeft,
+                expectedPreviewBoundsTop,
+                expectedPreviewBoundsRight,
+                expectedPreviewBoundsBottom,
+                expectedPreviewBoundsWidth,
+                expectedPreviewBoundsHeight,
+                "reloaded restored deleted-rename real asset snapshot should preserve live preview metadata");
         }
         finally
         {
@@ -22554,6 +22610,29 @@ internal static class Program
 
         try
         {
+            var loaded = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(loaded.Success && loaded.Document is not null,
+                $"real deleted duplicate smoke should load snapshot data for {sourcePath}");
+            if (!loaded.Success || loaded.Document is null)
+            {
+                return;
+            }
+
+            Expect(loaded.Document.ReportLayout?.PreviewBoundsAvailable == true,
+                $"initial deleted duplicate snapshot should preserve live preview bounds for {sourcePath}");
+            if (loaded.Document.ReportLayout?.PreviewBoundsAvailable != true)
+            {
+                return;
+            }
+
+            var initialLayout = loaded.Document.ReportLayout;
+            var expectedPreviewBoundsLeft = initialLayout.PreviewBoundsLeft;
+            var expectedPreviewBoundsTop = initialLayout.PreviewBoundsTop;
+            var expectedPreviewBoundsRight = initialLayout.PreviewBoundsRight;
+            var expectedPreviewBoundsBottom = initialLayout.PreviewBoundsBottom;
+            var expectedPreviewBoundsWidth = initialLayout.PreviewBoundsWidth;
+            var expectedPreviewBoundsHeight = initialLayout.PreviewBoundsHeight;
+
             var deleteResult = CopperfinStudioSnapshotClient.TryDeleteObject(
                 assetPath,
                 recordIndex,
@@ -22576,6 +22655,9 @@ internal static class Program
                 expectLabel,
                 expectedVisibleSectionObjectCount: 1,
                 "initial deleted real asset duplicate snapshot should preserve original identity");
+            AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
+                deleteResult.Document,
+                "initial deleted real asset duplicate snapshot should preserve deleted preview metadata");
 
             var duplicateResult = CopperfinStudioSnapshotClient.TryDuplicateObject(
                 assetPath,
@@ -22624,6 +22706,9 @@ internal static class Program
                 expectedVisibleSectionObjectCount: 2,
                 expectedDeletedSectionObjectCount: 2,
                 "duplicated deleted real asset snapshot should preserve duplicated deleted identity");
+            AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
+                duplicateResult.Document,
+                "duplicated deleted real asset snapshot should preserve deleted preview metadata");
             Expect(!duplicateResult.Document.CommandUndoAvailable,
                 $"real deleted duplicate smoke should not expose command undo after duplicating a deleted row for {sourcePath}");
 
@@ -22667,6 +22752,9 @@ internal static class Program
                 expectedVisibleSectionObjectCount: 2,
                 expectedDeletedSectionObjectCount: 2,
                 "reloaded duplicated deleted real asset snapshot should preserve duplicated deleted identity");
+            AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
+                reloadedAfterDuplicate.Document,
+                "reloaded duplicated deleted real asset snapshot should preserve deleted preview metadata");
             Expect(!reloadedAfterDuplicate.Document.CommandUndoAvailable,
                 $"reloaded deleted duplicate snapshot should not expose command undo for {sourcePath}");
 
@@ -22703,6 +22791,18 @@ internal static class Program
                 expectLabel,
                 expectUnplacedObject: false,
                 "restored deleted duplicate snapshot should preserve the restored duplicated identity");
+            AssertRealAssetPreviewBoundsGeometry(
+                restoreResult.Document,
+                expectedPreviewBoundsLeft,
+                expectedPreviewBoundsTop,
+                expectedPreviewBoundsRight,
+                expectedPreviewBoundsBottom,
+                expectedPreviewBoundsWidth,
+                expectedPreviewBoundsHeight,
+                "restored deleted duplicate snapshot should preserve live preview metadata");
+            AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
+                restoreResult.Document,
+                "restored deleted duplicate snapshot should preserve remaining deleted preview metadata");
             AssertRealAssetSectionObjectCount(
                 restoreResult.Document,
                 expectedSectionTitle,
@@ -22747,6 +22847,18 @@ internal static class Program
                 expectLabel,
                 expectUnplacedObject: false,
                 "reloaded restored deleted duplicate snapshot should preserve the restored duplicated identity");
+            AssertRealAssetPreviewBoundsGeometry(
+                reloadedAfterRestore.Document,
+                expectedPreviewBoundsLeft,
+                expectedPreviewBoundsTop,
+                expectedPreviewBoundsRight,
+                expectedPreviewBoundsBottom,
+                expectedPreviewBoundsWidth,
+                expectedPreviewBoundsHeight,
+                "reloaded restored deleted duplicate snapshot should preserve live preview metadata");
+            AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
+                reloadedAfterRestore.Document,
+                "reloaded restored deleted duplicate snapshot should preserve remaining deleted preview metadata");
             AssertRealAssetSectionObjectCount(
                 reloadedAfterRestore.Document,
                 expectedSectionTitle,
@@ -32189,6 +32301,34 @@ internal static class Program
                document.ReportLayout.PreviewBoundsWidth == expectedWidth &&
                document.ReportLayout.PreviewBoundsHeight == expectedHeight,
             $"{failurePrefix} for {document.Path} should preserve the source preview-bounds geometry");
+    }
+
+    private static void AssertRealAssetPreviewBoundsGeometry(
+        CopperfinStudioSnapshotDocument document,
+        int expectedLeft,
+        int expectedTop,
+        int expectedRight,
+        int expectedBottom,
+        int expectedWidth,
+        int expectedHeight,
+        string failurePrefix)
+    {
+        Expect(document.ReportLayout is not null,
+            $"{failurePrefix} for {document.Path} should include a report layout");
+        if (document.ReportLayout is null)
+        {
+            return;
+        }
+
+        Expect(document.ReportLayout.PreviewBoundsAvailable,
+            $"{failurePrefix} for {document.Path} should preserve live preview bounds");
+        Expect(document.ReportLayout.PreviewBoundsLeft == expectedLeft &&
+               document.ReportLayout.PreviewBoundsTop == expectedTop &&
+               document.ReportLayout.PreviewBoundsRight == expectedRight &&
+               document.ReportLayout.PreviewBoundsBottom == expectedBottom &&
+               document.ReportLayout.PreviewBoundsWidth == expectedWidth &&
+               document.ReportLayout.PreviewBoundsHeight == expectedHeight,
+            $"{failurePrefix} for {document.Path} should preserve the expected live preview-bounds geometry");
     }
 
     private static void AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
