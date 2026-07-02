@@ -30621,6 +30621,25 @@ internal static class Program
         var debuggerSummary = FindRichTextBoxes(control)
             .FirstOrDefault(box => box.Text.IndexOf("Copperfin Debug Session", StringComparison.OrdinalIgnoreCase) >= 0);
         Expect(debuggerSummary is not null, $"project debugger should surface a debug summary for {path}");
+        var debugSession = GetPrivateField<CopperfinRuntimeDebugSession>(control, "currentDebugSession");
+        Expect(debugSession is not null, $"project debugger should preserve the active debug session for {path}");
+        if (debugSession is not null)
+        {
+            Expect(!string.IsNullOrWhiteSpace(debugSession.ManifestPath) && File.Exists(debugSession.ManifestPath),
+                $"project debugger should preserve the runtime manifest path for {path}");
+            Expect(debugSession.BuildWarningCount == 0,
+                $"project debugger should inherit a warning-free build for {path}");
+            Expect(debugSession.BuildWarnings.Count == 0,
+                $"project debugger should not inherit build warning lines for {path}");
+            if (!string.IsNullOrWhiteSpace(debugSession.ManifestPath) && File.Exists(debugSession.ManifestPath))
+            {
+                var manifestText = File.ReadAllText(debugSession.ManifestPath);
+                Expect(manifestText.IndexOf("warning=", StringComparison.OrdinalIgnoreCase) < 0,
+                    $"project debugger manifest should remain warning-free for {path}");
+                Expect(manifestText.IndexOf("asset=6|wzcommon/registry.vcx|", StringComparison.Ordinal) >= 0,
+                    $"project debugger manifest should stage the shared class dependency for {path}");
+            }
+        }
         if (debuggerSummary is not null)
         {
             Expect(debuggerSummary.Text.IndexOf("Call Stack:", StringComparison.OrdinalIgnoreCase) >= 0,
@@ -37250,13 +37269,8 @@ internal static class Program
 
     private static ListView GetPrivateListView(CopperfinAssetEditorControl control, string fieldName)
     {
-        var field = typeof(CopperfinAssetEditorControl).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
-        if (field?.GetValue(control) is not ListView listView)
-        {
-            throw new InvalidOperationException($"Could not read private list view {fieldName}.");
-        }
-
-        return listView;
+        return GetPrivateField<ListView>(control, fieldName)
+            ?? throw new InvalidOperationException($"Could not read private list view {fieldName}.");
     }
 
     private static string CreateSmokeAssetFile(string tempRoot, string fileName)
@@ -37268,35 +37282,27 @@ internal static class Program
 
     private static Label GetPrivateLabel(CopperfinAssetEditorControl control, string fieldName)
     {
-        var field = typeof(CopperfinAssetEditorControl).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
-        if (field?.GetValue(control) is not Label label)
-        {
-            throw new InvalidOperationException($"Could not read private label {fieldName}.");
-        }
-
-        return label;
+        return GetPrivateField<Label>(control, fieldName)
+            ?? throw new InvalidOperationException($"Could not read private label {fieldName}.");
     }
 
     private static Button GetPrivateButton(CopperfinAssetEditorControl control, string fieldName)
     {
-        var field = typeof(CopperfinAssetEditorControl).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
-        if (field?.GetValue(control) is not Button button)
-        {
-            throw new InvalidOperationException($"Could not read private button {fieldName}.");
-        }
-
-        return button;
+        return GetPrivateField<Button>(control, fieldName)
+            ?? throw new InvalidOperationException($"Could not read private button {fieldName}.");
     }
 
     private static PropertyGrid GetPrivatePropertyGrid(CopperfinAssetEditorControl control)
     {
-        var field = typeof(CopperfinAssetEditorControl).GetField("propertyGrid", BindingFlags.Instance | BindingFlags.NonPublic);
-        if (field?.GetValue(control) is not PropertyGrid propertyGrid)
-        {
-            throw new InvalidOperationException("Could not read private property grid.");
-        }
+        return GetPrivateField<PropertyGrid>(control, "propertyGrid")
+            ?? throw new InvalidOperationException("Could not read private property grid.");
+    }
 
-        return propertyGrid;
+    private static T? GetPrivateField<T>(CopperfinAssetEditorControl control, string fieldName)
+        where T : class
+    {
+        var field = typeof(CopperfinAssetEditorControl).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+        return field?.GetValue(control) as T;
     }
 
     private static void SetCurrentSnapshot(CopperfinAssetEditorControl control, CopperfinStudioSnapshotDocument snapshot)
