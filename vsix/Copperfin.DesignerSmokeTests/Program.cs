@@ -25466,6 +25466,21 @@ internal static class Program
         {
             Environment.SetEnvironmentVariable("COPPERFIN_RENAME_OBJECT_UNIQUE_ID", expectedRenamedUniqueId);
 
+            var initialSnapshot = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(initialSnapshot.Success && initialSnapshot.Document is not null,
+                $"real asset editor rename smoke should load initial snapshot data for {sourcePath}");
+            if (!initialSnapshot.Success || initialSnapshot.Document is null || initialSnapshot.Document.ReportLayout is null)
+            {
+                return;
+            }
+
+            var expectedPreviewBoundsLeft = initialSnapshot.Document.ReportLayout.PreviewBoundsLeft;
+            var expectedPreviewBoundsTop = initialSnapshot.Document.ReportLayout.PreviewBoundsTop;
+            var expectedPreviewBoundsRight = initialSnapshot.Document.ReportLayout.PreviewBoundsRight;
+            var expectedPreviewBoundsBottom = initialSnapshot.Document.ReportLayout.PreviewBoundsBottom;
+            var expectedPreviewBoundsWidth = initialSnapshot.Document.ReportLayout.PreviewBoundsWidth;
+            var expectedPreviewBoundsHeight = initialSnapshot.Document.ReportLayout.PreviewBoundsHeight;
+
             using var hostForm = new Form
             {
                 Width = 1400,
@@ -25815,6 +25830,21 @@ internal static class Program
         {
             Environment.SetEnvironmentVariable("COPPERFIN_RENAME_OBJECT_UNIQUE_ID", expectedRenamedUniqueId);
 
+            var initialSnapshot = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(initialSnapshot.Success && initialSnapshot.Document is not null,
+                $"real asset editor rename smoke should load initial snapshot data for {sourcePath}");
+            if (!initialSnapshot.Success || initialSnapshot.Document is null || initialSnapshot.Document.ReportLayout is null)
+            {
+                return;
+            }
+
+            var expectedPreviewBoundsLeft = initialSnapshot.Document.ReportLayout.PreviewBoundsLeft;
+            var expectedPreviewBoundsTop = initialSnapshot.Document.ReportLayout.PreviewBoundsTop;
+            var expectedPreviewBoundsRight = initialSnapshot.Document.ReportLayout.PreviewBoundsRight;
+            var expectedPreviewBoundsBottom = initialSnapshot.Document.ReportLayout.PreviewBoundsBottom;
+            var expectedPreviewBoundsWidth = initialSnapshot.Document.ReportLayout.PreviewBoundsWidth;
+            var expectedPreviewBoundsHeight = initialSnapshot.Document.ReportLayout.PreviewBoundsHeight;
+
             using var hostForm = new Form
             {
                 Width = 1400,
@@ -25909,7 +25939,7 @@ internal static class Program
                     var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
                     var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
                     var objectState = TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString();
-                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                    return string.Equals(selectedSectionModel?.Title, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
                            selectedSectionModel?.RecordIndex == expectedSectionRecordIndex &&
                            selectedObject?.RecordIndex == recordIndex &&
                            !selectedObject.Deleted &&
@@ -25953,6 +25983,15 @@ internal static class Program
                     expectLabel,
                     expectUnplacedObject: false,
                     $"reloaded real asset editor rename snapshot should preserve renamed identity");
+                AssertRealAssetPreviewBoundsGeometry(
+                    reloadedAfterRename.Document,
+                    expectedPreviewBoundsLeft,
+                    expectedPreviewBoundsTop,
+                    expectedPreviewBoundsRight,
+                    expectedPreviewBoundsBottom,
+                    expectedPreviewBoundsWidth,
+                    expectedPreviewBoundsHeight,
+                    $"reloaded real asset editor rename snapshot should preserve live preview metadata");
             }
 
             var undoHandled = control.TryHandleUndoCommand();
@@ -25974,7 +26013,7 @@ internal static class Program
                     var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
                     var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
                     var objectState = TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString();
-                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                    return string.Equals(selectedSectionModel?.Title, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
                            selectedSectionModel?.RecordIndex == expectedSectionRecordIndex &&
                            selectedObject?.RecordIndex == recordIndex &&
                            !selectedObject.Deleted &&
@@ -26007,6 +26046,15 @@ internal static class Program
                     expectLabel,
                     expectUnplacedObject: false,
                     $"reloaded undone real asset editor rename snapshot should preserve original identity");
+                AssertRealAssetPreviewBoundsGeometry(
+                    reloadedAfterUndo.Document,
+                    expectedPreviewBoundsLeft,
+                    expectedPreviewBoundsTop,
+                    expectedPreviewBoundsRight,
+                    expectedPreviewBoundsBottom,
+                    expectedPreviewBoundsWidth,
+                    expectedPreviewBoundsHeight,
+                    $"reloaded undone real asset editor rename snapshot should preserve live preview metadata");
             }
 
             TearDownForm(hostForm);
