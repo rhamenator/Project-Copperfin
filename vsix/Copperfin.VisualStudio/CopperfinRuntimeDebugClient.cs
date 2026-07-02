@@ -22,7 +22,11 @@ internal static class CopperfinRuntimeDebugClient
             return new CopperfinRuntimeDebugSession
             {
                 Success = false,
-                Error = buildResult.Message
+                Error = buildResult.Message,
+                ManifestPath = buildResult.ManifestPath,
+                DebugManifestPath = buildResult.DebugManifestPath,
+                BuildWarningCount = buildResult.WarningCount,
+                BuildWarnings = buildResult.Warnings.ToList()
             };
         }
 
@@ -39,7 +43,10 @@ internal static class CopperfinRuntimeDebugClient
         return await ReplayAsync(new CopperfinRuntimeDebugSession
         {
             Success = true,
+            ManifestPath = buildResult.ManifestPath,
             DebugManifestPath = effectiveDebugManifestPath,
+            BuildWarningCount = buildResult.WarningCount,
+            BuildWarnings = buildResult.Warnings.ToList(),
             Commands = new List<string> { "continue" }
         });
     }
@@ -72,7 +79,10 @@ internal static class CopperfinRuntimeDebugClient
         {
             Success = session.Success,
             Error = session.Error,
+            ManifestPath = session.ManifestPath,
             DebugManifestPath = session.DebugManifestPath,
+            BuildWarningCount = session.BuildWarningCount,
+            BuildWarnings = session.BuildWarnings.ToList(),
             Commands = commands
         });
     }

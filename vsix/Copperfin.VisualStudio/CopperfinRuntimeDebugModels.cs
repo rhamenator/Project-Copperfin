@@ -6,7 +6,10 @@ internal sealed class CopperfinRuntimeDebugSession
 {
     public bool Success { get; set; }
     public string Error { get; set; } = string.Empty;
+    public string ManifestPath { get; set; } = string.Empty;
     public string DebugManifestPath { get; set; } = string.Empty;
+    public int BuildWarningCount { get; set; }
+    public List<string> BuildWarnings { get; set; } = new();
     public List<string> Commands { get; set; } = new();
     public CopperfinRuntimePauseState State { get; set; } = new();
 }

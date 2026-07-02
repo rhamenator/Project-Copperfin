@@ -30692,6 +30692,20 @@ internal static class Program
             return;
         }
 
+        Expect(!string.IsNullOrWhiteSpace(session.ManifestPath) && File.Exists(session.ManifestPath),
+            $"project debug replay should preserve the runtime manifest path for {path}");
+        Expect(session.BuildWarningCount == 0,
+            $"project debug replay should inherit a warning-free build for {path}");
+        Expect(session.BuildWarnings.Count == 0,
+            $"project debug replay should not inherit build warning lines for {path}");
+        if (!string.IsNullOrWhiteSpace(session.ManifestPath) && File.Exists(session.ManifestPath))
+        {
+            var manifestText = File.ReadAllText(session.ManifestPath);
+            Expect(manifestText.IndexOf("warning=", StringComparison.OrdinalIgnoreCase) < 0,
+                $"project debug replay manifest should remain warning-free for {path}");
+            Expect(manifestText.IndexOf("asset=6|wzcommon/registry.vcx|", StringComparison.Ordinal) >= 0,
+                $"project debug replay manifest should stage the shared class dependency for {path}");
+        }
         Expect(!string.IsNullOrWhiteSpace(session.State.Reason),
             $"project debug replay should surface a pause reason for {path}");
         Expect(session.State.Frames.Count > 0,
