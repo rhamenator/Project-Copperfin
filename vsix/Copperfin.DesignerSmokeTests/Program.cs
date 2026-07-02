@@ -4907,6 +4907,7 @@ internal static class Program
                 expectLabel: true,
                 expectedOriginalSectionObjectCount: 1,
                 expectedUpdatedSectionObjectCount: 2);
+            SmokeFreshRunVfpSourceStartupPaths();
             SmokeProjectEditorWithRealAsset(
                 ResolveFirstExistingRealAssetPath(
                     TryResolveVfp9InstallAsset(@"Samples\Solution\solution.pjx"),
@@ -30967,6 +30968,66 @@ internal static class Program
         }
 
         TearDownForm(form);
+    }
+
+    private static void SmokeFreshRunVfpSourceStartupPaths()
+    {
+        var vfpSourceZipPath = ResolveFirstExistingRealAssetPath(
+            ExpandUserPath(Environment.GetEnvironmentVariable("COPPERFIN_VFPSOURCE_ZIP")),
+            ExpandUserPath("~/Downloads/VFPSource.zip"));
+        if (string.IsNullOrWhiteSpace(vfpSourceZipPath) || !File.Exists(vfpSourceZipPath))
+        {
+            Console.WriteLine("SKIP: fresh-run VFPSource startup-path smoke requires a VFPSource.zip archive.");
+            return;
+        }
+
+        var extractionBaseRoot = GetArchiveExtractionBaseRoot(vfpSourceZipPath!);
+        try
+        {
+            if (Directory.Exists(extractionBaseRoot))
+            {
+                Directory.Delete(extractionBaseRoot, recursive: true);
+            }
+        }
+        catch (IOException)
+        {
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
+
+        var extractedVfpSourceRoot = EnumerateResolvedRealAssetRoots()
+            .FirstOrDefault(root =>
+                string.Equals(
+                    root,
+                    Path.Combine(extractionBaseRoot, "VFPSource"),
+                    StringComparison.OrdinalIgnoreCase));
+        Expect(!string.IsNullOrWhiteSpace(extractedVfpSourceRoot),
+            "fresh-run VFPSource startup-path smoke should materialize an extracted VFPSource root during root enumeration");
+        if (string.IsNullOrWhiteSpace(extractedVfpSourceRoot))
+        {
+            return;
+        }
+
+        var projectPath = TryResolveAssetUnderRoot(extractedVfpSourceRoot!, "tasklist/tasklist.PJX");
+        var programPath = TryResolveAssetUnderRoot(extractedVfpSourceRoot!, "tasklist/main.prg");
+        var formPath = TryResolveAssetUnderRoot(extractedVfpSourceRoot!, "Wizards/wzapp/template/Books/Forms/books.scx");
+        var reportPath = TryResolveAssetUnderRoot(extractedVfpSourceRoot!, "Wizards/wzapp/template/Books/Reports/by_author.FRX");
+
+        Expect(!string.IsNullOrWhiteSpace(projectPath) && !string.IsNullOrWhiteSpace(programPath) &&
+               !string.IsNullOrWhiteSpace(formPath) && !string.IsNullOrWhiteSpace(reportPath),
+            "fresh-run VFPSource startup-path smoke should resolve project, program, form, and report assets from the extracted root");
+        if (string.IsNullOrWhiteSpace(projectPath) || string.IsNullOrWhiteSpace(programPath) ||
+            string.IsNullOrWhiteSpace(formPath) || string.IsNullOrWhiteSpace(reportPath))
+        {
+            return;
+        }
+
+        SmokeProjectEditorWithRealAsset(
+            projectPath,
+            expectGroups: new[] { "Forms", "Programs", "Class Libraries", "Classes", "Other Assets" });
+        SmokeProgramEditorWithRealAsset(programPath);
+        SmokeStandaloneStudioWithMultipleAssets(formPath, reportPath);
     }
 
     private static void TearDownForm(Form form)
