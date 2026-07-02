@@ -7086,17 +7086,11 @@ internal static class Program
 
     private static void SmokeAssetEditorDeletedReportSettingsMissingOrientationHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor deleted-report-settings missing ORIENTATION host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDeletedSettingsMissingOrientationSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -7225,17 +7219,11 @@ internal static class Program
 
     private static void SmokeAssetEditorDeletedReportSettingsMissingPaperSizeHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor deleted-report-settings missing PAPERSIZE host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDeletedSettingsMissingPaperSizeSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -7364,17 +7352,11 @@ internal static class Program
 
     private static void SmokeAssetEditorDeletedReportSettingsMissingGridVHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor deleted-report-settings missing GRIDV host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDeletedSettingsMissingGridVSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -7503,17 +7485,11 @@ internal static class Program
 
     private static void SmokeAssetEditorDeletedReportSettingsMissingGridHHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor deleted-report-settings missing GRIDH host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDeletedSettingsMissingGridHSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -7642,17 +7618,11 @@ internal static class Program
 
     private static void SmokeAssetEditorDeletedReportSettingsMissingPaperLengthHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor deleted-report-settings missing PAPERLENGTH host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDeletedSettingsMissingPaperLengthSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -7781,17 +7751,11 @@ internal static class Program
 
     private static void SmokeAssetEditorDeletedReportSettingsMissingPaperWidthHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor deleted-report-settings missing PAPERWIDTH host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDeletedSettingsMissingPaperWidthSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -7920,17 +7884,11 @@ internal static class Program
 
     private static void SmokeAssetEditorDeletedReportSettingsMissingLeftMarginHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor deleted-report-settings missing LEFTMARGIN host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDeletedSettingsMissingLeftMarginSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -8059,17 +8017,11 @@ internal static class Program
 
     private static void SmokeAssetEditorDeletedReportSettingsMissingRightMarginHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor deleted-report-settings missing RIGHTMARGIN host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDeletedSettingsMissingRightMarginSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -8202,17 +8154,11 @@ internal static class Program
         string expectedUpdatedSelectionValue,
         Func<string> buildUpdatedHostResponseJson)
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine($"SKIP: shared asset-editor deleted-report-settings missing {propertyName} host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDeletedSettingsMissingMarginsSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -8341,17 +8287,11 @@ internal static class Program
 
     private static void SmokeAssetEditorDeletedReportSettingsMissingTagHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor deleted-report-settings missing TAG host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDeletedSettingsMissingTagSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -8480,17 +8420,11 @@ internal static class Program
 
     private static void SmokeAssetEditorDeletedReportSettingsMissingDefaultSourceHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor deleted-report-settings missing DEFAULTSOURCE host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDeletedSettingsMissingDefaultSourceSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -8619,17 +8553,11 @@ internal static class Program
 
     private static void SmokeAssetEditorDeletedReportSettingsMissingDriverHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor deleted-report-settings missing DRIVER host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDeletedSettingsMissingDriverSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -8758,17 +8686,11 @@ internal static class Program
 
     private static void SmokeAssetEditorDeletedReportSettingsMissingDeviceHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor deleted-report-settings missing DEVICE host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDeletedSettingsMissingDeviceSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -8897,17 +8819,11 @@ internal static class Program
 
     private static void SmokeAssetEditorDeletedReportSettingsMissingOutputHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor deleted-report-settings missing OUTPUT host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDeletedSettingsMissingOutputSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -9036,17 +8952,11 @@ internal static class Program
 
     private static void SmokeAssetEditorDeletedReportSettingsMissingPrintQualityHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor deleted-report-settings missing PRINTQUALITY host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDeletedSettingsMissingPrintQualitySmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -9175,17 +9085,11 @@ internal static class Program
 
     private static void SmokeAssetEditorDeletedReportSettingsMissingYResolutionHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor deleted-report-settings missing YRESOLUTION host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDeletedSettingsMissingYResolutionSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -9314,17 +9218,11 @@ internal static class Program
 
     private static void SmokeAssetEditorDeletedReportSettingsMissingTTOptionHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor deleted-report-settings missing TTOPTION host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDeletedSettingsMissingTTOptionSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -9453,17 +9351,11 @@ internal static class Program
 
     private static void SmokeAssetEditorDeletedReportSettingsMissingAsciiHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor deleted-report-settings missing ASCII host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDeletedSettingsMissingAsciiSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -9592,17 +9484,11 @@ internal static class Program
 
     private static void SmokeAssetEditorDeletedReportSettingsMissingCollateHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor deleted-report-settings missing COLLATE host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDeletedSettingsMissingCollateSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -9731,17 +9617,11 @@ internal static class Program
 
     private static void SmokeAssetEditorDeletedReportSettingsMissingCopiesHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor deleted-report-settings missing COPIES host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDeletedSettingsMissingCopiesSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -9870,17 +9750,11 @@ internal static class Program
 
     private static void SmokeAssetEditorDeletedReportSettingsMissingColorHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor deleted-report-settings missing COLOR host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDeletedSettingsMissingColorSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -10009,17 +9883,11 @@ internal static class Program
 
     private static void SmokeAssetEditorDeletedReportSettingsMissingColSpacingHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor deleted-report-settings missing COLSPACING host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDeletedSettingsMissingColSpacingSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -10148,17 +10016,11 @@ internal static class Program
 
     private static void SmokeAssetEditorDeletedReportSettingsMissingColWidthHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor deleted-report-settings missing COLWIDTH host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDeletedSettingsMissingColWidthSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -10287,17 +10149,11 @@ internal static class Program
 
     private static void SmokeAssetEditorDeletedReportSettingsMissingColsHostUpdate()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor deleted-report-settings missing COLS host-update smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDeletedSettingsMissingColsSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -10868,7 +10724,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -10995,7 +10851,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -11101,7 +10957,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -11223,7 +11079,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -11345,7 +11201,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         const string duplicateUniqueId = "middle-copy-guid";
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
@@ -11485,7 +11341,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         const string renamedUniqueId = "middle-renamed-guid";
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
@@ -11630,7 +11486,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -11759,7 +11615,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -11888,7 +11744,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -12035,7 +11891,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -12184,7 +12040,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -12332,7 +12188,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -12485,7 +12341,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -12638,7 +12494,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -12791,7 +12647,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -12947,7 +12803,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -13110,7 +12966,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -13287,7 +13143,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -13459,7 +13315,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -13732,7 +13588,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -13966,7 +13822,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -14211,7 +14067,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -14320,7 +14176,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -14443,7 +14299,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -14568,7 +14424,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         const string duplicateUniqueId = "middle-copy-guid";
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
@@ -14708,7 +14564,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         const string renamedUniqueId = "deleted-footer-renamed-guid";
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
@@ -14853,7 +14709,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -14982,7 +14838,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -15111,7 +14967,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -15258,7 +15114,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -15407,7 +15263,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -15555,7 +15411,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -15708,7 +15564,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -15861,7 +15717,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -16014,7 +15870,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -16170,7 +16026,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -16333,7 +16189,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -16510,7 +16366,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
@@ -16682,7 +16538,7 @@ internal static class Program
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var assetPath = CreateSmokeAssetFile(tempRoot, "cust.lbx");
-        var scriptPath = Path.Combine(tempRoot, "fake-studio-host.sh");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
         var logPath = Path.Combine(tempRoot, "studio-host.log");
         var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
         var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
