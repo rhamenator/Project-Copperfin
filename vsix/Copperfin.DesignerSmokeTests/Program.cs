@@ -14999,12 +14999,6 @@ internal static class Program
 
     private static void SmokeAssetEditorAlignLeftObjectCommandRefreshesLabelShellSummary()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor label align-left smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorReorderBackLabelObjectSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
@@ -15148,12 +15142,6 @@ internal static class Program
 
     private static void SmokeAssetEditorAlignTopObjectCommandRefreshesLabelShellSummary()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor label align-top smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorAlignTopLabelObjectSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
@@ -15296,12 +15284,6 @@ internal static class Program
 
     private static void SmokeAssetEditorMatchSizeObjectCommandRefreshesLabelShellSummary()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor label match-size smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorResizeLabelObjectSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
@@ -15449,12 +15431,6 @@ internal static class Program
 
     private static void SmokeAssetEditorMatchWidthObjectCommandRefreshesLabelShellSummary()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor label match-width smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorResizeLabelObjectSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
@@ -15602,12 +15578,6 @@ internal static class Program
 
     private static void SmokeAssetEditorMatchHeightObjectCommandRefreshesLabelShellSummary()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor label match-height smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorResizeLabelObjectSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
@@ -15755,12 +15725,6 @@ internal static class Program
 
     private static void SmokeAssetEditorDistributeHorizontallyObjectCommandRefreshesLabelShellSummary()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor label distribute-horizontal smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDistributeLabelObjectSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
@@ -15911,12 +15875,6 @@ internal static class Program
 
     private static void SmokeAssetEditorDistributeVerticallyObjectCommandRefreshesLabelShellSummary()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor label distribute-vertical smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorDistributeVerticalLabelObjectSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
@@ -16074,12 +16032,6 @@ internal static class Program
 
     private static void SmokeAssetEditorSnapVerticallyObjectCommandRefreshesLabelShellSummary()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor label snap-vertical smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorSnapLabelObjectSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
@@ -16251,12 +16203,6 @@ internal static class Program
 
     private static void SmokeAssetEditorSnapHorizontallyObjectCommandRefreshesLabelShellSummary()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor label snap-horizontal smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorSnapLabelObjectSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
@@ -16423,12 +16369,6 @@ internal static class Program
 
     private static void SmokeAssetEditorSnapToGridObjectCommandRefreshesLabelShellSummary()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor label snap-to-grid smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
-
         var snapshot = BuildAssetEditorSnapLabelObjectSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
