@@ -572,7 +572,16 @@ internal static class Program
                     SourceLineIndex = 0,
                     MemoBlockNumber = 143
                 },
-                expectRawSnapshotProperty: false);
+                expectRawSnapshotProperty: false,
+                expectedUpdatedPreviewBounds: new ExpectedPreviewBoundsGeometry
+                {
+                    Left = 0,
+                    Top = 0,
+                    Right = 96457,
+                    Bottom = 33436,
+                    Width = 96457,
+                    Height = 33436
+                });
             SmokeRealAssetHostBackedSettingsRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
                 propertyName: "ORIENTATION",
@@ -598,7 +607,16 @@ internal static class Program
                     SourceLineIndex = 0,
                     MemoBlockNumber = 18
                 },
-                expectRawSnapshotProperty: false);
+                expectRawSnapshotProperty: false,
+                expectedUpdatedPreviewBounds: new ExpectedPreviewBoundsGeometry
+                {
+                    Left = 0,
+                    Top = 0,
+                    Right = 21354,
+                    Bottom = 10000,
+                    Width = 21354,
+                    Height = 10000
+                });
             SmokeRealAssetHostBackedSettingsRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 propertyName: "PAPERSIZE",
@@ -1064,6 +1082,15 @@ internal static class Program
                     RecordIndex = 0,
                     FieldIndex = 62,
                     MemoBlockNumber = 0
+                },
+                expectedUpdatedPreviewBounds: new ExpectedPreviewBoundsGeometry
+                {
+                    Left = 0,
+                    Top = 0,
+                    Right = 96457,
+                    Bottom = 33436,
+                    Width = 96457,
+                    Height = 33436
                 });
             SmokeRealAssetHostBackedMissingSettingsRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
@@ -1092,6 +1119,15 @@ internal static class Program
                     RecordIndex = 0,
                     FieldIndex = 62,
                     MemoBlockNumber = 0
+                },
+                expectedUpdatedPreviewBounds: new ExpectedPreviewBoundsGeometry
+                {
+                    Left = 0,
+                    Top = 0,
+                    Right = 21354,
+                    Bottom = 10000,
+                    Width = 21354,
+                    Height = 10000
                 });
             SmokeRealAssetHostBackedMissingSettingsRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
@@ -20742,7 +20778,8 @@ internal static class Program
         bool expectLabel,
         CopperfinStudioNamedValue? expectedUpdatedSetting = null,
         CopperfinStudioNamedValue? expectedUndoneSetting = null,
-        bool expectRawSnapshotProperty = true)
+        bool expectRawSnapshotProperty = true,
+        ExpectedPreviewBoundsGeometry? expectedUpdatedPreviewBounds = null)
     {
         if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
         {
@@ -20762,6 +20799,32 @@ internal static class Program
             if (!loaded.Success || loaded.Document is null || loaded.Document.ReportLayout is null)
             {
                 return;
+            }
+
+            var expectedPreviewBoundsLeft = loaded.Document.ReportLayout.PreviewBoundsLeft;
+            var expectedPreviewBoundsTop = loaded.Document.ReportLayout.PreviewBoundsTop;
+            var expectedPreviewBoundsRight = loaded.Document.ReportLayout.PreviewBoundsRight;
+            var expectedPreviewBoundsBottom = loaded.Document.ReportLayout.PreviewBoundsBottom;
+            var expectedPreviewBoundsWidth = loaded.Document.ReportLayout.PreviewBoundsWidth;
+            var expectedPreviewBoundsHeight = loaded.Document.ReportLayout.PreviewBoundsHeight;
+            if (expectedUpdatedPreviewBounds is not null)
+            {
+                Expect(loaded.Document.ReportLayout.PreviewBoundsAvailable,
+                    $"initial real asset settings snapshot should preserve live preview bounds for {sourcePath}");
+                if (!loaded.Document.ReportLayout.PreviewBoundsAvailable)
+                {
+                    return;
+                }
+
+                AssertRealAssetLivePreviewBounds(
+                    loaded.Document,
+                    expectedPreviewBoundsLeft,
+                    expectedPreviewBoundsTop,
+                    expectedPreviewBoundsRight,
+                    expectedPreviewBoundsBottom,
+                    expectedPreviewBoundsWidth,
+                    expectedPreviewBoundsHeight,
+                    "initial real asset settings snapshot should preserve live preview metadata");
             }
 
             var initialSetting = loaded.Document.ReportLayout.Settings
@@ -20807,6 +20870,18 @@ internal static class Program
                 requireSelectedSettings: true,
                 expectRawSnapshotProperty: expectRawSnapshotProperty,
                 $"updated real asset settings snapshot should preserve {propertyName}");
+            if (expectedUpdatedPreviewBounds is not null)
+            {
+                AssertRealAssetLivePreviewBounds(
+                    updateResult.Document,
+                    expectedUpdatedPreviewBounds.Left,
+                    expectedUpdatedPreviewBounds.Top,
+                    expectedUpdatedPreviewBounds.Right,
+                    expectedUpdatedPreviewBounds.Bottom,
+                    expectedUpdatedPreviewBounds.Width,
+                    expectedUpdatedPreviewBounds.Height,
+                    "updated real asset settings snapshot should preserve live preview metadata");
+            }
             Expect(updateResult.Document.CommandUndoAvailable,
                 $"real asset settings smoke should expose undo after updating {propertyName} for {sourcePath}");
 
@@ -20827,6 +20902,18 @@ internal static class Program
                 requireSelectedSettings: false,
                 expectRawSnapshotProperty: expectRawSnapshotProperty,
                 $"reloaded updated real asset settings snapshot should preserve {propertyName}");
+            if (expectedUpdatedPreviewBounds is not null)
+            {
+                AssertRealAssetLivePreviewBounds(
+                    reloadedAfterUpdate.Document,
+                    expectedUpdatedPreviewBounds.Left,
+                    expectedUpdatedPreviewBounds.Top,
+                    expectedUpdatedPreviewBounds.Right,
+                    expectedUpdatedPreviewBounds.Bottom,
+                    expectedUpdatedPreviewBounds.Width,
+                    expectedUpdatedPreviewBounds.Height,
+                    "reloaded updated real asset settings snapshot should preserve live preview metadata");
+            }
             Expect(reloadedAfterUpdate.Document.CommandUndoAvailable,
                 $"reloaded updated real asset settings snapshot should keep undo available for {sourcePath}");
 
@@ -20847,6 +20934,18 @@ internal static class Program
                 requireSelectedSettings: false,
                 expectRawSnapshotProperty: expectRawSnapshotProperty,
                 $"undone real asset settings snapshot should preserve {propertyName}");
+            if (expectedUpdatedPreviewBounds is not null)
+            {
+                AssertRealAssetLivePreviewBounds(
+                    undoResult.Document,
+                    expectedPreviewBoundsLeft,
+                    expectedPreviewBoundsTop,
+                    expectedPreviewBoundsRight,
+                    expectedPreviewBoundsBottom,
+                    expectedPreviewBoundsWidth,
+                    expectedPreviewBoundsHeight,
+                    "undone real asset settings snapshot should preserve live preview metadata");
+            }
 
             var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
             Expect(reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null,
@@ -20865,6 +20964,18 @@ internal static class Program
                 requireSelectedSettings: false,
                 expectRawSnapshotProperty: expectRawSnapshotProperty,
                 $"reloaded undone real asset settings snapshot should preserve {propertyName}");
+            if (expectedUpdatedPreviewBounds is not null)
+            {
+                AssertRealAssetLivePreviewBounds(
+                    reloadedAfterUndo.Document,
+                    expectedPreviewBoundsLeft,
+                    expectedPreviewBoundsTop,
+                    expectedPreviewBoundsRight,
+                    expectedPreviewBoundsBottom,
+                    expectedPreviewBoundsWidth,
+                    expectedPreviewBoundsHeight,
+                    "reloaded undone real asset settings snapshot should preserve live preview metadata");
+            }
             Expect(!reloadedAfterUndo.Document.CommandUndoAvailable,
                 $"real asset settings smoke should clear undo after restoring {propertyName} for {sourcePath}");
         }
@@ -20893,7 +21004,8 @@ internal static class Program
         int expectedSectionCount,
         bool expectLabel,
         CopperfinStudioNamedValue expectedUpdatedSetting,
-        bool expectRawSnapshotProperty = true)
+        bool expectRawSnapshotProperty = true,
+        ExpectedPreviewBoundsGeometry? expectedUpdatedPreviewBounds = null)
     {
         if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
         {
@@ -20913,6 +21025,32 @@ internal static class Program
             if (!loaded.Success || loaded.Document is null || loaded.Document.ReportLayout is null)
             {
                 return;
+            }
+
+            var expectedPreviewBoundsLeft = loaded.Document.ReportLayout.PreviewBoundsLeft;
+            var expectedPreviewBoundsTop = loaded.Document.ReportLayout.PreviewBoundsTop;
+            var expectedPreviewBoundsRight = loaded.Document.ReportLayout.PreviewBoundsRight;
+            var expectedPreviewBoundsBottom = loaded.Document.ReportLayout.PreviewBoundsBottom;
+            var expectedPreviewBoundsWidth = loaded.Document.ReportLayout.PreviewBoundsWidth;
+            var expectedPreviewBoundsHeight = loaded.Document.ReportLayout.PreviewBoundsHeight;
+            if (expectedUpdatedPreviewBounds is not null)
+            {
+                Expect(loaded.Document.ReportLayout.PreviewBoundsAvailable,
+                    $"initial real asset settings add snapshot should preserve live preview bounds for {sourcePath}");
+                if (!loaded.Document.ReportLayout.PreviewBoundsAvailable)
+                {
+                    return;
+                }
+
+                AssertRealAssetLivePreviewBounds(
+                    loaded.Document,
+                    expectedPreviewBoundsLeft,
+                    expectedPreviewBoundsTop,
+                    expectedPreviewBoundsRight,
+                    expectedPreviewBoundsBottom,
+                    expectedPreviewBoundsWidth,
+                    expectedPreviewBoundsHeight,
+                    "initial real asset settings add snapshot should preserve live preview metadata");
             }
 
             AssertRealAssetSettingMissingSnapshot(
@@ -20944,6 +21082,18 @@ internal static class Program
                 requireSelectedSettings: true,
                 expectRawSnapshotProperty: expectRawSnapshotProperty,
                 $"updated real asset settings snapshot should preserve {propertyName}");
+            if (expectedUpdatedPreviewBounds is not null)
+            {
+                AssertRealAssetLivePreviewBounds(
+                    updateResult.Document,
+                    expectedUpdatedPreviewBounds.Left,
+                    expectedUpdatedPreviewBounds.Top,
+                    expectedUpdatedPreviewBounds.Right,
+                    expectedUpdatedPreviewBounds.Bottom,
+                    expectedUpdatedPreviewBounds.Width,
+                    expectedUpdatedPreviewBounds.Height,
+                    "updated real asset settings add snapshot should preserve live preview metadata");
+            }
             Expect(updateResult.Document.CommandUndoAvailable,
                 $"real asset settings add smoke should expose undo after updating {propertyName} for {sourcePath}");
 
@@ -20964,6 +21114,18 @@ internal static class Program
                 requireSelectedSettings: false,
                 expectRawSnapshotProperty: expectRawSnapshotProperty,
                 $"reloaded updated real asset settings snapshot should preserve {propertyName}");
+            if (expectedUpdatedPreviewBounds is not null)
+            {
+                AssertRealAssetLivePreviewBounds(
+                    reloadedAfterUpdate.Document,
+                    expectedUpdatedPreviewBounds.Left,
+                    expectedUpdatedPreviewBounds.Top,
+                    expectedUpdatedPreviewBounds.Right,
+                    expectedUpdatedPreviewBounds.Bottom,
+                    expectedUpdatedPreviewBounds.Width,
+                    expectedUpdatedPreviewBounds.Height,
+                    "reloaded updated real asset settings add snapshot should preserve live preview metadata");
+            }
             Expect(reloadedAfterUpdate.Document.CommandUndoAvailable,
                 $"reloaded updated real asset settings snapshot should keep undo available for {sourcePath}");
 
@@ -20981,6 +21143,18 @@ internal static class Program
                 expectedSectionCount,
                 expectLabel,
                 $"undone real asset settings snapshot should keep {propertyName} absent");
+            if (expectedUpdatedPreviewBounds is not null)
+            {
+                AssertRealAssetLivePreviewBounds(
+                    undoResult.Document,
+                    expectedPreviewBoundsLeft,
+                    expectedPreviewBoundsTop,
+                    expectedPreviewBoundsRight,
+                    expectedPreviewBoundsBottom,
+                    expectedPreviewBoundsWidth,
+                    expectedPreviewBoundsHeight,
+                    "undone real asset settings add snapshot should preserve live preview metadata");
+            }
 
             var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
             Expect(reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null,
@@ -20996,6 +21170,18 @@ internal static class Program
                 expectedSectionCount,
                 expectLabel,
                 $"reloaded undone real asset settings snapshot should keep {propertyName} absent");
+            if (expectedUpdatedPreviewBounds is not null)
+            {
+                AssertRealAssetLivePreviewBounds(
+                    reloadedAfterUndo.Document,
+                    expectedPreviewBoundsLeft,
+                    expectedPreviewBoundsTop,
+                    expectedPreviewBoundsRight,
+                    expectedPreviewBoundsBottom,
+                    expectedPreviewBoundsWidth,
+                    expectedPreviewBoundsHeight,
+                    "reloaded undone real asset settings add snapshot should preserve live preview metadata");
+            }
             Expect(!reloadedAfterUndo.Document.CommandUndoAvailable,
                 $"real asset settings add smoke should clear undo after restoring {propertyName} for {sourcePath}");
         }
