@@ -30145,6 +30145,21 @@ internal static class Program
 
         try
         {
+            var initialSnapshot = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(initialSnapshot.Success && initialSnapshot.Document is not null,
+                $"real asset editor live-reorder smoke should load initial snapshot data for {sourcePath}");
+            if (!initialSnapshot.Success || initialSnapshot.Document is null || initialSnapshot.Document.ReportLayout is null)
+            {
+                return;
+            }
+
+            var expectedPreviewBoundsLeft = initialSnapshot.Document.ReportLayout.PreviewBoundsLeft;
+            var expectedPreviewBoundsTop = initialSnapshot.Document.ReportLayout.PreviewBoundsTop;
+            var expectedPreviewBoundsRight = initialSnapshot.Document.ReportLayout.PreviewBoundsRight;
+            var expectedPreviewBoundsBottom = initialSnapshot.Document.ReportLayout.PreviewBoundsBottom;
+            var expectedPreviewBoundsWidth = initialSnapshot.Document.ReportLayout.PreviewBoundsWidth;
+            var expectedPreviewBoundsHeight = initialSnapshot.Document.ReportLayout.PreviewBoundsHeight;
+
             using var hostForm = new Form
             {
                 Width = 1400,
@@ -30244,7 +30259,7 @@ internal static class Program
                     var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault();
                     var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
                     var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
-                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                    return string.Equals(selectedSectionModel?.Title, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
                            selectedSectionModel?.RecordIndex == reorderedSectionRecordIndex &&
                            objectListView.Items.Count == expectedSectionObjectCount &&
                            selectedObject?.RecordIndex == expectedReorderedRecordIndex &&
@@ -30282,6 +30297,55 @@ internal static class Program
                    string.Equals(TryGetSnapshotObjectPropertyValue(companionObject, "UNIQUEID"), companionUniqueId, StringComparison.Ordinal) &&
                    string.Equals(companionObject.Title, companionObjectTitle, StringComparison.Ordinal),
                 $"real asset editor live-reorder smoke should preserve source and companion identities after reordering for {sourcePath}");
+
+            var snapshotAfterReorder = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(snapshotAfterReorder.Success && snapshotAfterReorder.Document is not null,
+                $"real asset editor live-reorder smoke should load reordered on-disk state before reload verification for {sourcePath}");
+            if (snapshotAfterReorder.Success && snapshotAfterReorder.Document is not null)
+            {
+                AssertRealAssetRoundTripSnapshot(
+                    snapshotAfterReorder.Document,
+                    expectedReorderedRecordIndex,
+                    "UNIQUEID",
+                    reorderedSourceUniqueId,
+                    reorderedSourceObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectUnplacedObject: false,
+                    $"updated real asset editor live-reorder snapshot should preserve the reordered-source identity");
+                AssertRealAssetRoundTripSnapshot(
+                    snapshotAfterReorder.Document,
+                    companionRecordIndex,
+                    "UNIQUEID",
+                    companionUniqueId,
+                    companionObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectUnplacedObject: false,
+                    $"updated real asset editor live-reorder snapshot should preserve the companion identity");
+                AssertRealAssetSectionObjectCount(
+                    snapshotAfterReorder.Document,
+                    expectedSectionTitle,
+                    expectedSectionObjectCount,
+                    $"updated real asset editor live-reorder snapshot should preserve section object counts");
+                AssertRealAssetSectionRecordOrder(
+                    snapshotAfterReorder.Document,
+                    expectedSectionTitle,
+                    reorderedSectionRecordIndex,
+                    expectedReorderedSectionRecordOrder,
+                    $"updated real asset editor live-reorder snapshot should preserve section record order");
+                AssertRealAssetPreviewBoundsGeometry(
+                    snapshotAfterReorder.Document,
+                    expectedPreviewBoundsLeft,
+                    expectedPreviewBoundsTop,
+                    expectedPreviewBoundsRight,
+                    expectedPreviewBoundsBottom,
+                    expectedPreviewBoundsWidth,
+                    expectedPreviewBoundsHeight,
+                    $"updated real asset editor live-reorder snapshot should preserve live preview metadata");
+            }
 
             var reloadedAfterReorder = CopperfinStudioSnapshotClient.TryLoad(assetPath);
             Expect(reloadedAfterReorder.Success && reloadedAfterReorder.Document is not null,
@@ -30321,6 +30385,15 @@ internal static class Program
                     reorderedSectionRecordIndex,
                     expectedReorderedSectionRecordOrder,
                     $"reloaded real asset editor live-reorder snapshot should preserve section record order");
+                AssertRealAssetPreviewBoundsGeometry(
+                    reloadedAfterReorder.Document,
+                    expectedPreviewBoundsLeft,
+                    expectedPreviewBoundsTop,
+                    expectedPreviewBoundsRight,
+                    expectedPreviewBoundsBottom,
+                    expectedPreviewBoundsWidth,
+                    expectedPreviewBoundsHeight,
+                    $"reloaded real asset editor live-reorder snapshot should preserve live preview metadata");
             }
 
             TearDownForm(hostForm);
