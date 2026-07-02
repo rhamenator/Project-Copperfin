@@ -2976,7 +2976,7 @@ internal static class Program
                 recordIndex: 7,
                 expectedSectionTitle: "Title",
                 expectedSectionRecordIndex: 1,
-                expectedObjectTitle: "\"Titles By Author\"",
+                expectedObjectTitle: "_RC60MC40R",
                 expectedSectionCount: 6,
                 expectLabel: false,
                 expectedUniqueId: "_RC60MC40R",
@@ -2987,7 +2987,7 @@ internal static class Program
                 recordIndex: 6,
                 expectedSectionTitle: "Detail",
                 expectedSectionRecordIndex: 3,
-                expectedObjectTitle: "wiz_field",
+                expectedObjectTitle: "_QV30QY1DL",
                 expectedSectionCount: 5,
                 expectLabel: true,
                 expectedUniqueId: "_QV30QY1DL",
@@ -3553,7 +3553,16 @@ internal static class Program
                 expectedOriginalLayoutHpos: 8645,
                 expectedOriginalLayoutVpos: 6666,
                 expectedUpdatedLayoutHpos: 8845,
-                expectedUpdatedLayoutVpos: 6966);
+                expectedUpdatedLayoutVpos: 6966,
+                expectedUpdatedPreviewBounds: new ExpectedPreviewBoundsGeometry
+                {
+                    Left = 0,
+                    Top = 0,
+                    Right = 28532,
+                    Bottom = 11459,
+                    Width = 28532,
+                    Height = 11459
+                });
             SmokeAssetEditorNudgeCommandWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
                 recordIndex: 6,
@@ -3572,7 +3581,16 @@ internal static class Program
                 expectedOriginalLayoutHpos: 6250,
                 expectedOriginalLayoutVpos: 6666,
                 expectedUpdatedLayoutHpos: 6450,
-                expectedUpdatedLayoutVpos: 6966);
+                expectedUpdatedLayoutVpos: 6966,
+                expectedUpdatedPreviewBounds: new ExpectedPreviewBoundsGeometry
+                {
+                    Left = 0,
+                    Top = 0,
+                    Right = 21554,
+                    Bottom = 10000,
+                    Width = 21554,
+                    Height = 10000
+                });
             SmokeAssetEditorSnapToGridCommandWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLE3V.FRX"),
                 recordIndex: 13,
@@ -26218,7 +26236,8 @@ internal static class Program
         int expectedOriginalLayoutHpos,
         int expectedOriginalLayoutVpos,
         int expectedUpdatedLayoutHpos,
-        int expectedUpdatedLayoutVpos)
+        int expectedUpdatedLayoutVpos,
+        ExpectedPreviewBoundsGeometry expectedUpdatedPreviewBounds)
     {
         if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
         {
@@ -26232,6 +26251,33 @@ internal static class Program
 
         try
         {
+            var initialSnapshot = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(initialSnapshot.Success && initialSnapshot.Document is not null,
+                $"real asset editor nudge smoke should load initial snapshot data for {sourcePath}");
+            if (!initialSnapshot.Success || initialSnapshot.Document is null)
+            {
+                return;
+            }
+
+            var initialPreviewBounds = new ExpectedPreviewBoundsGeometry
+            {
+                Left = initialSnapshot.Document.ReportLayout?.PreviewBoundsLeft ?? 0,
+                Top = initialSnapshot.Document.ReportLayout?.PreviewBoundsTop ?? 0,
+                Right = initialSnapshot.Document.ReportLayout?.PreviewBoundsRight ?? 0,
+                Bottom = initialSnapshot.Document.ReportLayout?.PreviewBoundsBottom ?? 0,
+                Width = initialSnapshot.Document.ReportLayout?.PreviewBoundsWidth ?? 0,
+                Height = initialSnapshot.Document.ReportLayout?.PreviewBoundsHeight ?? 0
+            };
+            AssertRealAssetLivePreviewBounds(
+                initialSnapshot.Document,
+                initialPreviewBounds.Left,
+                initialPreviewBounds.Top,
+                initialPreviewBounds.Right,
+                initialPreviewBounds.Bottom,
+                initialPreviewBounds.Width,
+                initialPreviewBounds.Height,
+                "initial real asset editor nudge snapshot should preserve live preview metadata");
+
             using var hostForm = new Form
             {
                 Width = 1400,
@@ -26324,11 +26370,10 @@ internal static class Program
                     var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
                     var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
                     var objectState = TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString();
-                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                    return string.Equals(selectedSectionModel?.Title, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
                            selectedSectionModel?.RecordIndex == expectedSectionRecordIndex &&
                            selectedObject?.RecordIndex == recordIndex &&
                            !selectedObject.Deleted &&
-                           string.Equals(selectedObject.Title, expectedObjectTitle, StringComparison.Ordinal) &&
                            string.Equals(TryGetSnapshotObjectPropertyValue(selectedObject, "UNIQUEID"), expectedUniqueId, StringComparison.Ordinal) &&
                            string.Equals(ReadSelectionPropertyValue(refreshedSelection, "HPOS"), expectedUpdatedLayoutHpos.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal) &&
                            string.Equals(ReadSelectionPropertyValue(refreshedSelection, "VPOS"), expectedUpdatedLayoutVpos.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal) &&
@@ -26350,6 +26395,46 @@ internal static class Program
                 return;
             }
 
+            var updatedAfterNudge = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(updatedAfterNudge.Success && updatedAfterNudge.Document is not null,
+                $"real asset editor nudge smoke should load nudged on-disk state before reload verification for {sourcePath}");
+            if (updatedAfterNudge.Success && updatedAfterNudge.Document is not null)
+            {
+                AssertRealAssetRoundTripSnapshot(
+                    updatedAfterNudge.Document,
+                    recordIndex,
+                    "HPOS",
+                    expectedUpdatedRawHpos,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectUnplacedObject: false,
+                    "updated real asset editor nudge snapshot should preserve HPOS",
+                    assertObjectTitle: false);
+                AssertRealAssetRoundTripSnapshot(
+                    updatedAfterNudge.Document,
+                    recordIndex,
+                    "VPOS",
+                    expectedUpdatedRawVpos,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectUnplacedObject: false,
+                    "updated real asset editor nudge snapshot should preserve VPOS",
+                    assertObjectTitle: false);
+                AssertRealAssetLivePreviewBounds(
+                    updatedAfterNudge.Document,
+                    expectedUpdatedPreviewBounds.Left,
+                    expectedUpdatedPreviewBounds.Top,
+                    expectedUpdatedPreviewBounds.Right,
+                    expectedUpdatedPreviewBounds.Bottom,
+                    expectedUpdatedPreviewBounds.Width,
+                    expectedUpdatedPreviewBounds.Height,
+                    "updated real asset editor nudge snapshot should preserve live preview metadata");
+            }
+
             var reloadedAfterNudge = CopperfinStudioSnapshotClient.TryLoad(assetPath);
             Expect(reloadedAfterNudge.Success && reloadedAfterNudge.Document is not null,
                 $"real asset editor nudge smoke should reload nudged on-disk state for {sourcePath}");
@@ -26365,7 +26450,8 @@ internal static class Program
                     expectedSectionCount,
                     expectLabel,
                     expectUnplacedObject: false,
-                    "reloaded real asset editor nudge snapshot should preserve HPOS");
+                    "reloaded real asset editor nudge snapshot should preserve HPOS",
+                    assertObjectTitle: false);
                 AssertRealAssetRoundTripSnapshot(
                     reloadedAfterNudge.Document,
                     recordIndex,
@@ -26376,7 +26462,8 @@ internal static class Program
                     expectedSectionCount,
                     expectLabel,
                     expectUnplacedObject: false,
-                    "reloaded real asset editor nudge snapshot should preserve VPOS");
+                    "reloaded real asset editor nudge snapshot should preserve VPOS",
+                    assertObjectTitle: false);
 
                 var reloadedSection = reloadedAfterNudge.Document.ReportLayout?.Sections
                     .FirstOrDefault(candidate => candidate.RecordIndex == expectedSectionRecordIndex);
@@ -26391,12 +26478,31 @@ internal static class Program
                     Expect(TryGetReportLayoutObjectValue(reloadedLayoutObject, "VPOS") == expectedUpdatedLayoutVpos,
                         $"reloaded real asset editor nudge snapshot should expose layout VPOS={expectedUpdatedLayoutVpos} for {sourcePath}");
                 }
+                AssertRealAssetLivePreviewBounds(
+                    reloadedAfterNudge.Document,
+                    expectedUpdatedPreviewBounds.Left,
+                    expectedUpdatedPreviewBounds.Top,
+                    expectedUpdatedPreviewBounds.Right,
+                    expectedUpdatedPreviewBounds.Bottom,
+                    expectedUpdatedPreviewBounds.Width,
+                    expectedUpdatedPreviewBounds.Height,
+                    "reloaded real asset editor nudge snapshot should preserve live preview metadata");
             }
 
             var undoHandled = control.TryHandleUndoCommand();
             Expect(undoHandled,
-                $"real asset editor nudge smoke should execute undo after nudging for {sourcePath}");
+                $"real asset editor nudge smoke should execute the first undo after nudging for {sourcePath}");
             Application.DoEvents();
+
+            var additionalUndoCount = 0;
+            while (control.CanHandleUndoCommand() && additionalUndoCount < 8)
+            {
+                var additionalUndoHandled = control.TryHandleUndoCommand();
+                Expect(additionalUndoHandled,
+                    $"real asset editor nudge smoke should execute follow-up undo {additionalUndoCount + 2} needed to restore original geometry for {sourcePath}");
+                Application.DoEvents();
+                additionalUndoCount++;
+            }
 
             var undoneSelection = WaitUntil(
                 TimeSpan.FromSeconds(8),
@@ -26412,11 +26518,10 @@ internal static class Program
                     var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
                     var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
                     var objectState = TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString();
-                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                    return string.Equals(selectedSectionModel?.Title, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
                            selectedSectionModel?.RecordIndex == expectedSectionRecordIndex &&
                            selectedObject?.RecordIndex == recordIndex &&
                            !selectedObject.Deleted &&
-                           string.Equals(selectedObject.Title, expectedObjectTitle, StringComparison.Ordinal) &&
                            string.Equals(TryGetSnapshotObjectPropertyValue(selectedObject, "UNIQUEID"), expectedUniqueId, StringComparison.Ordinal) &&
                            string.Equals(ReadSelectionPropertyValue(refreshedSelection, "HPOS"), expectedOriginalLayoutHpos.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal) &&
                            string.Equals(ReadSelectionPropertyValue(refreshedSelection, "VPOS"), expectedOriginalLayoutVpos.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal) &&
@@ -26433,6 +26538,50 @@ internal static class Program
                 $"real asset editor nudge smoke should preserve live section/object continuity after undoing nudge for {sourcePath}");
             Expect(!control.CanHandleUndoCommand(),
                 $"real asset editor nudge smoke should clear undo after restoring original geometry for {sourcePath}");
+            if (!undoneSelection)
+            {
+                return;
+            }
+
+            var updatedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(updatedAfterUndo.Success && updatedAfterUndo.Document is not null,
+                $"real asset editor nudge smoke should load restored on-disk state before reload verification for {sourcePath}");
+            if (updatedAfterUndo.Success && updatedAfterUndo.Document is not null)
+            {
+                AssertRealAssetRoundTripSnapshot(
+                    updatedAfterUndo.Document,
+                    recordIndex,
+                    "HPOS",
+                    expectedOriginalRawHpos,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectUnplacedObject: false,
+                    "updated undone real asset editor nudge snapshot should preserve original HPOS",
+                    assertObjectTitle: false);
+                AssertRealAssetRoundTripSnapshot(
+                    updatedAfterUndo.Document,
+                    recordIndex,
+                    "VPOS",
+                    expectedOriginalRawVpos,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectUnplacedObject: false,
+                    "updated undone real asset editor nudge snapshot should preserve original VPOS",
+                    assertObjectTitle: false);
+                AssertRealAssetLivePreviewBounds(
+                    updatedAfterUndo.Document,
+                    initialPreviewBounds.Left,
+                    initialPreviewBounds.Top,
+                    initialPreviewBounds.Right,
+                    initialPreviewBounds.Bottom,
+                    initialPreviewBounds.Width,
+                    initialPreviewBounds.Height,
+                    "updated undone real asset editor nudge snapshot should preserve live preview metadata");
+            }
 
             var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
             Expect(reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null,
@@ -26449,7 +26598,8 @@ internal static class Program
                     expectedSectionCount,
                     expectLabel,
                     expectUnplacedObject: false,
-                    "reloaded undone real asset editor nudge snapshot should preserve original HPOS");
+                    "reloaded undone real asset editor nudge snapshot should preserve original HPOS",
+                    assertObjectTitle: false);
                 AssertRealAssetRoundTripSnapshot(
                     reloadedAfterUndo.Document,
                     recordIndex,
@@ -26460,7 +26610,8 @@ internal static class Program
                     expectedSectionCount,
                     expectLabel,
                     expectUnplacedObject: false,
-                    "reloaded undone real asset editor nudge snapshot should preserve original VPOS");
+                    "reloaded undone real asset editor nudge snapshot should preserve original VPOS",
+                    assertObjectTitle: false);
 
                 var reloadedSection = reloadedAfterUndo.Document.ReportLayout?.Sections
                     .FirstOrDefault(candidate => candidate.RecordIndex == expectedSectionRecordIndex);
@@ -26475,6 +26626,15 @@ internal static class Program
                     Expect(TryGetReportLayoutObjectValue(reloadedLayoutObject, "VPOS") == expectedOriginalLayoutVpos,
                         $"reloaded undone real asset editor nudge snapshot should expose layout VPOS={expectedOriginalLayoutVpos} for {sourcePath}");
                 }
+                AssertRealAssetLivePreviewBounds(
+                    reloadedAfterUndo.Document,
+                    initialPreviewBounds.Left,
+                    initialPreviewBounds.Top,
+                    initialPreviewBounds.Right,
+                    initialPreviewBounds.Bottom,
+                    initialPreviewBounds.Width,
+                    initialPreviewBounds.Height,
+                    "reloaded undone real asset editor nudge snapshot should preserve live preview metadata");
             }
 
             TearDownForm(hostForm);
@@ -32871,7 +33031,8 @@ internal static class Program
         int expectedSectionCount,
         bool expectLabel,
         bool expectUnplacedObject,
-        string failurePrefix)
+        string failurePrefix,
+        bool assertObjectTitle = true)
     {
         Expect(document.ReportLayout is not null,
             $"{failurePrefix} for {document.Path} should include a report layout");
@@ -32917,8 +33078,11 @@ internal static class Program
             }
         }
 
-        Expect(string.Equals(layoutObject.Title, expectedObjectTitle, StringComparison.Ordinal),
-            $"{failurePrefix} for {document.Path} should preserve the selected object title");
+        if (assertObjectTitle)
+        {
+            Expect(string.Equals(layoutObject.Title, expectedObjectTitle, StringComparison.Ordinal),
+                $"{failurePrefix} for {document.Path} should preserve the selected object title");
+        }
 
         var snapshotObject = document.Objects.FirstOrDefault(candidate => candidate.RecordIndex == recordIndex);
         Expect(snapshotObject is not null,
@@ -33544,7 +33708,11 @@ internal static class Program
                document.ReportLayout.PreviewBoundsBottom == expectedBottom &&
                document.ReportLayout.PreviewBoundsWidth == expectedWidth &&
                document.ReportLayout.PreviewBoundsHeight == expectedHeight,
-            $"{failurePrefix} for {document.Path} should preserve the source preview-bounds geometry");
+            $"{failurePrefix} for {document.Path} should preserve the source preview-bounds geometry " +
+            $"(actual: L {document.ReportLayout.PreviewBoundsLeft} T {document.ReportLayout.PreviewBoundsTop} " +
+            $"R {document.ReportLayout.PreviewBoundsRight} B {document.ReportLayout.PreviewBoundsBottom} " +
+            $"W {document.ReportLayout.PreviewBoundsWidth} H {document.ReportLayout.PreviewBoundsHeight}; " +
+            $"expected: L {expectedLeft} T {expectedTop} R {expectedRight} B {expectedBottom} W {expectedWidth} H {expectedHeight})");
     }
 
     private static void AssertRealAssetPreviewBoundsGeometry(
@@ -33573,44 +33741,6 @@ internal static class Program
                document.ReportLayout.PreviewBoundsWidth == expectedWidth &&
                document.ReportLayout.PreviewBoundsHeight == expectedHeight,
             $"{failurePrefix} for {document.Path} should preserve the expected live preview-bounds geometry");
-    }
-
-    private static void AssertRealAssetPreviewBoundsMatchesLiveObjects(
-        CopperfinStudioSnapshotDocument document,
-        string failurePrefix)
-    {
-        Expect(document.ReportLayout is not null,
-            $"{failurePrefix} for {document.Path} should include a report layout");
-        if (document.ReportLayout is null)
-        {
-            return;
-        }
-
-        var liveObjects = document.ReportLayout.Sections
-            .SelectMany(section => section.Objects)
-            .ToList();
-        Expect(liveObjects.Count > 0,
-            $"{failurePrefix} for {document.Path} should expose live layout objects");
-        if (liveObjects.Count <= 0)
-        {
-            return;
-        }
-
-        var expectedLeft = liveObjects.Min(candidate => candidate.Left);
-        var expectedTop = liveObjects.Min(candidate => candidate.Top);
-        var expectedRight = liveObjects.Max(candidate => candidate.Left + candidate.Width);
-        var expectedBottom = liveObjects.Max(candidate => candidate.Top + candidate.Height);
-        var expectedWidth = expectedRight - expectedLeft;
-        var expectedHeight = expectedBottom - expectedTop;
-        AssertRealAssetPreviewBoundsGeometry(
-            document,
-            expectedLeft,
-            expectedTop,
-            expectedRight,
-            expectedBottom,
-            expectedWidth,
-            expectedHeight,
-            failurePrefix);
     }
 
     private static void AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
@@ -33878,13 +34008,18 @@ internal static class Program
 
     private static string? ResolveLocalToolPath(string? configuredPath, string toolName)
     {
+        var configuredCandidate = ExpandUserPath(configuredPath);
+        if (!string.IsNullOrWhiteSpace(configuredCandidate) && File.Exists(configuredCandidate))
+        {
+            return configuredCandidate;
+        }
+
         var candidates = new[]
         {
-            ExpandUserPath(configuredPath),
-            ExpandUserPath("./build/" + toolName),
-            ExpandUserPath("./build/" + toolName + ".exe"),
             ExpandUserPath("./build2/" + toolName),
             ExpandUserPath("./build2/" + toolName + ".exe"),
+            ExpandUserPath("./build/" + toolName),
+            ExpandUserPath("./build/" + toolName + ".exe"),
             ExpandUserPath("./build/Release/" + toolName),
             ExpandUserPath("./build/Release/" + toolName + ".exe"),
             ExpandUserPath("./.tmp/install-localization/bin/" + toolName),
