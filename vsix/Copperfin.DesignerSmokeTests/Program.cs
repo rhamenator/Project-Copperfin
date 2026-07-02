@@ -30579,12 +30579,6 @@ internal static class Program
             return;
         }
 
-        if (Path.DirectorySeparatorChar != '\\')
-        {
-            Console.WriteLine("SKIP: real project debugger smoke requires Windows runtime build execution support.");
-            return;
-        }
-
         using var hostForm = new Form
         {
             Width = 1400,
