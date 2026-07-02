@@ -4907,6 +4907,7 @@ internal static class Program
                 expectLabel: true,
                 expectedOriginalSectionObjectCount: 1,
                 expectedUpdatedSectionObjectCount: 2);
+            SmokeConfiguredVfp9ZipAssetDiscovery();
             SmokeFreshRunVfpSourceStartupPaths();
             SmokeProjectEditorWithRealAsset(
                 ResolveFirstExistingRealAssetPath(
@@ -30755,6 +30756,105 @@ internal static class Program
         SmokeAssetEditorWithRealAsset(labelPath, expectSection: "Detail");
     }
 
+    private static void SmokeConfiguredVfp9ZipAssetDiscovery()
+    {
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmokeVfp9ZipDiscovery-" + Guid.NewGuid().ToString("N"));
+        var zipPath = Path.Combine(tempRoot, "VFP9Samples.zip");
+        var extractionBaseRoot = GetArchiveExtractionBaseRoot(zipPath);
+        var previousVfp9Root = Environment.GetEnvironmentVariable("COPPERFIN_VFP9_ROOT");
+        var previousVfp9Zip = Environment.GetEnvironmentVariable("COPPERFIN_VFP9_ZIP");
+
+        Directory.CreateDirectory(tempRoot);
+
+        try
+        {
+            if (Directory.Exists(extractionBaseRoot))
+            {
+                Directory.Delete(extractionBaseRoot, recursive: true);
+            }
+
+            using (var archive = ZipFile.Open(zipPath, ZipArchiveMode.Create))
+            {
+                CreateArchiveEntry(archive, "Samples/Solution/Reports/invoice.frx", "invoice");
+                CreateArchiveEntry(archive, "Samples/Solution/Reports/cust.lbx", "cust");
+                CreateArchiveEntry(archive, "Samples/Solution/solution.pjx", "solution");
+                CreateArchiveEntry(archive, "Wizards/Template/Books/Forms/books.scx", "books");
+            }
+
+            Environment.SetEnvironmentVariable("COPPERFIN_VFP9_ROOT", null);
+            Environment.SetEnvironmentVariable("COPPERFIN_VFP9_ZIP", zipPath);
+
+            var resolvedInvoice = TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx");
+            var resolvedLabel = TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx");
+            var resolvedSolution = TryResolveVfp9InstallAsset(@"Samples\Solution\solution.pjx");
+            var resolvedBooksForm = TryResolveVfp9InstallAsset(@"Wizards\Template\Books\Forms\books.scx");
+
+            Expect(string.Equals(
+                    resolvedInvoice,
+                    Path.Combine(extractionBaseRoot, "Samples", "Solution", "Reports", "invoice.frx"),
+                    StringComparison.OrdinalIgnoreCase),
+                "configured VFP9 zip discovery should resolve invoice.frx from the extracted sample root");
+            Expect(string.Equals(
+                    resolvedLabel,
+                    Path.Combine(extractionBaseRoot, "Samples", "Solution", "Reports", "cust.lbx"),
+                    StringComparison.OrdinalIgnoreCase),
+                "configured VFP9 zip discovery should resolve cust.lbx from the extracted sample root");
+            Expect(string.Equals(
+                    resolvedSolution,
+                    Path.Combine(extractionBaseRoot, "Samples", "Solution", "solution.pjx"),
+                    StringComparison.OrdinalIgnoreCase),
+                "configured VFP9 zip discovery should resolve solution.pjx from the extracted sample root");
+            Expect(string.Equals(
+                    resolvedBooksForm,
+                    Path.Combine(extractionBaseRoot, "Wizards", "Template", "Books", "Forms", "books.scx"),
+                    StringComparison.OrdinalIgnoreCase),
+                "configured VFP9 zip discovery should resolve books.scx from the extracted sample root");
+
+            var enumeratedRoots = EnumerateResolvedRealAssetRoots().ToList();
+            Expect(enumeratedRoots.Any(root => string.Equals(root, extractionBaseRoot, StringComparison.OrdinalIgnoreCase)),
+                "configured VFP9 zip discovery should surface the extracted sample root during real-asset root enumeration");
+
+            var enumeratedReportAssets = EnumerateResolvedRealReportAssetPaths().ToList();
+            Expect(enumeratedReportAssets.Any(path => string.Equals(path, resolvedInvoice, StringComparison.OrdinalIgnoreCase)),
+                "configured VFP9 zip discovery should surface invoice.frx during report/label asset enumeration");
+            Expect(enumeratedReportAssets.Any(path => string.Equals(path, resolvedLabel, StringComparison.OrdinalIgnoreCase)),
+                "configured VFP9 zip discovery should surface cust.lbx during report/label asset enumeration");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_VFP9_ROOT", previousVfp9Root);
+            Environment.SetEnvironmentVariable("COPPERFIN_VFP9_ZIP", previousVfp9Zip);
+
+            try
+            {
+                if (Directory.Exists(extractionBaseRoot))
+                {
+                    Directory.Delete(extractionBaseRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
     private static void TearDownForm(Form form)
     {
         if (form.IsDisposed)
@@ -30873,6 +30973,18 @@ internal static class Program
                 yielded.Add(root!))
             {
                 yield return root!;
+            }
+        }
+
+        var vfp9ZipPath = ResolveVfp9ZipPath();
+        if (!string.IsNullOrWhiteSpace(vfp9ZipPath))
+        {
+            var extractedVfp9Root = TryExtractArchive(vfp9ZipPath!);
+            if (!string.IsNullOrWhiteSpace(extractedVfp9Root) &&
+                Directory.Exists(extractedVfp9Root) &&
+                yielded.Add(extractedVfp9Root!))
+            {
+                yield return extractedVfp9Root!;
             }
         }
     }
@@ -31780,6 +31892,7 @@ internal static class Program
 
     private static string? TryResolveVfp9InstallAsset(string relativePath)
     {
+        var normalizedRelativePath = relativePath.Replace('\\', '/');
         var configuredRoot = ExpandUserPath(Environment.GetEnvironmentVariable("COPPERFIN_VFP9_ROOT"));
         var defaultRoot = Path.DirectorySeparatorChar == '\\'
             ? @"C:\Program Files (x86)\Microsoft Visual FoxPro 9"
@@ -31792,14 +31905,37 @@ internal static class Program
                 continue;
             }
 
-            var candidate = Path.Combine(root!, relativePath.Replace('\\', Path.DirectorySeparatorChar));
-            if (File.Exists(candidate))
+            var candidate = TryResolveAssetUnderRoot(root!, normalizedRelativePath);
+            if (!string.IsNullOrWhiteSpace(candidate))
             {
                 return candidate;
             }
         }
 
+        var zipPath = ResolveVfp9ZipPath();
+        if (!string.IsNullOrWhiteSpace(zipPath))
+        {
+            var extractedRoot = TryExtractArchive(zipPath!);
+            if (!string.IsNullOrWhiteSpace(extractedRoot))
+            {
+                var extractedCandidate = TryResolveAssetUnderRoot(extractedRoot!, normalizedRelativePath);
+                if (!string.IsNullOrWhiteSpace(extractedCandidate))
+                {
+                    return extractedCandidate;
+                }
+            }
+        }
+
         return null;
+    }
+
+    private static string? ResolveVfp9ZipPath()
+    {
+        return ResolveFirstExistingRealAssetPath(
+            ExpandUserPath(Environment.GetEnvironmentVariable("COPPERFIN_VFP9_ZIP")),
+            ExpandUserPath("~/Downloads/VFP9Samples.zip"),
+            ExpandUserPath("~/Downloads/VFP9-Samples.zip"),
+            ExpandUserPath("~/Downloads/VFP9.zip"));
     }
 
     private static string? TryResolveVfpSourceAsset(string archiveRelativePath)
@@ -31960,12 +32096,66 @@ internal static class Program
         return extractionRoot;
     }
 
+    private static string? TryExtractArchive(string zipPath)
+    {
+        var extractionRoot = GetArchiveExtractionBaseRoot(zipPath);
+        var completionMarker = Path.Combine(extractionRoot, ".copperfin-extract-complete");
+        if (File.Exists(completionMarker))
+        {
+            return extractionRoot;
+        }
+
+        Directory.CreateDirectory(extractionRoot);
+
+        using var archive = ZipFile.OpenRead(zipPath);
+        var fileEntries = archive.Entries
+            .Where(entry => !string.IsNullOrEmpty(entry.Name))
+            .ToList();
+        if (fileEntries.Count == 0)
+        {
+            return null;
+        }
+
+        foreach (var entry in fileEntries)
+        {
+            var destinationPath = Path.Combine(extractionRoot, entry.FullName.Replace('/', Path.DirectorySeparatorChar));
+            var destinationDirectory = Path.GetDirectoryName(destinationPath);
+            if (!string.IsNullOrWhiteSpace(destinationDirectory))
+            {
+                Directory.CreateDirectory(destinationDirectory!);
+            }
+
+            if (File.Exists(destinationPath))
+            {
+                var existingAttributes = File.GetAttributes(destinationPath);
+                if ((existingAttributes & FileAttributes.ReadOnly) != 0)
+                {
+                    File.SetAttributes(destinationPath, existingAttributes & ~FileAttributes.ReadOnly);
+                }
+            }
+
+            entry.ExtractToFile(destinationPath, overwrite: true);
+            var extractedAttributes = File.GetAttributes(destinationPath);
+            File.SetAttributes(destinationPath, extractedAttributes | FileAttributes.ReadOnly);
+        }
+
+        File.WriteAllText(completionMarker, "complete");
+        return extractionRoot;
+    }
+
     private static string GetArchiveExtractionBaseRoot(string zipPath)
     {
         return Path.Combine(
             Path.GetTempPath(),
             "CopperfinDesignerSmokeRealAssets",
             Path.GetFileNameWithoutExtension(zipPath));
+    }
+
+    private static void CreateArchiveEntry(ZipArchive archive, string entryPath, string content)
+    {
+        var entry = archive.CreateEntry(entryPath);
+        using var writer = new StreamWriter(entry.Open());
+        writer.Write(content);
     }
 
     private static string? ExpandUserPath(string? path)
