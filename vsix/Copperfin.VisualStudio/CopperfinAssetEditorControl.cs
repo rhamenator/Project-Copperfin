@@ -98,6 +98,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private string? currentPath;
     private CopperfinStudioSnapshotDocument? currentSnapshot;
     private CopperfinRuntimeDebugSession? currentDebugSession;
+    private CopperfinProjectExecutionResult? currentProjectWorkflowResult;
     private CopperfinProjectInsights? currentProjectInsights;
     private bool suppressSelectionSync;
     private bool embeddedStudioShell;
@@ -898,6 +899,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         refreshButton.Enabled = true;
         currentSnapshot = null;
         currentDebugSession = null;
+        currentProjectWorkflowResult = null;
         currentProjectInsights = null;
         sectionListView.Items.Clear();
         objectListView.Items.Clear();
@@ -2298,7 +2300,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             return;
         }
 
+        currentProjectWorkflowResult = null;
         var result = await CopperfinProjectWorkflow.ExecuteAsync(currentPath!, operation);
+        currentProjectWorkflowResult = result;
         snapshotStatusLabel.Text = result.Message;
         if (!result.Success)
         {
