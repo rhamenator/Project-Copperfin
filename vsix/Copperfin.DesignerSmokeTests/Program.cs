@@ -21189,6 +21189,13 @@ internal static class Program
                 return;
             }
 
+            Expect(loaded.Document.ReportLayout?.PreviewBoundsAvailable == true,
+                $"initial real asset placement snapshot should preserve live preview bounds for {sourcePath}");
+            if (loaded.Document.ReportLayout?.PreviewBoundsAvailable != true)
+            {
+                return;
+            }
+
             AssertRealAssetRoundTripSnapshot(
                 loaded.Document,
                 recordIndex,
@@ -21204,6 +21211,22 @@ internal static class Program
                 loaded.Document,
                 expectedOriginalUnplacedObjectCount,
                 $"initial real asset placement snapshot should preserve unplaced-object counts");
+            var initialLayout = loaded.Document.ReportLayout;
+            var expectedPreviewBoundsLeft = initialLayout.PreviewBoundsLeft;
+            var expectedPreviewBoundsTop = initialLayout.PreviewBoundsTop;
+            var expectedPreviewBoundsRight = initialLayout.PreviewBoundsRight;
+            var expectedPreviewBoundsBottom = initialLayout.PreviewBoundsBottom;
+            var expectedPreviewBoundsWidth = initialLayout.PreviewBoundsWidth;
+            var expectedPreviewBoundsHeight = initialLayout.PreviewBoundsHeight;
+            AssertRealAssetPreviewBoundsGeometry(
+                loaded.Document,
+                expectedPreviewBoundsLeft,
+                expectedPreviewBoundsTop,
+                expectedPreviewBoundsRight,
+                expectedPreviewBoundsBottom,
+                expectedPreviewBoundsWidth,
+                expectedPreviewBoundsHeight,
+                $"initial real asset placement snapshot should preserve live preview metadata");
 
             var updateResult = CopperfinStudioSnapshotClient.TryUpdateProperty(
                 assetPath,
@@ -21232,6 +21255,15 @@ internal static class Program
                 updateResult.Document,
                 expectedUpdatedUnplacedObjectCount,
                 $"updated real asset placement snapshot should preserve unplaced-object counts");
+            AssertRealAssetPreviewBoundsGeometry(
+                updateResult.Document,
+                expectedPreviewBoundsLeft,
+                expectedPreviewBoundsTop,
+                expectedPreviewBoundsRight,
+                expectedPreviewBoundsBottom,
+                expectedPreviewBoundsWidth,
+                expectedPreviewBoundsHeight,
+                $"updated real asset placement snapshot should preserve live preview metadata");
             Expect(updateResult.Document.CommandUndoAvailable,
                 $"real asset placement smoke should expose undo after updating {propertyName} for {sourcePath}");
 
@@ -21258,6 +21290,15 @@ internal static class Program
                 reloadedAfterUpdate.Document,
                 expectedUpdatedUnplacedObjectCount,
                 $"reloaded updated real asset placement snapshot should preserve unplaced-object counts");
+            AssertRealAssetPreviewBoundsGeometry(
+                reloadedAfterUpdate.Document,
+                expectedPreviewBoundsLeft,
+                expectedPreviewBoundsTop,
+                expectedPreviewBoundsRight,
+                expectedPreviewBoundsBottom,
+                expectedPreviewBoundsWidth,
+                expectedPreviewBoundsHeight,
+                $"reloaded updated real asset placement snapshot should preserve live preview metadata");
             Expect(reloadedAfterUpdate.Document.CommandUndoAvailable,
                 $"reloaded updated real asset placement snapshot should keep undo available for {sourcePath}");
 
@@ -21292,6 +21333,15 @@ internal static class Program
                 reloadedAfterUndo.Document,
                 expectedOriginalUnplacedObjectCount,
                 $"reloaded undone real asset placement snapshot should preserve unplaced-object counts");
+            AssertRealAssetPreviewBoundsGeometry(
+                reloadedAfterUndo.Document,
+                expectedPreviewBoundsLeft,
+                expectedPreviewBoundsTop,
+                expectedPreviewBoundsRight,
+                expectedPreviewBoundsBottom,
+                expectedPreviewBoundsWidth,
+                expectedPreviewBoundsHeight,
+                $"reloaded undone real asset placement snapshot should preserve live preview metadata");
             Expect(!reloadedAfterUndo.Document.CommandUndoAvailable,
                 $"real asset placement smoke should clear undo after restoring {propertyName} for {sourcePath}");
         }
