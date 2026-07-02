@@ -23467,6 +23467,11 @@ internal static class Program
             var deleteButton = GetPrivateButton(control, "deleteObjectButton");
             var restoreButton = GetPrivateButton(control, "restoreObjectButton");
             var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface for the real delete smoke.");
+            var localization = new CopperfinLocalization("en-US");
+            var settingsScopeTitle = localization.Text("AssetEditor.ReportSection.Settings");
+            var deletedSettingsScopeTitle = localization.Format(
+                "AssetEditor.ReportSection.Deleted",
+                settingsScopeTitle);
 
             var loaded = WaitUntil(
                 TimeSpan.FromSeconds(8),
@@ -23627,6 +23632,50 @@ internal static class Program
                     expectedSectionTitle,
                     expectedOriginalSectionObjectCount,
                     $"reloaded restored real asset editor delete snapshot should preserve section object counts");
+
+                Expect(reloadedAfterRestore.Document.ReportLayout is not null,
+                    $"reloaded restored real asset editor delete snapshot should preserve report layout metadata for {sourcePath}");
+                if (reloadedAfterRestore.Document.ReportLayout is not null)
+                {
+                    var restoredLayout = reloadedAfterRestore.Document.ReportLayout;
+                    Expect(restoredLayout.PreviewBoundsAvailable,
+                        $"reloaded restored real asset editor delete snapshot should preserve live preview bounds for {sourcePath}");
+                    Expect(!restoredLayout.DeletedPreviewBoundsAvailable,
+                        $"reloaded restored real asset editor delete snapshot should clear deleted preview bounds for {sourcePath}");
+
+                    var expectedScopeTitle = restoredLayout.Settings.Count > 0
+                        ? settingsScopeTitle
+                        : restoredLayout.DeletedSettings.Count > 0
+                            ? deletedSettingsScopeTitle
+                            : null;
+                    Expect(!string.IsNullOrWhiteSpace(expectedScopeTitle),
+                        $"reloaded restored real asset editor delete snapshot should expose a settings scope for {sourcePath}");
+                    if (!string.IsNullOrWhiteSpace(expectedScopeTitle))
+                    {
+                        foreach (ListViewItem item in sectionListView.Items)
+                        {
+                            item.Selected = string.Equals(item.Text, expectedScopeTitle, StringComparison.Ordinal);
+                        }
+
+                        InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+                        Application.DoEvents();
+
+                        var expectedPreviewBounds = localization.Format(
+                            "AssetEditor.Property.BoundsValue",
+                            restoredLayout.PreviewBoundsLeft,
+                            restoredLayout.PreviewBoundsTop,
+                            restoredLayout.PreviewBoundsRight,
+                            restoredLayout.PreviewBoundsBottom,
+                            restoredLayout.PreviewBoundsWidth,
+                            restoredLayout.PreviewBoundsHeight);
+
+                        Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection restoredSettingsSelection &&
+                               objectListView.Items.Count == 0 &&
+                               string.Equals(ReadSelectionPropertyValue(restoredSettingsSelection, "PREVIEWBOUNDS"), expectedPreviewBounds, StringComparison.Ordinal) &&
+                               ReadSelectionPropertyValue(restoredSettingsSelection, "DELETEDPREVIEWBOUNDS") is null,
+                            $"real asset editor delete smoke should expose restored live preview bounds without stale deleted preview metadata for {sourcePath}");
+                    }
+                }
             }
 
             TearDownForm(hostForm);
