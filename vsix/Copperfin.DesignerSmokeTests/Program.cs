@@ -2217,7 +2217,16 @@ internal static class Program
                 expectedObjectTitle: "\"Titles By Author\"",
                 expectedSectionTitle: "Title",
                 expectedSectionCount: 6,
-                expectLabel: false);
+                expectLabel: false,
+                expectedUpdatedPreviewBounds: new ExpectedPreviewBoundsGeometry
+                {
+                    Left = 0,
+                    Top = 0,
+                    Right = 96457,
+                    Bottom = 33436,
+                    Width = 96457,
+                    Height = 33436
+                });
             SmokeRealAssetHostBackedBatchPropertyRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
                 recordIndex: 6,
@@ -2234,7 +2243,16 @@ internal static class Program
                 expectedObjectTitle: "wiz_field",
                 expectedSectionTitle: "Detail",
                 expectedSectionCount: 5,
-                expectLabel: true);
+                expectLabel: true,
+                expectedUpdatedPreviewBounds: new ExpectedPreviewBoundsGeometry
+                {
+                    Left = 0,
+                    Top = 0,
+                    Right = 22500,
+                    Bottom = 10000,
+                    Width = 22500,
+                    Height = 10000
+                });
             SmokeRealAssetHostBackedBatchPropertyRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 7,
@@ -2251,7 +2269,16 @@ internal static class Program
                 expectedObjectTitle: "\"Titles By Author\"",
                 expectedSectionTitle: "Title",
                 expectedSectionCount: 6,
-                expectLabel: false);
+                expectLabel: false,
+                expectedUpdatedPreviewBounds: new ExpectedPreviewBoundsGeometry
+                {
+                    Left = 0,
+                    Top = 0,
+                    Right = 96457,
+                    Bottom = 33436,
+                    Width = 96457,
+                    Height = 33436
+                });
             SmokeRealAssetHostBackedBatchPropertyRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
                 recordIndex: 6,
@@ -2268,7 +2295,16 @@ internal static class Program
                 expectedObjectTitle: "wiz_field",
                 expectedSectionTitle: "Detail",
                 expectedSectionCount: 5,
-                expectLabel: true);
+                expectLabel: true,
+                expectedUpdatedPreviewBounds: new ExpectedPreviewBoundsGeometry
+                {
+                    Left = 0,
+                    Top = 0,
+                    Right = 21354,
+                    Bottom = 10000,
+                    Width = 21354,
+                    Height = 10000
+                });
             SmokeRealAssetHostBackedBatchPropertyRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 7,
@@ -2285,7 +2321,16 @@ internal static class Program
                 expectedObjectTitle: "\"Titles By Author\"",
                 expectedSectionTitle: "Title",
                 expectedSectionCount: 6,
-                expectLabel: false);
+                expectLabel: false,
+                expectedUpdatedPreviewBounds: new ExpectedPreviewBoundsGeometry
+                {
+                    Left = 0,
+                    Top = 0,
+                    Right = 96457,
+                    Bottom = 33436,
+                    Width = 96457,
+                    Height = 33436
+                });
             SmokeRealAssetHostBackedBatchPropertyRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
                 recordIndex: 6,
@@ -21137,7 +21182,8 @@ internal static class Program
         string expectedObjectTitle,
         string expectedSectionTitle,
         int expectedSectionCount,
-        bool expectLabel)
+        bool expectLabel,
+        ExpectedPreviewBoundsGeometry? expectedUpdatedPreviewBounds = null)
     {
         if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
         {
@@ -21157,6 +21203,32 @@ internal static class Program
             if (!loaded.Success || loaded.Document is null)
             {
                 return;
+            }
+
+            var expectedPreviewBoundsLeft = loaded.Document.ReportLayout?.PreviewBoundsLeft ?? 0;
+            var expectedPreviewBoundsTop = loaded.Document.ReportLayout?.PreviewBoundsTop ?? 0;
+            var expectedPreviewBoundsRight = loaded.Document.ReportLayout?.PreviewBoundsRight ?? 0;
+            var expectedPreviewBoundsBottom = loaded.Document.ReportLayout?.PreviewBoundsBottom ?? 0;
+            var expectedPreviewBoundsWidth = loaded.Document.ReportLayout?.PreviewBoundsWidth ?? 0;
+            var expectedPreviewBoundsHeight = loaded.Document.ReportLayout?.PreviewBoundsHeight ?? 0;
+            if (expectedUpdatedPreviewBounds is not null)
+            {
+                Expect(loaded.Document.ReportLayout?.PreviewBoundsAvailable == true,
+                    $"initial real asset batch snapshot should preserve live preview bounds for {sourcePath}");
+                if (loaded.Document.ReportLayout?.PreviewBoundsAvailable != true)
+                {
+                    return;
+                }
+
+                AssertRealAssetLivePreviewBounds(
+                    loaded.Document,
+                    expectedPreviewBoundsLeft,
+                    expectedPreviewBoundsTop,
+                    expectedPreviewBoundsRight,
+                    expectedPreviewBoundsBottom,
+                    expectedPreviewBoundsWidth,
+                    expectedPreviewBoundsHeight,
+                    $"initial real asset batch snapshot should preserve live preview metadata");
             }
 
             foreach (var property in originalValues)
@@ -21196,6 +21268,18 @@ internal static class Program
                     expectUnplacedObject: false,
                     $"updated real asset batch snapshot should preserve {property.Key}");
             }
+            if (expectedUpdatedPreviewBounds is not null)
+            {
+                AssertRealAssetLivePreviewBounds(
+                    updateResult.Document,
+                    expectedUpdatedPreviewBounds.Left,
+                    expectedUpdatedPreviewBounds.Top,
+                    expectedUpdatedPreviewBounds.Right,
+                    expectedUpdatedPreviewBounds.Bottom,
+                    expectedUpdatedPreviewBounds.Width,
+                    expectedUpdatedPreviewBounds.Height,
+                    $"updated real asset batch snapshot should preserve live preview metadata");
+            }
             Expect(updateResult.Document.CommandUndoAvailable,
                 $"real asset batch smoke should expose undo after updating {propertyChanges.Count} properties for {sourcePath}");
 
@@ -21221,6 +21305,18 @@ internal static class Program
                     expectUnplacedObject: false,
                     $"reloaded updated real asset batch snapshot should preserve {property.Key}");
             }
+            if (expectedUpdatedPreviewBounds is not null)
+            {
+                AssertRealAssetLivePreviewBounds(
+                    reloadedAfterUpdate.Document,
+                    expectedUpdatedPreviewBounds.Left,
+                    expectedUpdatedPreviewBounds.Top,
+                    expectedUpdatedPreviewBounds.Right,
+                    expectedUpdatedPreviewBounds.Bottom,
+                    expectedUpdatedPreviewBounds.Width,
+                    expectedUpdatedPreviewBounds.Height,
+                    $"reloaded updated real asset batch snapshot should preserve live preview metadata");
+            }
             Expect(reloadedAfterUpdate.Document.CommandUndoAvailable,
                 $"reloaded updated real asset batch snapshot should keep undo available for {sourcePath}");
 
@@ -21230,6 +21326,18 @@ internal static class Program
             if (!undoResult.Success || undoResult.Document is null)
             {
                 return;
+            }
+            if (expectedUpdatedPreviewBounds is not null)
+            {
+                AssertRealAssetLivePreviewBounds(
+                    undoResult.Document,
+                    expectedPreviewBoundsLeft,
+                    expectedPreviewBoundsTop,
+                    expectedPreviewBoundsRight,
+                    expectedPreviewBoundsBottom,
+                    expectedPreviewBoundsWidth,
+                    expectedPreviewBoundsHeight,
+                    $"undone real asset batch snapshot should preserve live preview metadata");
             }
 
             var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
@@ -21253,6 +21361,18 @@ internal static class Program
                     expectLabel,
                     expectUnplacedObject: false,
                     $"reloaded undone real asset batch snapshot should preserve {property.Key}");
+            }
+            if (expectedUpdatedPreviewBounds is not null)
+            {
+                AssertRealAssetLivePreviewBounds(
+                    reloadedAfterUndo.Document,
+                    expectedPreviewBoundsLeft,
+                    expectedPreviewBoundsTop,
+                    expectedPreviewBoundsRight,
+                    expectedPreviewBoundsBottom,
+                    expectedPreviewBoundsWidth,
+                    expectedPreviewBoundsHeight,
+                    $"reloaded undone real asset batch snapshot should preserve live preview metadata");
             }
 
             Expect(!reloadedAfterUndo.Document.CommandUndoAvailable,
