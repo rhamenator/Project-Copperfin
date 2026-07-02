@@ -10714,11 +10714,6 @@ internal static class Program
 
     private static void SmokeAssetEditorUnplacedReportObjectPlacementIntoSectionRefreshesContinuity()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor unplaced-report placement-transition smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
 
         var snapshot = BuildAssetEditorUnplacedReportObjectUpdateSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
@@ -10841,11 +10836,6 @@ internal static class Program
 
     private static void SmokeAssetEditorDeletedReportObjectHostUpdateRefreshesShellSummary()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor deleted-report-object summary-refresh smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
 
         var snapshot = BuildAssetEditorDeletedReportObjectUpdateSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
@@ -10947,11 +10937,6 @@ internal static class Program
 
     private static void SmokeAssetEditorUndoRefreshesReportShellSummary()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor undo summary-refresh smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
 
         var snapshot = BuildAssetEditorUndoPreviewRefreshSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
@@ -11069,11 +11054,6 @@ internal static class Program
 
     private static void SmokeAssetEditorUndoRefreshesDeletedReportShellSummary()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor deleted-report undo summary-refresh smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
 
         var snapshot = BuildAssetEditorDeletedReportUndoPreviewRefreshSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
@@ -11191,11 +11171,6 @@ internal static class Program
 
     private static void SmokeAssetEditorDuplicateObjectCommandRefreshesReportShellSummary()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor duplicate-object smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
 
         var snapshot = BuildAssetEditorDuplicateReportObjectSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
@@ -11331,11 +11306,6 @@ internal static class Program
 
     private static void SmokeAssetEditorRenameObjectCommandRefreshesReportShellSummary()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor rename-object smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
 
         var snapshot = BuildAssetEditorRenameReportObjectSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
@@ -11476,11 +11446,6 @@ internal static class Program
 
     private static void SmokeAssetEditorDeleteObjectCommandRefreshesReportShellSummary()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor delete-object smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
 
         var snapshot = BuildAssetEditorDeleteReportObjectSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
@@ -11605,11 +11570,6 @@ internal static class Program
 
     private static void SmokeAssetEditorRestoreObjectCommandRefreshesReportShellSummary()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor report restore-object smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
 
         var snapshot = BuildAssetEditorRestoreReportObjectSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
@@ -11734,11 +11694,6 @@ internal static class Program
 
     private static void SmokeAssetEditorReorderFrontObjectCommandRefreshesReportShellSummary()
     {
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            Console.WriteLine("SKIP: shared asset-editor reorder-front smoke requires a POSIX scriptable fake Studio host.");
-            return;
-        }
 
         var snapshot = BuildAssetEditorReorderFrontReportObjectSmokeSnapshot();
         var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
