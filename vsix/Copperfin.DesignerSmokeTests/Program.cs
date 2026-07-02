@@ -30853,6 +30853,85 @@ internal static class Program
         TearDownForm(hostForm);
     }
 
+    private static void SmokeVisualAssetEditorWithRealAsset(
+        string? path,
+        string expectedAssetFamily,
+        string expectedTitle,
+        string expectedGuidanceSnippet,
+        string expectedSidecarExtension)
+    {
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(path) ? "real visual asset candidate" : path)} not found.");
+            return;
+        }
+
+        var expectedSidecarPath = Path.ChangeExtension(path, expectedSidecarExtension);
+        Expect(File.Exists(expectedSidecarPath),
+            $"visual asset editor smoke should preserve sidecar {expectedSidecarExtension} for {path}");
+
+        var loadedSnapshot = CopperfinStudioSnapshotClient.TryLoad(path!);
+        Expect(loadedSnapshot.Success && loadedSnapshot.Document is not null,
+            $"visual asset editor smoke should load snapshot data for {path}");
+        if (!loadedSnapshot.Success || loadedSnapshot.Document is null)
+        {
+            return;
+        }
+
+        Expect(string.Equals(loadedSnapshot.Document.AssetFamily, expectedAssetFamily, StringComparison.Ordinal),
+            $"visual asset editor smoke should preserve the native {expectedAssetFamily} document identity for {path}");
+        Expect(loadedSnapshot.Document.HasSidecar &&
+               string.Equals(loadedSnapshot.Document.SidecarPath, expectedSidecarPath, StringComparison.OrdinalIgnoreCase),
+            $"visual asset editor smoke should preserve the expected sidecar path for {path}");
+
+        using var hostForm = new Form
+        {
+            Width = 1400,
+            Height = 1000,
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-32000, -32000)
+        };
+
+        using var control = new CopperfinAssetEditorControl
+        {
+            Dock = DockStyle.Fill
+        };
+
+        hostForm.Controls.Add(control);
+        hostForm.Show();
+        Application.DoEvents();
+        control.LoadDocument(path!);
+
+        var loaded = WaitUntil(
+            TimeSpan.FromSeconds(8),
+            () => HasLabelText(control, expectedTitle) &&
+                  HasLabelTextContaining(control, expectedGuidanceSnippet) &&
+                  HasLabelTextContaining(control, "Snapshot loaded:") &&
+                  FindListViews(control).Any(list => list.Items.Count > 0));
+        Expect(loaded, $"visual asset editor smoke should load family-specific editor guidance for {path}");
+
+        Expect(HasLabelText(control, expectedTitle),
+            $"visual asset editor smoke should title {expectedAssetFamily} assets correctly for {path}");
+        Expect(HasLabelTextContaining(control, expectedGuidanceSnippet),
+            $"visual asset editor smoke should surface {expectedAssetFamily}-specific guidance for {path}");
+        Expect(!FindButtons(control).Any(button => button.Visible && button.Text == "Build Copperfin Project"),
+            $"visual asset editor smoke should keep {expectedAssetFamily} assets out of the project workflow shell for {path}");
+
+        var designSurface = FindDesignSurface(control);
+        Expect(designSurface is not null, $"visual asset editor smoke should surface a design canvas for {path}");
+        if (designSurface is not null)
+        {
+            using var bitmap = new Bitmap(Math.Max(1, designSurface.Width), Math.Max(1, designSurface.Height));
+            designSurface.DrawToBitmap(bitmap, new Rectangle(0, 0, bitmap.Width, bitmap.Height));
+            var minimumVisiblePixelCount = expectedAssetFamily == "form" ? 1500 : 100;
+            Expect(CountNonWhitePixels(bitmap) > minimumVisiblePixelCount,
+                $"visual asset editor smoke should render visible design content for {path}");
+        }
+
+        TearDownForm(hostForm);
+    }
+
     private static void SmokeProjectDebuggerWithRealAsset(string? path)
     {
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
@@ -31012,15 +31091,19 @@ internal static class Program
         var projectPath = TryResolveAssetUnderRoot(extractedVfpSourceRoot!, "tasklist/tasklist.PJX");
         var programPath = TryResolveAssetUnderRoot(extractedVfpSourceRoot!, "tasklist/main.prg");
         var formPath = TryResolveAssetUnderRoot(extractedVfpSourceRoot!, "Wizards/wzapp/template/Books/Forms/books.scx");
+        var classLibraryPath = TryResolveAssetUnderRoot(extractedVfpSourceRoot!, "EnvMgr/envmgr.vcx");
+        var menuPath = TryResolveAssetUnderRoot(extractedVfpSourceRoot!, "ReportBuilder/handler_context.mnx");
         var reportPath = TryResolveAssetUnderRoot(extractedVfpSourceRoot!, "Wizards/wzapp/template/Books/Reports/by_author.FRX");
         var labelPath = TryResolveAssetUnderRoot(extractedVfpSourceRoot!, "Wizards/wzreport/STYLES/STYLELBL.LBX");
 
         Expect(!string.IsNullOrWhiteSpace(projectPath) && !string.IsNullOrWhiteSpace(programPath) &&
-               !string.IsNullOrWhiteSpace(formPath) && !string.IsNullOrWhiteSpace(reportPath) &&
+               !string.IsNullOrWhiteSpace(formPath) && !string.IsNullOrWhiteSpace(classLibraryPath) &&
+               !string.IsNullOrWhiteSpace(menuPath) && !string.IsNullOrWhiteSpace(reportPath) &&
                !string.IsNullOrWhiteSpace(labelPath),
-            "fresh-run VFPSource startup-path smoke should resolve project, program, form, report, and label assets from the extracted root");
+            "fresh-run VFPSource startup-path smoke should resolve project, program, form, class-library, menu, report, and label assets from the extracted root");
         if (string.IsNullOrWhiteSpace(projectPath) || string.IsNullOrWhiteSpace(programPath) ||
-            string.IsNullOrWhiteSpace(formPath) || string.IsNullOrWhiteSpace(reportPath) ||
+            string.IsNullOrWhiteSpace(formPath) || string.IsNullOrWhiteSpace(classLibraryPath) ||
+            string.IsNullOrWhiteSpace(menuPath) || string.IsNullOrWhiteSpace(reportPath) ||
             string.IsNullOrWhiteSpace(labelPath))
         {
             return;
@@ -31035,6 +31118,9 @@ internal static class Program
             expectGroups: new[] { "Forms", "Programs", "Class Libraries", "Classes", "Other Assets" });
         SmokeProgramEditorWithRealAsset(programPath);
         SmokeStandaloneStudioWithMultipleAssets(formPath, reportPath);
+        SmokeVisualAssetEditorWithRealAsset(formPath, "form", "Visual form", "SCX/SCT assets", ".SCT");
+        SmokeVisualAssetEditorWithRealAsset(classLibraryPath, "class_library", "Visual class library", "VCX/VCT assets", ".VCT");
+        SmokeVisualAssetEditorWithRealAsset(menuPath, "menu", "Visual menu", "MNX/MNT assets", ".MNT");
         SmokeAssetEditorWithRealAsset(labelPath, expectSection: "Detail");
     }
 
