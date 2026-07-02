@@ -21344,6 +21344,13 @@ internal static class Program
                 return;
             }
 
+            Expect(loaded.Document.ReportLayout?.PreviewBoundsAvailable == true,
+                $"initial real asset duplicate snapshot should preserve live preview bounds for {sourcePath}");
+            if (loaded.Document.ReportLayout?.PreviewBoundsAvailable != true)
+            {
+                return;
+            }
+
             var sourceObject = loaded.Document.Objects.FirstOrDefault(candidate => candidate.RecordIndex == recordIndex);
             Expect(sourceObject is not null,
                 $"real asset duplicate smoke should expose source object {recordIndex} for {sourcePath}");
@@ -21376,6 +21383,22 @@ internal static class Program
                 expectedSectionTitle,
                 expectedOriginalSectionObjectCount,
                 $"initial real asset duplicate snapshot should preserve section object counts");
+            var initialLayout = loaded.Document.ReportLayout;
+            var expectedPreviewBoundsLeft = initialLayout.PreviewBoundsLeft;
+            var expectedPreviewBoundsTop = initialLayout.PreviewBoundsTop;
+            var expectedPreviewBoundsRight = initialLayout.PreviewBoundsRight;
+            var expectedPreviewBoundsBottom = initialLayout.PreviewBoundsBottom;
+            var expectedPreviewBoundsWidth = initialLayout.PreviewBoundsWidth;
+            var expectedPreviewBoundsHeight = initialLayout.PreviewBoundsHeight;
+            AssertRealAssetPreviewBoundsGeometry(
+                loaded.Document,
+                expectedPreviewBoundsLeft,
+                expectedPreviewBoundsTop,
+                expectedPreviewBoundsRight,
+                expectedPreviewBoundsBottom,
+                expectedPreviewBoundsWidth,
+                expectedPreviewBoundsHeight,
+                $"initial real asset duplicate snapshot should preserve live preview metadata");
 
             var duplicateResult = CopperfinStudioSnapshotClient.TryDuplicateObject(
                 assetPath,
@@ -21415,6 +21438,15 @@ internal static class Program
                 expectedSectionTitle,
                 expectedUpdatedSectionObjectCount,
                 $"updated real asset duplicate snapshot should preserve section object counts");
+            AssertRealAssetPreviewBoundsGeometry(
+                duplicateResult.Document,
+                expectedPreviewBoundsLeft,
+                expectedPreviewBoundsTop,
+                expectedPreviewBoundsRight,
+                expectedPreviewBoundsBottom,
+                expectedPreviewBoundsWidth,
+                expectedPreviewBoundsHeight,
+                $"updated real asset duplicate snapshot should preserve live preview metadata");
 
             var reloadedAfterDuplicate = CopperfinStudioSnapshotClient.TryLoad(assetPath);
             Expect(reloadedAfterDuplicate.Success && reloadedAfterDuplicate.Document is not null,
@@ -21448,6 +21480,15 @@ internal static class Program
                 expectedSectionTitle,
                 expectedUpdatedSectionObjectCount,
                 $"reloaded real asset duplicate snapshot should preserve section object counts");
+            AssertRealAssetPreviewBoundsGeometry(
+                reloadedAfterDuplicate.Document,
+                expectedPreviewBoundsLeft,
+                expectedPreviewBoundsTop,
+                expectedPreviewBoundsRight,
+                expectedPreviewBoundsBottom,
+                expectedPreviewBoundsWidth,
+                expectedPreviewBoundsHeight,
+                $"reloaded real asset duplicate snapshot should preserve live preview metadata");
         }
         finally
         {
@@ -21497,6 +21538,13 @@ internal static class Program
                 return;
             }
 
+            Expect(loaded.Document.ReportLayout?.PreviewBoundsAvailable == true,
+                $"initial real asset rename snapshot should preserve live preview bounds for {sourcePath}");
+            if (loaded.Document.ReportLayout?.PreviewBoundsAvailable != true)
+            {
+                return;
+            }
+
             AssertRealAssetRoundTripSnapshot(
                 loaded.Document,
                 recordIndex,
@@ -21508,6 +21556,22 @@ internal static class Program
                 expectLabel,
                 expectUnplacedObject: false,
                 $"initial real asset rename snapshot should preserve source object identity");
+            var initialLayout = loaded.Document.ReportLayout;
+            var expectedPreviewBoundsLeft = initialLayout.PreviewBoundsLeft;
+            var expectedPreviewBoundsTop = initialLayout.PreviewBoundsTop;
+            var expectedPreviewBoundsRight = initialLayout.PreviewBoundsRight;
+            var expectedPreviewBoundsBottom = initialLayout.PreviewBoundsBottom;
+            var expectedPreviewBoundsWidth = initialLayout.PreviewBoundsWidth;
+            var expectedPreviewBoundsHeight = initialLayout.PreviewBoundsHeight;
+            AssertRealAssetPreviewBoundsGeometry(
+                loaded.Document,
+                expectedPreviewBoundsLeft,
+                expectedPreviewBoundsTop,
+                expectedPreviewBoundsRight,
+                expectedPreviewBoundsBottom,
+                expectedPreviewBoundsWidth,
+                expectedPreviewBoundsHeight,
+                $"initial real asset rename snapshot should preserve live preview metadata");
 
             var renameResult = CopperfinStudioSnapshotClient.TryRenameObject(
                 assetPath,
@@ -21532,6 +21596,15 @@ internal static class Program
                 expectLabel,
                 expectUnplacedObject: false,
                 $"renamed real asset snapshot should preserve renamed identity");
+            AssertRealAssetPreviewBoundsGeometry(
+                renameResult.Document,
+                expectedPreviewBoundsLeft,
+                expectedPreviewBoundsTop,
+                expectedPreviewBoundsRight,
+                expectedPreviewBoundsBottom,
+                expectedPreviewBoundsWidth,
+                expectedPreviewBoundsHeight,
+                $"renamed real asset snapshot should preserve live preview metadata");
             Expect(renameResult.Document.CommandUndoAvailable,
                 $"real asset rename smoke should expose undo after renaming {recordIndex} for {sourcePath}");
 
@@ -21554,6 +21627,15 @@ internal static class Program
                 expectLabel,
                 expectUnplacedObject: false,
                 $"reloaded renamed real asset snapshot should preserve renamed identity");
+            AssertRealAssetPreviewBoundsGeometry(
+                reloadedAfterRename.Document,
+                expectedPreviewBoundsLeft,
+                expectedPreviewBoundsTop,
+                expectedPreviewBoundsRight,
+                expectedPreviewBoundsBottom,
+                expectedPreviewBoundsWidth,
+                expectedPreviewBoundsHeight,
+                $"reloaded renamed real asset snapshot should preserve live preview metadata");
             Expect(reloadedAfterRename.Document.CommandUndoAvailable,
                 $"reloaded real asset rename snapshot should keep undo available for {sourcePath}");
 
@@ -21576,6 +21658,15 @@ internal static class Program
                 expectLabel,
                 expectUnplacedObject: false,
                 $"undone real asset rename snapshot should preserve original identity");
+            AssertRealAssetPreviewBoundsGeometry(
+                undoResult.Document,
+                expectedPreviewBoundsLeft,
+                expectedPreviewBoundsTop,
+                expectedPreviewBoundsRight,
+                expectedPreviewBoundsBottom,
+                expectedPreviewBoundsWidth,
+                expectedPreviewBoundsHeight,
+                $"undone real asset rename snapshot should preserve live preview metadata");
             Expect(!undoResult.Document.CommandUndoAvailable,
                 $"undone real asset rename snapshot should clear command undo for {sourcePath}");
 
@@ -21598,6 +21689,15 @@ internal static class Program
                 expectLabel,
                 expectUnplacedObject: false,
                 $"reloaded undone real asset rename snapshot should preserve original identity");
+            AssertRealAssetPreviewBoundsGeometry(
+                reloadedAfterUndo.Document,
+                expectedPreviewBoundsLeft,
+                expectedPreviewBoundsTop,
+                expectedPreviewBoundsRight,
+                expectedPreviewBoundsBottom,
+                expectedPreviewBoundsWidth,
+                expectedPreviewBoundsHeight,
+                $"reloaded undone real asset rename snapshot should preserve live preview metadata");
             Expect(!reloadedAfterUndo.Document.CommandUndoAvailable,
                 $"reloaded undone real asset rename snapshot should clear command undo for {sourcePath}");
         }
@@ -32388,6 +32488,44 @@ internal static class Program
                document.ReportLayout.PreviewBoundsWidth == expectedWidth &&
                document.ReportLayout.PreviewBoundsHeight == expectedHeight,
             $"{failurePrefix} for {document.Path} should preserve the expected live preview-bounds geometry");
+    }
+
+    private static void AssertRealAssetPreviewBoundsMatchesLiveObjects(
+        CopperfinStudioSnapshotDocument document,
+        string failurePrefix)
+    {
+        Expect(document.ReportLayout is not null,
+            $"{failurePrefix} for {document.Path} should include a report layout");
+        if (document.ReportLayout is null)
+        {
+            return;
+        }
+
+        var liveObjects = document.ReportLayout.Sections
+            .SelectMany(section => section.Objects)
+            .ToList();
+        Expect(liveObjects.Count > 0,
+            $"{failurePrefix} for {document.Path} should expose live layout objects");
+        if (liveObjects.Count <= 0)
+        {
+            return;
+        }
+
+        var expectedLeft = liveObjects.Min(candidate => candidate.Left);
+        var expectedTop = liveObjects.Min(candidate => candidate.Top);
+        var expectedRight = liveObjects.Max(candidate => candidate.Left + candidate.Width);
+        var expectedBottom = liveObjects.Max(candidate => candidate.Top + candidate.Height);
+        var expectedWidth = expectedRight - expectedLeft;
+        var expectedHeight = expectedBottom - expectedTop;
+        AssertRealAssetPreviewBoundsGeometry(
+            document,
+            expectedLeft,
+            expectedTop,
+            expectedRight,
+            expectedBottom,
+            expectedWidth,
+            expectedHeight,
+            failurePrefix);
     }
 
     private static void AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
