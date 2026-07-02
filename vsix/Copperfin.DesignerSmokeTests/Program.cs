@@ -30653,10 +30653,24 @@ internal static class Program
 
         Expect(!string.IsNullOrWhiteSpace(result.OutputDirectory) && Directory.Exists(result.OutputDirectory),
             $"project build workflow should materialize an output directory for {path}");
+        Expect(!string.IsNullOrWhiteSpace(result.ManifestPath) && File.Exists(result.ManifestPath),
+            $"project build workflow should materialize a runtime manifest for {path}");
         Expect(!string.IsNullOrWhiteSpace(result.LauncherPath) && File.Exists(result.LauncherPath),
             $"project build workflow should materialize a launcher path for {path}");
         Expect(!string.IsNullOrWhiteSpace(result.DebugManifestPath) && File.Exists(result.DebugManifestPath),
             $"project build workflow should materialize a debug manifest for {path}");
+        Expect(result.WarningCount == 0,
+            $"project build workflow should remain warning-free for {path}");
+        Expect(result.Warnings.Count == 0,
+            $"project build workflow should not surface warning lines for {path}");
+        if (!string.IsNullOrWhiteSpace(result.ManifestPath) && File.Exists(result.ManifestPath))
+        {
+            var manifestText = File.ReadAllText(result.ManifestPath);
+            Expect(manifestText.IndexOf("warning=", StringComparison.OrdinalIgnoreCase) < 0,
+                $"project build workflow manifest should remain warning-free for {path}");
+            Expect(manifestText.IndexOf("asset=6|wzcommon/registry.vcx|", StringComparison.Ordinal) >= 0,
+                $"project build workflow manifest should stage the shared class dependency for {path}");
+        }
     }
 
     private static void SmokeProjectDebugReplayWithRealAsset(string? path)

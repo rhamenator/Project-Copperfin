@@ -21,8 +21,11 @@ internal sealed class CopperfinProjectExecutionResult
     public string Message { get; set; } = string.Empty;
     public string ProjectPath { get; set; } = string.Empty;
     public string OutputDirectory { get; set; } = string.Empty;
+    public string ManifestPath { get; set; } = string.Empty;
     public string LauncherPath { get; set; } = string.Empty;
     public string DebugManifestPath { get; set; } = string.Empty;
+    public int WarningCount { get; set; }
+    public List<string> Warnings { get; } = new();
     public int ExitCode { get; set; }
     public string StandardOutput { get; set; } = string.Empty;
     public string StandardError { get; set; } = string.Empty;
@@ -120,9 +123,33 @@ internal static class CopperfinProjectWorkflow
             buildHostPath,
             buildArguments,
             CreateSecurityEnabledBuildEnvironment());
+        var warningCount = ParseIntOrDefault(GetValueOrDefault(buildResult.Values, "warnings"), 0);
+        var warnings = ParseWarningLines(buildResult.StandardOutput);
+        if (warningCount == 0 && warnings.Count > 0)
+        {
+            warningCount = warnings.Count;
+        }
+        else if (warningCount > 0 && warnings.Count == 0)
+        {
+            warnings = ParseWarningLines(buildResult.StandardError);
+        }
+
+        var manifestPath = GetValueOrDefault(buildResult.Values, "manifest.path");
+        var debugManifestPath = GetValueOrDefault(buildResult.Values, "debug.manifest.path");
         if (buildResult.ExitCode != 0 || !string.Equals(GetValueOrDefault(buildResult.Values, "status"), "ok", StringComparison.OrdinalIgnoreCase))
         {
-            return Failure(projectPath, Localization.Text("AssetEditor.Project.Workflow.BuildFailed"), outputDirectory, string.Empty, buildResult.ExitCode, buildResult.StandardOutput, buildResult.StandardError);
+            return Failure(
+                projectPath,
+                Localization.Text("AssetEditor.Project.Workflow.BuildFailed"),
+                outputDirectory,
+                manifestPath,
+                string.Empty,
+                debugManifestPath,
+                warningCount,
+                warnings,
+                buildResult.ExitCode,
+                buildResult.StandardOutput,
+                buildResult.StandardError);
         }
 
         var launcherPath = buildResult.Values.TryGetValue("launcher.output", out var parsedLauncher)
@@ -135,7 +162,11 @@ internal static class CopperfinProjectWorkflow
                 projectPath,
                 Localization.Text("AssetEditor.Project.Workflow.LauncherMissing"),
                 outputDirectory,
+                manifestPath,
                 launcherPath ?? string.Empty,
+                debugManifestPath,
+                warningCount,
+                warnings,
                 buildResult.ExitCode,
                 buildResult.StandardOutput,
                 buildResult.StandardError);
@@ -143,28 +174,43 @@ internal static class CopperfinProjectWorkflow
 
         if (operation == CopperfinProjectOperation.Build)
         {
-            return new CopperfinProjectExecutionResult
+            var result = new CopperfinProjectExecutionResult
             {
                 Success = true,
                 Message = Localization.Text("AssetEditor.Project.Workflow.BuildSuccess"),
                 ProjectPath = projectPath,
                 OutputDirectory = outputDirectory,
+                ManifestPath = manifestPath,
                 LauncherPath = launcherPath,
-                DebugManifestPath = GetValueOrDefault(buildResult.Values, "debug.manifest.path"),
+                DebugManifestPath = debugManifestPath,
+                WarningCount = warningCount,
                 ExitCode = buildResult.ExitCode,
                 StandardOutput = buildResult.StandardOutput,
                 StandardError = buildResult.StandardError
             };
+            result.Warnings.AddRange(warnings);
+            return result;
         }
 
         var launchArguments = operation == CopperfinProjectOperation.Debug ? new[] { "--debug" } : Array.Empty<string>();
         var launchResult = StartProcess(launcherPath, launchArguments);
         if (!launchResult.Success)
         {
-            return Failure(projectPath, launchResult.Message, outputDirectory, launcherPath, buildResult.ExitCode, buildResult.StandardOutput, buildResult.StandardError);
+            return Failure(
+                projectPath,
+                launchResult.Message,
+                outputDirectory,
+                manifestPath,
+                launcherPath,
+                debugManifestPath,
+                warningCount,
+                warnings,
+                buildResult.ExitCode,
+                buildResult.StandardOutput,
+                buildResult.StandardError);
         }
 
-        return new CopperfinProjectExecutionResult
+        var launchWorkflowResult = new CopperfinProjectExecutionResult
         {
             Success = true,
             Message = operation == CopperfinProjectOperation.Debug
@@ -172,34 +218,50 @@ internal static class CopperfinProjectWorkflow
                 : Localization.Text("AssetEditor.Project.Workflow.LaunchSuccess"),
             ProjectPath = projectPath,
             OutputDirectory = outputDirectory,
+            ManifestPath = manifestPath,
             LauncherPath = launcherPath,
-            DebugManifestPath = GetValueOrDefault(buildResult.Values, "debug.manifest.path"),
+            DebugManifestPath = debugManifestPath,
+            WarningCount = warningCount,
             ExitCode = buildResult.ExitCode,
             StandardOutput = buildResult.StandardOutput,
             StandardError = buildResult.StandardError
         };
+        launchWorkflowResult.Warnings.AddRange(warnings);
+        return launchWorkflowResult;
     }
 
     private static CopperfinProjectExecutionResult Failure(
         string projectPath,
         string message,
         string outputDirectory = "",
+        string manifestPath = "",
         string launcherPath = "",
+        string debugManifestPath = "",
+        int warningCount = 0,
+        IReadOnlyCollection<string>? warnings = null,
         int exitCode = -1,
         string stdout = "",
         string stderr = "")
     {
-        return new CopperfinProjectExecutionResult
+        var result = new CopperfinProjectExecutionResult
         {
             Success = false,
             Message = message,
             ProjectPath = projectPath,
             OutputDirectory = outputDirectory,
+            ManifestPath = manifestPath,
             LauncherPath = launcherPath,
+            DebugManifestPath = debugManifestPath,
+            WarningCount = warningCount,
             ExitCode = exitCode,
             StandardOutput = stdout,
             StandardError = stderr
         };
+        if (warnings is not null)
+        {
+            result.Warnings.AddRange(warnings);
+        }
+        return result;
     }
 
     private static CopperfinProcessExecutionResult RunProcess(
@@ -322,6 +384,29 @@ internal static class CopperfinProjectWorkflow
         }
 
         return values;
+    }
+
+    private static List<string> ParseWarningLines(string text)
+    {
+        var warnings = new List<string>();
+        using var reader = new StringReader(text);
+        string? line;
+        while ((line = reader.ReadLine()) is not null)
+        {
+            if (!line.StartsWith("warning: ", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            warnings.Add(line.Substring("warning: ".Length).Trim());
+        }
+
+        return warnings;
+    }
+
+    private static int ParseIntOrDefault(string value, int fallback)
+    {
+        return int.TryParse(value, out var parsed) ? parsed : fallback;
     }
 
     private static string GetValueOrDefault(IReadOnlyDictionary<string, string> values, string key)
