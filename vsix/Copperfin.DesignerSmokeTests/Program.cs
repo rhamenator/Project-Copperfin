@@ -4920,6 +4920,11 @@ internal static class Program
                     TryResolveVfp9InstallAsset(@"Samples\Solution\solution.pjx"),
                     TryResolveVfpSourceAsset("VFPSource/addlabel/addlabel.pjx"),
                     TryResolveVfpSourceAsset("VFPSource/tasklist/tasklist.PJX")));
+            SmokeProjectRunWorkflowWithRealAsset(
+                ResolveFirstExistingRealAssetPath(
+                    TryResolveVfp9InstallAsset(@"Samples\Solution\solution.pjx"),
+                    TryResolveVfpSourceAsset("VFPSource/addlabel/addlabel.pjx"),
+                    TryResolveVfpSourceAsset("VFPSource/tasklist/tasklist.PJX")));
             SmokeProjectDebugReplayWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/addlabel/addlabel.pjx"));
             SmokeProgramEditorWithRealAsset(
@@ -30689,6 +30694,47 @@ internal static class Program
                 $"project build workflow manifest should remain warning-free for {path}");
             Expect(manifestText.IndexOf("asset=6|wzcommon/registry.vcx|", StringComparison.Ordinal) >= 0,
                 $"project build workflow manifest should stage the shared class dependency for {path}");
+        }
+    }
+
+    private static void SmokeProjectRunWorkflowWithRealAsset(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(path) ? "real project run asset candidate" : path)} not found.");
+            return;
+        }
+
+        #pragma warning disable VSTHRD002
+        var result = CopperfinProjectWorkflow.ExecuteAsync(path!, CopperfinProjectOperation.Run)
+            .GetAwaiter()
+            .GetResult();
+        #pragma warning restore VSTHRD002
+        Expect(result.Success, $"project run workflow should succeed for {path}");
+        if (!result.Success)
+        {
+            return;
+        }
+
+        Expect(!string.IsNullOrWhiteSpace(result.OutputDirectory) && Directory.Exists(result.OutputDirectory),
+            $"project run workflow should materialize an output directory for {path}");
+        Expect(!string.IsNullOrWhiteSpace(result.ManifestPath) && File.Exists(result.ManifestPath),
+            $"project run workflow should preserve a runtime manifest for {path}");
+        Expect(!string.IsNullOrWhiteSpace(result.LauncherPath) && File.Exists(result.LauncherPath),
+            $"project run workflow should preserve a launcher path for {path}");
+        Expect(!string.IsNullOrWhiteSpace(result.DebugManifestPath) && File.Exists(result.DebugManifestPath),
+            $"project run workflow should preserve a debug manifest for {path}");
+        Expect(result.WarningCount == 0,
+            $"project run workflow should inherit a warning-free build for {path}");
+        Expect(result.Warnings.Count == 0,
+            $"project run workflow should not surface warning lines for {path}");
+        if (!string.IsNullOrWhiteSpace(result.ManifestPath) && File.Exists(result.ManifestPath))
+        {
+            var manifestText = File.ReadAllText(result.ManifestPath);
+            Expect(manifestText.IndexOf("warning=", StringComparison.OrdinalIgnoreCase) < 0,
+                $"project run workflow manifest should remain warning-free for {path}");
+            Expect(manifestText.IndexOf("asset=6|wzcommon/registry.vcx|", StringComparison.Ordinal) >= 0,
+                $"project run workflow manifest should stage the shared class dependency for {path}");
         }
     }
 
