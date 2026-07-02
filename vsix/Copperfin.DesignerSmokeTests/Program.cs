@@ -31451,6 +31451,21 @@ internal static class Program
         {
             Environment.SetEnvironmentVariable("COPPERFIN_DUPLICATE_OBJECT_UNIQUE_ID", duplicateUniqueId);
 
+            var initialSnapshot = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(initialSnapshot.Success && initialSnapshot.Document is not null,
+                $"real asset editor duplicate smoke should load initial snapshot data for {sourcePath}");
+            if (!initialSnapshot.Success || initialSnapshot.Document is null || initialSnapshot.Document.ReportLayout is null)
+            {
+                return;
+            }
+
+            var expectedPreviewBoundsLeft = initialSnapshot.Document.ReportLayout.PreviewBoundsLeft;
+            var expectedPreviewBoundsTop = initialSnapshot.Document.ReportLayout.PreviewBoundsTop;
+            var expectedPreviewBoundsRight = initialSnapshot.Document.ReportLayout.PreviewBoundsRight;
+            var expectedPreviewBoundsBottom = initialSnapshot.Document.ReportLayout.PreviewBoundsBottom;
+            var expectedPreviewBoundsWidth = initialSnapshot.Document.ReportLayout.PreviewBoundsWidth;
+            var expectedPreviewBoundsHeight = initialSnapshot.Document.ReportLayout.PreviewBoundsHeight;
+
             using var hostForm = new Form
             {
                 Width = 1400,
@@ -31538,12 +31553,12 @@ internal static class Program
                         return false;
                     }
 
-                    var selectedSection = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text;
+                    var selectedSectionModel = sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioReportSection;
                     var selectedSnapshotObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
                     var selectedUniqueId = selectedSnapshotObject is null
                         ? null
                         : TryGetSnapshotObjectPropertyValue(selectedSnapshotObject, "UNIQUEID");
-                    return string.Equals(selectedSection, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                    return string.Equals(selectedSectionModel?.Title, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
                            objectListView.Items.Count == expectedUpdatedSectionObjectCount &&
                            string.Equals(selectedUniqueId, duplicateUniqueId, StringComparison.Ordinal) &&
                            string.Equals(selectedSnapshotObject?.Title, expectedSourceObjectTitle, StringComparison.Ordinal) &&
@@ -31558,6 +31573,49 @@ internal static class Program
                 });
             Expect(duplicatedSelection,
                 $"real asset editor duplicate smoke should preserve section/object continuity after duplicating the selected row for {sourcePath}");
+            if (!duplicatedSelection)
+            {
+                return;
+            }
+
+            var updatedAfterDuplicate = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(updatedAfterDuplicate.Success && updatedAfterDuplicate.Document is not null,
+                $"real asset editor duplicate smoke should load duplicated on-disk state before reload verification for {sourcePath}");
+            if (updatedAfterDuplicate.Success && updatedAfterDuplicate.Document is not null)
+            {
+                var updatedDuplicatedObject = FindSnapshotObjectByUniqueId(updatedAfterDuplicate.Document, duplicateUniqueId);
+                Expect(updatedDuplicatedObject is not null,
+                    $"updated real asset editor duplicate snapshot should preserve the duplicated UNIQUEID for {sourcePath}");
+                if (updatedDuplicatedObject is not null)
+                {
+                    AssertRealAssetRoundTripSnapshot(
+                        updatedAfterDuplicate.Document,
+                        updatedDuplicatedObject.RecordIndex,
+                        "UNIQUEID",
+                        duplicateUniqueId,
+                        expectedSourceObjectTitle,
+                        expectedSectionTitle,
+                        expectedSectionCount,
+                        expectLabel,
+                        expectUnplacedObject: false,
+                        $"updated real asset editor duplicate snapshot should preserve duplicated object identity");
+                }
+
+                AssertRealAssetSectionObjectCount(
+                    updatedAfterDuplicate.Document,
+                    expectedSectionTitle,
+                    expectedUpdatedSectionObjectCount,
+                    $"updated real asset editor duplicate snapshot should preserve section object counts");
+                AssertRealAssetPreviewBoundsGeometry(
+                    updatedAfterDuplicate.Document,
+                    expectedPreviewBoundsLeft,
+                    expectedPreviewBoundsTop,
+                    expectedPreviewBoundsRight,
+                    expectedPreviewBoundsBottom,
+                    expectedPreviewBoundsWidth,
+                    expectedPreviewBoundsHeight,
+                    $"updated real asset editor duplicate snapshot should preserve live preview metadata");
+            }
 
             var reloadedAfterDuplicate = CopperfinStudioSnapshotClient.TryLoad(assetPath);
             Expect(reloadedAfterDuplicate.Success && reloadedAfterDuplicate.Document is not null,
@@ -31587,6 +31645,15 @@ internal static class Program
                     expectedSectionTitle,
                     expectedUpdatedSectionObjectCount,
                     $"reloaded real asset editor duplicate snapshot should preserve section object counts");
+                AssertRealAssetPreviewBoundsGeometry(
+                    reloadedAfterDuplicate.Document,
+                    expectedPreviewBoundsLeft,
+                    expectedPreviewBoundsTop,
+                    expectedPreviewBoundsRight,
+                    expectedPreviewBoundsBottom,
+                    expectedPreviewBoundsWidth,
+                    expectedPreviewBoundsHeight,
+                    $"reloaded real asset editor duplicate snapshot should preserve live preview metadata");
             }
 
             TearDownForm(hostForm);
