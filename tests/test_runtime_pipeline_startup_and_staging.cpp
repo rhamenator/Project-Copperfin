@@ -273,6 +273,90 @@ void test_vfp_style_parent_relative_assets_resolve_and_stage_under_content_root(
     fs::remove_all(temp_root, ignored);
 }
 
+void test_vfp_source_layout_parent_relative_assets_resolve_by_tail_match() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_vfp_source_tail_match";
+    const fs::path source_root = temp_root / "VFPSource";
+    const fs::path project_dir = source_root / "addlabel";
+    const fs::path shared_dir = source_root / "Wizards" / "wzcommon";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+    fs::create_directories(shared_dir);
+
+    write_text(project_dir / "main.prg", "DO FORM registry\n");
+    write_text(shared_dir / "REGISTRY.VCX", "synthetic shared class library");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "addlabel.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "AddLabel";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "AddLabel";
+    workspace.build_plan.output_path = (output_dir / "AddLabel.exe").string();
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"},
+        {.record_index = 2U, .name = R"(..\wzcommon\registry.vcx)", .relative_path = R"(..\wzcommon\registry.vcx)", .type_title = "Class Library"}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false);
+
+    expect(plan.ok, "VFPSource-style tail-match plan should be created");
+
+    const auto shared_asset = std::find_if(plan.assets.begin(), plan.assets.end(), [](const auto& asset) {
+        return asset.record_index == 2U;
+    });
+    expect(shared_asset != plan.assets.end(), "VFPSource-style tail-match asset should be present in the plan");
+    if (shared_asset != plan.assets.end()) {
+        expect(shared_asset->source_path == (shared_dir / "REGISTRY.VCX").lexically_normal().string(),
+               "VFPSource-style tail-match asset should resolve to the case-insensitive shared source file");
+        expect(shared_asset->relative_path == "wzcommon/registry.vcx",
+               "VFPSource-style tail-match asset should preserve the sanitized package-relative path");
+    }
+
+    const bool has_missing_asset_warning = std::any_of(
+        plan.warnings.begin(),
+        plan.warnings.end(),
+        [](const std::string& warning) {
+            return warning.find(runtime_pipeline_english_catalog().translate(
+                "Runtime.Package.Warning.MissingProjectAsset")) != std::string::npos;
+        });
+    expect(!has_missing_asset_warning,
+           "VFPSource-style tail-match assets should not emit missing-asset warnings");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+
+    expect(result.ok, "VFPSource-style tail-match package should materialize");
+    if (result.ok) {
+        const fs::path content_root(result.plan.content_root);
+        expect(fs::exists(content_root / "wzcommon" / "registry.vcx"),
+               "VFPSource-style tail-match asset should be copied under content/");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_startup_dbf_companion_assets_are_staged() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_dbf_companions";

@@ -122,6 +122,8 @@ void test_manifest_asset_lines_include_copy_state_contract();
 // ==== Runtime package materialization and asset-staging tests ====
 void test_materialize_runtime_package();
 void test_materialize_excluded_xasset_startup_package();
+void test_vfp_style_parent_relative_assets_resolve_and_stage_under_content_root();
+void test_vfp_source_layout_parent_relative_assets_resolve_by_tail_match();
 void test_startup_dbf_companion_assets_are_staged();
 void test_materialize_fails_before_asset_staging_when_runtime_host_source_is_invalid();
 void test_startup_prg_extension_matching_is_case_insensitive();

@@ -11,6 +11,18 @@ std::string normalize_vfp_separators(std::string value) {
     return value;
 }
 
+std::vector<std::string> split_normalized_path_segments(const std::string& value) {
+    std::vector<std::string> segments;
+    for (const auto& part : std::filesystem::path(value)) {
+        const std::string segment = part.generic_string();
+        if (segment.empty() || segment == "." || segment == "/") {
+            continue;
+        }
+        segments.push_back(segment);
+    }
+    return segments;
+}
+
 bool is_windows_drive_absolute_path(const std::string& value) {
     return value.size() >= 3U &&
         std::isalpha(static_cast<unsigned char>(value[0])) != 0 &&
@@ -64,12 +76,7 @@ std::string sanitize_package_relative_path(const std::string& value) {
     }
 
     std::vector<std::string> segments;
-    for (const auto& part : std::filesystem::path(normalized)) {
-        const std::string segment = part.generic_string();
-        if (segment.empty() || segment == "." || segment == "/") {
-            continue;
-        }
-
+    for (const auto& segment : split_normalized_path_segments(normalized)) {
         if (segment == "..") {
             if (!segments.empty()) {
                 segments.pop_back();
@@ -96,6 +103,84 @@ std::string sanitize_package_relative_path(const std::string& value) {
         stream << segments[index];
     }
     return stream.str();
+}
+
+bool has_parent_traversal_segment(const std::string& value) {
+    const std::string normalized = normalize_vfp_separators(value);
+    const auto segments = split_normalized_path_segments(normalized);
+    return std::any_of(segments.begin(), segments.end(), [](const std::string& segment) {
+        return segment == "..";
+    });
+}
+
+std::optional<std::filesystem::path> find_case_insensitive_tail_match_under_root(
+    const std::filesystem::path& search_root,
+    const std::string& value) {
+    if (trim_copy(value).empty() || !std::filesystem::exists(search_root)) {
+        return std::nullopt;
+    }
+
+    const std::string sanitized_tail = sanitize_package_relative_path(value);
+    if (sanitized_tail.empty()) {
+        return std::nullopt;
+    }
+
+    const auto tail_segments = split_normalized_path_segments(sanitized_tail);
+    if (tail_segments.empty()) {
+        return std::nullopt;
+    }
+
+    std::optional<std::filesystem::path> best_match;
+    std::size_t best_extra_segments = static_cast<std::size_t>(-1);
+    std::string best_key;
+    std::error_code iterator_error;
+    for (std::filesystem::recursive_directory_iterator it(search_root, iterator_error), end; it != end; it.increment(iterator_error)) {
+        if (iterator_error) {
+            iterator_error.clear();
+            continue;
+        }
+
+        std::error_code status_error;
+        if (!it->is_regular_file(status_error) || status_error) {
+            continue;
+        }
+
+        const auto candidate_relative = it->path().lexically_relative(search_root);
+        if (candidate_relative.empty()) {
+            continue;
+        }
+
+        const auto candidate_segments = split_normalized_path_segments(candidate_relative.generic_string());
+        if (candidate_segments.size() < tail_segments.size()) {
+            continue;
+        }
+
+        bool matches = true;
+        for (std::size_t index = 0; index < tail_segments.size(); ++index) {
+            const auto& candidate_segment = candidate_segments[candidate_segments.size() - tail_segments.size() + index];
+            const auto& expected_segment = tail_segments[index];
+            if (lowercase_copy(candidate_segment) != lowercase_copy(expected_segment)) {
+                matches = false;
+                break;
+            }
+        }
+
+        if (!matches) {
+            continue;
+        }
+
+        const std::size_t extra_segments = candidate_segments.size() - tail_segments.size();
+        const std::string candidate_key = lowercase_copy(candidate_relative.generic_string());
+        if (!best_match ||
+            extra_segments < best_extra_segments ||
+            (extra_segments == best_extra_segments && candidate_key < best_key)) {
+            best_match = it->path().lexically_normal();
+            best_extra_segments = extra_segments;
+            best_key = candidate_key;
+        }
+    }
+
+    return best_match;
 }
 
 }  // namespace
@@ -330,6 +415,11 @@ std::string resolve_project_item_source(
         const std::filesystem::path from_relative = resolve_vfp_path_from_base(base_dir, entry.relative_path);
         if (std::filesystem::exists(from_relative)) {
             return from_relative.lexically_normal().string();
+        }
+        if (has_parent_traversal_segment(entry.relative_path)) {
+            if (const auto fallback = find_case_insensitive_tail_match_under_root(base_dir.parent_path(), entry.relative_path)) {
+                return fallback->string();
+            }
         }
         if (entry.name.empty()) {
             return from_relative.lexically_normal().string();

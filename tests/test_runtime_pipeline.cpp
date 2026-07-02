@@ -6,6 +6,8 @@ int main() {
     test_materialize_runtime_package();
     test_generated_launcher_forwards_manifest_and_debug_flag();
     test_materialize_excluded_xasset_startup_package();
+    test_vfp_style_parent_relative_assets_resolve_and_stage_under_content_root();
+    test_vfp_source_layout_parent_relative_assets_resolve_by_tail_match();
     test_dotnet_launcher_request_falls_back_to_native_host_when_unavailable();
     test_library_output_package_emits_module_definition_from_prg_routines();
     test_fll_output_package_emits_api_manifest_from_prg_routines();
