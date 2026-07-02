@@ -21651,6 +21651,13 @@ internal static class Program
                 return;
             }
 
+            Expect(loaded.Document.ReportLayout?.PreviewBoundsAvailable == true,
+                $"initial real asset delete snapshot should preserve live preview bounds for {sourcePath}");
+            if (loaded.Document.ReportLayout?.PreviewBoundsAvailable != true)
+            {
+                return;
+            }
+
             AssertRealAssetRoundTripSnapshot(
                 loaded.Document,
                 recordIndex,
@@ -21667,6 +21674,13 @@ internal static class Program
                 expectedSectionTitle,
                 expectedOriginalSectionObjectCount,
                 $"initial real asset delete snapshot should preserve section object counts");
+            var initialLayout = loaded.Document.ReportLayout;
+            var expectedPreviewBoundsLeft = initialLayout.PreviewBoundsLeft;
+            var expectedPreviewBoundsTop = initialLayout.PreviewBoundsTop;
+            var expectedPreviewBoundsRight = initialLayout.PreviewBoundsRight;
+            var expectedPreviewBoundsBottom = initialLayout.PreviewBoundsBottom;
+            var expectedPreviewBoundsWidth = initialLayout.PreviewBoundsWidth;
+            var expectedPreviewBoundsHeight = initialLayout.PreviewBoundsHeight;
 
             var deleteResult = CopperfinStudioSnapshotClient.TryDeleteObject(
                 assetPath,
@@ -21738,6 +21752,15 @@ internal static class Program
                 expectedSectionTitle,
                 expectedOriginalSectionObjectCount,
                 $"restored real asset delete snapshot should preserve section object counts");
+            AssertRealAssetLivePreviewBounds(
+                restoreResult.Document,
+                expectedPreviewBoundsLeft,
+                expectedPreviewBoundsTop,
+                expectedPreviewBoundsRight,
+                expectedPreviewBoundsBottom,
+                expectedPreviewBoundsWidth,
+                expectedPreviewBoundsHeight,
+                $"restored real asset delete snapshot should preserve live preview metadata");
 
             var reloadedAfterRestore = CopperfinStudioSnapshotClient.TryLoad(assetPath);
             Expect(reloadedAfterRestore.Success && reloadedAfterRestore.Document is not null,
@@ -21763,6 +21786,15 @@ internal static class Program
                 expectedSectionTitle,
                 expectedOriginalSectionObjectCount,
                 $"reloaded restored real asset delete snapshot should preserve section object counts");
+            AssertRealAssetLivePreviewBounds(
+                reloadedAfterRestore.Document,
+                expectedPreviewBoundsLeft,
+                expectedPreviewBoundsTop,
+                expectedPreviewBoundsRight,
+                expectedPreviewBoundsBottom,
+                expectedPreviewBoundsWidth,
+                expectedPreviewBoundsHeight,
+                $"reloaded restored real asset delete snapshot should preserve live preview metadata");
         }
         finally
         {
@@ -31978,6 +32010,36 @@ internal static class Program
             .ToArray();
         Expect(actualUniqueIdOrder.SequenceEqual(expectedUniqueIdOrder),
             $"{failurePrefix} for {document.Path} should preserve deleted UNIQUEID order [{string.Join(", ", expectedUniqueIdOrder)}]");
+    }
+
+    private static void AssertRealAssetLivePreviewBounds(
+        CopperfinStudioSnapshotDocument document,
+        int expectedLeft,
+        int expectedTop,
+        int expectedRight,
+        int expectedBottom,
+        int expectedWidth,
+        int expectedHeight,
+        string failurePrefix)
+    {
+        Expect(document.ReportLayout is not null,
+            $"{failurePrefix} for {document.Path} should include a report layout");
+        if (document.ReportLayout is null)
+        {
+            return;
+        }
+
+        Expect(document.ReportLayout.PreviewBoundsAvailable,
+            $"{failurePrefix} for {document.Path} should preserve live preview bounds");
+        Expect(!document.ReportLayout.DeletedPreviewBoundsAvailable,
+            $"{failurePrefix} for {document.Path} should clear deleted preview bounds");
+        Expect(document.ReportLayout.PreviewBoundsLeft == expectedLeft &&
+               document.ReportLayout.PreviewBoundsTop == expectedTop &&
+               document.ReportLayout.PreviewBoundsRight == expectedRight &&
+               document.ReportLayout.PreviewBoundsBottom == expectedBottom &&
+               document.ReportLayout.PreviewBoundsWidth == expectedWidth &&
+               document.ReportLayout.PreviewBoundsHeight == expectedHeight,
+            $"{failurePrefix} for {document.Path} should preserve the source preview-bounds geometry");
     }
 
     private static void AssertRealAssetDeletedObjectPropertySnapshot(
