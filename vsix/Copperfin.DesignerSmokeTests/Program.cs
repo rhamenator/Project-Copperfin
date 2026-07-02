@@ -4920,6 +4920,8 @@ internal static class Program
                     TryResolveVfp9InstallAsset(@"Samples\Solution\solution.pjx"),
                     TryResolveVfpSourceAsset("VFPSource/addlabel/addlabel.pjx"),
                     TryResolveVfpSourceAsset("VFPSource/tasklist/tasklist.PJX")));
+            SmokeProjectDebugReplayWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/addlabel/addlabel.pjx"));
             SmokeProgramEditorWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/tasklist/main.prg"));
             SmokeProjectDebuggerWithRealAsset(
@@ -30661,6 +30663,33 @@ internal static class Program
             $"project build workflow should materialize a launcher path for {path}");
         Expect(!string.IsNullOrWhiteSpace(result.DebugManifestPath) && File.Exists(result.DebugManifestPath),
             $"project build workflow should materialize a debug manifest for {path}");
+    }
+
+    private static void SmokeProjectDebugReplayWithRealAsset(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(path) ? "real project debug replay asset candidate" : path)} not found.");
+            return;
+        }
+
+        #pragma warning disable VSTHRD002
+        var session = CopperfinRuntimeDebugClient.StartSessionAsync(path!)
+            .GetAwaiter()
+            .GetResult();
+        #pragma warning restore VSTHRD002
+        Expect(session.Success, $"project debug replay should succeed for {path}");
+        if (!session.Success)
+        {
+            return;
+        }
+
+        Expect(!string.IsNullOrWhiteSpace(session.State.Reason),
+            $"project debug replay should surface a pause reason for {path}");
+        Expect(session.State.Frames.Count > 0,
+            $"project debug replay should surface a call stack for {path}");
+        Expect(session.State.Events.Count > 0,
+            $"project debug replay should surface runtime events for {path}");
     }
 
     private static void SmokeStandaloneStudioWithMultipleAssets(string? firstPath, string? secondPath)

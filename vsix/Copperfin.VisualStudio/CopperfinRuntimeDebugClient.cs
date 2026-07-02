@@ -11,6 +11,8 @@ namespace Copperfin.VisualStudio;
 internal static class CopperfinRuntimeDebugClient
 {
     private static readonly CopperfinLocalization Localization = CopperfinLocalization.FromEnvironment();
+    private const string DefaultInjectedBuildRole = "build-engineer";
+    private const string DefaultRuntimeDebugRole = "runtime-operator";
 
     public static async Task<CopperfinRuntimeDebugSession> StartSessionAsync(string projectPath)
     {
@@ -33,10 +35,11 @@ internal static class CopperfinRuntimeDebugClient
             };
         }
 
+        var effectiveDebugManifestPath = PrepareReplayManifest(buildResult.DebugManifestPath);
         return await ReplayAsync(new CopperfinRuntimeDebugSession
         {
             Success = true,
-            DebugManifestPath = buildResult.DebugManifestPath,
+            DebugManifestPath = effectiveDebugManifestPath,
             Commands = new List<string> { "continue" }
         });
     }
@@ -130,8 +133,17 @@ internal static class CopperfinRuntimeDebugClient
                 return session;
             }
 
+            var pauseState = ParsePauseState(stdout);
             if (process.ExitCode != 0)
             {
+                if (HasDebugData(pauseState))
+                {
+                    session.Success = true;
+                    session.Error = string.Empty;
+                    session.State = pauseState;
+                    return session;
+                }
+
                 session.Success = false;
                 session.Error = string.IsNullOrWhiteSpace(stderr) ? stdout.Trim() : stderr.Trim();
                 return session;
@@ -139,7 +151,7 @@ internal static class CopperfinRuntimeDebugClient
 
             session.Success = true;
             session.Error = string.Empty;
-            session.State = ParsePauseState(stdout);
+            session.State = pauseState;
             return session;
         });
     }
@@ -374,6 +386,108 @@ internal static class CopperfinRuntimeDebugClient
                state.Frames.Count > 0 ||
                state.Globals.Count > 0 ||
                state.Events.Count > 0;
+    }
+
+    private static string PrepareReplayManifest(string debugManifestPath)
+    {
+        if (string.IsNullOrWhiteSpace(debugManifestPath) || !File.Exists(debugManifestPath))
+        {
+            return debugManifestPath;
+        }
+
+        if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("COPPERFIN_SECURITY_ROLE")))
+        {
+            return debugManifestPath;
+        }
+
+        string manifestText;
+        try
+        {
+            manifestText = File.ReadAllText(debugManifestPath);
+        }
+        catch (IOException)
+        {
+            return debugManifestPath;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return debugManifestPath;
+        }
+
+        if (!string.Equals(ReadManifestValue(manifestText, "security_enabled"), "true", StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(ReadManifestValue(manifestText, "security_role"), DefaultInjectedBuildRole, StringComparison.OrdinalIgnoreCase))
+        {
+            return debugManifestPath;
+        }
+
+        var replayManifestText = ReplaceManifestValue(manifestText, "security_role", DefaultRuntimeDebugRole);
+        if (string.Equals(replayManifestText, manifestText, StringComparison.Ordinal))
+        {
+            return debugManifestPath;
+        }
+
+        var replayManifestDirectory = Path.GetDirectoryName(debugManifestPath);
+        if (string.IsNullOrWhiteSpace(replayManifestDirectory))
+        {
+            return debugManifestPath;
+        }
+
+        var replayManifestPath = Path.Combine(
+            replayManifestDirectory,
+            Path.GetFileNameWithoutExtension(debugManifestPath) + ".runtime-debug-" + Guid.NewGuid().ToString("N") + Path.GetExtension(debugManifestPath));
+
+        try
+        {
+            File.WriteAllText(replayManifestPath, replayManifestText);
+            return replayManifestPath;
+        }
+        catch (IOException)
+        {
+            return debugManifestPath;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return debugManifestPath;
+        }
+    }
+
+    private static string ReadManifestValue(string manifestText, string key)
+    {
+        using var reader = new StringReader(manifestText);
+        string? line;
+        while ((line = reader.ReadLine()) is not null)
+        {
+            if (line.StartsWith(key + "=", StringComparison.Ordinal))
+            {
+                return line.Substring(key.Length + 1);
+            }
+        }
+
+        return string.Empty;
+    }
+
+    private static string ReplaceManifestValue(string manifestText, string key, string replacementValue)
+    {
+        var updated = false;
+        using var reader = new StringReader(manifestText);
+        using var writer = new StringWriter();
+        string? line;
+        while ((line = reader.ReadLine()) is not null)
+        {
+            if (!updated && line.StartsWith(key + "=", StringComparison.Ordinal))
+            {
+                writer.Write(key);
+                writer.Write('=');
+                writer.Write(replacementValue);
+                writer.WriteLine();
+                updated = true;
+                continue;
+            }
+
+            writer.WriteLine(line);
+        }
+
+        return updated ? writer.ToString() : manifestText;
     }
 
     private static string Quote(string value)
