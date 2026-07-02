@@ -4915,6 +4915,11 @@ internal static class Program
                     TryResolveVfpSourceAsset("VFPSource/addlabel/addlabel.pjx"),
                     TryResolveVfpSourceAsset("VFPSource/tasklist/tasklist.PJX")),
                 expectGroups: new[] { "Forms", "Programs", "Class Libraries", "Classes", "Other Assets" });
+            SmokeProjectBuildWorkflowWithRealAsset(
+                ResolveFirstExistingRealAssetPath(
+                    TryResolveVfp9InstallAsset(@"Samples\Solution\solution.pjx"),
+                    TryResolveVfpSourceAsset("VFPSource/addlabel/addlabel.pjx"),
+                    TryResolveVfpSourceAsset("VFPSource/tasklist/tasklist.PJX")));
             SmokeProgramEditorWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/tasklist/main.prg"));
             SmokeProjectDebuggerWithRealAsset(
@@ -30629,6 +30634,33 @@ internal static class Program
         }
 
         TearDownForm(hostForm);
+    }
+
+    private static void SmokeProjectBuildWorkflowWithRealAsset(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(path) ? "real project build asset candidate" : path)} not found.");
+            return;
+        }
+
+        #pragma warning disable VSTHRD002
+        var result = CopperfinProjectWorkflow.ExecuteAsync(path!, CopperfinProjectOperation.Build)
+            .GetAwaiter()
+            .GetResult();
+        #pragma warning restore VSTHRD002
+        Expect(result.Success, $"project build workflow should succeed for {path}");
+        if (!result.Success)
+        {
+            return;
+        }
+
+        Expect(!string.IsNullOrWhiteSpace(result.OutputDirectory) && Directory.Exists(result.OutputDirectory),
+            $"project build workflow should materialize an output directory for {path}");
+        Expect(!string.IsNullOrWhiteSpace(result.LauncherPath) && File.Exists(result.LauncherPath),
+            $"project build workflow should materialize a launcher path for {path}");
+        Expect(!string.IsNullOrWhiteSpace(result.DebugManifestPath) && File.Exists(result.DebugManifestPath),
+            $"project build workflow should materialize a debug manifest for {path}");
     }
 
     private static void SmokeStandaloneStudioWithMultipleAssets(string? firstPath, string? secondPath)

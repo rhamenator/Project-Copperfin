@@ -39,6 +39,7 @@ internal sealed class CopperfinProcessExecutionResult
 internal static class CopperfinProjectWorkflow
 {
     private static readonly CopperfinLocalization Localization = CopperfinLocalization.FromEnvironment();
+    private const string DefaultSecurityBuildRole = "build-engineer";
 
     private const string RepoBuildHostPath = @"E:\Project-Copperfin\build\Release\copperfin_build_host.exe";
     private const string RepoRuntimeHostPath = @"E:\Project-Copperfin\build\Release\copperfin_runtime_host.exe";
@@ -108,11 +109,17 @@ internal static class CopperfinProjectWorkflow
             "--output-dir", Quote(outputDirectory),
             "--configuration", "debug",
             "--enable-security",
-            "--emit-dotnet-launcher",
             "--runtime-host", Quote(runtimeHostPath)
         };
+        if (ShouldEmitDotNetLauncher())
+        {
+            buildArguments.Add("--emit-dotnet-launcher");
+        }
 
-        var buildResult = RunProcess(buildHostPath, buildArguments);
+        var buildResult = RunProcess(
+            buildHostPath,
+            buildArguments,
+            CreateSecurityEnabledBuildEnvironment());
         if (buildResult.ExitCode != 0 || !string.Equals(GetValueOrDefault(buildResult.Values, "status"), "ok", StringComparison.OrdinalIgnoreCase))
         {
             return Failure(projectPath, Localization.Text("AssetEditor.Project.Workflow.BuildFailed"), outputDirectory, string.Empty, buildResult.ExitCode, buildResult.StandardOutput, buildResult.StandardError);
@@ -195,7 +202,10 @@ internal static class CopperfinProjectWorkflow
         };
     }
 
-    private static CopperfinProcessExecutionResult RunProcess(string fileName, IEnumerable<string> arguments)
+    private static CopperfinProcessExecutionResult RunProcess(
+        string fileName,
+        IEnumerable<string> arguments,
+        IReadOnlyDictionary<string, string>? environmentVariables = null)
     {
         var startInfo = new ProcessStartInfo
         {
@@ -206,6 +216,13 @@ internal static class CopperfinProjectWorkflow
             RedirectStandardError = true,
             CreateNoWindow = true
         };
+        if (environmentVariables is not null)
+        {
+            foreach (var kvp in environmentVariables)
+            {
+                startInfo.EnvironmentVariables[kvp.Key] = kvp.Value;
+            }
+        }
 
         using var process = new System.Diagnostics.Process { StartInfo = startInfo };
         if (!process.Start())
@@ -332,5 +349,23 @@ internal static class CopperfinProjectWorkflow
     private static string Quote(string value)
     {
         return "\"" + value.Replace("\"", "\"\"") + "\"";
+    }
+
+    private static bool ShouldEmitDotNetLauncher()
+    {
+        return Path.DirectorySeparatorChar == '\\';
+    }
+
+    private static IReadOnlyDictionary<string, string>? CreateSecurityEnabledBuildEnvironment()
+    {
+        if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("COPPERFIN_SECURITY_ROLE")))
+        {
+            return null;
+        }
+
+        return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["COPPERFIN_SECURITY_ROLE"] = DefaultSecurityBuildRole
+        };
     }
 }
