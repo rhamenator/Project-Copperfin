@@ -25468,7 +25468,7 @@ internal static class Program
 
             var initialSnapshot = CopperfinStudioSnapshotClient.TryLoad(assetPath);
             Expect(initialSnapshot.Success && initialSnapshot.Document is not null,
-                $"real asset editor rename smoke should load initial snapshot data for {sourcePath}");
+                $"real asset editor deleted-rename smoke should load initial snapshot data for {sourcePath}");
             if (!initialSnapshot.Success || initialSnapshot.Document is null || initialSnapshot.Document.ReportLayout is null)
             {
                 return;
@@ -25575,7 +25575,7 @@ internal static class Program
                     var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
                     var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
                     var objectState = TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString();
-                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                    return string.Equals(selectedSectionModel?.Title, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
                            selectedSectionModel?.RecordIndex == expectedSectionRecordIndex &&
                            selectedSectionModel?.DeletedObjectCount == 1 &&
                            selectedObject?.RecordIndex == recordIndex &&
@@ -25598,6 +25598,31 @@ internal static class Program
                 });
             Expect(deletedSelection,
                 $"real asset editor deleted-rename smoke should preserve deleted selection continuity before renaming for {sourcePath}");
+            if (!deletedSelection)
+            {
+                return;
+            }
+
+            var snapshotAfterDelete = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(snapshotAfterDelete.Success && snapshotAfterDelete.Document is not null,
+                $"real asset editor deleted-rename smoke should load deleted on-disk state before renaming for {sourcePath}");
+            if (snapshotAfterDelete.Success && snapshotAfterDelete.Document is not null)
+            {
+                AssertRealAssetDeletedObjectSnapshot(
+                    snapshotAfterDelete.Document,
+                    recordIndex,
+                    expectedOriginalUniqueId,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionRecordIndex,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectedDeletedSectionVisibleObjectCount,
+                    "updated real asset editor deleted-rename snapshot before renaming should preserve original identity");
+                AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
+                    snapshotAfterDelete.Document,
+                    "updated real asset editor deleted-rename snapshot before renaming should preserve deleted preview metadata");
+            }
 
             renameButton.PerformClick();
             Application.DoEvents();
@@ -25616,7 +25641,7 @@ internal static class Program
                     var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
                     var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
                     var objectState = TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString();
-                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                    return string.Equals(selectedSectionModel?.Title, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
                            selectedSectionModel?.RecordIndex == expectedSectionRecordIndex &&
                            selectedSectionModel?.DeletedObjectCount == 1 &&
                            selectedObject?.RecordIndex == recordIndex &&
@@ -25641,6 +25666,31 @@ internal static class Program
                 $"real asset editor deleted-rename smoke should preserve deleted section/object continuity after renaming for {sourcePath}");
             Expect(control.CanHandleUndoCommand(),
                 $"real asset editor deleted-rename smoke should expose undo after renaming for {sourcePath}");
+            if (!renamedSelection)
+            {
+                return;
+            }
+
+            var updatedAfterRename = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(updatedAfterRename.Success && updatedAfterRename.Document is not null,
+                $"real asset editor deleted-rename smoke should load renamed deleted on-disk state before reload verification for {sourcePath}");
+            if (updatedAfterRename.Success && updatedAfterRename.Document is not null)
+            {
+                AssertRealAssetDeletedObjectSnapshot(
+                    updatedAfterRename.Document,
+                    recordIndex,
+                    expectedRenamedUniqueId,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionRecordIndex,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectedDeletedSectionVisibleObjectCount,
+                    "updated real asset editor deleted-rename snapshot should preserve renamed identity");
+                AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
+                    updatedAfterRename.Document,
+                    "updated real asset editor deleted-rename snapshot should preserve deleted preview metadata");
+            }
 
             var reloadedAfterRename = CopperfinStudioSnapshotClient.TryLoad(assetPath);
             Expect(reloadedAfterRename.Success && reloadedAfterRename.Document is not null,
@@ -25658,6 +25708,9 @@ internal static class Program
                     expectLabel,
                     expectedDeletedSectionVisibleObjectCount,
                     "reloaded real asset editor deleted-rename snapshot should preserve renamed identity");
+                AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
+                    reloadedAfterRename.Document,
+                    "reloaded real asset editor deleted-rename snapshot should preserve deleted preview metadata");
             }
 
             var undoHandled = control.TryHandleUndoCommand();
@@ -25679,7 +25732,7 @@ internal static class Program
                     var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
                     var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
                     var objectState = TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString();
-                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                    return string.Equals(selectedSectionModel?.Title, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
                            selectedSectionModel?.RecordIndex == expectedSectionRecordIndex &&
                            selectedSectionModel?.DeletedObjectCount == 1 &&
                            selectedObject?.RecordIndex == recordIndex &&
@@ -25704,6 +25757,31 @@ internal static class Program
                 $"real asset editor deleted-rename smoke should preserve deleted section/object continuity after undoing rename for {sourcePath}");
             Expect(!control.CanHandleUndoCommand(),
                 $"real asset editor deleted-rename smoke should clear undo after restoring original identity for {sourcePath}");
+            if (!undoneSelection)
+            {
+                return;
+            }
+
+            var updatedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(updatedAfterUndo.Success && updatedAfterUndo.Document is not null,
+                $"real asset editor deleted-rename smoke should load restored deleted identity before reload verification for {sourcePath}");
+            if (updatedAfterUndo.Success && updatedAfterUndo.Document is not null)
+            {
+                AssertRealAssetDeletedObjectSnapshot(
+                    updatedAfterUndo.Document,
+                    recordIndex,
+                    expectedOriginalUniqueId,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionRecordIndex,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectedDeletedSectionVisibleObjectCount,
+                    "updated undone real asset editor deleted-rename snapshot should preserve original identity");
+                AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
+                    updatedAfterUndo.Document,
+                    "updated undone real asset editor deleted-rename snapshot should preserve deleted preview metadata");
+            }
 
             var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
             Expect(reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null,
@@ -25721,6 +25799,9 @@ internal static class Program
                     expectLabel,
                     expectedDeletedSectionVisibleObjectCount,
                     "reloaded undone real asset editor deleted-rename snapshot should preserve original identity");
+                AssertRealAssetDeletedPreviewBoundsMatchesDeletedObjects(
+                    reloadedAfterUndo.Document,
+                    "reloaded undone real asset editor deleted-rename snapshot should preserve deleted preview metadata");
             }
 
             restoreButton.PerformClick();
@@ -25740,7 +25821,7 @@ internal static class Program
                     var selectedSectionModel = selectedSection?.Tag as CopperfinStudioReportSection;
                     var selectedObject = objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Tag as CopperfinStudioSnapshotObject;
                     var objectState = TypeDescriptor.GetProperties(refreshedSelection)["OBJECTSTATE"]?.GetValue(refreshedSelection)?.ToString();
-                    return string.Equals(selectedSection?.Text, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
+                    return string.Equals(selectedSectionModel?.Title, expectedSectionTitle, StringComparison.OrdinalIgnoreCase) &&
                            selectedSectionModel?.RecordIndex == expectedSectionRecordIndex &&
                            selectedSectionModel?.DeletedObjectCount == 0 &&
                            selectedObject?.RecordIndex == recordIndex &&
@@ -25763,6 +25844,37 @@ internal static class Program
                 });
             Expect(restoredSelection,
                 $"real asset editor deleted-rename smoke should preserve live continuity after restoring the deleted row for {sourcePath}");
+            if (!restoredSelection)
+            {
+                return;
+            }
+
+            var updatedAfterRestore = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(updatedAfterRestore.Success && updatedAfterRestore.Document is not null,
+                $"real asset editor deleted-rename smoke should load restored live state before reload verification for {sourcePath}");
+            if (updatedAfterRestore.Success && updatedAfterRestore.Document is not null)
+            {
+                AssertRealAssetRoundTripSnapshot(
+                    updatedAfterRestore.Document,
+                    recordIndex,
+                    "UNIQUEID",
+                    expectedOriginalUniqueId,
+                    expectedObjectTitle,
+                    expectedSectionTitle,
+                    expectedSectionCount,
+                    expectLabel,
+                    expectUnplacedObject: false,
+                    "updated restored real asset editor deleted-rename snapshot should preserve original identity");
+                AssertRealAssetLivePreviewBounds(
+                    updatedAfterRestore.Document,
+                    expectedPreviewBoundsLeft,
+                    expectedPreviewBoundsTop,
+                    expectedPreviewBoundsRight,
+                    expectedPreviewBoundsBottom,
+                    expectedPreviewBoundsWidth,
+                    expectedPreviewBoundsHeight,
+                    "updated restored real asset editor deleted-rename snapshot should preserve live preview metadata");
+            }
 
             var reloadedAfterRestore = CopperfinStudioSnapshotClient.TryLoad(assetPath);
             Expect(reloadedAfterRestore.Success && reloadedAfterRestore.Document is not null,
@@ -25780,6 +25892,15 @@ internal static class Program
                     expectLabel,
                     expectUnplacedObject: false,
                     "reloaded restored real asset editor deleted-rename snapshot should preserve original identity");
+                AssertRealAssetLivePreviewBounds(
+                    reloadedAfterRestore.Document,
+                    expectedPreviewBoundsLeft,
+                    expectedPreviewBoundsTop,
+                    expectedPreviewBoundsRight,
+                    expectedPreviewBoundsBottom,
+                    expectedPreviewBoundsWidth,
+                    expectedPreviewBoundsHeight,
+                    "reloaded restored real asset editor deleted-rename snapshot should preserve live preview metadata");
             }
 
             TearDownForm(hostForm);
