@@ -31013,21 +31013,29 @@ internal static class Program
         var programPath = TryResolveAssetUnderRoot(extractedVfpSourceRoot!, "tasklist/main.prg");
         var formPath = TryResolveAssetUnderRoot(extractedVfpSourceRoot!, "Wizards/wzapp/template/Books/Forms/books.scx");
         var reportPath = TryResolveAssetUnderRoot(extractedVfpSourceRoot!, "Wizards/wzapp/template/Books/Reports/by_author.FRX");
+        var labelPath = TryResolveAssetUnderRoot(extractedVfpSourceRoot!, "Wizards/wzreport/STYLES/STYLELBL.LBX");
 
         Expect(!string.IsNullOrWhiteSpace(projectPath) && !string.IsNullOrWhiteSpace(programPath) &&
-               !string.IsNullOrWhiteSpace(formPath) && !string.IsNullOrWhiteSpace(reportPath),
-            "fresh-run VFPSource startup-path smoke should resolve project, program, form, and report assets from the extracted root");
+               !string.IsNullOrWhiteSpace(formPath) && !string.IsNullOrWhiteSpace(reportPath) &&
+               !string.IsNullOrWhiteSpace(labelPath),
+            "fresh-run VFPSource startup-path smoke should resolve project, program, form, report, and label assets from the extracted root");
         if (string.IsNullOrWhiteSpace(projectPath) || string.IsNullOrWhiteSpace(programPath) ||
-            string.IsNullOrWhiteSpace(formPath) || string.IsNullOrWhiteSpace(reportPath))
+            string.IsNullOrWhiteSpace(formPath) || string.IsNullOrWhiteSpace(reportPath) ||
+            string.IsNullOrWhiteSpace(labelPath))
         {
             return;
         }
+
+        var labelSidecarPath = Path.ChangeExtension(labelPath, ".LBT");
+        Expect(File.Exists(labelSidecarPath),
+            "fresh-run VFPSource startup-path smoke should preserve the label sidecar beside STYLELBL.LBX");
 
         SmokeProjectEditorWithRealAsset(
             projectPath,
             expectGroups: new[] { "Forms", "Programs", "Class Libraries", "Classes", "Other Assets" });
         SmokeProgramEditorWithRealAsset(programPath);
         SmokeStandaloneStudioWithMultipleAssets(formPath, reportPath);
+        SmokeAssetEditorWithRealAsset(labelPath, expectSection: "Detail");
     }
 
     private static void TearDownForm(Form form)
