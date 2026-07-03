@@ -1312,7 +1312,11 @@
             return 1;
         }
 
-        int register_ole_object(const Frame &frame, const std::string &prog_id, const std::string &source)
+        int register_ole_object(
+            const Frame &frame,
+            const std::string &prog_id,
+            const std::string &source,
+            const std::vector<PrgValue> &constructor_arguments = {})
         {
             const std::string normalized_source = normalize_identifier(source);
             if (normalized_source == "createobject" || normalized_source == "newobject")
@@ -1400,7 +1404,7 @@
                                           init_method_name,
                                           *init_method,
                                           this_reference,
-                                          {},
+                                          normalized_source == "createobject" ? constructor_arguments : std::vector<PrgValue>{},
                                           {});
                         (void)run_expression_invoked_routine_until_return(return_depth);
                     }

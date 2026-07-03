@@ -728,9 +728,9 @@ namespace copperfin::runtime
             {
                 return sql_set_prop(handle, property_name, value);
             },
-            [this, &frame](const std::string &prog_id, const std::string &source)
+            [this, &frame](const std::string &prog_id, const std::string &source, const std::vector<PrgValue> &constructor_arguments)
             {
-                return register_ole_object(frame, prog_id, source);
+                return register_ole_object(frame, prog_id, source, constructor_arguments);
             },
             [this, &frame](const std::string &base_name, const std::string &member_path, const std::vector<PrgValue> &arguments)
             {

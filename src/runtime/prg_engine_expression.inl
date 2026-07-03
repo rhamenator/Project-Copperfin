@@ -110,7 +110,7 @@
                 std::function<int(int, const std::string &, const std::string &, const std::string &)> sql_columns_callback,
                 std::function<PrgValue(int, const std::string &)> sql_get_prop_callback,
                 std::function<int(int, const std::string &, const PrgValue &)> sql_set_prop_callback,
-                std::function<int(const std::string &, const std::string &)> register_ole_callback,
+                std::function<int(const std::string &, const std::string &, const std::vector<PrgValue> &)> register_ole_callback,
                 std::function<PrgValue(const std::string &, const std::string &, const std::vector<PrgValue> &)> ole_invoke_callback,
                 std::function<PrgValue(const std::string &)> ole_property_callback,
                 std::function<PrgValue(const std::string &)> eval_expression_callback,
@@ -827,7 +827,13 @@
                 if (function == "createobject" && !arguments.empty())
                 {
                     const std::string prog_id = value_as_string(arguments[0]);
-                    const int handle = register_ole_callback_(prog_id, "createobject");
+                    std::vector<PrgValue> create_arguments;
+                    create_arguments.reserve(arguments.size() > 0U ? arguments.size() - 1U : 0U);
+                    for (std::size_t index = 1U; index < arguments.size(); ++index)
+                    {
+                        create_arguments.push_back(arguments[index]);
+                    }
+                    const int handle = register_ole_callback_(prog_id, "createobject", create_arguments);
                     record_event_callback_("ole.createobject", prog_id);
                     return make_string_value("object:" + prog_id + "#" + std::to_string(handle));
                 }
@@ -841,7 +847,7 @@
                     {
                         source += "@" + server;
                     }
-                    const int handle = register_ole_callback_(class_name, source);
+                    const int handle = register_ole_callback_(class_name, source, {});
                     std::string detail = class_name;
                     if (!library.empty())
                     {
@@ -860,7 +866,7 @@
                     const std::string class_name = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{};
                     const std::string resolved_prog_id = trim_copy(class_name).empty() ? source : class_name;
                     const std::string source_tag = trim_copy(source).empty() ? "getobject" : "getobject:" + source;
-                    const int handle = register_ole_callback_(resolved_prog_id, source_tag);
+                    const int handle = register_ole_callback_(resolved_prog_id, source_tag, {});
                     record_event_callback_(
                         "ole.getobject",
                         trim_copy(class_name).empty() ? source : source + " -> " + class_name);
@@ -1927,7 +1933,7 @@
             std::function<int(int, const std::string &, const std::string &, const std::string &)> sql_columns_callback_;
             std::function<PrgValue(int, const std::string &)> sql_get_prop_callback_;
             std::function<int(int, const std::string &, const PrgValue &)> sql_set_prop_callback_;
-            std::function<int(const std::string &, const std::string &)> register_ole_callback_;
+            std::function<int(const std::string &, const std::string &, const std::vector<PrgValue> &)> register_ole_callback_;
             std::function<PrgValue(const std::string &, const std::string &, const std::vector<PrgValue> &)> ole_invoke_callback_;
             std::function<PrgValue(const std::string &)> ole_property_callback_;
             std::function<PrgValue(const std::string &)> eval_expression_callback_;
