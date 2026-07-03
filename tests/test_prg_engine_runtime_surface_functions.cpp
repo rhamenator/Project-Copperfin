@@ -1039,6 +1039,123 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_prg_init_runs_during_object_creation_and_preserves_plain_creation()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_init_lifecycle";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_init_lifecycle.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('CreateWidget')\n"
+            "oNew = NEWOBJECT('NewWidget')\n"
+            "cCreateCaption = oCreate.Caption\n"
+            "lCreateInitRan = oCreate.lInitRan\n"
+            "nCreateCount = oCreate.nCount\n"
+            "cNewCaption = oNew.Caption\n"
+            "lNewInitRan = oNew.lInitRan\n"
+            "nNewCount = oNew.nCount\n"
+            "oPlain = CREATEOBJECT('Empty')\n"
+            "oPlain.Extra = 'plain'\n"
+            "cPlain = oPlain.Extra\n"
+            "RETURN\n"
+            "DEFINE CLASS CreateWidget AS Custom\n"
+            "    Caption = 'CreateBase'\n"
+            "    lInitRan = .F.\n"
+            "    nCount = 1\n"
+            "    PROCEDURE Init\n"
+            "        THIS.Caption = THIS.Caption + '-Init'\n"
+            "        THIS.lInitRan = .T.\n"
+            "        THIS.nCount = THIS.nCount + 1\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS NewWidget AS Custom\n"
+            "    Caption = 'NewBase'\n"
+            "    lInitRan = .F.\n"
+            "    nCount = 10\n"
+            "    FUNCTION Init\n"
+            "        THIS.Caption = THIS.Caption + '-Init'\n"
+            "        THIS.lInitRan = .T.\n"
+            "        THIS.nCount = THIS.nCount + 5\n"
+            "        RETURN THIS.nCount\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Init lifecycle script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("ccreatecaption", "CreateBase-Init");
+        check("lcreateinitran", "true");
+        check("ncreatecount", "2");
+        check("cnewcaption", "NewBase-Init");
+        check("lnewinitran", "true");
+        check("nnewcount", "15");
+        check("cplain", "plain");
+
+        expect(state.ole_objects.size() == 3U,
+               "native Init lifecycle script should register two native objects plus one plain object");
+        if (state.ole_objects.size() == 3U)
+        {
+            const auto &create_object = state.ole_objects[0];
+            expect(create_object.prog_id == "CreateWidget",
+                   "CREATEOBJECT native Init lifecycle should preserve class identity");
+            const auto create_caption = create_object.properties.find("caption");
+            expect(create_caption != create_object.properties.end(),
+                   "CREATEOBJECT native Init lifecycle should persist caption updates");
+            if (create_caption != create_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(create_caption->second) == "CreateBase-Init",
+                       "CREATEOBJECT native Init lifecycle should apply Init updates after default property materialization");
+            }
+
+            const auto &new_object = state.ole_objects[1];
+            expect(new_object.prog_id == "NewWidget",
+                   "bare NEWOBJECT native Init lifecycle should preserve class identity");
+            const auto new_count = new_object.properties.find("ncount");
+            expect(new_count != new_object.properties.end(),
+                   "bare NEWOBJECT native Init lifecycle should persist Init-written numeric properties");
+            if (new_count != new_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(new_count->second) == "15",
+                       "bare NEWOBJECT native Init lifecycle should run Init during creation");
+            }
+
+            expect(state.ole_objects[2].prog_id == "Empty",
+                   "plain CREATEOBJECT should remain stable alongside native Init lifecycle");
+        }
+
+        const bool has_init_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.init" &&
+                   (event.detail == "CreateWidget.Init" || event.detail == "NewWidget.Init");
+        });
+        expect(has_init_event,
+               "native object creation should emit prg.object.init events when Init runs");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_codepage_and_misc_runtime_surface_functions()
     {
         namespace fs = std::filesystem;
@@ -1712,6 +1829,7 @@ int main()
     test_createobject_instantiates_native_prg_class_and_preserves_plain_object_creation();
     test_newobject_instantiates_native_prg_class_and_preserves_ole_newobject();
     test_native_prg_object_methods_bind_this_and_persist_instance_state();
+    test_native_prg_init_runs_during_object_creation_and_preserves_plain_creation();
     test_codepage_and_misc_runtime_surface_functions();
     test_lookup_expression_function();
     test_lookup_expression_function_supports_sql_cursors();

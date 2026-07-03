@@ -1376,6 +1376,35 @@
                             evaluate_expression(property_statement.expression, frame);
                     }
 
+                    std::string init_program_path;
+                    std::string init_method_name;
+                    if (const Routine *init_method = find_native_object_method(
+                            *runtime_object,
+                            "init",
+                            init_program_path,
+                            init_method_name);
+                        init_method != nullptr)
+                    {
+                        if (!can_push_frame())
+                        {
+                            throw std::runtime_error(call_depth_limit_message());
+                        }
+
+                        events.push_back({.category = "prg.object.init",
+                                          .detail = init_method_name,
+                                          .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                        const std::size_t return_depth = stack.size();
+                        const PrgValue this_reference =
+                            make_string_value("object:" + runtime_object->prog_id + "#" + std::to_string(runtime_object->handle));
+                        push_method_frame(init_program_path,
+                                          init_method_name,
+                                          *init_method,
+                                          this_reference,
+                                          {},
+                                          {});
+                        (void)run_expression_invoked_routine_until_return(return_depth);
+                    }
+
                     return handle;
                 }
             }
