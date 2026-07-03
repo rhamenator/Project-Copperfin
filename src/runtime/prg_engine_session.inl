@@ -445,6 +445,10 @@
 
             auto [object_it, _] = ole_objects.emplace(handle, std::move(object_state));
             RuntimeOleObjectState *runtime_object = &object_it->second;
+            const auto make_runtime_object_reference = [](const RuntimeOleObjectState &object_state) -> PrgValue
+            {
+                return make_string_value("object:" + object_state.prog_id + "#" + std::to_string(object_state.handle));
+            };
             for (const PrgClassDefinition *lineage_class : class_lineage)
             {
                 for (const Statement &property_statement : lineage_class->property_statements)
@@ -462,6 +466,38 @@
 
                     runtime_object->properties[property_name] =
                         evaluate_expression(property_statement.expression, frame);
+                }
+            }
+            const PrgValue runtime_object_reference = make_runtime_object_reference(*runtime_object);
+            for (const PrgClassDefinition *lineage_class : class_lineage)
+            {
+                for (const NativeChildObjectDeclaration &child_declaration : lineage_class->child_object_declarations)
+                {
+                    const std::string child_name = normalize_identifier(child_declaration.name);
+                    if (child_name.empty() || child_declaration.class_name.empty())
+                    {
+                        continue;
+                    }
+
+                    RuntimeOleObjectState *child_object = instantiate_native_class_object(
+                        frame,
+                        child_declaration.class_name,
+                        runtime_object->source,
+                        "classbody.addobject",
+                        {},
+                        {},
+                        runtime_object_reference);
+                    if (child_object == nullptr)
+                    {
+                        continue;
+                    }
+
+                    runtime_object->properties[child_name] = make_runtime_object_reference(*child_object);
+                    runtime_object->last_action = "addobject(" + child_name + "," + child_declaration.class_name + ")";
+                    ++runtime_object->action_count;
+                    events.push_back({.category = "prg.object.addobject",
+                                      .detail = runtime_object->prog_id + "." + child_name + ":" + child_declaration.class_name,
+                                      .location = current_statement() == nullptr ? child_declaration.declaration_location : current_statement()->location});
                 }
             }
 
@@ -483,8 +519,6 @@
                                   .detail = init_method_name,
                                   .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
                 const std::size_t return_depth = stack.size();
-                const PrgValue this_reference =
-                    make_string_value("object:" + runtime_object->prog_id + "#" + std::to_string(runtime_object->handle));
                 std::vector<PrgValue> effective_constructor_arguments = constructor_arguments;
                 if (effective_constructor_arguments.size() < constructor_argument_references.size())
                 {
@@ -501,7 +535,7 @@
                 push_method_frame(init_program_path,
                                   init_method_name,
                                   *init_method,
-                                  this_reference,
+                                  runtime_object_reference,
                                   init_method_name.substr(0U, init_method_name.rfind('.')),
                                   "init",
                                   parent_reference,

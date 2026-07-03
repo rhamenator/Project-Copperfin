@@ -621,6 +621,21 @@ Program parse_program(const std::string& path) {
             current = &program.main;
             continue;
         }
+        if (current_class != nullptr && current == &program.main && starts_with_insensitive(line, "ADD OBJECT ")) {
+            const std::string body = trim_copy(line.substr(11U));
+            const std::size_t as_position = find_keyword_top_level(body, "AS");
+            if (as_position != std::string::npos) {
+                NativeChildObjectDeclaration declaration;
+                declaration.name = trim_copy(body.substr(0U, as_position));
+                declaration.class_name = trim_copy(body.substr(as_position + 2U));
+                declaration.declaration_location = {.file_path = normalize_path(path), .line = line_number};
+                declaration.text = line;
+                if (!declaration.name.empty() && !declaration.class_name.empty()) {
+                    current_class->child_object_declarations.push_back(std::move(declaration));
+                    continue;
+                }
+            }
+        }
 
         Statement statement = make_statement(StatementKind::no_op, path, line_number, line);
         if (starts_with_insensitive(line, "IF ")) {

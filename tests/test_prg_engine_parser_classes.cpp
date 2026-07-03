@@ -139,11 +139,59 @@ void test_parse_mixed_class_blocks_and_top_level_routines_stays_stable() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_parse_class_body_add_object_declarations_distinct_from_property_assignments() {
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_parser_class_body_add_object";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path program_path = temp_root / "class_body_add_object.prg";
+    copperfin::test_support::write_text(
+        program_path,
+        "DEFINE CLASS DemoForm AS Custom\n"
+        "    Caption = 'Demo'\n"
+        "    ADD OBJECT cmdSave AS SaveButton\n"
+        "    PROCEDURE Init\n"
+        "        RETURN THIS.Caption\n"
+        "    ENDPROC\n"
+        "ENDDEFINE\n"
+        "DEFINE CLASS SaveButton AS Custom\n"
+        "    Caption = 'Save'\n"
+        "ENDDEFINE\n");
+
+    const copperfin::runtime::Program program = copperfin::runtime::parse_program(program_path.string());
+    const auto class_found = program.classes.find("demoform");
+    copperfin::test_support::expect(class_found != program.classes.end(),
+                                    "class-body ADD OBJECT test should parse the owning class definition");
+    if (class_found != program.classes.end()) {
+        const auto& class_definition = class_found->second;
+        copperfin::test_support::expect(class_definition.property_statements.size() == 1U,
+                                        "class-body ADD OBJECT should stay out of ordinary class property assignments");
+        if (class_definition.property_statements.size() == 1U) {
+            copperfin::test_support::expect(class_definition.property_statements[0].identifier == "Caption",
+                                            "class-body ADD OBJECT should preserve surrounding property assignments");
+        }
+        copperfin::test_support::expect(class_definition.child_object_declarations.size() == 1U,
+                                        "class-body ADD OBJECT should be captured as a dedicated child-object declaration");
+        if (class_definition.child_object_declarations.size() == 1U) {
+            copperfin::test_support::expect(class_definition.child_object_declarations[0].name == "cmdSave",
+                                            "class-body ADD OBJECT should preserve the declared child name text");
+            copperfin::test_support::expect(class_definition.child_object_declarations[0].class_name == "SaveButton",
+                                            "class-body ADD OBJECT should preserve the declared child class text");
+        }
+    }
+
+    copperfin::test_support::expect(program.main.statements.empty(),
+                                    "class-body ADD OBJECT declarations should not leak into top-level main statements");
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
     test_parse_define_class_captures_metadata_and_methods();
     test_parse_mixed_class_blocks_and_top_level_routines_stays_stable();
+    test_parse_class_body_add_object_declarations_distinct_from_property_assignments();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

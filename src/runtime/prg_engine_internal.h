@@ -164,11 +164,19 @@ struct Routine {
     std::vector<Statement> statements;
 };
 
+struct NativeChildObjectDeclaration {
+    std::string name;
+    std::string class_name;
+    SourceLocation declaration_location{};
+    std::string text;
+};
+
 struct PrgClassDefinition {
     std::string name;
     std::string base_class_name;
     SourceLocation declaration_location{};
     std::vector<Statement> property_statements;
+    std::vector<NativeChildObjectDeclaration> child_object_declarations;
     std::map<std::string, Routine> methods;
 };
 

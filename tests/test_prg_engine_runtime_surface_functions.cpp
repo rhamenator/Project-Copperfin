@@ -1052,6 +1052,120 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_class_body_add_object_materializes_children_before_init()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_class_body_addobject";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_class_body_addobject.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('DemoForm')\n"
+            "oNew = NEWOBJECT('DemoForm')\n"
+            "lCreateHasChild = PEMSTATUS(oCreate, 'cmdSave', 1)\n"
+            "lNewHasChild = PEMSTATUS(oNew, 'cmdSave', 1)\n"
+            "lCreateInitSawChild = oCreate.lInitSawChild\n"
+            "lNewInitSawChild = oNew.lInitSawChild\n"
+            "cCreateInitChildCaption = oCreate.cInitChildCaption\n"
+            "cNewInitChildCaption = oNew.cInitChildCaption\n"
+            "cCreateOwnerCaption = oCreate.cmdSave.OwnerCaption()\n"
+            "cNewOwnerCaption = oNew.cmdSave.OwnerCaption()\n"
+            "lCreateChildHasParent = PEMSTATUS(oCreate.cmdSave, 'Parent', 1)\n"
+            "lNewChildHasParent = PEMSTATUS(oNew.cmdSave, 'Parent', 1)\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 13)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS DemoForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    lInitSawChild = .F.\n"
+            "    cInitChildCaption = ''\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "    PROCEDURE Init\n"
+            "        THIS.lInitSawChild = PEMSTATUS(THIS, 'cmdSave', 1)\n"
+            "        IF THIS.lInitSawChild\n"
+            "            THIS.cInitChildCaption = THIS.cmdSave.Caption\n"
+            "        ENDIF\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS Custom\n"
+            "    Caption = 'Save'\n"
+            "    FUNCTION OwnerCaption\n"
+            "        RETURN PARENT.Caption\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native class-body ADD OBJECT script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lcreatehaschild", "true");
+        check("lnewhaschild", "true");
+        check("lcreateinitsawchild", "true");
+        check("lnewinitsawchild", "true");
+        check("ccreateinitchildcaption", "Save");
+        check("cnewinitchildcaption", "Save");
+        check("ccreateownercaption", "MainForm");
+        check("cnewownercaption", "MainForm");
+        check("lcreatechildhasparent", "true");
+        check("lnewchildhasparent", "true");
+        check("ldictset", "true");
+        check("ndictcompare", "13");
+
+        expect(state.ole_objects.size() == 5U,
+               "native class-body ADD OBJECT script should register CREATEOBJECT, NEWOBJECT, child, child, and COM objects");
+        if (state.ole_objects.size() == 5U)
+        {
+            expect(state.ole_objects[0].prog_id == "DemoForm",
+                   "class-body ADD OBJECT should preserve the CREATEOBJECT parent class identity");
+            expect(state.ole_objects[1].prog_id == "SaveButton",
+                   "class-body ADD OBJECT should materialize the CREATEOBJECT child class");
+            expect(state.ole_objects[2].prog_id == "DemoForm",
+                   "class-body ADD OBJECT should preserve the NEWOBJECT parent class identity");
+            expect(state.ole_objects[3].prog_id == "SaveButton",
+                   "class-body ADD OBJECT should materialize the NEWOBJECT child class");
+            expect(state.ole_objects[4].prog_id == "Scripting.Dictionary",
+                   "COM behavior should remain stable while class-body ADD OBJECT lands");
+            expect(state.ole_objects[0].properties.contains("cmdsave"),
+                   "class-body ADD OBJECT should materialize the child reference on the CREATEOBJECT parent");
+            expect(state.ole_objects[2].properties.contains("cmdsave"),
+                   "class-body ADD OBJECT should materialize the child reference on the NEWOBJECT parent");
+        }
+
+        const std::size_t addobject_event_count = static_cast<std::size_t>(std::count_if(
+            state.events.begin(),
+            state.events.end(),
+            [](const auto &event)
+            {
+                return event.category == "prg.object.addobject" &&
+                       event.detail == "DemoForm.cmdsave:SaveButton";
+            }));
+        expect(addobject_event_count == 2U,
+               "class-body ADD OBJECT should emit addobject events for both CREATEOBJECT and NEWOBJECT activation");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_child_methods_resolve_thisform_through_parent_chain()
     {
         namespace fs = std::filesystem;
@@ -3673,6 +3787,7 @@ int main()
     test_createobject_instantiates_native_prg_class_and_preserves_plain_object_creation();
     test_newobject_instantiates_native_prg_class_and_preserves_ole_newobject();
     test_native_addobject_materializes_child_objects_and_child_methods_see_parent();
+    test_native_class_body_add_object_materializes_children_before_init();
     test_native_child_methods_resolve_thisform_through_parent_chain();
     test_native_child_methods_resolve_thisformset_through_owner_chain();
     test_dotted_native_child_chains_traverse_contained_objects();
