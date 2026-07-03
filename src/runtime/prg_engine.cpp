@@ -330,6 +330,13 @@ namespace copperfin::runtime
             std::map<std::string, std::map<std::size_t, std::string>> record_lock_owner_by_resource;
         };
 
+        struct CurrentNativeEventContext
+        {
+            int source_handle = 0;
+            std::string event_name;
+            int event_type = 0;
+        };
+
 #include "prg_engine_free_functions.inl"
     } // namespace
 
@@ -434,6 +441,7 @@ namespace copperfin::runtime
         std::map<int, RuntimeOleObjectState> ole_objects;
         std::vector<NativeEventBinding> native_event_bindings;
         std::set<std::string> active_native_event_keys;
+        std::vector<CurrentNativeEventContext> active_native_event_contexts;
         std::size_t next_native_event_binding_ordinal = 1U;
         std::set<std::string> loaded_libraries;
         std::map<int, std::map<int, RegisteredApiFunction>> registered_api_functions_by_session;
@@ -521,6 +529,7 @@ namespace copperfin::runtime
             const std::vector<std::optional<std::string>> &argument_references);
         std::optional<PrgValue> invoke_native_event_delegate(
             const NativeEventBinding &binding,
+            const CurrentNativeEventContext &event_context,
             const std::vector<PrgValue> &arguments,
             const std::vector<std::optional<std::string>> &argument_references);
         PrgValue release_native_object(
@@ -1693,9 +1702,26 @@ namespace copperfin::runtime
 
     std::optional<PrgValue> PrgRuntimeSession::Impl::invoke_native_event_delegate(
         const NativeEventBinding &binding,
+        const CurrentNativeEventContext &event_context,
         const std::vector<PrgValue> &arguments,
         const std::vector<std::optional<std::string>> &argument_references)
     {
+        struct CurrentEventGuard
+        {
+            std::vector<CurrentNativeEventContext> &stack;
+
+            ~CurrentEventGuard()
+            {
+                if (!stack.empty())
+                {
+                    stack.pop_back();
+                }
+            }
+        };
+
+        active_native_event_contexts.push_back(event_context);
+        CurrentEventGuard guard{active_native_event_contexts};
+
         if (binding.target_is_routine)
         {
             Program &program = load_program(binding.target_program_path);
@@ -1789,7 +1815,13 @@ namespace copperfin::runtime
                 const bool binding_after_source_method = (binding.flags & 1) != 0;
                 if (binding_after_source_method == after_source_method)
                 {
-                    (void)invoke_native_event_delegate(binding, arguments, argument_references);
+                    (void)invoke_native_event_delegate(
+                        binding,
+                        {.source_handle = runtime_object.handle,
+                         .event_name = normalized_identifier,
+                         .event_type = 2},
+                        arguments,
+                        argument_references);
                 }
             }
         };
@@ -1997,7 +2029,13 @@ namespace copperfin::runtime
                 const bool binding_after_source_method = (binding.flags & 1) != 0;
                 if (binding_after_source_method == after_source_method)
                 {
-                    (void)invoke_native_event_delegate(binding, event_arguments, event_argument_references);
+                    (void)invoke_native_event_delegate(
+                        binding,
+                        {.source_handle = (*source_object)->handle,
+                         .event_name = event_name,
+                         .event_type = 1},
+                        event_arguments,
+                        event_argument_references);
                 }
             }
         };
@@ -2144,6 +2182,60 @@ namespace copperfin::runtime
         if (array_name.empty())
         {
             return make_number_value(0.0);
+        }
+
+        const auto second_argument_is_zero_probe = [&]() -> bool
+        {
+            if (arguments.size() < 2U)
+            {
+                return false;
+            }
+            int object_handle = 0;
+            std::string object_prog_id;
+            if (parse_object_handle_reference(arguments[1], object_handle, object_prog_id))
+            {
+                return false;
+            }
+
+            switch (arguments[1].kind)
+            {
+            case PrgValueKind::number:
+                return std::abs(arguments[1].number_value) < 0.000001;
+            case PrgValueKind::int64:
+                return arguments[1].int64_value == 0;
+            case PrgValueKind::uint64:
+                return arguments[1].uint64_value == 0U;
+            case PrgValueKind::boolean:
+                return !arguments[1].boolean_value;
+            case PrgValueKind::string:
+                return trim_copy(arguments[1].string_value) == "0";
+            case PrgValueKind::empty:
+                return false;
+            }
+            return false;
+        };
+
+        if (second_argument_is_zero_probe())
+        {
+            if (active_native_event_contexts.empty())
+            {
+                return make_number_value(0.0);
+            }
+
+            const CurrentNativeEventContext &event_context = active_native_event_contexts.back();
+            const auto source_found = ole_objects.find(event_context.source_handle);
+            if (source_found == ole_objects.end())
+            {
+                return make_number_value(0.0);
+            }
+
+            assign_array(
+                array_name,
+                {make_string_value("object:" + source_found->second.prog_id + "#" + std::to_string(source_found->second.handle)),
+                 make_string_value(event_context.event_name),
+                 make_number_value(static_cast<double>(event_context.event_type))},
+                1U);
+            return make_number_value(3.0);
         }
 
         int object_handle = 0;

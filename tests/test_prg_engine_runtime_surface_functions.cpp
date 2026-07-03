@@ -38207,6 +38207,110 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_same_prg_native_aevents_zero_reports_current_event_metadata_during_delegate_dispatch()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_aevents_zero";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_aevents_zero.prg";
+        write_text(
+            main_path,
+            "nCaptureCount = 0\n"
+            "cLog = ''\n"
+            "oSource = CREATEOBJECT('SourceThing')\n"
+            "oHandler = CREATEOBJECT('HandlerThing')\n"
+            "nBindPing = BINDEVENT(oSource, 'Ping', oHandler, 'CaptureCurrent')\n"
+            "nBindRaiseOnly = BINDEVENT(oSource, 'RaiseOnly', oHandler, 'CaptureCurrent')\n"
+            "cDirect = oSource.Ping(12)\n"
+            "lRaised = RAISEEVENT(oSource, 'RaiseOnly', 34)\n"
+            "DIMENSION aExisting[1]\n"
+            "aExisting[1] = 'keep'\n"
+            "nOutsideRows = AEVENTS(aExisting, 0)\n"
+            "cOutsideKeep = aExisting[1]\n"
+            "nOutsideMissingRows = AEVENTS(aMissing, 0)\n"
+            "cOutsideMissingType = TYPE('aMissing')\n"
+            "RETURN\n"
+            "DEFINE CLASS SourceThing AS Custom\n"
+            "    FUNCTION Ping\n"
+            "        LPARAMETERS tnValue\n"
+            "        RETURN 'ping:' + TRANSFORM(tnValue)\n"
+            "    ENDFUNC\n"
+            "    FUNCTION RaiseOnly\n"
+            "        LPARAMETERS tnValue\n"
+            "        RETURN 'raise:' + TRANSFORM(tnValue)\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS HandlerThing AS Custom\n"
+            "    FUNCTION CaptureCurrent\n"
+            "        LPARAMETERS tnValue\n"
+            "        nCaptureCount = nCaptureCount + 1\n"
+            "        nRows = AEVENTS(aCurrent, 0)\n"
+            "        IF nCaptureCount = 1\n"
+            "            nFirstRows = nRows\n"
+            "            nFirstLen = ALEN(aCurrent)\n"
+            "            lFirstMatchesSource = COMPOBJ(aCurrent[1], oSource)\n"
+            "            cFirstEvent = aCurrent[2]\n"
+            "            nFirstType = aCurrent[3]\n"
+            "            cLog = cLog + '[first:' + cFirstEvent + ':' + TRANSFORM(aCurrent[3]) + ':' + TRANSFORM(tnValue) + ']'\n"
+            "        ELSE\n"
+            "            nSecondRows = nRows\n"
+            "            nSecondLen = ALEN(aCurrent)\n"
+            "            lSecondMatchesSource = COMPOBJ(aCurrent[1], oSource)\n"
+            "            cSecondEvent = aCurrent[2]\n"
+            "            nSecondType = aCurrent[3]\n"
+            "            cLog = cLog + '[second:' + cSecondEvent + ':' + TRANSFORM(aCurrent[3]) + ':' + TRANSFORM(tnValue) + ']'\n"
+            "        ENDIF\n"
+            "        RETURN tnValue\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native AEVENTS(..., 0) script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("nbindping", "1");
+        check("nbindraiseonly", "1");
+        check("cdirect", "ping:12");
+        check("lraised", "true");
+        check("ncapturecount", "2");
+        check("nfirstrows", "3");
+        check("nfirstlen", "3");
+        check("lfirstmatchessource", "true");
+        check("cfirstevent", "ping");
+        check("nfirsttype", "2");
+        check("nsecondrows", "3");
+        check("nsecondlen", "3");
+        check("lsecondmatchessource", "true");
+        check("csecondevent", "raiseonly");
+        check("nsecondtype", "1");
+        check("clog", "[first:ping:2:12][second:raiseonly:1:34]");
+        check("noutsiderows", "0");
+        check("coutsidekeep", "keep");
+        check("noutsidemissingrows", "0");
+        check("coutsidemissingtype", "U");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes()
     {
         namespace fs = std::filesystem;
@@ -39732,6 +39836,7 @@ int main()
     test_external_prg_base_methods_reflect_through_getpem_pemstatus_and_amembers();
         test_same_prg_native_bindevent_raiseevent_and_unbindevents_dispatch_same_session_handlers();
         test_same_prg_native_aevents_enumerates_same_session_bindings_without_clobbering_zero_row_targets();
+        test_same_prg_native_aevents_zero_reports_current_event_metadata_during_delegate_dispatch();
         test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();
     test_native_accessor_backed_properties_reflect_through_getpem_pemstatus_and_amembers();
     test_external_prg_base_accessor_backed_properties_dispatch_and_reflect();
