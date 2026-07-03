@@ -198,6 +198,20 @@ std::optional<PrgValue> get_native_identity_metadata(
     return std::nullopt;
 }
 
+std::vector<std::string> collect_native_identity_member_names(const RuntimeOleObjectState& runtime_object) {
+    std::vector<std::string> members;
+    if (get_native_identity_metadata(runtime_object, "class").has_value()) {
+        members.push_back("class");
+    }
+    if (get_native_identity_metadata(runtime_object, "baseclass").has_value()) {
+        members.push_back("baseclass");
+    }
+    if (get_native_identity_metadata(runtime_object, "classlibrary").has_value()) {
+        members.push_back("classlibrary");
+    }
+    return members;
+}
+
 bool method_ends_with_suffix(
     const std::string& method_name,
     const std::string& suffix,
@@ -435,6 +449,9 @@ std::vector<std::string> collect_object_member_names(const RuntimeOleObjectState
         for (const auto& [name, value] : runtime_object.properties) {
             (void)value;
             unique_members.insert(normalize_identifier(name));
+        }
+        for (const auto& metadata_name : collect_native_identity_member_names(runtime_object)) {
+            unique_members.insert(metadata_name);
         }
         for (const auto& method_name : runtime_object.methods) {
             std::string stem;

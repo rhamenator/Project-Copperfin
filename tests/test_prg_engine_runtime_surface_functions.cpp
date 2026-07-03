@@ -3721,6 +3721,149 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_same_prg_native_identity_metadata_appears_in_amembers()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_identity_amembers";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_identity_amembers.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildWidget')\n"
+            "nMembersProps = AMEMBERS(aMembersProps, oCreate, 1)\n"
+            "nMembersUnion = AMEMBERS(aMembersUnion, oCreate, 3)\n"
+            "cProp1 = aMembersProps[1]\n"
+            "cProp2 = aMembersProps[2]\n"
+            "cProp3 = aMembersProps[3]\n"
+            "cUnion1 = aMembersUnion[1]\n"
+            "cUnion3 = aMembersUnion[3]\n"
+            "RETURN\n"
+            "DEFINE CLASS ParentWidget AS Custom\n"
+            "    Caption = 'Parent'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ChildWidget AS ParentWidget\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native identity AMEMBERS script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("nmembersprops", "3");
+        check("nmembersunion", "3");
+        check("cprop1", "BASECLASS");
+        check("cprop2", "CAPTION");
+        check("cprop3", "CLASS");
+        check("cunion1", "BASECLASS");
+        check("cunion3", "CLASS");
+
+        expect(state.ole_objects.size() == 1U,
+               "native identity AMEMBERS should register one native object");
+        if (state.ole_objects.size() == 1U)
+        {
+            expect(state.ole_objects[0].prog_id == "ChildWidget",
+                   "native identity AMEMBERS should preserve child class identity");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_external_prg_base_identity_metadata_appears_in_amembers()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_external_prg_identity_amembers";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path library_path = temp_root / "widgetlib.prg";
+        write_text(
+            library_path,
+            "DEFINE CLASS ParentWidget AS Custom\n"
+            "    Caption = 'Parent'\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "external_identity_amembers.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildWidget')\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 27)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "nMembersProps = AMEMBERS(aMembersProps, oCreate, 1)\n"
+            "nMembersUnion = AMEMBERS(aMembersUnion, oCreate, 3)\n"
+            "cProp1 = aMembersProps[1]\n"
+            "cProp2 = aMembersProps[2]\n"
+            "cProp3 = aMembersProps[3]\n"
+            "cProp4 = aMembersProps[4]\n"
+            "cUnion1 = aMembersUnion[1]\n"
+            "cUnion4 = aMembersUnion[4]\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildWidget AS ParentWidget OF widgetlib.prg\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("external identity AMEMBERS script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("nmembersprops", "4");
+        check("nmembersunion", "4");
+        check("cprop1", "BASECLASS");
+        check("cprop2", "CAPTION");
+        check("cprop3", "CLASS");
+        check("cprop4", "CLASSLIBRARY");
+        check("cunion1", "BASECLASS");
+        check("cunion4", "CLASSLIBRARY");
+        check("ldictset", "true");
+        check("ndictcompare", "27");
+
+        expect(state.ole_objects.size() == 2U,
+               "external identity AMEMBERS should register native and COM objects");
+        if (state.ole_objects.size() == 2U)
+        {
+            expect(state.ole_objects[0].prog_id == "ChildWidget",
+                   "external identity AMEMBERS should preserve child class identity");
+            expect(state.ole_objects[1].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while external identity AMEMBERS lands");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_inherited_declarative_children_from_external_prg_bases_resolve_against_defining_library()
     {
         namespace fs = std::filesystem;
@@ -4931,11 +5074,11 @@ namespace
         check("lhasstatus", "true");
         check("lcaptionreadonly", "false");
         check("lstatusreadonly", "true");
-        check("nmembersprops", "4");
-        check("nmembersunion", "7");
-        check("cprop1", "CAPTION");
-        check("cprop2", "CBACKING");
-        check("cprop4", "STATUS");
+        check("nmembersprops", "6");
+        check("nmembersunion", "9");
+        check("cprop1", "BASECLASS");
+        check("cprop2", "CAPTION");
+        check("cprop4", "CLASS");
         check("ldictset", "true");
         check("ndictcompare", "10");
 
@@ -5037,11 +5180,11 @@ namespace
         check("lhasstatus", "true");
         check("lcaptionreadonly", "false");
         check("lstatusreadonly", "true");
-        check("nmembersprops", "5");
-        check("nmembersunion", "8");
-        check("cprop1", "CAPTION");
-        check("cprop2", "CBACKING");
-        check("cprop4", "NASSIGNCOUNT");
+        check("nmembersprops", "8");
+        check("nmembersunion", "11");
+        check("cprop1", "BASECLASS");
+        check("cprop2", "CAPTION");
+        check("cprop4", "CLASS");
         check("ldictset", "true");
         check("ndictcompare", "21");
 
@@ -6027,6 +6170,8 @@ int main()
     test_external_prg_base_identity_reflects_through_getpem_and_pemstatus();
     test_same_prg_native_class_reflects_through_getpem_and_pemstatus();
     test_external_prg_base_class_reflects_through_getpem_and_pemstatus();
+    test_same_prg_native_identity_metadata_appears_in_amembers();
+    test_external_prg_base_identity_metadata_appears_in_amembers();
     test_inherited_declarative_children_from_external_prg_bases_resolve_against_defining_library();
     test_inherited_external_prg_base_methods_resolve_addobject_children_against_defining_library();
     test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow();
