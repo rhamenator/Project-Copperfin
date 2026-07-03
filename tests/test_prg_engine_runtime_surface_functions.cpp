@@ -6805,6 +6805,186 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_same_prg_child_external_base_classlibrary_survives_identity_mutation_guards()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_child_external_base_classlibrary_guards";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path button_library_path = temp_root / "buttons.prg";
+        write_text(
+            button_library_path,
+            "DEFINE CLASS ParentButton AS Custom\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "native_child_external_base_classlibrary_guards.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('DemoForm')\n"
+            "lSetChildClassLibrary = SETPEM(oCreate.cmdSave, 'ClassLibrary', 'other.prg')\n"
+            "lAddChildClassLibrary = ADDPROPERTY(oCreate.cmdSave, 'ClassLibrary', 'other.prg')\n"
+            "lRemoveChildClassLibrary = REMOVEPROPERTY(oCreate.cmdSave, 'ClassLibrary')\n"
+            "oCreate.cmdSave.ClassLibrary = 'shadow.prg'\n"
+            "cChildClassLibraryAfter = GETPEM(oCreate.cmdSave, 'ClassLibrary')\n"
+            "cChildClassLibraryPropAfter = oCreate.cmdSave.ClassLibrary\n"
+            "lChildHasClassLibrary = PEMSTATUS(oCreate.cmdSave, 'ClassLibrary', 1)\n"
+            "lChildClassLibraryReadOnly = PEMSTATUS(oCreate.cmdSave, 'ClassLibrary', 5)\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 66)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS DemoForm AS Custom\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS ParentButton OF buttons.prg\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native child external-base classlibrary guard script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lsetchildclasslibrary", "false");
+        check("laddchildclasslibrary", "false");
+        check("lremovechildclasslibrary", "false");
+        check("cchildclasslibraryafter", button_library_path.string());
+        check("cchildclasslibrarypropafter", button_library_path.string());
+        check("lchildhasclasslibrary", "true");
+        check("lchildclasslibraryreadonly", "true");
+        check("ldictset", "true");
+        check("ndictcompare", "66");
+
+        expect(state.ole_objects.size() == 3U,
+               "native child external-base classlibrary guards should register parent, child, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            expect(state.ole_objects[0].prog_id == "DemoForm",
+                   "native child external-base classlibrary guards should preserve form identity");
+            const auto &child_object = state.ole_objects[1];
+            expect(child_object.prog_id == "SaveButton",
+                   "native child external-base classlibrary guards should preserve child class identity");
+            expect(child_object.class_library == button_library_path.string(),
+                   "native child external-base classlibrary guards should preserve the child external class-library path");
+            expect(!child_object.properties.contains("classlibrary"),
+                   "native child external-base classlibrary guards should not materialize a child ClassLibrary shadow");
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while native child external-base classlibrary guards land");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_external_base_child_external_base_classlibrary_survives_identity_mutation_guards()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_external_prg_child_external_base_classlibrary_guards";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path button_library_path = temp_root / "buttons.prg";
+        write_text(
+            button_library_path,
+            "DEFINE CLASS ParentButton AS Custom\n"
+            "ENDDEFINE\n");
+
+        const fs::path form_library_path = temp_root / "widgetlib.prg";
+        write_text(
+            form_library_path,
+            "DEFINE CLASS ParentForm AS Custom\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS ParentButton OF buttons.prg\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "external_child_external_base_classlibrary_guards.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildForm')\n"
+            "lSetChildClassLibrary = SETPEM(oCreate.cmdSave, 'ClassLibrary', 'other.prg')\n"
+            "lAddChildClassLibrary = ADDPROPERTY(oCreate.cmdSave, 'ClassLibrary', 'other.prg')\n"
+            "lRemoveChildClassLibrary = REMOVEPROPERTY(oCreate.cmdSave, 'ClassLibrary')\n"
+            "oCreate.cmdSave.ClassLibrary = 'shadow.prg'\n"
+            "cChildClassLibraryAfter = GETPEM(oCreate.cmdSave, 'ClassLibrary')\n"
+            "cChildClassLibraryPropAfter = oCreate.cmdSave.ClassLibrary\n"
+            "lChildHasClassLibrary = PEMSTATUS(oCreate.cmdSave, 'ClassLibrary', 1)\n"
+            "lChildClassLibraryReadOnly = PEMSTATUS(oCreate.cmdSave, 'ClassLibrary', 5)\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 67)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildForm AS ParentForm OF widgetlib.prg\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("external child external-base classlibrary guard script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lsetchildclasslibrary", "false");
+        check("laddchildclasslibrary", "false");
+        check("lremovechildclasslibrary", "false");
+        check("cchildclasslibraryafter", button_library_path.string());
+        check("cchildclasslibrarypropafter", button_library_path.string());
+        check("lchildhasclasslibrary", "true");
+        check("lchildclasslibraryreadonly", "true");
+        check("ldictset", "true");
+        check("ndictcompare", "67");
+
+        expect(state.ole_objects.size() == 3U,
+               "external child external-base classlibrary guards should register parent, child, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            expect(state.ole_objects[0].prog_id == "ChildForm",
+                   "external child external-base classlibrary guards should preserve form identity");
+            const auto &child_object = state.ole_objects[1];
+            expect(child_object.prog_id == "SaveButton",
+                   "external child external-base classlibrary guards should preserve child class identity");
+            expect(child_object.class_library == button_library_path.string(),
+                   "external child external-base classlibrary guards should preserve the child external class-library path");
+            expect(child_object.source == form_library_path.string(),
+                   "external child external-base classlibrary guards should preserve the defining child-class source path");
+            expect(!child_object.properties.contains("classlibrary"),
+                   "external child external-base classlibrary guards should not materialize a child ClassLibrary shadow");
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while external child external-base classlibrary guards land");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_same_prg_child_identity_metadata_appears_in_amembers()
     {
         namespace fs = std::filesystem;
@@ -10174,6 +10354,8 @@ int main()
     test_external_base_child_identity_reflects_through_getpem_and_pemstatus();
     test_same_prg_child_external_base_provenance_surfaces_through_identity_metadata();
     test_external_base_child_external_base_provenance_surfaces_through_identity_metadata();
+    test_same_prg_child_external_base_classlibrary_survives_identity_mutation_guards();
+    test_external_base_child_external_base_classlibrary_survives_identity_mutation_guards();
     test_same_prg_child_identity_metadata_appears_in_amembers();
     test_external_base_child_identity_metadata_appears_in_amembers();
     test_same_prg_child_parent_appears_in_amembers();
