@@ -188,6 +188,11 @@ public:
     void clear_breakpoints();
     [[nodiscard]] std::vector<RuntimeBreakpoint> list_breakpoints() const;
     [[nodiscard]] bool dispatch_event_handler(const std::string& routine_name);
+    [[nodiscard]] std::optional<std::intptr_t> dispatch_windows_message(
+        std::intptr_t hwnd,
+        std::uint32_t message,
+        std::intptr_t wparam = 0,
+        std::intptr_t lparam = 0);
     [[nodiscard]] bool can_undo_command() const;
     [[nodiscard]] std::string command_undo_label() const;
     [[nodiscard]] RuntimeWatchResult evaluate_watch_expression(const std::string& expression);

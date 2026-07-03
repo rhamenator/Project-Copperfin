@@ -337,6 +337,14 @@ namespace copperfin::runtime
             int event_type = 0;
         };
 
+        struct CurrentWindowMessageContext
+        {
+            int window_handle = 0;
+            int message = 0;
+            std::intptr_t wparam = 0;
+            std::intptr_t lparam = 0;
+        };
+
 #include "prg_engine_free_functions.inl"
     } // namespace
 
@@ -402,6 +410,15 @@ namespace copperfin::runtime
             std::size_t ordinal = 0;
         };
 
+        struct WindowMessageBinding
+        {
+            int window_handle = 0;
+            int message = 0;
+            int target_handle = 0;
+            std::string delegate_name;
+            std::size_t ordinal = 0;
+        };
+
         RuntimeSessionOptions options;
         std::map<std::string, Program> programs;
         std::deque<Frame> stack;
@@ -442,6 +459,8 @@ namespace copperfin::runtime
         std::vector<NativeEventBinding> native_event_bindings;
         std::set<std::string> active_native_event_keys;
         std::vector<CurrentNativeEventContext> active_native_event_contexts;
+        std::vector<WindowMessageBinding> window_message_bindings;
+        std::vector<CurrentWindowMessageContext> active_window_message_contexts;
         std::size_t next_native_event_binding_ordinal = 1U;
         std::set<std::string> loaded_libraries;
         std::map<int, std::map<int, RegisteredApiFunction>> registered_api_functions_by_session;
@@ -496,6 +515,11 @@ namespace copperfin::runtime
 #include "prg_engine_flow.inl"
 #undef COPPERFIN_PRG_ENGINE_IMPL_CONTEXT
         bool dispatch_event_handler(const std::string &routine_name);
+        std::optional<std::intptr_t> dispatch_windows_message(
+            std::intptr_t hwnd,
+            std::uint32_t message,
+            std::intptr_t wparam,
+            std::intptr_t lparam);
         bool dispatch_error_handler();
         std::optional<PrgValue> invoke_expression_user_routine(
             const Frame &source_frame,
@@ -539,6 +563,11 @@ namespace copperfin::runtime
         std::optional<PrgValue> invoke_native_event_delegate(
             const NativeEventBinding &binding,
             const CurrentNativeEventContext &event_context,
+            const std::vector<PrgValue> &arguments,
+            const std::vector<std::optional<std::string>> &argument_references);
+        std::optional<PrgValue> invoke_window_message_delegate(
+            const WindowMessageBinding &binding,
+            const CurrentWindowMessageContext &message_context,
             const std::vector<PrgValue> &arguments,
             const std::vector<std::optional<std::string>> &argument_references);
         PrgValue release_native_object(
@@ -1762,6 +1791,74 @@ namespace copperfin::runtime
         return std::nullopt;
     }
 
+    std::optional<PrgValue> PrgRuntimeSession::Impl::invoke_window_message_delegate(
+        const WindowMessageBinding &binding,
+        const CurrentWindowMessageContext &message_context,
+        const std::vector<PrgValue> &arguments,
+        const std::vector<std::optional<std::string>> &argument_references)
+    {
+        struct CurrentMessageGuard
+        {
+            std::vector<CurrentWindowMessageContext> &stack;
+
+            ~CurrentMessageGuard()
+            {
+                if (!stack.empty())
+                {
+                    stack.pop_back();
+                }
+            }
+        };
+
+        active_window_message_contexts.push_back(message_context);
+        CurrentMessageGuard guard{active_window_message_contexts};
+
+        const auto target_found = ole_objects.find(binding.target_handle);
+        if (target_found == ole_objects.end())
+        {
+            return std::nullopt;
+        }
+
+        RuntimeOleObjectState &target_object = target_found->second;
+        std::string method_program_path;
+        std::string method_name;
+        if (const Routine *method = find_native_object_method(
+                target_object,
+                binding.delegate_name,
+                method_program_path,
+                method_name);
+            method != nullptr)
+        {
+            if (!can_push_frame())
+            {
+                throw std::runtime_error(call_depth_limit_message());
+            }
+
+            target_object.last_action = "bindevent:" + binding.delegate_name;
+            ++target_object.action_count;
+            events.push_back({.category = "prg.event.delegate",
+                              .detail = std::to_string(message_context.window_handle) + ":" +
+                                            std::to_string(message_context.message) + " -> " + method_name,
+                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            const std::size_t return_depth = stack.size();
+            const PrgValue this_reference =
+                make_string_value("object:" + target_object.prog_id + "#" + std::to_string(target_object.handle));
+            push_method_frame(method_program_path,
+                              method_name,
+                              *method,
+                              this_reference,
+                              method_name.substr(0U, method_name.rfind('.')),
+                              normalize_identifier(binding.delegate_name),
+                              native_object_parent_reference(target_object),
+                              native_object_owner_form_reference(target_object),
+                              arguments,
+                              argument_references);
+            return run_expression_invoked_routine_until_return(return_depth);
+        }
+
+        return std::nullopt;
+    }
+
     std::optional<PrgValue> PrgRuntimeSession::Impl::invoke_native_object_method_if_present(
         RuntimeOleObjectState &runtime_object,
         const std::string &identifier,
@@ -1837,6 +1934,81 @@ namespace copperfin::runtime
         if (arguments.size() < 3U)
         {
             return make_number_value(0.0);
+        }
+
+        int object_handle_probe = 0;
+        std::string object_prog_id_probe;
+        const bool source_is_object =
+            parse_object_handle_reference(arguments[0], object_handle_probe, object_prog_id_probe);
+        const bool looks_like_window_message_binding =
+            arguments.size() >= 4U &&
+            !source_is_object &&
+            arguments[1].kind != PrgValueKind::string;
+        if (looks_like_window_message_binding)
+        {
+            const int window_handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
+            const int message = static_cast<int>(std::llround(value_as_number(arguments[1])));
+            if (message == 0)
+            {
+                return make_number_value(0.0);
+            }
+
+            auto target_object = resolve_ole_object(arguments[2]);
+            const std::string delegate_name = trim_copy(value_as_string(arguments[3]));
+            if (!target_object.has_value() || (*target_object)->source.empty() || delegate_name.empty())
+            {
+                return make_number_value(0.0);
+            }
+
+            std::string target_program_path;
+            std::string target_method_name;
+            if (const Routine *target_method = find_native_object_method(
+                    **target_object,
+                    delegate_name,
+                    target_program_path,
+                    target_method_name);
+                target_method == nullptr)
+            {
+                return make_number_value(0.0);
+            }
+
+            WindowMessageBinding binding;
+            binding.window_handle = window_handle;
+            binding.message = message;
+            binding.target_handle = (*target_object)->handle;
+            binding.delegate_name = delegate_name;
+            binding.ordinal = next_native_event_binding_ordinal++;
+
+            const auto duplicate = std::find_if(
+                window_message_bindings.begin(),
+                window_message_bindings.end(),
+                [&](const WindowMessageBinding &existing)
+                {
+                    return existing.window_handle == binding.window_handle &&
+                           existing.message == binding.message &&
+                           existing.target_handle == binding.target_handle &&
+                           normalize_identifier(existing.delegate_name) == normalize_identifier(binding.delegate_name);
+                });
+
+            if (duplicate == window_message_bindings.end())
+            {
+                window_message_bindings.push_back(binding);
+            }
+
+            const auto binding_count = static_cast<double>(std::count_if(
+                window_message_bindings.begin(),
+                window_message_bindings.end(),
+                [&](const WindowMessageBinding &existing)
+                {
+                    return existing.window_handle == binding.window_handle &&
+                           existing.message == binding.message;
+                }));
+
+            events.push_back({.category = "prg.event.bind",
+                              .detail = std::to_string(window_handle) + ":" + std::to_string(message) +
+                                            " -> " + binding.delegate_name,
+                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            return make_number_value(binding_count);
         }
 
         auto source_object = resolve_ole_object(arguments[0]);
@@ -2038,6 +2210,37 @@ namespace copperfin::runtime
             return make_number_value(0.0);
         }
 
+        int object_handle_probe = 0;
+        std::string object_prog_id_probe;
+        if (!parse_object_handle_reference(arguments[0], object_handle_probe, object_prog_id_probe))
+        {
+            const int window_handle = static_cast<int>(std::llround(value_as_number(arguments[0])));
+            const bool has_message_filter = arguments.size() >= 2U;
+            const int message = has_message_filter
+                                    ? static_cast<int>(std::llround(value_as_number(arguments[1])))
+                                    : 0;
+            const std::size_t before_count = window_message_bindings.size();
+            const auto erase_from = std::remove_if(
+                window_message_bindings.begin(),
+                window_message_bindings.end(),
+                [&](const WindowMessageBinding &binding)
+                {
+                    return binding.window_handle == window_handle &&
+                           (!has_message_filter || binding.message == message);
+                });
+            window_message_bindings.erase(erase_from, window_message_bindings.end());
+
+            const std::size_t removed_count = before_count - window_message_bindings.size();
+            if (removed_count != 0U)
+            {
+                events.push_back({.category = "prg.event.unbind",
+                                  .detail = std::to_string(window_handle) + ":" +
+                                                (has_message_filter ? std::to_string(message) : std::string("*")),
+                                  .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            }
+            return make_number_value(static_cast<double>(removed_count));
+        }
+
         const std::size_t before_count = native_event_bindings.size();
         const auto erase_from = std::remove_if(
             native_event_bindings.begin(),
@@ -2193,7 +2396,19 @@ namespace copperfin::runtime
         {
             if (active_native_event_contexts.empty())
             {
-                return make_number_value(0.0);
+                if (active_window_message_contexts.empty())
+                {
+                    return make_number_value(0.0);
+                }
+
+                const CurrentWindowMessageContext &message_context = active_window_message_contexts.back();
+                assign_array(
+                    array_name,
+                    {make_int64_value(static_cast<std::int64_t>(message_context.window_handle)),
+                     make_string_value(std::to_string(message_context.message)),
+                     make_number_value(0.0)},
+                    1U);
+                return make_number_value(3.0);
             }
 
             const CurrentNativeEventContext &event_context = active_native_event_contexts.back();
@@ -2210,6 +2425,62 @@ namespace copperfin::runtime
                  make_number_value(static_cast<double>(event_context.event_type))},
                 1U);
             return make_number_value(3.0);
+        }
+
+        const auto second_argument_is_one_probe = [&]() -> bool
+        {
+            if (arguments.size() < 2U)
+            {
+                return false;
+            }
+            int object_handle = 0;
+            std::string object_prog_id;
+            if (parse_object_handle_reference(arguments[1], object_handle, object_prog_id))
+            {
+                return false;
+            }
+
+            switch (arguments[1].kind)
+            {
+            case PrgValueKind::number:
+                return std::abs(arguments[1].number_value - 1.0) < 0.000001;
+            case PrgValueKind::int64:
+                return arguments[1].int64_value == 1;
+            case PrgValueKind::uint64:
+                return arguments[1].uint64_value == 1U;
+            case PrgValueKind::boolean:
+                return arguments[1].boolean_value;
+            case PrgValueKind::string:
+                return trim_copy(arguments[1].string_value) == "1";
+            case PrgValueKind::empty:
+                return false;
+            }
+            return false;
+        };
+
+        if (second_argument_is_one_probe())
+        {
+            std::vector<PrgValue> values;
+            values.reserve(window_message_bindings.size() * 4U);
+            for (const WindowMessageBinding &binding : window_message_bindings)
+            {
+                const auto target = ole_objects.find(binding.target_handle);
+                values.push_back(make_int64_value(static_cast<std::int64_t>(binding.window_handle)));
+                values.push_back(make_int64_value(static_cast<std::int64_t>(binding.message)));
+                values.push_back(
+                    target == ole_objects.end()
+                        ? make_empty_value()
+                        : make_string_value("object:" + target->second.prog_id + "#" + std::to_string(target->second.handle)));
+                values.push_back(make_string_value(binding.delegate_name));
+            }
+
+            if (values.empty())
+            {
+                return make_number_value(0.0);
+            }
+
+            assign_array(array_name, std::move(values), 4U);
+            return make_number_value(static_cast<double>(array_length(array_name, 1)));
         }
 
         int object_handle = 0;
@@ -2887,6 +3158,151 @@ namespace copperfin::runtime
         return false;
     }
 
+    std::optional<std::intptr_t> PrgRuntimeSession::Impl::dispatch_windows_message(
+        std::intptr_t hwnd,
+        std::uint32_t message,
+        std::intptr_t wparam,
+        std::intptr_t lparam)
+    {
+        if (!waiting_for_events || stack.empty())
+        {
+            return std::nullopt;
+        }
+
+        const int effective_hwnd = static_cast<int>(hwnd);
+        const int effective_message = static_cast<int>(message);
+
+        std::vector<WindowMessageBinding> bindings;
+        bindings.reserve(window_message_bindings.size());
+        for (const WindowMessageBinding &binding : window_message_bindings)
+        {
+            if (binding.window_handle == effective_hwnd &&
+                binding.message == effective_message)
+            {
+                bindings.push_back(binding);
+            }
+        }
+        if (bindings.empty())
+        {
+            for (const WindowMessageBinding &binding : window_message_bindings)
+            {
+                if (binding.window_handle == 0 &&
+                    binding.message == effective_message)
+                {
+                    bindings.push_back(binding);
+                }
+            }
+        }
+        if (bindings.empty())
+        {
+            return std::nullopt;
+        }
+
+        const bool was_waiting_for_events = waiting_for_events;
+        const bool previous_restore_event_loop_after_dispatch = restore_event_loop_after_dispatch;
+        waiting_for_events = false;
+        restore_event_loop_after_dispatch = true;
+        struct EventLoopRestoreGuard
+        {
+            PrgRuntimeSession::Impl &runtime;
+            bool should_restore = false;
+            bool previous_restore_flag = false;
+
+            ~EventLoopRestoreGuard()
+            {
+                if (!should_restore)
+                {
+                    return;
+                }
+                runtime.waiting_for_events =
+                    !runtime.stack.empty() && runtime.restore_event_loop_after_dispatch;
+                runtime.restore_event_loop_after_dispatch = previous_restore_flag;
+            }
+        } restore_guard{*this, was_waiting_for_events, previous_restore_event_loop_after_dispatch};
+
+        std::vector<PrgValue> arguments{
+            make_int64_value(static_cast<std::int64_t>(hwnd)),
+            make_int64_value(static_cast<std::int64_t>(message)),
+            make_int64_value(static_cast<std::int64_t>(wparam)),
+            make_int64_value(static_cast<std::int64_t>(lparam))};
+        const std::vector<std::optional<std::string>> argument_references(arguments.size(), std::nullopt);
+
+        auto result_to_intptr = [](const PrgValue &value) -> std::intptr_t
+        {
+            switch (value.kind)
+            {
+            case PrgValueKind::boolean:
+                return value.boolean_value ? 1 : 0;
+            case PrgValueKind::number:
+                return static_cast<std::intptr_t>(std::llround(value.number_value));
+            case PrgValueKind::string:
+            {
+                const std::string trimmed = trim_copy(value.string_value);
+                if (trimmed.empty())
+                {
+                    return 0;
+                }
+                try
+                {
+                    return static_cast<std::intptr_t>(std::stoll(trimmed));
+                }
+                catch (...)
+                {
+                    return 0;
+                }
+            }
+            case PrgValueKind::int64:
+                return static_cast<std::intptr_t>(value.int64_value);
+            case PrgValueKind::uint64:
+                return static_cast<std::intptr_t>(value.uint64_value);
+            case PrgValueKind::empty:
+                return 0;
+            }
+            return 0;
+        };
+
+        std::optional<std::intptr_t> last_result;
+        for (const WindowMessageBinding &binding : bindings)
+        {
+            const auto target_found = ole_objects.find(binding.target_handle);
+            if (target_found == ole_objects.end())
+            {
+                continue;
+            }
+
+            if (auto result = invoke_window_message_delegate(
+                    binding,
+                    {.window_handle = effective_hwnd,
+                     .message = effective_message,
+                     .wparam = wparam,
+                     .lparam = lparam},
+                    arguments,
+                    argument_references);
+                result.has_value())
+            {
+                last_result = result_to_intptr(*result);
+            }
+        }
+
+        window_message_bindings.erase(
+            std::remove_if(
+                window_message_bindings.begin(),
+                window_message_bindings.end(),
+                [&](const WindowMessageBinding &binding)
+                {
+                    return ole_objects.find(binding.target_handle) == ole_objects.end();
+                }),
+            window_message_bindings.end());
+
+        if (last_result.has_value())
+        {
+            events.push_back({.category = "runtime.dispatch",
+                              .detail = "winmsg:" + std::to_string(effective_hwnd) + ":" + std::to_string(effective_message),
+                              .location = {}});
+        }
+        return last_result;
+    }
+
     bool PrgRuntimeSession::Impl::dispatch_error_handler()
     {
         if (handling_error)
@@ -3385,6 +3801,15 @@ namespace copperfin::runtime
     bool PrgRuntimeSession::dispatch_event_handler(const std::string &routine_name)
     {
         return impl_->dispatch_event_handler(routine_name);
+    }
+
+    std::optional<std::intptr_t> PrgRuntimeSession::dispatch_windows_message(
+        std::intptr_t hwnd,
+        std::uint32_t message,
+        std::intptr_t wparam,
+        std::intptr_t lparam)
+    {
+        return impl_->dispatch_windows_message(hwnd, message, wparam, lparam);
     }
 
     bool PrgRuntimeSession::can_undo_command() const

@@ -38311,6 +38311,170 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_same_prg_native_windows_message_bindevent_and_aevents_dispatch_during_read_events()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_winmsg_bindevent";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_winmsg_bindevent.prg";
+        write_text(
+            main_path,
+            "nExactCalls = 0\n"
+            "nAllCalls = 0\n"
+            "cLog = ''\n"
+            "oHandler = CREATEOBJECT('HandlerThing')\n"
+            "nMain = MAINHWND()\n"
+            "nBindExact = BINDEVENT(nMain, 274, oHandler, 'HandleExact', 3)\n"
+            "nBindAll = BINDEVENT(0, 275, oHandler, 'HandleAll', 3)\n"
+            "nMessageRows = AEVENTS(aMessageEvents, 1)\n"
+            "nMessageCols = ALEN(aMessageEvents, 2)\n"
+            "nRow1Hwnd = aMessageEvents[1,1]\n"
+            "nRow1Msg = aMessageEvents[1,2]\n"
+            "lRow1Handler = COMPOBJ(aMessageEvents[1,3], oHandler)\n"
+            "cRow1Delegate = aMessageEvents[1,4]\n"
+            "nRow2Hwnd = aMessageEvents[2,1]\n"
+            "nRow2Msg = aMessageEvents[2,2]\n"
+            "lRow2Handler = COMPOBJ(aMessageEvents[2,3], oHandler)\n"
+            "cRow2Delegate = aMessageEvents[2,4]\n"
+            "nUnbindExact = UNBINDEVENTS(nMain, 274)\n"
+            "nAfterUnbindRows = AEVENTS(aAfterUnbind, 1)\n"
+            "nRebindExact = BINDEVENT(nMain, 274, oHandler, 'HandleExact')\n"
+            "nAfterRebindRows = AEVENTS(aAfterRebind, 1)\n"
+            "READ EVENTS\n"
+            "RETURN\n"
+            "DEFINE CLASS HandlerThing AS Custom\n"
+            "    FUNCTION HandleExact\n"
+            "        LPARAMETERS tnHwnd, tnMessage, tnWParam, tnLParam\n"
+            "        nExactCalls = nExactCalls + 1\n"
+            "        nRows = AEVENTS(aCurrent, 0)\n"
+            "        nExactRows = nRows\n"
+            "        nExactLen = ALEN(aCurrent)\n"
+            "        nExactCurrentHwnd = aCurrent[1]\n"
+            "        cExactCurrentEvent = aCurrent[2]\n"
+            "        nExactCurrentType = aCurrent[3]\n"
+            "        cLog = cLog + '[exact:' + TRANSFORM(tnHwnd) + ':' + TRANSFORM(tnMessage) + ':' + TRANSFORM(tnWParam) + ':' + TRANSFORM(tnLParam) + ':' + TRANSFORM(aCurrent[3]) + ']'\n"
+            "        RETURN tnWParam + tnLParam\n"
+            "    ENDFUNC\n"
+            "    FUNCTION HandleAll\n"
+            "        LPARAMETERS tnHwnd, tnMessage, tnWParam, tnLParam\n"
+            "        nAllCalls = nAllCalls + 1\n"
+            "        nRows = AEVENTS(aCurrentAll, 0)\n"
+            "        nAllRows = nRows\n"
+            "        nAllLen = ALEN(aCurrentAll)\n"
+            "        nAllCurrentHwnd = aCurrentAll[1]\n"
+            "        cAllCurrentEvent = aCurrentAll[2]\n"
+            "        nAllCurrentType = aCurrentAll[3]\n"
+            "        cLog = cLog + '[all:' + TRANSFORM(tnHwnd) + ':' + TRANSFORM(tnMessage) + ':' + TRANSFORM(tnWParam) + ':' + TRANSFORM(tnLParam) + ':' + TRANSFORM(aCurrentAll[3]) + ']'\n"
+            "        CLEAR EVENTS\n"
+            "        RETURN tnMessage\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop,
+               std::string("Windows-message BINDEVENT script should pause in READ EVENTS: ") + state.message);
+        expect(state.waiting_for_events,
+               "Windows-message BINDEVENT script should report waiting_for_events while paused");
+
+        const auto exact_result = session.dispatch_windows_message(1001, 274, 16, 32);
+        expect(exact_result.has_value(),
+               "Windows-message BINDEVENT should dispatch the exact hWnd/message binding");
+        if (exact_result.has_value())
+        {
+            expect(*exact_result == 48,
+                   "Windows-message BINDEVENT exact delegate should return the integer handler result");
+        }
+
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop,
+               std::string("Windows-message exact dispatch should restore the READ EVENTS pause: ") + state.message);
+        expect(state.waiting_for_events,
+               "Windows-message exact dispatch should return the runtime to waiting_for_events");
+
+        const auto wildcard_result = session.dispatch_windows_message(2222, 275, 8, 4);
+        expect(wildcard_result.has_value(),
+               "Windows-message BINDEVENT should dispatch the wildcard hWnd binding");
+        if (wildcard_result.has_value())
+        {
+            expect(*wildcard_result == 275,
+                   "Windows-message BINDEVENT wildcard delegate should return the integer handler result");
+        }
+
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("Windows-message BINDEVENT script should complete after CLEAR EVENTS: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("nmain", "1001");
+        check("nbindexact", "1");
+        check("nbindall", "1");
+        check("nmessagerows", "2");
+        check("nmessagecols", "4");
+        check("nrow1hwnd", "1001");
+        check("nrow1msg", "274");
+        check("lrow1handler", "true");
+        check("crow1delegate", "HandleExact");
+        check("nrow2hwnd", "0");
+        check("nrow2msg", "275");
+        check("lrow2handler", "true");
+        check("crow2delegate", "HandleAll");
+        check("nunbindexact", "1");
+        check("nafterunbindrows", "1");
+        check("nrebindexact", "1");
+        check("nafterrebindrows", "2");
+        check("nexactcalls", "1");
+        check("nallcalls", "1");
+        check("nexactrows", "3");
+        check("nexactlen", "3");
+        check("nexactcurrenthwnd", "1001");
+        check("cexactcurrentevent", "274");
+        check("nexactcurrenttype", "0");
+        check("nallrows", "3");
+        check("nalllen", "3");
+        check("nallcurrenthwnd", "2222");
+        check("callcurrentevent", "275");
+        check("nallcurrenttype", "0");
+        check("clog", "[exact:1001:274:16:32:0][all:2222:275:8:4:0]");
+
+        const bool has_bind_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.event.bind" &&
+                   (event.detail == "1001:274 -> HandleExact" ||
+                    event.detail == "0:275 -> HandleAll");
+        });
+        expect(has_bind_event,
+               "Windows-message BINDEVENT should emit runtime bind telemetry");
+
+        const bool has_delegate_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.event.delegate" &&
+                   (event.detail == "1001:274 -> HandlerThing.HandleExact" ||
+                    event.detail == "2222:275 -> HandlerThing.HandleAll");
+        });
+        expect(has_delegate_event,
+               "Windows-message BINDEVENT should emit delegate telemetry during dispatch");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_same_prg_native_bindevent_property_access_and_assign_dispatch_preserve_current_event_metadata()
     {
         namespace fs = std::filesystem;
@@ -40386,6 +40550,7 @@ int main()
         test_same_prg_native_bindevent_raiseevent_and_unbindevents_dispatch_same_session_handlers();
         test_same_prg_native_aevents_enumerates_same_session_bindings_without_clobbering_zero_row_targets();
         test_same_prg_native_aevents_zero_reports_current_event_metadata_during_delegate_dispatch();
+        test_same_prg_native_windows_message_bindevent_and_aevents_dispatch_during_read_events();
         test_same_prg_native_bindevent_property_access_and_assign_dispatch_preserve_current_event_metadata();
         test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();
     test_native_accessor_backed_properties_reflect_through_getpem_pemstatus_and_amembers();
