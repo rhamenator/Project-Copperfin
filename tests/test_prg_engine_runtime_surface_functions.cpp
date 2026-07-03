@@ -2746,6 +2746,193 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_release_detaches_contained_child_while_owner_and_sibling_remain_alive()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_release_direct_child";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_release_direct_child.prg";
+        write_text(
+            main_path,
+            "cDestroyLog = ''\n"
+            "cChildParentCaptionDuringDestroy = ''\n"
+            "cGrandchildParentCaptionDuringDestroy = ''\n"
+            "nFormDestroyCount = 0\n"
+            "nChildDestroyCount = 0\n"
+            "nGrandchildDestroyCount = 0\n"
+            "oForm = CREATEOBJECT('DemoForm')\n"
+            "oChild = oForm.cmdSave\n"
+            "oSibling = oForm.cmdCancel\n"
+            "oGrandchild = oChild.lblBadge\n"
+            "cOwnerCaptionBeforeRelease = oForm.Caption\n"
+            "cSiblingCaptionBeforeRelease = oSibling.Caption\n"
+            "cGrandchildCaptionBeforeRelease = oGrandchild.Caption\n"
+            "lReleased = oChild.Release()\n"
+            "cDestroyLogAfter = cDestroyLog\n"
+            "cChildParentCaptionAfter = cChildParentCaptionDuringDestroy\n"
+            "cGrandchildParentCaptionAfter = cGrandchildParentCaptionDuringDestroy\n"
+            "nFormDestroyCountAfter = nFormDestroyCount\n"
+            "nChildDestroyCountAfter = nChildDestroyCount\n"
+            "nGrandchildDestroyCountAfter = nGrandchildDestroyCount\n"
+            "cOwnerCaptionAfterRelease = oForm.Caption\n"
+            "lOwnerStillHasSave = PEMSTATUS(oForm, 'cmdSave', 1)\n"
+            "xReleasedChild = GETPEM(oForm, 'cmdSave')\n"
+            "lOwnerStillHasCancel = PEMSTATUS(oForm, 'cmdCancel', 1)\n"
+            "cSiblingCaptionAfterRelease = oForm.cmdCancel.Caption\n"
+            "lHeldChildHasParentAfterRelease = PEMSTATUS(oChild, 'Parent', 1)\n"
+            "xHeldChildParentAfterRelease = GETPEM(oChild, 'Parent')\n"
+            "lHeldChildHasCaptionAfterRelease = PEMSTATUS(oChild, 'Caption', 1)\n"
+            "xHeldChildCaptionAfterRelease = GETPEM(oChild, 'Caption')\n"
+            "lHeldGrandchildHasParentAfterRelease = PEMSTATUS(oGrandchild, 'Parent', 1)\n"
+            "xHeldGrandchildParentAfterRelease = GETPEM(oGrandchild, 'Parent')\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 92)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS DemoForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddObject('cmdSave', 'SaveButton')\n"
+            "        THIS.AddObject('cmdCancel', 'CancelButton')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "    PROCEDURE Destroy\n"
+            "        nFormDestroyCount = nFormDestroyCount + 1\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS Custom\n"
+            "    Caption = 'Save'\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddObject('lblBadge', 'BadgeLabel')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "    PROCEDURE Destroy\n"
+            "        cDestroyLog = cDestroyLog + 'child>'\n"
+            "        cChildParentCaptionDuringDestroy = PARENT.Caption\n"
+            "        nChildDestroyCount = nChildDestroyCount + 1\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS CancelButton AS Custom\n"
+            "    Caption = 'Cancel'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS BadgeLabel AS Custom\n"
+            "    Caption = 'Badge'\n"
+            "    PROCEDURE Destroy\n"
+            "        cDestroyLog = cDestroyLog + 'badge>'\n"
+            "        cGrandchildParentCaptionDuringDestroy = PARENT.Caption\n"
+            "        nGrandchildDestroyCount = nGrandchildDestroyCount + 1\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Release direct-child script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cownercaptionbeforerelease", "MainForm");
+        check("csiblingcaptionbeforerelease", "Cancel");
+        check("cgrandchildcaptionbeforerelease", "Badge");
+        check("lreleased", "true");
+        check("cdestroylogafter", "badge>child>");
+        check("cchildparentcaptionafter", "MainForm");
+        check("cgrandchildparentcaptionafter", "Save");
+        check("nformdestroycountafter", "0");
+        check("nchilddestroycountafter", "1");
+        check("ngrandchilddestroycountafter", "1");
+        check("cownercaptionafterrelease", "MainForm");
+        check("lownerstillhassave", "false");
+        check("lownerstillhascancel", "true");
+        check("csiblingcaptionafterrelease", "Cancel");
+        check("lheldchildhasparentafterrelease", "false");
+        check("lheldchildhascaptionafterrelease", "false");
+        check("lheldgrandchildhasparentafterrelease", "false");
+        check("ldictset", "true");
+        check("ndictcompare", "92");
+
+        const auto released_child = state.globals.find("xreleasedchild");
+        expect(released_child != state.globals.end() &&
+                   released_child->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "native Release direct child should invalidate GETPEM() on the owner's released child slot");
+
+        const auto held_child_parent = state.globals.find("xheldchildparentafterrelease");
+        expect(held_child_parent != state.globals.end() &&
+                   held_child_parent->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "native Release direct child should invalidate GETPEM() on the held child's Parent");
+
+        const auto held_child_caption = state.globals.find("xheldchildcaptionafterrelease");
+        expect(held_child_caption != state.globals.end() &&
+                   held_child_caption->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "native Release direct child should invalidate GETPEM() on the held released child");
+
+        const auto held_grandchild_parent = state.globals.find("xheldgrandchildparentafterrelease");
+        expect(held_grandchild_parent != state.globals.end() &&
+                   held_grandchild_parent->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "native Release direct child should invalidate GETPEM() on the released grandchild's Parent");
+
+        expect(state.ole_objects.size() == 3U,
+               "native Release direct child should leave owner, surviving sibling, and COM objects registered");
+        if (state.ole_objects.size() == 3U)
+        {
+            expect(state.ole_objects[0].prog_id == "DemoForm",
+                   "native Release direct child should keep the owner object alive");
+            expect(!state.ole_objects[0].properties.contains("cmdsave"),
+                   "native Release direct child should detach the released child from the owner");
+            expect(state.ole_objects[0].properties.contains("cmdcancel"),
+                   "native Release direct child should preserve the surviving sibling on the owner");
+            expect(state.ole_objects[1].prog_id == "CancelButton",
+                   "native Release direct child should preserve the surviving sibling object");
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while native direct-child Release lands");
+        }
+
+        const bool has_child_destroy_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.destroy" &&
+                   event.detail == "SaveButton.Destroy";
+        });
+        expect(has_child_destroy_event,
+               "native Release direct child should dispatch the child Destroy method");
+
+        const bool has_grandchild_destroy_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.destroy" &&
+                   event.detail == "BadgeLabel.Destroy";
+        });
+        expect(has_grandchild_destroy_event,
+               "native Release direct child should dispatch descendant Destroy methods");
+
+        const bool has_form_destroy_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.destroy" &&
+                   event.detail == "DemoForm.Destroy";
+        });
+        expect(!has_form_destroy_event,
+               "native Release direct child should not destroy the owner");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_newobject_with_explicit_prg_library_activates_native_class_and_preserves_explicit_targets()
     {
         namespace fs = std::filesystem;
@@ -13899,6 +14086,7 @@ int main()
     test_native_removeobject_detaches_child_and_clears_parent_reference();
     test_native_release_invokes_destroy_and_invalidates_standalone_object();
     test_native_release_recursively_destroys_contained_children_and_invalidates_owner_chain();
+    test_native_release_detaches_contained_child_while_owner_and_sibling_remain_alive();
     test_newobject_with_explicit_prg_library_activates_native_class_and_preserves_explicit_targets();
     test_native_prg_object_methods_bind_this_and_persist_instance_state();
     test_native_prg_init_runs_during_object_creation_and_preserves_plain_creation();
