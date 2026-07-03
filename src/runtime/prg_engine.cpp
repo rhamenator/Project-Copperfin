@@ -827,16 +827,34 @@ namespace copperfin::runtime
                                 : std::optional<std::string>{});
                     }
 
+                    const std::string primary_child_program_path =
+                        explicit_native_prg_library
+                            ? resolve_native_prg_program_path(child_library, implicit_child_program_path)
+                            : implicit_child_program_path;
                     RuntimeOleObjectState *child_object = instantiate_native_class_object(
                         frame,
                         child_class,
-                        explicit_native_prg_library
-                            ? resolve_native_prg_program_path(child_library, implicit_child_program_path)
-                            : implicit_child_program_path,
+                        primary_child_program_path,
                         "addobject",
                         child_constructor_arguments,
                         child_argument_references,
                         make_runtime_object_reference(*runtime_object));
+                    if (child_object == nullptr && !explicit_native_prg_library)
+                    {
+                        const std::string owner_program_path = normalize_path(runtime_object->source);
+                        if (!owner_program_path.empty() &&
+                            owner_program_path != normalize_path(primary_child_program_path))
+                        {
+                            child_object = instantiate_native_class_object(
+                                frame,
+                                child_class,
+                                owner_program_path,
+                                "addobject",
+                                child_constructor_arguments,
+                                child_argument_references,
+                                make_runtime_object_reference(*runtime_object));
+                        }
+                    }
                     if (child_object == nullptr)
                     {
                         return make_boolean_value(false);
