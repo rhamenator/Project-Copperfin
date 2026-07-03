@@ -3605,6 +3605,139 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_createobject_and_newobject_instantiate_same_prg_timer_native_class()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_timer_class";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_timer_class.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('WorkerTimer')\n"
+            "oLeaf = NEWOBJECT('WorkerTimer')\n"
+            "cCreateInterval = ALLTRIM(STR(oCreate.Interval))\n"
+            "cLeafInterval = ALLTRIM(STR(oLeaf.Interval))\n"
+            "cCreateDescribe = oCreate.Describe('prefix')\n"
+            "cLeafDescribe = oLeaf.Describe('leaf')\n"
+            "cCreateBaseClass = oCreate.BaseClass\n"
+            "cLeafBaseClass = oLeaf.BaseClass\n"
+            "cCreateClass = oCreate.Class\n"
+            "cLeafClass = oLeaf.Class\n"
+            "lCreateHasDescribe = GETPEM(oCreate, 'Describe')\n"
+            "lLeafHasDescribe = GETPEM(oLeaf, 'Describe')\n"
+            "lCreateHasBaseClass = PEMSTATUS(oCreate, 'BaseClass', 1)\n"
+            "lLeafHasBaseClass = PEMSTATUS(oLeaf, 'BaseClass', 1)\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 160)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS WorkerTimer AS Timer\n"
+            "    Interval = 250\n"
+            "    FUNCTION Describe\n"
+            "        LPARAMETERS tcPrefix\n"
+            "        RETURN tcPrefix + ':' + ALLTRIM(STR(THIS.Interval))\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Timer-base class script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("ccreateinterval", "250");
+        check("cleafinterval", "250");
+        check("ccreatedescribe", "prefix:250");
+        check("cleafdescribe", "leaf:250");
+        check("ccreatebaseclass", "Timer");
+        check("cleafbaseclass", "Timer");
+        check("ccreateclass", "WorkerTimer");
+        check("cleafclass", "WorkerTimer");
+        check("lcreatehasdescribe", "true");
+        check("lleafhasdescribe", "true");
+        check("lcreatehasbaseclass", "true");
+        check("lleafhasbaseclass", "true");
+        check("ldictset", "true");
+        check("ndictcompare", "160");
+
+        expect(state.ole_objects.size() == 3U,
+               "native Timer-base CREATEOBJECT/NEWOBJECT plus COM NEWOBJECT should register three runtime objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            const auto &create_object = state.ole_objects[0];
+            const auto &leaf_object = state.ole_objects[1];
+            expect(create_object.prog_id == "WorkerTimer",
+                   "native Timer-base CREATEOBJECT should preserve the PRG class name");
+            expect(create_object.source == main_path.string(),
+                   "native Timer-base CREATEOBJECT should preserve defining PRG provenance");
+            expect(create_object.base_class_name == "Timer",
+                   "native Timer-base CREATEOBJECT should preserve the builtin Timer base token");
+            expect(create_object.class_library.empty(),
+                   "native Timer-base CREATEOBJECT should keep ClassLibrary empty for same-PRG classes");
+            expect(create_object.class_hierarchy.size() == 3U,
+                   "native Timer-base CREATEOBJECT should persist native class hierarchy including Timer");
+            if (create_object.class_hierarchy.size() == 3U)
+            {
+                expect(create_object.class_hierarchy[0] == "WORKERTIMER",
+                       "native Timer-base CREATEOBJECT should store the native class first");
+                expect(create_object.class_hierarchy[1] == "TIMER",
+                       "native Timer-base CREATEOBJECT should store the builtin Timer base second");
+                expect(create_object.class_hierarchy[2] == "OBJECT",
+                       "native Timer-base CREATEOBJECT should store the terminal OBJECT token third");
+            }
+
+            expect(leaf_object.prog_id == "WorkerTimer",
+                   "native Timer-base NEWOBJECT should preserve the PRG class name");
+            expect(leaf_object.source == main_path.string(),
+                   "native Timer-base NEWOBJECT should preserve defining PRG provenance");
+            expect(leaf_object.base_class_name == "Timer",
+                   "native Timer-base NEWOBJECT should preserve the builtin Timer base token");
+            expect(leaf_object.class_library.empty(),
+                   "native Timer-base NEWOBJECT should keep ClassLibrary empty for same-PRG classes");
+            expect(leaf_object.class_hierarchy.size() == 3U,
+                   "native Timer-base NEWOBJECT should persist native class hierarchy including Timer");
+            if (leaf_object.class_hierarchy.size() == 3U)
+            {
+                expect(leaf_object.class_hierarchy[0] == "WORKERTIMER",
+                       "native Timer-base NEWOBJECT should store the native class first");
+                expect(leaf_object.class_hierarchy[1] == "TIMER",
+                       "native Timer-base NEWOBJECT should store the builtin Timer base second");
+                expect(leaf_object.class_hierarchy[2] == "OBJECT",
+                       "native Timer-base NEWOBJECT should store the terminal OBJECT token third");
+            }
+
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while Timer-base native activation lands");
+        }
+
+        const bool has_describe_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   event.detail == "WorkerTimer.Describe";
+        });
+        expect(has_describe_invoke_event,
+               "native Timer-base activation should dispatch ordinary native method calls");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_addobject_materializes_child_objects_and_child_methods_see_parent()
     {
         namespace fs = std::filesystem;
@@ -37054,6 +37187,7 @@ int main()
     test_createobject_and_newobject_instantiate_same_prg_spinner_native_class();
     test_createobject_and_newobject_instantiate_same_prg_editbox_native_class();
     test_createobject_and_newobject_instantiate_same_prg_image_native_class();
+    test_createobject_and_newobject_instantiate_same_prg_timer_native_class();
     test_native_addobject_materializes_child_objects_and_child_methods_see_parent();
     test_native_class_body_add_object_materializes_children_before_init();
     test_native_class_body_add_object_with_property_clauses_materialize_before_parent_init();
