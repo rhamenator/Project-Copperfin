@@ -650,14 +650,32 @@
                         continue;
                     }
 
+                    const std::string primary_child_program_path =
+                        resolve_native_prg_program_path(child_declaration.source_path, lineage_class.program->path);
                     RuntimeOleObjectState *child_object = instantiate_native_class_object(
                         frame,
                         child_declaration.class_name,
-                        resolve_native_prg_program_path(child_declaration.source_path, lineage_class.program->path),
+                        primary_child_program_path,
                         "classbody.addobject",
                         {},
                         {},
                         runtime_object_reference);
+                    if (child_object == nullptr && trim_copy(child_declaration.source_path).empty())
+                    {
+                        const std::string owner_program_path = normalize_path(runtime_object->source);
+                        if (!owner_program_path.empty() &&
+                            owner_program_path != normalize_path(primary_child_program_path))
+                        {
+                            child_object = instantiate_native_class_object(
+                                frame,
+                                child_declaration.class_name,
+                                owner_program_path,
+                                "classbody.addobject",
+                                {},
+                                {},
+                                runtime_object_reference);
+                        }
+                    }
                     if (child_object == nullptr)
                     {
                         continue;

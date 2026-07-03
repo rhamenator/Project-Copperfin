@@ -19377,6 +19377,155 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_inherited_external_parent_declarative_child_materializes_when_class_exists_only_in_derived_startup_prg()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_inherited_external_parent_declarative_derived_startup_child";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path widget_library_path = temp_root / "widgetlib.prg";
+        write_text(
+            widget_library_path,
+            "DEFINE CLASS ParentForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    cInitChildCaption = ''\n"
+            "    cInitOwnerCaption = ''\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "    PROCEDURE Init\n"
+            "        THIS.cInitChildCaption = THIS.cmdSave.Caption\n"
+            "        THIS.cInitOwnerCaption = THIS.cmdSave.OwnerCaption()\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "    FUNCTION Save\n"
+            "        THIS.Caption = THIS.Caption + '-Saved'\n"
+            "        RETURN THIS.Caption\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "inherited_external_parent_declarative_derived_startup_child.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildForm')\n"
+            "oLeaf = NEWOBJECT('LeafForm')\n"
+            "lCreateHasChild = PEMSTATUS(oCreate, 'cmdSave', 1)\n"
+            "lLeafHasChild = PEMSTATUS(oLeaf, 'cmdSave', 1)\n"
+            "cCreateInitChildCaption = oCreate.cInitChildCaption\n"
+            "cLeafInitChildCaption = oLeaf.cInitChildCaption\n"
+            "cCreateInitOwnerCaption = oCreate.cInitOwnerCaption\n"
+            "cLeafInitOwnerCaption = oLeaf.cInitOwnerCaption\n"
+            "cCreateChildCaption = oCreate.cmdSave.Caption\n"
+            "cLeafChildCaption = oLeaf.cmdSave.Caption\n"
+            "cCreateOwnerCaption = oCreate.cmdSave.OwnerCaption()\n"
+            "cLeafOwnerCaption = oLeaf.cmdSave.OwnerCaption()\n"
+            "cCreateSavedCaption = oCreate.cmdSave.TriggerSave()\n"
+            "cLeafSavedCaption = oLeaf.cmdSave.TriggerSave()\n"
+            "cCreateCaptionAfterSave = oCreate.Caption\n"
+            "cLeafCaptionAfterSave = oLeaf.Caption\n"
+            "lCreateChildHasParent = PEMSTATUS(oCreate.cmdSave, 'Parent', 1)\n"
+            "lLeafChildHasParent = PEMSTATUS(oLeaf.cmdSave, 'Parent', 1)\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 127)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildForm AS ParentForm OF widgetlib.prg\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS LeafForm AS ChildForm\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS Custom\n"
+            "    Caption = 'Save'\n"
+            "    FUNCTION OwnerCaption\n"
+            "        RETURN PARENT.Caption\n"
+            "    ENDFUNC\n"
+            "    FUNCTION TriggerSave\n"
+            "        RETURN THISFORM.Save()\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("inherited external-parent declarative derived-startup child script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lcreatehaschild", "true");
+        check("lleafhaschild", "true");
+        check("ccreateinitchildcaption", "Save");
+        check("cleafinitchildcaption", "Save");
+        check("ccreateinitownercaption", "MainForm");
+        check("cleafinitownercaption", "MainForm");
+        check("ccreatechildcaption", "Save");
+        check("cleafchildcaption", "Save");
+        check("ccreateownercaption", "MainForm");
+        check("cleafownercaption", "MainForm");
+        check("ccreatesavedcaption", "MainForm-Saved");
+        check("cleafsavedcaption", "MainForm-Saved");
+        check("ccreatecaptionaftersave", "MainForm-Saved");
+        check("cleafcaptionaftersave", "MainForm-Saved");
+        check("lcreatechildhasparent", "true");
+        check("lleafchildhasparent", "true");
+        check("ldictset", "true");
+        check("ndictcompare", "127");
+
+        expect(state.ole_objects.size() == 5U,
+               "inherited external-parent declarative derived-startup child script should register CREATEOBJECT parent/child, NEWOBJECT parent/child, and COM objects");
+        if (state.ole_objects.size() == 5U)
+        {
+            const auto &create_parent = state.ole_objects[0];
+            const auto &create_child = state.ole_objects[1];
+            const auto &leaf_parent = state.ole_objects[2];
+            const auto &leaf_child = state.ole_objects[3];
+            expect(create_parent.prog_id == "ChildForm",
+                   "inherited external-parent declarative derived-startup child should preserve CREATEOBJECT parent identity");
+            expect(create_child.prog_id == "SaveButton",
+                   "inherited external-parent declarative derived-startup child should materialize the CREATEOBJECT child");
+            expect(create_child.source == main_path.string(),
+                   "inherited external-parent declarative derived-startup child should resolve the CREATEOBJECT child against the derived startup PRG when the external parent library lacks the class");
+            expect(leaf_parent.prog_id == "LeafForm",
+                   "inherited external-parent declarative derived-startup child should preserve NEWOBJECT leaf identity");
+            expect(leaf_child.prog_id == "SaveButton",
+                   "inherited external-parent declarative derived-startup child should materialize leaf inherited children");
+            expect(leaf_child.source == main_path.string(),
+                   "inherited external-parent declarative derived-startup child should preserve derived-startup provenance for leaf child instances");
+            expect(state.ole_objects[4].prog_id == "Scripting.Dictionary",
+                   "COM behavior should remain stable while inherited external-parent declarative derived-startup child activation lands");
+        }
+
+        const bool has_addobject_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.addobject" &&
+                   (event.detail == "ChildForm.cmdsave:SaveButton" ||
+                    event.detail == "LeafForm.cmdsave:SaveButton");
+        });
+        expect(has_addobject_event,
+               "inherited external-parent declarative derived-startup child should emit child materialization events");
+
+        const bool has_save_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   event.detail == "ParentForm.Save";
+        });
+        expect(has_save_invoke_event,
+               "inherited external-parent declarative derived-startup child should keep materialized children fully usable through THISFORM owner dispatch");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_inherited_external_base_addobject_external_child_base_surfaces_classlibrary_provenance()
     {
         namespace fs = std::filesystem;
@@ -24410,6 +24559,7 @@ int main()
     test_inherited_declarative_children_from_external_prg_bases_resolve_against_defining_library();
     test_inherited_external_prg_base_methods_resolve_addobject_children_against_defining_library();
     test_inherited_external_parent_addobject_materializes_child_declared_only_in_derived_startup_prg();
+    test_inherited_external_parent_declarative_child_materializes_when_class_exists_only_in_derived_startup_prg();
     test_inherited_external_base_addobject_external_child_base_surfaces_classlibrary_provenance();
     test_inherited_external_base_addobject_external_child_base_aclass_reflects_inheritance_chain();
     test_inherited_external_base_addobject_deeper_external_child_base_aclass_reflects_inheritance_chain();
