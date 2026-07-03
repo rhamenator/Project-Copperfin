@@ -1542,7 +1542,10 @@ namespace copperfin::runtime
             return std::nullopt;
         }
 
-        Program &program = load_program(runtime_object.source);
+        Program &program = load_program(
+            source_frame.native_method_class_name.empty()
+                ? runtime_object.source
+                : source_frame.file_path);
         std::string native_method_name;
         std::string native_defining_class_name;
         const auto native_method =
