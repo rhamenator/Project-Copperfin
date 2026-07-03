@@ -4350,6 +4350,162 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_same_prg_native_identity_metadata_cannot_be_shadowed_through_direct_assignment()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_identity_direct_assignment";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_identity_direct_assignment.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildWidget')\n"
+            "oCreate.Class = 'OtherClass'\n"
+            "oCreate.BaseClass = 'OtherBase'\n"
+            "oCreate.ClassLibrary = 'other.prg'\n"
+            "cClassAfter = GETPEM(oCreate, 'Class')\n"
+            "cBaseClassAfter = GETPEM(oCreate, 'BaseClass')\n"
+            "xClassLibraryAfter = GETPEM(oCreate, 'ClassLibrary')\n"
+            "RETURN\n"
+            "DEFINE CLASS ParentWidget AS Custom\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ChildWidget AS ParentWidget\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native identity direct-assignment script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cclassafter", "ChildWidget");
+        check("cbaseclassafter", "ParentWidget");
+
+        const auto class_library_after = state.globals.find("xclasslibraryafter");
+        expect(class_library_after != state.globals.end() &&
+                   class_library_after->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "same-PRG identity direct assignment should leave ClassLibrary empty");
+
+        expect(state.ole_objects.size() == 1U,
+               "native identity direct assignment should register one native object");
+        if (state.ole_objects.size() == 1U)
+        {
+            const auto &native_object = state.ole_objects[0];
+            expect(native_object.prog_id == "ChildWidget",
+                   "native identity direct assignment should preserve child class identity");
+            expect(native_object.base_class_name == "ParentWidget",
+                   "native identity direct assignment should preserve the immediate base class");
+            expect(native_object.class_library.empty(),
+                   "native identity direct assignment should preserve empty same-PRG class library provenance");
+            expect(!native_object.properties.contains("class"),
+                   "native identity direct assignment should not materialize a Class shadow property");
+            expect(!native_object.properties.contains("baseclass"),
+                   "native identity direct assignment should not materialize a BaseClass shadow property");
+            expect(!native_object.properties.contains("classlibrary"),
+                   "native identity direct assignment should not materialize a ClassLibrary shadow property");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_external_prg_identity_metadata_cannot_be_shadowed_through_direct_assignment()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_external_prg_identity_direct_assignment";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path library_path = temp_root / "widgetlib.prg";
+        write_text(
+            library_path,
+            "DEFINE CLASS ParentWidget AS Custom\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "external_identity_direct_assignment.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildWidget')\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 31)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "oCreate.Class = 'OtherClass'\n"
+            "oCreate.BaseClass = 'OtherBase'\n"
+            "oCreate.ClassLibrary = 'other.prg'\n"
+            "cClassAfter = GETPEM(oCreate, 'Class')\n"
+            "cBaseClassAfter = GETPEM(oCreate, 'BaseClass')\n"
+            "cClassLibraryAfter = GETPEM(oCreate, 'ClassLibrary')\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildWidget AS ParentWidget OF widgetlib.prg\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("external identity direct-assignment script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cclassafter", "ChildWidget");
+        check("cbaseclassafter", "ParentWidget");
+        check("cclasslibraryafter", library_path.string());
+        check("ldictset", "true");
+        check("ndictcompare", "31");
+
+        expect(state.ole_objects.size() == 2U,
+               "external identity direct assignment should register native and COM objects");
+        if (state.ole_objects.size() == 2U)
+        {
+            const auto &native_object = state.ole_objects[0];
+            expect(native_object.prog_id == "ChildWidget",
+                   "external identity direct assignment should preserve child class identity");
+            expect(native_object.base_class_name == "ParentWidget",
+                   "external identity direct assignment should preserve the immediate external base class");
+            expect(native_object.class_library == library_path.string(),
+                   "external identity direct assignment should preserve external class library provenance");
+            expect(!native_object.properties.contains("class"),
+                   "external identity direct assignment should not materialize a Class shadow property");
+            expect(!native_object.properties.contains("baseclass"),
+                   "external identity direct assignment should not materialize a BaseClass shadow property");
+            expect(!native_object.properties.contains("classlibrary"),
+                   "external identity direct assignment should not materialize a ClassLibrary shadow property");
+
+            expect(state.ole_objects[1].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while external identity direct assignment lands");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_inherited_declarative_children_from_external_prg_bases_resolve_against_defining_library()
     {
         namespace fs = std::filesystem;
@@ -6664,6 +6820,8 @@ int main()
     test_external_prg_identity_metadata_stays_protected_from_removeproperty();
     test_same_prg_native_identity_metadata_cannot_be_shadowed_through_addproperty();
     test_external_prg_identity_metadata_cannot_be_shadowed_through_addproperty();
+    test_same_prg_native_identity_metadata_cannot_be_shadowed_through_direct_assignment();
+    test_external_prg_identity_metadata_cannot_be_shadowed_through_direct_assignment();
     test_inherited_declarative_children_from_external_prg_bases_resolve_against_defining_library();
     test_inherited_external_prg_base_methods_resolve_addobject_children_against_defining_library();
     test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow();

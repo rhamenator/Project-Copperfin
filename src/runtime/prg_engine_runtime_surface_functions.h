@@ -30,6 +30,8 @@ struct RuntimeSurfaceCursorSnapshot {
     std::vector<RuntimeSurfaceCursorRow> rows;
 };
 
+bool is_native_identity_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+
 std::optional<PrgValue> evaluate_runtime_surface_function(
     const std::string& function,
     const std::vector<PrgValue>& arguments,

@@ -601,7 +601,10 @@
                                               .location = statement.location});
                             return {};
                         }
-                        runtime_object->properties[property_name] = assignment_value;
+                        if (!is_native_identity_member_name(*runtime_object, property_name))
+                        {
+                            runtime_object->properties[property_name] = assignment_value;
+                        }
                     }
                     runtime_object->last_action = effective_member_path + " = " + value_as_string(assignment_value);
                     ++runtime_object->action_count;

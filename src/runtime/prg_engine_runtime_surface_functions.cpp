@@ -198,7 +198,7 @@ std::optional<PrgValue> get_native_identity_metadata(
     return std::nullopt;
 }
 
-bool is_native_identity_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name) {
+bool native_identity_member_name_matches(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name) {
     if (runtime_object.class_hierarchy.empty()) {
         return false;
     }
@@ -500,6 +500,11 @@ std::vector<std::string> collect_object_member_names(const RuntimeOleObjectState
 }
 
 }  // namespace
+
+bool is_native_identity_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_identity_member_name_matches(runtime_object, normalized_member_name);
+}
 
 std::optional<PrgValue> evaluate_runtime_surface_function(
     const std::string& function,
