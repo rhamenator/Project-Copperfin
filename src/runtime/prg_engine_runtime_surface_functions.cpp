@@ -198,6 +198,15 @@ std::optional<PrgValue> get_native_identity_metadata(
     return std::nullopt;
 }
 
+bool is_native_identity_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name) {
+    if (runtime_object.class_hierarchy.empty()) {
+        return false;
+    }
+    return normalized_member_name == "class" ||
+           normalized_member_name == "baseclass" ||
+           normalized_member_name == "classlibrary";
+}
+
 std::vector<std::string> collect_native_identity_member_names(const RuntimeOleObjectState& runtime_object) {
     std::vector<std::string> members;
     if (get_native_identity_metadata(runtime_object, "class").has_value()) {
@@ -711,6 +720,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         const std::string property_name = normalize_identifier(trim_copy(value_as_string(arguments[1])));
         if (property_name.empty()) {
+            return make_boolean_value(false);
+        }
+        if (is_native_identity_member_name(*runtime_object, property_name)) {
             return make_boolean_value(false);
         }
         const PrgValue initial_value = arguments.size() >= 3U ? arguments[2] : make_empty_value();
