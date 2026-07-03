@@ -2130,6 +2130,236 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_inherited_external_parent_child_methods_resolve_thisform_to_live_derived_owner()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_inherited_external_parent_thisform";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path widget_library_path = temp_root / "widgetlib.prg";
+        write_text(
+            widget_library_path,
+            "DEFINE CLASS ParentForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddObject('cmdSave', 'SaveButton')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "    FUNCTION Save\n"
+            "        THIS.Caption = THIS.Caption + '-Saved'\n"
+            "        RETURN THIS.Caption\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS Custom\n"
+            "    FUNCTION OwnerCaption\n"
+            "        RETURN THISFORM.Caption\n"
+            "    ENDFUNC\n"
+            "    FUNCTION TriggerSave\n"
+            "        RETURN THISFORM.Save()\n"
+            "    ENDFUNC\n"
+            "    FUNCTION OwnerRef\n"
+            "        RETURN THISFORM\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "inherited_external_parent_thisform.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildForm')\n"
+            "oChild = oCreate.cmdSave\n"
+            "cOwnerCaption = oChild.OwnerCaption()\n"
+            "cSavedCaption = oChild.TriggerSave()\n"
+            "cFormCaptionAfterSave = oCreate.Caption\n"
+            "oOwnerRef = oChild.OwnerRef()\n"
+            "cOwnerRefCaption = oOwnerRef.Caption\n"
+            "cOwnerRefClass = oOwnerRef.Class\n"
+            "oOwnerRef.Caption = oOwnerRef.Caption + '-Ref'\n"
+            "cFormCaptionAfterRef = oCreate.Caption\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildForm AS ParentForm OF widgetlib.prg\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("inherited external-parent THISFORM script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cownercaption", "MainForm");
+        check("csavedcaption", "MainForm-Saved");
+        check("cformcaptionaftersave", "MainForm-Saved");
+        check("cownerrefcaption", "MainForm-Saved");
+        check("cownerrefclass", "ChildForm");
+        check("cformcaptionafterref", "MainForm-Saved-Ref");
+
+        expect(state.ole_objects.size() == 2U,
+               "inherited external-parent THISFORM script should register derived owner and child objects");
+        if (state.ole_objects.size() == 2U)
+        {
+            const auto &owner_object = state.ole_objects[0];
+            const auto &child_object = state.ole_objects[1];
+            expect(owner_object.prog_id == "ChildForm",
+                   "inherited external-parent THISFORM should preserve the live derived owner identity");
+            expect(owner_object.source == main_path.string(),
+                   "inherited external-parent THISFORM should preserve the derived owner source path");
+            expect(child_object.prog_id == "SaveButton",
+                   "inherited external-parent THISFORM should preserve the child object identity");
+            expect(child_object.source == widget_library_path.string(),
+                   "inherited external-parent THISFORM should preserve the external parent-library child source path");
+            const auto caption = owner_object.properties.find("caption");
+            if (caption != owner_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(caption->second) == "MainForm-Saved-Ref",
+                       "inherited external-parent THISFORM should let child methods and returned owner refs mutate the live derived owner");
+            }
+            else
+            {
+                expect(false, "inherited external-parent THISFORM should preserve the derived owner caption property");
+            }
+        }
+
+        const bool has_save_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   event.detail == "ParentForm.Save";
+        });
+        expect(has_save_invoke_event,
+               "inherited external-parent THISFORM should route child method calls into the inherited owner Save method");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_inherited_external_parent_child_methods_resolve_thisformset_to_live_derived_owner()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_inherited_external_parent_thisformset";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path widget_library_path = temp_root / "widgetlib.prg";
+        write_text(
+            widget_library_path,
+            "DEFINE CLASS ParentForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddObject('cmdSave', 'SaveButton')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "    FUNCTION Save\n"
+            "        THIS.Caption = THIS.Caption + '-Saved'\n"
+            "        RETURN THIS.Caption\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS Custom\n"
+            "    FUNCTION OwnerCaption\n"
+            "        RETURN THISFORMSET.Caption\n"
+            "    ENDFUNC\n"
+            "    FUNCTION TriggerSave\n"
+            "        RETURN THISFORMSET.Save()\n"
+            "    ENDFUNC\n"
+            "    FUNCTION OwnerRef\n"
+            "        RETURN THISFORMSET\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "inherited_external_parent_thisformset.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildForm')\n"
+            "oChild = oCreate.cmdSave\n"
+            "cOwnerCaption = oChild.OwnerCaption()\n"
+            "cSavedCaption = oChild.TriggerSave()\n"
+            "cFormCaptionAfterSave = oCreate.Caption\n"
+            "oOwnerRef = oChild.OwnerRef()\n"
+            "cOwnerRefCaption = oOwnerRef.Caption\n"
+            "cOwnerRefClass = oOwnerRef.Class\n"
+            "oOwnerRef.Caption = oOwnerRef.Caption + '-Ref'\n"
+            "cFormCaptionAfterRef = oCreate.Caption\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildForm AS ParentForm OF widgetlib.prg\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("inherited external-parent THISFORMSET script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cownercaption", "MainForm");
+        check("csavedcaption", "MainForm-Saved");
+        check("cformcaptionaftersave", "MainForm-Saved");
+        check("cownerrefcaption", "MainForm-Saved");
+        check("cownerrefclass", "ChildForm");
+        check("cformcaptionafterref", "MainForm-Saved-Ref");
+
+        expect(state.ole_objects.size() == 2U,
+               "inherited external-parent THISFORMSET script should register derived owner and child objects");
+        if (state.ole_objects.size() == 2U)
+        {
+            const auto &owner_object = state.ole_objects[0];
+            const auto &child_object = state.ole_objects[1];
+            expect(owner_object.prog_id == "ChildForm",
+                   "inherited external-parent THISFORMSET should preserve the live derived owner identity");
+            expect(owner_object.source == main_path.string(),
+                   "inherited external-parent THISFORMSET should preserve the derived owner source path");
+            expect(child_object.prog_id == "SaveButton",
+                   "inherited external-parent THISFORMSET should preserve the child object identity");
+            expect(child_object.source == widget_library_path.string(),
+                   "inherited external-parent THISFORMSET should preserve the external parent-library child source path");
+            const auto caption = owner_object.properties.find("caption");
+            if (caption != owner_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(caption->second) == "MainForm-Saved-Ref",
+                       "inherited external-parent THISFORMSET should let child methods and returned owner refs mutate the live derived owner");
+            }
+            else
+            {
+                expect(false, "inherited external-parent THISFORMSET should preserve the derived owner caption property");
+            }
+        }
+
+        const bool has_save_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   event.detail == "ParentForm.Save";
+        });
+        expect(has_save_invoke_event,
+               "inherited external-parent THISFORMSET should route child method calls into the inherited owner Save method");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_external_prg_base_child_methods_resolve_parent_thisform_and_thisformset()
     {
         namespace fs = std::filesystem;
@@ -23748,6 +23978,8 @@ int main()
     test_declarative_children_materialize_from_external_prg_sources_before_parent_init();
     test_native_child_methods_resolve_thisform_through_parent_chain();
     test_native_child_methods_resolve_thisformset_through_owner_chain();
+    test_inherited_external_parent_child_methods_resolve_thisform_to_live_derived_owner();
+    test_inherited_external_parent_child_methods_resolve_thisformset_to_live_derived_owner();
     test_external_prg_base_child_methods_resolve_parent_thisform_and_thisformset();
     test_dotted_native_child_chains_traverse_contained_objects();
     test_dotted_native_child_assignments_traverse_contained_objects();
