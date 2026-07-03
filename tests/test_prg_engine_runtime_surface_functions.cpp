@@ -4550,9 +4550,11 @@ namespace
             "oCreate = CREATEOBJECT('ChildWidget')\n"
             "oCreate.Class = 'OtherClass'\n"
             "oCreate.BaseClass = 'OtherBase'\n"
+            "oCreate.ParentClass = 'OtherParent'\n"
             "oCreate.ClassLibrary = 'other.prg'\n"
             "cClassAfter = GETPEM(oCreate, 'Class')\n"
             "cBaseClassAfter = GETPEM(oCreate, 'BaseClass')\n"
+            "cParentClassAfter = GETPEM(oCreate, 'ParentClass')\n"
             "xClassLibraryAfter = GETPEM(oCreate, 'ClassLibrary')\n"
             "RETURN\n"
             "DEFINE CLASS ParentWidget AS Custom\n"
@@ -4582,6 +4584,7 @@ namespace
 
         check("cclassafter", "ChildWidget");
         check("cbaseclassafter", "ParentWidget");
+        check("cparentclassafter", "ParentWidget");
 
         const auto class_library_after = state.globals.find("xclasslibraryafter");
         expect(class_library_after != state.globals.end() &&
@@ -4603,6 +4606,8 @@ namespace
                    "native identity direct assignment should not materialize a Class shadow property");
             expect(!native_object.properties.contains("baseclass"),
                    "native identity direct assignment should not materialize a BaseClass shadow property");
+            expect(!native_object.properties.contains("parentclass"),
+                   "native identity direct assignment should not materialize a ParentClass shadow property");
             expect(!native_object.properties.contains("classlibrary"),
                    "native identity direct assignment should not materialize a ClassLibrary shadow property");
         }
@@ -4633,9 +4638,11 @@ namespace
             "nDictCompare = GETPEM(oDict, 'comparemode')\n"
             "oCreate.Class = 'OtherClass'\n"
             "oCreate.BaseClass = 'OtherBase'\n"
+            "oCreate.ParentClass = 'OtherParent'\n"
             "oCreate.ClassLibrary = 'other.prg'\n"
             "cClassAfter = GETPEM(oCreate, 'Class')\n"
             "cBaseClassAfter = GETPEM(oCreate, 'BaseClass')\n"
+            "cParentClassAfter = GETPEM(oCreate, 'ParentClass')\n"
             "cClassLibraryAfter = GETPEM(oCreate, 'ClassLibrary')\n"
             "RETURN\n"
             "DEFINE CLASS ChildWidget AS ParentWidget OF widgetlib.prg\n"
@@ -4663,6 +4670,7 @@ namespace
 
         check("cclassafter", "ChildWidget");
         check("cbaseclassafter", "ParentWidget");
+        check("cparentclassafter", "ParentWidget");
         check("cclasslibraryafter", library_path.string());
         check("ldictset", "true");
         check("ndictcompare", "31");
@@ -4682,6 +4690,8 @@ namespace
                    "external identity direct assignment should not materialize a Class shadow property");
             expect(!native_object.properties.contains("baseclass"),
                    "external identity direct assignment should not materialize a BaseClass shadow property");
+            expect(!native_object.properties.contains("parentclass"),
+                   "external identity direct assignment should not materialize a ParentClass shadow property");
             expect(!native_object.properties.contains("classlibrary"),
                    "external identity direct assignment should not materialize a ClassLibrary shadow property");
 
