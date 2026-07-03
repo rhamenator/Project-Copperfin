@@ -1,3 +1,7 @@
+// Copyright © 2026 Richard M. Hamilton. All rights reserved.
+// Licensed under the Project Copperfin Source-Available License or
+// Commercial License. See LICENSE.md in the repository root.
+
 #pragma once
 
 #include "copperfin/platform/extensibility_model.h"
@@ -84,6 +88,14 @@ struct RuntimePackagePlan {
     std::string security_role;
     std::string audit_log_path;
     std::string runtime_host_sha256;
+    std::string license_state;
+    std::string license_type;
+    std::string license_id;
+    std::string license_licensee;
+    int license_seats = 0;
+    std::string license_subscription_expires;
+    int license_perpetual_max_major_version = 0;
+    std::string license_source_path;
     BuildConfiguration configuration = BuildConfiguration::debug;
     BuildOutputKind output_kind = BuildOutputKind::executable;
     bool security_enabled = false;

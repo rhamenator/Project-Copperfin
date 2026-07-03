@@ -1,3 +1,7 @@
+// Copyright © 2026 Richard M. Hamilton. All rights reserved.
+// Licensed under the Project Copperfin Source-Available License or
+// Commercial License. See LICENSE.md in the repository root.
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -3077,6 +3081,14 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelDirectFoxSqlTargets"), directRelational));
             var aiOptional = snapshot.DatabaseProfile.QueryPaths.Count(path => path.AiOptional);
             summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelOptionalAiPlanningPaths"), aiOptional));
+        }
+
+        summary.AppendLine();
+        summary.AppendLine(L("AssetEditor.Summary.License"));
+        summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelLicenseState"), snapshot.LicenseProfile.State));
+        if (!string.IsNullOrEmpty(snapshot.LicenseProfile.Licensee))
+        {
+            summary.AppendLine(F("AssetEditor.Summary.IndentedLabelValue", L("AssetEditor.Summary.LabelLicensee"), snapshot.LicenseProfile.Licensee));
         }
 
         return summary.ToString();

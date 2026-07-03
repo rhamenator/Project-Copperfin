@@ -1,3 +1,8 @@
+// Copyright © 2026 Richard M. Hamilton. All rights reserved.
+// Licensed under the Project Copperfin Source-Available License or
+// Commercial License. See LICENSE.md in the repository root.
+
+#include "copperfin/licensing/license_status.h"
 #include "copperfin/platform/extensibility_model.h"
 #include "copperfin/localization/localization.h"
 #include "copperfin/runtime/runtime_pipeline.h"
@@ -68,6 +73,50 @@ std::string message(
     const std::string& key,
     const copperfin::localization::PlaceholderMap& placeholders = {}) {
     return catalog.translate(key, placeholders);
+}
+
+void print_license_status(const copperfin::licensing::LicenseStatus& status) {
+    using copperfin::licensing::LicenseState;
+
+    std::cout << "status: ok\n";
+    std::cout << "state: " << copperfin::licensing::license_state_name(status.state) << "\n";
+    if (status.state == LicenseState::free) {
+        return;
+    }
+
+    if (!status.license_id.empty()) {
+        std::cout << "license_id: " << status.license_id << "\n";
+    }
+    if (!status.license_type.empty()) {
+        std::cout << "license_type: " << status.license_type << "\n";
+    }
+    if (!status.pricing_model.empty()) {
+        std::cout << "pricing_model: " << status.pricing_model << "\n";
+    }
+    if (!status.licensee_name.empty()) {
+        std::cout << "licensee_name: " << status.licensee_name << "\n";
+    }
+    if (!status.licensee_email.empty()) {
+        std::cout << "licensee_email: " << status.licensee_email << "\n";
+    }
+    if (status.seats > 0) {
+        std::cout << "seats: " << status.seats << "\n";
+    }
+    if (!status.issued_date.empty()) {
+        std::cout << "issued_date: " << status.issued_date << "\n";
+    }
+    if (!status.subscription_expires.empty()) {
+        std::cout << "subscription_expires: " << status.subscription_expires << "\n";
+    }
+    if (status.perpetual_max_major_version > 0) {
+        std::cout << "perpetual_max_major_version: " << status.perpetual_max_major_version << "\n";
+    }
+    if (!status.source_path.empty()) {
+        std::cout << "source_path: " << status.source_path << "\n";
+    }
+    if (!status.diagnostic.empty()) {
+        std::cout << "diagnostic: " << status.diagnostic << "\n";
+    }
 }
 
 void print_error_line(
@@ -257,6 +306,11 @@ int main(int argc, char** argv) {
         args.emplace_back(argv[index]);
     }
 
+    if (!args.empty() && args[0] == "license-status") {
+        print_license_status(copperfin::licensing::load_license_status(argv[0]));
+        return 0;
+    }
+
     if (args.empty() || args[0] != "build") {
         print_usage(catalog);
         return 2;
@@ -413,7 +467,7 @@ int main(int argc, char** argv) {
     }
 
     const auto extensibility_profile = copperfin::platform::default_extensibility_profile();
-    const auto plan = copperfin::runtime::create_runtime_package_plan(
+    auto plan = copperfin::runtime::create_runtime_package_plan(
         open_result.document,
         workspace,
         security_profile,
@@ -428,6 +482,19 @@ int main(int argc, char** argv) {
         print_error_line(catalog, message(catalog, "BuildHost.Error.BuildPlanCreationFailed"));
         return 4;
     }
+
+    // Stamped into app.cfmanifest/app.cfdebug as inert, informational
+    // provenance -- never gates whether the build succeeds or what it
+    // produces. See LicenseState::perpetual_out_of_version's doc comment.
+    const auto license_status = copperfin::licensing::load_license_status(argv[0]);
+    plan.license_state = std::string(copperfin::licensing::license_state_name(license_status.state));
+    plan.license_type = license_status.license_type;
+    plan.license_id = license_status.license_id;
+    plan.license_licensee = license_status.licensee_name;
+    plan.license_seats = license_status.seats;
+    plan.license_subscription_expires = license_status.subscription_expires;
+    plan.license_perpetual_max_major_version = license_status.perpetual_max_major_version;
+    plan.license_source_path = license_status.source_path;
 
     const std::string runtime_host_path = resolve_runtime_host_path(runtime_host_override, argv[0]);
     const auto materialized = copperfin::runtime::materialize_runtime_package(

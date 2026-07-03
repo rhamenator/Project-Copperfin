@@ -1,7 +1,12 @@
+// Copyright © 2026 Richard M. Hamilton. All rights reserved.
+// Licensed under the Project Copperfin Source-Available License or
+// Commercial License. See LICENSE.md in the repository root.
+
 #include "studio_host_main_support.h"
 
 namespace cf_studio_host_main_detail {
 const copperfin::localization::LocalizedCatalog* g_active_catalog = nullptr;
+std::string g_executable_path;
 
 copperfin::localization::LocalizedCatalog load_localization(const char* executable_path) {
     const std::filesystem::path locale_root = copperfin::localization::resolve_catalog_root(
@@ -3368,6 +3373,25 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document,
     }
     std::cout << "]\n";
     std::cout << "    },\n";
+    {
+        const auto license_status = copperfin::licensing::load_license_status(g_executable_path);
+        std::cout << "    \"licenseProfile\": {\n";
+        std::cout << "      \"state\": ";
+        print_json_string(std::string(copperfin::licensing::license_state_name(license_status.state)));
+        std::cout << ",\n";
+        std::cout << "      \"licenseType\": ";
+        print_json_string(license_status.license_type);
+        std::cout << ",\n";
+        std::cout << "      \"licensee\": ";
+        print_json_string(license_status.licensee_name);
+        std::cout << ",\n";
+        std::cout << "      \"seats\": " << license_status.seats << ",\n";
+        std::cout << "      \"subscriptionExpires\": ";
+        print_json_string(license_status.subscription_expires);
+        std::cout << ",\n";
+        std::cout << "      \"perpetualMaxMajorVersion\": " << license_status.perpetual_max_major_version << "\n";
+        std::cout << "    },\n";
+    }
     std::cout << "    \"databaseProfile\": {\n";
     std::cout << "      \"available\": " << (database_profile.available ? "true" : "false") << ",\n";
     std::cout << "      \"connectors\": [\n";
@@ -3666,5 +3690,96 @@ std::optional<int> try_handle_list_subsystems(
         }
         return 0;
     }
+
+void print_license_status(const copperfin::licensing::LicenseStatus& status) {
+    using copperfin::licensing::LicenseState;
+
+    std::cout << "status: ok\n";
+    std::cout << "state: " << copperfin::licensing::license_state_name(status.state) << "\n";
+    if (status.state == LicenseState::free) {
+        return;
+    }
+
+    if (!status.license_id.empty()) {
+        std::cout << "license_id: " << status.license_id << "\n";
+    }
+    if (!status.license_type.empty()) {
+        std::cout << "license_type: " << status.license_type << "\n";
+    }
+    if (!status.pricing_model.empty()) {
+        std::cout << "pricing_model: " << status.pricing_model << "\n";
+    }
+    if (!status.licensee_name.empty()) {
+        std::cout << "licensee_name: " << status.licensee_name << "\n";
+    }
+    if (!status.licensee_email.empty()) {
+        std::cout << "licensee_email: " << status.licensee_email << "\n";
+    }
+    if (status.seats > 0) {
+        std::cout << "seats: " << status.seats << "\n";
+    }
+    if (!status.issued_date.empty()) {
+        std::cout << "issued_date: " << status.issued_date << "\n";
+    }
+    if (!status.subscription_expires.empty()) {
+        std::cout << "subscription_expires: " << status.subscription_expires << "\n";
+    }
+    if (status.perpetual_max_major_version > 0) {
+        std::cout << "perpetual_max_major_version: " << status.perpetual_max_major_version << "\n";
+    }
+    if (!status.source_path.empty()) {
+        std::cout << "source_path: " << status.source_path << "\n";
+    }
+    if (!status.diagnostic.empty()) {
+        std::cout << "diagnostic: " << status.diagnostic << "\n";
+    }
+}
+
+void print_json_license_status(const copperfin::licensing::LicenseStatus& status) {
+    std::cout << "{\n";
+    std::cout << "  \"status\": \"ok\",\n";
+    std::cout << "  \"license\": {\n";
+    std::cout << "    \"state\": ";
+    print_json_string(std::string(copperfin::licensing::license_state_name(status.state)));
+    std::cout << ",\n";
+    std::cout << "    \"licenseId\": ";
+    print_json_string(status.license_id);
+    std::cout << ",\n";
+    std::cout << "    \"licenseType\": ";
+    print_json_string(status.license_type);
+    std::cout << ",\n";
+    std::cout << "    \"pricingModel\": ";
+    print_json_string(status.pricing_model);
+    std::cout << ",\n";
+    std::cout << "    \"licensee\": ";
+    print_json_string(status.licensee_name);
+    std::cout << ",\n";
+    std::cout << "    \"seats\": " << status.seats << ",\n";
+    std::cout << "    \"subscriptionExpires\": ";
+    print_json_string(status.subscription_expires);
+    std::cout << ",\n";
+    std::cout << "    \"perpetualMaxMajorVersion\": " << status.perpetual_max_major_version << "\n";
+    std::cout << "  }\n";
+    std::cout << "}\n";
+}
+
+std::optional<int> try_handle_license_status(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
+    (void)catalog;
+    const bool requested = std::find(args.begin(), args.end(), "--license-status") != args.end();
+    if (!requested) {
+        return std::nullopt;
+    }
+
+    const auto status = copperfin::licensing::load_license_status(g_executable_path);
+    const bool output_json = std::find(args.begin(), args.end(), "--json") != args.end();
+    if (output_json) {
+        print_json_license_status(status);
+    } else {
+        print_license_status(status);
+    }
+    return 0;
+}
 
 }  // namespace cf_studio_host_main_detail

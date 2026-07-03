@@ -1,3 +1,8 @@
+// Copyright © 2026 Richard M. Hamilton. All rights reserved.
+// Licensed under the Project Copperfin Source-Available License or
+// Commercial License. See LICENSE.md in the repository root.
+
+#include "copperfin/licensing/license_status.h"
 #include "copperfin/localization/localization.h"
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/runtime/xasset_methods.h"
@@ -482,6 +487,50 @@ void print_warning_line(
     const copperfin::localization::LocalizedCatalog& catalog,
     const std::string& warning) {
     std::cerr << localized_message_or_default(catalog, "RuntimeHost.Prefix.Warning", "warning: ") << warning << "\n";
+}
+
+void print_license_status(const copperfin::licensing::LicenseStatus& status) {
+    using copperfin::licensing::LicenseState;
+
+    std::cout << "status: ok\n";
+    std::cout << "state: " << copperfin::licensing::license_state_name(status.state) << "\n";
+    if (status.state == LicenseState::free) {
+        return;
+    }
+
+    if (!status.license_id.empty()) {
+        std::cout << "license_id: " << status.license_id << "\n";
+    }
+    if (!status.license_type.empty()) {
+        std::cout << "license_type: " << status.license_type << "\n";
+    }
+    if (!status.pricing_model.empty()) {
+        std::cout << "pricing_model: " << status.pricing_model << "\n";
+    }
+    if (!status.licensee_name.empty()) {
+        std::cout << "licensee_name: " << status.licensee_name << "\n";
+    }
+    if (!status.licensee_email.empty()) {
+        std::cout << "licensee_email: " << status.licensee_email << "\n";
+    }
+    if (status.seats > 0) {
+        std::cout << "seats: " << status.seats << "\n";
+    }
+    if (!status.issued_date.empty()) {
+        std::cout << "issued_date: " << status.issued_date << "\n";
+    }
+    if (!status.subscription_expires.empty()) {
+        std::cout << "subscription_expires: " << status.subscription_expires << "\n";
+    }
+    if (status.perpetual_max_major_version > 0) {
+        std::cout << "perpetual_max_major_version: " << status.perpetual_max_major_version << "\n";
+    }
+    if (!status.source_path.empty()) {
+        std::cout << "source_path: " << status.source_path << "\n";
+    }
+    if (!status.diagnostic.empty()) {
+        std::cout << "diagnostic: " << status.diagnostic << "\n";
+    }
 }
 
 bool is_runtime_bridge_routine_identifier(const std::string& value) {
@@ -1393,13 +1442,16 @@ int main(int argc, char** argv) {
     bool federation_planning_require = false;
     bool federation_policy_audit = true;
     bool debug_mode = false;
+    bool license_status_requested = false;
     std::vector<std::string> breakpoint_args;
     std::vector<std::string> debug_commands;
     RuntimeBridgeInvocationOptions bridge_options;
 
     for (int index = 1; index < argc; ++index) {
         const std::string arg = argv[index];
-        if (arg == "--manifest" && (index + 1) < argc) {
+        if (arg == "--license-status") {
+            license_status_requested = true;
+        } else if (arg == "--manifest" && (index + 1) < argc) {
             manifest_path = argv[++index];
         } else if (arg == "--federation-backend" && (index + 1) < argc) {
             federation_backend = argv[++index];
@@ -1456,6 +1508,11 @@ int main(int argc, char** argv) {
             print_usage(catalog);
             return 2;
         }
+    }
+
+    if (license_status_requested) {
+        print_license_status(copperfin::licensing::load_license_status(argv[0]));
+        return 0;
     }
 
     const bool federation_mode_requested =

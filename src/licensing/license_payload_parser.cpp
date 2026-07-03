@@ -1,0 +1,301 @@
+// Copyright © 2026 Richard M. Hamilton. All rights reserved.
+// Licensed under the Project Copperfin Source-Available License or
+// Commercial License. See LICENSE.md in the repository root.
+
+#include "license_payload_parser.h"
+
+#include <cctype>
+#include <cstddef>
+
+namespace copperfin::licensing {
+
+namespace {
+
+struct Cursor {
+    std::string_view text;
+    std::size_t pos = 0;
+};
+
+void skip_ws(Cursor& cursor) {
+    while (cursor.pos < cursor.text.size()) {
+        const char ch = cursor.text[cursor.pos];
+        if (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r') {
+            ++cursor.pos;
+        } else {
+            break;
+        }
+    }
+}
+
+bool consume(Cursor& cursor, char expected) {
+    skip_ws(cursor);
+    if (cursor.pos < cursor.text.size() && cursor.text[cursor.pos] == expected) {
+        ++cursor.pos;
+        return true;
+    }
+    return false;
+}
+
+bool peek_is(Cursor& cursor, char expected) {
+    skip_ws(cursor);
+    return cursor.pos < cursor.text.size() && cursor.text[cursor.pos] == expected;
+}
+
+void append_utf8(std::string& out, unsigned int code_point) {
+    if (code_point < 0x80U) {
+        out.push_back(static_cast<char>(code_point));
+    } else if (code_point < 0x800U) {
+        out.push_back(static_cast<char>(0xC0U | (code_point >> 6U)));
+        out.push_back(static_cast<char>(0x80U | (code_point & 0x3FU)));
+    } else {
+        out.push_back(static_cast<char>(0xE0U | (code_point >> 12U)));
+        out.push_back(static_cast<char>(0x80U | ((code_point >> 6U) & 0x3FU)));
+        out.push_back(static_cast<char>(0x80U | (code_point & 0x3FU)));
+    }
+}
+
+bool parse_hex4(Cursor& cursor, unsigned int& value) {
+    if (cursor.pos + 4U > cursor.text.size()) {
+        return false;
+    }
+    value = 0U;
+    for (unsigned int k = 0U; k < 4U; ++k) {
+        const char hex_char = cursor.text[cursor.pos + k];
+        value <<= 4U;
+        if (hex_char >= '0' && hex_char <= '9') {
+            value |= static_cast<unsigned int>(hex_char - '0');
+        } else if (hex_char >= 'a' && hex_char <= 'f') {
+            value |= static_cast<unsigned int>(hex_char - 'a' + 10);
+        } else if (hex_char >= 'A' && hex_char <= 'F') {
+            value |= static_cast<unsigned int>(hex_char - 'A' + 10);
+        } else {
+            return false;
+        }
+    }
+    cursor.pos += 4U;
+    return true;
+}
+
+bool parse_json_string(Cursor& cursor, std::string& out) {
+    skip_ws(cursor);
+    if (cursor.pos >= cursor.text.size() || cursor.text[cursor.pos] != '"') {
+        return false;
+    }
+    ++cursor.pos;
+    out.clear();
+
+    while (true) {
+        if (cursor.pos >= cursor.text.size()) {
+            return false;
+        }
+        const char ch = cursor.text[cursor.pos];
+        if (ch == '"') {
+            ++cursor.pos;
+            return true;
+        }
+        if (ch == '\\') {
+            ++cursor.pos;
+            if (cursor.pos >= cursor.text.size()) {
+                return false;
+            }
+            const char escaped = cursor.text[cursor.pos];
+            switch (escaped) {
+                case '"':
+                    out.push_back('"');
+                    ++cursor.pos;
+                    break;
+                case '\\':
+                    out.push_back('\\');
+                    ++cursor.pos;
+                    break;
+                case '/':
+                    out.push_back('/');
+                    ++cursor.pos;
+                    break;
+                case 'b':
+                    out.push_back('\b');
+                    ++cursor.pos;
+                    break;
+                case 'f':
+                    out.push_back('\f');
+                    ++cursor.pos;
+                    break;
+                case 'n':
+                    out.push_back('\n');
+                    ++cursor.pos;
+                    break;
+                case 'r':
+                    out.push_back('\r');
+                    ++cursor.pos;
+                    break;
+                case 't':
+                    out.push_back('\t');
+                    ++cursor.pos;
+                    break;
+                case 'u': {
+                    ++cursor.pos;
+                    unsigned int code_point = 0U;
+                    if (!parse_hex4(cursor, code_point)) {
+                        return false;
+                    }
+                    append_utf8(out, code_point);
+                    break;
+                }
+                default:
+                    return false;
+            }
+        } else if (static_cast<unsigned char>(ch) < 0x20U) {
+            return false;
+        } else {
+            out.push_back(ch);
+            ++cursor.pos;
+        }
+    }
+}
+
+bool parse_json_integer(Cursor& cursor, long long& out) {
+    skip_ws(cursor);
+    const std::size_t start = cursor.pos;
+    bool negative = false;
+    if (cursor.pos < cursor.text.size() && cursor.text[cursor.pos] == '-') {
+        negative = true;
+        ++cursor.pos;
+    }
+    if (cursor.pos >= cursor.text.size() || (std::isdigit(static_cast<unsigned char>(cursor.text[cursor.pos])) == 0)) {
+        cursor.pos = start;
+        return false;
+    }
+
+    long long value = 0;
+    while (cursor.pos < cursor.text.size() && (std::isdigit(static_cast<unsigned char>(cursor.text[cursor.pos])) != 0)) {
+        value = (value * 10) + (cursor.text[cursor.pos] - '0');
+        ++cursor.pos;
+    }
+
+    if (cursor.pos < cursor.text.size() &&
+        (cursor.text[cursor.pos] == '.' || cursor.text[cursor.pos] == 'e' || cursor.text[cursor.pos] == 'E')) {
+        cursor.pos = start;
+        return false;
+    }
+
+    out = negative ? -value : value;
+    return true;
+}
+
+bool parse_flat_scalar_object(Cursor& cursor, PayloadFields& out) {
+    if (!consume(cursor, '{')) {
+        return false;
+    }
+    if (peek_is(cursor, '}')) {
+        consume(cursor, '}');
+        return true;
+    }
+
+    while (true) {
+        std::string key;
+        if (!parse_json_string(cursor, key)) {
+            return false;
+        }
+        if (!consume(cursor, ':')) {
+            return false;
+        }
+
+        if (peek_is(cursor, '"')) {
+            std::string value;
+            if (!parse_json_string(cursor, value)) {
+                return false;
+            }
+            out[key] = PayloadValue::make_string(value);
+        } else {
+            long long value = 0;
+            if (!parse_json_integer(cursor, value)) {
+                return false;
+            }
+            out[key] = PayloadValue::make_integer(value);
+        }
+
+        if (consume(cursor, ',')) {
+            continue;
+        }
+        if (consume(cursor, '}')) {
+            return true;
+        }
+        return false;
+    }
+}
+
+}  // namespace
+
+ParsedLicenseFile parse_license_file(std::string_view json_text) {
+    ParsedLicenseFile result;
+    Cursor cursor{json_text, 0};
+
+    if (!consume(cursor, '{')) {
+        result.error = "expected top-level JSON object";
+        return result;
+    }
+
+    if (peek_is(cursor, '}')) {
+        consume(cursor, '}');
+        result.error = "license file has no fields";
+        return result;
+    }
+
+    bool has_payload = false;
+    bool has_algorithm = false;
+    bool has_signature = false;
+
+    while (true) {
+        std::string key;
+        if (!parse_json_string(cursor, key)) {
+            result.error = "expected a JSON key string";
+            return result;
+        }
+        if (!consume(cursor, ':')) {
+            result.error = "expected ':' after key";
+            return result;
+        }
+
+        if (key == "payload") {
+            if (!parse_flat_scalar_object(cursor, result.payload_fields)) {
+                result.error = "malformed payload object";
+                return result;
+            }
+            has_payload = true;
+        } else if (key == "signature_algorithm") {
+            if (!parse_json_string(cursor, result.signature_algorithm)) {
+                result.error = "malformed signature_algorithm field";
+                return result;
+            }
+            has_algorithm = true;
+        } else if (key == "signature") {
+            if (!parse_json_string(cursor, result.signature_base64)) {
+                result.error = "malformed signature field";
+                return result;
+            }
+            has_signature = true;
+        } else {
+            result.error = "unexpected top-level key: " + key;
+            return result;
+        }
+
+        if (consume(cursor, ',')) {
+            continue;
+        }
+        if (consume(cursor, '}')) {
+            break;
+        }
+        result.error = "expected ',' or '}'";
+        return result;
+    }
+
+    if (!has_payload || !has_algorithm || !has_signature) {
+        result.error = "missing required top-level field (payload, signature_algorithm, signature)";
+        return result;
+    }
+
+    result.ok = true;
+    return result;
+}
+
+}  // namespace copperfin::licensing

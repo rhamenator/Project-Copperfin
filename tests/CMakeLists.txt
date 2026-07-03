@@ -80,6 +80,23 @@ add_test(
     COMMAND $<TARGET_FILE:test_build_host_output> $<TARGET_FILE:copperfin_build_host>
 )
 
+add_executable(test_licensing_status
+    test_licensing_status.cpp
+)
+target_link_libraries(test_licensing_status PRIVATE cf_licensing)
+target_include_directories(test_licensing_status PRIVATE ${CMAKE_SOURCE_DIR}/src/licensing)
+
+if(MSVC)
+    target_compile_options(test_licensing_status PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_licensing_status PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_licensing_status
+    COMMAND $<TARGET_FILE:test_licensing_status>
+)
+
 add_executable(test_studio_host_json
     test_studio_host_json.cpp
     test_studio_host_json_shared_test_helpers.cpp

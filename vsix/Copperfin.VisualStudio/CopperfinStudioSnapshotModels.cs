@@ -1,3 +1,7 @@
+// Copyright © 2026 Richard M. Hamilton. All rights reserved.
+// Licensed under the Project Copperfin Source-Available License or
+// Commercial License. See LICENSE.md in the repository root.
+
 using System.Collections.Generic;
 
 namespace Copperfin.VisualStudio;
@@ -33,7 +37,18 @@ internal sealed class CopperfinStudioSnapshotDocument
     public CopperfinStudioSecurityProfile SecurityProfile { get; set; } = new();
     public CopperfinStudioExtensibilityProfile ExtensibilityProfile { get; set; } = new();
     public CopperfinStudioDatabaseFederationProfile DatabaseProfile { get; set; } = new();
+    public CopperfinStudioLicenseProfile LicenseProfile { get; set; } = new();
     public List<CopperfinStudioSnapshotObject> Objects { get; set; } = new();
+}
+
+internal sealed class CopperfinStudioLicenseProfile
+{
+    public string State { get; set; } = string.Empty;
+    public string LicenseType { get; set; } = string.Empty;
+    public string Licensee { get; set; } = string.Empty;
+    public int Seats { get; set; }
+    public string SubscriptionExpires { get; set; } = string.Empty;
+    public int PerpetualMaxMajorVersion { get; set; }
 }
 
 internal sealed class CopperfinStudioSnapshotField

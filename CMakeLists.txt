@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(Copperfin LANGUAGES CXX)
+project(Copperfin LANGUAGES CXX C)
 
 include(CheckCXXCompilerFlag)
 
@@ -54,6 +54,46 @@ else()
 endif()
 
 target_link_libraries(cf_security PRIVATE cf_localization)
+
+add_library(cf_licensing
+    src/licensing/base64.cpp
+    src/licensing/canonical_payload_serializer.cpp
+    src/licensing/ed25519_verify.cpp
+    src/licensing/license_classifier.cpp
+    src/licensing/license_payload_parser.cpp
+    src/licensing/license_status.cpp
+    src/licensing/third_party/ed25519_ref/fe.c
+    src/licensing/third_party/ed25519_ref/ge.c
+    src/licensing/third_party/ed25519_ref/sc.c
+    src/licensing/third_party/ed25519_ref/sha512.c
+    src/licensing/third_party/ed25519_ref/verify.c
+)
+
+target_include_directories(cf_licensing
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+if(MSVC)
+    target_compile_options(cf_licensing PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(cf_licensing PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+# Vendored third-party Ed25519 verify code: relax warnings so upstream
+# source (see src/licensing/third_party/ed25519_ref/README.md) doesn't need
+# to be edited to satisfy this project's own warning level.
+set_source_files_properties(
+    src/licensing/third_party/ed25519_ref/fe.c
+    src/licensing/third_party/ed25519_ref/ge.c
+    src/licensing/third_party/ed25519_ref/sc.c
+    src/licensing/third_party/ed25519_ref/sha512.c
+    src/licensing/third_party/ed25519_ref/verify.c
+    PROPERTIES COMPILE_OPTIONS "$<IF:$<CXX_COMPILER_ID:MSVC>,/W1,-w>"
+)
+
+# cf_licensing is intentionally dependency-free (no cf_localization link) so
+# it stays trivially unit-testable offline; see license_status.h.
 
 add_library(cf_platform_profile
     src/platform/database_model.cpp
@@ -249,6 +289,7 @@ target_link_libraries(cf_runtime_pipeline
         cf_security
         cf_platform_profile
         cf_xbase_runtime
+        cf_licensing
 )
 
 if(MSVC)
@@ -274,7 +315,7 @@ add_executable(copperfin_inspect
     apps/copperfin_inspect/main.cpp
 )
 
-target_link_libraries(copperfin_inspect PRIVATE cf_vfp_assets cf_security)
+target_link_libraries(copperfin_inspect PRIVATE cf_vfp_assets cf_security cf_licensing)
 target_link_libraries(copperfin_inspect PRIVATE cf_localization)
 
 if(MSVC)
@@ -300,7 +341,7 @@ add_executable(copperfin_studio_host
     apps/copperfin_studio_host/studio_host_main_selection_and_report.cpp
 )
 
-target_link_libraries(copperfin_studio_host PRIVATE cf_design_model cf_security cf_platform_profile)
+target_link_libraries(copperfin_studio_host PRIVATE cf_design_model cf_security cf_platform_profile cf_licensing)
 
 if(MSVC)
     target_compile_options(copperfin_studio_host PRIVATE /W4 /permissive-)
@@ -312,7 +353,7 @@ add_executable(copperfin_runtime_host
     apps/copperfin_runtime_host/main.cpp
 )
 
-target_link_libraries(copperfin_runtime_host PRIVATE cf_xbase_runtime cf_security cf_platform_profile)
+target_link_libraries(copperfin_runtime_host PRIVATE cf_xbase_runtime cf_security cf_platform_profile cf_licensing)
 target_link_libraries(copperfin_runtime_host PRIVATE cf_localization)
 
 if(MSVC)

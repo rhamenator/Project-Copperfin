@@ -1,3 +1,7 @@
+// Copyright © 2026 Richard M. Hamilton. All rights reserved.
+// Licensed under the Project Copperfin Source-Available License or
+// Commercial License. See LICENSE.md in the repository root.
+
 #include "studio_host_main_support.h"
 
 using namespace cf_studio_host_main_detail;
@@ -5,6 +9,7 @@ using namespace cf_studio_host_main_detail;
 int main(int argc, char** argv) {
     const auto catalog = load_localization(argc > 0 ? argv[0] : nullptr);
     g_active_catalog = &catalog;
+    g_executable_path = argc > 0 ? argv[0] : "";
     const auto hardening = copperfin::security::apply_default_process_hardening();
     if (!hardening.applied) {
         std::cerr << studio_warning_prefix() << hardening.message << "\n";
@@ -15,6 +20,9 @@ int main(int argc, char** argv) {
         args.emplace_back(argv[index]);
     }
 
+    if (const auto handled = try_handle_license_status(catalog, args)) {
+        return *handled;
+    }
     if (const auto handled = try_handle_list_subsystems(catalog, args)) {
         return *handled;
     }

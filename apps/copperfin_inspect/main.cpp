@@ -1,3 +1,8 @@
+// Copyright © 2026 Richard M. Hamilton. All rights reserved.
+// Licensed under the Project Copperfin Source-Available License or
+// Commercial License. See LICENSE.md in the repository root.
+
+#include "copperfin/licensing/license_status.h"
 #include "copperfin/localization/localization.h"
 #include "copperfin/vfp/asset_inspector.h"
 #include "copperfin/security/process_hardening.h"
@@ -13,6 +18,7 @@ struct CommandLineOptions {
     std::string locale;
     bool help = false;
     bool valid = true;
+    bool license_status = false;
 };
 
 CommandLineOptions parse_arguments(int argc, char** argv) {
@@ -21,6 +27,10 @@ CommandLineOptions parse_arguments(int argc, char** argv) {
         const std::string argument = argv[index];
         if (argument == "--help" || argument == "-h") {
             options.help = true;
+            continue;
+        }
+        if (argument == "--license-status") {
+            options.license_status = true;
             continue;
         }
         if (argument == "--locale") {
@@ -65,6 +75,49 @@ void print_error_line(
     const copperfin::localization::LocalizedCatalog& catalog,
     const std::string& error) {
     std::cout << catalog.translate("Inspect.Prefix.Error") << error << "\n";
+}
+
+void print_license_status(const copperfin::licensing::LicenseStatus& status) {
+    using copperfin::licensing::LicenseState;
+
+    std::cout << "state: " << copperfin::licensing::license_state_name(status.state) << "\n";
+    if (status.state == LicenseState::free) {
+        return;
+    }
+
+    if (!status.license_id.empty()) {
+        std::cout << "license_id: " << status.license_id << "\n";
+    }
+    if (!status.license_type.empty()) {
+        std::cout << "license_type: " << status.license_type << "\n";
+    }
+    if (!status.pricing_model.empty()) {
+        std::cout << "pricing_model: " << status.pricing_model << "\n";
+    }
+    if (!status.licensee_name.empty()) {
+        std::cout << "licensee_name: " << status.licensee_name << "\n";
+    }
+    if (!status.licensee_email.empty()) {
+        std::cout << "licensee_email: " << status.licensee_email << "\n";
+    }
+    if (status.seats > 0) {
+        std::cout << "seats: " << status.seats << "\n";
+    }
+    if (!status.issued_date.empty()) {
+        std::cout << "issued_date: " << status.issued_date << "\n";
+    }
+    if (!status.subscription_expires.empty()) {
+        std::cout << "subscription_expires: " << status.subscription_expires << "\n";
+    }
+    if (status.perpetual_max_major_version > 0) {
+        std::cout << "perpetual_max_major_version: " << status.perpetual_max_major_version << "\n";
+    }
+    if (!status.source_path.empty()) {
+        std::cout << "source_path: " << status.source_path << "\n";
+    }
+    if (!status.diagnostic.empty()) {
+        std::cout << "diagnostic: " << status.diagnostic << "\n";
+    }
 }
 
 void print_warning_line(
@@ -170,6 +223,10 @@ int main(int argc, char** argv) {
     const auto hardening = copperfin::security::apply_default_process_hardening();
     if (!hardening.applied) {
         print_warning_line(catalog, hardening.message);
+    }
+    if (options.license_status) {
+        print_license_status(copperfin::licensing::load_license_status(argv[0]));
+        return 0;
     }
     if (!options.valid || options.help || options.asset_path.empty()) {
         print_usage(catalog);

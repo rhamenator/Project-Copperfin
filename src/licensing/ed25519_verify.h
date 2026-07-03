@@ -1,0 +1,22 @@
+// Copyright © 2026 Richard M. Hamilton. All rights reserved.
+// Licensed under the Project Copperfin Source-Available License or
+// Commercial License. See LICENSE.md in the repository root.
+
+#pragma once
+
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <string_view>
+
+namespace copperfin::licensing {
+
+// Thin wrapper around the vendored, verify-only Ed25519 implementation in
+// third_party/ed25519_ref/. This header intentionally exposes no signing,
+// key-generation, or key-exchange entry point.
+[[nodiscard]] bool ed25519_verify_detached(
+    std::string_view message,
+    const std::array<std::uint8_t, 64>& signature,
+    const std::array<std::uint8_t, 32>& public_key);
+
+}  // namespace copperfin::licensing

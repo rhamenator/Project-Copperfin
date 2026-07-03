@@ -1,6 +1,11 @@
+// Copyright © 2026 Richard M. Hamilton. All rights reserved.
+// Licensed under the Project Copperfin Source-Available License or
+// Commercial License. See LICENSE.md in the repository root.
+
 #ifndef COPPERFIN_STUDIO_HOST_MAIN_SUPPORT_H
 #define COPPERFIN_STUDIO_HOST_MAIN_SUPPORT_H
 
+#include "copperfin/licensing/license_status.h"
 #include "copperfin/localization/localization.h"
 #include "copperfin/studio/document_model.h"
 #include "copperfin/platform/database_model.h"
@@ -153,7 +158,11 @@ struct DesignerDispatchExecutionCatalogParseResult;
 // ==== Shared CLI infrastructure (usage/help text, JSON scalar printing, localization, exit codes) ====
 
 extern const copperfin::localization::LocalizedCatalog* g_active_catalog;
+extern std::string g_executable_path;
 copperfin::localization::LocalizedCatalog load_localization(const char* executable_path);
+std::optional<int> try_handle_license_status(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args);
 std::string localized_message_or_default(
     std::string_view key,
     std::string_view fallback);

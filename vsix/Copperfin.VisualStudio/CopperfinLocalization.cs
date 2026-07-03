@@ -1,3 +1,7 @@
+// Copyright © 2026 Richard M. Hamilton. All rights reserved.
+// Licensed under the Project Copperfin Source-Available License or
+// Commercial License. See LICENSE.md in the repository root.
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -513,6 +517,9 @@ internal sealed class CopperfinLocalization
                 ["AssetEditor.Summary.LabelR"] = "R",
                 ["AssetEditor.Summary.LabelMcp"] = "MCP",
                 ["AssetEditor.Summary.LabelAiModelSelection"] = "AI Model Selection",
+                ["AssetEditor.Summary.License"] = "License:",
+                ["AssetEditor.Summary.LabelLicenseState"] = "Status",
+                ["AssetEditor.Summary.LabelLicensee"] = "Licensed to",
                 ["AssetEditor.Summary.DatabaseFederation"] = "Database Federation:",
                 ["AssetEditor.Summary.LabelConnectors"] = "Connectors",
                 ["AssetEditor.Summary.LabelQueryPaths"] = "Query Paths",
@@ -1104,6 +1111,9 @@ internal sealed class CopperfinLocalization
                 ["AssetEditor.Summary.LabelR"] = "R",
                 ["AssetEditor.Summary.LabelMcp"] = "MCP",
                 ["AssetEditor.Summary.LabelAiModelSelection"] = "Selección de modelo IA",
+                ["AssetEditor.Summary.License"] = "Licencia:",
+                ["AssetEditor.Summary.LabelLicenseState"] = "Estado",
+                ["AssetEditor.Summary.LabelLicensee"] = "Licenciado a",
                 ["AssetEditor.Summary.DatabaseFederation"] = "Federación de base de datos:",
                 ["AssetEditor.Summary.LabelConnectors"] = "Conectores",
                 ["AssetEditor.Summary.LabelQueryPaths"] = "Rutas de consulta",
@@ -1695,6 +1705,9 @@ internal sealed class CopperfinLocalization
                 ["AssetEditor.Summary.LabelR"] = "R",
                 ["AssetEditor.Summary.LabelMcp"] = "MCP",
                 ["AssetEditor.Summary.LabelAiModelSelection"] = "Seleção de modelo de IA",
+                ["AssetEditor.Summary.License"] = "Licença:",
+                ["AssetEditor.Summary.LabelLicenseState"] = "Status",
+                ["AssetEditor.Summary.LabelLicensee"] = "Licenciado para",
                 ["AssetEditor.Summary.DatabaseFederation"] = "Federação de banco de dados:",
                 ["AssetEditor.Summary.LabelConnectors"] = "Conectores",
                 ["AssetEditor.Summary.LabelQueryPaths"] = "Caminhos de consulta",
