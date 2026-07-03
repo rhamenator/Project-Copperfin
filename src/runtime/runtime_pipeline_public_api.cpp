@@ -5,6 +5,13 @@
 #include "runtime_pipeline_support.h"
 
 namespace copperfin::runtime {
+namespace {
+
+constexpr int kRuntimeManifestVersion = 2;
+constexpr int kDebugManifestVersion = 2;
+
+}  // namespace
+
 const char* build_configuration_name(BuildConfiguration configuration) {
     switch (configuration) {
         case BuildConfiguration::debug:
@@ -222,7 +229,7 @@ std::string build_runtime_manifest_text(
     const security::NativeSecurityProfile& security_profile,
     const platform::ExtensibilityProfile& extensibility_profile) {
     std::ostringstream stream;
-    stream << "manifest_version=1\n";
+    stream << "manifest_version=" << kRuntimeManifestVersion << "\n";
     stream << "project_title=" << quote_manifest_value(plan.project_title) << "\n";
     stream << "project_path=" << quote_manifest_value(plan.project_path) << "\n";
     stream << "package_root=" << quote_manifest_value(plan.package_root) << "\n";
@@ -375,7 +382,7 @@ std::string build_debug_manifest_text(
     const security::NativeSecurityProfile& security_profile,
     const platform::ExtensibilityProfile& extensibility_profile) {
     std::ostringstream stream;
-    stream << "debug_manifest_version=1\n";
+    stream << "debug_manifest_version=" << kDebugManifestVersion << "\n";
     stream << "project_title=" << quote_manifest_value(plan.project_title) << "\n";
     stream << "project_path=" << quote_manifest_value(plan.project_path) << "\n";
     stream << "package_root=" << quote_manifest_value(plan.package_root) << "\n";

@@ -125,6 +125,92 @@ void test_materialize_runtime_package() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_runtime_package_license_fields_bump_manifest_schema_versions() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_license_manifest_versions";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    write_text(project_dir / "main.prg", "RETURN\n");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "license_manifest_versions.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "LicenseManifestVersions";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "LicenseManifestVersions";
+    workspace.build_plan.output_path = (output_dir / "LicenseManifestVersions.exe").string();
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"}
+    };
+
+    auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        true);
+
+    expect(plan.ok, "license manifest version plan should be created");
+    plan.license_state = "perpetual";
+    plan.license_type = "perpetual";
+    plan.license_id = "test-license-id";
+    plan.license_licensee = "Copperfin Test Licensee";
+    plan.license_seats = 7;
+    plan.license_subscription_expires = "2027-12-31";
+    plan.license_perpetual_max_major_version = 9;
+    plan.license_source_path = (project_dir / "licenses" / "project-copperfin.license.json").string();
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+
+    expect(result.ok, "license manifest version package should materialize");
+    if (result.ok) {
+        const std::string runtime_manifest = read_text(result.plan.manifest_path);
+        const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
+
+        expect(manifest_value_for_key(runtime_manifest, "manifest_version") == "2",
+               "runtime manifest should bump manifest_version when license_* fields are present");
+        expect(manifest_value_for_key(debug_manifest, "debug_manifest_version") == "2",
+               "debug manifest should bump debug_manifest_version when license_* fields are present");
+
+        const std::vector<std::pair<std::string, std::string>> expected_license_fields{
+            {"license_state", quote_manifest_value(plan.license_state)},
+            {"license_type", quote_manifest_value(plan.license_type)},
+            {"license_id", quote_manifest_value(plan.license_id)},
+            {"license_licensee", quote_manifest_value(plan.license_licensee)},
+            {"license_seats", std::to_string(plan.license_seats)},
+            {"license_subscription_expires", quote_manifest_value(plan.license_subscription_expires)},
+            {"license_perpetual_max_major_version", std::to_string(plan.license_perpetual_max_major_version)},
+            {"license_source_path", quote_manifest_value(plan.license_source_path)}};
+        for (const auto& [key, expected_value] : expected_license_fields) {
+            expect(manifest_value_for_key(runtime_manifest, key) == expected_value,
+                   "runtime manifest should preserve " + key + " under the versioned contract");
+            expect(manifest_value_for_key(debug_manifest, key) == expected_value,
+                   "debug manifest should preserve " + key + " under the versioned contract");
+        }
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_materialize_excluded_xasset_startup_package() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_xasset_tests";
