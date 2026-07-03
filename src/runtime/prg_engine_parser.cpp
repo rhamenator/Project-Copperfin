@@ -565,6 +565,7 @@ Program parse_program(const std::string& path) {
     program.main.name = "main";
 
     Routine* current = &program.main;
+    PrgClassDefinition* current_class = nullptr;
     for (const auto& logical_line : load_logical_lines(path)) {
         const std::size_t line_number = logical_line.line_number;
         const std::string line = trim_copy(logical_line.text);
@@ -576,6 +577,30 @@ Program parse_program(const std::string& path) {
         }
 
         const std::string upper = uppercase_copy(line);
+        if (current_class == nullptr && current == &program.main && starts_with_insensitive(line, "DEFINE CLASS ")) {
+            const std::string body = trim_copy(line.substr(13U));
+            const std::size_t as_position = find_keyword_top_level(body, "AS");
+
+            PrgClassDefinition class_definition;
+            class_definition.name = trim_copy(
+                as_position == std::string::npos
+                    ? body
+                    : body.substr(0U, as_position));
+            class_definition.base_class_name = trim_copy(
+                as_position == std::string::npos
+                    ? std::string{}
+                    : body.substr(as_position + 2U));
+            class_definition.declaration_location = {.file_path = normalize_path(path), .line = line_number};
+            current_class = &program.classes[normalize_identifier(class_definition.name)];
+            *current_class = std::move(class_definition);
+            current = &program.main;
+            continue;
+        }
+        if (current_class != nullptr && upper == "ENDDEFINE") {
+            current_class = nullptr;
+            current = &program.main;
+            continue;
+        }
         if (starts_with_insensitive(line, "PROCEDURE ") || starts_with_insensitive(line, "FUNCTION ")) {
             const auto separator = line.find(' ');
             Routine routine;
@@ -584,7 +609,11 @@ Program parse_program(const std::string& path) {
                 ? RoutineKind::function
                 : RoutineKind::procedure;
             routine.declaration_location = {.file_path = normalize_path(path), .line = line_number};
-            current = &program.routines[normalize_identifier(routine.name)];
+            if (current_class != nullptr) {
+                current = &current_class->methods[normalize_identifier(routine.name)];
+            } else {
+                current = &program.routines[normalize_identifier(routine.name)];
+            }
             *current = std::move(routine);
             continue;
         }
@@ -1396,7 +1425,11 @@ Program parse_program(const std::string& path) {
             parse_default_statement(line, statement);
         }
 
-        current->statements.push_back(std::move(statement));
+        if (current_class != nullptr && current == &program.main) {
+            current_class->property_statements.push_back(std::move(statement));
+        } else {
+            current->statements.push_back(std::move(statement));
+        }
     }
 
     return program;

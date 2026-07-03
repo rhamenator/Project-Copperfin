@@ -164,10 +164,19 @@ struct Routine {
     std::vector<Statement> statements;
 };
 
+struct PrgClassDefinition {
+    std::string name;
+    std::string base_class_name;
+    SourceLocation declaration_location{};
+    std::vector<Statement> property_statements;
+    std::map<std::string, Routine> methods;
+};
+
 struct Program {
     std::string path;
     Routine main{};
     std::map<std::string, Routine> routines;
+    std::map<std::string, PrgClassDefinition> classes;
 };
 
 Program parse_program(const std::string& path);
