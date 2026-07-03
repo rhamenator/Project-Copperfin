@@ -27340,6 +27340,175 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_object_block_deeper_external_child_external_base_dotted_access_resolves_live_child_chain()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_object_block_deeper_external_child_external_base_dotted";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path root_library_path = temp_root / "rootbuttons.prg";
+        write_text(
+            root_library_path,
+            "DEFINE CLASS RootButton AS Custom\n"
+            "    FUNCTION RootToken\n"
+            "        RETURN 'RootToken'\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        const fs::path button_library_path = temp_root / "buttons.prg";
+        write_text(
+            button_library_path,
+            "DEFINE CLASS ParentButton AS RootButton OF rootbuttons.prg\n"
+            "    FUNCTION OwnerCaption\n"
+            "        RETURN PARENT.Caption\n"
+            "    ENDFUNC\n"
+            "    FUNCTION TriggerSave\n"
+            "        RETURN THISFORM.Save()\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "native_object_block_deeper_external_child_external_base_dotted.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('DemoForm')\n"
+            "cChildCaptionBefore = oForm.cmdSave.Caption\n"
+            "cParentCaptionBefore = oForm.cmdSave.Parent.Caption\n"
+            "oForm.cmdSave.Caption = 'Go'\n"
+            "oForm.cmdSave.Parent.Caption = 'Done'\n"
+            "cChildCaptionAfter = oForm.cmdSave.Caption\n"
+            "cOwnerCaption = oForm.cmdSave.OwnerCaption()\n"
+            "cSavedCaption = oForm.cmdSave.TriggerSave()\n"
+            "cParentCaptionAfterSave = oForm.Caption\n"
+            "cChildBaseClass = oForm.cmdSave.BaseClass\n"
+            "cChildClassLibrary = oForm.cmdSave.ClassLibrary\n"
+            "lChildHasParent = PEMSTATUS(oForm.cmdSave, 'Parent', 1)\n"
+            "cRootToken = oForm.cmdSave.RootToken()\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 155)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS DemoForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    OBJECT cmdSave AS SaveButton\n"
+            "        Caption = 'Commit'\n"
+            "    ENDOBJECT\n"
+            "    FUNCTION Save\n"
+            "        THIS.Caption = THIS.Caption + '-Saved'\n"
+            "        RETURN THIS.Caption\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS ParentButton OF buttons.prg\n"
+            "    Caption = 'Save'\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native object-block deeper external child external-base dotted script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cchildcaptionbefore", "Commit");
+        check("cparentcaptionbefore", "MainForm");
+        check("cchildcaptionafter", "Go");
+        check("cownercaption", "Done");
+        check("csavedcaption", "Done-Saved");
+        check("cparentcaptionaftersave", "Done-Saved");
+        check("cchildbaseclass", "ParentButton");
+        check("cchildclasslibrary", button_library_path.string());
+        check("lchildhasparent", "true");
+        check("croottoken", "RootToken");
+        check("ldictset", "true");
+        check("ndictcompare", "155");
+
+        expect(state.ole_objects.size() == 3U,
+               "native object-block deeper external child external-base dotted should register parent, child, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            const auto &parent_object = state.ole_objects[0];
+            const auto &child_object = state.ole_objects[1];
+            expect(parent_object.prog_id == "DemoForm",
+                   "native object-block deeper external child external-base dotted should preserve parent identity");
+            expect(parent_object.source == main_path.string(),
+                   "native object-block deeper external child external-base dotted should preserve parent source");
+            expect(child_object.prog_id == "SaveButton",
+                   "native object-block deeper external child external-base dotted should preserve child identity");
+            expect(child_object.base_class_name == "ParentButton",
+                   "native object-block deeper external child external-base dotted should preserve immediate child base-class identity");
+            expect(child_object.source == main_path.string(),
+                   "native object-block deeper external child external-base dotted should preserve the defining child-class source path");
+            expect(child_object.class_library == button_library_path.string(),
+                   "native object-block deeper external child external-base dotted should preserve the immediate external ClassLibrary path");
+            expect(child_object.class_hierarchy.size() == 5U,
+                   "native object-block deeper external child external-base dotted should preserve child class hierarchy");
+
+            const auto parent_caption = parent_object.properties.find("caption");
+            const auto child_caption = child_object.properties.find("caption");
+            if (parent_caption != parent_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(parent_caption->second) == "Done-Saved",
+                       "native object-block deeper external child external-base dotted should let dotted child method calls update the owner");
+            }
+            else
+            {
+                expect(false, "native object-block deeper external child external-base dotted should preserve the owner caption");
+            }
+            if (child_caption != child_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(child_caption->second) == "Go",
+                       "native object-block deeper external child external-base dotted should preserve the child dotted assignment");
+            }
+            else
+            {
+                expect(false, "native object-block deeper external child external-base dotted should preserve the child caption");
+            }
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while native object-block deeper external child external-base dotted lands");
+        }
+
+        const bool has_addobject_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.addobject" &&
+                   event.detail == "DemoForm.cmdsave:SaveButton";
+        });
+        expect(has_addobject_event,
+               "native object-block deeper external child external-base dotted should emit child materialization events");
+
+        const bool has_owner_caption_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   (event.detail == "SaveButton.OwnerCaption" ||
+                    event.detail == "ParentButton.OwnerCaption");
+        });
+        expect(has_owner_caption_invoke_event,
+               "native object-block deeper external child external-base dotted should dispatch direct dotted child method calls");
+
+        const bool has_save_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   event.detail == "DemoForm.Save";
+        });
+        expect(has_save_invoke_event,
+               "native object-block deeper external child external-base dotted should keep child THISFORM owner dispatch stable");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_inherited_external_base_addobject_deeper_external_child_external_base_provenance_stays_coherent()
     {
         namespace fs = std::filesystem;
@@ -30902,6 +31071,7 @@ int main()
     test_native_addobject_deeper_external_child_external_base_dotted_access_resolves_live_child_chain();
     test_native_object_block_deeper_external_child_external_base_provenance_stays_coherent();
     test_native_object_block_deeper_external_child_external_base_provenance_resists_mutation();
+    test_native_object_block_deeper_external_child_external_base_dotted_access_resolves_live_child_chain();
     test_inherited_external_base_addobject_deeper_external_child_external_base_provenance_stays_coherent();
     test_inherited_external_base_addobject_deeper_external_child_external_base_dotted_access_resolves_live_child_chain();
     test_native_addobject_deeper_external_child_external_base_classlibrary_stays_read_only_to_setpem();
