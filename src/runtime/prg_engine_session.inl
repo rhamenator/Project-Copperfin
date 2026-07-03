@@ -476,6 +476,38 @@
             return {.runtime_object = current_object, .remaining_member_path = remaining_member_path};
         }
 
+        std::vector<int> collect_native_owned_child_handles(const RuntimeOleObjectState &runtime_object)
+        {
+            std::vector<int> child_handles;
+            for (const auto &[property_name, property_value] : runtime_object.properties)
+            {
+                if (property_name == "parent")
+                {
+                    continue;
+                }
+
+                const auto child_object = resolve_ole_object(property_value);
+                if (!child_object.has_value())
+                {
+                    continue;
+                }
+
+                const auto child_parent = native_object_parent_reference(**child_object);
+                int parent_handle = 0;
+                std::string parent_prog_id;
+                if (!child_parent.has_value() ||
+                    !parse_object_handle_reference(*child_parent, parent_handle, parent_prog_id) ||
+                    parent_handle != runtime_object.handle)
+                {
+                    continue;
+                }
+
+                child_handles.push_back((*child_object)->handle);
+            }
+
+            return child_handles;
+        }
+
         RuntimeOleObjectState *instantiate_native_class_object(
             const Frame &frame,
             const std::string &prog_id,

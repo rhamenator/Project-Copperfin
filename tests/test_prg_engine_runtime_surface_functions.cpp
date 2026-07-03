@@ -2530,6 +2530,222 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_release_invokes_destroy_and_invalidates_standalone_object()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_release_standalone";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_release_standalone.prg";
+        write_text(
+            main_path,
+            "nDestroyCount = 0\n"
+            "oWidget = CREATEOBJECT('Widget')\n"
+            "cCaptionBeforeRelease = oWidget.Caption\n"
+            "lHadCaptionBeforeRelease = PEMSTATUS(oWidget, 'Caption', 1)\n"
+            "lReleased = oWidget.Release()\n"
+            "nDestroyCountAfter = nDestroyCount\n"
+            "lHasCaptionAfterRelease = PEMSTATUS(oWidget, 'Caption', 1)\n"
+            "xCaptionAfterRelease = GETPEM(oWidget, 'Caption')\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 90)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS Widget AS Custom\n"
+            "    Caption = 'Standalone'\n"
+            "    PROCEDURE Destroy\n"
+            "        nDestroyCount = nDestroyCount + 1\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Release standalone script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("ccaptionbeforerelease", "Standalone");
+        check("lhadcaptionbeforerelease", "true");
+        check("lreleased", "true");
+        check("ndestroycountafter", "1");
+        check("lhascaptionafterrelease", "false");
+        check("ldictset", "true");
+        check("ndictcompare", "90");
+
+        const auto caption_after_release = state.globals.find("xcaptionafterrelease");
+        expect(caption_after_release != state.globals.end() &&
+                   caption_after_release->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "native Release standalone should invalidate GETPEM() on the released object");
+
+        expect(state.ole_objects.size() == 1U,
+               "native Release standalone should leave only the COM object registered after release");
+        if (state.ole_objects.size() == 1U)
+        {
+            expect(state.ole_objects[0].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while native standalone Release lands");
+        }
+
+        const bool has_destroy_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.destroy" &&
+                   event.detail == "Widget.Destroy";
+        });
+        expect(has_destroy_event,
+               "native Release standalone should dispatch the native Destroy method");
+
+        const bool has_release_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.release" &&
+                   event.detail == "Widget";
+        });
+        expect(has_release_event,
+               "native Release standalone should emit a release event");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_native_release_recursively_destroys_contained_children_and_invalidates_owner_chain()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_release_contained";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_release_contained.prg";
+        write_text(
+            main_path,
+            "cDestroyLog = ''\n"
+            "cChildParentCaptionDuringDestroy = ''\n"
+            "nFormDestroyCount = 0\n"
+            "nChildDestroyCount = 0\n"
+            "oForm = CREATEOBJECT('DemoForm')\n"
+            "oChild = oForm.cmdSave\n"
+            "lHasChildBeforeRelease = PEMSTATUS(oForm, 'cmdSave', 1)\n"
+            "cChildCaptionBeforeRelease = oChild.Caption\n"
+            "lReleased = oForm.Release()\n"
+            "cDestroyLogAfter = cDestroyLog\n"
+            "cChildParentCaptionAfter = cChildParentCaptionDuringDestroy\n"
+            "nFormDestroyCountAfter = nFormDestroyCount\n"
+            "nChildDestroyCountAfter = nChildDestroyCount\n"
+            "lHasChildAfterRelease = PEMSTATUS(oForm, 'cmdSave', 1)\n"
+            "xChildAfterRelease = GETPEM(oForm, 'cmdSave')\n"
+            "lChildHasParentAfterRelease = PEMSTATUS(oChild, 'Parent', 1)\n"
+            "xChildParentAfterRelease = GETPEM(oChild, 'Parent')\n"
+            "lFormHasCaptionAfterRelease = PEMSTATUS(oForm, 'Caption', 1)\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 91)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS DemoForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddObject('cmdSave', 'SaveButton')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "    PROCEDURE Destroy\n"
+            "        cDestroyLog = cDestroyLog + 'form>'\n"
+            "        nFormDestroyCount = nFormDestroyCount + 1\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS Custom\n"
+            "    Caption = 'Save'\n"
+            "    PROCEDURE Destroy\n"
+            "        cDestroyLog = cDestroyLog + 'child>'\n"
+            "        cChildParentCaptionDuringDestroy = PARENT.Caption\n"
+            "        nChildDestroyCount = nChildDestroyCount + 1\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Release contained script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lhaschildbeforerelease", "true");
+        check("cchildcaptionbeforerelease", "Save");
+        check("lreleased", "true");
+        check("cdestroylogafter", "child>form>");
+        check("cchildparentcaptionafter", "MainForm");
+        check("nformdestroycountafter", "1");
+        check("nchilddestroycountafter", "1");
+        check("lhaschildafterrelease", "false");
+        check("lchildhasparentafterrelease", "false");
+        check("lformhascaptionafterrelease", "false");
+        check("ldictset", "true");
+        check("ndictcompare", "91");
+
+        const auto child_after_release = state.globals.find("xchildafterrelease");
+        expect(child_after_release != state.globals.end() &&
+                   child_after_release->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "native Release contained should invalidate GETPEM() for the released child member");
+
+        const auto child_parent_after_release = state.globals.find("xchildparentafterrelease");
+        expect(child_parent_after_release != state.globals.end() &&
+                   child_parent_after_release->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "native Release contained should invalidate GETPEM() for the released child's Parent");
+
+        expect(state.ole_objects.size() == 1U,
+               "native Release contained should leave only the COM object registered after recursive release");
+        if (state.ole_objects.size() == 1U)
+        {
+            expect(state.ole_objects[0].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while native contained Release lands");
+        }
+
+        const bool has_child_destroy_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.destroy" &&
+                   event.detail == "SaveButton.Destroy";
+        });
+        expect(has_child_destroy_event,
+               "native Release contained should dispatch the child Destroy method");
+
+        const bool has_form_destroy_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.destroy" &&
+                   event.detail == "DemoForm.Destroy";
+        });
+        expect(has_form_destroy_event,
+               "native Release contained should dispatch the parent Destroy method");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_newobject_with_explicit_prg_library_activates_native_class_and_preserves_explicit_targets()
     {
         namespace fs = std::filesystem;
@@ -13681,6 +13897,8 @@ int main()
     test_dotted_native_child_chains_traverse_contained_objects();
     test_dotted_native_child_assignments_traverse_contained_objects();
     test_native_removeobject_detaches_child_and_clears_parent_reference();
+    test_native_release_invokes_destroy_and_invalidates_standalone_object();
+    test_native_release_recursively_destroys_contained_children_and_invalidates_owner_chain();
     test_newobject_with_explicit_prg_library_activates_native_class_and_preserves_explicit_targets();
     test_native_prg_object_methods_bind_this_and_persist_instance_state();
     test_native_prg_init_runs_during_object_creation_and_preserves_plain_creation();

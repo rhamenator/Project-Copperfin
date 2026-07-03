@@ -481,6 +481,9 @@ namespace copperfin::runtime
             const Frame &source_frame,
             const std::vector<PrgValue> &arguments,
             const std::vector<std::optional<std::string>> &argument_references);
+        PrgValue release_native_object(
+            RuntimeOleObjectState &runtime_object,
+            const std::string &effective_member_path);
         std::optional<PrgValue> invoke_expression_base_method(
             const Frame &source_frame,
             const std::vector<PrgValue> &arguments,
@@ -885,6 +888,10 @@ namespace copperfin::runtime
                                       .detail = runtime_object->prog_id + "." + child_name,
                                       .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
                     return make_boolean_value(true);
+                }
+                if (leaf == "release" && !runtime_object->source.empty())
+                {
+                    return release_native_object(*runtime_object, effective_member_path);
                 }
                 std::string native_method_program_path;
                 std::string native_method_name;
@@ -1599,6 +1606,143 @@ namespace copperfin::runtime
                               argument_references.begin(),
                               argument_references.end()));
         return run_expression_invoked_routine_until_return(return_depth);
+    }
+
+    PrgValue PrgRuntimeSession::Impl::release_native_object(
+        RuntimeOleObjectState &runtime_object,
+        const std::string &effective_member_path)
+    {
+        struct PendingRelease
+        {
+            int handle = 0;
+            bool children_queued = false;
+        };
+
+        std::vector<int> release_order;
+        std::vector<PendingRelease> pending;
+        std::set<int> scheduled_handles;
+        pending.push_back({.handle = runtime_object.handle, .children_queued = false});
+        scheduled_handles.insert(runtime_object.handle);
+
+        while (!pending.empty())
+        {
+            const PendingRelease current = pending.back();
+            pending.pop_back();
+
+            const auto found = ole_objects.find(current.handle);
+            if (found == ole_objects.end())
+            {
+                continue;
+            }
+
+            if (!current.children_queued)
+            {
+                pending.push_back({.handle = current.handle, .children_queued = true});
+                std::vector<int> child_handles = collect_native_owned_child_handles(found->second);
+                for (auto it = child_handles.rbegin(); it != child_handles.rend(); ++it)
+                {
+                    if (scheduled_handles.insert(*it).second)
+                    {
+                        pending.push_back({.handle = *it, .children_queued = false});
+                    }
+                }
+                continue;
+            }
+
+            release_order.push_back(current.handle);
+        }
+
+        for (const int handle : release_order)
+        {
+            auto found = ole_objects.find(handle);
+            if (found == ole_objects.end())
+            {
+                continue;
+            }
+
+            RuntimeOleObjectState &object_state = found->second;
+            std::string destroy_program_path;
+            std::string destroy_method_name;
+            if (const Routine *destroy_method = find_native_object_method(
+                    object_state,
+                    "destroy",
+                    destroy_program_path,
+                    destroy_method_name);
+                destroy_method != nullptr)
+            {
+                if (!can_push_frame())
+                {
+                    throw std::runtime_error(call_depth_limit_message());
+                }
+
+                events.push_back({.category = "prg.object.destroy",
+                                  .detail = destroy_method_name,
+                                  .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                const std::size_t return_depth = stack.size();
+                const PrgValue this_reference =
+                    make_string_value("object:" + object_state.prog_id + "#" + std::to_string(object_state.handle));
+                push_method_frame(destroy_program_path,
+                                  destroy_method_name,
+                                  *destroy_method,
+                                  this_reference,
+                                  destroy_method_name.substr(0U, destroy_method_name.rfind('.')),
+                                  "destroy",
+                                  native_object_parent_reference(object_state),
+                                  native_object_owner_form_reference(object_state),
+                                  {},
+                                  {});
+                (void)run_expression_invoked_routine_until_return(return_depth);
+
+                found = ole_objects.find(handle);
+                if (found == ole_objects.end())
+                {
+                    continue;
+                }
+            }
+
+            RuntimeOleObjectState &released_object = found->second;
+            const auto parent_reference = native_object_parent_reference(released_object);
+            if (parent_reference.has_value())
+            {
+                int parent_handle = 0;
+                std::string parent_prog_id;
+                if (parse_object_handle_reference(*parent_reference, parent_handle, parent_prog_id))
+                {
+                    const auto parent_found = ole_objects.find(parent_handle);
+                    if (parent_found != ole_objects.end())
+                    {
+                        const std::string released_reference =
+                            value_as_string(make_string_value("object:" + released_object.prog_id + "#" + std::to_string(released_object.handle)));
+                        auto &parent_properties = parent_found->second.properties;
+                        for (auto property_it = parent_properties.begin(); property_it != parent_properties.end();)
+                        {
+                            if (value_as_string(property_it->second) == released_reference)
+                            {
+                                property_it = parent_properties.erase(property_it);
+                            }
+                            else
+                            {
+                                ++property_it;
+                            }
+                        }
+                    }
+                }
+            }
+
+            released_object.properties.erase("parent");
+            released_object.last_action = effective_member_path + "()";
+            ++released_object.action_count;
+            events.push_back({.category = "prg.object.release",
+                              .detail = released_object.prog_id,
+                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+        }
+
+        for (const int handle : release_order)
+        {
+            ole_objects.erase(handle);
+        }
+
+        return make_boolean_value(true);
     }
 
     std::optional<PrgValue> PrgRuntimeSession::Impl::invoke_expression_base_method(
