@@ -1796,6 +1796,150 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_same_prg_native_bare_helper_calls_resolve_to_current_instance_before_top_level_routines()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_helper_calls";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_helper_calls.prg";
+        write_text(
+            main_path,
+            "nSeed = 4\n"
+            "oCreate = CREATEOBJECT('ChildWidget', @nSeed)\n"
+            "oPlain = CREATEOBJECT('Empty')\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "oPlain.Extra = 'plain'\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 8)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "cDescribe = oCreate.Describe('prefix')\n"
+            "nSeedAfter = nSeed\n"
+            "cCaption = oCreate.Caption\n"
+            "nStored = oCreate.nValue\n"
+            "lInitRan = oCreate.lInitRan\n"
+            "cPlain = oPlain.Extra\n"
+            "RETURN\n"
+            "FUNCTION BuildCaption\n"
+            "    LPARAMETERS tcPrefix\n"
+            "    RETURN 'top-level-' + tcPrefix\n"
+            "ENDFUNC\n"
+            "DEFINE CLASS ParentWidget AS Custom\n"
+            "    Caption = 'Parent'\n"
+            "    nValue = 0\n"
+            "    lInitRan = .F.\n"
+            "    PROCEDURE Init\n"
+            "        LPARAMETERS tnSeed\n"
+            "        FinishInit(@tnSeed)\n"
+            "        RETURN THIS.Caption\n"
+            "    ENDPROC\n"
+            "    PROCEDURE FinishInit\n"
+            "        LPARAMETERS tnSeed\n"
+            "        tnSeed = tnSeed + 3\n"
+            "        THIS.nValue = tnSeed\n"
+            "        THIS.Caption = THIS.Caption + '-Init'\n"
+            "        THIS.lInitRan = .T.\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "    FUNCTION Describe\n"
+            "        LPARAMETERS tcPrefix\n"
+            "        RETURN BuildCaption(tcPrefix)\n"
+            "    ENDFUNC\n"
+            "    FUNCTION BuildCaption\n"
+            "        LPARAMETERS tcPrefix\n"
+            "        RETURN tcPrefix + ':' + THIS.Caption\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ChildWidget AS ParentWidget\n"
+            "    Caption = 'Child'\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native bare helper-call script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cdescribe", "prefix:Child-Init");
+        check("nseedafter", "7");
+        check("ccaption", "Child-Init");
+        check("nstored", "7");
+        check("linitran", "true");
+        check("cplain", "plain");
+        check("ldictset", "true");
+        check("ndictcompare", "8");
+
+        expect(state.ole_objects.size() == 3U,
+               "native bare helper-call script should register native, plain, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            const auto &native_object = state.ole_objects[0];
+            expect(native_object.prog_id == "ChildWidget",
+                   "native bare helper-call resolution should preserve child class identity");
+            const auto caption = native_object.properties.find("caption");
+            const auto value = native_object.properties.find("nvalue");
+            const auto init_ran = native_object.properties.find("linitran");
+            if (caption != native_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(caption->second) == "Child-Init",
+                       "native bare helper-call resolution should preserve helper-updated caption state");
+            }
+            else
+            {
+                expect(false, "native bare helper-call resolution should materialize helper-updated caption state");
+            }
+            if (value != native_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(value->second) == "7",
+                       "native bare helper-call resolution should preserve helper by-reference updates from Init");
+            }
+            else
+            {
+                expect(false, "native bare helper-call resolution should materialize helper-updated numeric state");
+            }
+            if (init_ran != native_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(init_ran->second) == "true",
+                       "native bare helper-call resolution should preserve helper-set Init flags");
+            }
+            else
+            {
+                expect(false, "native bare helper-call resolution should materialize helper-set Init flags");
+            }
+
+            expect(state.ole_objects[1].prog_id == "Empty",
+                   "plain CREATEOBJECT should remain stable while native helper-method resolution lands");
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while native helper-method resolution lands");
+        }
+
+        const bool has_helper_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   (event.detail == "ParentWidget.FinishInit" ||
+                    event.detail == "ParentWidget.BuildCaption");
+        });
+        expect(has_helper_invoke_event,
+               "native bare helper-call resolution should emit helper-method invoke events");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_codepage_and_misc_runtime_surface_functions()
     {
         namespace fs = std::filesystem;
@@ -2475,6 +2619,7 @@ int main()
     test_native_object_method_and_init_preserve_by_reference_argument_updates();
     test_same_prg_native_class_inheritance_applies_parent_defaults_methods_and_init();
     test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow();
+    test_same_prg_native_bare_helper_calls_resolve_to_current_instance_before_top_level_routines();
     test_codepage_and_misc_runtime_surface_functions();
     test_lookup_expression_function();
     test_lookup_expression_function_supports_sql_cursors();

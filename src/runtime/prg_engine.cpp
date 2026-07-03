@@ -1338,6 +1338,54 @@ namespace copperfin::runtime
         const std::vector<std::optional<std::string>> &argument_references)
     {
         Program &program = load_program(source_frame.file_path);
+        if (!source_frame.native_method_class_name.empty())
+        {
+            const auto this_found = source_frame.locals.find("this");
+            if (this_found != source_frame.locals.end())
+            {
+                auto runtime_object = resolve_ole_object(this_found->second);
+                if (runtime_object.has_value())
+                {
+                    std::string native_method_name;
+                    std::string native_defining_class_name;
+                    if (const Routine *native_method = find_native_same_prg_method(
+                            program,
+                            source_frame.native_method_class_name,
+                            identifier,
+                            true,
+                            native_method_name,
+                            &native_defining_class_name);
+                        native_method != nullptr)
+                    {
+                        if (!can_push_frame())
+                        {
+                            throw std::runtime_error(call_depth_limit_message());
+                        }
+
+                        RuntimeOleObjectState *runtime_object_state = *runtime_object;
+                        runtime_object_state->last_action = identifier + "()";
+                        ++runtime_object_state->action_count;
+                        events.push_back({.category = "prg.object.invoke",
+                                          .detail = native_method_name,
+                                          .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+
+                        const std::size_t return_depth = stack.size();
+                        push_method_frame(program.path,
+                                          native_method_name,
+                                          *native_method,
+                                          this_found->second,
+                                          native_defining_class_name,
+                                          normalize_identifier(identifier),
+                                          std::vector<PrgValue>(arguments.begin(), arguments.end()),
+                                          std::vector<std::optional<std::string>>(
+                                              argument_references.begin(),
+                                              argument_references.end()));
+                        return run_expression_invoked_routine_until_return(return_depth);
+                    }
+                }
+            }
+        }
+
         const auto found = program.routines.find(normalize_identifier(identifier));
         if (found == program.routines.end())
         {
