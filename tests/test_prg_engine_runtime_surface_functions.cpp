@@ -1247,6 +1247,98 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_dotted_native_child_assignments_traverse_contained_objects()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_child_chain_assignment";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_child_chain_assignment.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('DemoForm')\n"
+            "oForm.cmdSave.Caption = 'Go'\n"
+            "oForm.cmdSave.Parent.Caption = 'Done'\n"
+            "cChildCaption = oForm.cmdSave.Caption\n"
+            "cParentCaption = oForm.Caption\n"
+            "cOwnerCaption = oForm.cmdSave.OwnerCaption()\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 15)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS DemoForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddObject('cmdSave', 'SaveButton')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS Custom\n"
+            "    Caption = 'Save'\n"
+            "    FUNCTION OwnerCaption\n"
+            "        RETURN PARENT.Caption\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native child-chain assignment script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cchildcaption", "Go");
+        check("cparentcaption", "Done");
+        check("cownercaption", "Done");
+        check("ldictset", "true");
+        check("ndictcompare", "15");
+
+        expect(state.ole_objects.size() == 3U,
+               "native child-chain assignment script should register parent, child, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            const auto parent_caption = state.ole_objects[0].properties.find("caption");
+            const auto child_caption = state.ole_objects[1].properties.find("caption");
+            if (parent_caption != state.ole_objects[0].properties.end())
+            {
+                expect(copperfin::runtime::format_value(parent_caption->second) == "Done",
+                       "native child-chain assignment should update the parent through the dotted chain");
+            }
+            else
+            {
+                expect(false, "native child-chain assignment should preserve the parent caption property");
+            }
+            if (child_caption != state.ole_objects[1].properties.end())
+            {
+                expect(copperfin::runtime::format_value(child_caption->second) == "Go",
+                       "native child-chain assignment should update the contained child through the dotted chain");
+            }
+            else
+            {
+                expect(false, "native child-chain assignment should preserve the child caption property");
+            }
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM behavior should remain stable while native child-chain assignment lands");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_newobject_with_explicit_prg_library_activates_native_class_and_preserves_explicit_targets()
     {
         namespace fs = std::filesystem;
@@ -3397,6 +3489,7 @@ int main()
     test_native_addobject_materializes_child_objects_and_child_methods_see_parent();
     test_native_child_methods_resolve_thisform_through_parent_chain();
     test_dotted_native_child_chains_traverse_contained_objects();
+    test_dotted_native_child_assignments_traverse_contained_objects();
     test_newobject_with_explicit_prg_library_activates_native_class_and_preserves_explicit_targets();
     test_native_prg_object_methods_bind_this_and_persist_instance_state();
     test_native_prg_init_runs_during_object_creation_and_preserves_plain_creation();

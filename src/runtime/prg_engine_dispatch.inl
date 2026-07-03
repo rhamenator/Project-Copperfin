@@ -576,8 +576,15 @@
                         return {.ok = false, .message = last_error_message};
                     }
 
-                    RuntimeOleObjectState *runtime_object = *object;
-                    const std::string property_name = normalize_identifier(assignment_identifier.substr(separator + 1U));
+                    const std::string member_path = assignment_identifier.substr(separator + 1U);
+                    const auto resolved_path = resolve_runtime_object_member_path(frame, object_part, member_path);
+                    RuntimeOleObjectState *runtime_object =
+                        resolved_path.runtime_object == nullptr ? *object : resolved_path.runtime_object;
+                    const std::string effective_member_path =
+                        resolved_path.remaining_member_path.empty()
+                            ? member_path
+                            : resolved_path.remaining_member_path;
+                    const std::string property_name = normalize_identifier(effective_member_path);
                     if (!property_name.empty())
                     {
                         if (invoke_native_object_method_if_present(
@@ -587,7 +594,7 @@
                                 {assignment_value},
                                 {}).has_value())
                         {
-                            runtime_object->last_action = assignment_identifier.substr(separator + 1U) + " = " + value_as_string(assignment_value);
+                            runtime_object->last_action = effective_member_path + " = " + value_as_string(assignment_value);
                             ++runtime_object->action_count;
                             events.push_back({.category = "ole.set",
                                               .detail = runtime_object->prog_id + "." + runtime_object->last_action,
@@ -596,7 +603,7 @@
                         }
                         runtime_object->properties[property_name] = assignment_value;
                     }
-                    runtime_object->last_action = assignment_identifier.substr(separator + 1U) + " = " + value_as_string(assignment_value);
+                    runtime_object->last_action = effective_member_path + " = " + value_as_string(assignment_value);
                     ++runtime_object->action_count;
                     events.push_back({.category = "ole.set",
                                       .detail = runtime_object->prog_id + "." + runtime_object->last_action,
