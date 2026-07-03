@@ -4241,6 +4241,145 @@ namespace
         }
     }
 
+    void test_external_prg_base_accessor_backed_properties_dispatch_and_reflect()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_external_accessor_reflection";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path library_path = temp_root / "widgetlib.prg";
+        write_text(
+            library_path,
+            "DEFINE CLASS ParentWidget AS Custom\n"
+            "    cBacking = 'Parent'\n"
+            "    cStatusBacking = 'Ready'\n"
+            "    nAssignCount = 0\n"
+            "    FUNCTION Caption_Access\n"
+            "        RETURN THIS.cBacking + ':A'\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE Caption_Assign\n"
+            "        LPARAMETERS tcValue\n"
+            "        THIS.cBacking = tcValue + ':S'\n"
+            "        THIS.nAssignCount = THIS.nAssignCount + 1\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "    FUNCTION Status_Access\n"
+            "        RETURN THIS.cStatusBacking + ':R'\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "external_accessor_reflection.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildWidget')\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 21)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "cCaptionBefore = oCreate.Caption\n"
+            "oCreate.Caption = 'Set'\n"
+            "cCaptionAfter = oCreate.Caption\n"
+            "cBacking = oCreate.cBacking\n"
+            "nAssignCount = oCreate.nAssignCount\n"
+            "cGetCaption = GETPEM(oCreate, 'Caption')\n"
+            "cGetStatus = GETPEM(oCreate, 'Status')\n"
+            "lHasCaption = PEMSTATUS(oCreate, 'Caption', 1)\n"
+            "lHasStatus = PEMSTATUS(oCreate, 'Status', 1)\n"
+            "lCaptionReadOnly = PEMSTATUS(oCreate, 'Caption', 5)\n"
+            "lStatusReadOnly = PEMSTATUS(oCreate, 'Status', 5)\n"
+            "nMembersProps = AMEMBERS(aMembersProps, oCreate, 1)\n"
+            "nMembersUnion = AMEMBERS(aMembersUnion, oCreate, 3)\n"
+            "cProp1 = aMembersProps[1]\n"
+            "cProp2 = aMembersProps[2]\n"
+            "cProp4 = aMembersProps[4]\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildWidget AS ParentWidget OF widgetlib.prg\n"
+            "    cBacking = 'Child'\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("external-base accessor reflection script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("ccaptionbefore", "Child:A");
+        check("ccaptionafter", "Set:S:A");
+        check("cbacking", "Set:S");
+        check("nassigncount", "1");
+        check("cgetcaption", "Set:S:A");
+        check("cgetstatus", "Ready:R");
+        check("lhascaption", "true");
+        check("lhasstatus", "true");
+        check("lcaptionreadonly", "false");
+        check("lstatusreadonly", "true");
+        check("nmembersprops", "5");
+        check("nmembersunion", "8");
+        check("cprop1", "CAPTION");
+        check("cprop2", "CBACKING");
+        check("cprop4", "NASSIGNCOUNT");
+        check("ldictset", "true");
+        check("ndictcompare", "21");
+
+        expect(state.ole_objects.size() == 2U,
+               "external-base accessor reflection script should register native and COM objects");
+        if (state.ole_objects.size() == 2U)
+        {
+            const auto &native_object = state.ole_objects[0];
+            expect(native_object.prog_id == "ChildWidget",
+                   "external-base accessor reflection should preserve child class identity");
+            const auto backing = native_object.properties.find("cbacking");
+            const auto assign_count = native_object.properties.find("nassigncount");
+            if (backing != native_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(backing->second) == "Set:S",
+                       "external-base accessor reflection should preserve inherited assign-side backing state");
+            }
+            else
+            {
+                expect(false, "external-base accessor reflection should materialize inherited assign-side backing state");
+            }
+            if (assign_count != native_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(assign_count->second) == "1",
+                       "external-base accessor reflection should preserve inherited assign-count state");
+            }
+            else
+            {
+                expect(false, "external-base accessor reflection should materialize inherited assign-count state");
+            }
+            expect(state.ole_objects[1].prog_id == "Scripting.Dictionary",
+                   "COM reflection should remain stable while external-base accessor coverage lands");
+        }
+
+        const bool has_accessor_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   (event.detail == "ParentWidget.Caption_Access" ||
+                    event.detail == "ParentWidget.Caption_Assign" ||
+                    event.detail == "ParentWidget.Status_Access");
+        });
+        expect(has_accessor_invoke_event,
+               "external-base accessor reflection should emit inherited accessor-method invoke events");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_accessor_backed_properties_setpem_routes_through_assign_methods()
     {
         namespace fs = std::filesystem;
@@ -5058,6 +5197,7 @@ int main()
     test_external_prg_base_methods_support_dodefault_dispatch();
     test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();
     test_native_accessor_backed_properties_reflect_through_getpem_pemstatus_and_amembers();
+    test_external_prg_base_accessor_backed_properties_dispatch_and_reflect();
     test_native_accessor_backed_properties_setpem_routes_through_assign_methods();
     test_codepage_and_misc_runtime_surface_functions();
     test_lookup_expression_function();
