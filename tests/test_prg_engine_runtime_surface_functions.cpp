@@ -4182,6 +4182,198 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_same_prg_inherited_child_aclass_reflects_deeper_inheritance_chain()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_inherited_child_aclass_inheritance";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_inherited_child_aclass_inheritance.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('DemoForm')\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 62)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "nClassCount = ACLASS(aClass, oCreate.cmdSave)\n"
+            "cClass1 = aClass[1]\n"
+            "cClass2 = aClass[2]\n"
+            "cClass3 = aClass[3]\n"
+            "cClass4 = aClass[4]\n"
+            "cClass5 = aClass[5]\n"
+            "RETURN\n"
+            "DEFINE CLASS DemoForm AS Custom\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS RootButton AS Custom\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ParentButton AS RootButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS ParentButton\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native inherited child ACLASS script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("nclasscount", "5");
+        check("cclass1", "SAVEBUTTON");
+        check("cclass2", "PARENTBUTTON");
+        check("cclass3", "ROOTBUTTON");
+        check("cclass4", "CUSTOM");
+        check("cclass5", "OBJECT");
+        check("ldictset", "true");
+        check("ndictcompare", "62");
+
+        expect(state.ole_objects.size() == 3U,
+               "native inherited child ACLASS should register parent, child, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            expect(state.ole_objects[0].prog_id == "DemoForm",
+                   "native inherited child ACLASS should preserve parent form identity");
+            const auto &child_object = state.ole_objects[1];
+            expect(child_object.prog_id == "SaveButton",
+                   "native inherited child ACLASS should preserve child class identity");
+            expect(child_object.class_hierarchy.size() == 5U,
+                   "native inherited child ACLASS should persist the deeper child native class hierarchy");
+            if (child_object.class_hierarchy.size() == 5U)
+            {
+                expect(child_object.class_hierarchy[0] == "SAVEBUTTON",
+                       "native inherited child ACLASS should store the derived child class first");
+                expect(child_object.class_hierarchy[1] == "PARENTBUTTON",
+                       "native inherited child ACLASS should store the intermediate child class second");
+                expect(child_object.class_hierarchy[2] == "ROOTBUTTON",
+                       "native inherited child ACLASS should store the deeper child ancestor third");
+                expect(child_object.class_hierarchy[3] == "CUSTOM",
+                       "native inherited child ACLASS should store the builtin base token");
+                expect(child_object.class_hierarchy[4] == "OBJECT",
+                       "native inherited child ACLASS should store the terminal object token");
+            }
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while native inherited child ACLASS lands");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_external_base_inherited_child_aclass_reflects_deeper_inheritance_chain()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_external_prg_inherited_child_aclass_inheritance";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path library_path = temp_root / "widgetlib.prg";
+        write_text(
+            library_path,
+            "DEFINE CLASS ParentForm AS Custom\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS RootButton AS Custom\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ParentButton AS RootButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS ParentButton\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "external_inherited_child_aclass_inheritance.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildForm')\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 63)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "nClassCount = ACLASS(aClass, oCreate.cmdSave)\n"
+            "cClass1 = aClass[1]\n"
+            "cClass2 = aClass[2]\n"
+            "cClass3 = aClass[3]\n"
+            "cClass4 = aClass[4]\n"
+            "cClass5 = aClass[5]\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildForm AS ParentForm OF widgetlib.prg\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("external inherited child ACLASS script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("nclasscount", "5");
+        check("cclass1", "SAVEBUTTON");
+        check("cclass2", "PARENTBUTTON");
+        check("cclass3", "ROOTBUTTON");
+        check("cclass4", "CUSTOM");
+        check("cclass5", "OBJECT");
+        check("ldictset", "true");
+        check("ndictcompare", "63");
+
+        expect(state.ole_objects.size() == 3U,
+               "external inherited child ACLASS should register parent, child, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            expect(state.ole_objects[0].prog_id == "ChildForm",
+                   "external inherited child ACLASS should preserve parent form identity");
+            const auto &child_object = state.ole_objects[1];
+            expect(child_object.prog_id == "SaveButton",
+                   "external inherited child ACLASS should preserve child class identity");
+            expect(child_object.class_hierarchy.size() == 5U,
+                   "external inherited child ACLASS should persist the deeper child native class hierarchy");
+            if (child_object.class_hierarchy.size() == 5U)
+            {
+                expect(child_object.class_hierarchy[0] == "SAVEBUTTON",
+                       "external inherited child ACLASS should store the derived child class first");
+                expect(child_object.class_hierarchy[1] == "PARENTBUTTON",
+                       "external inherited child ACLASS should store the intermediate child class second");
+                expect(child_object.class_hierarchy[2] == "ROOTBUTTON",
+                       "external inherited child ACLASS should store the deeper child ancestor third");
+                expect(child_object.class_hierarchy[3] == "CUSTOM",
+                       "external inherited child ACLASS should store the builtin base token");
+                expect(child_object.class_hierarchy[4] == "OBJECT",
+                       "external inherited child ACLASS should store the terminal object token");
+            }
+            expect(child_object.source == library_path.string(),
+                   "external inherited child ACLASS should preserve the defining PRG path as child provenance");
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while external inherited child ACLASS lands");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_same_prg_native_identity_metadata_stays_read_only_to_setpem()
     {
         namespace fs = std::filesystem;
@@ -9734,6 +9926,8 @@ int main()
     test_external_prg_base_aclass_reflects_inheritance_chain();
     test_same_prg_child_aclass_reflects_inheritance_chain();
     test_external_base_child_aclass_reflects_inheritance_chain();
+    test_same_prg_inherited_child_aclass_reflects_deeper_inheritance_chain();
+    test_external_base_inherited_child_aclass_reflects_deeper_inheritance_chain();
     test_same_prg_native_baseclass_reflects_through_getpem_and_pemstatus();
     test_external_prg_base_identity_reflects_through_getpem_and_pemstatus();
     test_same_prg_native_class_reflects_through_getpem_and_pemstatus();
