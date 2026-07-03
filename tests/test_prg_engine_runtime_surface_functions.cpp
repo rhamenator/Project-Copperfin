@@ -10132,6 +10132,246 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_addobject_deeper_external_child_identity_metadata_cannot_be_shadowed_through_direct_assignment()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_addobject_deeper_external_child_identity_direct_assignment";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path root_library_path = temp_root / "rootbuttons.prg";
+        write_text(
+            root_library_path,
+            "DEFINE CLASS RootButton AS Custom\n"
+            "ENDDEFINE\n");
+
+        const fs::path button_library_path = temp_root / "buttons.prg";
+        write_text(
+            button_library_path,
+            "DEFINE CLASS ParentButton AS RootButton OF rootbuttons.prg\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS ParentButton\n"
+            "    Caption = 'Save'\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "native_addobject_deeper_external_child_identity_direct_assignment.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('DemoForm')\n"
+            "oChild = oForm.cmdSave\n"
+            "oChild.Class = 'OtherClass'\n"
+            "oChild.BaseClass = 'OtherBase'\n"
+            "oChild.ParentClass = 'OtherParent'\n"
+            "oChild.ClassLibrary = 'other.prg'\n"
+            "cChildClassAfter = GETPEM(oChild, 'Class')\n"
+            "cChildBaseClassAfter = GETPEM(oChild, 'BaseClass')\n"
+            "cChildParentClassAfter = GETPEM(oChild, 'ParentClass')\n"
+            "xChildClassLibraryAfter = GETPEM(oChild, 'ClassLibrary')\n"
+            "lChildClassReadOnly = PEMSTATUS(oChild, 'Class', 5)\n"
+            "lChildBaseClassReadOnly = PEMSTATUS(oChild, 'BaseClass', 5)\n"
+            "lChildParentClassReadOnly = PEMSTATUS(oChild, 'ParentClass', 5)\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 78)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS DemoForm AS Custom\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddObject('cmdSave', 'SaveButton', 'buttons.prg')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native ADDOBJECT deeper external child identity direct-assignment script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cchildclassafter", "SaveButton");
+        check("cchildbaseclassafter", "ParentButton");
+        check("cchildparentclassafter", "ParentButton");
+        check("lchildclassreadonly", "true");
+        check("lchildbaseclassreadonly", "true");
+        check("lchildparentclassreadonly", "true");
+        check("ldictset", "true");
+        check("ndictcompare", "78");
+
+        const auto child_class_library_after = state.globals.find("xchildclasslibraryafter");
+        expect(child_class_library_after != state.globals.end() &&
+                   child_class_library_after->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "native ADDOBJECT deeper external child identity direct assignment should keep the derived child ClassLibrary empty");
+
+        expect(state.ole_objects.size() == 3U,
+               "native ADDOBJECT deeper external child identity direct assignment should register parent, child, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            const auto &parent_object = state.ole_objects[0];
+            const auto &child_object = state.ole_objects[1];
+            expect(parent_object.prog_id == "DemoForm",
+                   "native ADDOBJECT deeper external child identity direct assignment should preserve parent identity");
+            expect(child_object.prog_id == "SaveButton",
+                   "native ADDOBJECT deeper external child identity direct assignment should preserve child identity");
+            expect(child_object.base_class_name == "ParentButton",
+                   "native ADDOBJECT deeper external child identity direct assignment should preserve the immediate child base-class identity");
+            expect(child_object.source == button_library_path.string(),
+                   "native ADDOBJECT deeper external child identity direct assignment should preserve the child definition source path");
+            expect(child_object.class_library.empty(),
+                   "native ADDOBJECT deeper external child identity direct assignment should keep the derived child ClassLibrary empty");
+            expect(child_object.class_hierarchy.size() == 5U,
+                   "native ADDOBJECT deeper external child identity direct assignment should preserve the deeper runtime child class hierarchy");
+            expect(!child_object.properties.contains("class"),
+                   "native ADDOBJECT deeper external child identity direct assignment should not materialize a child Class shadow property");
+            expect(!child_object.properties.contains("baseclass"),
+                   "native ADDOBJECT deeper external child identity direct assignment should not materialize a child BaseClass shadow property");
+            expect(!child_object.properties.contains("parentclass"),
+                   "native ADDOBJECT deeper external child identity direct assignment should not materialize a child ParentClass shadow property");
+            expect(!child_object.properties.contains("classlibrary"),
+                   "native ADDOBJECT deeper external child identity direct assignment should not materialize a child ClassLibrary shadow property");
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while native ADDOBJECT deeper external child identity direct assignment lands");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_inherited_external_base_addobject_deeper_external_child_identity_metadata_cannot_be_shadowed_through_direct_assignment()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_external_base_inherited_addobject_deeper_external_child_identity_direct_assignment";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path root_library_path = temp_root / "rootbuttons.prg";
+        write_text(
+            root_library_path,
+            "DEFINE CLASS RootButton AS Custom\n"
+            "ENDDEFINE\n");
+
+        const fs::path button_library_path = temp_root / "buttons.prg";
+        write_text(
+            button_library_path,
+            "DEFINE CLASS ParentButton AS RootButton OF rootbuttons.prg\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS ParentButton\n"
+            "    Caption = 'Save'\n"
+            "ENDDEFINE\n");
+
+        const fs::path widget_library_path = temp_root / "widgetlib.prg";
+        write_text(
+            widget_library_path,
+            "DEFINE CLASS ParentForm AS Custom\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddObject('cmdSave', 'SaveButton', 'buttons.prg')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "external_base_inherited_addobject_deeper_external_child_identity_direct_assignment.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildForm')\n"
+            "oChild = oCreate.cmdSave\n"
+            "oChild.Class = 'OtherClass'\n"
+            "oChild.BaseClass = 'OtherBase'\n"
+            "oChild.ParentClass = 'OtherParent'\n"
+            "oChild.ClassLibrary = 'other.prg'\n"
+            "cChildClassAfter = GETPEM(oChild, 'Class')\n"
+            "cChildBaseClassAfter = GETPEM(oChild, 'BaseClass')\n"
+            "cChildParentClassAfter = GETPEM(oChild, 'ParentClass')\n"
+            "xChildClassLibraryAfter = GETPEM(oChild, 'ClassLibrary')\n"
+            "lChildClassReadOnly = PEMSTATUS(oChild, 'Class', 5)\n"
+            "lChildBaseClassReadOnly = PEMSTATUS(oChild, 'BaseClass', 5)\n"
+            "lChildParentClassReadOnly = PEMSTATUS(oChild, 'ParentClass', 5)\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 79)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildForm AS ParentForm OF widgetlib.prg\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("external-base inherited ADDOBJECT deeper external child identity direct-assignment script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cchildclassafter", "SaveButton");
+        check("cchildbaseclassafter", "ParentButton");
+        check("cchildparentclassafter", "ParentButton");
+        check("lchildclassreadonly", "true");
+        check("lchildbaseclassreadonly", "true");
+        check("lchildparentclassreadonly", "true");
+        check("ldictset", "true");
+        check("ndictcompare", "79");
+
+        const auto child_class_library_after = state.globals.find("xchildclasslibraryafter");
+        expect(child_class_library_after != state.globals.end() &&
+                   child_class_library_after->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "external-base inherited ADDOBJECT deeper external child identity direct assignment should keep the derived child ClassLibrary empty");
+
+        expect(state.ole_objects.size() == 3U,
+               "external-base inherited ADDOBJECT deeper external child identity direct assignment should register parent, child, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            const auto &parent_object = state.ole_objects[0];
+            const auto &child_object = state.ole_objects[1];
+            expect(parent_object.prog_id == "ChildForm",
+                   "external-base inherited ADDOBJECT deeper external child identity direct assignment should preserve parent identity");
+            expect(child_object.prog_id == "SaveButton",
+                   "external-base inherited ADDOBJECT deeper external child identity direct assignment should preserve child identity");
+            expect(child_object.base_class_name == "ParentButton",
+                   "external-base inherited ADDOBJECT deeper external child identity direct assignment should preserve the immediate child base-class identity");
+            expect(child_object.source == button_library_path.string(),
+                   "external-base inherited ADDOBJECT deeper external child identity direct assignment should preserve the child definition source path");
+            expect(child_object.class_library.empty(),
+                   "external-base inherited ADDOBJECT deeper external child identity direct assignment should keep the derived child ClassLibrary empty");
+            expect(child_object.class_hierarchy.size() == 5U,
+                   "external-base inherited ADDOBJECT deeper external child identity direct assignment should preserve the deeper runtime child class hierarchy");
+            expect(!child_object.properties.contains("class"),
+                   "external-base inherited ADDOBJECT deeper external child identity direct assignment should not materialize a child Class shadow property");
+            expect(!child_object.properties.contains("baseclass"),
+                   "external-base inherited ADDOBJECT deeper external child identity direct assignment should not materialize a child BaseClass shadow property");
+            expect(!child_object.properties.contains("parentclass"),
+                   "external-base inherited ADDOBJECT deeper external child identity direct assignment should not materialize a child ParentClass shadow property");
+            expect(!child_object.properties.contains("classlibrary"),
+                   "external-base inherited ADDOBJECT deeper external child identity direct assignment should not materialize a child ClassLibrary shadow property");
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while external-base inherited ADDOBJECT deeper external child identity direct assignment lands");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow()
     {
         namespace fs = std::filesystem;
@@ -12232,6 +12472,8 @@ int main()
     test_inherited_external_base_addobject_deeper_external_child_identity_metadata_cannot_be_shadowed_through_addproperty();
     test_native_addobject_deeper_external_child_identity_metadata_cannot_be_erased_through_removeproperty();
     test_inherited_external_base_addobject_deeper_external_child_identity_metadata_cannot_be_erased_through_removeproperty();
+    test_native_addobject_deeper_external_child_identity_metadata_cannot_be_shadowed_through_direct_assignment();
+    test_inherited_external_base_addobject_deeper_external_child_identity_metadata_cannot_be_shadowed_through_direct_assignment();
     test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow();
     test_same_prg_native_bare_helper_calls_resolve_to_current_instance_before_top_level_routines();
     test_inherited_external_prg_base_methods_resolve_bare_helper_calls_against_defining_library();
