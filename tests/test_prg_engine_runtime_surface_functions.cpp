@@ -4028,9 +4028,11 @@ namespace
             "oCreate = CREATEOBJECT('ChildWidget')\n"
             "lSetClass = SETPEM(oCreate, 'Class', 'OtherClass')\n"
             "lSetBaseClass = SETPEM(oCreate, 'BaseClass', 'OtherBase')\n"
+            "lSetParentClass = SETPEM(oCreate, 'ParentClass', 'OtherParent')\n"
             "lSetClassLibrary = SETPEM(oCreate, 'ClassLibrary', 'other.prg')\n"
             "cClassAfter = GETPEM(oCreate, 'Class')\n"
             "cBaseClassAfter = GETPEM(oCreate, 'BaseClass')\n"
+            "cParentClassAfter = GETPEM(oCreate, 'ParentClass')\n"
             "xClassLibraryAfter = GETPEM(oCreate, 'ClassLibrary')\n"
             "RETURN\n"
             "DEFINE CLASS ParentWidget AS Custom\n"
@@ -4060,9 +4062,11 @@ namespace
 
         check("lsetclass", "false");
         check("lsetbaseclass", "false");
+        check("lsetparentclass", "false");
         check("lsetclasslibrary", "false");
         check("cclassafter", "ChildWidget");
         check("cbaseclassafter", "ParentWidget");
+        check("cparentclassafter", "ParentWidget");
 
         const auto class_library_after = state.globals.find("xclasslibraryafter");
         expect(class_library_after != state.globals.end() &&
@@ -4084,6 +4088,8 @@ namespace
                    "native identity SETPEM should not materialize a writable Class property shadow");
             expect(!native_object.properties.contains("baseclass"),
                    "native identity SETPEM should not materialize a writable BaseClass property shadow");
+            expect(!native_object.properties.contains("parentclass"),
+                   "native identity SETPEM should not materialize a writable ParentClass property shadow");
             expect(!native_object.properties.contains("classlibrary"),
                    "native identity SETPEM should not materialize a writable ClassLibrary property shadow");
         }
@@ -4114,9 +4120,11 @@ namespace
             "nDictCompare = GETPEM(oDict, 'comparemode')\n"
             "lSetClass = SETPEM(oCreate, 'Class', 'OtherClass')\n"
             "lSetBaseClass = SETPEM(oCreate, 'BaseClass', 'OtherBase')\n"
+            "lSetParentClass = SETPEM(oCreate, 'ParentClass', 'OtherParent')\n"
             "lSetClassLibrary = SETPEM(oCreate, 'ClassLibrary', 'other.prg')\n"
             "cClassAfter = GETPEM(oCreate, 'Class')\n"
             "cBaseClassAfter = GETPEM(oCreate, 'BaseClass')\n"
+            "cParentClassAfter = GETPEM(oCreate, 'ParentClass')\n"
             "cClassLibraryAfter = GETPEM(oCreate, 'ClassLibrary')\n"
             "RETURN\n"
             "DEFINE CLASS ChildWidget AS ParentWidget OF widgetlib.prg\n"
@@ -4144,9 +4152,11 @@ namespace
 
         check("lsetclass", "false");
         check("lsetbaseclass", "false");
+        check("lsetparentclass", "false");
         check("lsetclasslibrary", "false");
         check("cclassafter", "ChildWidget");
         check("cbaseclassafter", "ParentWidget");
+        check("cparentclassafter", "ParentWidget");
         check("cclasslibraryafter", library_path.string());
         check("ldictset", "true");
         check("ndictcompare", "28");
@@ -4166,6 +4176,8 @@ namespace
                    "external identity SETPEM should not materialize a writable Class property shadow");
             expect(!native_object.properties.contains("baseclass"),
                    "external identity SETPEM should not materialize a writable BaseClass property shadow");
+            expect(!native_object.properties.contains("parentclass"),
+                   "external identity SETPEM should not materialize a writable ParentClass property shadow");
             expect(!native_object.properties.contains("classlibrary"),
                    "external identity SETPEM should not materialize a writable ClassLibrary property shadow");
 
