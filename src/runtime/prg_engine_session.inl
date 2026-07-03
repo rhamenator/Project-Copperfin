@@ -587,7 +587,7 @@
                     RuntimeOleObjectState *child_object = instantiate_native_class_object(
                         frame,
                         child_declaration.class_name,
-                        resolve_native_prg_program_path(child_declaration.source_path, runtime_object->source),
+                        resolve_native_prg_program_path(child_declaration.source_path, lineage_class.program->path),
                         "classbody.addobject",
                         {},
                         {},
