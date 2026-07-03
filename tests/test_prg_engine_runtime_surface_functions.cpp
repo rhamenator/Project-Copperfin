@@ -799,6 +799,152 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_createobject_instantiates_native_prg_class_and_preserves_plain_object_creation()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_createobject_native_prg_class";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "createobject_native_class.prg";
+        write_text(
+            main_path,
+            "oWidget = CREATEOBJECT('MyWidget')\n"
+            "cCaption = oWidget.Caption\n"
+            "nCount = oWidget.nCount\n"
+            "lHasInit = GETPEM(oWidget, 'Init')\n"
+            "lHasCaption = PEMSTATUS(oWidget, 'Caption', 1)\n"
+            "oPlain = CREATEOBJECT('Empty')\n"
+            "oPlain.Extra = 'plain'\n"
+            "cPlain = oPlain.Extra\n"
+            "RETURN\n"
+            "DEFINE CLASS MyWidget AS Custom\n"
+            "    Caption = 'Demo'\n"
+            "    nCount = 3\n"
+            "    PROCEDURE Init\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native CREATEOBJECT script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        expect(state.globals.count("owidget") && state.globals.at("owidget").kind == copperfin::runtime::PrgValueKind::string,
+               "CREATEOBJECT('MyWidget') should return a string object ref");
+        check("ccaption", "Demo");
+        check("ncount", "3");
+        check("lhasinit", "true");
+        check("lhascaption", "true");
+
+        expect(state.globals.count("oplain") && state.globals.at("oplain").kind == copperfin::runtime::PrgValueKind::string,
+               "CREATEOBJECT('Empty') should still return a string object ref");
+        check("cplain", "plain");
+
+        expect(state.ole_objects.size() == 2U,
+               "native CREATEOBJECT plus plain CREATEOBJECT should register two runtime objects");
+        if (state.ole_objects.size() == 2U)
+        {
+            expect(state.ole_objects[0].prog_id == "MyWidget",
+                   "native CREATEOBJECT should preserve the PRG class name in runtime object state");
+            expect(state.ole_objects[0].source == main_path.string(),
+                   "native CREATEOBJECT should preserve the defining PRG path as object provenance");
+            expect(state.ole_objects[1].prog_id == "Empty",
+                   "plain CREATEOBJECT should still preserve the requested non-class prog id");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_newobject_instantiates_native_prg_class_and_preserves_ole_newobject()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_newobject_native_prg_class";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "newobject_native_class.prg";
+        write_text(
+            main_path,
+            "oWidget = NEWOBJECT('MyWidget')\n"
+            "cName = oWidget.Name\n"
+            "lHasSave = GETPEM(oWidget, 'CanSave')\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lSetCompare = SETPEM(oDict, 'comparemode', 2)\n"
+            "nCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS MyWidget AS Custom\n"
+            "    Name = 'Widget'\n"
+            "    FUNCTION CanSave\n"
+            "        RETURN .T.\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native NEWOBJECT script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        expect(state.globals.count("owidget") && state.globals.at("owidget").kind == copperfin::runtime::PrgValueKind::string,
+               "NEWOBJECT('MyWidget') should return a string object ref");
+        check("cname", "Widget");
+        check("lhassave", "true");
+
+        expect(state.globals.count("odict") && state.globals.at("odict").kind == copperfin::runtime::PrgValueKind::string,
+               "NEWOBJECT('Scripting.Dictionary', 'vbscript.dll') should still return a string object ref");
+        check("lsetcompare", "true");
+        check("ncompare", "2");
+
+        expect(state.ole_objects.size() == 2U,
+               "native and OLE NEWOBJECT calls should both register runtime objects");
+        if (state.ole_objects.size() == 2U)
+        {
+            expect(state.ole_objects[0].prog_id == "MyWidget",
+                   "native NEWOBJECT should preserve the PRG class name in runtime object state");
+            expect(state.ole_objects[0].source == main_path.string(),
+                   "native NEWOBJECT should preserve the defining PRG path as object provenance");
+            expect(state.ole_objects[1].prog_id == "Scripting.Dictionary",
+                   "OLE NEWOBJECT should still preserve the requested COM class");
+            expect(state.ole_objects[1].source == "vbscript.dll",
+                   "OLE NEWOBJECT should still preserve the requested library source");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_codepage_and_misc_runtime_surface_functions()
     {
         namespace fs = std::filesystem;
@@ -1469,6 +1615,8 @@ int main()
     test_cursor_xml_round_trip_runtime_surface_functions();
     test_cursor_xml_invalid_input_runtime_surface_functions();
     test_newobject_getpem_setpem_compobj_functions();
+    test_createobject_instantiates_native_prg_class_and_preserves_plain_object_creation();
+    test_newobject_instantiates_native_prg_class_and_preserves_ole_newobject();
     test_codepage_and_misc_runtime_surface_functions();
     test_lookup_expression_function();
     test_lookup_expression_function_supports_sql_cursors();

@@ -444,6 +444,7 @@ namespace copperfin::runtime
         std::vector<std::string> critical_section_stack;
         std::map<std::string, std::size_t> critical_section_depth_by_name;
         std::map<std::string, std::shared_ptr<std::recursive_mutex>> critical_section_mutexes_by_name;
+        std::size_t native_class_instantiation_depth = 0;
 
         // Index seek optimizer - pattern cache
         std::map<std::string, IndexExpressionPattern> index_pattern_cache;  // Cache analyzed patterns by expression text
@@ -727,9 +728,9 @@ namespace copperfin::runtime
             {
                 return sql_set_prop(handle, property_name, value);
             },
-            [this](const std::string &prog_id, const std::string &source)
+            [this, &frame](const std::string &prog_id, const std::string &source)
             {
-                return register_ole_object(prog_id, source);
+                return register_ole_object(frame, prog_id, source);
             },
             [this, &frame](const std::string &base_name, const std::string &member_path, const std::vector<PrgValue> &arguments)
             {

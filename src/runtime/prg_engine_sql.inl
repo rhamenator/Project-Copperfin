@@ -1312,6 +1312,77 @@
             return 1;
         }
 
+        int register_ole_object(const Frame &frame, const std::string &prog_id, const std::string &source)
+        {
+            const std::string normalized_source = normalize_identifier(source);
+            if (normalized_source == "createobject" || normalized_source == "newobject")
+            {
+                Program &program = load_program(frame.file_path);
+                const auto class_found = program.classes.find(normalize_identifier(prog_id));
+                if (class_found != program.classes.end())
+                {
+                    if (native_class_instantiation_depth >= max_call_depth)
+                    {
+                        throw std::runtime_error(call_depth_limit_message());
+                    }
+
+                    struct NativeClassInstantiationGuard
+                    {
+                        std::size_t &depth;
+
+                        explicit NativeClassInstantiationGuard(std::size_t &current_depth)
+                            : depth(current_depth)
+                        {
+                            ++depth;
+                        }
+
+                        ~NativeClassInstantiationGuard()
+                        {
+                            --depth;
+                        }
+                    } guard(native_class_instantiation_depth);
+
+                    const PrgClassDefinition &class_definition = class_found->second;
+                    const int handle = next_ole_handle++;
+                    RuntimeOleObjectState object_state{
+                        .handle = handle,
+                        .prog_id = class_definition.name.empty() ? prog_id : class_definition.name,
+                        .source = program.path,
+                        .last_action = normalized_source,
+                        .action_count = 1};
+
+                    object_state.methods.reserve(class_definition.methods.size());
+                    for (const auto &[_, method] : class_definition.methods)
+                    {
+                        object_state.methods.push_back(method.name);
+                    }
+
+                    auto [object_it, _] = ole_objects.emplace(handle, std::move(object_state));
+                    RuntimeOleObjectState *runtime_object = &object_it->second;
+                    for (const Statement &property_statement : class_definition.property_statements)
+                    {
+                        if (property_statement.kind != StatementKind::assignment)
+                        {
+                            continue;
+                        }
+
+                        const std::string property_name = normalize_identifier(property_statement.identifier);
+                        if (property_name.empty())
+                        {
+                            continue;
+                        }
+
+                        runtime_object->properties[property_name] =
+                            evaluate_expression(property_statement.expression, frame);
+                    }
+
+                    return handle;
+                }
+            }
+
+            return register_ole_object(prog_id, source);
+        }
+
         int register_ole_object(const std::string &prog_id, const std::string &source)
         {
             const std::string normalized_prog_id = normalize_identifier(prog_id);
