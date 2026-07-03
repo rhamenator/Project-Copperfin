@@ -1315,6 +1315,20 @@ namespace copperfin::runtime
                 auto object = resolve_ole_object(value);
                 return object.has_value() ? *object : nullptr;
             },
+            [this, &frame](const PrgValue &value, const std::string &member_name) -> std::optional<PrgValue>
+            {
+                auto object = resolve_ole_object(value);
+                if (!object.has_value())
+                {
+                    return std::nullopt;
+                }
+                return invoke_native_object_method_if_present(
+                    **object,
+                    member_name + "_access",
+                    frame,
+                    {},
+                    {});
+            },
             [this](const std::string &name, std::vector<PrgValue> values)
             {
                 assign_array(name, std::move(values));

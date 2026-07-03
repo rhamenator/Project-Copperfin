@@ -43,6 +43,7 @@
         const std::function<std::optional<RuntimeSurfaceCursorSnapshot>(const std::string&)>& snapshot_cursor_callback,
         const std::function<std::optional<std::size_t>(const RuntimeSurfaceCursorSnapshot&, const std::string&)>& load_cursor_snapshot_callback,
         const std::function<RuntimeOleObjectState*(const PrgValue&)>& resolve_object_callback,
+        const std::function<std::optional<PrgValue>(const PrgValue&, const std::string&)>& read_native_member_callback,
         const std::function<void(const std::string&, std::vector<PrgValue>)>& assign_array_callback,
         const std::function<void(const std::string&, const std::string&)>& record_event_callback);
 
@@ -119,6 +120,7 @@
                 std::function<std::optional<std::size_t>(const RuntimeSurfaceCursorSnapshot &, const std::string &)> load_cursor_snapshot_callback,
                 std::function<void(const std::string &, const std::string &)> record_event_callback,
                 std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback,
+                std::function<std::optional<PrgValue>(const PrgValue &, const std::string &)> read_native_member_callback,
                 std::function<void(const std::string &, std::vector<PrgValue>)> assign_array_callback,
                 std::function<std::size_t()> memowidth_callback,
                 std::function<std::optional<PrgValue>(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> base_method_invoke_callback,
@@ -179,6 +181,7 @@
                   load_cursor_snapshot_callback_(std::move(load_cursor_snapshot_callback)),
                   record_event_callback_(std::move(record_event_callback)),
                   resolve_object_callback_(std::move(resolve_object_callback)),
+                  read_native_member_callback_(std::move(read_native_member_callback)),
                   assign_array_callback_(std::move(assign_array_callback)),
                   memowidth_callback_(std::move(memowidth_callback)),
                   base_method_invoke_callback_(std::move(base_method_invoke_callback)),
@@ -1341,6 +1344,7 @@
                                                           snapshot_cursor_callback_,
                                                           load_cursor_snapshot_callback_,
                                                           resolve_object_callback_,
+                                                          read_native_member_callback_,
                                                           assign_array_callback_,
                                                           record_event_callback_))
                 {
@@ -2011,6 +2015,7 @@
             std::function<std::optional<std::size_t>(const RuntimeSurfaceCursorSnapshot &, const std::string &)> load_cursor_snapshot_callback_;
             std::function<void(const std::string &, const std::string &)> record_event_callback_;
             std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback_;
+            std::function<std::optional<PrgValue>(const PrgValue &, const std::string &)> read_native_member_callback_;
             std::function<void(const std::string &, std::vector<PrgValue>)> assign_array_callback_;
             std::function<std::size_t()> memowidth_callback_;
             std::function<std::optional<PrgValue>(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> base_method_invoke_callback_;

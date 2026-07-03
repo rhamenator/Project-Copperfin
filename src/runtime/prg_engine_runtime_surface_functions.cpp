@@ -180,6 +180,40 @@ bool is_scripting_dictionary_object(const RuntimeOleObjectState& runtime_object)
     return normalize_identifier(runtime_object.prog_id) == "scripting.dictionary";
 }
 
+bool method_ends_with_suffix(
+    const std::string& method_name,
+    const std::string& suffix,
+    std::string* stem = nullptr) {
+    const std::string normalized_method = normalize_identifier(method_name);
+    if (normalized_method.size() <= suffix.size() ||
+        normalized_method.compare(normalized_method.size() - suffix.size(), suffix.size(), suffix) != 0) {
+        return false;
+    }
+
+    if (normalized_method[normalized_method.size() - suffix.size() - 1U] != '_') {
+        return false;
+    }
+
+    if (stem != nullptr) {
+        *stem = normalized_method.substr(0U, normalized_method.size() - suffix.size() - 1U);
+    }
+    return true;
+}
+
+bool object_has_accessor_property(const RuntimeOleObjectState& runtime_object, const std::string& normalized_property_name) {
+    return std::any_of(runtime_object.methods.begin(), runtime_object.methods.end(), [&](const std::string& method_name) {
+        std::string stem;
+        return method_ends_with_suffix(method_name, "access", &stem) && stem == normalized_property_name;
+    });
+}
+
+bool object_has_assigner_property(const RuntimeOleObjectState& runtime_object, const std::string& normalized_property_name) {
+    return std::any_of(runtime_object.methods.begin(), runtime_object.methods.end(), [&](const std::string& method_name) {
+        std::string stem;
+        return method_ends_with_suffix(method_name, "assign", &stem) && stem == normalized_property_name;
+    });
+}
+
 bool looks_like_file_path(const std::string& text) {
     const std::string trimmed = trim_copy(text);
     if (trimmed.empty()) {
@@ -384,6 +418,14 @@ std::vector<std::string> collect_object_member_names(const RuntimeOleObjectState
             (void)value;
             unique_members.insert(normalize_identifier(name));
         }
+        for (const auto& method_name : runtime_object.methods) {
+            std::string stem;
+            if ((method_ends_with_suffix(method_name, "access", &stem) ||
+                 method_ends_with_suffix(method_name, "assign", &stem)) &&
+                !stem.empty()) {
+                unique_members.insert(stem);
+            }
+        }
     }
     if (include_methods) {
         for (const auto& method_name : runtime_object.methods) {
@@ -433,6 +475,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
     const std::function<std::optional<RuntimeSurfaceCursorSnapshot>(const std::string&)>& snapshot_cursor_callback,
     const std::function<std::optional<std::size_t>(const RuntimeSurfaceCursorSnapshot&, const std::string&)>& load_cursor_snapshot_callback,
     const std::function<RuntimeOleObjectState*(const PrgValue&)>& resolve_object_callback,
+    const std::function<std::optional<PrgValue>(const PrgValue&, const std::string&)>& read_native_member_callback,
     const std::function<void(const std::string&, std::vector<PrgValue>)>& assign_array_callback,
     const std::function<void(const std::string&, const std::string&)>& record_event_callback) {
     auto record_runtime_warning = [&](const std::string& detail) {
@@ -592,6 +635,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         if (attribute == 1) {
             const bool exists = runtime_object->properties.contains(member_name) ||
+                                object_has_accessor_property(*runtime_object, member_name) ||
                                 object_has_member(runtime_object->methods, member_name) ||
                                 object_has_member(runtime_object->events, member_name);
             return make_boolean_value(exists);
@@ -600,7 +644,10 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             return make_boolean_value(false);
         }
         if (attribute == 5) {
-            const bool readonly = is_scripting_dictionary_object(*runtime_object) && member_name == "count";
+            const bool readonly =
+                (is_scripting_dictionary_object(*runtime_object) && member_name == "count") ||
+                (object_has_accessor_property(*runtime_object, member_name) &&
+                 !object_has_assigner_property(*runtime_object, member_name));
             return make_boolean_value(readonly);
         }
         return make_boolean_value(false);
@@ -641,6 +688,15 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         const auto prop_it = runtime_object->properties.find(member_name);
         if (prop_it != runtime_object->properties.end()) {
             return prop_it->second;
+        }
+        if (object_has_accessor_property(*runtime_object, member_name)) {
+            if (read_native_member_callback) {
+                const auto member_value = read_native_member_callback(arguments[0], member_name);
+                if (member_value.has_value()) {
+                    return *member_value;
+                }
+            }
+            return make_boolean_value(true);
         }
         if (object_has_member(runtime_object->methods, member_name) ||
             object_has_member(runtime_object->events, member_name)) {

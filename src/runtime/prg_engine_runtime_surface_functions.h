@@ -48,6 +48,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
     const std::function<std::optional<RuntimeSurfaceCursorSnapshot>(const std::string&)>& snapshot_cursor_callback,
     const std::function<std::optional<std::size_t>(const RuntimeSurfaceCursorSnapshot&, const std::string&)>& load_cursor_snapshot_callback,
     const std::function<RuntimeOleObjectState*(const PrgValue&)>& resolve_object_callback,
+    const std::function<std::optional<PrgValue>(const PrgValue&, const std::string&)>& read_native_member_callback,
     const std::function<void(const std::string&, std::vector<PrgValue>)>& assign_array_callback,
     const std::function<void(const std::string&, const std::string&)>& record_event_callback);
 
