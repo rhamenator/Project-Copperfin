@@ -781,8 +781,55 @@ namespace copperfin::runtime
                 }
 
                 RuntimeOleObjectState *runtime_object = *object;
+                const auto make_runtime_object_reference = [](const RuntimeOleObjectState &object_state) -> PrgValue
+                {
+                    return make_string_value("object:" + object_state.prog_id + "#" + std::to_string(object_state.handle));
+                };
                 const std::string leaf = normalize_identifier(
                     member_path.substr(member_path.rfind('.') == std::string::npos ? 0U : member_path.rfind('.') + 1U));
+                if (leaf == "addobject" && !runtime_object->source.empty() && arguments.size() >= 2U)
+                {
+                    const std::string child_name = normalize_identifier(trim_copy(value_as_string(arguments[0])));
+                    const std::string child_class = trim_copy(value_as_string(arguments[1]));
+                    if (child_name.empty() || child_class.empty())
+                    {
+                        return make_boolean_value(false);
+                    }
+
+                    std::vector<PrgValue> child_constructor_arguments;
+                    std::vector<std::optional<std::string>> child_argument_references;
+                    child_constructor_arguments.reserve(arguments.size() > 2U ? arguments.size() - 2U : 0U);
+                    child_argument_references.reserve(argument_references.size() > 2U ? argument_references.size() - 2U : 0U);
+                    for (std::size_t index = 2U; index < arguments.size(); ++index)
+                    {
+                        child_constructor_arguments.push_back(arguments[index]);
+                        child_argument_references.push_back(
+                            index < argument_references.size()
+                                ? argument_references[index]
+                                : std::optional<std::string>{});
+                    }
+
+                    RuntimeOleObjectState *child_object = instantiate_native_class_object(
+                        frame,
+                        child_class,
+                        runtime_object->source,
+                        "addobject",
+                        child_constructor_arguments,
+                        child_argument_references,
+                        make_runtime_object_reference(*runtime_object));
+                    if (child_object == nullptr)
+                    {
+                        return make_boolean_value(false);
+                    }
+
+                    runtime_object->properties[child_name] = make_runtime_object_reference(*child_object);
+                    runtime_object->last_action = member_path + "(" + child_name + "," + child_class + ")";
+                    ++runtime_object->action_count;
+                    events.push_back({.category = "prg.object.addobject",
+                                      .detail = runtime_object->prog_id + "." + child_name + ":" + child_class,
+                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                    return make_boolean_value(true);
+                }
                 std::string native_method_program_path;
                 std::string native_method_name;
                 if (const Routine *native_method = find_native_object_method(
@@ -811,6 +858,7 @@ namespace copperfin::runtime
                                       this_reference,
                                       native_method_name.substr(0U, native_method_name.rfind('.')),
                                       leaf,
+                                      native_object_parent_reference(*runtime_object),
                                       arguments,
                                       argument_references);
                     return run_expression_invoked_routine_until_return(return_depth);
@@ -1470,6 +1518,7 @@ namespace copperfin::runtime
                           this_reference,
                           native_defining_class_name,
                           normalize_identifier(identifier),
+                          native_object_parent_reference(runtime_object),
                           std::vector<PrgValue>(arguments.begin(), arguments.end()),
                           std::vector<std::optional<std::string>>(
                               argument_references.begin(),
@@ -1537,6 +1586,13 @@ namespace copperfin::runtime
                           this_found->second,
                           base_defining_class_name,
                           source_frame.native_method_name,
+                          [&source_frame]() -> std::optional<PrgValue>
+                          {
+                              const auto parent_found = source_frame.locals.find("parent");
+                              return parent_found == source_frame.locals.end()
+                                  ? std::nullopt
+                                  : std::optional<PrgValue>(parent_found->second);
+                          }(),
                           std::vector<PrgValue>(effective_arguments.begin(), effective_arguments.end()),
                           std::vector<std::optional<std::string>>(
                               effective_argument_references.begin(),

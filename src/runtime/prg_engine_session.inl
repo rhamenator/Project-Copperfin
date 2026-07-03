@@ -51,6 +51,7 @@
             const PrgValue &this_reference,
             const std::string &native_method_class_name = {},
             const std::string &native_method_name = {},
+            const std::optional<PrgValue> &parent_reference = std::nullopt,
             std::vector<PrgValue> call_arguments = {},
             std::vector<std::optional<std::string>> call_argument_references = {})
         {
@@ -64,6 +65,11 @@
             frame.native_method_name = normalize_identifier(native_method_name);
             frame.locals["this"] = this_reference;
             frame.local_names.insert("this");
+            if (parent_reference.has_value())
+            {
+                frame.locals["parent"] = *parent_reference;
+                frame.local_names.insert("parent");
+            }
             stack.push_back(std::move(frame));
         }
 
@@ -201,6 +207,164 @@
                 member_name,
                 true,
                 qualified_routine_name);
+        }
+
+        std::optional<PrgValue> native_object_parent_reference(
+            const RuntimeOleObjectState &runtime_object) const
+        {
+            const auto parent = runtime_object.properties.find("parent");
+            if (parent == runtime_object.properties.end())
+            {
+                return std::nullopt;
+            }
+
+            int handle = 0;
+            std::string prog_id;
+            return parse_object_handle_reference(parent->second, handle, prog_id)
+                ? std::optional<PrgValue>(parent->second)
+                : std::nullopt;
+        }
+
+        RuntimeOleObjectState *instantiate_native_class_object(
+            const Frame &frame,
+            const std::string &prog_id,
+            const std::string &program_path,
+            const std::string &source_tag,
+            const std::vector<PrgValue> &constructor_arguments = {},
+            const std::vector<std::optional<std::string>> &constructor_argument_references = {},
+            const std::optional<PrgValue> &parent_reference = std::nullopt)
+        {
+            Program &program = load_program(program_path);
+            const auto class_found = program.classes.find(normalize_identifier(prog_id));
+            if (class_found == program.classes.end())
+            {
+                return nullptr;
+            }
+
+            if (native_class_instantiation_depth >= max_call_depth)
+            {
+                throw std::runtime_error(call_depth_limit_message());
+            }
+
+            struct NativeClassInstantiationGuard
+            {
+                std::size_t &depth;
+
+                explicit NativeClassInstantiationGuard(std::size_t &current_depth)
+                    : depth(current_depth)
+                {
+                    ++depth;
+                }
+
+                ~NativeClassInstantiationGuard()
+                {
+                    --depth;
+                }
+            } guard(native_class_instantiation_depth);
+
+            const PrgClassDefinition &class_definition = class_found->second;
+            std::vector<const PrgClassDefinition *> class_lineage =
+                collect_native_same_prg_class_lineage(
+                    program,
+                    class_definition.name.empty() ? prog_id : class_definition.name);
+            if (class_lineage.empty())
+            {
+                class_lineage.push_back(&class_definition);
+            }
+            const int handle = next_ole_handle++;
+            RuntimeOleObjectState object_state{
+                .handle = handle,
+                .prog_id = class_definition.name.empty() ? prog_id : class_definition.name,
+                .source = program.path,
+                .last_action = source_tag,
+                .action_count = 1};
+            if (parent_reference.has_value())
+            {
+                object_state.properties["parent"] = *parent_reference;
+            }
+
+            std::map<std::string, std::string> effective_methods;
+            for (const PrgClassDefinition *lineage_class : class_lineage)
+            {
+                for (const auto &[normalized_method_name, method] : lineage_class->methods)
+                {
+                    effective_methods[normalized_method_name] = method.name;
+                }
+            }
+            object_state.methods.reserve(effective_methods.size());
+            for (const auto &[_, method_name] : effective_methods)
+            {
+                object_state.methods.push_back(method_name);
+            }
+
+            auto [object_it, _] = ole_objects.emplace(handle, std::move(object_state));
+            RuntimeOleObjectState *runtime_object = &object_it->second;
+            for (const PrgClassDefinition *lineage_class : class_lineage)
+            {
+                for (const Statement &property_statement : lineage_class->property_statements)
+                {
+                    if (property_statement.kind != StatementKind::assignment)
+                    {
+                        continue;
+                    }
+
+                    const std::string property_name = normalize_identifier(property_statement.identifier);
+                    if (property_name.empty())
+                    {
+                        continue;
+                    }
+
+                    runtime_object->properties[property_name] =
+                        evaluate_expression(property_statement.expression, frame);
+                }
+            }
+
+            std::string init_program_path;
+            std::string init_method_name;
+            if (const Routine *init_method = find_native_object_method(
+                    *runtime_object,
+                    "init",
+                    init_program_path,
+                    init_method_name);
+                init_method != nullptr)
+            {
+                if (!can_push_frame())
+                {
+                    throw std::runtime_error(call_depth_limit_message());
+                }
+
+                events.push_back({.category = "prg.object.init",
+                                  .detail = init_method_name,
+                                  .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                const std::size_t return_depth = stack.size();
+                const PrgValue this_reference =
+                    make_string_value("object:" + runtime_object->prog_id + "#" + std::to_string(runtime_object->handle));
+                std::vector<PrgValue> effective_constructor_arguments = constructor_arguments;
+                if (effective_constructor_arguments.size() < constructor_argument_references.size())
+                {
+                    effective_constructor_arguments.resize(constructor_argument_references.size());
+                }
+                for (std::size_t index = 0U; index < constructor_argument_references.size(); ++index)
+                {
+                    if (constructor_argument_references[index].has_value())
+                    {
+                        effective_constructor_arguments[index] =
+                            lookup_variable(frame, *constructor_argument_references[index]);
+                    }
+                }
+                push_method_frame(init_program_path,
+                                  init_method_name,
+                                  *init_method,
+                                  this_reference,
+                                  init_method_name.substr(0U, init_method_name.rfind('.')),
+                                  "init",
+                                  parent_reference,
+                                  effective_constructor_arguments,
+                                  constructor_argument_references);
+                (void)run_expression_invoked_routine_until_return(return_depth);
+            }
+
+            return runtime_object;
         }
 
         const Statement *current_statement() const

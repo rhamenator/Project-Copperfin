@@ -945,6 +945,113 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_addobject_materializes_child_objects_and_child_methods_see_parent()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_addobject";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_addobject.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('DemoForm')\n"
+            "oChild = oForm.cmdSave\n"
+            "lHasChild = PEMSTATUS(oForm, 'cmdSave', 1)\n"
+            "lChildHasParent = PEMSTATUS(oChild, 'Parent', 1)\n"
+            "lChildAdded = oForm.lChildAdded\n"
+            "cFormCaption = oForm.Caption\n"
+            "cChildCaption = oChild.Caption\n"
+            "oParent = oChild.Parent\n"
+            "cParentCaption = oParent.Caption\n"
+            "cOwnerCaption = oChild.OwnerCaption()\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 13)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS DemoForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    lChildAdded = .F.\n"
+            "    PROCEDURE Init\n"
+            "        THIS.lChildAdded = THIS.AddObject('cmdSave', 'SaveButton')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS Custom\n"
+            "    Caption = 'Save'\n"
+            "    FUNCTION OwnerCaption\n"
+            "        RETURN PARENT.Caption\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native ADDOBJECT script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lhaschild", "true");
+        check("lchildhasparent", "true");
+        check("lchildadded", "true");
+        check("cformcaption", "MainForm");
+        check("cchildcaption", "Save");
+        check("cparentcaption", "MainForm");
+        check("cownercaption", "MainForm");
+        check("ldictset", "true");
+        check("ndictcompare", "13");
+
+        expect(state.ole_objects.size() == 3U,
+               "native ADDOBJECT script should register parent, child, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            const auto &parent_object = state.ole_objects[0];
+            const auto &child_object = state.ole_objects[1];
+            expect(parent_object.prog_id == "DemoForm",
+                   "native ADDOBJECT should preserve the parent class identity");
+            expect(child_object.prog_id == "SaveButton",
+                   "native ADDOBJECT should preserve the child class identity");
+            expect(parent_object.properties.contains("cmdsave"),
+                   "native ADDOBJECT should materialize the child reference on the parent");
+            const auto child_parent = child_object.properties.find("parent");
+            if (child_parent != child_object.properties.end())
+            {
+                expect(child_parent->second.kind == copperfin::runtime::PrgValueKind::string,
+                       "native ADDOBJECT should persist a PARENT object reference on the child");
+            }
+            else
+            {
+                expect(false, "native ADDOBJECT should materialize the child PARENT reference");
+            }
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM behavior should remain stable while native ADDOBJECT lands");
+        }
+
+        const bool has_addobject_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.addobject" &&
+                   event.detail == "DemoForm.cmdsave:SaveButton";
+        });
+        expect(has_addobject_event,
+               "native ADDOBJECT should emit child-activation events");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_newobject_with_explicit_prg_library_activates_native_class_and_preserves_explicit_targets()
     {
         namespace fs = std::filesystem;
@@ -3092,6 +3199,7 @@ int main()
     test_newobject_getpem_setpem_compobj_functions();
     test_createobject_instantiates_native_prg_class_and_preserves_plain_object_creation();
     test_newobject_instantiates_native_prg_class_and_preserves_ole_newobject();
+    test_native_addobject_materializes_child_objects_and_child_methods_see_parent();
     test_newobject_with_explicit_prg_library_activates_native_class_and_preserves_explicit_targets();
     test_native_prg_object_methods_bind_this_and_persist_instance_state();
     test_native_prg_init_runs_during_object_creation_and_preserves_plain_creation();
