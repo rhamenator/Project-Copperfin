@@ -4940,6 +4940,151 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_same_prg_child_identity_metadata_reads_through_ordinary_properties()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_child_identity_property_reads";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_child_identity_property_reads.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('DemoForm')\n"
+            "cChildClass = oCreate.cmdSave.Class\n"
+            "cChildBaseClass = oCreate.cmdSave.BaseClass\n"
+            "cChildParentClass = oCreate.cmdSave.ParentClass\n"
+            "xChildClassLibrary = oCreate.cmdSave.ClassLibrary\n"
+            "RETURN\n"
+            "DEFINE CLASS DemoForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS Custom\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native child identity property-read script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cchildclass", "SaveButton");
+        check("cchildbaseclass", "Custom");
+        check("cchildparentclass", "Custom");
+
+        const auto child_class_library = state.globals.find("xchildclasslibrary");
+        expect(child_class_library != state.globals.end() &&
+                   child_class_library->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "same-PRG child identity property reads should leave child ClassLibrary empty");
+
+        expect(state.ole_objects.size() == 2U,
+               "native child identity property reads should register parent and child objects");
+        if (state.ole_objects.size() == 2U)
+        {
+            expect(state.ole_objects[0].prog_id == "DemoForm",
+                   "native child identity property reads should preserve form identity");
+            expect(state.ole_objects[1].prog_id == "SaveButton",
+                   "native child identity property reads should preserve child class identity");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_external_base_child_identity_metadata_reads_through_ordinary_properties()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_external_prg_child_identity_property_reads";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path library_path = temp_root / "widgetlib.prg";
+        write_text(
+            library_path,
+            "DEFINE CLASS ParentForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS Custom\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "external_child_identity_property_reads.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildForm')\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 51)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "cChildClass = oCreate.cmdSave.Class\n"
+            "cChildBaseClass = oCreate.cmdSave.BaseClass\n"
+            "cChildParentClass = oCreate.cmdSave.ParentClass\n"
+            "xChildClassLibrary = oCreate.cmdSave.ClassLibrary\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildForm AS ParentForm OF widgetlib.prg\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("external child identity property-read script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cchildclass", "SaveButton");
+        check("cchildbaseclass", "Custom");
+        check("cchildparentclass", "Custom");
+        check("ldictset", "true");
+        check("ndictcompare", "51");
+
+        const auto child_class_library = state.globals.find("xchildclasslibrary");
+        expect(child_class_library != state.globals.end() &&
+                   child_class_library->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "external child identity property reads should leave child ClassLibrary empty when the child class itself has no external base");
+
+        expect(state.ole_objects.size() == 3U,
+               "external child identity property reads should register parent, child, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            expect(state.ole_objects[0].prog_id == "ChildForm",
+                   "external child identity property reads should preserve form identity");
+            expect(state.ole_objects[1].prog_id == "SaveButton",
+                   "external child identity property reads should preserve child class identity");
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while external child identity property reads land");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_same_prg_child_parent_reflects_through_getpem_and_pemstatus()
     {
         namespace fs = std::filesystem;
@@ -8615,6 +8760,8 @@ int main()
     test_external_prg_identity_metadata_reads_through_ordinary_properties();
     test_same_prg_native_parentclass_reads_through_ordinary_properties();
     test_external_prg_parentclass_reads_through_ordinary_properties();
+    test_same_prg_child_identity_metadata_reads_through_ordinary_properties();
+    test_external_base_child_identity_metadata_reads_through_ordinary_properties();
     test_same_prg_child_parent_reflects_through_getpem_and_pemstatus();
     test_external_base_child_parent_reflects_through_getpem_and_pemstatus();
     test_same_prg_child_identity_reflects_through_getpem_and_pemstatus();
