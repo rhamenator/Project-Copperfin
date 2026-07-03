@@ -842,12 +842,56 @@
                     const std::string class_name = value_as_string(arguments[0]);
                     const std::string library = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{};
                     const std::string server = arguments.size() >= 6U ? value_as_string(arguments[5]) : std::string{};
-                    std::string source = library.empty() ? "newobject" : library;
-                    if (!trim_copy(server).empty())
+                    const auto looks_like_library_target = [](const std::string &candidate)
+                    {
+                        const auto has_suffix = [](const std::string &text, const char *suffix)
+                        {
+                            const std::size_t suffix_length = std::char_traits<char>::length(suffix);
+                            return text.size() >= suffix_length &&
+                                   text.compare(text.size() - suffix_length, suffix_length, suffix) == 0;
+                        };
+                        const std::string trimmed = trim_copy(candidate);
+                        if (trimmed.empty())
+                        {
+                            return false;
+                        }
+                        if (trimmed.find('/') != std::string::npos ||
+                            trimmed.find('\\') != std::string::npos ||
+                            trimmed.find(':') != std::string::npos)
+                        {
+                            return true;
+                        }
+
+                        const std::string normalized = lowercase_copy(trimmed);
+                        return has_suffix(normalized, ".vcx") ||
+                               has_suffix(normalized, ".dll") ||
+                               has_suffix(normalized, ".ocx") ||
+                               has_suffix(normalized, ".exe") ||
+                               has_suffix(normalized, ".so") ||
+                               has_suffix(normalized, ".dylib") ||
+                               has_suffix(normalized, ".fll");
+                    };
+
+                    const bool explicit_server = !trim_copy(server).empty();
+                    const bool library_looks_explicit = looks_like_library_target(library);
+                    const bool bare_native_candidate = !explicit_server && (!trim_copy(library).empty() ? !library_looks_explicit : true);
+
+                    std::vector<PrgValue> constructor_arguments;
+                    if (bare_native_candidate)
+                    {
+                        constructor_arguments.reserve(arguments.size() > 0U ? arguments.size() - 1U : 0U);
+                        for (std::size_t index = 1U; index < arguments.size(); ++index)
+                        {
+                            constructor_arguments.push_back(arguments[index]);
+                        }
+                    }
+
+                    std::string source = bare_native_candidate ? std::string{"newobject"} : (library.empty() ? "newobject" : library);
+                    if (explicit_server)
                     {
                         source += "@" + server;
                     }
-                    const int handle = register_ole_callback_(class_name, source, {});
+                    const int handle = register_ole_callback_(class_name, source, constructor_arguments);
                     std::string detail = class_name;
                     if (!library.empty())
                     {

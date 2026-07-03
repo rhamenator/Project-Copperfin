@@ -1404,7 +1404,7 @@
                                           init_method_name,
                                           *init_method,
                                           this_reference,
-                                          normalized_source == "createobject" ? constructor_arguments : std::vector<PrgValue>{},
+                                          constructor_arguments,
                                           {});
                         (void)run_expression_invoked_routine_until_return(return_depth);
                     }

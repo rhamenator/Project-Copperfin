@@ -1258,6 +1258,109 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_newobject_arguments_flow_into_native_init_while_createobject_and_com_newobject_stay_stable()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_newobject_init_args";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_newobject_init_args.prg";
+        write_text(
+            main_path,
+            "oCtor = NEWOBJECT('CtorWidget', 'New', 6)\n"
+            "oCreate = CREATEOBJECT('CreateWidget', 'Create', 2)\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 4)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "cCtorCaption = oCtor.Caption\n"
+            "nCtorCount = oCtor.nCount\n"
+            "lCtorInitRan = oCtor.lInitRan\n"
+            "cCreateCaption = oCreate.Caption\n"
+            "nCreateCount = oCreate.nCount\n"
+            "lCreateInitRan = oCreate.lInitRan\n"
+            "RETURN\n"
+            "DEFINE CLASS CtorWidget AS Custom\n"
+            "    Caption = 'Base'\n"
+            "    nCount = 1\n"
+            "    lInitRan = .F.\n"
+            "    PROCEDURE Init\n"
+            "        LPARAMETERS tcSuffix, tnDelta\n"
+            "        THIS.Caption = THIS.Caption + '-' + tcSuffix\n"
+            "        THIS.nCount = THIS.nCount + tnDelta\n"
+            "        THIS.lInitRan = .T.\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS CreateWidget AS Custom\n"
+            "    Caption = 'CreateBase'\n"
+            "    nCount = 10\n"
+            "    lInitRan = .F.\n"
+            "    PROCEDURE Init\n"
+            "        LPARAMETERS tcSuffix, tnDelta\n"
+            "        THIS.Caption = THIS.Caption + '-' + tcSuffix\n"
+            "        THIS.nCount = THIS.nCount + tnDelta\n"
+            "        THIS.lInitRan = .T.\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native NEWOBJECT Init-args script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cctorcaption", "Base-New");
+        check("nctorcount", "7");
+        check("lctorinitran", "true");
+        check("ccreatecaption", "CreateBase-Create");
+        check("ncreatecount", "12");
+        check("lcreateinitran", "true");
+        check("ldictset", "true");
+        check("ndictcompare", "4");
+
+        expect(state.ole_objects.size() == 3U,
+               "NEWOBJECT Init-args script should register native NEWOBJECT, native CREATEOBJECT, and COM NEWOBJECT objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            expect(state.ole_objects[0].prog_id == "CtorWidget",
+                   "native NEWOBJECT Init-args script should preserve constructor-target class identity");
+            const auto ctor_count = state.ole_objects[0].properties.find("ncount");
+            expect(ctor_count != state.ole_objects[0].properties.end(),
+                   "native NEWOBJECT Init-args script should persist Init-updated numeric state");
+            if (ctor_count != state.ole_objects[0].properties.end())
+            {
+                expect(copperfin::runtime::format_value(ctor_count->second) == "7",
+                       "native NEWOBJECT Init-args script should apply trailing NEWOBJECT arguments inside Init");
+            }
+
+            expect(state.ole_objects[1].prog_id == "CreateWidget",
+                   "CREATEOBJECT constructor-argument behavior should remain stable while NEWOBJECT gains parity");
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT library activation should remain stable while native NEWOBJECT gains Init arguments");
+            expect(state.ole_objects[2].source == "vbscript.dll",
+                   "COM NEWOBJECT library source should remain stable while native NEWOBJECT gains Init arguments");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_codepage_and_misc_runtime_surface_functions()
     {
         namespace fs = std::filesystem;
@@ -1933,6 +2036,7 @@ int main()
     test_native_prg_object_methods_bind_this_and_persist_instance_state();
     test_native_prg_init_runs_during_object_creation_and_preserves_plain_creation();
     test_createobject_arguments_flow_into_native_init_while_newobject_and_non_native_creation_stay_stable();
+    test_newobject_arguments_flow_into_native_init_while_createobject_and_com_newobject_stay_stable();
     test_codepage_and_misc_runtime_surface_functions();
     test_lookup_expression_function();
     test_lookup_expression_function_supports_sql_cursors();
