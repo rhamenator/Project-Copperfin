@@ -79,6 +79,7 @@ enum class StatementKind {
     catch_statement,
     finally_statement,
     endtry_statement,
+    throw_statement,
     public_declaration,
     local_declaration,
     private_declaration,

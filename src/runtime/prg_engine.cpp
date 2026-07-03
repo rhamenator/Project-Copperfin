@@ -364,6 +364,7 @@ namespace copperfin::runtime
             std::string ole_action;
             int ole_native_code = 0;
             bool has_ole_native_code = false;
+            std::optional<PrgValue> thrown_user_value;
         };
 
         struct FaultMetadataSnapshot

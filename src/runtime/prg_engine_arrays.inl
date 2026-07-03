@@ -618,7 +618,10 @@
             std::vector<PrgValue> values{
                 make_number_value(static_cast<double>(effective_error_code)),
                 make_string_value(effective_error_message),
-                make_string_value(error_parameter == effective_error_message ? std::string{} : error_parameter),
+                make_string_value(
+                    compatibility.thrown_user_value.has_value()
+                        ? format_value(*compatibility.thrown_user_value)
+                        : (error_parameter == effective_error_message ? std::string{} : error_parameter)),
                 make_number_value(static_cast<double>(current_error_work_area() == 0 ? current_selected_work_area() : current_error_work_area())),
                 make_number_value(static_cast<double>(current_fault_location().line)),
                 make_string_value(current_error_procedure()),

@@ -142,6 +142,8 @@ const char* statement_kind_name(const StatementKind kind) {
             return "finally_statement";
         case StatementKind::endtry_statement:
             return "endtry_statement";
+        case StatementKind::throw_statement:
+            return "throw_statement";
         case StatementKind::public_declaration:
             return "public_declaration";
         case StatementKind::local_declaration:

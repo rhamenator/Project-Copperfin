@@ -2083,6 +2083,18 @@
                     frame.tries.pop_back();
                 }
                 return {};
+            case StatementKind::throw_statement:
+            {
+                const PrgValue thrown_value = statement.expression.empty()
+                    ? make_empty_value()
+                    : evaluate_expression(statement.expression, frame);
+                last_error_message = format_value(thrown_value);
+                last_error_compatibility = {};
+                last_error_compatibility.thrown_user_value = thrown_value;
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                return {.ok = false, .message = last_error_message};
+            }
             case StatementKind::read_events:
                 waiting_for_events = true;
                 events.push_back({.category = "runtime.event_loop",

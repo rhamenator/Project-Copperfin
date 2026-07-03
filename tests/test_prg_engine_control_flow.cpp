@@ -68,6 +68,7 @@ int main() {
     test_with_endwith_resolves_leading_dot_member_access();
     test_try_catch_finally_handles_runtime_errors();
     test_catch_to_binds_exception_object_with_error_metadata();
+    test_throw_is_catchable_and_preserves_exception_uservalue();
     test_try_finally_runs_without_catch_on_success();
     test_do_with_by_reference_updates_caller_variable();
     test_print_command_emits_event();

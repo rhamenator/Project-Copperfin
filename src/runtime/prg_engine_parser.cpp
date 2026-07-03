@@ -806,6 +806,9 @@ Program parse_program(const std::string& path) {
             statement.kind = StatementKind::finally_statement;
         } else if (upper == "ENDTRY") {
             statement.kind = StatementKind::endtry_statement;
+        } else if (upper == "THROW" || starts_with_insensitive(line, "THROW ")) {
+            statement.kind = StatementKind::throw_statement;
+            statement.expression = upper == "THROW" ? std::string{} : trim_copy(line.substr(6U));
         } else if (starts_with_insensitive(line, "DO FORM ")) {
             statement.kind = StatementKind::do_form;
             statement.identifier = trim_copy(line.substr(8U));

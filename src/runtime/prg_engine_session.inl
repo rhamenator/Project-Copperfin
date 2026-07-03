@@ -774,7 +774,11 @@
             last_error_code = classify_runtime_error_code(last_error_message);
             last_error_work_area = current_selected_work_area();
             last_error_procedure = frame.routine_name;
-            if (last_error_code != 1526 && last_error_code != 1429)
+            const bool preserve_compatibility =
+                last_error_code == 1526 ||
+                last_error_code == 1429 ||
+                last_error_compatibility.thrown_user_value.has_value();
+            if (!preserve_compatibility)
             {
                 last_error_compatibility = {};
             }
@@ -876,7 +880,7 @@
             object_state.properties["details"] = make_string_value(detail);
             object_state.properties["linecontents"] = make_string_value(current_fault_statement());
             object_state.properties["stacklevel"] = make_number_value(static_cast<double>(stack.size()));
-            object_state.properties["uservalue"] = make_empty_value();
+            object_state.properties["uservalue"] = compatibility.thrown_user_value.value_or(make_empty_value());
 
             auto [inserted, _] = ole_objects.emplace(handle, std::move(object_state));
             return make_string_value("object:" + inserted->second.prog_id + "#" + std::to_string(inserted->second.handle));

@@ -1183,6 +1183,133 @@ void test_catch_to_binds_exception_object_with_error_metadata() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_throw_is_catchable_and_preserves_exception_uservalue() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_throw_exception_uservalue";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "throw_exception_uservalue.prg";
+    write_text(
+        main_path,
+        "TRY\n"
+        "  DO raiselegacy\n"
+        "CATCH TO oErr\n"
+        "  cCatchType = TYPE('oErr')\n"
+        "  cCatchClass = oErr.Class\n"
+        "  cCatchBaseClass = oErr.BaseClass\n"
+        "  cCatchMessage = oErr.Message\n"
+        "  cCatchDetails = oErr.Details\n"
+        "  nCatchUserValue = oErr.UserValue\n"
+        "  cCatchUserValueType = VARTYPE(oErr.UserValue)\n"
+        "  nCatchLineNo = oErr.LineNo\n"
+        "  cCatchProcedure = oErr.Procedure\n"
+        "  cCatchLineContents = oErr.LineContents\n"
+        "  lCatchHasUserValue = PEMSTATUS(oErr, 'UserValue', 1)\n"
+        "  lCatchSameObject = COMPOBJ(oErr, oErr)\n"
+        "  nErrRows = AERROR(aErr)\n"
+        "  nErrCode = aErr[1,1]\n"
+        "  cErrMsg = aErr[1,2]\n"
+        "  cErrParam = aErr[1,3]\n"
+        "  nErrLine = aErr[1,5]\n"
+        "  cErrProc = aErr[1,6]\n"
+        "  cErrStmt = aErr[1,7]\n"
+        "  nFnCode = ERROR()\n"
+        "  cFnMsg = MESSAGE()\n"
+        "  nFnLine = LINENO()\n"
+        "  cFnProg = PROGRAM()\n"
+        "ENDTRY\n"
+        "RETURN\n"
+        "PROCEDURE raiselegacy\n"
+        "  THROW 42\n"
+        "  RETURN\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "THROW/CATCH Exception-object script should complete: " + state.message);
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto it = state.globals.find(name);
+        if (it == state.globals.end()) {
+            expect(false, name + " should be captured");
+            return;
+        }
+        expect(copperfin::runtime::format_value(it->second) == expected,
+               name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+    };
+
+    check("ccatchtype", "O");
+    check("ccatchclass", "Exception");
+    check("ccatchbaseclass", "Exception");
+    check("ccatchmessage", "42");
+    check("ccatchdetails", "42");
+    check("ncatchuservalue", "42");
+    check("ccatchuservaluetype", "N");
+    check("ccatchprocedure", "raiselegacy");
+    check("ccatchlinecontents", "THROW 42");
+    check("lcatchhasuservalue", "true");
+    check("lcatchsameobject", "true");
+    check("nerrrows", "1");
+    check("cerrmsg", "42");
+    check("cerrparam", "42");
+    check("cerrproc", "raiselegacy");
+    check("cerrstmt", "THROW 42");
+    check("cfnmsg", "42");
+    check("cfnprog", "raiselegacy");
+
+    const auto catch_line_no = state.globals.find("ncatchlineno");
+    const auto err_code = state.globals.find("nerrcode");
+    const auto err_line = state.globals.find("nerrline");
+    const auto fn_code = state.globals.find("nfncode");
+    const auto fn_line = state.globals.find("nfnline");
+
+    expect(catch_line_no != state.globals.end(), "caught THROW Exception should expose LineNo");
+    expect(err_code != state.globals.end(), "AERROR() should expose thrown error code");
+    expect(err_line != state.globals.end(), "AERROR() should expose thrown line");
+    expect(fn_code != state.globals.end(), "ERROR() should expose thrown error code");
+    expect(fn_line != state.globals.end(), "LINENO() should expose thrown line");
+
+    if (catch_line_no != state.globals.end()) {
+        expect(copperfin::runtime::format_value(catch_line_no->second) == "30",
+               "caught THROW Exception LineNo should report the THROW statement line");
+    }
+    if (err_line != state.globals.end()) {
+        expect(copperfin::runtime::format_value(err_line->second) == "30",
+               "AERROR()[1,5] should report the THROW statement line");
+    }
+    if (fn_line != state.globals.end()) {
+        expect(copperfin::runtime::format_value(fn_line->second) == "30",
+               "LINENO() should report the THROW statement line");
+    }
+    if (err_code != state.globals.end() && fn_code != state.globals.end()) {
+        expect(copperfin::runtime::format_value(err_code->second) ==
+                   copperfin::runtime::format_value(fn_code->second),
+               "AERROR()[1,1] should continue matching ERROR() for THROW");
+    }
+
+    expect(state.ole_objects.size() == 1U,
+           "THROW/CATCH script should materialize one caught Exception object");
+    if (state.ole_objects.size() == 1U) {
+        const auto& caught_object = state.ole_objects[0];
+        expect(caught_object.prog_id == "Exception",
+               "caught THROW object should preserve the builtin Exception class token");
+        expect(caught_object.source.empty(),
+               "caught THROW object should remain synthetic rather than PRG-backed");
+        expect(caught_object.base_class_name == "Exception",
+               "caught THROW object should expose Exception as BaseClass");
+        const auto user_value = caught_object.properties.find("uservalue");
+        expect(user_value != caught_object.properties.end() &&
+                   copperfin::runtime::format_value(user_value->second) == "42",
+               "caught THROW object should preserve the thrown UserValue");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_try_finally_runs_without_catch_on_success() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_try_finally_success";
