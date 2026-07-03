@@ -140,6 +140,7 @@ namespace copperfin::runtime
             bool handling_error = false;
             bool entered_catch = false;
             bool entered_finally = false;
+            bool propagate_after_finally = false;
         };
 
         struct Frame

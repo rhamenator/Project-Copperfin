@@ -1650,6 +1650,194 @@ void test_catch_to_when_false_resets_variable_and_falls_to_outer_handler() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_catch_when_false_with_finally_reaches_outer_catch_with_original_metadata() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_catch_when_finally_outer";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "catch_when_finally_outer.prg";
+    write_text(
+        main_path,
+        "TRY\n"
+        "  TRY\n"
+        "    bad = LOG(-1)\n"
+        "  CATCH TO oSkip WHEN oSkip.ErrorNo = 999\n"
+        "    cInnerHandled = 'wrong'\n"
+        "  FINALLY\n"
+        "    lFinallyHit = .T.\n"
+        "  ENDTRY\n"
+        "CATCH TO oOuter\n"
+        "  lOuterHandled = .T.\n"
+        "  cSkipType = VARTYPE(oSkip)\n"
+        "  cOuterMsg = oOuter.Message\n"
+        "  nOuterLine = oOuter.LineNo\n"
+        "  cOuterStmt = oOuter.LineContents\n"
+        "  nErrRows = AERROR(aErr)\n"
+        "  cErrMsg = aErr[1,2]\n"
+        "  nErrLine = aErr[1,5]\n"
+        "  cErrStmt = aErr[1,7]\n"
+        "  cFnMsg = MESSAGE()\n"
+        "  nFnLine = LINENO()\n"
+        "ENDTRY\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "inner FINALLY outer CATCH script should complete: " + state.message);
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto it = state.globals.find(name);
+        if (it == state.globals.end()) {
+            expect(false, name + " should be captured");
+            return;
+        }
+        expect(copperfin::runtime::format_value(it->second) == expected,
+               name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+    };
+
+    check("lfinallyhit", "true");
+    check("louterhandled", "true");
+    check("cskiptype", "U");
+    check("nerrrows", "1");
+
+    const auto outer_msg = state.globals.find("coutermsg");
+    const auto err_msg = state.globals.find("cerrmsg");
+    const auto fn_msg = state.globals.find("cfnmsg");
+    const auto outer_line = state.globals.find("nouterline");
+    const auto err_line = state.globals.find("nerrline");
+    const auto fn_line = state.globals.find("nfnline");
+    const auto outer_stmt = state.globals.find("couterstmt");
+    const auto err_stmt = state.globals.find("cerrstmt");
+    const auto inner_handled = state.globals.find("cinnerhandled");
+
+    expect(inner_handled == state.globals.end(),
+           "non-matching inner CATCH WHEN with FINALLY should not execute its body");
+    expect(outer_msg != state.globals.end(), "outer CATCH should expose original Message after FINALLY");
+    expect(err_msg != state.globals.end(), "AERROR() should expose original Message after FINALLY");
+    expect(fn_msg != state.globals.end(), "MESSAGE() should expose original Message after FINALLY");
+    expect(outer_line != state.globals.end(), "outer CATCH should expose original LineNo after FINALLY");
+    expect(err_line != state.globals.end(), "AERROR() should expose original LineNo after FINALLY");
+    expect(fn_line != state.globals.end(), "LINENO() should expose original LineNo after FINALLY");
+    expect(outer_stmt != state.globals.end(), "outer CATCH should expose original LineContents after FINALLY");
+    expect(err_stmt != state.globals.end(), "AERROR() should expose original LineContents after FINALLY");
+
+    if (outer_msg != state.globals.end() && err_msg != state.globals.end() && fn_msg != state.globals.end()) {
+        expect(copperfin::runtime::format_value(outer_msg->second) ==
+                   copperfin::runtime::format_value(err_msg->second),
+               "inner FINALLY outer CATCH should keep AERROR()[1,2] aligned with the original Message");
+        expect(copperfin::runtime::format_value(outer_msg->second) ==
+                   copperfin::runtime::format_value(fn_msg->second),
+               "inner FINALLY outer CATCH should keep MESSAGE() aligned with the original Message");
+    }
+    if (outer_line != state.globals.end()) {
+        expect(copperfin::runtime::format_value(outer_line->second) == "3",
+               "outer CATCH after inner FINALLY should preserve the original fault line");
+    }
+    if (err_line != state.globals.end()) {
+        expect(copperfin::runtime::format_value(err_line->second) == "3",
+               "AERROR()[1,5] after inner FINALLY should preserve the original fault line");
+    }
+    if (fn_line != state.globals.end()) {
+        expect(copperfin::runtime::format_value(fn_line->second) == "3",
+               "LINENO() after inner FINALLY should preserve the original fault line");
+    }
+    if (outer_stmt != state.globals.end()) {
+        expect(copperfin::runtime::format_value(outer_stmt->second) == "bad = LOG(-1)",
+               "outer CATCH after inner FINALLY should preserve the original fault statement");
+    }
+    if (err_stmt != state.globals.end()) {
+        expect(copperfin::runtime::format_value(err_stmt->second) == "bad = LOG(-1)",
+               "AERROR()[1,7] after inner FINALLY should preserve the original fault statement");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_catch_when_false_with_finally_reaches_on_error_with_original_metadata() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_catch_when_finally_on_error";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "catch_when_finally_on_error.prg";
+    write_text(
+        main_path,
+        "ON ERROR DO handleerr\n"
+        "TRY\n"
+        "  bad = LOG(-1)\n"
+        "CATCH TO oSkip WHEN oSkip.ErrorNo = 999\n"
+        "  cInnerHandled = 'wrong'\n"
+        "FINALLY\n"
+        "  lFinallyHit = .T.\n"
+        "ENDTRY\n"
+        "after_fault = 1\n"
+        "RETURN\n"
+        "PROCEDURE handleerr\n"
+        "lHandled = .T.\n"
+        "nErrRows = AERROR(aErr)\n"
+        "cErrMsg = aErr[1,2]\n"
+        "nErrLine = aErr[1,5]\n"
+        "cErrStmt = aErr[1,7]\n"
+        "cFnMsg = MESSAGE()\n"
+        "nFnLine = LINENO()\n"
+        "RETURN\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "inner FINALLY ON ERROR script should complete: " + state.message);
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto it = state.globals.find(name);
+        if (it == state.globals.end()) {
+            expect(false, name + " should be captured");
+            return;
+        }
+        expect(copperfin::runtime::format_value(it->second) == expected,
+               name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+    };
+
+    check("lfinallyhit", "true");
+    check("lhandled", "true");
+    check("after_fault", "1");
+    check("nerrrows", "1");
+
+    const auto err_line = state.globals.find("nerrline");
+    const auto fn_line = state.globals.find("nfnline");
+    const auto err_stmt = state.globals.find("cerrstmt");
+    const auto fn_msg = state.globals.find("cfnmsg");
+    const auto inner_handled = state.globals.find("cinnerhandled");
+
+    expect(inner_handled == state.globals.end(),
+           "non-matching CATCH WHEN with FINALLY should not execute before ON ERROR");
+    expect(err_line != state.globals.end(), "AERROR() should expose original LineNo after FINALLY/ON ERROR");
+    expect(fn_line != state.globals.end(), "LINENO() should expose original LineNo after FINALLY/ON ERROR");
+    expect(err_stmt != state.globals.end(), "AERROR() should expose original LineContents after FINALLY/ON ERROR");
+    expect(fn_msg != state.globals.end(), "MESSAGE() should expose original Message after FINALLY/ON ERROR");
+
+    if (err_line != state.globals.end()) {
+        expect(copperfin::runtime::format_value(err_line->second) == "3",
+               "AERROR()[1,5] after FINALLY/ON ERROR should preserve the original fault line");
+    }
+    if (fn_line != state.globals.end()) {
+        expect(copperfin::runtime::format_value(fn_line->second) == "3",
+               "LINENO() after FINALLY/ON ERROR should preserve the original fault line");
+    }
+    if (err_stmt != state.globals.end()) {
+        expect(copperfin::runtime::format_value(err_stmt->second) == "bad = LOG(-1)",
+               "AERROR()[1,7] after FINALLY/ON ERROR should preserve the original fault statement");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_try_finally_runs_without_catch_on_success() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_try_finally_success";

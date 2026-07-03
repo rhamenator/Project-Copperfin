@@ -404,6 +404,7 @@
                     active_try.handling_error = true;
                     active_try.entered_catch = true;
                     active_try.entered_finally = false;
+                    active_try.propagate_after_finally = false;
                     frame.pc = catch_statement_index + 1U;
 
                     events.push_back({.category = "runtime.try_handler",
@@ -417,6 +418,9 @@
                     active_try.handling_error = true;
                     active_try.entered_catch = false;
                     active_try.entered_finally = true;
+                    active_try.propagate_after_finally = true;
+                    last_error_compatibility.explicit_error_code = last_error_code;
+                    last_error_compatibility.preserve_fault_context = true;
                     frame.pc = *active_try.finally_statement_index + 1U;
 
                     events.push_back({.category = "runtime.try_handler",

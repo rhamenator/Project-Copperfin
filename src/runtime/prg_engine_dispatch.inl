@@ -2043,7 +2043,8 @@
                                        .endtry_statement_index = *targets.endtry_statement_index,
                                        .handling_error = false,
                                        .entered_catch = false,
-                                       .entered_finally = false});
+                                       .entered_finally = false,
+                                       .propagate_after_finally = false});
                 return {};
             }
             case StatementKind::catch_statement:
@@ -2074,7 +2075,12 @@
             case StatementKind::endtry_statement:
                 if (!frame.tries.empty() && frame.tries.back().endtry_statement_index == (frame.pc - 1U))
                 {
+                    const bool propagate_after_finally = frame.tries.back().propagate_after_finally;
                     frame.tries.pop_back();
+                    if (propagate_after_finally)
+                    {
+                        return {.ok = false, .message = last_error_message};
+                    }
                 }
                 return {};
             case StatementKind::throw_statement:
