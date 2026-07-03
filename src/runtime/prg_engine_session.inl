@@ -534,6 +534,14 @@
                 object_state.properties["parent"] = *parent_reference;
             }
 
+            object_state.base_class_name =
+                native_same_prg_base_class_name(class_definition.base_class_name);
+            if (!trim_copy(class_definition.base_class_source_path).empty())
+            {
+                object_state.class_library =
+                    resolve_native_prg_program_path(class_definition.base_class_source_path, program.path);
+            }
+
             object_state.class_hierarchy.reserve(class_lineage.size() + 2U);
             for (auto lineage_it = class_lineage.rbegin(); lineage_it != class_lineage.rend(); ++lineage_it)
             {

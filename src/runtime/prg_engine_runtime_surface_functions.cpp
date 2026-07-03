@@ -180,6 +180,18 @@ bool is_scripting_dictionary_object(const RuntimeOleObjectState& runtime_object)
     return normalize_identifier(runtime_object.prog_id) == "scripting.dictionary";
 }
 
+std::optional<PrgValue> get_native_identity_metadata(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name == "baseclass" && !trim_copy(runtime_object.base_class_name).empty()) {
+        return make_string_value(runtime_object.base_class_name);
+    }
+    if (normalized_member_name == "classlibrary" && !trim_copy(runtime_object.class_library).empty()) {
+        return make_string_value(runtime_object.class_library);
+    }
+    return std::nullopt;
+}
+
 bool method_ends_with_suffix(
     const std::string& method_name,
     const std::string& suffix,
@@ -642,7 +654,8 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             return make_boolean_value(false);
         }
         if (attribute == 1) {
-            const bool exists = runtime_object->properties.contains(member_name) ||
+            const bool exists = get_native_identity_metadata(*runtime_object, member_name).has_value() ||
+                                runtime_object->properties.contains(member_name) ||
                                 object_has_accessor_property(*runtime_object, member_name) ||
                                 object_has_member(runtime_object->methods, member_name) ||
                                 object_has_member(runtime_object->events, member_name);
@@ -653,6 +666,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         if (attribute == 5) {
             const bool readonly =
+                get_native_identity_metadata(*runtime_object, member_name).has_value() ||
                 (is_scripting_dictionary_object(*runtime_object) && member_name == "count") ||
                 (object_has_accessor_property(*runtime_object, member_name) &&
                  !object_has_assigner_property(*runtime_object, member_name));
@@ -692,6 +706,10 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         const std::string member_name = normalize_identifier(trim_copy(value_as_string(arguments[1])));
         if (runtime_object == nullptr || member_name.empty()) {
             return make_empty_value();
+        }
+        if (const auto metadata_value = get_native_identity_metadata(*runtime_object, member_name);
+            metadata_value.has_value()) {
+            return *metadata_value;
         }
         const auto prop_it = runtime_object->properties.find(member_name);
         if (prop_it != runtime_object->properties.end()) {

@@ -126,6 +126,8 @@ struct RuntimeOleObjectState {
     int action_count = 0;
     std::map<std::string, PrgValue> properties{};
     std::vector<std::string> class_hierarchy{};
+    std::string base_class_name{};
+    std::string class_library{};
     std::vector<std::string> methods{};
     std::vector<std::string> events{};
 };
