@@ -28246,6 +28246,252 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_inherited_external_base_declarative_deeper_external_child_external_base_provenance_stays_coherent()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_external_base_inherited_declarative_deeper_external_child_external_base_provenance";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path root_library_path = temp_root / "rootbuttons.prg";
+        write_text(
+            root_library_path,
+            "DEFINE CLASS RootButton AS Custom\n"
+            "    FUNCTION RootToken\n"
+            "        RETURN 'RootToken'\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        const fs::path button_library_path = temp_root / "buttons.prg";
+        write_text(
+            button_library_path,
+            "DEFINE CLASS ParentButton AS RootButton OF rootbuttons.prg\n"
+            "    FUNCTION OwnerCaption\n"
+            "        RETURN PARENT.Caption\n"
+            "    ENDFUNC\n"
+            "    FUNCTION TriggerSave\n"
+            "        RETURN THISFORM.Save()\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        const fs::path widget_library_path = temp_root / "widgetlib.prg";
+        write_text(
+            widget_library_path,
+            "DEFINE CLASS ParentForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    cInitChildCaption = ''\n"
+            "    cInitOwnerCaption = ''\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "    PROCEDURE Init\n"
+            "        THIS.cInitChildCaption = THIS.cmdSave.Caption\n"
+            "        THIS.cInitOwnerCaption = THIS.cmdSave.OwnerCaption()\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "    FUNCTION Save\n"
+            "        THIS.Caption = THIS.Caption + '-Saved'\n"
+            "        RETURN THIS.Caption\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS ParentButton OF buttons.prg\n"
+            "    Caption = 'Save'\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "external_base_inherited_declarative_deeper_external_child_external_base_provenance.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildForm')\n"
+            "oLeaf = NEWOBJECT('LeafForm')\n"
+            "oChild = oCreate.cmdSave\n"
+            "oLeafChild = oLeaf.cmdSave\n"
+            "cCreateInitChildCaption = oCreate.cInitChildCaption\n"
+            "cLeafInitChildCaption = oLeaf.cInitChildCaption\n"
+            "cCreateInitOwnerCaption = oCreate.cInitOwnerCaption\n"
+            "cLeafInitOwnerCaption = oLeaf.cInitOwnerCaption\n"
+            "cCreateChildClass = oChild.Class\n"
+            "cCreateChildBaseClass = oChild.BaseClass\n"
+            "cCreateChildParentClass = oChild.ParentClass\n"
+            "cCreateChildClassLibrary = oChild.ClassLibrary\n"
+            "cCreateChildClassReflect = GETPEM(oChild, 'Class')\n"
+            "cCreateChildBaseClassReflect = GETPEM(oChild, 'BaseClass')\n"
+            "cCreateChildParentClassReflect = GETPEM(oChild, 'ParentClass')\n"
+            "cCreateChildClassLibraryReflect = GETPEM(oChild, 'ClassLibrary')\n"
+            "lCreateChildHasClass = PEMSTATUS(oChild, 'Class', 1)\n"
+            "lCreateChildHasBaseClass = PEMSTATUS(oChild, 'BaseClass', 1)\n"
+            "lCreateChildHasParentClass = PEMSTATUS(oChild, 'ParentClass', 1)\n"
+            "lCreateChildHasClassLibrary = PEMSTATUS(oChild, 'ClassLibrary', 1)\n"
+            "lCreateChildClassReadOnly = PEMSTATUS(oChild, 'Class', 5)\n"
+            "lCreateChildBaseClassReadOnly = PEMSTATUS(oChild, 'BaseClass', 5)\n"
+            "lCreateChildParentClassReadOnly = PEMSTATUS(oChild, 'ParentClass', 5)\n"
+            "lCreateChildClassLibraryReadOnly = PEMSTATUS(oChild, 'ClassLibrary', 5)\n"
+            "nMembersProps = AMEMBERS(aMembersProps, oChild, 1)\n"
+            "nMembersUnion = AMEMBERS(aMembersUnion, oChild, 3)\n"
+            "cProp1 = aMembersProps[1]\n"
+            "cProp2 = aMembersProps[2]\n"
+            "cProp3 = aMembersProps[3]\n"
+            "cProp4 = aMembersProps[4]\n"
+            "cProp5 = aMembersProps[5]\n"
+            "cProp6 = aMembersProps[6]\n"
+            "nClassCount = ACLASS(aClass, oChild)\n"
+            "cClass1 = aClass[1]\n"
+            "cClass2 = aClass[2]\n"
+            "cClass3 = aClass[3]\n"
+            "cClass4 = aClass[4]\n"
+            "cClass5 = aClass[5]\n"
+            "cCreateOwnerCaption = oChild.OwnerCaption()\n"
+            "cLeafOwnerCaption = oLeafChild.OwnerCaption()\n"
+            "cCreateSavedCaption = oChild.TriggerSave()\n"
+            "cLeafSavedCaption = oLeafChild.TriggerSave()\n"
+            "cCreateCaptionAfterSave = oCreate.Caption\n"
+            "cLeafCaptionAfterSave = oLeaf.Caption\n"
+            "cLeafChildClassLibrary = oLeafChild.ClassLibrary\n"
+            "cLeafChildBaseClass = oLeafChild.BaseClass\n"
+            "lCreateChildHasParent = PEMSTATUS(oChild, 'Parent', 1)\n"
+            "lLeafChildHasParent = PEMSTATUS(oLeafChild, 'Parent', 1)\n"
+            "cRootToken = oChild.RootToken()\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 158)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildForm AS ParentForm OF widgetlib.prg\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS LeafForm AS ChildForm\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("external-base inherited declarative deeper external child external-base provenance script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("ccreateinitchildcaption", "Save");
+        check("cleafinitchildcaption", "Save");
+        check("ccreateinitownercaption", "MainForm");
+        check("cleafinitownercaption", "MainForm");
+        check("ccreatechildclass", "SaveButton");
+        check("ccreatechildbaseclass", "ParentButton");
+        check("ccreatechildparentclass", "ParentButton");
+        check("ccreatechildclasslibrary", button_library_path.string());
+        check("ccreatechildclassreflect", "SaveButton");
+        check("ccreatechildbaseclassreflect", "ParentButton");
+        check("ccreatechildparentclassreflect", "ParentButton");
+        check("ccreatechildclasslibraryreflect", button_library_path.string());
+        check("lcreatechildhasclass", "true");
+        check("lcreatechildhasbaseclass", "true");
+        check("lcreatechildhasparentclass", "true");
+        check("lcreatechildhasclasslibrary", "true");
+        check("lcreatechildclassreadonly", "true");
+        check("lcreatechildbaseclassreadonly", "true");
+        check("lcreatechildparentclassreadonly", "true");
+        check("lcreatechildclasslibraryreadonly", "true");
+        check("nmembersprops", "6");
+        check("cprop1", "BASECLASS");
+        check("cprop2", "CAPTION");
+        check("cprop3", "CLASS");
+        check("cprop4", "CLASSLIBRARY");
+        check("cprop5", "PARENT");
+        check("cprop6", "PARENTCLASS");
+        check("nclasscount", "5");
+        check("cclass1", "SAVEBUTTON");
+        check("cclass2", "PARENTBUTTON");
+        check("cclass3", "ROOTBUTTON");
+        check("cclass4", "CUSTOM");
+        check("cclass5", "OBJECT");
+        check("ccreateownercaption", "MainForm");
+        check("cleafownercaption", "MainForm");
+        check("ccreatesavedcaption", "MainForm-Saved");
+        check("cleafsavedcaption", "MainForm-Saved");
+        check("ccreatecaptionaftersave", "MainForm-Saved");
+        check("cleafcaptionaftersave", "MainForm-Saved");
+        check("cleafchildclasslibrary", button_library_path.string());
+        check("cleafchildbaseclass", "ParentButton");
+        check("lcreatechildhasparent", "true");
+        check("lleafchildhasparent", "true");
+        check("croottoken", "RootToken");
+        check("ldictset", "true");
+        check("ndictcompare", "158");
+
+        const auto members_union = state.globals.find("nmembersunion");
+        expect(members_union != state.globals.end() &&
+                   std::stoi(copperfin::runtime::format_value(members_union->second)) >= 9,
+               "external-base inherited declarative deeper external child external-base provenance should keep union member enumeration including inherited child methods");
+
+        expect(state.ole_objects.size() == 5U,
+               "external-base inherited declarative deeper external child external-base provenance should register CREATEOBJECT parent/child, NEWOBJECT parent/child, and COM objects");
+        if (state.ole_objects.size() == 5U)
+        {
+            const auto &create_parent = state.ole_objects[0];
+            const auto &create_child = state.ole_objects[1];
+            const auto &leaf_parent = state.ole_objects[2];
+            const auto &leaf_child = state.ole_objects[3];
+            expect(create_parent.prog_id == "ChildForm",
+                   "external-base inherited declarative deeper external child external-base provenance should preserve CREATEOBJECT parent identity");
+            expect(create_parent.source == main_path.string(),
+                   "external-base inherited declarative deeper external child external-base provenance should preserve CREATEOBJECT parent source");
+            expect(create_child.prog_id == "SaveButton",
+                   "external-base inherited declarative deeper external child external-base provenance should preserve CREATEOBJECT child identity");
+            expect(create_child.base_class_name == "ParentButton",
+                   "external-base inherited declarative deeper external child external-base provenance should preserve immediate child base-class identity");
+            expect(create_child.source == widget_library_path.string(),
+                   "external-base inherited declarative deeper external child external-base provenance should preserve the defining child-class source path");
+            expect(create_child.class_library == button_library_path.string(),
+                   "external-base inherited declarative deeper external child external-base provenance should preserve the immediate external ClassLibrary path");
+            expect(create_child.class_hierarchy.size() == 5U,
+                   "external-base inherited declarative deeper external child external-base provenance should preserve the deeper runtime child class hierarchy");
+            expect(!create_child.properties.contains("classlibrary"),
+                   "external-base inherited declarative deeper external child external-base provenance should not materialize a CREATEOBJECT child ClassLibrary shadow");
+            expect(leaf_parent.prog_id == "LeafForm",
+                   "external-base inherited declarative deeper external child external-base provenance should preserve NEWOBJECT leaf identity");
+            expect(leaf_parent.source == main_path.string(),
+                   "external-base inherited declarative deeper external child external-base provenance should preserve NEWOBJECT leaf source");
+            expect(leaf_child.prog_id == "SaveButton",
+                   "external-base inherited declarative deeper external child external-base provenance should preserve leaf child identity");
+            expect(leaf_child.base_class_name == "ParentButton",
+                   "external-base inherited declarative deeper external child external-base provenance should preserve the leaf child immediate external base");
+            expect(leaf_child.source == widget_library_path.string(),
+                   "external-base inherited declarative deeper external child external-base provenance should preserve the leaf child defining source path");
+            expect(leaf_child.class_library == button_library_path.string(),
+                   "external-base inherited declarative deeper external child external-base provenance should preserve the leaf child immediate external ClassLibrary path");
+            expect(!leaf_child.properties.contains("classlibrary"),
+                   "external-base inherited declarative deeper external child external-base provenance should not materialize a leaf child ClassLibrary shadow");
+            expect(state.ole_objects[4].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while external-base inherited declarative deeper external child external-base provenance lands");
+        }
+
+        const bool has_addobject_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.addobject" &&
+                   (event.detail == "ChildForm.cmdsave:SaveButton" ||
+                    event.detail == "LeafForm.cmdsave:SaveButton");
+        });
+        expect(has_addobject_event,
+               "external-base inherited declarative deeper external child external-base provenance should emit child materialization events");
+
+        const bool has_save_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   event.detail == "ParentForm.Save";
+        });
+        expect(has_save_invoke_event,
+               "external-base inherited declarative deeper external child external-base provenance should keep child owner dispatch usable after ordinary reads and reflection");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_inherited_external_base_addobject_deeper_external_child_external_base_dotted_access_resolves_live_child_chain()
     {
         namespace fs = std::filesystem;
@@ -31656,6 +31902,7 @@ int main()
     test_native_object_block_deeper_external_child_external_base_provenance_resists_mutation();
     test_native_object_block_deeper_external_child_external_base_dotted_access_resolves_live_child_chain();
     test_inherited_external_base_addobject_deeper_external_child_external_base_provenance_stays_coherent();
+    test_inherited_external_base_declarative_deeper_external_child_external_base_provenance_stays_coherent();
     test_inherited_external_base_addobject_deeper_external_child_external_base_dotted_access_resolves_live_child_chain();
     test_native_addobject_deeper_external_child_external_base_classlibrary_stays_read_only_to_setpem();
     test_inherited_external_base_addobject_deeper_external_child_external_base_classlibrary_stays_read_only_to_setpem();
