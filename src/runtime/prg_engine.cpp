@@ -1061,6 +1061,11 @@ namespace copperfin::runtime
                 {
                     return *access_result;
                 }
+                if (auto metadata_value = read_native_identity_metadata(*runtime_object, property_name);
+                    metadata_value.has_value())
+                {
+                    return *metadata_value;
+                }
                 const auto property = runtime_object->properties.find(property_name);
                 if (property != runtime_object->properties.end())
                 {
