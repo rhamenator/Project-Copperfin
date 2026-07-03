@@ -75,6 +75,8 @@
             {
                 frame.locals["thisform"] = *owner_form_reference;
                 frame.local_names.insert("thisform");
+                frame.locals["thisformset"] = *owner_form_reference;
+                frame.local_names.insert("thisformset");
             }
             stack.push_back(std::move(frame));
         }
