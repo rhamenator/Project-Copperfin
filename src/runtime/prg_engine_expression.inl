@@ -572,6 +572,7 @@
                     }
                     const std::string normalized_identifier = normalize_identifier(identifier);
                     const bool prefer_function_call =
+                        normalized_identifier == "aclass" ||
                         normalized_identifier == "acopy" ||
                         normalized_identifier == "adel" ||
                         normalized_identifier == "adir" ||

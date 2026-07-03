@@ -23645,8 +23645,36 @@ namespace
             "cLeafSavedCaption = oLeafChild.TriggerSave()\n"
             "cCreateCaptionAfterSave = oCreate.Caption\n"
             "cLeafCaptionAfterSave = oLeaf.Caption\n"
+            "cLeafChildClass = oLeafChild.Class\n"
             "cLeafChildClassLibrary = oLeafChild.ClassLibrary\n"
             "cLeafChildBaseClass = oLeafChild.BaseClass\n"
+            "cLeafChildParentClass = oLeafChild.ParentClass\n"
+            "cLeafChildClassReflect = GETPEM(oLeafChild, 'Class')\n"
+            "cLeafChildBaseClassReflect = GETPEM(oLeafChild, 'BaseClass')\n"
+            "cLeafChildParentClassReflect = GETPEM(oLeafChild, 'ParentClass')\n"
+            "cLeafChildClassLibraryReflect = GETPEM(oLeafChild, 'ClassLibrary')\n"
+            "lLeafChildHasClass = PEMSTATUS(oLeafChild, 'Class', 1)\n"
+            "lLeafChildHasBaseClass = PEMSTATUS(oLeafChild, 'BaseClass', 1)\n"
+            "lLeafChildHasParentClass = PEMSTATUS(oLeafChild, 'ParentClass', 1)\n"
+            "lLeafChildHasClassLibrary = PEMSTATUS(oLeafChild, 'ClassLibrary', 1)\n"
+            "lLeafChildClassReadOnly = PEMSTATUS(oLeafChild, 'Class', 5)\n"
+            "lLeafChildBaseClassReadOnly = PEMSTATUS(oLeafChild, 'BaseClass', 5)\n"
+            "lLeafChildParentClassReadOnly = PEMSTATUS(oLeafChild, 'ParentClass', 5)\n"
+            "lLeafChildClassLibraryReadOnly = PEMSTATUS(oLeafChild, 'ClassLibrary', 5)\n"
+            "nLeafMembersProps = AMEMBERS(aLeafMembersProps, oLeafChild, 1)\n"
+            "nLeafMembersUnion = AMEMBERS(aLeafMembersUnion, oLeafChild, 3)\n"
+            "cLeafProp1 = aLeafMembersProps[1]\n"
+            "cLeafProp2 = aLeafMembersProps[2]\n"
+            "cLeafProp3 = aLeafMembersProps[3]\n"
+            "cLeafProp4 = aLeafMembersProps[4]\n"
+            "cLeafProp5 = aLeafMembersProps[5]\n"
+            "cLeafProp6 = aLeafMembersProps[6]\n"
+            "nLeafClassCount = ACLASS(aLeafClass, oLeafChild)\n"
+            "cLeafClass1 = aLeafClass[1]\n"
+            "cLeafClass2 = aLeafClass[2]\n"
+            "cLeafClass3 = aLeafClass[3]\n"
+            "cLeafClass4 = aLeafClass[4]\n"
+            "cLeafClass5 = aLeafClass[5]\n"
             "lCreateChildHasParent = PEMSTATUS(oChild, 'Parent', 1)\n"
             "lLeafChildHasParent = PEMSTATUS(oLeafChild, 'Parent', 1)\n"
             "cRootToken = oChild.RootToken()\n"
@@ -23718,8 +23746,35 @@ namespace
         check("cleafsavedcaption", "MainForm-Saved");
         check("ccreatecaptionaftersave", "MainForm-Saved");
         check("cleafcaptionaftersave", "MainForm-Saved");
+        check("cleafchildclass", "SaveButton");
         check("cleafchildclasslibrary", button_library_path.string());
         check("cleafchildbaseclass", "ParentButton");
+        check("cleafchildparentclass", "ParentButton");
+        check("cleafchildclassreflect", "SaveButton");
+        check("cleafchildbaseclassreflect", "ParentButton");
+        check("cleafchildparentclassreflect", "ParentButton");
+        check("cleafchildclasslibraryreflect", button_library_path.string());
+        check("lleafchildhasclass", "true");
+        check("lleafchildhasbaseclass", "true");
+        check("lleafchildhasparentclass", "true");
+        check("lleafchildhasclasslibrary", "true");
+        check("lleafchildclassreadonly", "true");
+        check("lleafchildbaseclassreadonly", "true");
+        check("lleafchildparentclassreadonly", "true");
+        check("lleafchildclasslibraryreadonly", "true");
+        check("nleafmembersprops", "6");
+        check("cleafprop1", "BASECLASS");
+        check("cleafprop2", "CAPTION");
+        check("cleafprop3", "CLASS");
+        check("cleafprop4", "CLASSLIBRARY");
+        check("cleafprop5", "PARENT");
+        check("cleafprop6", "PARENTCLASS");
+        check("nleafclasscount", "5");
+        check("cleafclass1", "SAVEBUTTON");
+        check("cleafclass2", "PARENTBUTTON");
+        check("cleafclass3", "ROOTBUTTON");
+        check("cleafclass4", "CUSTOM");
+        check("cleafclass5", "OBJECT");
         check("lcreatechildhasparent", "true");
         check("lleafchildhasparent", "true");
         check("croottoken", "RootToken");
@@ -23730,6 +23785,11 @@ namespace
         expect(members_union != state.globals.end() &&
                    std::stoi(copperfin::runtime::format_value(members_union->second)) >= 9,
                "external-base inherited object-block deeper external child external-base provenance should keep union member enumeration including inherited child methods");
+
+        const auto leaf_members_union = state.globals.find("nleafmembersunion");
+        expect(leaf_members_union != state.globals.end() &&
+                   std::stoi(copperfin::runtime::format_value(leaf_members_union->second)) >= 9,
+               "external-base inherited object-block deeper external child external-base provenance should keep leaf union member enumeration including inherited child methods");
 
         expect(state.ole_objects.size() == 5U,
                "external-base inherited object-block deeper external child external-base provenance should register CREATEOBJECT parent/child, NEWOBJECT parent/child, and COM objects");
