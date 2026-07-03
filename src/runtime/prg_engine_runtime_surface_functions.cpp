@@ -207,6 +207,7 @@ bool native_identity_member_name_matches(const RuntimeOleObjectState& runtime_ob
     }
     return normalized_member_name == "class" ||
            normalized_member_name == "baseclass" ||
+           normalized_member_name == "parentclass" ||
            normalized_member_name == "classlibrary";
 }
 
