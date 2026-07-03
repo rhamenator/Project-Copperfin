@@ -475,6 +475,12 @@ namespace copperfin::runtime
             const std::string &identifier,
             const std::vector<PrgValue> &arguments,
             const std::vector<std::optional<std::string>> &argument_references);
+        std::optional<PrgValue> invoke_native_object_method_if_present(
+            RuntimeOleObjectState &runtime_object,
+            const std::string &identifier,
+            const Frame &source_frame,
+            const std::vector<PrgValue> &arguments,
+            const std::vector<std::optional<std::string>> &argument_references);
         std::optional<PrgValue> invoke_expression_base_method(
             const Frame &source_frame,
             const std::vector<PrgValue> &arguments,
@@ -936,6 +942,16 @@ namespace copperfin::runtime
                                   .detail = runtime_object->prog_id + "." + property_path.substr(separator + 1U),
                                   .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
                 const std::string property_name = normalize_identifier(property_path.substr(separator + 1U));
+                if (auto access_result = invoke_native_object_method_if_present(
+                        *runtime_object,
+                        property_name + "_access",
+                        frame,
+                        {},
+                        {});
+                    access_result.has_value())
+                {
+                    return *access_result;
+                }
                 const auto property = runtime_object->properties.find(property_name);
                 if (property != runtime_object->properties.end())
                 {
@@ -1346,41 +1362,15 @@ namespace copperfin::runtime
                 auto runtime_object = resolve_ole_object(this_found->second);
                 if (runtime_object.has_value())
                 {
-                    std::string native_method_name;
-                    std::string native_defining_class_name;
-                    if (const Routine *native_method = find_native_same_prg_method(
-                            program,
-                            source_frame.native_method_class_name,
+                    if (auto native_result = invoke_native_object_method_if_present(
+                            **runtime_object,
                             identifier,
-                            true,
-                            native_method_name,
-                            &native_defining_class_name);
-                        native_method != nullptr)
+                            source_frame,
+                            arguments,
+                            argument_references);
+                        native_result.has_value())
                     {
-                        if (!can_push_frame())
-                        {
-                            throw std::runtime_error(call_depth_limit_message());
-                        }
-
-                        RuntimeOleObjectState *runtime_object_state = *runtime_object;
-                        runtime_object_state->last_action = identifier + "()";
-                        ++runtime_object_state->action_count;
-                        events.push_back({.category = "prg.object.invoke",
-                                          .detail = native_method_name,
-                                          .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
-
-                        const std::size_t return_depth = stack.size();
-                        push_method_frame(program.path,
-                                          native_method_name,
-                                          *native_method,
-                                          this_found->second,
-                                          native_defining_class_name,
-                                          normalize_identifier(identifier),
-                                          std::vector<PrgValue>(arguments.begin(), arguments.end()),
-                                          std::vector<std::optional<std::string>>(
-                                              argument_references.begin(),
-                                              argument_references.end()));
-                        return run_expression_invoked_routine_until_return(return_depth);
+                        return native_result;
                     }
                 }
             }
@@ -1399,6 +1389,62 @@ namespace copperfin::runtime
 
         const std::size_t return_depth = stack.size();
         push_routine_frame(program.path, found->second, arguments, argument_references);
+        return run_expression_invoked_routine_until_return(return_depth);
+    }
+
+    std::optional<PrgValue> PrgRuntimeSession::Impl::invoke_native_object_method_if_present(
+        RuntimeOleObjectState &runtime_object,
+        const std::string &identifier,
+        const Frame &source_frame,
+        const std::vector<PrgValue> &arguments,
+        const std::vector<std::optional<std::string>> &argument_references)
+    {
+        if (runtime_object.source.empty())
+        {
+            return std::nullopt;
+        }
+
+        Program &program = load_program(runtime_object.source);
+        std::string native_method_name;
+        std::string native_defining_class_name;
+        const Routine *native_method = find_native_same_prg_method(
+            program,
+            source_frame.native_method_class_name.empty()
+                ? runtime_object.prog_id
+                : source_frame.native_method_class_name,
+            identifier,
+            true,
+            native_method_name,
+            &native_defining_class_name);
+        if (native_method == nullptr)
+        {
+            return std::nullopt;
+        }
+
+        if (!can_push_frame())
+        {
+            throw std::runtime_error(call_depth_limit_message());
+        }
+
+        runtime_object.last_action = identifier + "()";
+        ++runtime_object.action_count;
+        events.push_back({.category = "prg.object.invoke",
+                          .detail = native_method_name,
+                          .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+
+        const std::size_t return_depth = stack.size();
+        const PrgValue this_reference =
+            make_string_value("object:" + runtime_object.prog_id + "#" + std::to_string(runtime_object.handle));
+        push_method_frame(program.path,
+                          native_method_name,
+                          *native_method,
+                          this_reference,
+                          native_defining_class_name,
+                          normalize_identifier(identifier),
+                          std::vector<PrgValue>(arguments.begin(), arguments.end()),
+                          std::vector<std::optional<std::string>>(
+                              argument_references.begin(),
+                              argument_references.end()));
         return run_expression_invoked_routine_until_return(return_depth);
     }
 

@@ -1940,6 +1940,142 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_access_assign";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_access_assign.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildWidget')\n"
+            "oPlain = CREATEOBJECT('Empty')\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "oPlain.Extra = 'plain'\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 9)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "cCaptionBefore = oCreate.Caption\n"
+            "oCreate.Caption = 'Set'\n"
+            "cCaptionAfter = oCreate.Caption\n"
+            "cDescribe = oCreate.Describe()\n"
+            "nAssignCount = oCreate.nAssignCount\n"
+            "nRawBefore = oCreate.nRaw\n"
+            "oCreate.nRaw = 9\n"
+            "nRawAfter = oCreate.nRaw\n"
+            "cBacking = oCreate.cBacking\n"
+            "cPlain = oPlain.Extra\n"
+            "RETURN\n"
+            "DEFINE CLASS ParentWidget AS Custom\n"
+            "    cBacking = 'Parent'\n"
+            "    nAssignCount = 0\n"
+            "    nRaw = 5\n"
+            "    FUNCTION Caption_Access\n"
+            "        RETURN THIS.cBacking + ':A'\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE Caption_Assign\n"
+            "        LPARAMETERS tcValue\n"
+            "        THIS.cBacking = tcValue + ':S'\n"
+            "        THIS.nAssignCount = THIS.nAssignCount + 1\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "    FUNCTION Describe\n"
+            "        RETURN THIS.Caption + ':' + TRANSFORM(THIS.nAssignCount)\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ChildWidget AS ParentWidget\n"
+            "    cBacking = 'Child'\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native ACCESS/ASSIGN script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("ccaptionbefore", "Child:A");
+        check("ccaptionafter", "Set:S:A");
+        check("cdescribe", "Set:S:A:1");
+        check("nassigncount", "1");
+        check("nrawbefore", "5");
+        check("nrawafter", "9");
+        check("cbacking", "Set:S");
+        check("cplain", "plain");
+        check("ldictset", "true");
+        check("ndictcompare", "9");
+
+        expect(state.ole_objects.size() == 3U,
+               "native ACCESS/ASSIGN script should register native, plain, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            const auto &native_object = state.ole_objects[0];
+            expect(native_object.prog_id == "ChildWidget",
+                   "native ACCESS/ASSIGN should preserve child class identity");
+            const auto backing = native_object.properties.find("cbacking");
+            const auto assign_count = native_object.properties.find("nassigncount");
+            const auto raw_value = native_object.properties.find("nraw");
+            if (backing != native_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(backing->second) == "Set:S",
+                       "native ACCESS/ASSIGN should let ASSIGN methods update backing state");
+            }
+            else
+            {
+                expect(false, "native ACCESS/ASSIGN should materialize updated backing state");
+            }
+            if (assign_count != native_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(assign_count->second) == "1",
+                       "native ACCESS/ASSIGN should preserve ASSIGN-side state updates");
+            }
+            else
+            {
+                expect(false, "native ACCESS/ASSIGN should materialize assign-count state");
+            }
+            if (raw_value != native_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(raw_value->second) == "9",
+                       "native ACCESS/ASSIGN should preserve raw-property fallback when no accessor exists");
+            }
+            else
+            {
+                expect(false, "native ACCESS/ASSIGN should materialize raw-property fallback state");
+            }
+
+            expect(state.ole_objects[1].prog_id == "Empty",
+                   "plain CREATEOBJECT should remain stable while native ACCESS/ASSIGN lands");
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while native ACCESS/ASSIGN lands");
+        }
+
+        const bool has_accessor_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   (event.detail == "ParentWidget.Caption_Access" ||
+                    event.detail == "ParentWidget.Caption_Assign");
+        });
+        expect(has_accessor_invoke_event,
+               "native ACCESS/ASSIGN should emit accessor-method invoke events");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_codepage_and_misc_runtime_surface_functions()
     {
         namespace fs = std::filesystem;
@@ -2620,6 +2756,7 @@ int main()
     test_same_prg_native_class_inheritance_applies_parent_defaults_methods_and_init();
     test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow();
     test_same_prg_native_bare_helper_calls_resolve_to_current_instance_before_top_level_routines();
+    test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();
     test_codepage_and_misc_runtime_surface_functions();
     test_lookup_expression_function();
     test_lookup_expression_function_supports_sql_cursors();
