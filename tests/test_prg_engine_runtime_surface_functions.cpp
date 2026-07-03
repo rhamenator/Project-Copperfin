@@ -3583,6 +3583,144 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_same_prg_native_class_reflects_through_getpem_and_pemstatus()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_class_reflection";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_class_reflection.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildWidget')\n"
+            "oPlain = CREATEOBJECT('Empty')\n"
+            "cClass = GETPEM(oCreate, 'Class')\n"
+            "lHasClass = PEMSTATUS(oCreate, 'Class', 1)\n"
+            "lClassReadOnly = PEMSTATUS(oCreate, 'Class', 5)\n"
+            "xPlainClass = GETPEM(oPlain, 'Class')\n"
+            "lPlainHasClass = PEMSTATUS(oPlain, 'Class', 1)\n"
+            "RETURN\n"
+            "DEFINE CLASS ParentWidget AS Custom\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ChildWidget AS ParentWidget\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Class reflection script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cclass", "ChildWidget");
+        check("lhasclass", "true");
+        check("lclassreadonly", "true");
+        check("lplainhasclass", "false");
+
+        const auto plain_class = state.globals.find("xplainclass");
+        expect(plain_class != state.globals.end() &&
+                   plain_class->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "plain CREATEOBJECT should keep native Class reflection empty");
+
+        expect(state.ole_objects.size() == 2U,
+               "native Class reflection should register native and plain objects");
+        if (state.ole_objects.size() == 2U)
+        {
+            expect(state.ole_objects[0].prog_id == "ChildWidget",
+                   "native Class reflection should preserve child class identity");
+            expect(state.ole_objects[0].class_hierarchy.size() == 4U,
+                   "native Class reflection should keep native hierarchy metadata intact");
+            expect(state.ole_objects[1].prog_id == "Empty",
+                   "plain CREATEOBJECT should remain stable while native Class reflection lands");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_external_prg_base_class_reflects_through_getpem_and_pemstatus()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_external_prg_class_reflection";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path library_path = temp_root / "widgetlib.prg";
+        write_text(
+            library_path,
+            "DEFINE CLASS ParentWidget AS Custom\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "external_class_reflection.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildWidget')\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 26)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "cClass = GETPEM(oCreate, 'Class')\n"
+            "lHasClass = PEMSTATUS(oCreate, 'Class', 1)\n"
+            "lClassReadOnly = PEMSTATUS(oCreate, 'Class', 5)\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildWidget AS ParentWidget OF widgetlib.prg\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("external-base Class reflection script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cclass", "ChildWidget");
+        check("lhasclass", "true");
+        check("lclassreadonly", "true");
+        check("ldictset", "true");
+        check("ndictcompare", "26");
+
+        expect(state.ole_objects.size() == 2U,
+               "external-base Class reflection should register native and COM objects");
+        if (state.ole_objects.size() == 2U)
+        {
+            expect(state.ole_objects[0].prog_id == "ChildWidget",
+                   "external-base Class reflection should preserve child class identity");
+            expect(state.ole_objects[0].class_library == library_path.string(),
+                   "external-base Class reflection should preserve external library provenance");
+            expect(state.ole_objects[1].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while external-base Class reflection lands");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_inherited_declarative_children_from_external_prg_bases_resolve_against_defining_library()
     {
         namespace fs = std::filesystem;
@@ -5887,6 +6025,8 @@ int main()
     test_external_prg_base_aclass_reflects_inheritance_chain();
     test_same_prg_native_baseclass_reflects_through_getpem_and_pemstatus();
     test_external_prg_base_identity_reflects_through_getpem_and_pemstatus();
+    test_same_prg_native_class_reflects_through_getpem_and_pemstatus();
+    test_external_prg_base_class_reflects_through_getpem_and_pemstatus();
     test_inherited_declarative_children_from_external_prg_bases_resolve_against_defining_library();
     test_inherited_external_prg_base_methods_resolve_addobject_children_against_defining_library();
     test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow();

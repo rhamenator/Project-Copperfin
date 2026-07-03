@@ -183,6 +183,12 @@ bool is_scripting_dictionary_object(const RuntimeOleObjectState& runtime_object)
 std::optional<PrgValue> get_native_identity_metadata(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
+    if (runtime_object.class_hierarchy.empty()) {
+        return std::nullopt;
+    }
+    if (normalized_member_name == "class" && !trim_copy(runtime_object.prog_id).empty()) {
+        return make_string_value(runtime_object.prog_id);
+    }
     if (normalized_member_name == "baseclass" && !trim_copy(runtime_object.base_class_name).empty()) {
         return make_string_value(runtime_object.base_class_name);
     }
