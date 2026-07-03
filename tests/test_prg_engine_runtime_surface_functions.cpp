@@ -29372,25 +29372,42 @@ namespace
         write_text(
             main_path,
             "oCreate = CREATEOBJECT('ChildForm')\n"
+            "oLeaf = NEWOBJECT('LeafForm')\n"
             "oChild = oCreate.cmdSave\n"
+            "oLeafChild = oLeaf.cmdSave\n"
             "lChildClassReadOnly = PEMSTATUS(oChild, 'Class', 5)\n"
             "lChildBaseClassReadOnly = PEMSTATUS(oChild, 'BaseClass', 5)\n"
             "lChildParentClassReadOnly = PEMSTATUS(oChild, 'ParentClass', 5)\n"
             "lChildClassLibraryReadOnly = PEMSTATUS(oChild, 'ClassLibrary', 5)\n"
+            "lLeafChildClassReadOnly = PEMSTATUS(oLeafChild, 'Class', 5)\n"
+            "lLeafChildBaseClassReadOnly = PEMSTATUS(oLeafChild, 'BaseClass', 5)\n"
+            "lLeafChildParentClassReadOnly = PEMSTATUS(oLeafChild, 'ParentClass', 5)\n"
+            "lLeafChildClassLibraryReadOnly = PEMSTATUS(oLeafChild, 'ClassLibrary', 5)\n"
             "lSetChildClass = SETPEM(oChild, 'Class', 'OtherClass')\n"
             "lSetChildBaseClass = SETPEM(oChild, 'BaseClass', 'OtherBase')\n"
             "lSetChildParentClass = SETPEM(oChild, 'ParentClass', 'OtherParent')\n"
             "lSetChildClassLibrary = SETPEM(oChild, 'ClassLibrary', 'other.prg')\n"
+            "lSetLeafChildClass = SETPEM(oLeafChild, 'Class', 'OtherClass')\n"
+            "lSetLeafChildBaseClass = SETPEM(oLeafChild, 'BaseClass', 'OtherBase')\n"
+            "lSetLeafChildParentClass = SETPEM(oLeafChild, 'ParentClass', 'OtherParent')\n"
+            "lSetLeafChildClassLibrary = SETPEM(oLeafChild, 'ClassLibrary', 'other.prg')\n"
             "cChildClassAfter = GETPEM(oChild, 'Class')\n"
             "cChildBaseClassAfter = GETPEM(oChild, 'BaseClass')\n"
             "cChildParentClassAfter = GETPEM(oChild, 'ParentClass')\n"
             "cChildClassLibraryAfter = GETPEM(oChild, 'ClassLibrary')\n"
             "cChildClassLibraryPropAfter = oChild.ClassLibrary\n"
+            "cLeafChildClassAfter = GETPEM(oLeafChild, 'Class')\n"
+            "cLeafChildBaseClassAfter = GETPEM(oLeafChild, 'BaseClass')\n"
+            "cLeafChildParentClassAfter = GETPEM(oLeafChild, 'ParentClass')\n"
+            "cLeafChildClassLibraryAfter = GETPEM(oLeafChild, 'ClassLibrary')\n"
+            "cLeafChildClassLibraryPropAfter = oLeafChild.ClassLibrary\n"
             "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
             "lDictSet = SETPEM(oDict, 'comparemode', 83)\n"
             "nDictCompare = GETPEM(oDict, 'comparemode')\n"
             "RETURN\n"
             "DEFINE CLASS ChildForm AS ParentForm OF widgetlib.prg\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS LeafForm AS ChildForm\n"
             "ENDDEFINE\n");
 
         copperfin::runtime::PrgRuntimeSession session =
@@ -29417,45 +29434,80 @@ namespace
         check("lchildbaseclassreadonly", "true");
         check("lchildparentclassreadonly", "true");
         check("lchildclasslibraryreadonly", "true");
+        check("lleafchildclassreadonly", "true");
+        check("lleafchildbaseclassreadonly", "true");
+        check("lleafchildparentclassreadonly", "true");
+        check("lleafchildclasslibraryreadonly", "true");
         check("lsetchildclass", "false");
         check("lsetchildbaseclass", "false");
         check("lsetchildparentclass", "false");
         check("lsetchildclasslibrary", "false");
+        check("lsetleafchildclass", "false");
+        check("lsetleafchildbaseclass", "false");
+        check("lsetleafchildparentclass", "false");
+        check("lsetleafchildclasslibrary", "false");
         check("cchildclassafter", "SaveButton");
         check("cchildbaseclassafter", "ParentButton");
         check("cchildparentclassafter", "ParentButton");
         check("cchildclasslibraryafter", button_library_path.string());
         check("cchildclasslibrarypropafter", button_library_path.string());
+        check("cleafchildclassafter", "SaveButton");
+        check("cleafchildbaseclassafter", "ParentButton");
+        check("cleafchildparentclassafter", "ParentButton");
+        check("cleafchildclasslibraryafter", button_library_path.string());
+        check("cleafchildclasslibrarypropafter", button_library_path.string());
         check("ldictset", "true");
         check("ndictcompare", "83");
 
-        expect(state.ole_objects.size() == 3U,
-               "external-base inherited ADDOBJECT deeper external child external-base SETPEM should register parent, child, and COM objects");
-        if (state.ole_objects.size() == 3U)
+        expect(state.ole_objects.size() == 5U,
+               "external-base inherited ADDOBJECT deeper external child external-base SETPEM should register CREATEOBJECT parent/child, NEWOBJECT parent/child, and COM objects");
+        if (state.ole_objects.size() == 5U)
         {
-            const auto &parent_object = state.ole_objects[0];
-            const auto &child_object = state.ole_objects[1];
-            expect(parent_object.prog_id == "ChildForm",
-                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should preserve parent identity");
-            expect(child_object.prog_id == "SaveButton",
-                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should preserve child identity");
-            expect(child_object.base_class_name == "ParentButton",
-                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should preserve immediate child base-class identity");
-            expect(child_object.source == widget_library_path.string(),
-                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should preserve the defining child-class source path");
-            expect(child_object.class_library == button_library_path.string(),
-                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should preserve the immediate external ClassLibrary path");
-            expect(child_object.class_hierarchy.size() == 5U,
-                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should preserve the deeper runtime child class hierarchy");
-            expect(!child_object.properties.contains("class"),
-                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should not materialize a writable child Class shadow");
-            expect(!child_object.properties.contains("baseclass"),
-                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should not materialize a writable child BaseClass shadow");
-            expect(!child_object.properties.contains("parentclass"),
-                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should not materialize a writable child ParentClass shadow");
-            expect(!child_object.properties.contains("classlibrary"),
-                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should not materialize a writable child ClassLibrary shadow");
-            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+            const auto &create_parent = state.ole_objects[0];
+            const auto &create_child = state.ole_objects[1];
+            const auto &leaf_parent = state.ole_objects[2];
+            const auto &leaf_child = state.ole_objects[3];
+            expect(create_parent.prog_id == "ChildForm",
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should preserve CREATEOBJECT parent identity");
+            expect(create_child.prog_id == "SaveButton",
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should preserve CREATEOBJECT child identity");
+            expect(create_child.base_class_name == "ParentButton",
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should preserve CREATEOBJECT immediate child base-class identity");
+            expect(create_child.source == widget_library_path.string(),
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should preserve the CREATEOBJECT child source path");
+            expect(create_child.class_library == button_library_path.string(),
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should preserve the CREATEOBJECT immediate external ClassLibrary path");
+            expect(create_child.class_hierarchy.size() == 5U,
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should preserve the CREATEOBJECT child class hierarchy");
+            expect(!create_child.properties.contains("class"),
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should not materialize a writable CREATEOBJECT child Class shadow");
+            expect(!create_child.properties.contains("baseclass"),
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should not materialize a writable CREATEOBJECT child BaseClass shadow");
+            expect(!create_child.properties.contains("parentclass"),
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should not materialize a writable CREATEOBJECT child ParentClass shadow");
+            expect(!create_child.properties.contains("classlibrary"),
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should not materialize a writable CREATEOBJECT child ClassLibrary shadow");
+            expect(leaf_parent.prog_id == "LeafForm",
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should preserve NEWOBJECT leaf identity");
+            expect(leaf_child.prog_id == "SaveButton",
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should preserve NEWOBJECT leaf child identity");
+            expect(leaf_child.base_class_name == "ParentButton",
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should preserve NEWOBJECT leaf child immediate base-class identity");
+            expect(leaf_child.source == widget_library_path.string(),
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should preserve the NEWOBJECT leaf child source path");
+            expect(leaf_child.class_library == button_library_path.string(),
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should preserve the NEWOBJECT leaf child immediate external ClassLibrary path");
+            expect(leaf_child.class_hierarchy.size() == 5U,
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should preserve the NEWOBJECT leaf child class hierarchy");
+            expect(!leaf_child.properties.contains("class"),
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should not materialize a writable NEWOBJECT leaf child Class shadow");
+            expect(!leaf_child.properties.contains("baseclass"),
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should not materialize a writable NEWOBJECT leaf child BaseClass shadow");
+            expect(!leaf_child.properties.contains("parentclass"),
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should not materialize a writable NEWOBJECT leaf child ParentClass shadow");
+            expect(!leaf_child.properties.contains("classlibrary"),
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should not materialize a writable NEWOBJECT leaf child ClassLibrary shadow");
+            expect(state.ole_objects[4].prog_id == "Scripting.Dictionary",
                    "COM NEWOBJECT should remain stable while external-base inherited ADDOBJECT deeper external child external-base SETPEM lands");
         }
 
@@ -29620,25 +29672,42 @@ namespace
         write_text(
             main_path,
             "oCreate = CREATEOBJECT('ChildForm')\n"
+            "oLeaf = NEWOBJECT('LeafForm')\n"
             "oChild = oCreate.cmdSave\n"
+            "oLeafChild = oLeaf.cmdSave\n"
             "lAddChildClass = ADDPROPERTY(oChild, 'Class', 'OtherClass')\n"
             "lAddChildBaseClass = ADDPROPERTY(oChild, 'BaseClass', 'OtherBase')\n"
             "lAddChildParentClass = ADDPROPERTY(oChild, 'ParentClass', 'OtherParent')\n"
             "lAddChildClassLibrary = ADDPROPERTY(oChild, 'ClassLibrary', 'other.prg')\n"
+            "lAddLeafChildClass = ADDPROPERTY(oLeafChild, 'Class', 'OtherClass')\n"
+            "lAddLeafChildBaseClass = ADDPROPERTY(oLeafChild, 'BaseClass', 'OtherBase')\n"
+            "lAddLeafChildParentClass = ADDPROPERTY(oLeafChild, 'ParentClass', 'OtherParent')\n"
+            "lAddLeafChildClassLibrary = ADDPROPERTY(oLeafChild, 'ClassLibrary', 'other.prg')\n"
             "cChildClassAfter = GETPEM(oChild, 'Class')\n"
             "cChildBaseClassAfter = GETPEM(oChild, 'BaseClass')\n"
             "cChildParentClassAfter = GETPEM(oChild, 'ParentClass')\n"
             "cChildClassLibraryAfter = GETPEM(oChild, 'ClassLibrary')\n"
             "cChildClassLibraryPropAfter = oChild.ClassLibrary\n"
+            "cLeafChildClassAfter = GETPEM(oLeafChild, 'Class')\n"
+            "cLeafChildBaseClassAfter = GETPEM(oLeafChild, 'BaseClass')\n"
+            "cLeafChildParentClassAfter = GETPEM(oLeafChild, 'ParentClass')\n"
+            "cLeafChildClassLibraryAfter = GETPEM(oLeafChild, 'ClassLibrary')\n"
+            "cLeafChildClassLibraryPropAfter = oLeafChild.ClassLibrary\n"
             "lChildClassReadOnly = PEMSTATUS(oChild, 'Class', 5)\n"
             "lChildBaseClassReadOnly = PEMSTATUS(oChild, 'BaseClass', 5)\n"
             "lChildParentClassReadOnly = PEMSTATUS(oChild, 'ParentClass', 5)\n"
             "lChildClassLibraryReadOnly = PEMSTATUS(oChild, 'ClassLibrary', 5)\n"
+            "lLeafChildClassReadOnly = PEMSTATUS(oLeafChild, 'Class', 5)\n"
+            "lLeafChildBaseClassReadOnly = PEMSTATUS(oLeafChild, 'BaseClass', 5)\n"
+            "lLeafChildParentClassReadOnly = PEMSTATUS(oLeafChild, 'ParentClass', 5)\n"
+            "lLeafChildClassLibraryReadOnly = PEMSTATUS(oLeafChild, 'ClassLibrary', 5)\n"
             "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
             "lDictSet = SETPEM(oDict, 'comparemode', 85)\n"
             "nDictCompare = GETPEM(oDict, 'comparemode')\n"
             "RETURN\n"
             "DEFINE CLASS ChildForm AS ParentForm OF widgetlib.prg\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS LeafForm AS ChildForm\n"
             "ENDDEFINE\n");
 
         copperfin::runtime::PrgRuntimeSession session =
@@ -29665,45 +29734,80 @@ namespace
         check("laddchildbaseclass", "false");
         check("laddchildparentclass", "false");
         check("laddchildclasslibrary", "false");
+        check("laddleafchildclass", "false");
+        check("laddleafchildbaseclass", "false");
+        check("laddleafchildparentclass", "false");
+        check("laddleafchildclasslibrary", "false");
         check("cchildclassafter", "SaveButton");
         check("cchildbaseclassafter", "ParentButton");
         check("cchildparentclassafter", "ParentButton");
         check("cchildclasslibraryafter", button_library_path.string());
         check("cchildclasslibrarypropafter", button_library_path.string());
+        check("cleafchildclassafter", "SaveButton");
+        check("cleafchildbaseclassafter", "ParentButton");
+        check("cleafchildparentclassafter", "ParentButton");
+        check("cleafchildclasslibraryafter", button_library_path.string());
+        check("cleafchildclasslibrarypropafter", button_library_path.string());
         check("lchildclassreadonly", "true");
         check("lchildbaseclassreadonly", "true");
         check("lchildparentclassreadonly", "true");
         check("lchildclasslibraryreadonly", "true");
+        check("lleafchildclassreadonly", "true");
+        check("lleafchildbaseclassreadonly", "true");
+        check("lleafchildparentclassreadonly", "true");
+        check("lleafchildclasslibraryreadonly", "true");
         check("ldictset", "true");
         check("ndictcompare", "85");
 
-        expect(state.ole_objects.size() == 3U,
-               "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should register parent, child, and COM objects");
-        if (state.ole_objects.size() == 3U)
+        expect(state.ole_objects.size() == 5U,
+               "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should register CREATEOBJECT parent/child, NEWOBJECT parent/child, and COM objects");
+        if (state.ole_objects.size() == 5U)
         {
-            const auto &parent_object = state.ole_objects[0];
-            const auto &child_object = state.ole_objects[1];
-            expect(parent_object.prog_id == "ChildForm",
-                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should preserve parent identity");
-            expect(child_object.prog_id == "SaveButton",
-                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should preserve child identity");
-            expect(child_object.base_class_name == "ParentButton",
-                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should preserve immediate child base-class identity");
-            expect(child_object.source == widget_library_path.string(),
-                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should preserve the defining child-class source path");
-            expect(child_object.class_library == button_library_path.string(),
-                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should preserve the immediate external ClassLibrary path");
-            expect(child_object.class_hierarchy.size() == 5U,
-                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should preserve the deeper runtime child class hierarchy");
-            expect(!child_object.properties.contains("class"),
-                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should not materialize a child Class shadow");
-            expect(!child_object.properties.contains("baseclass"),
-                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should not materialize a child BaseClass shadow");
-            expect(!child_object.properties.contains("parentclass"),
-                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should not materialize a child ParentClass shadow");
-            expect(!child_object.properties.contains("classlibrary"),
-                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should not materialize a child ClassLibrary shadow");
-            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+            const auto &create_parent = state.ole_objects[0];
+            const auto &create_child = state.ole_objects[1];
+            const auto &leaf_parent = state.ole_objects[2];
+            const auto &leaf_child = state.ole_objects[3];
+            expect(create_parent.prog_id == "ChildForm",
+                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should preserve CREATEOBJECT parent identity");
+            expect(create_child.prog_id == "SaveButton",
+                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should preserve CREATEOBJECT child identity");
+            expect(create_child.base_class_name == "ParentButton",
+                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should preserve CREATEOBJECT immediate child base-class identity");
+            expect(create_child.source == widget_library_path.string(),
+                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should preserve the CREATEOBJECT child source path");
+            expect(create_child.class_library == button_library_path.string(),
+                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should preserve the CREATEOBJECT immediate external ClassLibrary path");
+            expect(create_child.class_hierarchy.size() == 5U,
+                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should preserve the CREATEOBJECT child class hierarchy");
+            expect(!create_child.properties.contains("class"),
+                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should not materialize a CREATEOBJECT child Class shadow");
+            expect(!create_child.properties.contains("baseclass"),
+                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should not materialize a CREATEOBJECT child BaseClass shadow");
+            expect(!create_child.properties.contains("parentclass"),
+                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should not materialize a CREATEOBJECT child ParentClass shadow");
+            expect(!create_child.properties.contains("classlibrary"),
+                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should not materialize a CREATEOBJECT child ClassLibrary shadow");
+            expect(leaf_parent.prog_id == "LeafForm",
+                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should preserve NEWOBJECT leaf identity");
+            expect(leaf_child.prog_id == "SaveButton",
+                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should preserve NEWOBJECT leaf child identity");
+            expect(leaf_child.base_class_name == "ParentButton",
+                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should preserve NEWOBJECT leaf child immediate base-class identity");
+            expect(leaf_child.source == widget_library_path.string(),
+                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should preserve the NEWOBJECT leaf child source path");
+            expect(leaf_child.class_library == button_library_path.string(),
+                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should preserve the NEWOBJECT leaf child immediate external ClassLibrary path");
+            expect(leaf_child.class_hierarchy.size() == 5U,
+                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should preserve the NEWOBJECT leaf child class hierarchy");
+            expect(!leaf_child.properties.contains("class"),
+                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should not materialize a NEWOBJECT leaf child Class shadow");
+            expect(!leaf_child.properties.contains("baseclass"),
+                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should not materialize a NEWOBJECT leaf child BaseClass shadow");
+            expect(!leaf_child.properties.contains("parentclass"),
+                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should not materialize a NEWOBJECT leaf child ParentClass shadow");
+            expect(!leaf_child.properties.contains("classlibrary"),
+                   "external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY should not materialize a NEWOBJECT leaf child ClassLibrary shadow");
+            expect(state.ole_objects[4].prog_id == "Scripting.Dictionary",
                    "COM NEWOBJECT should remain stable while external-base inherited ADDOBJECT deeper external child external-base ADDPROPERTY lands");
         }
 
@@ -29868,25 +29972,42 @@ namespace
         write_text(
             main_path,
             "oCreate = CREATEOBJECT('ChildForm')\n"
+            "oLeaf = NEWOBJECT('LeafForm')\n"
             "oChild = oCreate.cmdSave\n"
+            "oLeafChild = oLeaf.cmdSave\n"
             "lRemoveChildClass = REMOVEPROPERTY(oChild, 'Class')\n"
             "lRemoveChildBaseClass = REMOVEPROPERTY(oChild, 'BaseClass')\n"
             "lRemoveChildParentClass = REMOVEPROPERTY(oChild, 'ParentClass')\n"
             "lRemoveChildClassLibrary = REMOVEPROPERTY(oChild, 'ClassLibrary')\n"
+            "lRemoveLeafChildClass = REMOVEPROPERTY(oLeafChild, 'Class')\n"
+            "lRemoveLeafChildBaseClass = REMOVEPROPERTY(oLeafChild, 'BaseClass')\n"
+            "lRemoveLeafChildParentClass = REMOVEPROPERTY(oLeafChild, 'ParentClass')\n"
+            "lRemoveLeafChildClassLibrary = REMOVEPROPERTY(oLeafChild, 'ClassLibrary')\n"
             "cChildClassAfter = GETPEM(oChild, 'Class')\n"
             "cChildBaseClassAfter = GETPEM(oChild, 'BaseClass')\n"
             "cChildParentClassAfter = GETPEM(oChild, 'ParentClass')\n"
             "cChildClassLibraryAfter = GETPEM(oChild, 'ClassLibrary')\n"
             "cChildClassLibraryPropAfter = oChild.ClassLibrary\n"
+            "cLeafChildClassAfter = GETPEM(oLeafChild, 'Class')\n"
+            "cLeafChildBaseClassAfter = GETPEM(oLeafChild, 'BaseClass')\n"
+            "cLeafChildParentClassAfter = GETPEM(oLeafChild, 'ParentClass')\n"
+            "cLeafChildClassLibraryAfter = GETPEM(oLeafChild, 'ClassLibrary')\n"
+            "cLeafChildClassLibraryPropAfter = oLeafChild.ClassLibrary\n"
             "lChildClassReadOnly = PEMSTATUS(oChild, 'Class', 5)\n"
             "lChildBaseClassReadOnly = PEMSTATUS(oChild, 'BaseClass', 5)\n"
             "lChildParentClassReadOnly = PEMSTATUS(oChild, 'ParentClass', 5)\n"
             "lChildClassLibraryReadOnly = PEMSTATUS(oChild, 'ClassLibrary', 5)\n"
+            "lLeafChildClassReadOnly = PEMSTATUS(oLeafChild, 'Class', 5)\n"
+            "lLeafChildBaseClassReadOnly = PEMSTATUS(oLeafChild, 'BaseClass', 5)\n"
+            "lLeafChildParentClassReadOnly = PEMSTATUS(oLeafChild, 'ParentClass', 5)\n"
+            "lLeafChildClassLibraryReadOnly = PEMSTATUS(oLeafChild, 'ClassLibrary', 5)\n"
             "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
             "lDictSet = SETPEM(oDict, 'comparemode', 87)\n"
             "nDictCompare = GETPEM(oDict, 'comparemode')\n"
             "RETURN\n"
             "DEFINE CLASS ChildForm AS ParentForm OF widgetlib.prg\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS LeafForm AS ChildForm\n"
             "ENDDEFINE\n");
 
         copperfin::runtime::PrgRuntimeSession session =
@@ -29913,45 +30034,80 @@ namespace
         check("lremovechildbaseclass", "false");
         check("lremovechildparentclass", "false");
         check("lremovechildclasslibrary", "false");
+        check("lremoveleafchildclass", "false");
+        check("lremoveleafchildbaseclass", "false");
+        check("lremoveleafchildparentclass", "false");
+        check("lremoveleafchildclasslibrary", "false");
         check("cchildclassafter", "SaveButton");
         check("cchildbaseclassafter", "ParentButton");
         check("cchildparentclassafter", "ParentButton");
         check("cchildclasslibraryafter", button_library_path.string());
         check("cchildclasslibrarypropafter", button_library_path.string());
+        check("cleafchildclassafter", "SaveButton");
+        check("cleafchildbaseclassafter", "ParentButton");
+        check("cleafchildparentclassafter", "ParentButton");
+        check("cleafchildclasslibraryafter", button_library_path.string());
+        check("cleafchildclasslibrarypropafter", button_library_path.string());
         check("lchildclassreadonly", "true");
         check("lchildbaseclassreadonly", "true");
         check("lchildparentclassreadonly", "true");
         check("lchildclasslibraryreadonly", "true");
+        check("lleafchildclassreadonly", "true");
+        check("lleafchildbaseclassreadonly", "true");
+        check("lleafchildparentclassreadonly", "true");
+        check("lleafchildclasslibraryreadonly", "true");
         check("ldictset", "true");
         check("ndictcompare", "87");
 
-        expect(state.ole_objects.size() == 3U,
-               "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should register parent, child, and COM objects");
-        if (state.ole_objects.size() == 3U)
+        expect(state.ole_objects.size() == 5U,
+               "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should register CREATEOBJECT parent/child, NEWOBJECT parent/child, and COM objects");
+        if (state.ole_objects.size() == 5U)
         {
-            const auto &parent_object = state.ole_objects[0];
-            const auto &child_object = state.ole_objects[1];
-            expect(parent_object.prog_id == "ChildForm",
-                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should preserve parent identity");
-            expect(child_object.prog_id == "SaveButton",
-                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should preserve child identity");
-            expect(child_object.base_class_name == "ParentButton",
-                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should preserve immediate child base-class identity");
-            expect(child_object.source == widget_library_path.string(),
-                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should preserve the defining child-class source path");
-            expect(child_object.class_library == button_library_path.string(),
-                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should preserve the immediate external ClassLibrary path");
-            expect(child_object.class_hierarchy.size() == 5U,
-                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should preserve the deeper runtime child class hierarchy");
-            expect(!child_object.properties.contains("class"),
-                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should not materialize a child Class shadow");
-            expect(!child_object.properties.contains("baseclass"),
-                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should not materialize a child BaseClass shadow");
-            expect(!child_object.properties.contains("parentclass"),
-                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should not materialize a child ParentClass shadow");
-            expect(!child_object.properties.contains("classlibrary"),
-                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should not materialize a child ClassLibrary shadow");
-            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+            const auto &create_parent = state.ole_objects[0];
+            const auto &create_child = state.ole_objects[1];
+            const auto &leaf_parent = state.ole_objects[2];
+            const auto &leaf_child = state.ole_objects[3];
+            expect(create_parent.prog_id == "ChildForm",
+                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should preserve CREATEOBJECT parent identity");
+            expect(create_child.prog_id == "SaveButton",
+                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should preserve CREATEOBJECT child identity");
+            expect(create_child.base_class_name == "ParentButton",
+                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should preserve CREATEOBJECT immediate child base-class identity");
+            expect(create_child.source == widget_library_path.string(),
+                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should preserve the CREATEOBJECT child source path");
+            expect(create_child.class_library == button_library_path.string(),
+                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should preserve the CREATEOBJECT immediate external ClassLibrary path");
+            expect(create_child.class_hierarchy.size() == 5U,
+                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should preserve the CREATEOBJECT child class hierarchy");
+            expect(!create_child.properties.contains("class"),
+                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should not materialize a CREATEOBJECT child Class shadow");
+            expect(!create_child.properties.contains("baseclass"),
+                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should not materialize a CREATEOBJECT child BaseClass shadow");
+            expect(!create_child.properties.contains("parentclass"),
+                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should not materialize a CREATEOBJECT child ParentClass shadow");
+            expect(!create_child.properties.contains("classlibrary"),
+                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should not materialize a CREATEOBJECT child ClassLibrary shadow");
+            expect(leaf_parent.prog_id == "LeafForm",
+                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should preserve NEWOBJECT leaf identity");
+            expect(leaf_child.prog_id == "SaveButton",
+                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should preserve NEWOBJECT leaf child identity");
+            expect(leaf_child.base_class_name == "ParentButton",
+                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should preserve NEWOBJECT leaf child immediate base-class identity");
+            expect(leaf_child.source == widget_library_path.string(),
+                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should preserve the NEWOBJECT leaf child source path");
+            expect(leaf_child.class_library == button_library_path.string(),
+                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should preserve the NEWOBJECT leaf child immediate external ClassLibrary path");
+            expect(leaf_child.class_hierarchy.size() == 5U,
+                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should preserve the NEWOBJECT leaf child class hierarchy");
+            expect(!leaf_child.properties.contains("class"),
+                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should not materialize a NEWOBJECT leaf child Class shadow");
+            expect(!leaf_child.properties.contains("baseclass"),
+                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should not materialize a NEWOBJECT leaf child BaseClass shadow");
+            expect(!leaf_child.properties.contains("parentclass"),
+                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should not materialize a NEWOBJECT leaf child ParentClass shadow");
+            expect(!leaf_child.properties.contains("classlibrary"),
+                   "external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY should not materialize a NEWOBJECT leaf child ClassLibrary shadow");
+            expect(state.ole_objects[4].prog_id == "Scripting.Dictionary",
                    "COM NEWOBJECT should remain stable while external-base inherited ADDOBJECT deeper external child external-base REMOVEPROPERTY lands");
         }
 
@@ -30112,25 +30268,42 @@ namespace
         write_text(
             main_path,
             "oCreate = CREATEOBJECT('ChildForm')\n"
+            "oLeaf = NEWOBJECT('LeafForm')\n"
             "oChild = oCreate.cmdSave\n"
+            "oLeafChild = oLeaf.cmdSave\n"
             "oChild.Class = 'OtherClass'\n"
             "oChild.BaseClass = 'OtherBase'\n"
             "oChild.ParentClass = 'OtherParent'\n"
             "oChild.ClassLibrary = 'other.prg'\n"
+            "oLeafChild.Class = 'OtherClass'\n"
+            "oLeafChild.BaseClass = 'OtherBase'\n"
+            "oLeafChild.ParentClass = 'OtherParent'\n"
+            "oLeafChild.ClassLibrary = 'other.prg'\n"
             "cChildClassAfter = GETPEM(oChild, 'Class')\n"
             "cChildBaseClassAfter = GETPEM(oChild, 'BaseClass')\n"
             "cChildParentClassAfter = GETPEM(oChild, 'ParentClass')\n"
             "cChildClassLibraryAfter = GETPEM(oChild, 'ClassLibrary')\n"
             "cChildClassLibraryPropAfter = oChild.ClassLibrary\n"
+            "cLeafChildClassAfter = GETPEM(oLeafChild, 'Class')\n"
+            "cLeafChildBaseClassAfter = GETPEM(oLeafChild, 'BaseClass')\n"
+            "cLeafChildParentClassAfter = GETPEM(oLeafChild, 'ParentClass')\n"
+            "cLeafChildClassLibraryAfter = GETPEM(oLeafChild, 'ClassLibrary')\n"
+            "cLeafChildClassLibraryPropAfter = oLeafChild.ClassLibrary\n"
             "lChildClassReadOnly = PEMSTATUS(oChild, 'Class', 5)\n"
             "lChildBaseClassReadOnly = PEMSTATUS(oChild, 'BaseClass', 5)\n"
             "lChildParentClassReadOnly = PEMSTATUS(oChild, 'ParentClass', 5)\n"
             "lChildClassLibraryReadOnly = PEMSTATUS(oChild, 'ClassLibrary', 5)\n"
+            "lLeafChildClassReadOnly = PEMSTATUS(oLeafChild, 'Class', 5)\n"
+            "lLeafChildBaseClassReadOnly = PEMSTATUS(oLeafChild, 'BaseClass', 5)\n"
+            "lLeafChildParentClassReadOnly = PEMSTATUS(oLeafChild, 'ParentClass', 5)\n"
+            "lLeafChildClassLibraryReadOnly = PEMSTATUS(oLeafChild, 'ClassLibrary', 5)\n"
             "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
             "lDictSet = SETPEM(oDict, 'comparemode', 89)\n"
             "nDictCompare = GETPEM(oDict, 'comparemode')\n"
             "RETURN\n"
             "DEFINE CLASS ChildForm AS ParentForm OF widgetlib.prg\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS LeafForm AS ChildForm\n"
             "ENDDEFINE\n");
 
         copperfin::runtime::PrgRuntimeSession session =
@@ -30158,40 +30331,71 @@ namespace
         check("cchildparentclassafter", "ParentButton");
         check("cchildclasslibraryafter", button_library_path.string());
         check("cchildclasslibrarypropafter", button_library_path.string());
+        check("cleafchildclassafter", "SaveButton");
+        check("cleafchildbaseclassafter", "ParentButton");
+        check("cleafchildparentclassafter", "ParentButton");
+        check("cleafchildclasslibraryafter", button_library_path.string());
+        check("cleafchildclasslibrarypropafter", button_library_path.string());
         check("lchildclassreadonly", "true");
         check("lchildbaseclassreadonly", "true");
         check("lchildparentclassreadonly", "true");
         check("lchildclasslibraryreadonly", "true");
+        check("lleafchildclassreadonly", "true");
+        check("lleafchildbaseclassreadonly", "true");
+        check("lleafchildparentclassreadonly", "true");
+        check("lleafchildclasslibraryreadonly", "true");
         check("ldictset", "true");
         check("ndictcompare", "89");
 
-        expect(state.ole_objects.size() == 3U,
-               "external-base inherited ADDOBJECT deeper external child external-base direct assignment should register parent, child, and COM objects");
-        if (state.ole_objects.size() == 3U)
+        expect(state.ole_objects.size() == 5U,
+               "external-base inherited ADDOBJECT deeper external child external-base direct assignment should register CREATEOBJECT parent/child, NEWOBJECT parent/child, and COM objects");
+        if (state.ole_objects.size() == 5U)
         {
-            const auto &parent_object = state.ole_objects[0];
-            const auto &child_object = state.ole_objects[1];
-            expect(parent_object.prog_id == "ChildForm",
-                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should preserve parent identity");
-            expect(child_object.prog_id == "SaveButton",
-                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should preserve child identity");
-            expect(child_object.base_class_name == "ParentButton",
-                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should preserve immediate child base-class identity");
-            expect(child_object.source == widget_library_path.string(),
-                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should preserve the defining child-class source path");
-            expect(child_object.class_library == button_library_path.string(),
-                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should preserve the immediate external ClassLibrary path");
-            expect(child_object.class_hierarchy.size() == 5U,
-                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should preserve the deeper runtime child class hierarchy");
-            expect(!child_object.properties.contains("class"),
-                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should not materialize a child Class shadow");
-            expect(!child_object.properties.contains("baseclass"),
-                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should not materialize a child BaseClass shadow");
-            expect(!child_object.properties.contains("parentclass"),
-                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should not materialize a child ParentClass shadow");
-            expect(!child_object.properties.contains("classlibrary"),
-                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should not materialize a child ClassLibrary shadow");
-            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+            const auto &create_parent = state.ole_objects[0];
+            const auto &create_child = state.ole_objects[1];
+            const auto &leaf_parent = state.ole_objects[2];
+            const auto &leaf_child = state.ole_objects[3];
+            expect(create_parent.prog_id == "ChildForm",
+                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should preserve CREATEOBJECT parent identity");
+            expect(create_child.prog_id == "SaveButton",
+                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should preserve CREATEOBJECT child identity");
+            expect(create_child.base_class_name == "ParentButton",
+                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should preserve CREATEOBJECT immediate child base-class identity");
+            expect(create_child.source == widget_library_path.string(),
+                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should preserve the CREATEOBJECT child source path");
+            expect(create_child.class_library == button_library_path.string(),
+                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should preserve the CREATEOBJECT immediate external ClassLibrary path");
+            expect(create_child.class_hierarchy.size() == 5U,
+                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should preserve the CREATEOBJECT child class hierarchy");
+            expect(!create_child.properties.contains("class"),
+                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should not materialize a CREATEOBJECT child Class shadow");
+            expect(!create_child.properties.contains("baseclass"),
+                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should not materialize a CREATEOBJECT child BaseClass shadow");
+            expect(!create_child.properties.contains("parentclass"),
+                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should not materialize a CREATEOBJECT child ParentClass shadow");
+            expect(!create_child.properties.contains("classlibrary"),
+                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should not materialize a CREATEOBJECT child ClassLibrary shadow");
+            expect(leaf_parent.prog_id == "LeafForm",
+                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should preserve NEWOBJECT leaf identity");
+            expect(leaf_child.prog_id == "SaveButton",
+                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should preserve NEWOBJECT leaf child identity");
+            expect(leaf_child.base_class_name == "ParentButton",
+                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should preserve NEWOBJECT leaf child immediate base-class identity");
+            expect(leaf_child.source == widget_library_path.string(),
+                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should preserve the NEWOBJECT leaf child source path");
+            expect(leaf_child.class_library == button_library_path.string(),
+                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should preserve the NEWOBJECT leaf child immediate external ClassLibrary path");
+            expect(leaf_child.class_hierarchy.size() == 5U,
+                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should preserve the NEWOBJECT leaf child class hierarchy");
+            expect(!leaf_child.properties.contains("class"),
+                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should not materialize a NEWOBJECT leaf child Class shadow");
+            expect(!leaf_child.properties.contains("baseclass"),
+                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should not materialize a NEWOBJECT leaf child BaseClass shadow");
+            expect(!leaf_child.properties.contains("parentclass"),
+                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should not materialize a NEWOBJECT leaf child ParentClass shadow");
+            expect(!leaf_child.properties.contains("classlibrary"),
+                   "external-base inherited ADDOBJECT deeper external child external-base direct assignment should not materialize a NEWOBJECT leaf child ClassLibrary shadow");
+            expect(state.ole_objects[4].prog_id == "Scripting.Dictionary",
                    "COM NEWOBJECT should remain stable while external-base inherited ADDOBJECT deeper external child external-base direct assignment lands");
         }
 
