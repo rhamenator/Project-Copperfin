@@ -5293,6 +5293,214 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_same_prg_child_identity_metadata_cannot_be_shadowed_through_addproperty()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_child_identity_addproperty";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_child_identity_addproperty.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('DemoForm')\n"
+            "lAddChildClass = ADDPROPERTY(oCreate.cmdSave, 'Class', 'OtherClass')\n"
+            "lAddChildBaseClass = ADDPROPERTY(oCreate.cmdSave, 'BaseClass', 'OtherBase')\n"
+            "lAddChildParentClass = ADDPROPERTY(oCreate.cmdSave, 'ParentClass', 'OtherParent')\n"
+            "lAddChildClassLibrary = ADDPROPERTY(oCreate.cmdSave, 'ClassLibrary', 'other.prg')\n"
+            "cChildClassAfter = GETPEM(oCreate.cmdSave, 'Class')\n"
+            "cChildBaseClassAfter = GETPEM(oCreate.cmdSave, 'BaseClass')\n"
+            "cChildParentClassAfter = GETPEM(oCreate.cmdSave, 'ParentClass')\n"
+            "xChildClassLibraryAfter = GETPEM(oCreate.cmdSave, 'ClassLibrary')\n"
+            "lChildClassReadOnly = PEMSTATUS(oCreate.cmdSave, 'Class', 5)\n"
+            "lChildBaseClassReadOnly = PEMSTATUS(oCreate.cmdSave, 'BaseClass', 5)\n"
+            "lChildParentClassReadOnly = PEMSTATUS(oCreate.cmdSave, 'ParentClass', 5)\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 54)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS DemoForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS Custom\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native child identity ADDPROPERTY script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("laddchildclass", "false");
+        check("laddchildbaseclass", "false");
+        check("laddchildparentclass", "false");
+        check("laddchildclasslibrary", "false");
+        check("cchildclassafter", "SaveButton");
+        check("cchildbaseclassafter", "Custom");
+        check("cchildparentclassafter", "Custom");
+        check("lchildclassreadonly", "true");
+        check("lchildbaseclassreadonly", "true");
+        check("lchildparentclassreadonly", "true");
+        check("ldictset", "true");
+        check("ndictcompare", "54");
+
+        const auto child_class_library_after = state.globals.find("xchildclasslibraryafter");
+        expect(child_class_library_after != state.globals.end() &&
+                   child_class_library_after->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "same-PRG child identity ADDPROPERTY should leave child ClassLibrary empty after failed shadow creation");
+
+        expect(state.ole_objects.size() == 3U,
+               "native child identity ADDPROPERTY should register parent, child, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            expect(state.ole_objects[0].prog_id == "DemoForm",
+                   "native child identity ADDPROPERTY should preserve parent form identity");
+            const auto &child_object = state.ole_objects[1];
+            expect(child_object.prog_id == "SaveButton",
+                   "native child identity ADDPROPERTY should preserve child class identity");
+            expect(child_object.base_class_name == "Custom",
+                   "native child identity ADDPROPERTY should preserve child base-class identity");
+            expect(child_object.class_library.empty(),
+                   "native child identity ADDPROPERTY should preserve empty same-PRG child class-library provenance");
+            expect(!child_object.properties.contains("class"),
+                   "native child identity ADDPROPERTY should not materialize a child Class shadow");
+            expect(!child_object.properties.contains("baseclass"),
+                   "native child identity ADDPROPERTY should not materialize a child BaseClass shadow");
+            expect(!child_object.properties.contains("parentclass"),
+                   "native child identity ADDPROPERTY should not materialize a child ParentClass shadow");
+            expect(!child_object.properties.contains("classlibrary"),
+                   "native child identity ADDPROPERTY should not materialize a child ClassLibrary shadow");
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while native child identity ADDPROPERTY lands");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_external_base_child_identity_metadata_cannot_be_shadowed_through_addproperty()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_external_prg_child_identity_addproperty";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path library_path = temp_root / "widgetlib.prg";
+        write_text(
+            library_path,
+            "DEFINE CLASS ParentForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS Custom\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "external_child_identity_addproperty.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildForm')\n"
+            "lAddChildClass = ADDPROPERTY(oCreate.cmdSave, 'Class', 'OtherClass')\n"
+            "lAddChildBaseClass = ADDPROPERTY(oCreate.cmdSave, 'BaseClass', 'OtherBase')\n"
+            "lAddChildParentClass = ADDPROPERTY(oCreate.cmdSave, 'ParentClass', 'OtherParent')\n"
+            "lAddChildClassLibrary = ADDPROPERTY(oCreate.cmdSave, 'ClassLibrary', 'other.prg')\n"
+            "cChildClassAfter = GETPEM(oCreate.cmdSave, 'Class')\n"
+            "cChildBaseClassAfter = GETPEM(oCreate.cmdSave, 'BaseClass')\n"
+            "cChildParentClassAfter = GETPEM(oCreate.cmdSave, 'ParentClass')\n"
+            "xChildClassLibraryAfter = GETPEM(oCreate.cmdSave, 'ClassLibrary')\n"
+            "lChildClassReadOnly = PEMSTATUS(oCreate.cmdSave, 'Class', 5)\n"
+            "lChildBaseClassReadOnly = PEMSTATUS(oCreate.cmdSave, 'BaseClass', 5)\n"
+            "lChildParentClassReadOnly = PEMSTATUS(oCreate.cmdSave, 'ParentClass', 5)\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 55)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildForm AS ParentForm OF widgetlib.prg\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("external child identity ADDPROPERTY script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("laddchildclass", "false");
+        check("laddchildbaseclass", "false");
+        check("laddchildparentclass", "false");
+        check("laddchildclasslibrary", "false");
+        check("cchildclassafter", "SaveButton");
+        check("cchildbaseclassafter", "Custom");
+        check("cchildparentclassafter", "Custom");
+        check("lchildclassreadonly", "true");
+        check("lchildbaseclassreadonly", "true");
+        check("lchildparentclassreadonly", "true");
+        check("ldictset", "true");
+        check("ndictcompare", "55");
+
+        const auto child_class_library_after = state.globals.find("xchildclasslibraryafter");
+        expect(child_class_library_after != state.globals.end() &&
+                   child_class_library_after->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "external child identity ADDPROPERTY should leave child ClassLibrary empty when the child class itself has no external base");
+
+        expect(state.ole_objects.size() == 3U,
+               "external child identity ADDPROPERTY should register parent, child, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            expect(state.ole_objects[0].prog_id == "ChildForm",
+                   "external child identity ADDPROPERTY should preserve parent form identity");
+            const auto &child_object = state.ole_objects[1];
+            expect(child_object.prog_id == "SaveButton",
+                   "external child identity ADDPROPERTY should preserve child class identity");
+            expect(child_object.base_class_name == "Custom",
+                   "external child identity ADDPROPERTY should preserve child base-class identity");
+            expect(child_object.class_library.empty(),
+                   "external child identity ADDPROPERTY should keep child class-library provenance empty when the child class itself has no external base");
+            expect(child_object.source == library_path.string(),
+                   "external child identity ADDPROPERTY should preserve the defining PRG path as child provenance");
+            expect(!child_object.properties.contains("class"),
+                   "external child identity ADDPROPERTY should not materialize a child Class shadow");
+            expect(!child_object.properties.contains("baseclass"),
+                   "external child identity ADDPROPERTY should not materialize a child BaseClass shadow");
+            expect(!child_object.properties.contains("parentclass"),
+                   "external child identity ADDPROPERTY should not materialize a child ParentClass shadow");
+            expect(!child_object.properties.contains("classlibrary"),
+                   "external child identity ADDPROPERTY should not materialize a child ClassLibrary shadow");
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while external child identity ADDPROPERTY lands");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_same_prg_child_parent_reflects_through_getpem_and_pemstatus()
     {
         namespace fs = std::filesystem;
@@ -8972,6 +9180,8 @@ int main()
     test_external_base_child_identity_metadata_reads_through_ordinary_properties();
     test_same_prg_child_identity_metadata_stays_read_only_to_setpem();
     test_external_base_child_identity_metadata_stays_read_only_to_setpem();
+    test_same_prg_child_identity_metadata_cannot_be_shadowed_through_addproperty();
+    test_external_base_child_identity_metadata_cannot_be_shadowed_through_addproperty();
     test_same_prg_child_parent_reflects_through_getpem_and_pemstatus();
     test_external_base_child_parent_reflects_through_getpem_and_pemstatus();
     test_same_prg_child_identity_reflects_through_getpem_and_pemstatus();
