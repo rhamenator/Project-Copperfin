@@ -9,6 +9,7 @@
 #include "copperfin/security/security_model.h"
 #include "copperfin/studio/project_workspace.h"
 #include "prg_engine_test_support.h"
+#include "test_environment_support.h"
 
 #include <algorithm>
 #include <cstdlib>
@@ -32,22 +33,6 @@ void write_catalog(const std::filesystem::path& root, const std::string& locale,
     const std::filesystem::path locale_root = root / locale;
     std::filesystem::create_directories(locale_root);
     write_text(locale_root / "strings.json", json);
-}
-
-void set_env_value(const std::string& name, const std::string& value, bool has_value) {
-#ifdef _WIN32
-    if (has_value) {
-        _putenv_s(name.c_str(), value.c_str());
-    } else {
-        _putenv_s(name.c_str(), "");
-    }
-#else
-    if (has_value) {
-        setenv(name.c_str(), value.c_str(), 1);
-    } else {
-        unsetenv(name.c_str());
-    }
-#endif
 }
 
 std::string shell_quote(const std::string& value) {
@@ -88,24 +73,6 @@ std::string run_command_capture(const std::string& command) {
 #endif
     return output;
 }
-
-struct ScopedEnvironmentValue {
-    std::string name;
-    bool had_value = false;
-    std::string original_value;
-
-    explicit ScopedEnvironmentValue(std::string environment_name)
-        : name(std::move(environment_name)) {
-        if (const char* current = std::getenv(name.c_str())) {
-            had_value = true;
-            original_value = current;
-        }
-    }
-
-    ~ScopedEnvironmentValue() {
-        set_env_value(name, original_value, had_value);
-    }
-};
 
 void seed_test_catalogs(const std::filesystem::path& root) {
     write_catalog(
@@ -191,6 +158,37 @@ void test_placeholders_pseudo_locale_and_unicode() {
         "#1779: UTF-8 catalog values and placeholders should round trip non-ASCII text");
 
     fs::remove_all(temp_root, ignored);
+}
+
+void test_catalog_json_unicode_escapes_support_surrogate_pairs() {
+    const auto parsed = copperfin::localization::parse_catalog_json(
+        "{\"emoji\":\"\\uD83D\\uDE03\",\"clef\":\"\\uD834\\uDD1E\"}");
+    expect(parsed.ok, "#3213: catalog JSON parser should accept valid surrogate-pair escapes");
+    if (parsed.ok) {
+        const auto emoji = parsed.entries.find("emoji");
+        const auto clef = parsed.entries.find("clef");
+        expect(
+            emoji != parsed.entries.end() && emoji->second == "\xF0\x9F\x98\x83",
+            "#3213: surrogate-pair emoji escapes should decode to four-byte UTF-8");
+        expect(
+            clef != parsed.entries.end() && clef->second == "\xF0\x9D\x84\x9E",
+            "#3213: surrogate-pair music-symbol escapes should decode to four-byte UTF-8");
+    }
+
+    const auto lone_high = copperfin::localization::parse_catalog_json("{\"emoji\":\"\\uD83D\"}");
+    expect(
+        !lone_high.ok && lone_high.error == "Catalog.Json.IncompleteUnicodeEscape",
+        "#3213: a trailing high surrogate should surface the existing incomplete-unicode diagnostic");
+
+    const auto lone_low = copperfin::localization::parse_catalog_json("{\"emoji\":\"\\uDE03\"}");
+    expect(
+        !lone_low.ok && lone_low.error == "Catalog.Json.InvalidUnicodeEscape",
+        "#3213: an unpaired low surrogate should be rejected");
+
+    const auto mismatched_pair = copperfin::localization::parse_catalog_json("{\"emoji\":\"\\uD83D\\u0041\"}");
+    expect(
+        !mismatched_pair.ok && mismatched_pair.error == "Catalog.Json.InvalidUnicodeEscape",
+        "#3213: a high surrogate followed by a non-low-surrogate escape should be rejected");
 }
 
 void test_machine_contract_fields_remain_invariant() {
@@ -3026,6 +3024,7 @@ void test_inspect_error_prefix_routes_through_localization(const std::string& in
 int main(int argc, char** argv) {
     test_catalog_loading_and_fallback();
     test_placeholders_pseudo_locale_and_unicode();
+    test_catalog_json_unicode_escapes_support_surrogate_pairs();
     test_machine_contract_fields_remain_invariant();
     test_catalog_root_resolution_searches_parent_directories();
     test_parser_behavior_remains_locale_invariant();

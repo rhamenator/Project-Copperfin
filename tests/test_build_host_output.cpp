@@ -4,6 +4,7 @@
 
 #include "copperfin/localization/localization.h"
 #include "copperfin/vfp/dbf_table.h"
+#include "test_environment_support.h"
 
 #include <cstdlib>
 #include <filesystem>
@@ -23,6 +24,9 @@
 
 namespace {
 
+using copperfin::test_support::ScopedEnvironmentValue;
+using copperfin::test_support::set_env_value;
+
 int failures = 0;
 
 void expect(bool condition, const std::string& message) {
@@ -31,58 +35,6 @@ void expect(bool condition, const std::string& message) {
         ++failures;
     }
 }
-
-std::string getenv_value(const std::string& name) {
-#ifdef _WIN32
-    char* value = nullptr;
-    std::size_t value_size = 0;
-    if (_dupenv_s(&value, &value_size, name.c_str()) != 0 || value == nullptr) {
-        return {};
-    }
-    std::string result(value);
-    std::free(value);
-    return result;
-#else
-    const char* value = std::getenv(name.c_str());
-    if (value == nullptr) {
-        return {};
-    }
-    return value;
-#endif
-}
-
-void set_env_value(const std::string& name, const std::string& value, bool has_value) {
-#ifdef _WIN32
-    if (has_value) {
-        _putenv_s(name.c_str(), value.c_str());
-    } else {
-        _putenv_s((name + "=").c_str(), "");
-    }
-#else
-    if (has_value) {
-        setenv(name.c_str(), value.c_str(), 1);
-    } else {
-        unsetenv(name.c_str());
-    }
-#endif
-}
-
-struct ScopedEnvironmentValue {
-    std::string name;
-    std::string original;
-    bool had_original = false;
-
-    explicit ScopedEnvironmentValue(const std::string& environment_name)
-        : name(environment_name),
-          original(getenv_value(name)) {
-        had_original = !original.empty();
-        set_env_value(name, "", false);
-    }
-
-    ~ScopedEnvironmentValue() {
-        set_env_value(name, original, had_original);
-    }
-};
 
 void write_text(const std::filesystem::path& path, const std::string& text) {
     std::ofstream output(path, std::ios::binary | std::ios::trunc);
@@ -3069,6 +3021,8 @@ void run_build_host_localized_usage_smoke(const std::string& build_host_path) {
                    "Usage: copperfin_build_host build --project <path-to-pjx> --output-dir <directory>") !=
                    std::string::npos,
                "default build host usage should preserve the en-US CLI text");
+        expect(process.stdout_text.find("   or: copperfin_build_host --license-status") != std::string::npos,
+               "default build host usage should advertise the normalized license-status flag");
         expect(process.stdout_text.find("--configuration debug|release") != std::string::npos,
                "default build host usage should preserve configuration tokens");
     }
@@ -3083,6 +3037,8 @@ void run_build_host_localized_usage_smoke(const std::string& build_host_path) {
         expect(process.stdout_text.find("Uso: copperfin_build_host build --project <path-to-pjx> --output-dir <directory>") !=
                    std::string::npos,
                "Spanish placeholder build host usage should resolve through the es-419 catalog");
+        expect(process.stdout_text.find("   o: copperfin_build_host --license-status") != std::string::npos,
+               "Spanish placeholder build host usage should localize the alternate usage prefix");
         expect(process.stdout_text.find("Usage: copperfin_build_host") == std::string::npos,
                "Spanish placeholder build host usage should not fall back to raw English prose");
         expect(process.stdout_text.find("--configuration debug|release") != std::string::npos,
@@ -3117,6 +3073,8 @@ void run_build_host_localized_usage_smoke(const std::string& build_host_path) {
                "pseudo-localized build host usage should decorate prose");
         expect(process.stdout_text.find("copperfin_build_host") != std::string::npos,
                "pseudo-localized build host usage should preserve the command name");
+        expect(process.stdout_text.find("--license-status") != std::string::npos,
+               "pseudo-localized build host usage should preserve the normalized license-status flag");
         expect(process.stdout_text.find("--project") != std::string::npos,
                "pseudo-localized build host usage should preserve CLI flags");
         expect(process.stdout_text.find("debug|release") != std::string::npos,
@@ -3136,6 +3094,22 @@ void run_build_host_localized_usage_smoke(const std::string& build_host_path) {
                "pseudo-localized build host command errors should preserve the invalid CLI flag");
         expect(error_process.stdout_text.find("error: Unknown or incomplete argument") == std::string::npos,
                "pseudo-localized build host command errors should not fall back to the raw English prefixed error");
+    }
+
+    {
+        const auto process = run_process_capture(build_host_path, {"--license-status"}, temp_root);
+        expect(process.exit_code == 0, "normalized build host license-status flag should succeed");
+        expect(process.stdout_text.find("status: ok") != std::string::npos,
+               "normalized build host license-status flag should preserve the machine-readable status line");
+        expect(process.stdout_text.find("state: ") != std::string::npos,
+               "normalized build host license-status flag should print the license state");
+    }
+
+    {
+        const auto process = run_process_capture(build_host_path, {"license-status"}, temp_root);
+        expect(process.exit_code == 0, "legacy build host positional license-status should remain accepted");
+        expect(process.stdout_text.find("status: ok") != std::string::npos,
+               "legacy build host positional license-status should still print the machine-readable status line");
     }
 
     {

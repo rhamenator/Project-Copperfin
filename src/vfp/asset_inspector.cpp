@@ -430,6 +430,7 @@ std::vector<std::string> companion_index_paths_for(const std::filesystem::path& 
         case AssetFamily::form:
         case AssetFamily::class_library:
         case AssetFamily::report:
+        case AssetFamily::label:
         case AssetFamily::menu:
         case AssetFamily::index:
         case AssetFamily::program:

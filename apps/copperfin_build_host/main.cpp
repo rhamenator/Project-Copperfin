@@ -15,6 +15,7 @@
 #include "copperfin/studio/document_model.h"
 #include "copperfin/studio/project_workspace.h"
 
+#include <algorithm>
 #include <cerrno>
 #include <cstdlib>
 #include <filesystem>
@@ -65,6 +66,12 @@ void print_usage(const copperfin::localization::LocalizedCatalog& catalog) {
             {"projectValue", "<path-to-pjx>"},
             {"runtimeHostOption", "--runtime-host"},
             {"runtimeHostValue", "<path>"}
+        }) << "\n";
+    std::cout << catalog.translate(
+        "BuildHost.Usage.LicenseStatus",
+        {
+            {"commandName", "copperfin_build_host"},
+            {"licenseStatusOption", "--license-status"}
         }) << "\n";
 }
 
@@ -306,7 +313,10 @@ int main(int argc, char** argv) {
         args.emplace_back(argv[index]);
     }
 
-    if (!args.empty() && args[0] == "license-status") {
+    const bool legacy_license_status = args.size() == 1U && args[0] == "license-status";
+    const bool license_status_requested =
+        std::find(args.begin(), args.end(), "--license-status") != args.end();
+    if (legacy_license_status || license_status_requested) {
         print_license_status(copperfin::licensing::load_license_status(argv[0]));
         return 0;
     }

@@ -13,6 +13,7 @@
   "BuildHost.Prefix.Error": "error: ",
   "BuildHost.Prefix.Warning": "warning: ",
   "BuildHost.Usage": "Usage: {commandName} {buildCommand} {projectOption} {projectValue} {outputDirOption} {outputDirValue} [{configurationOption} {configurationValue}] [{enableSecurityOption}] [{emitDotnetLauncherOption}] [{runtimeHostOption} {runtimeHostValue}]",
+  "BuildHost.Usage.LicenseStatus": "   or: {commandName} {licenseStatusOption}",
   "BuildHost.Warning.ProcessHardening": "warning: {message}",
   "Runtime.Package.Warning.DebugStartupSourceUnresolved": "No source-side startup asset could be resolved for debugging.",
   "Runtime.Package.Warning.DotNetOutputProfileUnavailable": ".NET launcher generation was requested but no .NET output profile is available.",

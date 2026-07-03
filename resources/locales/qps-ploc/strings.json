@@ -13,6 +13,7 @@
   "BuildHost.Prefix.Error": "error: ",
   "BuildHost.Prefix.Warning": "warning: ",
   "BuildHost.Usage": "Usage: {commandName} {buildCommand} {projectOption} {projectValue} {outputDirOption} {outputDirValue} [{configurationOption} {configurationValue}] [{enableSecurityOption}] [{emitDotnetLauncherOption}] [{runtimeHostOption} {runtimeHostValue}]",
+  "BuildHost.Usage.LicenseStatus": "   ør: {commandName} {licenseStatusOption}",
   "BuildHost.Warning.ProcessHardening": "warning: {message}",
   "Command.Inspect": "Inspect",
   "Runtime.Package.Warning.DebugStartupSourceUnresolved": "No source-side startup asset could be resolved for debugging.",

@@ -84,11 +84,72 @@ void append_utf8(std::string& value, unsigned int codepoint) {
     } else if (codepoint <= 0x7FFU) {
         value.push_back(static_cast<char>(0xC0U | (codepoint >> 6U)));
         value.push_back(static_cast<char>(0x80U | (codepoint & 0x3FU)));
-    } else {
+    } else if (codepoint <= 0xFFFFU) {
         value.push_back(static_cast<char>(0xE0U | (codepoint >> 12U)));
         value.push_back(static_cast<char>(0x80U | ((codepoint >> 6U) & 0x3FU)));
         value.push_back(static_cast<char>(0x80U | (codepoint & 0x3FU)));
+    } else {
+        value.push_back(static_cast<char>(0xF0U | (codepoint >> 18U)));
+        value.push_back(static_cast<char>(0x80U | ((codepoint >> 12U) & 0x3FU)));
+        value.push_back(static_cast<char>(0x80U | ((codepoint >> 6U) & 0x3FU)));
+        value.push_back(static_cast<char>(0x80U | (codepoint & 0x3FU)));
     }
+}
+
+bool parse_json_unicode_escape(std::string_view text, std::size_t& offset, unsigned int& codepoint, std::string& error) {
+    if (offset + 4U > text.size()) {
+        error = "Catalog.Json.IncompleteUnicodeEscape";
+        return false;
+    }
+
+    unsigned int code_unit = 0U;
+    for (std::size_t index = 0U; index < 4U; ++index) {
+        const int hex = hex_value(text[offset + index]);
+        if (hex < 0) {
+            error = "Catalog.Json.InvalidUnicodeEscape";
+            return false;
+        }
+        code_unit = (code_unit << 4U) | static_cast<unsigned int>(hex);
+    }
+    offset += 4U;
+
+    if (code_unit >= 0xD800U && code_unit <= 0xDBFFU) {
+        if (offset + 6U > text.size()) {
+            error = "Catalog.Json.IncompleteUnicodeEscape";
+            return false;
+        }
+        if (text[offset] != '\\' || text[offset + 1U] != 'u') {
+            error = "Catalog.Json.InvalidUnicodeEscape";
+            return false;
+        }
+        offset += 2U;
+
+        unsigned int low_surrogate = 0U;
+        for (std::size_t index = 0U; index < 4U; ++index) {
+            const int hex = hex_value(text[offset + index]);
+            if (hex < 0) {
+                error = "Catalog.Json.InvalidUnicodeEscape";
+                return false;
+            }
+            low_surrogate = (low_surrogate << 4U) | static_cast<unsigned int>(hex);
+        }
+        offset += 4U;
+        if (low_surrogate < 0xDC00U || low_surrogate > 0xDFFFU) {
+            error = "Catalog.Json.InvalidUnicodeEscape";
+            return false;
+        }
+
+        codepoint = 0x10000U + (((code_unit - 0xD800U) << 10U) | (low_surrogate - 0xDC00U));
+        return true;
+    }
+
+    if (code_unit >= 0xDC00U && code_unit <= 0xDFFFU) {
+        error = "Catalog.Json.InvalidUnicodeEscape";
+        return false;
+    }
+
+    codepoint = code_unit;
+    return true;
 }
 
 bool parse_json_string(std::string_view text, std::size_t& offset, std::string& value, std::string& error) {
@@ -134,20 +195,10 @@ bool parse_json_string(std::string_view text, std::size_t& offset, std::string& 
                 value.push_back('\t');
                 break;
             case 'u': {
-                if (offset + 4U > text.size()) {
-                    error = "Catalog.Json.IncompleteUnicodeEscape";
+                unsigned int codepoint = 0U;
+                if (!parse_json_unicode_escape(text, offset, codepoint, error)) {
                     return false;
                 }
-                unsigned int codepoint = 0U;
-                for (std::size_t index = 0U; index < 4U; ++index) {
-                    const int hex = hex_value(text[offset + index]);
-                    if (hex < 0) {
-                        error = "Catalog.Json.InvalidUnicodeEscape";
-                        return false;
-                    }
-                    codepoint = (codepoint << 4U) | static_cast<unsigned int>(hex);
-                }
-                offset += 4U;
                 append_utf8(value, codepoint);
                 break;
             }

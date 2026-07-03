@@ -5,6 +5,7 @@
 #include "copperfin/licensing/license_status.h"
 #include "license_classifier.h"
 #include "license_payload_value.h"
+#include "test_environment_support.h"
 
 #include <cstdlib>
 #include <filesystem>
@@ -15,6 +16,8 @@
 namespace {
 
 namespace fs = std::filesystem;
+using copperfin::test_support::ScopedEnvironmentValue;
+using copperfin::test_support::set_env_value;
 using copperfin::licensing::LicenseState;
 using copperfin::licensing::LicenseStatus;
 using copperfin::licensing::PayloadFields;
@@ -32,54 +35,6 @@ void expect(bool condition, const std::string& message) {
         ++failures;
     }
 }
-
-void set_env_value(const std::string& name, const std::string& value, bool has_value) {
-#ifdef _WIN32
-    if (has_value) {
-        _putenv_s(name.c_str(), value.c_str());
-    } else {
-        _putenv_s(name.c_str(), "");
-    }
-#else
-    if (has_value) {
-        setenv(name.c_str(), value.c_str(), 1);
-    } else {
-        unsetenv(name.c_str());
-    }
-#endif
-}
-
-struct ScopedEnvironmentValue {
-    std::string name;
-    bool had_value = false;
-    std::string original_value;
-
-    explicit ScopedEnvironmentValue(std::string environment_name)
-        : name(std::move(environment_name)) {
-#ifdef _WIN32
-        char* raw = nullptr;
-        std::size_t length = 0;
-        if (_dupenv_s(&raw, &length, name.c_str()) == 0 && raw != nullptr) {
-            had_value = true;
-            original_value = raw;
-            std::free(raw);
-        }
-#else
-        if (const char* current = std::getenv(name.c_str())) {
-            had_value = true;
-            original_value = current;
-        }
-#endif
-    }
-
-    void set(const std::string& value) {
-        set_env_value(name, value, true);
-    }
-
-    ~ScopedEnvironmentValue() {
-        set_env_value(name, original_value, had_value);
-    }
-};
 
 fs::path test_root() {
     return fs::temp_directory_path() / "copperfin_licensing_tests";

@@ -8,6 +8,7 @@
 #include "copperfin/security/sha256.h"
 #include "copperfin/studio/document_model.h"
 #include "copperfin/vfp/dbf_table.h"
+#include "test_environment_support.h"
 
 #include <cstdlib>
 #include <filesystem>
@@ -272,54 +273,14 @@ struct ProcessResult {
 class ScopedEnvironmentVariable {
 public:
     ScopedEnvironmentVariable(const char* name, std::string value)
-        : name_(name == nullptr ? "" : name),
-          had_original_(false) {
-        if (name_.empty()) {
-            return;
+        : scoped_(name == nullptr ? std::string() : std::string(name), false) {
+        if (!scoped_.name.empty()) {
+            scoped_.set(value);
         }
-
-#if defined(_WIN32)
-        char* raw_value = nullptr;
-        std::size_t raw_length = 0;
-        if (_dupenv_s(&raw_value, &raw_length, name_.c_str()) == 0 && raw_value != nullptr) {
-            had_original_ = true;
-            original_value_ = raw_value;
-            std::free(raw_value);
-        }
-        _putenv_s(name_.c_str(), value.c_str());
-#else
-        if (const char* raw_value = std::getenv(name_.c_str()); raw_value != nullptr) {
-            had_original_ = true;
-            original_value_ = raw_value;
-        }
-        setenv(name_.c_str(), value.c_str(), 1);
-#endif
-    }
-
-    ~ScopedEnvironmentVariable() {
-        if (name_.empty()) {
-            return;
-        }
-
-#if defined(_WIN32)
-        if (had_original_) {
-            _putenv_s(name_.c_str(), original_value_.c_str());
-        } else {
-            _putenv_s(name_.c_str(), "");
-        }
-#else
-        if (had_original_) {
-            setenv(name_.c_str(), original_value_.c_str(), 1);
-        } else {
-            unsetenv(name_.c_str());
-        }
-#endif
     }
 
 private:
-    std::string name_;
-    std::string original_value_;
-    bool had_original_;
+    copperfin::test_support::ScopedEnvironmentValue scoped_;
 };
 
 ProcessResult run_process_capture(

@@ -13,6 +13,7 @@
   "BuildHost.Prefix.Error": "erro: ",
   "BuildHost.Prefix.Warning": "aviso: ",
   "BuildHost.Usage": "Uso: {commandName} {buildCommand} {projectOption} {projectValue} {outputDirOption} {outputDirValue} [{configurationOption} {configurationValue}] [{enableSecurityOption}] [{emitDotnetLauncherOption}] [{runtimeHostOption} {runtimeHostValue}]",
+  "BuildHost.Usage.LicenseStatus": "   ou: {commandName} {licenseStatusOption}",
   "BuildHost.Warning.ProcessHardening": "aviso: {message}",
   "Command.Inspect": "Inspecionar",
   "Runtime.Package.Warning.DebugStartupSourceUnresolved": "Nao foi possivel resolver o asset de inicializacao do lado da origem para depuracao.",

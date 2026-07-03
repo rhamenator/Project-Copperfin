@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "test_runtime_pipeline_support.h"
+#include "test_environment_support.h"
 
 namespace cf_test_runtime_pipeline {
 int failures = 0;
@@ -152,38 +153,11 @@ std::string manifest_value_for_key(const std::string& text, const std::string& k
 }
 
 std::string getenv_value(const std::string& name) {
-#if defined(_WIN32)
-    char* raw = nullptr;
-    std::size_t length = 0;
-    if (_dupenv_s(&raw, &length, name.c_str()) != 0 || raw == nullptr) {
-        return {};
-    }
-    const std::string value = raw;
-    std::free(raw);
-    return value;
-#else
-    const char* raw = std::getenv(name.c_str());
-    if (raw == nullptr) {
-        return {};
-    }
-    return raw;
-#endif
+    return copperfin::test_support::getenv_value(name);
 }
 
 void set_env_variable(const std::string& name, const std::string& value, bool has_value) {
-#if defined(_WIN32)
-    if (has_value) {
-        _putenv_s(name.c_str(), value.c_str());
-    } else {
-        _putenv_s((name + "=").c_str(), "");
-    }
-#else
-    if (has_value) {
-        setenv(name.c_str(), value.c_str(), 1);
-    } else {
-        unsetenv(name.c_str());
-    }
-#endif
+    copperfin::test_support::set_env_value(name, value, has_value);
 }
 
 bool dotnet_is_available() {
@@ -196,18 +170,11 @@ bool dotnet_is_available() {
 }
 
 std::string native_cxx_command() {
-    const char* configured = std::getenv("CXX");
-    if (configured != nullptr) {
-        const std::string value(configured);
-        if (!value.empty()) {
-            return value;
-        }
+    const std::string value = getenv_value("CXX");
+    if (!value.empty()) {
+        return value;
     }
-#if defined(_WIN32)
     return "c++";
-#else
-    return "c++";
-#endif
 }
 
 bool native_cxx_is_available() {

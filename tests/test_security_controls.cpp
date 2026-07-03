@@ -10,6 +10,7 @@
 #include "copperfin/security/secret_provider.h"
 #include "copperfin/security/security_model.h"
 #include "copperfin/security/sha256.h"
+#include "test_environment_support.h"
 
 #include <cstdlib>
 #include <filesystem>
@@ -17,6 +18,9 @@
 #include <iostream>
 
 namespace {
+
+using copperfin::test_support::ScopedEnvironmentValue;
+using copperfin::test_support::set_env_value;
 
 int failures = 0;
 
@@ -26,40 +30,6 @@ void expect(bool condition, const std::string& message) {
         ++failures;
     }
 }
-
-void set_env_value(const std::string& name, const std::string& value, bool has_value) {
-#ifdef _WIN32
-    if (has_value) {
-        _putenv_s(name.c_str(), value.c_str());
-    } else {
-        _putenv_s(name.c_str(), "");
-    }
-#else
-    if (has_value) {
-        setenv(name.c_str(), value.c_str(), 1);
-    } else {
-        unsetenv(name.c_str());
-    }
-#endif
-}
-
-struct ScopedEnvironmentValue {
-    std::string name;
-    bool had_value = false;
-    std::string original_value;
-
-    explicit ScopedEnvironmentValue(std::string environment_name)
-        : name(std::move(environment_name)) {
-        if (const char* current = std::getenv(name.c_str())) {
-            had_value = true;
-            original_value = current;
-        }
-    }
-
-    ~ScopedEnvironmentValue() {
-        set_env_value(name, original_value, had_value);
-    }
-};
 
 void test_authorization() {
     const auto profile = copperfin::security::default_native_security_profile();
