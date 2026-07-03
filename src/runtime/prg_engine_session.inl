@@ -639,6 +639,7 @@
                         evaluate_expression(property_statement.expression, frame);
                 }
             }
+            (void)read_native_collection_member(*runtime_object, "count");
             const PrgValue runtime_object_reference = make_runtime_object_reference(*runtime_object);
             for (const NativeClassLookup &lineage_class : class_lineage)
             {

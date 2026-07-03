@@ -180,6 +180,53 @@ bool is_scripting_dictionary_object(const RuntimeOleObjectState& runtime_object)
     return normalize_identifier(runtime_object.prog_id) == "scripting.dictionary";
 }
 
+void sync_native_collection_count(RuntimeOleObjectState& runtime_object) {
+    runtime_object.properties["count"] = make_number_value(static_cast<double>(runtime_object.collection_items.size()));
+}
+
+std::optional<std::size_t> resolve_native_collection_slot(
+    const RuntimeOleObjectState& runtime_object,
+    const PrgValue& selector) {
+    switch (selector.kind) {
+        case PrgValueKind::number: {
+            const long long index = std::llround(selector.number_value);
+            if (index >= 1LL && static_cast<std::size_t>(index) <= runtime_object.collection_items.size()) {
+                return static_cast<std::size_t>(index - 1LL);
+            }
+            return std::nullopt;
+        }
+        case PrgValueKind::int64:
+            if (selector.int64_value >= 1LL &&
+                static_cast<std::size_t>(selector.int64_value) <= runtime_object.collection_items.size()) {
+                return static_cast<std::size_t>(selector.int64_value - 1LL);
+            }
+            return std::nullopt;
+        case PrgValueKind::uint64:
+            if (selector.uint64_value >= 1ULL &&
+                static_cast<std::size_t>(selector.uint64_value) <= runtime_object.collection_items.size()) {
+                return static_cast<std::size_t>(selector.uint64_value - 1ULL);
+            }
+            return std::nullopt;
+        case PrgValueKind::boolean:
+        case PrgValueKind::string:
+        case PrgValueKind::empty:
+            break;
+    }
+
+    const std::string key = normalize_identifier(trim_copy(value_as_string(selector)));
+    if (key.empty()) {
+        return std::nullopt;
+    }
+
+    const auto found = std::find(runtime_object.collection_item_keys.begin(),
+                                 runtime_object.collection_item_keys.end(),
+                                 key);
+    if (found == runtime_object.collection_item_keys.end()) {
+        return std::nullopt;
+    }
+    return static_cast<std::size_t>(std::distance(runtime_object.collection_item_keys.begin(), found));
+}
+
 std::optional<PrgValue> get_native_identity_reflection_metadata(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
@@ -481,6 +528,9 @@ std::vector<std::string> collect_object_member_names(const RuntimeOleObjectState
             (void)value;
             unique_members.insert(normalize_identifier(name));
         }
+        if (is_native_collection_object(runtime_object)) {
+            unique_members.insert("count");
+        }
         for (const auto& metadata_name : collect_native_identity_member_names(runtime_object)) {
             unique_members.insert(metadata_name);
         }
@@ -496,6 +546,12 @@ std::vector<std::string> collect_object_member_names(const RuntimeOleObjectState
     if (include_methods) {
         for (const auto& method_name : runtime_object.methods) {
             unique_members.insert(normalize_identifier(method_name));
+        }
+        if (is_native_collection_object(runtime_object)) {
+            unique_members.insert("add");
+            unique_members.insert("item");
+            unique_members.insert("remove");
+            unique_members.insert("removeall");
         }
     }
     if (include_events) {
@@ -531,6 +587,94 @@ bool is_native_identity_member_name(const RuntimeOleObjectState& runtime_object,
 bool is_native_child_parent_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_child_parent_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_collection_object(const RuntimeOleObjectState& runtime_object)
+{
+    return normalize_identifier(runtime_object.base_class_name) == "collection" ||
+           normalize_identifier(runtime_object.prog_id) == "collection";
+}
+
+bool is_native_collection_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    if (!is_native_collection_object(runtime_object)) {
+        return false;
+    }
+    return normalized_member_name == "count" ||
+           normalized_member_name == "add" ||
+           normalized_member_name == "item" ||
+           normalized_member_name == "remove" ||
+           normalized_member_name == "removeall";
+}
+
+bool is_native_collection_readonly_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return is_native_collection_object(runtime_object) && normalized_member_name == "count";
+}
+
+std::optional<PrgValue> read_native_collection_member(RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    if (!is_native_collection_object(runtime_object) || normalized_member_name != "count") {
+        return std::nullopt;
+    }
+    sync_native_collection_count(runtime_object);
+    return runtime_object.properties["count"];
+}
+
+std::optional<PrgValue> invoke_native_collection_method(RuntimeOleObjectState& runtime_object,
+                                                        const std::string& normalized_method_name,
+                                                        const std::vector<PrgValue>& arguments)
+{
+    if (!is_native_collection_object(runtime_object)) {
+        return std::nullopt;
+    }
+
+    if (normalized_method_name == "add" && !arguments.empty()) {
+        const std::string key =
+            arguments.size() >= 2U ? normalize_identifier(trim_copy(value_as_string(arguments[1]))) : std::string{};
+        if (!key.empty()) {
+            const auto existing = std::find(runtime_object.collection_item_keys.begin(),
+                                            runtime_object.collection_item_keys.end(),
+                                            key);
+            if (existing != runtime_object.collection_item_keys.end()) {
+                runtime_object.collection_items[static_cast<std::size_t>(
+                    std::distance(runtime_object.collection_item_keys.begin(), existing))] = arguments[0];
+            } else {
+                runtime_object.collection_items.push_back(arguments[0]);
+                runtime_object.collection_item_keys.push_back(key);
+            }
+        } else {
+            runtime_object.collection_items.push_back(arguments[0]);
+            runtime_object.collection_item_keys.push_back({});
+        }
+        sync_native_collection_count(runtime_object);
+        return make_boolean_value(true);
+    }
+
+    if (normalized_method_name == "item" && !arguments.empty()) {
+        const auto slot = resolve_native_collection_slot(runtime_object, arguments[0]);
+        return slot.has_value() ? runtime_object.collection_items[*slot] : make_empty_value();
+    }
+
+    if (normalized_method_name == "remove" && !arguments.empty()) {
+        const auto slot = resolve_native_collection_slot(runtime_object, arguments[0]);
+        if (!slot.has_value()) {
+            return make_boolean_value(false);
+        }
+        runtime_object.collection_items.erase(runtime_object.collection_items.begin() + static_cast<std::ptrdiff_t>(*slot));
+        runtime_object.collection_item_keys.erase(runtime_object.collection_item_keys.begin() + static_cast<std::ptrdiff_t>(*slot));
+        sync_native_collection_count(runtime_object);
+        return make_boolean_value(true);
+    }
+
+    if (normalized_method_name == "removeall") {
+        runtime_object.collection_items.clear();
+        runtime_object.collection_item_keys.clear();
+        sync_native_collection_count(runtime_object);
+        return make_boolean_value(true);
+    }
+
+    return std::nullopt;
 }
 
 std::optional<PrgValue> read_native_identity_metadata(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
@@ -732,6 +876,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         if (attribute == 1) {
             const bool exists = get_native_identity_reflection_metadata(*runtime_object, member_name).has_value() ||
+                                is_native_collection_member_name(*runtime_object, member_name) ||
                                 runtime_object->properties.contains(member_name) ||
                                 object_has_accessor_property(*runtime_object, member_name) ||
                                 object_has_member(runtime_object->methods, member_name) ||
@@ -745,6 +890,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             const bool readonly =
                 get_native_identity_reflection_metadata(*runtime_object, member_name).has_value() ||
                 native_child_parent_member_name_matches(*runtime_object, member_name) ||
+                is_native_collection_readonly_member_name(*runtime_object, member_name) ||
                 (is_scripting_dictionary_object(*runtime_object) && member_name == "count") ||
                 (object_has_accessor_property(*runtime_object, member_name) &&
                  !object_has_assigner_property(*runtime_object, member_name));
@@ -769,7 +915,8 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             return make_boolean_value(false);
         }
         if (is_native_identity_member_name(*runtime_object, property_name) ||
-            native_child_parent_member_name_matches(*runtime_object, property_name)) {
+            native_child_parent_member_name_matches(*runtime_object, property_name) ||
+            is_native_collection_member_name(*runtime_object, property_name)) {
             return make_boolean_value(false);
         }
         const PrgValue initial_value = arguments.size() >= 3U ? arguments[2] : make_empty_value();
@@ -793,6 +940,10 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             metadata_value.has_value()) {
             return *metadata_value;
         }
+        if (const auto collection_value = read_native_collection_member(*runtime_object, member_name);
+            collection_value.has_value()) {
+            return *collection_value;
+        }
         const auto prop_it = runtime_object->properties.find(member_name);
         if (prop_it != runtime_object->properties.end()) {
             return prop_it->second;
@@ -804,6 +955,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                     return *member_value;
                 }
             }
+            return make_boolean_value(true);
+        }
+        if (is_native_collection_member_name(*runtime_object, member_name)) {
             return make_boolean_value(true);
         }
         if (object_has_member(runtime_object->methods, member_name) ||
@@ -828,7 +982,8 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         if (is_scripting_dictionary_object(*runtime_object) && member_name == "count") {
             return make_boolean_value(false);
         }
-        if (native_child_parent_member_name_matches(*runtime_object, member_name)) {
+        if (native_child_parent_member_name_matches(*runtime_object, member_name) ||
+            is_native_collection_readonly_member_name(*runtime_object, member_name)) {
             return make_boolean_value(false);
         }
         if (object_has_assigner_property(*runtime_object, member_name)) {
@@ -864,7 +1019,8 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             return make_boolean_value(false);
         }
         if (is_native_identity_member_name(*runtime_object, property_name) ||
-            native_child_parent_member_name_matches(*runtime_object, property_name)) {
+            native_child_parent_member_name_matches(*runtime_object, property_name) ||
+            is_native_collection_member_name(*runtime_object, property_name)) {
             return make_boolean_value(false);
         }
         const std::size_t removed = runtime_object->properties.erase(property_name);

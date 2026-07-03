@@ -951,6 +951,11 @@ namespace copperfin::runtime
                 events.push_back({.category = "ole.invoke",
                                   .detail = runtime_object->prog_id + "." + effective_member_path,
                                   .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                if (auto collection_result = invoke_native_collection_method(*runtime_object, leaf, arguments);
+                    collection_result.has_value())
+                {
+                    return *collection_result;
+                }
                 if (normalize_identifier(runtime_object->prog_id) == "scripting.dictionary")
                 {
                     auto update_dictionary_count = [&]()
@@ -1090,6 +1095,11 @@ namespace copperfin::runtime
                     metadata_value.has_value())
                 {
                     return *metadata_value;
+                }
+                if (auto collection_value = read_native_collection_member(*runtime_object, property_name);
+                    collection_value.has_value())
+                {
+                    return *collection_value;
                 }
                 if (is_native_identity_member_name(*runtime_object, property_name))
                 {

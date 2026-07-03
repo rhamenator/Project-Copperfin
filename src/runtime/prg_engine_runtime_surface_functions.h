@@ -32,6 +32,13 @@ struct RuntimeSurfaceCursorSnapshot {
 
 bool is_native_identity_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_child_parent_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_collection_object(const RuntimeOleObjectState& runtime_object);
+bool is_native_collection_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_collection_readonly_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+std::optional<PrgValue> read_native_collection_member(RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+std::optional<PrgValue> invoke_native_collection_method(RuntimeOleObjectState& runtime_object,
+                                                        const std::string& normalized_method_name,
+                                                        const std::vector<PrgValue>& arguments);
 std::optional<PrgValue> read_native_identity_metadata(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 
 std::optional<PrgValue> evaluate_runtime_surface_function(
