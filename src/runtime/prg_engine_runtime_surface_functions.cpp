@@ -605,9 +605,16 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             }
 
             std::vector<PrgValue> class_chain;
-            const std::string class_name = class_token_from_prog_id(runtime_object->prog_id);
-            class_chain.push_back(make_string_value(class_name));
-            class_chain.push_back(make_string_value("OBJECT"));
+            if (!runtime_object->class_hierarchy.empty()) {
+                class_chain.reserve(runtime_object->class_hierarchy.size());
+                for (const std::string& class_name : runtime_object->class_hierarchy) {
+                    class_chain.push_back(make_string_value(class_name));
+                }
+            } else {
+                const std::string class_name = class_token_from_prog_id(runtime_object->prog_id);
+                class_chain.push_back(make_string_value(class_name));
+                class_chain.push_back(make_string_value("OBJECT"));
+            }
             assign_array_callback(array_name, class_chain);
             return make_number_value(static_cast<double>(class_chain.size()));
         } catch (...) {

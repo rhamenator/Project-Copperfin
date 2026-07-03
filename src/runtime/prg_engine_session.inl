@@ -534,6 +534,32 @@
                 object_state.properties["parent"] = *parent_reference;
             }
 
+            object_state.class_hierarchy.reserve(class_lineage.size() + 2U);
+            for (auto lineage_it = class_lineage.rbegin(); lineage_it != class_lineage.rend(); ++lineage_it)
+            {
+                const std::string class_name = uppercase_copy(trim_copy(
+                    lineage_it->class_definition->name.empty() ? prog_id : lineage_it->class_definition->name));
+                if (!class_name.empty() &&
+                    (object_state.class_hierarchy.empty() || object_state.class_hierarchy.back() != class_name))
+                {
+                    object_state.class_hierarchy.push_back(class_name);
+                }
+            }
+            if (!class_lineage.empty())
+            {
+                const std::string base_class_token = uppercase_copy(trim_copy(
+                    native_same_prg_base_class_name(class_lineage.front().class_definition->base_class_name)));
+                if (!base_class_token.empty() &&
+                    (object_state.class_hierarchy.empty() || object_state.class_hierarchy.back() != base_class_token))
+                {
+                    object_state.class_hierarchy.push_back(base_class_token);
+                }
+            }
+            if (object_state.class_hierarchy.empty() || object_state.class_hierarchy.back() != "OBJECT")
+            {
+                object_state.class_hierarchy.push_back("OBJECT");
+            }
+
             std::map<std::string, std::string> effective_methods;
             for (const NativeClassLookup &lineage_class : class_lineage)
             {

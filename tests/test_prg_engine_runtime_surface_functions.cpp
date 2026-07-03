@@ -3247,6 +3247,186 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_same_prg_native_aclass_reflects_inheritance_chain()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_aclass_inheritance";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_aclass_inheritance.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildWidget')\n"
+            "oPlain = CREATEOBJECT('Empty')\n"
+            "nClassCount = ACLASS(aClass, oCreate)\n"
+            "cClass1 = aClass[1]\n"
+            "cClass2 = aClass[2]\n"
+            "cClass3 = aClass[3]\n"
+            "cClass4 = aClass[4]\n"
+            "cClass5 = aClass[5]\n"
+            "RETURN\n"
+            "DEFINE CLASS RootWidget AS Custom\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ParentWidget AS RootWidget\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ChildWidget AS ParentWidget\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native ACLASS inheritance script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("nclasscount", "5");
+        check("cclass1", "CHILDWIDGET");
+        check("cclass2", "PARENTWIDGET");
+        check("cclass3", "ROOTWIDGET");
+        check("cclass4", "CUSTOM");
+        check("cclass5", "OBJECT");
+
+        expect(state.ole_objects.size() == 2U,
+               "native ACLASS inheritance should register native and plain objects");
+        if (state.ole_objects.size() == 2U)
+        {
+            const auto &native_object = state.ole_objects[0];
+            expect(native_object.prog_id == "ChildWidget",
+                   "native ACLASS inheritance should preserve child class identity");
+            expect(native_object.class_hierarchy.size() == 5U,
+                   "native ACLASS inheritance should persist the native class hierarchy on runtime objects");
+            if (native_object.class_hierarchy.size() == 5U)
+            {
+                expect(native_object.class_hierarchy[0] == "CHILDWIDGET",
+                       "native ACLASS inheritance should store the derived class first");
+                expect(native_object.class_hierarchy[1] == "PARENTWIDGET",
+                       "native ACLASS inheritance should store the immediate parent second");
+                expect(native_object.class_hierarchy[2] == "ROOTWIDGET",
+                       "native ACLASS inheritance should store deeper native ancestors");
+                expect(native_object.class_hierarchy[3] == "CUSTOM",
+                       "native ACLASS inheritance should preserve the builtin base token");
+                expect(native_object.class_hierarchy[4] == "OBJECT",
+                       "native ACLASS inheritance should preserve the terminal object token");
+            }
+
+            expect(state.ole_objects[1].prog_id == "Empty",
+                   "plain CREATEOBJECT should remain stable while native ACLASS inheritance lands");
+            expect(state.ole_objects[1].class_hierarchy.empty(),
+                   "plain CREATEOBJECT should keep the native-only class hierarchy empty");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_external_prg_base_aclass_reflects_inheritance_chain()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_external_prg_aclass_inheritance";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path library_path = temp_root / "widgetlib.prg";
+        write_text(
+            library_path,
+            "DEFINE CLASS RootWidget AS Custom\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ParentWidget AS RootWidget\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "external_aclass_inheritance.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildWidget')\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 24)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "nClassCount = ACLASS(aClass, oCreate)\n"
+            "cClass1 = aClass[1]\n"
+            "cClass2 = aClass[2]\n"
+            "cClass3 = aClass[3]\n"
+            "cClass4 = aClass[4]\n"
+            "cClass5 = aClass[5]\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildWidget AS ParentWidget OF widgetlib.prg\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("external-base ACLASS inheritance script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("nclasscount", "5");
+        check("cclass1", "CHILDWIDGET");
+        check("cclass2", "PARENTWIDGET");
+        check("cclass3", "ROOTWIDGET");
+        check("cclass4", "CUSTOM");
+        check("cclass5", "OBJECT");
+        check("ldictset", "true");
+        check("ndictcompare", "24");
+
+        expect(state.ole_objects.size() == 2U,
+               "external-base ACLASS inheritance should register native and COM objects");
+        if (state.ole_objects.size() == 2U)
+        {
+            const auto &native_object = state.ole_objects[0];
+            expect(native_object.prog_id == "ChildWidget",
+                   "external-base ACLASS inheritance should preserve child class identity");
+            expect(native_object.class_hierarchy.size() == 5U,
+                   "external-base ACLASS inheritance should persist the external-base class hierarchy");
+            if (native_object.class_hierarchy.size() == 5U)
+            {
+                expect(native_object.class_hierarchy[0] == "CHILDWIDGET",
+                       "external-base ACLASS inheritance should store the derived class first");
+                expect(native_object.class_hierarchy[1] == "PARENTWIDGET",
+                       "external-base ACLASS inheritance should store the inherited external parent second");
+                expect(native_object.class_hierarchy[2] == "ROOTWIDGET",
+                       "external-base ACLASS inheritance should store deeper external native ancestors");
+                expect(native_object.class_hierarchy[3] == "CUSTOM",
+                       "external-base ACLASS inheritance should preserve the builtin base token");
+                expect(native_object.class_hierarchy[4] == "OBJECT",
+                       "external-base ACLASS inheritance should preserve the terminal object token");
+            }
+
+            expect(state.ole_objects[1].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while external-base ACLASS inheritance lands");
+            expect(state.ole_objects[1].class_hierarchy.empty(),
+                   "COM NEWOBJECT should keep the native-only class hierarchy empty");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_inherited_declarative_children_from_external_prg_bases_resolve_against_defining_library()
     {
         namespace fs = std::filesystem;
@@ -5547,6 +5727,8 @@ int main()
     test_native_addobject_materializes_external_prg_child_objects_and_preserves_init_flow();
     test_same_prg_native_class_inheritance_applies_parent_defaults_methods_and_init();
     test_native_class_inheritance_loads_external_prg_base_sources();
+    test_same_prg_native_aclass_reflects_inheritance_chain();
+    test_external_prg_base_aclass_reflects_inheritance_chain();
     test_inherited_declarative_children_from_external_prg_bases_resolve_against_defining_library();
     test_inherited_external_prg_base_methods_resolve_addobject_children_against_defining_library();
     test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow();
