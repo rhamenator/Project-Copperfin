@@ -601,7 +601,8 @@
                                               .location = statement.location});
                             return {};
                         }
-                        if (!is_native_identity_member_name(*runtime_object, property_name))
+                        if (!is_native_identity_member_name(*runtime_object, property_name) &&
+                            !is_native_child_parent_member_name(*runtime_object, property_name))
                         {
                             runtime_object->properties[property_name] = assignment_value;
                         }

@@ -528,6 +528,11 @@ bool is_native_identity_member_name(const RuntimeOleObjectState& runtime_object,
     return native_identity_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_child_parent_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_child_parent_member_name_matches(runtime_object, normalized_member_name);
+}
+
 std::optional<PrgValue> read_native_identity_metadata(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     // Ordinary dotted reads intentionally trail reflection parity for metadata we have not widened yet.
