@@ -3278,6 +3278,132 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_inherited_external_prg_base_methods_resolve_addobject_children_against_defining_library()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_external_base_inherited_addobject";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path library_path = temp_root / "widgetlib.prg";
+        write_text(
+            library_path,
+            "DEFINE CLASS ParentForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    cInitChildCaption = ''\n"
+            "    cInitOwnerCaption = ''\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddObject('cmdSave', 'SaveButton')\n"
+            "        THIS.cInitChildCaption = THIS.cmdSave.Caption\n"
+            "        THIS.cInitOwnerCaption = THIS.cmdSave.OwnerCaption()\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS Custom\n"
+            "    Caption = 'Save'\n"
+            "    FUNCTION OwnerCaption\n"
+            "        RETURN PARENT.Caption\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "external_base_inherited_addobject.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildForm')\n"
+            "oNew = NEWOBJECT('LeafForm')\n"
+            "lCreateHasChild = PEMSTATUS(oCreate, 'cmdSave', 1)\n"
+            "lNewHasChild = PEMSTATUS(oNew, 'cmdSave', 1)\n"
+            "cCreateInitChildCaption = oCreate.cInitChildCaption\n"
+            "cNewInitChildCaption = oNew.cInitChildCaption\n"
+            "cCreateInitOwnerCaption = oCreate.cInitOwnerCaption\n"
+            "cNewInitOwnerCaption = oNew.cInitOwnerCaption\n"
+            "cCreateChildCaption = oCreate.cmdSave.Caption\n"
+            "cNewChildCaption = oNew.cmdSave.Caption\n"
+            "cCreateOwnerCaption = oCreate.cmdSave.OwnerCaption()\n"
+            "cNewOwnerCaption = oNew.cmdSave.OwnerCaption()\n"
+            "lCreateChildHasParent = PEMSTATUS(oCreate.cmdSave, 'Parent', 1)\n"
+            "lNewChildHasParent = PEMSTATUS(oNew.cmdSave, 'Parent', 1)\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 18)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildForm AS ParentForm OF widgetlib.prg\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS LeafForm AS ChildForm\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("external-base inherited ADDOBJECT script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lcreatehaschild", "true");
+        check("lnewhaschild", "true");
+        check("ccreateinitchildcaption", "Save");
+        check("cnewinitchildcaption", "Save");
+        check("ccreateinitownercaption", "MainForm");
+        check("cnewinitownercaption", "MainForm");
+        check("ccreatechildcaption", "Save");
+        check("cnewchildcaption", "Save");
+        check("ccreateownercaption", "MainForm");
+        check("cnewownercaption", "MainForm");
+        check("lcreatechildhasparent", "true");
+        check("lnewchildhasparent", "true");
+        check("ldictset", "true");
+        check("ndictcompare", "18");
+
+        expect(state.ole_objects.size() == 5U,
+               "external-base inherited ADDOBJECT script should register CREATEOBJECT parent/child, NEWOBJECT parent/child, and COM objects");
+        if (state.ole_objects.size() == 5U)
+        {
+            const auto &create_parent = state.ole_objects[0];
+            const auto &create_child = state.ole_objects[1];
+            const auto &new_parent = state.ole_objects[2];
+            const auto &new_child = state.ole_objects[3];
+            expect(create_parent.prog_id == "ChildForm",
+                   "external-base inherited ADDOBJECT should preserve CREATEOBJECT parent class identity");
+            expect(create_child.prog_id == "SaveButton",
+                   "external-base inherited ADDOBJECT should materialize the inherited child class");
+            expect(create_child.source == library_path.string(),
+                   "external-base inherited ADDOBJECT should resolve child classes against the inherited method's defining external PRG");
+            expect(new_parent.prog_id == "LeafForm",
+                   "external-base inherited ADDOBJECT should preserve NEWOBJECT leaf class identity");
+            expect(new_child.prog_id == "SaveButton",
+                   "external-base inherited ADDOBJECT should materialize inherited children for leaf instances");
+            expect(new_child.source == library_path.string(),
+                   "external-base inherited ADDOBJECT should preserve external PRG provenance for leaf child instances");
+            expect(state.ole_objects[4].prog_id == "Scripting.Dictionary",
+                   "COM behavior should remain stable while external-base inherited ADDOBJECT lands");
+        }
+
+        const bool has_addobject_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.addobject" &&
+                   (event.detail == "ChildForm.cmdsave:SaveButton" ||
+                    event.detail == "LeafForm.cmdsave:SaveButton");
+        });
+        expect(has_addobject_event,
+               "external-base inherited ADDOBJECT should emit child materialization events");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow()
     {
         namespace fs = std::filesystem;
@@ -4616,6 +4742,7 @@ int main()
     test_same_prg_native_class_inheritance_applies_parent_defaults_methods_and_init();
     test_native_class_inheritance_loads_external_prg_base_sources();
     test_inherited_declarative_children_from_external_prg_bases_resolve_against_defining_library();
+    test_inherited_external_prg_base_methods_resolve_addobject_children_against_defining_library();
     test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow();
     test_same_prg_native_bare_helper_calls_resolve_to_current_instance_before_top_level_routines();
     test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();

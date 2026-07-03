@@ -806,6 +806,10 @@ namespace copperfin::runtime
                         arguments.size() >= 3U ? trim_copy(value_as_string(arguments[2])) : std::string{};
                     const bool explicit_native_prg_library =
                         lowercase_copy(std::filesystem::path(child_library).extension().string()) == ".prg";
+                    const std::string implicit_child_program_path =
+                        frame.native_method_class_name.empty()
+                            ? runtime_object->source
+                            : frame.file_path;
                     const std::size_t constructor_start_index = explicit_native_prg_library ? 3U : 2U;
                     std::vector<PrgValue> child_constructor_arguments;
                     std::vector<std::optional<std::string>> child_argument_references;
@@ -824,8 +828,8 @@ namespace copperfin::runtime
                         frame,
                         child_class,
                         explicit_native_prg_library
-                            ? resolve_native_prg_program_path(child_library, runtime_object->source)
-                            : runtime_object->source,
+                            ? resolve_native_prg_program_path(child_library, implicit_child_program_path)
+                            : implicit_child_program_path,
                         "addobject",
                         child_constructor_arguments,
                         child_argument_references,
