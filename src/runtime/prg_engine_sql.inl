@@ -1316,7 +1316,8 @@
             const Frame &frame,
             const std::string &prog_id,
             const std::string &source,
-            const std::vector<PrgValue> &constructor_arguments = {})
+            const std::vector<PrgValue> &constructor_arguments = {},
+            const std::vector<std::optional<std::string>> &constructor_argument_references = {})
         {
             const std::string normalized_source = normalize_identifier(source);
             if (normalized_source == "createobject" || normalized_source == "newobject")
@@ -1400,12 +1401,25 @@
                         const std::size_t return_depth = stack.size();
                         const PrgValue this_reference =
                             make_string_value("object:" + runtime_object->prog_id + "#" + std::to_string(runtime_object->handle));
+                        std::vector<PrgValue> effective_constructor_arguments = constructor_arguments;
+                        if (effective_constructor_arguments.size() < constructor_argument_references.size())
+                        {
+                            effective_constructor_arguments.resize(constructor_argument_references.size());
+                        }
+                        for (std::size_t index = 0U; index < constructor_argument_references.size(); ++index)
+                        {
+                            if (constructor_argument_references[index].has_value())
+                            {
+                                effective_constructor_arguments[index] =
+                                    lookup_variable(frame, *constructor_argument_references[index]);
+                            }
+                        }
                         push_method_frame(init_program_path,
                                           init_method_name,
                                           *init_method,
                                           this_reference,
-                                          constructor_arguments,
-                                          {});
+                                          effective_constructor_arguments,
+                                          constructor_argument_references);
                         (void)run_expression_invoked_routine_until_return(return_depth);
                     }
 

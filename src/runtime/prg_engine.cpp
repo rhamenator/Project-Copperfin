@@ -728,11 +728,19 @@ namespace copperfin::runtime
             {
                 return sql_set_prop(handle, property_name, value);
             },
-            [this, &frame](const std::string &prog_id, const std::string &source, const std::vector<PrgValue> &constructor_arguments)
+            [this, &frame](
+                const std::string &prog_id,
+                const std::string &source,
+                const std::vector<PrgValue> &constructor_arguments,
+                const std::vector<std::optional<std::string>> &constructor_argument_references)
             {
-                return register_ole_object(frame, prog_id, source, constructor_arguments);
+                return register_ole_object(frame, prog_id, source, constructor_arguments, constructor_argument_references);
             },
-            [this, &frame](const std::string &base_name, const std::string &member_path, const std::vector<PrgValue> &arguments)
+            [this, &frame](
+                const std::string &base_name,
+                const std::string &member_path,
+                const std::vector<PrgValue> &arguments,
+                const std::vector<std::optional<std::string>> &argument_references)
             {
                 const Statement *statement = current_statement();
                 const std::string action_text = statement == nullptr
@@ -790,7 +798,7 @@ namespace copperfin::runtime
                                       *native_method,
                                       this_reference,
                                       arguments,
-                                      {});
+                                      argument_references);
                     return run_expression_invoked_routine_until_return(return_depth);
                 }
 

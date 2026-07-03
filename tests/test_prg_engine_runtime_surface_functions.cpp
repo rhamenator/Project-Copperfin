@@ -1361,6 +1361,106 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_object_method_and_init_preserve_by_reference_argument_updates()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_object_byref";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_object_byref.prg";
+        write_text(
+            main_path,
+            "nCtorSeed = 7\n"
+            "nMethodSeed = 10\n"
+            "oCtor = CREATEOBJECT('CtorWidget', @nCtorSeed)\n"
+            "oMethod = CREATEOBJECT('MethodWidget')\n"
+            "nMethodResult = oMethod.Bump(@nMethodSeed)\n"
+            "nCtorAfter = nCtorSeed\n"
+            "nCtorStored = oCtor.nValue\n"
+            "nMethodAfter = nMethodSeed\n"
+            "nMethodStored = oMethod.nValue\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 5)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS CtorWidget AS Custom\n"
+            "    nValue = 0\n"
+            "    PROCEDURE Init\n"
+            "        LPARAMETERS tnSeed\n"
+            "        tnSeed = tnSeed + 3\n"
+            "        THIS.nValue = tnSeed\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MethodWidget AS Custom\n"
+            "    nValue = 0\n"
+            "    FUNCTION Bump\n"
+            "        LPARAMETERS tnSeed\n"
+            "        tnSeed = tnSeed + 5\n"
+            "        THIS.nValue = tnSeed\n"
+            "        RETURN tnSeed\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native object by-reference script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("nctorafter", "10");
+        check("nctorstored", "10");
+        check("nmethodresult", "15");
+        check("nmethodafter", "15");
+        check("nmethodstored", "15");
+        check("ldictset", "true");
+        check("ndictcompare", "5");
+
+        expect(state.ole_objects.size() == 3U,
+               "native object by-reference script should register ctor, method, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            const auto ctor_value = state.ole_objects[0].properties.find("nvalue");
+            expect(ctor_value != state.ole_objects[0].properties.end(),
+                   "automatic Init by-reference updates should persist onto the constructed object");
+            if (ctor_value != state.ole_objects[0].properties.end())
+            {
+                expect(copperfin::runtime::format_value(ctor_value->second) == "10",
+                       "automatic Init by-reference updates should persist updated constructor values");
+            }
+
+            const auto method_value = state.ole_objects[1].properties.find("nvalue");
+            expect(method_value != state.ole_objects[1].properties.end(),
+                   "native object method by-reference updates should persist onto the instance");
+            if (method_value != state.ole_objects[1].properties.end())
+            {
+                expect(copperfin::runtime::format_value(method_value->second) == "15",
+                       "native object method by-reference updates should persist updated method values");
+            }
+
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM object activation should remain stable while native by-reference parity lands");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_codepage_and_misc_runtime_surface_functions()
     {
         namespace fs = std::filesystem;
@@ -2037,6 +2137,7 @@ int main()
     test_native_prg_init_runs_during_object_creation_and_preserves_plain_creation();
     test_createobject_arguments_flow_into_native_init_while_newobject_and_non_native_creation_stay_stable();
     test_newobject_arguments_flow_into_native_init_while_createobject_and_com_newobject_stay_stable();
+    test_native_object_method_and_init_preserve_by_reference_argument_updates();
     test_codepage_and_misc_runtime_surface_functions();
     test_lookup_expression_function();
     test_lookup_expression_function_supports_sql_cursors();
