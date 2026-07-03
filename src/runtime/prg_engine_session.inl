@@ -491,6 +491,22 @@
                     {
                         continue;
                     }
+                    for (const Statement& property_statement : child_declaration.property_statements)
+                    {
+                        if (property_statement.kind != StatementKind::assignment)
+                        {
+                            continue;
+                        }
+
+                        const std::string property_name = normalize_identifier(property_statement.identifier);
+                        if (property_name.empty())
+                        {
+                            continue;
+                        }
+
+                        child_object->properties[property_name] =
+                            evaluate_expression(property_statement.expression, frame);
+                    }
 
                     runtime_object->properties[child_name] = make_runtime_object_reference(*child_object);
                     runtime_object->last_action = "addobject(" + child_name + "," + child_declaration.class_name + ")";

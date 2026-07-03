@@ -186,12 +186,64 @@ void test_parse_class_body_add_object_declarations_distinct_from_property_assign
     fs::remove_all(temp_root, ignored);
 }
 
+void test_parse_class_body_add_object_with_property_clauses() {
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_parser_class_body_add_object_with";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path program_path = temp_root / "class_body_add_object_with.prg";
+    copperfin::test_support::write_text(
+        program_path,
+        "DEFINE CLASS DemoForm AS Custom\n"
+        "    Caption = 'Demo'\n"
+        "    ADD OBJECT cmdSave AS SaveButton WITH Caption = 'Commit', nPriority = 7\n"
+        "ENDDEFINE\n"
+        "DEFINE CLASS SaveButton AS Custom\n"
+        "    Caption = 'Save'\n"
+        "ENDDEFINE\n");
+
+    const copperfin::runtime::Program program = copperfin::runtime::parse_program(program_path.string());
+    const auto class_found = program.classes.find("demoform");
+    copperfin::test_support::expect(class_found != program.classes.end(),
+                                    "class-body ADD OBJECT WITH test should parse the owning class definition");
+    if (class_found != program.classes.end()) {
+        const auto& class_definition = class_found->second;
+        copperfin::test_support::expect(class_definition.property_statements.size() == 1U,
+                                        "class-body ADD OBJECT WITH should stay out of ordinary class property assignments");
+        copperfin::test_support::expect(class_definition.child_object_declarations.size() == 1U,
+                                        "class-body ADD OBJECT WITH should be captured as a child-object declaration");
+        if (class_definition.child_object_declarations.size() == 1U) {
+            const auto& declaration = class_definition.child_object_declarations[0];
+            copperfin::test_support::expect(declaration.name == "cmdSave",
+                                            "class-body ADD OBJECT WITH should preserve the declared child name text");
+            copperfin::test_support::expect(declaration.class_name == "SaveButton",
+                                            "class-body ADD OBJECT WITH should preserve the declared child class text");
+            copperfin::test_support::expect(declaration.property_statements.size() == 2U,
+                                            "class-body ADD OBJECT WITH should preserve each property clause separately");
+            if (declaration.property_statements.size() == 2U) {
+                copperfin::test_support::expect(declaration.property_statements[0].identifier == "Caption",
+                                                "class-body ADD OBJECT WITH should preserve the first child property name");
+                copperfin::test_support::expect(declaration.property_statements[0].expression == "'Commit'",
+                                                "class-body ADD OBJECT WITH should preserve the first child property expression");
+                copperfin::test_support::expect(declaration.property_statements[1].identifier == "nPriority",
+                                                "class-body ADD OBJECT WITH should preserve the second child property name");
+                copperfin::test_support::expect(declaration.property_statements[1].expression == "7",
+                                                "class-body ADD OBJECT WITH should preserve the second child property expression");
+            }
+        }
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
     test_parse_define_class_captures_metadata_and_methods();
     test_parse_mixed_class_blocks_and_top_level_routines_stays_stable();
     test_parse_class_body_add_object_declarations_distinct_from_property_assignments();
+    test_parse_class_body_add_object_with_property_clauses();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

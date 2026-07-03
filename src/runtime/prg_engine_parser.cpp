@@ -204,6 +204,30 @@ Statement make_statement(StatementKind kind, const std::string& path, std::size_
     return statement;
 }
 
+void parse_default_statement(const std::string& line, Statement& statement);
+
+std::vector<Statement> parse_child_object_property_clauses(
+    const std::string& path,
+    std::size_t line_number,
+    const std::string& clauses_text) {
+    std::vector<Statement> property_statements;
+    for (const std::string& raw_clause : split_csv_like(clauses_text)) {
+        const std::string clause = trim_copy(raw_clause);
+        if (clause.empty()) {
+            continue;
+        }
+
+        Statement statement = make_statement(StatementKind::no_op, path, line_number, clause);
+        parse_default_statement(clause, statement);
+        if (statement.kind == StatementKind::assignment &&
+            !trim_copy(statement.identifier).empty() &&
+            !trim_copy(statement.expression).empty()) {
+            property_statements.push_back(std::move(statement));
+        }
+    }
+    return property_statements;
+}
+
 bool has_wrapping_parentheses(const std::string& text) {
     const std::string trimmed = trim_copy(text);
     if (trimmed.size() < 2U || trimmed.front() != '(' || trimmed.back() != ')') {
@@ -625,11 +649,21 @@ Program parse_program(const std::string& path) {
             const std::string body = trim_copy(line.substr(11U));
             const std::size_t as_position = find_keyword_top_level(body, "AS");
             if (as_position != std::string::npos) {
+                const std::size_t with_position = find_keyword_top_level_from(body, "WITH", as_position + 2U);
                 NativeChildObjectDeclaration declaration;
                 declaration.name = trim_copy(body.substr(0U, as_position));
-                declaration.class_name = trim_copy(body.substr(as_position + 2U));
+                declaration.class_name = trim_copy(
+                    with_position == std::string::npos
+                        ? body.substr(as_position + 2U)
+                        : body.substr(as_position + 2U, with_position - as_position - 2U));
                 declaration.declaration_location = {.file_path = normalize_path(path), .line = line_number};
                 declaration.text = line;
+                if (with_position != std::string::npos) {
+                    declaration.property_statements = parse_child_object_property_clauses(
+                        path,
+                        line_number,
+                        trim_copy(body.substr(with_position + 4U)));
+                }
                 if (!declaration.name.empty() && !declaration.class_name.empty()) {
                     current_class->child_object_declarations.push_back(std::move(declaration));
                     continue;

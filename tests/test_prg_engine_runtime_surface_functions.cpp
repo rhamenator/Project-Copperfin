@@ -1166,6 +1166,115 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_class_body_add_object_with_property_clauses_materialize_before_parent_init()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_class_body_addobject_with";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_class_body_addobject_with.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('DemoForm')\n"
+            "oNew = NEWOBJECT('DemoForm')\n"
+            "cCreateInitChildCaption = oCreate.cInitChildCaption\n"
+            "cNewInitChildCaption = oNew.cInitChildCaption\n"
+            "nCreateInitChildPriority = oCreate.nInitChildPriority\n"
+            "nNewInitChildPriority = oNew.nInitChildPriority\n"
+            "cCreateChildCaption = oCreate.cmdSave.Caption\n"
+            "cNewChildCaption = oNew.cmdSave.Caption\n"
+            "nCreateChildPriority = oCreate.cmdSave.nPriority\n"
+            "nNewChildPriority = oNew.cmdSave.nPriority\n"
+            "cCreateOwnerCaption = oCreate.cmdSave.OwnerCaption()\n"
+            "cNewOwnerCaption = oNew.cmdSave.OwnerCaption()\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 13)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS DemoForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    cInitChildCaption = ''\n"
+            "    nInitChildPriority = 0\n"
+            "    ADD OBJECT cmdSave AS SaveButton WITH Caption = 'Commit', nPriority = 7\n"
+            "    PROCEDURE Init\n"
+            "        THIS.cInitChildCaption = THIS.cmdSave.Caption\n"
+            "        THIS.nInitChildPriority = THIS.cmdSave.nPriority\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS Custom\n"
+            "    Caption = 'Save'\n"
+            "    FUNCTION OwnerCaption\n"
+            "        RETURN PARENT.Caption\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native class-body ADD OBJECT WITH script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("ccreateinitchildcaption", "Commit");
+        check("cnewinitchildcaption", "Commit");
+        check("ncreateinitchildpriority", "7");
+        check("nnewinitchildpriority", "7");
+        check("ccreatechildcaption", "Commit");
+        check("cnewchildcaption", "Commit");
+        check("ncreatechildpriority", "7");
+        check("nnewchildpriority", "7");
+        check("ccreateownercaption", "MainForm");
+        check("cnewownercaption", "MainForm");
+        check("ldictset", "true");
+        check("ndictcompare", "13");
+
+        expect(state.ole_objects.size() == 5U,
+               "native class-body ADD OBJECT WITH script should register CREATEOBJECT, NEWOBJECT, child, child, and COM objects");
+        if (state.ole_objects.size() == 5U)
+        {
+            expect(state.ole_objects[1].prog_id == "SaveButton",
+                   "class-body ADD OBJECT WITH should materialize the CREATEOBJECT child class");
+            expect(state.ole_objects[3].prog_id == "SaveButton",
+                   "class-body ADD OBJECT WITH should materialize the NEWOBJECT child class");
+            const auto create_child_caption = state.ole_objects[1].properties.find("caption");
+            const auto create_child_priority = state.ole_objects[1].properties.find("npriority");
+            const auto new_child_caption = state.ole_objects[3].properties.find("caption");
+            const auto new_child_priority = state.ole_objects[3].properties.find("npriority");
+            expect(create_child_caption != state.ole_objects[1].properties.end() &&
+                       copperfin::runtime::format_value(create_child_caption->second) == "Commit",
+                   "class-body ADD OBJECT WITH should apply caption override to the CREATEOBJECT child");
+            expect(create_child_priority != state.ole_objects[1].properties.end() &&
+                       copperfin::runtime::format_value(create_child_priority->second) == "7",
+                   "class-body ADD OBJECT WITH should apply numeric override to the CREATEOBJECT child");
+            expect(new_child_caption != state.ole_objects[3].properties.end() &&
+                       copperfin::runtime::format_value(new_child_caption->second) == "Commit",
+                   "class-body ADD OBJECT WITH should apply caption override to the NEWOBJECT child");
+            expect(new_child_priority != state.ole_objects[3].properties.end() &&
+                       copperfin::runtime::format_value(new_child_priority->second) == "7",
+                   "class-body ADD OBJECT WITH should apply numeric override to the NEWOBJECT child");
+            expect(state.ole_objects[4].prog_id == "Scripting.Dictionary",
+                   "COM behavior should remain stable while class-body ADD OBJECT WITH lands");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_child_methods_resolve_thisform_through_parent_chain()
     {
         namespace fs = std::filesystem;
@@ -3788,6 +3897,7 @@ int main()
     test_newobject_instantiates_native_prg_class_and_preserves_ole_newobject();
     test_native_addobject_materializes_child_objects_and_child_methods_see_parent();
     test_native_class_body_add_object_materializes_children_before_init();
+    test_native_class_body_add_object_with_property_clauses_materialize_before_parent_init();
     test_native_child_methods_resolve_thisform_through_parent_chain();
     test_native_child_methods_resolve_thisformset_through_owner_chain();
     test_dotted_native_child_chains_traverse_contained_objects();
