@@ -211,6 +211,21 @@ bool native_identity_member_name_matches(const RuntimeOleObjectState& runtime_ob
            normalized_member_name == "classlibrary";
 }
 
+bool native_child_parent_member_name_matches(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name) {
+    if (normalized_member_name != "parent") {
+        return false;
+    }
+
+    const auto parent = runtime_object.properties.find("parent");
+    if (parent == runtime_object.properties.end()) {
+        return false;
+    }
+
+    int handle = 0;
+    std::string prog_id;
+    return parse_object_handle_reference(parent->second, handle, prog_id);
+}
+
 std::vector<std::string> collect_native_identity_member_names(const RuntimeOleObjectState& runtime_object) {
     std::vector<std::string> members;
     if (get_native_identity_reflection_metadata(runtime_object, "class").has_value()) {
@@ -724,6 +739,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         if (attribute == 5) {
             const bool readonly =
                 get_native_identity_reflection_metadata(*runtime_object, member_name).has_value() ||
+                native_child_parent_member_name_matches(*runtime_object, member_name) ||
                 (is_scripting_dictionary_object(*runtime_object) && member_name == "count") ||
                 (object_has_accessor_property(*runtime_object, member_name) &&
                  !object_has_assigner_property(*runtime_object, member_name));
@@ -804,6 +820,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             return make_boolean_value(false);
         }
         if (is_scripting_dictionary_object(*runtime_object) && member_name == "count") {
+            return make_boolean_value(false);
+        }
+        if (native_child_parent_member_name_matches(*runtime_object, member_name)) {
             return make_boolean_value(false);
         }
         if (object_has_assigner_property(*runtime_object, member_name)) {

@@ -5193,7 +5193,7 @@ namespace
             "cProp5 = aMembersProps[5]\n"
             "cProp6 = aMembersProps[6]\n"
             "cUnion1 = aMembersUnion[1]\n"
-            "cUnion6 = aMembersUnion[6]\n"
+            "cUnion5 = aMembersUnion[5]\n"
             "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
             "lDictSet = SETPEM(oDict, 'comparemode', 38)\n"
             "nDictCompare = GETPEM(oDict, 'comparemode')\n"
@@ -5221,17 +5221,16 @@ namespace
                    name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
         };
 
-        check("nmembersprops", "6");
-        check("nmembersunion", "6");
+        check("nmembersprops", "5");
+        check("nmembersunion", "5");
         check("lchildhasparent", "true");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop3", "CLASS");
-        check("cprop4", "CLASSLIBRARY");
-        check("cprop5", "PARENT");
-        check("cprop6", "PARENTCLASS");
+        check("cprop4", "PARENT");
+        check("cprop5", "PARENTCLASS");
         check("cunion1", "BASECLASS");
-        check("cunion6", "PARENTCLASS");
+        check("cunion5", "PARENTCLASS");
         check("ldictset", "true");
         check("ndictcompare", "38");
 
@@ -5245,6 +5244,178 @@ namespace
                    "external child Parent AMEMBERS should preserve child identity");
             expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
                    "COM NEWOBJECT should remain stable while external child Parent AMEMBERS lands");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_same_prg_child_parent_stays_read_only_to_setpem()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_child_parent_setpem";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_child_parent_setpem.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('DemoForm')\n"
+            "lParentReadOnly = PEMSTATUS(oCreate.cmdSave, 'Parent', 5)\n"
+            "lSetParent = SETPEM(oCreate.cmdSave, 'Parent', 'OtherParent')\n"
+            "oParentRef = GETPEM(oCreate.cmdSave, 'Parent')\n"
+            "cParentCaption = oParentRef.Caption\n"
+            "lChildHasParent = PEMSTATUS(oCreate.cmdSave, 'Parent', 1)\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 39)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS DemoForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS Custom\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native child Parent SETPEM script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lparentreadonly", "true");
+        check("lsetparent", "false");
+        check("cparentcaption", "MainForm");
+        check("lchildhasparent", "true");
+        check("ldictset", "true");
+        check("ndictcompare", "39");
+
+        expect(state.ole_objects.size() == 3U,
+               "native child Parent SETPEM should register parent, child, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            expect(state.ole_objects[0].prog_id == "DemoForm",
+                   "native child Parent SETPEM should preserve form identity");
+            const auto &child_object = state.ole_objects[1];
+            expect(child_object.prog_id == "SaveButton",
+                   "native child Parent SETPEM should preserve child identity");
+            const auto child_parent = child_object.properties.find("parent");
+            if (child_parent != child_object.properties.end())
+            {
+                expect(child_parent->second.kind == copperfin::runtime::PrgValueKind::string,
+                       "native child Parent SETPEM should keep the built-in PARENT object reference materialized");
+                expect(child_parent->second.string_value == "object:DemoForm#" + std::to_string(state.ole_objects[0].handle),
+                       "native child Parent SETPEM should not replace the built-in PARENT object reference");
+            }
+            else
+            {
+                expect(false, "native child Parent SETPEM should preserve the child PARENT reference");
+            }
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while native child Parent SETPEM lands");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_external_base_child_parent_stays_read_only_to_setpem()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_external_prg_child_parent_setpem";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path library_path = temp_root / "widgetlib.prg";
+        write_text(
+            library_path,
+            "DEFINE CLASS ParentForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS Custom\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "external_child_parent_setpem.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildForm')\n"
+            "lParentReadOnly = PEMSTATUS(oCreate.cmdSave, 'Parent', 5)\n"
+            "lSetParent = SETPEM(oCreate.cmdSave, 'Parent', 'OtherParent')\n"
+            "oParentRef = GETPEM(oCreate.cmdSave, 'Parent')\n"
+            "cParentCaption = oParentRef.Caption\n"
+            "lChildHasParent = PEMSTATUS(oCreate.cmdSave, 'Parent', 1)\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 40)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildForm AS ParentForm OF widgetlib.prg\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("external child Parent SETPEM script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lparentreadonly", "true");
+        check("lsetparent", "false");
+        check("cparentcaption", "MainForm");
+        check("lchildhasparent", "true");
+        check("ldictset", "true");
+        check("ndictcompare", "40");
+
+        expect(state.ole_objects.size() == 3U,
+               "external child Parent SETPEM should register parent, child, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            expect(state.ole_objects[0].prog_id == "ChildForm",
+                   "external child Parent SETPEM should preserve form identity");
+            const auto &child_object = state.ole_objects[1];
+            expect(child_object.prog_id == "SaveButton",
+                   "external child Parent SETPEM should preserve child identity");
+            const auto child_parent = child_object.properties.find("parent");
+            if (child_parent != child_object.properties.end())
+            {
+                expect(child_parent->second.kind == copperfin::runtime::PrgValueKind::string,
+                       "external child Parent SETPEM should keep the built-in PARENT object reference materialized");
+                expect(child_parent->second.string_value == "object:ChildForm#" + std::to_string(state.ole_objects[0].handle),
+                       "external child Parent SETPEM should not replace the built-in PARENT object reference");
+            }
+            else
+            {
+                expect(false, "external child Parent SETPEM should preserve the child PARENT reference");
+            }
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while external child Parent SETPEM lands");
         }
 
         fs::remove_all(temp_root, ignored);
@@ -7576,6 +7747,8 @@ int main()
     test_external_base_child_parent_reflects_through_getpem_and_pemstatus();
     test_same_prg_child_parent_appears_in_amembers();
     test_external_base_child_parent_appears_in_amembers();
+    test_same_prg_child_parent_stays_read_only_to_setpem();
+    test_external_base_child_parent_stays_read_only_to_setpem();
     test_inherited_declarative_children_from_external_prg_bases_resolve_against_defining_library();
     test_inherited_external_prg_base_methods_resolve_addobject_children_against_defining_library();
     test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow();
