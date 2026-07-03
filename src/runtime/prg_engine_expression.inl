@@ -127,6 +127,7 @@
                 std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> bindevent_callback,
                 std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> raiseevent_callback,
                 std::function<PrgValue(const std::vector<PrgValue> &)> unbindevents_callback,
+                std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::string> &)> aevents_callback,
                 std::function<std::size_t()> memowidth_callback,
                 std::function<std::optional<PrgValue>(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> base_method_invoke_callback,
                 std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> user_routine_invoke_callback,
@@ -192,6 +193,7 @@
                   bindevent_callback_(std::move(bindevent_callback)),
                   raiseevent_callback_(std::move(raiseevent_callback)),
                   unbindevents_callback_(std::move(unbindevents_callback)),
+                  aevents_callback_(std::move(aevents_callback)),
                   memowidth_callback_(std::move(memowidth_callback)),
                   base_method_invoke_callback_(std::move(base_method_invoke_callback)),
                   user_routine_invoke_callback_(std::move(user_routine_invoke_callback)),
@@ -580,6 +582,7 @@
                     const bool prefer_function_call =
                         normalized_identifier == "aclass" ||
                         normalized_identifier == "acopy" ||
+                        normalized_identifier == "aevents" ||
                         normalized_identifier == "adel" ||
                         normalized_identifier == "adir" ||
                         normalized_identifier == "aelement" ||
@@ -672,6 +675,12 @@
                 {
                     return unbindevents_callback_
                         ? unbindevents_callback_(arguments)
+                        : make_number_value(0.0);
+                }
+                if (function == "aevents")
+                {
+                    return aevents_callback_
+                        ? aevents_callback_(arguments, raw_arguments)
                         : make_number_value(0.0);
                 }
                 if (function == "select")
@@ -2055,6 +2064,7 @@
             std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> bindevent_callback_;
             std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> raiseevent_callback_;
             std::function<PrgValue(const std::vector<PrgValue> &)> unbindevents_callback_;
+            std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::string> &)> aevents_callback_;
             std::function<std::size_t()> memowidth_callback_;
             std::function<std::optional<PrgValue>(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> base_method_invoke_callback_;
             std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> user_routine_invoke_callback_;

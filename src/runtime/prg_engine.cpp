@@ -504,6 +504,9 @@ namespace copperfin::runtime
             const std::vector<std::optional<std::string>> &argument_references);
         PrgValue unbind_native_events(
             const std::vector<PrgValue> &arguments);
+        PrgValue inspect_native_events(
+            const std::vector<PrgValue> &arguments,
+            const std::vector<std::string> &raw_arguments);
         std::optional<PrgValue> invoke_native_object_method_body_if_present(
             RuntimeOleObjectState &runtime_object,
             const std::string &identifier,
@@ -1532,6 +1535,12 @@ namespace copperfin::runtime
             {
                 return unbind_native_events(arguments);
             },
+            [this](
+                const std::vector<PrgValue> &arguments,
+                const std::vector<std::string> &raw_arguments) -> PrgValue
+            {
+                return inspect_native_events(arguments, raw_arguments);
+            },
             [this]()
             {
                 const auto found = memowidth_by_session.find(current_data_session);
@@ -2074,6 +2083,120 @@ namespace copperfin::runtime
                               .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
         }
         return make_number_value(static_cast<double>(removed_count));
+    }
+
+    PrgValue PrgRuntimeSession::Impl::inspect_native_events(
+        const std::vector<PrgValue> &arguments,
+        const std::vector<std::string> &raw_arguments)
+    {
+        if (raw_arguments.empty() || arguments.size() < 2U)
+        {
+            return make_number_value(0.0);
+        }
+
+        const auto resolve_array_argument_name = [&](std::size_t index)
+        {
+            std::string candidate = index < raw_arguments.size() ? trim_copy(raw_arguments[index]) : std::string{};
+            if (!is_bare_identifier_text(candidate) &&
+                index < arguments.size() &&
+                arguments[index].kind == PrgValueKind::string)
+            {
+                const std::string evaluated_name = trim_copy(value_as_string(arguments[index]));
+                if (is_bare_identifier_text(evaluated_name))
+                {
+                    candidate = evaluated_name;
+                }
+            }
+            if (is_bare_identifier_text(candidate) && !stack.empty())
+            {
+                Frame &frame = stack.back();
+                constexpr std::size_t max_array_name_depth = 16U;
+                std::vector<std::string> visited_identifiers;
+                visited_identifiers.reserve(8U);
+                for (std::size_t depth = 0U; depth < max_array_name_depth; ++depth)
+                {
+                    const std::string normalized = normalize_memory_variable_identifier(candidate);
+                    if (std::find(visited_identifiers.begin(), visited_identifiers.end(), normalized) != visited_identifiers.end())
+                    {
+                        break;
+                    }
+                    visited_identifiers.push_back(normalized);
+
+                    const PrgValue indirect_value = lookup_variable(frame, candidate);
+                    if (indirect_value.kind != PrgValueKind::string)
+                    {
+                        break;
+                    }
+
+                    const std::string next = trim_copy(value_as_string(indirect_value));
+                    if (next.empty() || next == candidate || !is_bare_identifier_text(next))
+                    {
+                        break;
+                    }
+
+                    candidate = next;
+                }
+            }
+            return candidate;
+        };
+
+        const std::string array_name = resolve_array_argument_name(0U);
+        if (array_name.empty())
+        {
+            return make_number_value(0.0);
+        }
+
+        int object_handle = 0;
+        std::string object_prog_id;
+        if (!parse_object_handle_reference(arguments[1], object_handle, object_prog_id))
+        {
+            return make_number_value(0.0);
+        }
+
+        std::vector<PrgValue> values;
+        values.reserve(native_event_bindings.size() * 5U);
+        for (const NativeEventBinding &binding : native_event_bindings)
+        {
+            const bool object_is_source = binding.source_handle == object_handle;
+            const bool object_is_handler = !binding.target_is_routine && binding.target_handle == object_handle;
+            if (!object_is_source && !object_is_handler)
+            {
+                continue;
+            }
+
+            values.push_back(make_boolean_value(object_is_handler));
+            if (object_is_handler)
+            {
+                const auto source = ole_objects.find(binding.source_handle);
+                values.push_back(
+                    source == ole_objects.end()
+                        ? make_empty_value()
+                        : make_string_value("object:" + source->second.prog_id + "#" + std::to_string(source->second.handle)));
+            }
+            else if (binding.target_is_routine)
+            {
+                values.push_back(make_empty_value());
+            }
+            else
+            {
+                const auto target = ole_objects.find(binding.target_handle);
+                values.push_back(
+                    target == ole_objects.end()
+                        ? make_empty_value()
+                        : make_string_value("object:" + target->second.prog_id + "#" + std::to_string(target->second.handle)));
+            }
+            values.push_back(make_string_value(binding.event_name));
+            values.push_back(make_string_value(binding.delegate_name));
+            values.push_back(make_number_value(static_cast<double>(binding.flags)));
+        }
+
+        if (values.empty())
+        {
+            return make_number_value(0.0);
+        }
+
+        assign_array(array_name, std::move(values), 5U);
+        return make_number_value(static_cast<double>(array_length(array_name, 1)));
     }
 
     PrgValue PrgRuntimeSession::Impl::release_native_object(

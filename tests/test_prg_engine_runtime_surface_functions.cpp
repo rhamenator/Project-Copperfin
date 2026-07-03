@@ -38063,6 +38063,150 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_same_prg_native_aevents_enumerates_same_session_bindings_without_clobbering_zero_row_targets()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_aevents";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_aevents.prg";
+        write_text(
+            main_path,
+            "oSource = CREATEOBJECT('SourceThing')\n"
+            "oHandler = CREATEOBJECT('HandlerThing')\n"
+            "oPlain = CREATEOBJECT('Empty')\n"
+            "nBind1 = BINDEVENT(oSource, 'Ping', oHandler, 'HandleBefore')\n"
+            "nBind2 = BINDEVENT(oSource, 'Ping', 'HandlePing')\n"
+            "nBind3 = BINDEVENT(oSource, 'AfterPing', oHandler, 'HandleAfter', 1)\n"
+            "nBind4 = BINDEVENT(oSource, 'NoSimple', oHandler, 'HandleNoSimple', 2)\n"
+            "nSourceRows = AEVENTS(aSourceEvents, oSource)\n"
+            "nSourceCols = ALEN(aSourceEvents, 2)\n"
+            "lSourceRow1HasHandler = COMPOBJ(aSourceEvents[1,2], oHandler)\n"
+            "cSourceRow1Event = aSourceEvents[1,3]\n"
+            "cSourceRow1Delegate = aSourceEvents[1,4]\n"
+            "cSourceRow2TargetType = VARTYPE(aSourceEvents[2,2])\n"
+            "cSourceRow2Event = aSourceEvents[2,3]\n"
+            "cSourceRow2Delegate = aSourceEvents[2,4]\n"
+            "nSourceRow3Flags = aSourceEvents[3,5]\n"
+            "nSourceRow4Flags = aSourceEvents[4,5]\n"
+            "nHandlerRows = AEVENTS(aHandlerEvents, oHandler)\n"
+            "nHandlerCols = ALEN(aHandlerEvents, 2)\n"
+            "lHandlerRow1IsSource = aHandlerEvents[1,1]\n"
+            "lHandlerRow1MatchesSource = COMPOBJ(aHandlerEvents[1,2], oSource)\n"
+            "cHandlerRow1Event = aHandlerEvents[1,3]\n"
+            "cHandlerRow1Delegate = aHandlerEvents[1,4]\n"
+            "DIMENSION aExisting[1]\n"
+            "aExisting[1] = 'keep'\n"
+            "nExistingRows = AEVENTS(aExisting, oPlain)\n"
+            "cExistingAfter = aExisting[1]\n"
+            "nExistingCols = ALEN(aExisting, 2)\n"
+            "nMissingRows = AEVENTS(aMissing, oPlain)\n"
+            "cMissingType = TYPE('aMissing')\n"
+            "nUnbindSpecific = UNBINDEVENTS(oSource, 'Ping', oHandler, 'HandleBefore')\n"
+            "nAfterSpecificRows = AEVENTS(aAfterSpecific, oSource)\n"
+            "cAfterSpecificRow1Delegate = aAfterSpecific[1,4]\n"
+            "cAfterSpecificRow1TargetType = VARTYPE(aAfterSpecific[1,2])\n"
+            "nUnbindObject = UNBINDEVENTS(oHandler)\n"
+            "nAfterObjectRows = AEVENTS(aAfterObject, oSource)\n"
+            "cAfterObjectRow1Delegate = aAfterObject[1,4]\n"
+            "nHandlerAfterObjectRows = AEVENTS(aHandlerAfterObject, oHandler)\n"
+            "cHandlerAfterObjectType = TYPE('aHandlerAfterObject')\n"
+            "RETURN\n"
+            "PROCEDURE HandlePing\n"
+            "    LPARAMETERS tnValue\n"
+            "    RETURN tnValue\n"
+            "ENDPROC\n"
+            "DEFINE CLASS SourceThing AS Custom\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS HandlerThing AS Custom\n"
+            "    FUNCTION HandleBefore\n"
+            "        LPARAMETERS tnValue\n"
+            "        RETURN tnValue\n"
+            "    ENDFUNC\n"
+            "    FUNCTION HandleAfter\n"
+            "        LPARAMETERS tnValue\n"
+            "        RETURN tnValue\n"
+            "    ENDFUNC\n"
+            "    FUNCTION HandleNoSimple\n"
+            "        LPARAMETERS tnValue\n"
+            "        RETURN tnValue\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native AEVENTS script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("nbind1", "1");
+        check("nbind2", "2");
+        check("nbind3", "1");
+        check("nbind4", "1");
+        check("nsourcerows", "4");
+        check("nsourcecols", "5");
+        check("lsourcerow1hashandler", "true");
+        check("csourcerow1event", "ping");
+        check("csourcerow1delegate", "HandleBefore");
+        check("csourcerow2targettype", "U");
+        check("csourcerow2event", "ping");
+        check("csourcerow2delegate", "HandlePing");
+        check("nsourcerow3flags", "1");
+        check("nsourcerow4flags", "2");
+        check("nhandlerrows", "3");
+        check("nhandlercols", "5");
+        check("lhandlerrow1issource", "true");
+        check("chandlerrow1event", "ping");
+        check("chandlerrow1delegate", "HandleBefore");
+        check("nexistingrows", "0");
+        check("cexistingafter", "keep");
+        check("nexistingcols", "1");
+        check("nmissingrows", "0");
+        check("cmissingtype", "U");
+        check("nunbindspecific", "1");
+        check("nafterspecificrows", "3");
+        check("cafterspecificrow1delegate", "HandlePing");
+        check("cafterspecificrow1targettype", "U");
+        check("nunbindobject", "2");
+        check("nafterobjectrows", "1");
+        check("cafterobjectrow1delegate", "HandlePing");
+        check("nhandlerafterobjectrows", "0");
+        check("chandlerafterobjecttype", "U");
+
+        const auto handler_match = state.globals.find("lsourcerow1hashandler");
+        const auto source_match = state.globals.find("lhandlerrow1matchessource");
+        expect(handler_match != state.globals.end(), "AEVENTS source/handler compare result should be captured");
+        expect(source_match != state.globals.end(), "AEVENTS handler/source compare result should be captured");
+        if (handler_match != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(handler_match->second) == "true",
+                   "AEVENTS(aSourceEvents, oSource) should surface the bound handler object");
+        }
+        if (source_match != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(source_match->second) == "true",
+                   "AEVENTS(aHandlerEvents, oHandler) should surface the bound source object");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes()
     {
         namespace fs = std::filesystem;
@@ -39586,8 +39730,9 @@ int main()
     test_inherited_external_prg_base_methods_resolve_bare_helper_calls_against_defining_library();
     test_external_prg_base_methods_support_dodefault_dispatch();
     test_external_prg_base_methods_reflect_through_getpem_pemstatus_and_amembers();
-    test_same_prg_native_bindevent_raiseevent_and_unbindevents_dispatch_same_session_handlers();
-    test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();
+        test_same_prg_native_bindevent_raiseevent_and_unbindevents_dispatch_same_session_handlers();
+        test_same_prg_native_aevents_enumerates_same_session_bindings_without_clobbering_zero_row_targets();
+        test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();
     test_native_accessor_backed_properties_reflect_through_getpem_pemstatus_and_amembers();
     test_external_prg_base_accessor_backed_properties_dispatch_and_reflect();
     test_native_accessor_backed_properties_setpem_routes_through_assign_methods();
