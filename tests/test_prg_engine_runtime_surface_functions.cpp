@@ -10680,6 +10680,254 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_addobject_deeper_external_child_external_base_classlibrary_stays_read_only_to_setpem()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_addobject_deeper_external_child_external_base_setpem";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path root_library_path = temp_root / "rootbuttons.prg";
+        write_text(
+            root_library_path,
+            "DEFINE CLASS RootButton AS Custom\n"
+            "ENDDEFINE\n");
+
+        const fs::path button_library_path = temp_root / "buttons.prg";
+        write_text(
+            button_library_path,
+            "DEFINE CLASS ParentButton AS RootButton OF rootbuttons.prg\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "native_addobject_deeper_external_child_external_base_setpem.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('DemoForm')\n"
+            "oChild = oForm.cmdSave\n"
+            "lChildClassReadOnly = PEMSTATUS(oChild, 'Class', 5)\n"
+            "lChildBaseClassReadOnly = PEMSTATUS(oChild, 'BaseClass', 5)\n"
+            "lChildParentClassReadOnly = PEMSTATUS(oChild, 'ParentClass', 5)\n"
+            "lChildClassLibraryReadOnly = PEMSTATUS(oChild, 'ClassLibrary', 5)\n"
+            "lSetChildClass = SETPEM(oChild, 'Class', 'OtherClass')\n"
+            "lSetChildBaseClass = SETPEM(oChild, 'BaseClass', 'OtherBase')\n"
+            "lSetChildParentClass = SETPEM(oChild, 'ParentClass', 'OtherParent')\n"
+            "lSetChildClassLibrary = SETPEM(oChild, 'ClassLibrary', 'other.prg')\n"
+            "cChildClassAfter = GETPEM(oChild, 'Class')\n"
+            "cChildBaseClassAfter = GETPEM(oChild, 'BaseClass')\n"
+            "cChildParentClassAfter = GETPEM(oChild, 'ParentClass')\n"
+            "cChildClassLibraryAfter = GETPEM(oChild, 'ClassLibrary')\n"
+            "cChildClassLibraryPropAfter = oChild.ClassLibrary\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 82)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS DemoForm AS Custom\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddObject('cmdSave', 'SaveButton')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS ParentButton OF buttons.prg\n"
+            "    Caption = 'Save'\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native ADDOBJECT deeper external child external-base SETPEM script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lchildclassreadonly", "true");
+        check("lchildbaseclassreadonly", "true");
+        check("lchildparentclassreadonly", "true");
+        check("lchildclasslibraryreadonly", "true");
+        check("lsetchildclass", "false");
+        check("lsetchildbaseclass", "false");
+        check("lsetchildparentclass", "false");
+        check("lsetchildclasslibrary", "false");
+        check("cchildclassafter", "SaveButton");
+        check("cchildbaseclassafter", "ParentButton");
+        check("cchildparentclassafter", "ParentButton");
+        check("cchildclasslibraryafter", button_library_path.string());
+        check("cchildclasslibrarypropafter", button_library_path.string());
+        check("ldictset", "true");
+        check("ndictcompare", "82");
+
+        expect(state.ole_objects.size() == 3U,
+               "native ADDOBJECT deeper external child external-base SETPEM should register parent, child, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            const auto &parent_object = state.ole_objects[0];
+            const auto &child_object = state.ole_objects[1];
+            expect(parent_object.prog_id == "DemoForm",
+                   "native ADDOBJECT deeper external child external-base SETPEM should preserve parent identity");
+            expect(child_object.prog_id == "SaveButton",
+                   "native ADDOBJECT deeper external child external-base SETPEM should preserve child identity");
+            expect(child_object.base_class_name == "ParentButton",
+                   "native ADDOBJECT deeper external child external-base SETPEM should preserve immediate child base-class identity");
+            expect(child_object.source == main_path.string(),
+                   "native ADDOBJECT deeper external child external-base SETPEM should preserve the defining child-class source path");
+            expect(child_object.class_library == button_library_path.string(),
+                   "native ADDOBJECT deeper external child external-base SETPEM should preserve the immediate external ClassLibrary path");
+            expect(child_object.class_hierarchy.size() == 5U,
+                   "native ADDOBJECT deeper external child external-base SETPEM should preserve the deeper runtime child class hierarchy");
+            expect(!child_object.properties.contains("class"),
+                   "native ADDOBJECT deeper external child external-base SETPEM should not materialize a writable child Class shadow");
+            expect(!child_object.properties.contains("baseclass"),
+                   "native ADDOBJECT deeper external child external-base SETPEM should not materialize a writable child BaseClass shadow");
+            expect(!child_object.properties.contains("parentclass"),
+                   "native ADDOBJECT deeper external child external-base SETPEM should not materialize a writable child ParentClass shadow");
+            expect(!child_object.properties.contains("classlibrary"),
+                   "native ADDOBJECT deeper external child external-base SETPEM should not materialize a writable child ClassLibrary shadow");
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while native ADDOBJECT deeper external child external-base SETPEM lands");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_inherited_external_base_addobject_deeper_external_child_external_base_classlibrary_stays_read_only_to_setpem()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_external_base_inherited_addobject_deeper_external_child_external_base_setpem";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path root_library_path = temp_root / "rootbuttons.prg";
+        write_text(
+            root_library_path,
+            "DEFINE CLASS RootButton AS Custom\n"
+            "ENDDEFINE\n");
+
+        const fs::path button_library_path = temp_root / "buttons.prg";
+        write_text(
+            button_library_path,
+            "DEFINE CLASS ParentButton AS RootButton OF rootbuttons.prg\n"
+            "ENDDEFINE\n");
+
+        const fs::path widget_library_path = temp_root / "widgetlib.prg";
+        write_text(
+            widget_library_path,
+            "DEFINE CLASS ParentForm AS Custom\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddObject('cmdSave', 'SaveButton')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS ParentButton OF buttons.prg\n"
+            "    Caption = 'Save'\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "external_base_inherited_addobject_deeper_external_child_external_base_setpem.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildForm')\n"
+            "oChild = oCreate.cmdSave\n"
+            "lChildClassReadOnly = PEMSTATUS(oChild, 'Class', 5)\n"
+            "lChildBaseClassReadOnly = PEMSTATUS(oChild, 'BaseClass', 5)\n"
+            "lChildParentClassReadOnly = PEMSTATUS(oChild, 'ParentClass', 5)\n"
+            "lChildClassLibraryReadOnly = PEMSTATUS(oChild, 'ClassLibrary', 5)\n"
+            "lSetChildClass = SETPEM(oChild, 'Class', 'OtherClass')\n"
+            "lSetChildBaseClass = SETPEM(oChild, 'BaseClass', 'OtherBase')\n"
+            "lSetChildParentClass = SETPEM(oChild, 'ParentClass', 'OtherParent')\n"
+            "lSetChildClassLibrary = SETPEM(oChild, 'ClassLibrary', 'other.prg')\n"
+            "cChildClassAfter = GETPEM(oChild, 'Class')\n"
+            "cChildBaseClassAfter = GETPEM(oChild, 'BaseClass')\n"
+            "cChildParentClassAfter = GETPEM(oChild, 'ParentClass')\n"
+            "cChildClassLibraryAfter = GETPEM(oChild, 'ClassLibrary')\n"
+            "cChildClassLibraryPropAfter = oChild.ClassLibrary\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 83)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildForm AS ParentForm OF widgetlib.prg\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("external-base inherited ADDOBJECT deeper external child external-base SETPEM script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lchildclassreadonly", "true");
+        check("lchildbaseclassreadonly", "true");
+        check("lchildparentclassreadonly", "true");
+        check("lchildclasslibraryreadonly", "true");
+        check("lsetchildclass", "false");
+        check("lsetchildbaseclass", "false");
+        check("lsetchildparentclass", "false");
+        check("lsetchildclasslibrary", "false");
+        check("cchildclassafter", "SaveButton");
+        check("cchildbaseclassafter", "ParentButton");
+        check("cchildparentclassafter", "ParentButton");
+        check("cchildclasslibraryafter", button_library_path.string());
+        check("cchildclasslibrarypropafter", button_library_path.string());
+        check("ldictset", "true");
+        check("ndictcompare", "83");
+
+        expect(state.ole_objects.size() == 3U,
+               "external-base inherited ADDOBJECT deeper external child external-base SETPEM should register parent, child, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            const auto &parent_object = state.ole_objects[0];
+            const auto &child_object = state.ole_objects[1];
+            expect(parent_object.prog_id == "ChildForm",
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should preserve parent identity");
+            expect(child_object.prog_id == "SaveButton",
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should preserve child identity");
+            expect(child_object.base_class_name == "ParentButton",
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should preserve immediate child base-class identity");
+            expect(child_object.source == widget_library_path.string(),
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should preserve the defining child-class source path");
+            expect(child_object.class_library == button_library_path.string(),
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should preserve the immediate external ClassLibrary path");
+            expect(child_object.class_hierarchy.size() == 5U,
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should preserve the deeper runtime child class hierarchy");
+            expect(!child_object.properties.contains("class"),
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should not materialize a writable child Class shadow");
+            expect(!child_object.properties.contains("baseclass"),
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should not materialize a writable child BaseClass shadow");
+            expect(!child_object.properties.contains("parentclass"),
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should not materialize a writable child ParentClass shadow");
+            expect(!child_object.properties.contains("classlibrary"),
+                   "external-base inherited ADDOBJECT deeper external child external-base SETPEM should not materialize a writable child ClassLibrary shadow");
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while external-base inherited ADDOBJECT deeper external child external-base SETPEM lands");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow()
     {
         namespace fs = std::filesystem;
@@ -12784,6 +13032,8 @@ int main()
     test_inherited_external_base_addobject_deeper_external_child_identity_metadata_cannot_be_shadowed_through_direct_assignment();
     test_native_addobject_deeper_external_child_external_base_provenance_stays_coherent();
     test_inherited_external_base_addobject_deeper_external_child_external_base_provenance_stays_coherent();
+    test_native_addobject_deeper_external_child_external_base_classlibrary_stays_read_only_to_setpem();
+    test_inherited_external_base_addobject_deeper_external_child_external_base_classlibrary_stays_read_only_to_setpem();
     test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow();
     test_same_prg_native_bare_helper_calls_resolve_to_current_instance_before_top_level_routines();
     test_inherited_external_prg_base_methods_resolve_bare_helper_calls_against_defining_library();
