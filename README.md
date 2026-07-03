@@ -46,7 +46,12 @@ Important note:
 
 Contents:
 
-- [`LICENSE`](E:/Project-Copperfin/LICENSE)
+- [`LICENSE.md`](E:/Project-Copperfin/LICENSE.md)
+- [`SOURCE_AVAILABLE_LICENSE.md`](E:/Project-Copperfin/SOURCE_AVAILABLE_LICENSE.md)
+- [`COMMERCIAL_LICENSE.md`](E:/Project-Copperfin/COMMERCIAL_LICENSE.md)
+- [`CLA.md`](E:/Project-Copperfin/CLA.md)
+- [`MIGRATION_NOTICE.md`](E:/Project-Copperfin/MIGRATION_NOTICE.md)
+- [`LEGAL_FAQ.md`](E:/Project-Copperfin/LEGAL_FAQ.md)
 - [`SECURITY.md`](E:/Project-Copperfin/SECURITY.md)
 - [`agents.md`](E:/Project-Copperfin/agents.md)
 - [`agent-handoff.md`](E:/Project-Copperfin/agent-handoff.md)
@@ -186,3 +191,36 @@ Known limitation:
 - the new standalone Studio shell shares the same editor stack, but it is still an early shell rather than the finished full-fidelity Copperfin IDE
 - the standalone Studio shell now supports tabbed multi-document editing, but it still needs richer IDE chrome and workflow parity before it feels like the full VFP 9 experience
 - the new project utility panes are strong parity progress, but they are still summary-driven surfaces rather than the full interactive VFP 9 Project Manager, Data Explorer, Object Browser, Coverage, and builder ecosystem
+
+## Licensing
+
+Project Copperfin is **dual-licensed**:
+
+- **Individual, non-commercial use is free** under the
+  [Source-Available License](SOURCE_AVAILABLE_LICENSE.md) (PCSAL-1.0). You
+  can read, run, and modify the source for personal, non-commercial
+  purposes.
+- **Commercial use requires a paid [Commercial License](COMMERCIAL_LICENSE.md)**,
+  with pricing graduated by seats or revenue tier, available either as an
+  Annual Subscription or a one-time Perpetual License at the same per-seat
+  rate. Support is included with either paid option (the free tier has no
+  support). The commercial and individual editions are the same
+  codebase — only the license governing your use differs.
+- **Contributors** must agree to the [CLA.md](CLA.md) before a Contribution
+  can be merged, so the project can continue to be dual-licensed and
+  commercialized going forward.
+
+This is a **source-available**, not open-source, license — it is
+intentionally not OSI-approved, since it restricts commercial use and
+restricts proprietary relicensing of derivative works.
+
+Prior versions of this repository were licensed under **GNU GPL-3.0-only**.
+That does not change: GPL-3.0 rights already granted, including to
+commercial entities that have already forked the GPL-licensed codebase,
+remain fully valid and unaffected. Only new versions going forward are
+dual-licensed. See [MIGRATION_NOTICE.md](MIGRATION_NOTICE.md) for the full
+explanation and [LICENSE-GPL-3.0-HISTORICAL.md](LICENSE-GPL-3.0-HISTORICAL.md)
+for the preserved original license text.
+
+To obtain a Commercial License, contact **[rich@yourfoxprodeveloper.com](mailto:rich@yourfoxprodeveloper.com)**.
+For common questions, see the [Legal FAQ](LEGAL_FAQ.md).

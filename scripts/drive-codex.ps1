@@ -1,3 +1,7 @@
+# Copyright © 2026 Richard M. Hamilton. All rights reserved.
+# Licensed under the Project Copperfin Source-Available License or
+# Commercial License. See LICENSE.md in the repository root.
+
 param(
     [string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path,
     [string]$PromptFile,
