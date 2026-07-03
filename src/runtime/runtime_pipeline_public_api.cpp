@@ -277,7 +277,6 @@ std::string build_runtime_manifest_text(
     stream << "license_seats=" << plan.license_seats << "\n";
     stream << "license_subscription_expires=" << quote_manifest_value(plan.license_subscription_expires) << "\n";
     stream << "license_perpetual_max_major_version=" << plan.license_perpetual_max_major_version << "\n";
-    stream << "license_source_path=" << quote_manifest_value(plan.license_source_path) << "\n";
     stream << "security_roles=" << security_profile.roles.size() << "\n";
     stream << "launcher_mode=" << quote_manifest_value(plan.launcher_mode) << "\n";
     stream << "launcher_fallback=" << quote_manifest_value(plan.launcher_fallback) << "\n";
@@ -403,7 +402,6 @@ std::string build_debug_manifest_text(
     stream << "license_seats=" << plan.license_seats << "\n";
     stream << "license_subscription_expires=" << quote_manifest_value(plan.license_subscription_expires) << "\n";
     stream << "license_perpetual_max_major_version=" << plan.license_perpetual_max_major_version << "\n";
-    stream << "license_source_path=" << quote_manifest_value(plan.license_source_path) << "\n";
     stream << "security_roles=" << security_profile.roles.size() << "\n";
     stream << "startup_item=" << quote_manifest_value(plan.debug_plan.startup_item) << "\n";
     stream << "startup_source=" << quote_manifest_value(plan.debug_plan.startup_source_path) << "\n";

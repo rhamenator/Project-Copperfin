@@ -494,8 +494,10 @@ int main(int argc, char** argv) {
     }
 
     // Stamped into app.cfmanifest/app.cfdebug as inert, informational
-    // provenance -- never gates whether the build succeeds or what it
-    // produces. See LicenseState::perpetual_out_of_version's doc comment.
+    // license metadata -- never gates whether the build succeeds or
+    // what it produces. Local source-path provenance stays out of the
+    // durable package artifacts. See LicenseState::perpetual_out_of_version's
+    // doc comment.
     const auto license_status = copperfin::licensing::load_license_status(argv[0]);
     plan.license_state = std::string(copperfin::licensing::license_state_name(license_status.state));
     plan.license_type = license_status.license_type;
@@ -504,7 +506,6 @@ int main(int argc, char** argv) {
     plan.license_seats = license_status.seats;
     plan.license_subscription_expires = license_status.subscription_expires;
     plan.license_perpetual_max_major_version = license_status.perpetual_max_major_version;
-    plan.license_source_path = license_status.source_path;
 
     const std::string runtime_host_path = resolve_runtime_host_path(runtime_host_override, argv[0]);
     const auto materialized = copperfin::runtime::materialize_runtime_package(

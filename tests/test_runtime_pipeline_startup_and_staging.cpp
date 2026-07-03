@@ -198,14 +198,17 @@ void test_runtime_package_license_fields_bump_manifest_schema_versions() {
             {"license_licensee", quote_manifest_value(plan.license_licensee)},
             {"license_seats", std::to_string(plan.license_seats)},
             {"license_subscription_expires", quote_manifest_value(plan.license_subscription_expires)},
-            {"license_perpetual_max_major_version", std::to_string(plan.license_perpetual_max_major_version)},
-            {"license_source_path", quote_manifest_value(plan.license_source_path)}};
+            {"license_perpetual_max_major_version", std::to_string(plan.license_perpetual_max_major_version)}};
         for (const auto& [key, expected_value] : expected_license_fields) {
             expect(manifest_value_for_key(runtime_manifest, key) == expected_value,
                    "runtime manifest should preserve " + key + " under the versioned contract");
             expect(manifest_value_for_key(debug_manifest, key) == expected_value,
                    "debug manifest should preserve " + key + " under the versioned contract");
         }
+        expect(manifest_value_for_key(runtime_manifest, "license_source_path").empty(),
+               "runtime manifest should omit local license_source_path provenance");
+        expect(manifest_value_for_key(debug_manifest, "license_source_path").empty(),
+               "debug manifest should omit local license_source_path provenance");
     }
 
     fs::remove_all(temp_root, ignored);
