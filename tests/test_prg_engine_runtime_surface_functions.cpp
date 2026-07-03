@@ -1188,6 +1188,108 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_addobject_external_child_base_surfaces_classlibrary_provenance()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_addobject_external_child_base_provenance";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path root_library_path = temp_root / "rootbuttons.prg";
+        write_text(
+            root_library_path,
+            "DEFINE CLASS ParentButton AS Custom\n"
+            "ENDDEFINE\n");
+
+        const fs::path button_library_path = temp_root / "buttons.prg";
+        write_text(
+            button_library_path,
+            "DEFINE CLASS SaveButton AS ParentButton OF rootbuttons.prg\n"
+            "    Caption = 'Save'\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "native_addobject_external_child_base_provenance.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('DemoForm')\n"
+            "oChild = oForm.cmdSave\n"
+            "cChildClassLibrary = GETPEM(oChild, 'ClassLibrary')\n"
+            "lChildHasClassLibrary = PEMSTATUS(oChild, 'ClassLibrary', 1)\n"
+            "lChildClassLibraryReadOnly = PEMSTATUS(oChild, 'ClassLibrary', 5)\n"
+            "cChildClassLibraryProp = oChild.ClassLibrary\n"
+            "nMembersProps = AMEMBERS(aMembersProps, oChild, 1)\n"
+            "cProp4 = aMembersProps[4]\n"
+            "lSetChildClassLibrary = SETPEM(oChild, 'ClassLibrary', 'shadow.prg')\n"
+            "oChild.ClassLibrary = 'shadow2.prg'\n"
+            "cChildClassLibraryAfter = GETPEM(oChild, 'ClassLibrary')\n"
+            "cChildClassLibraryPropAfter = oChild.ClassLibrary\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 68)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS DemoForm AS Custom\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddObject('cmdSave', 'SaveButton', 'buttons.prg')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native ADDOBJECT external child-base provenance script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cchildclasslibrary", root_library_path.string());
+        check("lchildhasclasslibrary", "true");
+        check("lchildclasslibraryreadonly", "true");
+        check("cchildclasslibraryprop", root_library_path.string());
+        check("nmembersprops", "6");
+        check("cprop4", "CLASSLIBRARY");
+        check("lsetchildclasslibrary", "false");
+        check("cchildclasslibraryafter", root_library_path.string());
+        check("cchildclasslibrarypropafter", root_library_path.string());
+        check("ldictset", "true");
+        check("ndictcompare", "68");
+
+        expect(state.ole_objects.size() == 3U,
+               "native ADDOBJECT external child-base provenance should register parent, child, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            const auto &parent_object = state.ole_objects[0];
+            const auto &child_object = state.ole_objects[1];
+            expect(parent_object.prog_id == "DemoForm",
+                   "native ADDOBJECT external child-base provenance should preserve parent identity");
+            expect(child_object.prog_id == "SaveButton",
+                   "native ADDOBJECT external child-base provenance should preserve child identity");
+            expect(child_object.source == button_library_path.string(),
+                   "native ADDOBJECT external child-base provenance should preserve the child definition source path");
+            expect(child_object.class_library == root_library_path.string(),
+                   "native ADDOBJECT external child-base provenance should preserve the external child ClassLibrary path");
+            expect(!child_object.properties.contains("classlibrary"),
+                   "native ADDOBJECT external child-base provenance should not materialize a ClassLibrary shadow");
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while native ADDOBJECT external child-base provenance lands");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_class_body_add_object_materializes_children_before_init()
     {
         namespace fs = std::filesystem;
@@ -8480,6 +8582,112 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_inherited_external_base_addobject_external_child_base_surfaces_classlibrary_provenance()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_external_base_inherited_addobject_external_child_base_provenance";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path root_library_path = temp_root / "rootbuttons.prg";
+        write_text(
+            root_library_path,
+            "DEFINE CLASS ParentButton AS Custom\n"
+            "ENDDEFINE\n");
+
+        const fs::path widget_library_path = temp_root / "widgetlib.prg";
+        write_text(
+            widget_library_path,
+            "DEFINE CLASS ParentForm AS Custom\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddObject('cmdSave', 'SaveButton', 'buttons.prg')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        const fs::path button_library_path = temp_root / "buttons.prg";
+        write_text(
+            button_library_path,
+            "DEFINE CLASS SaveButton AS ParentButton OF rootbuttons.prg\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "external_base_inherited_addobject_external_child_base_provenance.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildForm')\n"
+            "oChild = oCreate.cmdSave\n"
+            "cChildClassLibrary = GETPEM(oChild, 'ClassLibrary')\n"
+            "lChildHasClassLibrary = PEMSTATUS(oChild, 'ClassLibrary', 1)\n"
+            "lChildClassLibraryReadOnly = PEMSTATUS(oChild, 'ClassLibrary', 5)\n"
+            "cChildClassLibraryProp = oChild.ClassLibrary\n"
+            "nMembersProps = AMEMBERS(aMembersProps, oChild, 1)\n"
+            "cProp3 = aMembersProps[3]\n"
+            "lSetChildClassLibrary = SETPEM(oChild, 'ClassLibrary', 'shadow.prg')\n"
+            "oChild.ClassLibrary = 'shadow2.prg'\n"
+            "cChildClassLibraryAfter = GETPEM(oChild, 'ClassLibrary')\n"
+            "cChildClassLibraryPropAfter = oChild.ClassLibrary\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 69)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildForm AS ParentForm OF widgetlib.prg\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("external-base inherited ADDOBJECT external child-base provenance script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cchildclasslibrary", root_library_path.string());
+        check("lchildhasclasslibrary", "true");
+        check("lchildclasslibraryreadonly", "true");
+        check("cchildclasslibraryprop", root_library_path.string());
+        check("cprop3", "CLASSLIBRARY");
+        check("lsetchildclasslibrary", "false");
+        check("cchildclasslibraryafter", root_library_path.string());
+        check("cchildclasslibrarypropafter", root_library_path.string());
+        check("ldictset", "true");
+        check("ndictcompare", "69");
+
+        expect(state.ole_objects.size() == 3U,
+               "external-base inherited ADDOBJECT external child-base provenance should register parent, child, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            const auto &parent_object = state.ole_objects[0];
+            const auto &child_object = state.ole_objects[1];
+            expect(parent_object.prog_id == "ChildForm",
+                   "external-base inherited ADDOBJECT external child-base provenance should preserve parent identity");
+            expect(child_object.prog_id == "SaveButton",
+                   "external-base inherited ADDOBJECT external child-base provenance should preserve child identity");
+            expect(child_object.source == button_library_path.string(),
+                   "external-base inherited ADDOBJECT external child-base provenance should preserve the child definition source path");
+            expect(child_object.class_library == root_library_path.string(),
+                   "external-base inherited ADDOBJECT external child-base provenance should preserve the external child ClassLibrary path");
+            expect(!child_object.properties.contains("classlibrary"),
+                   "external-base inherited ADDOBJECT external child-base provenance should not materialize a ClassLibrary shadow");
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while external-base inherited ADDOBJECT external child-base provenance lands");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow()
     {
         namespace fs = std::filesystem;
@@ -10504,6 +10712,7 @@ int main()
     test_newobject_arguments_flow_into_native_init_while_createobject_and_com_newobject_stay_stable();
     test_native_object_method_and_init_preserve_by_reference_argument_updates();
     test_native_addobject_materializes_external_prg_child_objects_and_preserves_init_flow();
+    test_native_addobject_external_child_base_surfaces_classlibrary_provenance();
     test_same_prg_native_class_inheritance_applies_parent_defaults_methods_and_init();
     test_native_class_inheritance_loads_external_prg_base_sources();
     test_same_prg_native_aclass_reflects_inheritance_chain();
@@ -10566,6 +10775,7 @@ int main()
     test_external_base_child_parent_cannot_be_shadowed_through_direct_assignment();
     test_inherited_declarative_children_from_external_prg_bases_resolve_against_defining_library();
     test_inherited_external_prg_base_methods_resolve_addobject_children_against_defining_library();
+    test_inherited_external_base_addobject_external_child_base_surfaces_classlibrary_provenance();
     test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow();
     test_same_prg_native_bare_helper_calls_resolve_to_current_instance_before_top_level_routines();
     test_inherited_external_prg_base_methods_resolve_bare_helper_calls_against_defining_library();
