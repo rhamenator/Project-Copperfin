@@ -1348,6 +1348,14 @@
                     } guard(native_class_instantiation_depth);
 
                     const PrgClassDefinition &class_definition = class_found->second;
+                    std::vector<const PrgClassDefinition *> class_lineage =
+                        collect_native_same_prg_class_lineage(
+                            program,
+                            class_definition.name.empty() ? prog_id : class_definition.name);
+                    if (class_lineage.empty())
+                    {
+                        class_lineage.push_back(&class_definition);
+                    }
                     const int handle = next_ole_handle++;
                     RuntimeOleObjectState object_state{
                         .handle = handle,
@@ -1356,29 +1364,40 @@
                         .last_action = normalized_source,
                         .action_count = 1};
 
-                    object_state.methods.reserve(class_definition.methods.size());
-                    for (const auto &[_, method] : class_definition.methods)
+                    std::map<std::string, std::string> effective_methods;
+                    for (const PrgClassDefinition *lineage_class : class_lineage)
                     {
-                        object_state.methods.push_back(method.name);
+                        for (const auto &[normalized_method_name, method] : lineage_class->methods)
+                        {
+                            effective_methods[normalized_method_name] = method.name;
+                        }
+                    }
+                    object_state.methods.reserve(effective_methods.size());
+                    for (const auto &[_, method_name] : effective_methods)
+                    {
+                        object_state.methods.push_back(method_name);
                     }
 
                     auto [object_it, _] = ole_objects.emplace(handle, std::move(object_state));
                     RuntimeOleObjectState *runtime_object = &object_it->second;
-                    for (const Statement &property_statement : class_definition.property_statements)
+                    for (const PrgClassDefinition *lineage_class : class_lineage)
                     {
-                        if (property_statement.kind != StatementKind::assignment)
+                        for (const Statement &property_statement : lineage_class->property_statements)
                         {
-                            continue;
-                        }
+                            if (property_statement.kind != StatementKind::assignment)
+                            {
+                                continue;
+                            }
 
-                        const std::string property_name = normalize_identifier(property_statement.identifier);
-                        if (property_name.empty())
-                        {
-                            continue;
-                        }
+                            const std::string property_name = normalize_identifier(property_statement.identifier);
+                            if (property_name.empty())
+                            {
+                                continue;
+                            }
 
-                        runtime_object->properties[property_name] =
-                            evaluate_expression(property_statement.expression, frame);
+                            runtime_object->properties[property_name] =
+                                evaluate_expression(property_statement.expression, frame);
+                        }
                     }
 
                     std::string init_program_path;

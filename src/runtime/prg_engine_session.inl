@@ -63,6 +63,72 @@
             stack.push_back(std::move(frame));
         }
 
+        std::string native_same_prg_base_class_name(const std::string &base_class_name) const
+        {
+            const std::string trimmed = trim_copy(base_class_name);
+            if (trimmed.empty())
+            {
+                return {};
+            }
+
+            std::size_t end = 0U;
+            while (end < trimmed.size())
+            {
+                const char ch = trimmed[end];
+                if (std::isalnum(static_cast<unsigned char>(ch)) != 0 || ch == '_')
+                {
+                    ++end;
+                    continue;
+                }
+                break;
+            }
+
+            return end == 0U ? std::string{} : trimmed.substr(0U, end);
+        }
+
+        const PrgClassDefinition *find_native_same_prg_class(
+            const Program &program,
+            const std::string &class_name) const
+        {
+            const auto found = program.classes.find(normalize_identifier(class_name));
+            return found == program.classes.end() ? nullptr : &found->second;
+        }
+
+        const PrgClassDefinition *find_native_same_prg_base_class(
+            const Program &program,
+            const PrgClassDefinition &class_definition) const
+        {
+            const std::string base_class_name =
+                native_same_prg_base_class_name(class_definition.base_class_name);
+            return base_class_name.empty()
+                ? nullptr
+                : find_native_same_prg_class(program, base_class_name);
+        }
+
+        std::vector<const PrgClassDefinition *> collect_native_same_prg_class_lineage(
+            const Program &program,
+            const std::string &class_name) const
+        {
+            std::vector<const PrgClassDefinition *> reverse_lineage;
+            std::set<std::string> visited;
+            const PrgClassDefinition *current = find_native_same_prg_class(program, class_name);
+            while (current != nullptr)
+            {
+                const std::string normalized_name = normalize_identifier(current->name);
+                if (!normalized_name.empty() && !visited.insert(normalized_name).second)
+                {
+                    break;
+                }
+
+                reverse_lineage.push_back(current);
+                current = find_native_same_prg_base_class(program, *current);
+            }
+
+            return std::vector<const PrgClassDefinition *>(
+                reverse_lineage.rbegin(),
+                reverse_lineage.rend());
+        }
+
         const Routine *find_native_object_method(
             const RuntimeOleObjectState &runtime_object,
             const std::string &member_name,
@@ -75,23 +141,38 @@
             }
 
             Program &program = load_program(runtime_object.source);
-            const auto class_found = program.classes.find(normalize_identifier(runtime_object.prog_id));
-            if (class_found == program.classes.end())
+            const PrgClassDefinition *current_class =
+                find_native_same_prg_class(program, runtime_object.prog_id);
+            if (current_class == nullptr)
             {
                 return nullptr;
             }
 
-            const auto method_found = class_found->second.methods.find(normalize_identifier(member_name));
-            if (method_found == class_found->second.methods.end())
+            std::set<std::string> visited;
+            const std::string normalized_member_name = normalize_identifier(member_name);
+            while (current_class != nullptr)
             {
-                return nullptr;
+                const std::string normalized_class_name = normalize_identifier(current_class->name);
+                if (!normalized_class_name.empty() &&
+                    !visited.insert(normalized_class_name).second)
+                {
+                    break;
+                }
+
+                const auto method_found = current_class->methods.find(normalized_member_name);
+                if (method_found != current_class->methods.end())
+                {
+                    program_path = program.path;
+                    qualified_routine_name =
+                        (current_class->name.empty() ? runtime_object.prog_id : current_class->name) +
+                        "." + method_found->second.name;
+                    return &method_found->second;
+                }
+
+                current_class = find_native_same_prg_base_class(program, *current_class);
             }
 
-            program_path = program.path;
-            qualified_routine_name =
-                (class_found->second.name.empty() ? runtime_object.prog_id : class_found->second.name) +
-                "." + method_found->second.name;
-            return &method_found->second;
+            return nullptr;
         }
 
         const Statement *current_statement() const

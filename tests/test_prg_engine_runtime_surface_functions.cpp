@@ -1461,6 +1461,184 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_same_prg_native_class_inheritance_applies_parent_defaults_methods_and_init()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_class_inheritance";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_class_inheritance.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildWidget')\n"
+            "oNew = NEWOBJECT('LeafWidget')\n"
+            "oPlain = CREATEOBJECT('Empty')\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "oPlain.Extra = 'plain'\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 6)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "cCreateDescribe = oCreate.Describe()\n"
+            "cCreateWho = oCreate.Who()\n"
+            "cNewDescribe = oNew.Describe()\n"
+            "cNewWho = oNew.Who()\n"
+            "cPlain = oPlain.Extra\n"
+            "nCreateBase = oCreate.nBase\n"
+            "nCreateChild = oCreate.nChild\n"
+            "lCreateInitRan = oCreate.lInitRan\n"
+            "nNewBase = oNew.nBase\n"
+            "nNewChild = oNew.nChild\n"
+            "lNewInitRan = oNew.lInitRan\n"
+            "RETURN\n"
+            "DEFINE CLASS ParentWidget AS Custom\n"
+            "    Caption = 'Parent'\n"
+            "    nBase = 3\n"
+            "    lInitRan = .F.\n"
+            "    PROCEDURE Init\n"
+            "        THIS.Caption = THIS.Caption + '-Init'\n"
+            "        THIS.lInitRan = .T.\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "    FUNCTION Describe\n"
+            "        RETURN THIS.Caption\n"
+            "    ENDFUNC\n"
+            "    FUNCTION Who\n"
+            "        RETURN 'Parent'\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ChildWidget AS ParentWidget\n"
+            "    Caption = 'Child'\n"
+            "    nChild = 7\n"
+            "    FUNCTION Who\n"
+            "        RETURN 'Child'\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS LeafWidget AS ChildWidget\n"
+            "    nBase = 11\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native class inheritance script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("ccreatedescribe", "Child-Init");
+        check("ccreatewho", "Child");
+        check("cnewdescribe", "Child-Init");
+        check("cnewwho", "Child");
+        check("cplain", "plain");
+        check("ncreatebase", "3");
+        check("ncreatechild", "7");
+        check("lcreateinitran", "true");
+        check("nnewbase", "11");
+        check("nnewchild", "7");
+        check("lnewinitran", "true");
+        check("ldictset", "true");
+        check("ndictcompare", "6");
+
+        expect(state.ole_objects.size() == 4U,
+               "native class inheritance script should register CREATEOBJECT, NEWOBJECT, plain, and COM objects");
+        if (state.ole_objects.size() == 4U)
+        {
+            const auto &create_object = state.ole_objects[0];
+            expect(create_object.prog_id == "ChildWidget",
+                   "native class inheritance should preserve child class identity");
+            const auto create_caption = create_object.properties.find("caption");
+            const auto create_base = create_object.properties.find("nbase");
+            const auto create_child = create_object.properties.find("nchild");
+            const auto create_init = create_object.properties.find("linitran");
+            expect(create_caption != create_object.properties.end(),
+                   "native class inheritance should materialize inherited Init-updated caption state");
+            expect(create_base != create_object.properties.end(),
+                   "native class inheritance should materialize inherited parent properties");
+            expect(create_child != create_object.properties.end(),
+                   "native class inheritance should keep child-local properties");
+            expect(create_init != create_object.properties.end(),
+                   "native class inheritance should materialize inherited Init-written flags");
+            if (create_caption != create_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(create_caption->second) == "Child-Init",
+                       "native class inheritance should let inherited Init see child-overridden properties");
+            }
+            if (create_base != create_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(create_base->second) == "3",
+                       "native class inheritance should keep parent default properties on child instances");
+            }
+            if (create_child != create_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(create_child->second) == "7",
+                       "native class inheritance should keep child-local default properties");
+            }
+            if (create_init != create_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(create_init->second) == "true",
+                       "native class inheritance should run inherited Init when the child does not override it");
+            }
+            expect(std::find(create_object.methods.begin(), create_object.methods.end(), "Describe") != create_object.methods.end(),
+                   "native class inheritance should expose inherited methods on the runtime object");
+            expect(std::find(create_object.methods.begin(), create_object.methods.end(), "Who") != create_object.methods.end(),
+                   "native class inheritance should retain child overrides in the runtime method list");
+            expect(std::find(create_object.methods.begin(), create_object.methods.end(), "Init") != create_object.methods.end(),
+                   "native class inheritance should expose inherited Init in runtime member enumeration");
+
+            const auto &new_object = state.ole_objects[1];
+            expect(new_object.prog_id == "LeafWidget",
+                   "multilevel native class inheritance should preserve leaf class identity");
+            const auto new_base = new_object.properties.find("nbase");
+            const auto new_child = new_object.properties.find("nchild");
+            if (new_base != new_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(new_base->second) == "11",
+                       "multilevel native class inheritance should let leaf defaults override inherited parent values");
+            }
+            else
+            {
+                expect(false, "multilevel native class inheritance should materialize leaf override properties");
+            }
+            if (new_child != new_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(new_child->second) == "7",
+                       "multilevel native class inheritance should retain intermediate inherited properties");
+            }
+            else
+            {
+                expect(false, "multilevel native class inheritance should materialize intermediate inherited properties");
+            }
+
+            expect(state.ole_objects[2].prog_id == "Empty",
+                   "plain CREATEOBJECT should remain stable while native inheritance lands");
+            expect(state.ole_objects[3].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while native inheritance lands");
+        }
+
+        const bool has_inherited_init_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.init" &&
+                   event.detail == "ParentWidget.Init";
+        });
+        expect(has_inherited_init_event,
+               "native class inheritance should emit the inherited Init event when the parent Init runs");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_codepage_and_misc_runtime_surface_functions()
     {
         namespace fs = std::filesystem;
@@ -2138,6 +2316,7 @@ int main()
     test_createobject_arguments_flow_into_native_init_while_newobject_and_non_native_creation_stay_stable();
     test_newobject_arguments_flow_into_native_init_while_createobject_and_com_newobject_stay_stable();
     test_native_object_method_and_init_preserve_by_reference_argument_updates();
+    test_same_prg_native_class_inheritance_applies_parent_defaults_methods_and_init();
     test_codepage_and_misc_runtime_surface_functions();
     test_lookup_expression_function();
     test_lookup_expression_function_supports_sql_cursors();
