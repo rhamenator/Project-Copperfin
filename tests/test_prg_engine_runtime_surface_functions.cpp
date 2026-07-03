@@ -21524,6 +21524,239 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_inherited_external_parent_object_block_derived_startup_child_identity_metadata_resists_mutation()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_inherited_external_parent_object_block_derived_startup_child_identity";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path widget_library_path = temp_root / "widgetlib.prg";
+        write_text(
+            widget_library_path,
+            "DEFINE CLASS ParentForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    OBJECT cmdSave AS SaveButton\n"
+            "        Caption = 'Commit'\n"
+            "    ENDOBJECT\n"
+            "    FUNCTION Save\n"
+            "        THIS.Caption = THIS.Caption + '-Saved'\n"
+            "        RETURN THIS.Caption\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "inherited_external_parent_object_block_derived_startup_child_identity.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildForm')\n"
+            "oLeaf = NEWOBJECT('LeafForm')\n"
+            "oCreateChild = oCreate.cmdSave\n"
+            "oLeafChild = oLeaf.cmdSave\n"
+            "lCreateChildClassReadOnly = PEMSTATUS(oCreateChild, 'Class', 5)\n"
+            "lCreateChildBaseClassReadOnly = PEMSTATUS(oCreateChild, 'BaseClass', 5)\n"
+            "lCreateChildParentClassReadOnly = PEMSTATUS(oCreateChild, 'ParentClass', 5)\n"
+            "lSetCreateChildClass = SETPEM(oCreateChild, 'Class', 'OtherClass')\n"
+            "lSetCreateChildBaseClass = SETPEM(oCreateChild, 'BaseClass', 'OtherBase')\n"
+            "lSetCreateChildParentClass = SETPEM(oCreateChild, 'ParentClass', 'OtherParent')\n"
+            "lSetCreateChildClassLibrary = SETPEM(oCreateChild, 'ClassLibrary', 'other.prg')\n"
+            "lAddCreateChildClass = ADDPROPERTY(oCreateChild, 'Class', 'OtherClass')\n"
+            "lAddCreateChildBaseClass = ADDPROPERTY(oCreateChild, 'BaseClass', 'OtherBase')\n"
+            "lAddCreateChildParentClass = ADDPROPERTY(oCreateChild, 'ParentClass', 'OtherParent')\n"
+            "lAddCreateChildClassLibrary = ADDPROPERTY(oCreateChild, 'ClassLibrary', 'other.prg')\n"
+            "cCreateChildClassAfter = oCreateChild.Class\n"
+            "cCreateChildBaseClassAfter = oCreateChild.BaseClass\n"
+            "cCreateChildParentClassAfter = oCreateChild.ParentClass\n"
+            "xCreateChildClassLibraryAfter = oCreateChild.ClassLibrary\n"
+            "cCreateChildClassReflectAfter = GETPEM(oCreateChild, 'Class')\n"
+            "cCreateChildBaseClassReflectAfter = GETPEM(oCreateChild, 'BaseClass')\n"
+            "cCreateChildParentClassReflectAfter = GETPEM(oCreateChild, 'ParentClass')\n"
+            "xCreateChildClassLibraryReflectAfter = GETPEM(oCreateChild, 'ClassLibrary')\n"
+            "lRemoveLeafChildClass = REMOVEPROPERTY(oLeafChild, 'Class')\n"
+            "lRemoveLeafChildBaseClass = REMOVEPROPERTY(oLeafChild, 'BaseClass')\n"
+            "lRemoveLeafChildParentClass = REMOVEPROPERTY(oLeafChild, 'ParentClass')\n"
+            "lRemoveLeafChildClassLibrary = REMOVEPROPERTY(oLeafChild, 'ClassLibrary')\n"
+            "oLeafChild.Class = 'OtherClass'\n"
+            "oLeafChild.BaseClass = 'OtherBase'\n"
+            "oLeafChild.ParentClass = 'OtherParent'\n"
+            "oLeafChild.ClassLibrary = 'other.prg'\n"
+            "lLeafChildClassReadOnly = PEMSTATUS(oLeafChild, 'Class', 5)\n"
+            "lLeafChildBaseClassReadOnly = PEMSTATUS(oLeafChild, 'BaseClass', 5)\n"
+            "lLeafChildParentClassReadOnly = PEMSTATUS(oLeafChild, 'ParentClass', 5)\n"
+            "cLeafChildClassAfter = oLeafChild.Class\n"
+            "cLeafChildBaseClassAfter = oLeafChild.BaseClass\n"
+            "cLeafChildParentClassAfter = oLeafChild.ParentClass\n"
+            "xLeafChildClassLibraryAfter = oLeafChild.ClassLibrary\n"
+            "cLeafChildClassReflectAfter = GETPEM(oLeafChild, 'Class')\n"
+            "cLeafChildBaseClassReflectAfter = GETPEM(oLeafChild, 'BaseClass')\n"
+            "cLeafChildParentClassReflectAfter = GETPEM(oLeafChild, 'ParentClass')\n"
+            "xLeafChildClassLibraryReflectAfter = GETPEM(oLeafChild, 'ClassLibrary')\n"
+            "cCreateOwnerCaption = oCreateChild.OwnerCaption()\n"
+            "cLeafOwnerCaption = oLeafChild.OwnerCaption()\n"
+            "cCreateSavedCaption = oCreateChild.TriggerSave()\n"
+            "cLeafSavedCaption = oLeafChild.TriggerSave()\n"
+            "cCreateCaptionAfterSave = oCreate.Caption\n"
+            "cLeafCaptionAfterSave = oLeaf.Caption\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 129)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildForm AS ParentForm OF widgetlib.prg\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS LeafForm AS ChildForm\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS Custom\n"
+            "    Caption = 'Save'\n"
+            "    FUNCTION OwnerCaption\n"
+            "        RETURN PARENT.Caption\n"
+            "    ENDFUNC\n"
+            "    FUNCTION TriggerSave\n"
+            "        RETURN THISFORM.Save()\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("inherited external-parent object-block derived-startup child identity script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lcreatechildclassreadonly", "true");
+        check("lcreatechildbaseclassreadonly", "true");
+        check("lcreatechildparentclassreadonly", "true");
+        check("lsetcreatechildclass", "false");
+        check("lsetcreatechildbaseclass", "false");
+        check("lsetcreatechildparentclass", "false");
+        check("lsetcreatechildclasslibrary", "false");
+        check("laddcreatechildclass", "false");
+        check("laddcreatechildbaseclass", "false");
+        check("laddcreatechildparentclass", "false");
+        check("laddcreatechildclasslibrary", "false");
+        check("ccreatechildclassafter", "SaveButton");
+        check("ccreatechildbaseclassafter", "Custom");
+        check("ccreatechildparentclassafter", "Custom");
+        check("ccreatechildclassreflectafter", "SaveButton");
+        check("ccreatechildbaseclassreflectafter", "Custom");
+        check("ccreatechildparentclassreflectafter", "Custom");
+        check("lremoveleafchildclass", "false");
+        check("lremoveleafchildbaseclass", "false");
+        check("lremoveleafchildparentclass", "false");
+        check("lremoveleafchildclasslibrary", "false");
+        check("lleafchildclassreadonly", "true");
+        check("lleafchildbaseclassreadonly", "true");
+        check("lleafchildparentclassreadonly", "true");
+        check("cleafchildclassafter", "SaveButton");
+        check("cleafchildbaseclassafter", "Custom");
+        check("cleafchildparentclassafter", "Custom");
+        check("cleafchildclassreflectafter", "SaveButton");
+        check("cleafchildbaseclassreflectafter", "Custom");
+        check("cleafchildparentclassreflectafter", "Custom");
+        check("ccreateownercaption", "MainForm");
+        check("cleafownercaption", "MainForm");
+        check("ccreatesavedcaption", "MainForm-Saved");
+        check("cleafsavedcaption", "MainForm-Saved");
+        check("ccreatecaptionaftersave", "MainForm-Saved");
+        check("cleafcaptionaftersave", "MainForm-Saved");
+        check("ldictset", "true");
+        check("ndictcompare", "129");
+
+        const auto create_child_class_library_after = state.globals.find("xcreatechildclasslibraryafter");
+        expect(create_child_class_library_after != state.globals.end() &&
+                   create_child_class_library_after->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "inherited external-parent object-block derived-startup child identity should leave the CREATEOBJECT child ClassLibrary empty after failed mutation");
+
+        const auto create_child_class_library_reflect_after = state.globals.find("xcreatechildclasslibraryreflectafter");
+        expect(create_child_class_library_reflect_after != state.globals.end() &&
+                   create_child_class_library_reflect_after->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "inherited external-parent object-block derived-startup child identity should leave the CREATEOBJECT child ClassLibrary empty through GETPEM() after failed mutation");
+
+        const auto leaf_child_class_library_after = state.globals.find("xleafchildclasslibraryafter");
+        expect(leaf_child_class_library_after != state.globals.end() &&
+                   leaf_child_class_library_after->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "inherited external-parent object-block derived-startup child identity should leave the leaf child ClassLibrary empty after rejected mutation");
+
+        const auto leaf_child_class_library_reflect_after = state.globals.find("xleafchildclasslibraryreflectafter");
+        expect(leaf_child_class_library_reflect_after != state.globals.end() &&
+                   leaf_child_class_library_reflect_after->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "inherited external-parent object-block derived-startup child identity should leave the leaf child ClassLibrary empty through GETPEM() after rejected mutation");
+
+        expect(state.ole_objects.size() == 5U,
+               "inherited external-parent object-block derived-startup child identity should register CREATEOBJECT parent/child, NEWOBJECT parent/child, and COM objects");
+        if (state.ole_objects.size() == 5U)
+        {
+            const auto &create_parent = state.ole_objects[0];
+            const auto &create_child = state.ole_objects[1];
+            const auto &leaf_parent = state.ole_objects[2];
+            const auto &leaf_child = state.ole_objects[3];
+            expect(create_parent.prog_id == "ChildForm",
+                   "inherited external-parent object-block derived-startup child identity should preserve CREATEOBJECT parent identity");
+            expect(create_child.prog_id == "SaveButton",
+                   "inherited external-parent object-block derived-startup child identity should preserve CREATEOBJECT child identity");
+            expect(create_child.base_class_name == "Custom",
+                   "inherited external-parent object-block derived-startup child identity should preserve the CREATEOBJECT child builtin base");
+            expect(create_child.source == main_path.string(),
+                   "inherited external-parent object-block derived-startup child identity should preserve CREATEOBJECT child source identity");
+            expect(create_child.class_library.empty(),
+                   "inherited external-parent object-block derived-startup child identity should preserve empty CREATEOBJECT child ClassLibrary semantics");
+            expect(create_child.class_hierarchy.size() == 3U,
+                   "inherited external-parent object-block derived-startup child identity should preserve CREATEOBJECT child class hierarchy");
+            expect(!create_child.properties.contains("class"),
+                   "inherited external-parent object-block derived-startup child identity should not materialize a CREATEOBJECT child Class shadow");
+            expect(!create_child.properties.contains("baseclass"),
+                   "inherited external-parent object-block derived-startup child identity should not materialize a CREATEOBJECT child BaseClass shadow");
+            expect(!create_child.properties.contains("parentclass"),
+                   "inherited external-parent object-block derived-startup child identity should not materialize a CREATEOBJECT child ParentClass shadow");
+            expect(!create_child.properties.contains("classlibrary"),
+                   "inherited external-parent object-block derived-startup child identity should not materialize a CREATEOBJECT child ClassLibrary shadow");
+            expect(leaf_parent.prog_id == "LeafForm",
+                   "inherited external-parent object-block derived-startup child identity should preserve NEWOBJECT leaf identity");
+            expect(leaf_child.prog_id == "SaveButton",
+                   "inherited external-parent object-block derived-startup child identity should preserve leaf child identity");
+            expect(leaf_child.base_class_name == "Custom",
+                   "inherited external-parent object-block derived-startup child identity should preserve the leaf child builtin base");
+            expect(leaf_child.source == main_path.string(),
+                   "inherited external-parent object-block derived-startup child identity should preserve leaf child source identity");
+            expect(leaf_child.class_library.empty(),
+                   "inherited external-parent object-block derived-startup child identity should preserve empty leaf child ClassLibrary semantics");
+            expect(leaf_child.class_hierarchy.size() == 3U,
+                   "inherited external-parent object-block derived-startup child identity should preserve leaf child class hierarchy");
+            expect(!leaf_child.properties.contains("class"),
+                   "inherited external-parent object-block derived-startup child identity should not materialize a leaf child Class shadow");
+            expect(!leaf_child.properties.contains("baseclass"),
+                   "inherited external-parent object-block derived-startup child identity should not materialize a leaf child BaseClass shadow");
+            expect(!leaf_child.properties.contains("parentclass"),
+                   "inherited external-parent object-block derived-startup child identity should not materialize a leaf child ParentClass shadow");
+            expect(!leaf_child.properties.contains("classlibrary"),
+                   "inherited external-parent object-block derived-startup child identity should not materialize a leaf child ClassLibrary shadow");
+            expect(state.ole_objects[4].prog_id == "Scripting.Dictionary",
+                   "COM behavior should remain stable while inherited external-parent object-block derived-startup child identity lands");
+        }
+
+        const bool has_save_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   event.detail == "ParentForm.Save";
+        });
+        expect(has_save_invoke_event,
+               "inherited external-parent object-block derived-startup child identity should keep child owner dispatch usable after rejected mutations");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_inherited_external_parent_object_block_derived_startup_child_preserves_external_base_provenance()
     {
         namespace fs = std::filesystem;
@@ -33162,6 +33395,7 @@ int main()
     test_inherited_external_parent_declarative_derived_startup_external_base_child_identity_metadata_resists_mutation();
     test_inherited_external_parent_declarative_derived_startup_external_base_dotted_access_resolves_live_child_chain();
     test_inherited_external_parent_object_block_child_materializes_when_class_exists_only_in_derived_startup_prg();
+    test_inherited_external_parent_object_block_derived_startup_child_identity_metadata_resists_mutation();
     test_inherited_external_parent_object_block_derived_startup_child_preserves_external_base_provenance();
     test_inherited_external_parent_object_block_derived_startup_external_base_child_identity_metadata_resists_mutation();
     test_inherited_external_parent_object_block_derived_startup_external_base_dotted_access_resolves_live_child_chain();
