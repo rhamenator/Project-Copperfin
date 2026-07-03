@@ -4940,6 +4940,144 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_same_prg_child_parent_reflects_through_getpem_and_pemstatus()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_child_parent_reflection";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_child_parent_reflection.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('DemoForm')\n"
+            "oParentRef = GETPEM(oCreate.cmdSave, 'Parent')\n"
+            "lChildHasParent = PEMSTATUS(oCreate.cmdSave, 'Parent', 1)\n"
+            "cParentCaption = oParentRef.Caption\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 35)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS DemoForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS Custom\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native child Parent reflection script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lchildhasparent", "true");
+        check("cparentcaption", "MainForm");
+        check("ldictset", "true");
+        check("ndictcompare", "35");
+
+        expect(state.ole_objects.size() == 3U,
+               "native child Parent reflection should register parent, child, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            expect(state.ole_objects[0].prog_id == "DemoForm",
+                   "native child Parent reflection should preserve form identity");
+            expect(state.ole_objects[1].prog_id == "SaveButton",
+                   "native child Parent reflection should preserve child identity");
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while native child Parent reflection lands");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_external_base_child_parent_reflects_through_getpem_and_pemstatus()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_external_prg_child_parent_reflection";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path library_path = temp_root / "widgetlib.prg";
+        write_text(
+            library_path,
+            "DEFINE CLASS ParentForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS Custom\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "external_child_parent_reflection.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildForm')\n"
+            "oParentRef = GETPEM(oCreate.cmdSave, 'Parent')\n"
+            "lChildHasParent = PEMSTATUS(oCreate.cmdSave, 'Parent', 1)\n"
+            "cParentCaption = oParentRef.Caption\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 36)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildForm AS ParentForm OF widgetlib.prg\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("external child Parent reflection script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lchildhasparent", "true");
+        check("cparentcaption", "MainForm");
+        check("ldictset", "true");
+        check("ndictcompare", "36");
+
+        expect(state.ole_objects.size() == 3U,
+               "external child Parent reflection should register parent, child, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            expect(state.ole_objects[0].prog_id == "ChildForm",
+                   "external child Parent reflection should preserve form identity");
+            expect(state.ole_objects[1].prog_id == "SaveButton",
+                   "external child Parent reflection should preserve child identity");
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while external child Parent reflection lands");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_inherited_declarative_children_from_external_prg_bases_resolve_against_defining_library()
     {
         namespace fs = std::filesystem;
@@ -7262,6 +7400,8 @@ int main()
     test_external_prg_identity_metadata_reads_through_ordinary_properties();
     test_same_prg_native_parentclass_reads_through_ordinary_properties();
     test_external_prg_parentclass_reads_through_ordinary_properties();
+    test_same_prg_child_parent_reflects_through_getpem_and_pemstatus();
+    test_external_base_child_parent_reflects_through_getpem_and_pemstatus();
     test_inherited_declarative_children_from_external_prg_bases_resolve_against_defining_library();
     test_inherited_external_prg_base_methods_resolve_addobject_children_against_defining_library();
     test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow();
