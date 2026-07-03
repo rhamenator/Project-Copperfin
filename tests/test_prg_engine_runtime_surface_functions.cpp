@@ -2621,6 +2621,178 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_release_recursively_destroys_external_base_standalone_object_subtree_and_invalidates_released_chain()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_release_external_base_standalone_subtree";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path root_library_path = temp_root / "rootbuttons.prg";
+        write_text(
+            root_library_path,
+            "DEFINE CLASS RootButton AS Custom\n"
+            "ENDDEFINE\n");
+
+        const fs::path button_library_path = temp_root / "buttons.prg";
+        write_text(
+            button_library_path,
+            "DEFINE CLASS ParentButton AS RootButton OF rootbuttons.prg\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "native_release_external_base_standalone_subtree.prg";
+        write_text(
+            main_path,
+            "cDestroyLog = ''\n"
+            "cGrandchildParentCaptionDuringDestroy = ''\n"
+            "nChildDestroyCount = 0\n"
+            "nGrandchildDestroyCount = 0\n"
+            "oWidget = CREATEOBJECT('SaveButton')\n"
+            "oGrandchild = oWidget.lblBadge\n"
+            "cChildClassBeforeRelease = oWidget.Class\n"
+            "cChildBaseClassBeforeRelease = oWidget.BaseClass\n"
+            "cChildParentClassBeforeRelease = oWidget.ParentClass\n"
+            "cChildClassLibraryBeforeRelease = oWidget.ClassLibrary\n"
+            "nChildClassCountBeforeRelease = ACLASS(aChildClass, oWidget)\n"
+            "cChildClass1BeforeRelease = aChildClass[1]\n"
+            "cChildClass2BeforeRelease = aChildClass[2]\n"
+            "cChildClass3BeforeRelease = aChildClass[3]\n"
+            "cChildClass4BeforeRelease = aChildClass[4]\n"
+            "cChildClass5BeforeRelease = aChildClass[5]\n"
+            "cChildCaptionBeforeRelease = oWidget.Caption\n"
+            "cGrandchildCaptionBeforeRelease = oGrandchild.Caption\n"
+            "lChildHasClassLibraryBeforeRelease = PEMSTATUS(oWidget, 'ClassLibrary', 1)\n"
+            "lReleased = oWidget.Release()\n"
+            "cDestroyLogAfter = cDestroyLog\n"
+            "cGrandchildParentCaptionAfter = cGrandchildParentCaptionDuringDestroy\n"
+            "nChildDestroyCountAfter = nChildDestroyCount\n"
+            "nGrandchildDestroyCountAfter = nGrandchildDestroyCount\n"
+            "lChildHasCaptionAfterRelease = PEMSTATUS(oWidget, 'Caption', 1)\n"
+            "xChildCaptionAfterRelease = GETPEM(oWidget, 'Caption')\n"
+            "lChildHasClassLibraryAfterRelease = PEMSTATUS(oWidget, 'ClassLibrary', 1)\n"
+            "xChildClassLibraryAfterRelease = GETPEM(oWidget, 'ClassLibrary')\n"
+            "lGrandchildHasParentAfterRelease = PEMSTATUS(oGrandchild, 'Parent', 1)\n"
+            "xGrandchildParentAfterRelease = GETPEM(oGrandchild, 'Parent')\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 123)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS BadgeLabel AS Custom\n"
+            "    Caption = 'Badge'\n"
+            "    PROCEDURE Destroy\n"
+            "        cDestroyLog = cDestroyLog + 'badge>'\n"
+            "        cGrandchildParentCaptionDuringDestroy = PARENT.Caption\n"
+            "        nGrandchildDestroyCount = nGrandchildDestroyCount + 1\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS ParentButton OF buttons.prg\n"
+            "    Caption = 'Save'\n"
+            "    OBJECT lblBadge AS BadgeLabel\n"
+            "        Caption = 'Badge'\n"
+            "    ENDOBJECT\n"
+            "    PROCEDURE Destroy\n"
+            "        cDestroyLog = cDestroyLog + 'child>'\n"
+            "        nChildDestroyCount = nChildDestroyCount + 1\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Release external-base standalone subtree script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cchildclassbeforerelease", "SaveButton");
+        check("cchildbaseclassbeforerelease", "ParentButton");
+        check("cchildparentclassbeforerelease", "ParentButton");
+        check("cchildclasslibrarybeforerelease", button_library_path.string());
+        check("nchildclasscountbeforerelease", "5");
+        check("cchildclass1beforerelease", "SAVEBUTTON");
+        check("cchildclass2beforerelease", "PARENTBUTTON");
+        check("cchildclass3beforerelease", "ROOTBUTTON");
+        check("cchildclass4beforerelease", "CUSTOM");
+        check("cchildclass5beforerelease", "OBJECT");
+        check("cchildcaptionbeforerelease", "Save");
+        check("cgrandchildcaptionbeforerelease", "Badge");
+        check("lchildhasclasslibrarybeforerelease", "true");
+        check("lreleased", "true");
+        check("cdestroylogafter", "badge>child>");
+        check("cgrandchildparentcaptionafter", "Save");
+        check("nchilddestroycountafter", "1");
+        check("ngrandchilddestroycountafter", "1");
+        check("lchildhascaptionafterrelease", "false");
+        check("lchildhasclasslibraryafterrelease", "false");
+        check("lgrandchildhasparentafterrelease", "false");
+        check("ldictset", "true");
+        check("ndictcompare", "123");
+
+        const auto child_caption_after_release = state.globals.find("xchildcaptionafterrelease");
+        expect(child_caption_after_release != state.globals.end() &&
+                   child_caption_after_release->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "native Release external-base standalone subtree should invalidate GETPEM() on the released object");
+
+        const auto child_class_library_after_release = state.globals.find("xchildclasslibraryafterrelease");
+        expect(child_class_library_after_release != state.globals.end() &&
+                   child_class_library_after_release->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "native Release external-base standalone subtree should invalidate GETPEM() on the released object's ClassLibrary");
+
+        const auto grandchild_parent_after_release = state.globals.find("xgrandchildparentafterrelease");
+        expect(grandchild_parent_after_release != state.globals.end() &&
+                   grandchild_parent_after_release->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "native Release external-base standalone subtree should invalidate GETPEM() on the released grandchild's Parent");
+
+        expect(state.ole_objects.size() == 1U,
+               "native Release external-base standalone subtree should leave only the COM object registered after release");
+        if (state.ole_objects.size() == 1U)
+        {
+            expect(state.ole_objects[0].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while native external-base standalone Release lands");
+        }
+
+        const bool has_grandchild_destroy_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.destroy" &&
+                   event.detail == "BadgeLabel.Destroy";
+        });
+        expect(has_grandchild_destroy_event,
+               "native Release external-base standalone subtree should dispatch the grandchild Destroy method");
+
+        const bool has_child_destroy_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.destroy" &&
+                   event.detail == "SaveButton.Destroy";
+        });
+        expect(has_child_destroy_event,
+               "native Release external-base standalone subtree should dispatch the released object's Destroy method");
+
+        const bool has_release_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.release" &&
+                   event.detail == "SaveButton";
+        });
+        expect(has_release_event,
+               "native Release external-base standalone subtree should emit a release event");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_release_recursively_destroys_contained_children_and_invalidates_owner_chain()
     {
         namespace fs = std::filesystem;
@@ -19885,6 +20057,7 @@ int main()
     test_dotted_native_child_assignments_traverse_contained_objects();
     test_native_removeobject_detaches_child_and_clears_parent_reference();
     test_native_release_invokes_destroy_and_invalidates_standalone_object();
+    test_native_release_recursively_destroys_external_base_standalone_object_subtree_and_invalidates_released_chain();
     test_native_release_recursively_destroys_contained_children_and_invalidates_owner_chain();
     test_native_release_detaches_contained_child_while_owner_and_sibling_remain_alive();
     test_native_owner_release_recursively_destroys_same_prg_object_block_child_subtree_and_invalidates_owner_chain();
