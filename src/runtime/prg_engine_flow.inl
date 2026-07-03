@@ -237,7 +237,7 @@
 
         struct TryClauseTargets
         {
-            std::optional<std::size_t> catch_statement_index;
+            std::vector<std::size_t> catch_statement_indices;
             std::optional<std::size_t> finally_statement_index;
             std::optional<std::size_t> endtry_statement_index;
         };
@@ -273,9 +273,9 @@
                 {
                     continue;
                 }
-                if (kind == StatementKind::catch_statement && !targets.catch_statement_index.has_value())
+                if (kind == StatementKind::catch_statement)
                 {
-                    targets.catch_statement_index = index;
+                    targets.catch_statement_indices.push_back(index);
                 }
                 else if (kind == StatementKind::finally_statement && !targets.finally_statement_index.has_value())
                 {
@@ -353,42 +353,79 @@
 
         bool dispatch_try_handler(Frame &frame, const Statement &statement)
         {
-            for (auto iterator = frame.tries.rbegin(); iterator != frame.tries.rend(); ++iterator)
+            for (std::size_t try_index = frame.tries.size(); try_index > 0U; --try_index)
             {
-                TryState &active_try = *iterator;
+                TryState &active_try = frame.tries[try_index - 1U];
                 if (active_try.handling_error)
                 {
                     continue;
                 }
 
-                active_try.handling_error = true;
-                active_try.entered_catch = false;
-                active_try.entered_finally = false;
-                if (!active_try.catch_variable.empty())
+                std::optional<PrgValue> caught_exception_reference;
+                const auto ensure_caught_exception_reference = [&]() -> const PrgValue &
                 {
-                    assign_variable(frame, active_try.catch_variable, materialize_catch_exception_object());
-                }
+                    if (!caught_exception_reference.has_value())
+                    {
+                        caught_exception_reference = materialize_catch_exception_object();
+                    }
+                    return *caught_exception_reference;
+                };
 
-                if (active_try.catch_statement_index.has_value())
+                for (const std::size_t catch_statement_index : active_try.catch_statement_indices)
                 {
-                    frame.pc = *active_try.catch_statement_index + 1U;
+                    if (frame.routine == nullptr || catch_statement_index >= frame.routine->statements.size())
+                    {
+                        continue;
+                    }
+
+                    const Statement &catch_statement = frame.routine->statements[catch_statement_index];
+                    const std::string catch_variable = trim_copy(catch_statement.identifier);
+                    if (!catch_variable.empty())
+                    {
+                        assign_variable(frame, catch_variable, ensure_caught_exception_reference());
+                    }
+
+                    bool predicate_matches = true;
+                    if (!catch_statement.secondary_expression.empty())
+                    {
+                        predicate_matches = value_as_bool(
+                            evaluate_expression(catch_statement.secondary_expression, frame));
+                    }
+
+                    if (!predicate_matches)
+                    {
+                        if (!catch_variable.empty())
+                        {
+                            assign_variable(frame, catch_variable, make_empty_value());
+                        }
+                        continue;
+                    }
+
+                    active_try.handling_error = true;
                     active_try.entered_catch = true;
-                }
-                else if (active_try.finally_statement_index.has_value())
-                {
-                    frame.pc = *active_try.finally_statement_index + 1U;
-                    active_try.entered_finally = true;
-                }
-                else
-                {
-                    frame.pc = active_try.endtry_statement_index + 1U;
-                    frame.tries.erase(std::next(iterator).base());
+                    active_try.entered_finally = false;
+                    frame.pc = catch_statement_index + 1U;
+
+                    events.push_back({.category = "runtime.try_handler",
+                                      .detail = statement.text,
+                                      .location = statement.location});
+                    return true;
                 }
 
-                events.push_back({.category = "runtime.try_handler",
-                                  .detail = statement.text,
-                                  .location = statement.location});
-                return true;
+                if (active_try.finally_statement_index.has_value())
+                {
+                    active_try.handling_error = true;
+                    active_try.entered_catch = false;
+                    active_try.entered_finally = true;
+                    frame.pc = *active_try.finally_statement_index + 1U;
+
+                    events.push_back({.category = "runtime.try_handler",
+                                      .detail = statement.text,
+                                      .location = statement.location});
+                    return true;
+                }
+
+                frame.tries.erase(frame.tries.begin() + static_cast<std::ptrdiff_t>(try_index - 1U));
             }
 
             return false;

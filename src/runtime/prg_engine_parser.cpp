@@ -798,8 +798,19 @@ Program parse_program(const std::string& path) {
             statement.kind = StatementKind::try_statement;
         } else if (starts_with_insensitive(line, "CATCH")) {
             statement.kind = StatementKind::catch_statement;
-            statement.identifier = trim_copy(line.substr(5U));
-            if (starts_with_insensitive(statement.identifier, "TO ")) {
+            const std::string catch_tail = trim_copy(line.substr(5U));
+            const std::size_t when_position = find_keyword_top_level(catch_tail, "WHEN");
+            const std::string catch_head = trim_copy(
+                when_position == std::string::npos
+                    ? catch_tail
+                    : catch_tail.substr(0U, when_position));
+            if (when_position != std::string::npos)
+            {
+                statement.secondary_expression = trim_copy(catch_tail.substr(when_position + 4U));
+            }
+            statement.identifier = catch_head;
+            if (starts_with_insensitive(statement.identifier, "TO "))
+            {
                 statement.identifier = trim_copy(statement.identifier.substr(3U));
             }
         } else if (upper == "FINALLY") {

@@ -2037,37 +2037,31 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
-                std::string catch_variable;
-                if (targets.catch_statement_index.has_value())
-                {
-                    catch_variable = normalize_identifier(frame.routine->statements[*targets.catch_statement_index].identifier);
-                }
                 frame.tries.push_back({.try_statement_index = frame.pc - 1U,
-                                       .catch_statement_index = targets.catch_statement_index,
+                                       .catch_statement_indices = targets.catch_statement_indices,
                                        .finally_statement_index = targets.finally_statement_index,
                                        .endtry_statement_index = *targets.endtry_statement_index,
-                                       .catch_variable = catch_variable,
                                        .handling_error = false,
                                        .entered_catch = false,
                                        .entered_finally = false});
                 return {};
             }
             case StatementKind::catch_statement:
-                if (!frame.tries.empty() && frame.tries.back().catch_statement_index == (frame.pc - 1U))
+                if (!frame.tries.empty() &&
+                    std::find(frame.tries.back().catch_statement_indices.begin(),
+                              frame.tries.back().catch_statement_indices.end(),
+                              frame.pc - 1U) != frame.tries.back().catch_statement_indices.end())
                 {
                     const TryState active_try = frame.tries.back();
-                    if (!active_try.handling_error)
+                    if (active_try.finally_statement_index.has_value())
                     {
-                        if (active_try.finally_statement_index.has_value())
-                        {
-                            frame.tries.back().entered_finally = true;
-                            frame.pc = *active_try.finally_statement_index + 1U;
-                        }
-                        else
-                        {
-                            frame.tries.pop_back();
-                            frame.pc = active_try.endtry_statement_index + 1U;
-                        }
+                        frame.tries.back().entered_finally = true;
+                        frame.pc = *active_try.finally_statement_index + 1U;
+                    }
+                    else
+                    {
+                        frame.tries.pop_back();
+                        frame.pc = active_try.endtry_statement_index + 1U;
                     }
                 }
                 return {};

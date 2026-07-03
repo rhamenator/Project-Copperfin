@@ -170,6 +170,8 @@ void test_catch_to_binds_exception_object_with_error_metadata();
 void test_throw_is_catchable_and_preserves_exception_uservalue();
 void test_bare_throw_rethrows_active_exception_object();
 void test_bare_throw_without_active_exception_creates_user_thrown_default();
+void test_catch_when_false_falls_through_to_later_clause();
+void test_catch_to_when_false_resets_variable_and_falls_to_outer_handler();
 void test_try_finally_runs_without_catch_on_success();
 void test_file_operation_runtime_errors_localize();
 void test_residual_dispatch_runtime_errors_localize();

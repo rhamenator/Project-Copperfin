@@ -71,6 +71,8 @@ int main() {
     test_throw_is_catchable_and_preserves_exception_uservalue();
     test_bare_throw_rethrows_active_exception_object();
     test_bare_throw_without_active_exception_creates_user_thrown_default();
+    test_catch_when_false_falls_through_to_later_clause();
+    test_catch_to_when_false_resets_variable_and_falls_to_outer_handler();
     test_try_finally_runs_without_catch_on_success();
     test_do_with_by_reference_updates_caller_variable();
     test_print_command_emits_event();

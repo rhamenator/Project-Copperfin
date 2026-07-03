@@ -134,10 +134,9 @@ namespace copperfin::runtime
         struct TryState
         {
             std::size_t try_statement_index = 0;
-            std::optional<std::size_t> catch_statement_index;
+            std::vector<std::size_t> catch_statement_indices;
             std::optional<std::size_t> finally_statement_index;
             std::size_t endtry_statement_index = 0;
-            std::string catch_variable;
             bool handling_error = false;
             bool entered_catch = false;
             bool entered_finally = false;
