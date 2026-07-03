@@ -180,7 +180,7 @@ bool is_scripting_dictionary_object(const RuntimeOleObjectState& runtime_object)
     return normalize_identifier(runtime_object.prog_id) == "scripting.dictionary";
 }
 
-std::optional<PrgValue> get_native_identity_metadata(
+std::optional<PrgValue> get_native_identity_reflection_metadata(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
     if (runtime_object.class_hierarchy.empty()) {
@@ -190,6 +190,9 @@ std::optional<PrgValue> get_native_identity_metadata(
         return make_string_value(runtime_object.prog_id);
     }
     if (normalized_member_name == "baseclass" && !trim_copy(runtime_object.base_class_name).empty()) {
+        return make_string_value(runtime_object.base_class_name);
+    }
+    if (normalized_member_name == "parentclass" && !trim_copy(runtime_object.base_class_name).empty()) {
         return make_string_value(runtime_object.base_class_name);
     }
     if (normalized_member_name == "classlibrary" && !trim_copy(runtime_object.class_library).empty()) {
@@ -209,13 +212,13 @@ bool native_identity_member_name_matches(const RuntimeOleObjectState& runtime_ob
 
 std::vector<std::string> collect_native_identity_member_names(const RuntimeOleObjectState& runtime_object) {
     std::vector<std::string> members;
-    if (get_native_identity_metadata(runtime_object, "class").has_value()) {
+    if (get_native_identity_reflection_metadata(runtime_object, "class").has_value()) {
         members.push_back("class");
     }
-    if (get_native_identity_metadata(runtime_object, "baseclass").has_value()) {
+    if (get_native_identity_reflection_metadata(runtime_object, "baseclass").has_value()) {
         members.push_back("baseclass");
     }
-    if (get_native_identity_metadata(runtime_object, "classlibrary").has_value()) {
+    if (get_native_identity_reflection_metadata(runtime_object, "classlibrary").has_value()) {
         members.push_back("classlibrary");
     }
     return members;
@@ -508,7 +511,14 @@ bool is_native_identity_member_name(const RuntimeOleObjectState& runtime_object,
 
 std::optional<PrgValue> read_native_identity_metadata(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
-    return get_native_identity_metadata(runtime_object, normalized_member_name);
+    // Ordinary dotted reads intentionally trail reflection parity here; ParentClass stays reflection-only until #3287.
+    if (normalized_member_name != "class" &&
+        normalized_member_name != "baseclass" &&
+        normalized_member_name != "classlibrary")
+    {
+        return std::nullopt;
+    }
+    return get_native_identity_reflection_metadata(runtime_object, normalized_member_name);
 }
 
 std::optional<PrgValue> evaluate_runtime_surface_function(
@@ -696,7 +706,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             return make_boolean_value(false);
         }
         if (attribute == 1) {
-            const bool exists = get_native_identity_metadata(*runtime_object, member_name).has_value() ||
+            const bool exists = get_native_identity_reflection_metadata(*runtime_object, member_name).has_value() ||
                                 runtime_object->properties.contains(member_name) ||
                                 object_has_accessor_property(*runtime_object, member_name) ||
                                 object_has_member(runtime_object->methods, member_name) ||
@@ -708,7 +718,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         if (attribute == 5) {
             const bool readonly =
-                get_native_identity_metadata(*runtime_object, member_name).has_value() ||
+                get_native_identity_reflection_metadata(*runtime_object, member_name).has_value() ||
                 (is_scripting_dictionary_object(*runtime_object) && member_name == "count") ||
                 (object_has_accessor_property(*runtime_object, member_name) &&
                  !object_has_assigner_property(*runtime_object, member_name));
@@ -752,7 +762,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         if (runtime_object == nullptr || member_name.empty()) {
             return make_empty_value();
         }
-        if (const auto metadata_value = get_native_identity_metadata(*runtime_object, member_name);
+        if (const auto metadata_value = get_native_identity_reflection_metadata(*runtime_object, member_name);
             metadata_value.has_value()) {
             return *metadata_value;
         }
