@@ -5078,6 +5078,178 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_same_prg_child_parent_appears_in_amembers()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_child_parent_amembers";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_child_parent_amembers.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('DemoForm')\n"
+            "nMembersProps = AMEMBERS(aMembersProps, oCreate.cmdSave, 1)\n"
+            "nMembersUnion = AMEMBERS(aMembersUnion, oCreate.cmdSave, 3)\n"
+            "lChildHasParent = PEMSTATUS(oCreate.cmdSave, 'Parent', 1)\n"
+            "cProp1 = aMembersProps[1]\n"
+            "cProp2 = aMembersProps[2]\n"
+            "cProp3 = aMembersProps[3]\n"
+            "cProp4 = aMembersProps[4]\n"
+            "cProp5 = aMembersProps[5]\n"
+            "cUnion1 = aMembersUnion[1]\n"
+            "cUnion5 = aMembersUnion[5]\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 37)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS DemoForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS Custom\n"
+            "    Caption = 'Save'\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native child Parent AMEMBERS script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("nmembersprops", "5");
+        check("nmembersunion", "5");
+        check("lchildhasparent", "true");
+        check("cprop1", "BASECLASS");
+        check("cprop2", "CAPTION");
+        check("cprop3", "CLASS");
+        check("cprop4", "PARENT");
+        check("cprop5", "PARENTCLASS");
+        check("cunion1", "BASECLASS");
+        check("cunion5", "PARENTCLASS");
+        check("ldictset", "true");
+        check("ndictcompare", "37");
+
+        expect(state.ole_objects.size() == 3U,
+               "native child Parent AMEMBERS should register parent, child, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            expect(state.ole_objects[0].prog_id == "DemoForm",
+                   "native child Parent AMEMBERS should preserve form identity");
+            expect(state.ole_objects[1].prog_id == "SaveButton",
+                   "native child Parent AMEMBERS should preserve child identity");
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while native child Parent AMEMBERS lands");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_external_base_child_parent_appears_in_amembers()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_external_prg_child_parent_amembers";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path library_path = temp_root / "widgetlib.prg";
+        write_text(
+            library_path,
+            "DEFINE CLASS ParentForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS Custom\n"
+            "    Caption = 'Save'\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "external_child_parent_amembers.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildForm')\n"
+            "nMembersProps = AMEMBERS(aMembersProps, oCreate.cmdSave, 1)\n"
+            "nMembersUnion = AMEMBERS(aMembersUnion, oCreate.cmdSave, 3)\n"
+            "lChildHasParent = PEMSTATUS(oCreate.cmdSave, 'Parent', 1)\n"
+            "cProp1 = aMembersProps[1]\n"
+            "cProp2 = aMembersProps[2]\n"
+            "cProp3 = aMembersProps[3]\n"
+            "cProp4 = aMembersProps[4]\n"
+            "cProp5 = aMembersProps[5]\n"
+            "cProp6 = aMembersProps[6]\n"
+            "cUnion1 = aMembersUnion[1]\n"
+            "cUnion6 = aMembersUnion[6]\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 38)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildForm AS ParentForm OF widgetlib.prg\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("external child Parent AMEMBERS script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("nmembersprops", "6");
+        check("nmembersunion", "6");
+        check("lchildhasparent", "true");
+        check("cprop1", "BASECLASS");
+        check("cprop2", "CAPTION");
+        check("cprop3", "CLASS");
+        check("cprop4", "CLASSLIBRARY");
+        check("cprop5", "PARENT");
+        check("cprop6", "PARENTCLASS");
+        check("cunion1", "BASECLASS");
+        check("cunion6", "PARENTCLASS");
+        check("ldictset", "true");
+        check("ndictcompare", "38");
+
+        expect(state.ole_objects.size() == 3U,
+               "external child Parent AMEMBERS should register parent, child, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            expect(state.ole_objects[0].prog_id == "ChildForm",
+                   "external child Parent AMEMBERS should preserve form identity");
+            expect(state.ole_objects[1].prog_id == "SaveButton",
+                   "external child Parent AMEMBERS should preserve child identity");
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while external child Parent AMEMBERS lands");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_inherited_declarative_children_from_external_prg_bases_resolve_against_defining_library()
     {
         namespace fs = std::filesystem;
@@ -7402,6 +7574,8 @@ int main()
     test_external_prg_parentclass_reads_through_ordinary_properties();
     test_same_prg_child_parent_reflects_through_getpem_and_pemstatus();
     test_external_base_child_parent_reflects_through_getpem_and_pemstatus();
+    test_same_prg_child_parent_appears_in_amembers();
+    test_external_base_child_parent_appears_in_amembers();
     test_inherited_declarative_children_from_external_prg_bases_resolve_against_defining_library();
     test_inherited_external_prg_base_methods_resolve_addobject_children_against_defining_library();
     test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow();
