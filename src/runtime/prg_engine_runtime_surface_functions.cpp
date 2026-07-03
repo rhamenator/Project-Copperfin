@@ -221,6 +221,9 @@ std::vector<std::string> collect_native_identity_member_names(const RuntimeOleOb
     if (get_native_identity_reflection_metadata(runtime_object, "classlibrary").has_value()) {
         members.push_back("classlibrary");
     }
+    if (get_native_identity_reflection_metadata(runtime_object, "parentclass").has_value()) {
+        members.push_back("parentclass");
+    }
     return members;
 }
 

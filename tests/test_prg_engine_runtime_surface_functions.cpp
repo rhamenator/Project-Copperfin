@@ -3884,8 +3884,9 @@ namespace
             "cProp1 = aMembersProps[1]\n"
             "cProp2 = aMembersProps[2]\n"
             "cProp3 = aMembersProps[3]\n"
+            "cProp4 = aMembersProps[4]\n"
             "cUnion1 = aMembersUnion[1]\n"
-            "cUnion3 = aMembersUnion[3]\n"
+            "cUnion4 = aMembersUnion[4]\n"
             "RETURN\n"
             "DEFINE CLASS ParentWidget AS Custom\n"
             "    Caption = 'Parent'\n"
@@ -3913,13 +3914,14 @@ namespace
                    name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
         };
 
-        check("nmembersprops", "3");
-        check("nmembersunion", "3");
+        check("nmembersprops", "4");
+        check("nmembersunion", "4");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop3", "CLASS");
+        check("cprop4", "PARENTCLASS");
         check("cunion1", "BASECLASS");
-        check("cunion3", "CLASS");
+        check("cunion4", "PARENTCLASS");
 
         expect(state.ole_objects.size() == 1U,
                "native identity AMEMBERS should register one native object");
@@ -3960,8 +3962,9 @@ namespace
             "cProp2 = aMembersProps[2]\n"
             "cProp3 = aMembersProps[3]\n"
             "cProp4 = aMembersProps[4]\n"
+            "cProp5 = aMembersProps[5]\n"
             "cUnion1 = aMembersUnion[1]\n"
-            "cUnion4 = aMembersUnion[4]\n"
+            "cUnion5 = aMembersUnion[5]\n"
             "RETURN\n"
             "DEFINE CLASS ChildWidget AS ParentWidget OF widgetlib.prg\n"
             "ENDDEFINE\n");
@@ -3986,14 +3989,15 @@ namespace
                    name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
         };
 
-        check("nmembersprops", "4");
-        check("nmembersunion", "4");
+        check("nmembersprops", "5");
+        check("nmembersunion", "5");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop3", "CLASS");
         check("cprop4", "CLASSLIBRARY");
+        check("cprop5", "PARENTCLASS");
         check("cunion1", "BASECLASS");
-        check("cunion4", "CLASSLIBRARY");
+        check("cunion5", "PARENTCLASS");
         check("ldictset", "true");
         check("ndictcompare", "27");
 
@@ -6100,8 +6104,8 @@ namespace
         check("lhasstatus", "true");
         check("lcaptionreadonly", "false");
         check("lstatusreadonly", "true");
-        check("nmembersprops", "6");
-        check("nmembersunion", "9");
+        check("nmembersprops", "7");
+        check("nmembersunion", "10");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop4", "CLASS");
@@ -6206,8 +6210,8 @@ namespace
         check("lhasstatus", "true");
         check("lcaptionreadonly", "false");
         check("lstatusreadonly", "true");
-        check("nmembersprops", "8");
-        check("nmembersunion", "11");
+        check("nmembersprops", "9");
+        check("nmembersunion", "12");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop4", "CLASS");
