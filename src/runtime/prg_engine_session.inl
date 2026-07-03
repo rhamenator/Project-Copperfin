@@ -847,6 +847,41 @@
             return snapshot == nullptr ? last_error_compatibility : snapshot->compatibility;
         }
 
+        PrgValue materialize_catch_exception_object()
+        {
+            const AErrorCompatibilitySnapshot &compatibility = current_error_compatibility();
+            std::string detail = current_error_message();
+            if (!compatibility.sql_detail.empty())
+            {
+                detail = compatibility.sql_detail;
+            }
+            else if (!compatibility.ole_detail.empty())
+            {
+                detail = compatibility.ole_detail;
+            }
+
+            const int handle = next_ole_handle++;
+            RuntimeOleObjectState object_state{
+                .handle = handle,
+                .prog_id = "Exception",
+                .source = {},
+                .last_action = "catch",
+                .action_count = 1};
+            object_state.base_class_name = "Exception";
+            object_state.class_hierarchy = {"EXCEPTION", "OBJECT"};
+            object_state.properties["message"] = make_string_value(current_error_message());
+            object_state.properties["errorno"] = make_number_value(static_cast<double>(current_error_code()));
+            object_state.properties["lineno"] = make_number_value(static_cast<double>(current_fault_location().line));
+            object_state.properties["procedure"] = make_string_value(current_error_procedure());
+            object_state.properties["details"] = make_string_value(detail);
+            object_state.properties["linecontents"] = make_string_value(current_fault_statement());
+            object_state.properties["stacklevel"] = make_number_value(static_cast<double>(stack.size()));
+            object_state.properties["uservalue"] = make_empty_value();
+
+            auto [inserted, _] = ole_objects.emplace(handle, std::move(object_state));
+            return make_string_value("object:" + inserted->second.prog_id + "#" + std::to_string(inserted->second.handle));
+        }
+
         void record_sql_aerror_context(const std::string &detail,
                                        const std::string &state,
                                        int native_code,

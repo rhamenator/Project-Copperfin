@@ -632,7 +632,7 @@ void test_reprocess_contention_retries_and_mutation_lock_timeouts() {
         "    lReplaceBlocked = .F.\n"
         "CATCH TO err_text\n"
         "    lReplaceBlocked = .T.\n"
-        "    cReplaceError = err_text\n"
+        "    cReplaceError = err_text.Message\n"
         "ENDTRY\n"
         "SET REPROCESS TO 0\n"
         "lZeroConflict = RLOCK()\n"
@@ -732,7 +732,7 @@ void test_lock_retry_blocking_is_rejected_inside_critical_section() {
         "    lPolicyBlocked = .F.\n"
         "CATCH TO err_text\n"
         "    lPolicyBlocked = .T.\n"
-        "    cPolicyError = err_text\n"
+        "    cPolicyError = err_text.Message\n"
         "ENDTRY\n"
         "EXIT CRITICAL shared\n"
         "RETURN\n");

@@ -475,7 +475,7 @@ void test_critical_section_blocking_policy_rejects_await_inside_section() {
         "    lAwaitBlocked = .F.\n"
         "CATCH TO err_text\n"
         "    lAwaitBlocked = .T.\n"
-        "    cAwaitError = err_text\n"
+        "    cAwaitError = err_text.Message\n"
         "ENDTRY\n"
         "EXIT CRITICAL shared\n"
         "AWAIT nTask TO lDoneAfterExit\n"
@@ -528,7 +528,7 @@ void test_critical_section_blocking_policy_rejects_sleep_inside_section() {
         "    lSleepBlocked = .F.\n"
         "CATCH TO err_text\n"
         "    lSleepBlocked = .T.\n"
-        "    cSleepError = err_text\n"
+        "    cSleepError = err_text.Message\n"
         "ENDTRY\n"
         "EXIT CRITICAL shared\n"
         "RETURN\n");

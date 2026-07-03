@@ -366,7 +366,7 @@
                 active_try.entered_finally = false;
                 if (!active_try.catch_variable.empty())
                 {
-                    assign_variable(frame, active_try.catch_variable, make_string_value(last_error_message));
+                    assign_variable(frame, active_try.catch_variable, materialize_catch_exception_object());
                 }
 
                 if (active_try.catch_statement_index.has_value())

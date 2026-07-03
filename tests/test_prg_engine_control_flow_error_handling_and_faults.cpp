@@ -721,7 +721,7 @@ void test_ole_method_fault_is_catchable_and_preserves_object_state() {
         "TRY\n"
         "  oDict.NoSuchMethod(7)\n"
         "CATCH TO err_text\n"
-        "  cCaught = err_text\n"
+        "  cCaught = err_text.Message\n"
         "FINALLY\n"
         "  finally_hit = 1\n"
         "ENDTRY\n"
@@ -991,7 +991,7 @@ void test_try_catch_finally_handles_runtime_errors() {
         "TRY\n"
         "  DO missing_routine\n"
         "CATCH TO err_text\n"
-        "  caught = err_text\n"
+        "  caught = err_text.Message\n"
         "FINALLY\n"
         "  finally_hit = 1\n"
         "ENDTRY\n"
@@ -1023,6 +1023,162 @@ void test_try_catch_finally_handles_runtime_errors() {
             return event.category == "runtime.try_handler";
         });
     expect(has_try_handler_event, "runtime should emit a TRY handler event when a TRY block catches an error");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_catch_to_binds_exception_object_with_error_metadata() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_catch_exception_object";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "catch_exception_object.prg";
+    write_text(
+        main_path,
+        "TRY\n"
+        "  DO causefault\n"
+        "CATCH TO oErr\n"
+        "  cCatchType = TYPE('oErr')\n"
+        "  cCatchClass = oErr.Class\n"
+        "  cCatchBaseClass = oErr.BaseClass\n"
+        "  cCatchMessage = oErr.Message\n"
+        "  nCatchErrorNo = oErr.ErrorNo\n"
+        "  nCatchLineNo = oErr.LineNo\n"
+        "  cCatchProcedure = oErr.Procedure\n"
+        "  cCatchDetails = oErr.Details\n"
+        "  cCatchLineContents = oErr.LineContents\n"
+        "  nCatchStackLevel = oErr.StackLevel\n"
+        "  lCatchHasMessage = PEMSTATUS(oErr, 'Message', 1)\n"
+        "  lCatchHasBaseClass = PEMSTATUS(oErr, 'BaseClass', 1)\n"
+        "  lCatchSameObject = COMPOBJ(oErr, oErr)\n"
+        "  nErrRows = AERROR(aErr)\n"
+        "  nErrCode = aErr[1,1]\n"
+        "  cErrMsg = aErr[1,2]\n"
+        "  nErrLine = aErr[1,5]\n"
+        "  cErrProc = aErr[1,6]\n"
+        "  nFnCode = ERROR()\n"
+        "  cFnMsg = MESSAGE()\n"
+        "  nFnLine = LINENO()\n"
+        "  cFnProg = PROGRAM()\n"
+        "ENDTRY\n"
+        "RETURN\n"
+        "PROCEDURE causefault\n"
+        "  fault_val = LOG(-1)\n"
+        "  RETURN\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "CATCH TO Exception-object script should complete: " + state.message);
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto it = state.globals.find(name);
+        if (it == state.globals.end()) {
+            expect(false, name + " should be captured");
+            return;
+        }
+        expect(copperfin::runtime::format_value(it->second) == expected,
+               name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+    };
+
+    check("ccatchtype", "O");
+    check("ccatchclass", "Exception");
+    check("ccatchbaseclass", "Exception");
+    check("ccatchprocedure", "causefault");
+    check("ccatchlinecontents", "fault_val = LOG(-1)");
+    check("lcatchhasmessage", "true");
+    check("lcatchhasbaseclass", "true");
+    check("lcatchsameobject", "true");
+    check("nerrrows", "1");
+
+    const auto catch_message = state.globals.find("ccatchmessage");
+    const auto catch_error_no = state.globals.find("ncatcherrorno");
+    const auto catch_line_no = state.globals.find("ncatchlineno");
+    const auto catch_details = state.globals.find("ccatchdetails");
+    const auto catch_stack_level = state.globals.find("ncatchstacklevel");
+    const auto err_code = state.globals.find("nerrcode");
+    const auto err_msg = state.globals.find("cerrmsg");
+    const auto err_line = state.globals.find("nerrline");
+    const auto err_proc = state.globals.find("cerrproc");
+    const auto fn_code = state.globals.find("nfncode");
+    const auto fn_msg = state.globals.find("cfnmsg");
+    const auto fn_line = state.globals.find("nfnline");
+    const auto fn_prog = state.globals.find("cfnprog");
+
+    expect(catch_message != state.globals.end(), "caught Exception object should expose Message");
+    expect(catch_error_no != state.globals.end(), "caught Exception object should expose ErrorNo");
+    expect(catch_line_no != state.globals.end(), "caught Exception object should expose LineNo");
+    expect(catch_details != state.globals.end(), "caught Exception object should expose Details");
+    expect(catch_stack_level != state.globals.end(), "caught Exception object should expose StackLevel");
+    expect(err_code != state.globals.end(), "AERROR() should still expose error code");
+    expect(err_msg != state.globals.end(), "AERROR() should still expose error message");
+    expect(err_line != state.globals.end(), "AERROR() should still expose fault line");
+    expect(err_proc != state.globals.end(), "AERROR() should still expose procedure");
+    expect(fn_code != state.globals.end(), "ERROR() should still expose code");
+    expect(fn_msg != state.globals.end(), "MESSAGE() should still expose text");
+    expect(fn_line != state.globals.end(), "LINENO() should still expose fault line");
+    expect(fn_prog != state.globals.end(), "PROGRAM() should still expose procedure");
+
+    if (catch_message != state.globals.end() && err_msg != state.globals.end() && fn_msg != state.globals.end()) {
+        const std::string catch_msg = copperfin::runtime::format_value(catch_message->second);
+        expect(catch_msg == copperfin::runtime::format_value(err_msg->second),
+               "caught Exception Message should match AERROR()[1,2]");
+        expect(catch_msg == copperfin::runtime::format_value(fn_msg->second),
+               "caught Exception Message should match MESSAGE()");
+    }
+    if (catch_error_no != state.globals.end() && err_code != state.globals.end() && fn_code != state.globals.end()) {
+        const std::string catch_code = copperfin::runtime::format_value(catch_error_no->second);
+        expect(catch_code == copperfin::runtime::format_value(err_code->second),
+               "caught Exception ErrorNo should match AERROR()[1,1]");
+        expect(catch_code == copperfin::runtime::format_value(fn_code->second),
+               "caught Exception ErrorNo should match ERROR()");
+    }
+    if (catch_line_no != state.globals.end() && err_line != state.globals.end() && fn_line != state.globals.end()) {
+        const std::string catch_line = copperfin::runtime::format_value(catch_line_no->second);
+        expect(catch_line == copperfin::runtime::format_value(err_line->second),
+               "caught Exception LineNo should match AERROR()[1,5]");
+        expect(catch_line == copperfin::runtime::format_value(fn_line->second),
+               "caught Exception LineNo should match LINENO()");
+    }
+    if (err_proc != state.globals.end() && fn_prog != state.globals.end()) {
+        expect(copperfin::runtime::format_value(err_proc->second) ==
+                   copperfin::runtime::format_value(fn_prog->second),
+               "AERROR()[1,6] should continue matching PROGRAM()");
+    }
+    if (catch_details != state.globals.end()) {
+        expect(!copperfin::runtime::format_value(catch_details->second).empty(),
+               "caught Exception Details should not be empty");
+    }
+    if (catch_stack_level != state.globals.end()) {
+        expect(copperfin::runtime::format_value(catch_stack_level->second) == "1",
+               "caught Exception StackLevel should reflect the active catch frame depth for a single nested routine fault");
+    }
+
+    expect(state.ole_objects.size() == 1U,
+           "CATCH TO Exception-object script should materialize one caught Exception object");
+    if (state.ole_objects.size() == 1U) {
+        const auto& caught_object = state.ole_objects[0];
+        expect(caught_object.prog_id == "Exception",
+               "caught Exception object should preserve the builtin Exception class token");
+        expect(caught_object.source.empty(),
+               "caught Exception object should be synthetic rather than PRG-backed");
+        expect(caught_object.base_class_name == "Exception",
+               "caught Exception object should expose Exception as BaseClass");
+        expect(caught_object.class_library.empty(),
+               "caught Exception object should keep ClassLibrary empty");
+        expect(caught_object.class_hierarchy.size() == 2U,
+               "caught Exception object should expose Exception -> Object hierarchy");
+        if (caught_object.class_hierarchy.size() == 2U) {
+            expect(caught_object.class_hierarchy[0] == "EXCEPTION",
+                   "caught Exception object should store EXCEPTION first in the hierarchy");
+            expect(caught_object.class_hierarchy[1] == "OBJECT",
+                   "caught Exception object should store OBJECT second in the hierarchy");
+        }
+    }
 
     fs::remove_all(temp_root, ignored);
 }
@@ -1427,19 +1583,23 @@ void test_ole_invocation_and_property_read_runtime_errors_localize() {
         "oDict.Add('Alpha', 41)\n"
         "TRY\n"
         "  missingOle.NoSuchMethod()\n"
-        "CATCH TO cMissingMethod\n"
+        "CATCH TO oMissingMethod\n"
+        "  cMissingMethod = oMissingMethod.Message\n"
         "ENDTRY\n"
         "TRY\n"
         "  xMissingObjectProperty = missingOle.SomeProperty\n"
-        "CATCH TO cMissingProperty\n"
+        "CATCH TO oMissingProperty\n"
+        "  cMissingProperty = oMissingProperty.Message\n"
         "ENDTRY\n"
         "TRY\n"
         "  oDict.NoSuchMethod(7)\n"
-        "CATCH TO cMissingMemberMethod\n"
+        "CATCH TO oMissingMemberMethod\n"
+        "  cMissingMemberMethod = oMissingMemberMethod.Message\n"
         "ENDTRY\n"
         "TRY\n"
         "  xMissingMemberProperty = oDict.NoSuchProperty\n"
-        "CATCH TO cMissingMemberProperty\n"
+        "CATCH TO oMissingMemberProperty\n"
+        "  cMissingMemberProperty = oMissingMemberProperty.Message\n"
         "ENDTRY\n"
         "RETURN\n");
 

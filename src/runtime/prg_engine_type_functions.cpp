@@ -67,6 +67,11 @@ std::string vartype_code(const PrgValue& value) {
     if (value.kind == PrgValueKind::int64 || value.kind == PrgValueKind::uint64) {
         return "I";
     }
+    int object_handle = 0;
+    std::string object_prog_id;
+    if (parse_object_handle_reference(value, object_handle, object_prog_id)) {
+        return "O";
+    }
     return "C";
 }
 
