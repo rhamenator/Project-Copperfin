@@ -271,6 +271,104 @@
             return std::nullopt;
         }
 
+        struct ResolvedRuntimeObjectMemberPath
+        {
+            RuntimeOleObjectState *runtime_object = nullptr;
+            std::string remaining_member_path;
+        };
+
+        ResolvedRuntimeObjectMemberPath resolve_runtime_object_member_path(
+            const Frame &frame,
+            const std::string &base_name,
+            const std::string &member_path)
+        {
+            const PrgValue object_value = lookup_variable(frame, base_name);
+            auto object = resolve_ole_object(object_value);
+            if (!object.has_value())
+            {
+                return {};
+            }
+
+            RuntimeOleObjectState *current_object = *object;
+            std::vector<std::string> segments;
+            std::size_t start = 0U;
+            while (start <= member_path.size())
+            {
+                const std::size_t separator = member_path.find('.', start);
+                std::string segment = separator == std::string::npos
+                                          ? member_path.substr(start)
+                                          : member_path.substr(start, separator - start);
+                segment = trim_copy(segment);
+                if (!segment.empty())
+                {
+                    segments.push_back(segment);
+                }
+                if (separator == std::string::npos)
+                {
+                    break;
+                }
+                start = separator + 1U;
+            }
+
+            if (segments.empty())
+            {
+                return {.runtime_object = current_object, .remaining_member_path = member_path};
+            }
+
+            std::size_t consumed_segments = 0U;
+            const auto current_matches_parent_of_child = [&](const RuntimeOleObjectState &child_object) -> bool
+            {
+                const auto parent_reference = native_object_parent_reference(child_object);
+                if (!parent_reference.has_value())
+                {
+                    return false;
+                }
+
+                int parent_handle = 0;
+                std::string parent_prog_id;
+                return parse_object_handle_reference(*parent_reference, parent_handle, parent_prog_id) &&
+                       parent_handle == current_object->handle;
+            };
+
+            for (std::size_t index = 0U; index + 1U < segments.size(); ++index)
+            {
+                const std::string property_name = normalize_identifier(segments[index]);
+                const auto property = current_object->properties.find(property_name);
+                if (property == current_object->properties.end())
+                {
+                    break;
+                }
+
+                const auto nested_object = resolve_ole_object(property->second);
+                if (!nested_object.has_value())
+                {
+                    break;
+                }
+
+                RuntimeOleObjectState *next_object = *nested_object;
+                const bool parent_step = property_name == "parent";
+                if (!parent_step && !current_matches_parent_of_child(*next_object))
+                {
+                    break;
+                }
+
+                current_object = next_object;
+                consumed_segments = index + 1U;
+            }
+
+            std::string remaining_member_path;
+            for (std::size_t index = consumed_segments; index < segments.size(); ++index)
+            {
+                if (!remaining_member_path.empty())
+                {
+                    remaining_member_path += '.';
+                }
+                remaining_member_path += segments[index];
+            }
+
+            return {.runtime_object = current_object, .remaining_member_path = remaining_member_path};
+        }
+
         RuntimeOleObjectState *instantiate_native_class_object(
             const Frame &frame,
             const std::string &prog_id,

@@ -769,9 +769,8 @@ namespace copperfin::runtime
                                               1429);
                     throw std::runtime_error(message);
                 };
-                const PrgValue object_value = lookup_variable(frame, base_name);
-                auto object = resolve_ole_object(object_value);
-                if (!object.has_value())
+                const auto resolved_path = resolve_runtime_object_member_path(frame, base_name, member_path);
+                if (resolved_path.runtime_object == nullptr)
                 {
                     return raise_ole_fault(base_name + "." + member_path + "()",
                                            base_name,
@@ -780,13 +779,20 @@ namespace copperfin::runtime
                                                {{"targetIdentifier", base_name + "." + member_path}}));
                 }
 
-                RuntimeOleObjectState *runtime_object = *object;
+                RuntimeOleObjectState *runtime_object = resolved_path.runtime_object;
                 const auto make_runtime_object_reference = [](const RuntimeOleObjectState &object_state) -> PrgValue
                 {
                     return make_string_value("object:" + object_state.prog_id + "#" + std::to_string(object_state.handle));
                 };
+                const std::string effective_member_path =
+                    resolved_path.remaining_member_path.empty()
+                        ? member_path
+                        : resolved_path.remaining_member_path;
                 const std::string leaf = normalize_identifier(
-                    member_path.substr(member_path.rfind('.') == std::string::npos ? 0U : member_path.rfind('.') + 1U));
+                    effective_member_path.substr(
+                        effective_member_path.rfind('.') == std::string::npos
+                            ? 0U
+                            : effective_member_path.rfind('.') + 1U));
                 if (leaf == "addobject" && !runtime_object->source.empty() && arguments.size() >= 2U)
                 {
                     const std::string child_name = normalize_identifier(trim_copy(value_as_string(arguments[0])));
@@ -823,7 +829,7 @@ namespace copperfin::runtime
                     }
 
                     runtime_object->properties[child_name] = make_runtime_object_reference(*child_object);
-                    runtime_object->last_action = member_path + "(" + child_name + "," + child_class + ")";
+                    runtime_object->last_action = effective_member_path + "(" + child_name + "," + child_class + ")";
                     ++runtime_object->action_count;
                     events.push_back({.category = "prg.object.addobject",
                                       .detail = runtime_object->prog_id + "." + child_name + ":" + child_class,
@@ -844,7 +850,7 @@ namespace copperfin::runtime
                         throw std::runtime_error(call_depth_limit_message());
                     }
 
-                    runtime_object->last_action = member_path + "()";
+                    runtime_object->last_action = effective_member_path + "()";
                     ++runtime_object->action_count;
                     events.push_back({.category = "prg.object.invoke",
                                       .detail = native_method_name,
@@ -865,10 +871,10 @@ namespace copperfin::runtime
                     return run_expression_invoked_routine_until_return(return_depth);
                 }
 
-                runtime_object->last_action = member_path + "()";
+                runtime_object->last_action = effective_member_path + "()";
                 ++runtime_object->action_count;
                 events.push_back({.category = "ole.invoke",
-                                  .detail = runtime_object->prog_id + "." + member_path,
+                                  .detail = runtime_object->prog_id + "." + effective_member_path,
                                   .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
                 if (normalize_identifier(runtime_object->prog_id) == "scripting.dictionary")
                 {
@@ -934,20 +940,20 @@ namespace copperfin::runtime
                         return make_boolean_value(true);
                     }
 
-                    return raise_ole_fault(runtime_object->prog_id + "." + member_path + "()",
+                    return raise_ole_fault(runtime_object->prog_id + "." + effective_member_path + "()",
                                            base_name,
                                            runtime_text(
                                                "Runtime.Prg.Core.Error.OleMemberNotFoundForMethodInvocation",
-                                               {{"memberIdentifier", runtime_object->prog_id + "." + member_path}}));
+                                               {{"memberIdentifier", runtime_object->prog_id + "." + effective_member_path}}));
                 }
 
                 if (leaf == "add" || leaf == "create" || leaf == "open" || leaf == "item")
                 {
-                    return make_string_value("object:" + runtime_object->prog_id + "." + member_path + "#" + std::to_string(runtime_object->handle));
+                    return make_string_value("object:" + runtime_object->prog_id + "." + effective_member_path + "#" + std::to_string(runtime_object->handle));
                 }
                 if (arguments.empty())
                 {
-                    return make_string_value("ole:" + runtime_object->prog_id + "." + member_path);
+                    return make_string_value("ole:" + runtime_object->prog_id + "." + effective_member_path);
                 }
                 return arguments.front();
             },
@@ -973,9 +979,9 @@ namespace copperfin::runtime
                 }
 
                 const std::string object_name = property_path.substr(0U, separator);
-                const PrgValue object_value = lookup_variable(frame, object_name);
-                auto object = resolve_ole_object(object_value);
-                if (!object.has_value())
+                const std::string member_path = property_path.substr(separator + 1U);
+                const auto resolved_path = resolve_runtime_object_member_path(frame, object_name, member_path);
+                if (resolved_path.runtime_object == nullptr)
                 {
                     return raise_ole_fault(property_path,
                                            object_name,
@@ -984,13 +990,17 @@ namespace copperfin::runtime
                                                {{"propertyPath", property_path}}));
                 }
 
-                RuntimeOleObjectState *runtime_object = *object;
-                runtime_object->last_action = property_path.substr(separator + 1U);
+                RuntimeOleObjectState *runtime_object = resolved_path.runtime_object;
+                const std::string effective_property_path =
+                    resolved_path.remaining_member_path.empty()
+                        ? member_path
+                        : resolved_path.remaining_member_path;
+                runtime_object->last_action = effective_property_path;
                 ++runtime_object->action_count;
                 events.push_back({.category = "ole.get",
-                                  .detail = runtime_object->prog_id + "." + property_path.substr(separator + 1U),
+                                  .detail = runtime_object->prog_id + "." + effective_property_path,
                                   .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
-                const std::string property_name = normalize_identifier(property_path.substr(separator + 1U));
+                const std::string property_name = normalize_identifier(effective_property_path);
                 if (auto access_result = invoke_native_object_method_if_present(
                         *runtime_object,
                         property_name + "_access",
@@ -1008,13 +1018,13 @@ namespace copperfin::runtime
                 }
                 if (normalize_identifier(runtime_object->prog_id) == "scripting.dictionary")
                 {
-                    return raise_ole_fault(runtime_object->prog_id + "." + property_path.substr(separator + 1U),
+                    return raise_ole_fault(runtime_object->prog_id + "." + effective_property_path,
                                            object_name,
                                            runtime_text(
                                                "Runtime.Prg.Core.Error.OleMemberNotFoundForPropertyRead",
-                                               {{"memberIdentifier", runtime_object->prog_id + "." + property_path.substr(separator + 1U)}}));
+                                               {{"memberIdentifier", runtime_object->prog_id + "." + effective_property_path}}));
                 }
-                return make_string_value("ole:" + runtime_object->prog_id + "." + property_path.substr(separator + 1U));
+                return make_string_value("ole:" + runtime_object->prog_id + "." + effective_property_path);
             },
             [this, &frame, preferred_cursor](const std::string &nested_expression)
             {
