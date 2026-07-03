@@ -945,6 +945,100 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_prg_object_methods_bind_this_and_persist_instance_state()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_object_methods";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_object_methods.prg";
+        write_text(
+            main_path,
+            "oWidget = CREATEOBJECT('MyWidget')\n"
+            "cBefore = oWidget.Caption\n"
+            "cRenameResult = oWidget.Rename('Updated')\n"
+            "cAfter = oWidget.Caption\n"
+            "nFirstCount = oWidget.CountUp()\n"
+            "nSecondCount = oWidget.CountUp()\n"
+            "RETURN\n"
+            "DEFINE CLASS MyWidget AS Custom\n"
+            "    Caption = 'Demo'\n"
+            "    nCount = 0\n"
+            "    FUNCTION Rename\n"
+            "        LPARAMETERS tcCaption\n"
+            "        THIS.Caption = tcCaption\n"
+            "        RETURN THIS.Caption\n"
+            "    ENDFUNC\n"
+            "    FUNCTION CountUp\n"
+            "        THIS.nCount = THIS.nCount + 1\n"
+            "        RETURN THIS.nCount\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native object method script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cbefore", "Demo");
+        check("crenameresult", "Updated");
+        check("cafter", "Updated");
+        check("nfirstcount", "1");
+        check("nsecondcount", "2");
+
+        expect(state.ole_objects.size() == 1U,
+               "native object method script should reuse one instantiated runtime object");
+        if (state.ole_objects.size() == 1U)
+        {
+            const auto &object = state.ole_objects.front();
+            expect(object.prog_id == "MyWidget",
+                   "native object method script should preserve class identity on the runtime object");
+            const auto caption = object.properties.find("caption");
+            expect(caption != object.properties.end(),
+                   "THIS-bound method writes should persist updated object properties");
+            if (caption != object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(caption->second) == "Updated",
+                       "THIS-bound method writes should persist the updated caption");
+            }
+            const auto count = object.properties.find("ncount");
+            expect(count != object.properties.end(),
+                   "THIS-bound method writes should persist numeric object properties");
+            if (count != object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(count->second) == "2",
+                       "THIS-bound method writes should persist the incremented count");
+            }
+        }
+
+        const bool has_native_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   (event.detail == "MyWidget.Rename" || event.detail == "MyWidget.CountUp");
+        });
+        expect(has_native_invoke_event,
+               "native object methods should emit prg.object.invoke events");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_codepage_and_misc_runtime_surface_functions()
     {
         namespace fs = std::filesystem;
@@ -1617,6 +1711,7 @@ int main()
     test_newobject_getpem_setpem_compobj_functions();
     test_createobject_instantiates_native_prg_class_and_preserves_plain_object_creation();
     test_newobject_instantiates_native_prg_class_and_preserves_ole_newobject();
+    test_native_prg_object_methods_bind_this_and_persist_instance_state();
     test_codepage_and_misc_runtime_surface_functions();
     test_lookup_expression_function();
     test_lookup_expression_function_supports_sql_cursors();

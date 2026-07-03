@@ -761,14 +761,44 @@ namespace copperfin::runtime
                 }
 
                 RuntimeOleObjectState *runtime_object = *object;
+                const std::string leaf = normalize_identifier(
+                    member_path.substr(member_path.rfind('.') == std::string::npos ? 0U : member_path.rfind('.') + 1U));
+                std::string native_method_program_path;
+                std::string native_method_name;
+                if (const Routine *native_method = find_native_object_method(
+                        *runtime_object,
+                        leaf,
+                        native_method_program_path,
+                        native_method_name);
+                    native_method != nullptr)
+                {
+                    if (!can_push_frame())
+                    {
+                        throw std::runtime_error(call_depth_limit_message());
+                    }
+
+                    runtime_object->last_action = member_path + "()";
+                    ++runtime_object->action_count;
+                    events.push_back({.category = "prg.object.invoke",
+                                      .detail = native_method_name,
+                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                    const std::size_t return_depth = stack.size();
+                    const PrgValue this_reference =
+                        make_string_value("object:" + runtime_object->prog_id + "#" + std::to_string(runtime_object->handle));
+                    push_method_frame(native_method_program_path,
+                                      native_method_name,
+                                      *native_method,
+                                      this_reference,
+                                      arguments,
+                                      {});
+                    return run_expression_invoked_routine_until_return(return_depth);
+                }
+
                 runtime_object->last_action = member_path + "()";
                 ++runtime_object->action_count;
                 events.push_back({.category = "ole.invoke",
                                   .detail = runtime_object->prog_id + "." + member_path,
                                   .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
-
-                const std::string leaf = normalize_identifier(
-                    member_path.substr(member_path.rfind('.') == std::string::npos ? 0U : member_path.rfind('.') + 1U));
                 if (normalize_identifier(runtime_object->prog_id) == "scripting.dictionary")
                 {
                     auto update_dictionary_count = [&]()

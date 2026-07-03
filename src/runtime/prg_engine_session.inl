@@ -44,6 +44,56 @@
             stack.push_back(std::move(frame));
         }
 
+        void push_method_frame(
+            const std::string &path,
+            const std::string &routine_name,
+            const Routine &routine,
+            const PrgValue &this_reference,
+            std::vector<PrgValue> call_arguments = {},
+            std::vector<std::optional<std::string>> call_argument_references = {})
+        {
+            Frame frame;
+            frame.file_path = normalize_path(path);
+            frame.routine_name = routine_name;
+            frame.routine = &routine;
+            frame.call_arguments = std::move(call_arguments);
+            frame.call_argument_references = std::move(call_argument_references);
+            frame.locals["this"] = this_reference;
+            frame.local_names.insert("this");
+            stack.push_back(std::move(frame));
+        }
+
+        const Routine *find_native_object_method(
+            const RuntimeOleObjectState &runtime_object,
+            const std::string &member_name,
+            std::string &program_path,
+            std::string &qualified_routine_name)
+        {
+            if (runtime_object.source.empty())
+            {
+                return nullptr;
+            }
+
+            Program &program = load_program(runtime_object.source);
+            const auto class_found = program.classes.find(normalize_identifier(runtime_object.prog_id));
+            if (class_found == program.classes.end())
+            {
+                return nullptr;
+            }
+
+            const auto method_found = class_found->second.methods.find(normalize_identifier(member_name));
+            if (method_found == class_found->second.methods.end())
+            {
+                return nullptr;
+            }
+
+            program_path = program.path;
+            qualified_routine_name =
+                (class_found->second.name.empty() ? runtime_object.prog_id : class_found->second.name) +
+                "." + method_found->second.name;
+            return &method_found->second;
+        }
+
         const Statement *current_statement() const
         {
             if (stack.empty())
