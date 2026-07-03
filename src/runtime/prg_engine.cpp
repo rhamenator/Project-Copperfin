@@ -383,6 +383,18 @@ namespace copperfin::runtime
             std::optional<DataSessionState> session_state_snapshot;
         };
 
+        struct NativeEventBinding
+        {
+            int source_handle = 0;
+            std::string event_name;
+            bool target_is_routine = false;
+            std::string target_program_path;
+            int target_handle = 0;
+            std::string delegate_name;
+            int flags = 0;
+            std::size_t ordinal = 0;
+        };
+
         RuntimeSessionOptions options;
         std::map<std::string, Program> programs;
         std::deque<Frame> stack;
@@ -420,6 +432,9 @@ namespace copperfin::runtime
         std::map<int, std::size_t> memowidth_by_session;
         std::map<int, std::map<int, RuntimeSqlConnectionState>> sql_connections_by_session;
         std::map<int, RuntimeOleObjectState> ole_objects;
+        std::vector<NativeEventBinding> native_event_bindings;
+        std::set<std::string> active_native_event_keys;
+        std::size_t next_native_event_binding_ordinal = 1U;
         std::set<std::string> loaded_libraries;
         std::map<int, std::map<int, RegisteredApiFunction>> registered_api_functions_by_session;
         std::map<std::string, DeclaredDllFunction> declared_dll_functions; // keyed by normalized alias
@@ -479,10 +494,30 @@ namespace copperfin::runtime
             const std::string &identifier,
             const std::vector<PrgValue> &arguments,
             const std::vector<std::optional<std::string>> &argument_references);
+        PrgValue bind_native_event(
+            const Frame &source_frame,
+            const std::vector<PrgValue> &arguments,
+            const std::vector<std::optional<std::string>> &argument_references);
+        PrgValue raise_native_event(
+            const Frame &source_frame,
+            const std::vector<PrgValue> &arguments,
+            const std::vector<std::optional<std::string>> &argument_references);
+        PrgValue unbind_native_events(
+            const std::vector<PrgValue> &arguments);
+        std::optional<PrgValue> invoke_native_object_method_body_if_present(
+            RuntimeOleObjectState &runtime_object,
+            const std::string &identifier,
+            const Frame &source_frame,
+            const std::vector<PrgValue> &arguments,
+            const std::vector<std::optional<std::string>> &argument_references);
         std::optional<PrgValue> invoke_native_object_method_if_present(
             RuntimeOleObjectState &runtime_object,
             const std::string &identifier,
             const Frame &source_frame,
+            const std::vector<PrgValue> &arguments,
+            const std::vector<std::optional<std::string>> &argument_references);
+        std::optional<PrgValue> invoke_native_event_delegate(
+            const NativeEventBinding &binding,
             const std::vector<PrgValue> &arguments,
             const std::vector<std::optional<std::string>> &argument_references);
         PrgValue release_native_object(
@@ -915,39 +950,15 @@ namespace copperfin::runtime
                 {
                     return release_native_object(*runtime_object, effective_member_path);
                 }
-                std::string native_method_program_path;
-                std::string native_method_name;
-                if (const Routine *native_method = find_native_object_method(
+                if (auto native_result = invoke_native_object_method_if_present(
                         *runtime_object,
                         leaf,
-                        native_method_program_path,
-                        native_method_name);
-                    native_method != nullptr)
+                        frame,
+                        arguments,
+                        argument_references);
+                    native_result.has_value())
                 {
-                    if (!can_push_frame())
-                    {
-                        throw std::runtime_error(call_depth_limit_message());
-                    }
-
-                    runtime_object->last_action = effective_member_path + "()";
-                    ++runtime_object->action_count;
-                    events.push_back({.category = "prg.object.invoke",
-                                      .detail = native_method_name,
-                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
-                    const std::size_t return_depth = stack.size();
-                    const PrgValue this_reference =
-                        make_string_value("object:" + runtime_object->prog_id + "#" + std::to_string(runtime_object->handle));
-                    push_method_frame(native_method_program_path,
-                                      native_method_name,
-                                      *native_method,
-                                      this_reference,
-                                      native_method_name.substr(0U, native_method_name.rfind('.')),
-                                      leaf,
-                                      native_object_parent_reference(*runtime_object),
-                                      native_object_owner_form_reference(*runtime_object),
-                                      arguments,
-                                      argument_references);
-                    return run_expression_invoked_routine_until_return(return_depth);
+                    return *native_result;
                 }
 
                 runtime_object->last_action = effective_member_path + "()";
@@ -1505,6 +1516,22 @@ namespace copperfin::runtime
             {
                 assign_array(name, std::move(values));
             },
+            [this, &frame](
+                const std::vector<PrgValue> &arguments,
+                const std::vector<std::optional<std::string>> &argument_references) -> PrgValue
+            {
+                return bind_native_event(frame, arguments, argument_references);
+            },
+            [this, &frame](
+                const std::vector<PrgValue> &arguments,
+                const std::vector<std::optional<std::string>> &argument_references) -> PrgValue
+            {
+                return raise_native_event(frame, arguments, argument_references);
+            },
+            [this](const std::vector<PrgValue> &arguments) -> PrgValue
+            {
+                return unbind_native_events(arguments);
+            },
             [this]()
             {
                 const auto found = memowidth_by_session.find(current_data_session);
@@ -1578,7 +1605,7 @@ namespace copperfin::runtime
         return run_expression_invoked_routine_until_return(return_depth);
     }
 
-    std::optional<PrgValue> PrgRuntimeSession::Impl::invoke_native_object_method_if_present(
+    std::optional<PrgValue> PrgRuntimeSession::Impl::invoke_native_object_method_body_if_present(
         RuntimeOleObjectState &runtime_object,
         const std::string &identifier,
         const Frame &source_frame,
@@ -1590,18 +1617,33 @@ namespace copperfin::runtime
             return std::nullopt;
         }
 
+        bool use_source_frame_method_context = false;
+        if (!source_frame.native_method_class_name.empty())
+        {
+            const auto this_found = source_frame.locals.find("this");
+            if (this_found != source_frame.locals.end())
+            {
+                if (auto current_this_object = resolve_ole_object(this_found->second);
+                    current_this_object.has_value() &&
+                    (*current_this_object)->handle == runtime_object.handle)
+                {
+                    use_source_frame_method_context = true;
+                }
+            }
+        }
+
         Program &program = load_program(
-            source_frame.native_method_class_name.empty()
-                ? runtime_object.source
-                : source_frame.file_path);
+            use_source_frame_method_context
+                ? source_frame.file_path
+                : runtime_object.source);
         std::string native_method_name;
         std::string native_defining_class_name;
         const auto native_method =
             find_native_class_method_lookup(
                 program,
-                source_frame.native_method_class_name.empty()
-                    ? runtime_object.prog_id
-                    : source_frame.native_method_class_name,
+                use_source_frame_method_context
+                    ? source_frame.native_method_class_name
+                    : runtime_object.prog_id,
                 identifier,
                 true,
                 native_method_name,
@@ -1638,6 +1680,400 @@ namespace copperfin::runtime
                               argument_references.begin(),
                               argument_references.end()));
         return run_expression_invoked_routine_until_return(return_depth);
+    }
+
+    std::optional<PrgValue> PrgRuntimeSession::Impl::invoke_native_event_delegate(
+        const NativeEventBinding &binding,
+        const std::vector<PrgValue> &arguments,
+        const std::vector<std::optional<std::string>> &argument_references)
+    {
+        if (binding.target_is_routine)
+        {
+            Program &program = load_program(binding.target_program_path);
+            const auto found = program.routines.find(normalize_identifier(binding.delegate_name));
+            if (found == program.routines.end())
+            {
+                return std::nullopt;
+            }
+            if (!can_push_frame())
+            {
+                throw std::runtime_error(call_depth_limit_message());
+            }
+
+            events.push_back({.category = "prg.event.delegate",
+                              .detail = binding.event_name + " -> " + found->second.name,
+                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            const std::size_t return_depth = stack.size();
+            push_routine_frame(program.path, found->second, arguments, argument_references);
+            return run_expression_invoked_routine_until_return(return_depth);
+        }
+
+        const auto target_found = ole_objects.find(binding.target_handle);
+        if (target_found == ole_objects.end())
+        {
+            return std::nullopt;
+        }
+
+        RuntimeOleObjectState &target_object = target_found->second;
+        std::string method_program_path;
+        std::string method_name;
+        if (const Routine *method = find_native_object_method(
+                target_object,
+                binding.delegate_name,
+                method_program_path,
+                method_name);
+            method != nullptr)
+        {
+            if (!can_push_frame())
+            {
+                throw std::runtime_error(call_depth_limit_message());
+            }
+
+            target_object.last_action = "bindevent:" + binding.delegate_name;
+            ++target_object.action_count;
+            events.push_back({.category = "prg.event.delegate",
+                              .detail = binding.event_name + " -> " + method_name,
+                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            const std::size_t return_depth = stack.size();
+            const PrgValue this_reference =
+                make_string_value("object:" + target_object.prog_id + "#" + std::to_string(target_object.handle));
+            push_method_frame(method_program_path,
+                              method_name,
+                              *method,
+                              this_reference,
+                              method_name.substr(0U, method_name.rfind('.')),
+                              normalize_identifier(binding.delegate_name),
+                              native_object_parent_reference(target_object),
+                              native_object_owner_form_reference(target_object),
+                              arguments,
+                              argument_references);
+            return run_expression_invoked_routine_until_return(return_depth);
+        }
+
+        return std::nullopt;
+    }
+
+    std::optional<PrgValue> PrgRuntimeSession::Impl::invoke_native_object_method_if_present(
+        RuntimeOleObjectState &runtime_object,
+        const std::string &identifier,
+        const Frame &source_frame,
+        const std::vector<PrgValue> &arguments,
+        const std::vector<std::optional<std::string>> &argument_references)
+    {
+        const std::string normalized_identifier = normalize_identifier(identifier);
+        std::vector<NativeEventBinding> bindings;
+        bindings.reserve(native_event_bindings.size());
+        for (const NativeEventBinding &binding : native_event_bindings)
+        {
+            if (binding.source_handle == runtime_object.handle &&
+                binding.event_name == normalized_identifier &&
+                (binding.flags & 2) == 0)
+            {
+                bindings.push_back(binding);
+            }
+        }
+
+        auto invoke_delegates_for_phase = [&](bool after_source_method)
+        {
+            for (const NativeEventBinding &binding : bindings)
+            {
+                const bool binding_after_source_method = (binding.flags & 1) != 0;
+                if (binding_after_source_method == after_source_method)
+                {
+                    (void)invoke_native_event_delegate(binding, arguments, argument_references);
+                }
+            }
+        };
+
+        const std::string active_event_key =
+            std::to_string(runtime_object.handle) + ":" + normalized_identifier;
+        const bool already_active =
+            active_native_event_keys.find(active_event_key) != active_native_event_keys.end();
+
+        if (!bindings.empty() && !already_active)
+        {
+            active_native_event_keys.insert(active_event_key);
+            invoke_delegates_for_phase(false);
+            auto result = invoke_native_object_method_body_if_present(
+                runtime_object,
+                normalized_identifier,
+                source_frame,
+                arguments,
+                argument_references);
+            invoke_delegates_for_phase(true);
+            active_native_event_keys.erase(active_event_key);
+            return result;
+        }
+
+        return invoke_native_object_method_body_if_present(
+            runtime_object,
+            normalized_identifier,
+            source_frame,
+            arguments,
+            argument_references);
+    }
+
+    PrgValue PrgRuntimeSession::Impl::bind_native_event(
+        const Frame &source_frame,
+        const std::vector<PrgValue> &arguments,
+        const std::vector<std::optional<std::string>> &argument_references)
+    {
+        (void)argument_references;
+        if (arguments.size() < 3U)
+        {
+            return make_number_value(0.0);
+        }
+
+        auto source_object = resolve_ole_object(arguments[0]);
+        if (!source_object.has_value() || (*source_object)->source.empty())
+        {
+            return make_number_value(0.0);
+        }
+
+        const std::string event_name = normalize_identifier(trim_copy(value_as_string(arguments[1])));
+        if (event_name.empty())
+        {
+            return make_number_value(0.0);
+        }
+
+        NativeEventBinding binding;
+        binding.source_handle = (*source_object)->handle;
+        binding.event_name = event_name;
+        binding.ordinal = next_native_event_binding_ordinal++;
+
+        auto target_object = arguments.size() >= 4U ? resolve_ole_object(arguments[2]) : std::optional<RuntimeOleObjectState *>{};
+        if (arguments.size() >= 4U && target_object.has_value())
+        {
+            const std::string delegate_name = trim_copy(value_as_string(arguments[3]));
+            if (!target_object.has_value() || (*target_object)->source.empty() || delegate_name.empty())
+            {
+                return make_number_value(0.0);
+            }
+
+            std::string target_program_path;
+            std::string target_method_name;
+            if (const Routine *target_method = find_native_object_method(
+                    **target_object,
+                    delegate_name,
+                    target_program_path,
+                    target_method_name);
+                target_method == nullptr)
+            {
+                return make_number_value(0.0);
+            }
+
+            binding.target_is_routine = false;
+            binding.target_handle = (*target_object)->handle;
+            binding.delegate_name = delegate_name;
+            binding.flags = arguments.size() >= 5U
+                                ? static_cast<int>(std::llround(value_as_number(arguments[4]))) & 3
+                                : 0;
+        }
+        else
+        {
+            const std::string routine_name = trim_copy(value_as_string(arguments[2]));
+            if (routine_name.empty())
+            {
+                return make_number_value(0.0);
+            }
+
+            Program &program = load_program(source_frame.file_path);
+            const auto found = program.routines.find(normalize_identifier(routine_name));
+            if (found == program.routines.end())
+            {
+                return make_number_value(0.0);
+            }
+
+            binding.target_is_routine = true;
+            binding.target_program_path = program.path;
+            binding.delegate_name = found->second.name;
+            binding.flags = arguments.size() >= 4U
+                                ? static_cast<int>(std::llround(value_as_number(arguments[3]))) & 3
+                                : 0;
+        }
+
+        const auto duplicate = std::find_if(
+            native_event_bindings.begin(),
+            native_event_bindings.end(),
+            [&](const NativeEventBinding &existing)
+            {
+                return existing.source_handle == binding.source_handle &&
+                       existing.event_name == binding.event_name &&
+                       existing.target_is_routine == binding.target_is_routine &&
+                       existing.target_program_path == binding.target_program_path &&
+                       existing.target_handle == binding.target_handle &&
+                       normalize_identifier(existing.delegate_name) == normalize_identifier(binding.delegate_name);
+            });
+
+        if (duplicate == native_event_bindings.end())
+        {
+            native_event_bindings.push_back(binding);
+        }
+        else
+        {
+            duplicate->flags = binding.flags;
+        }
+
+        const auto binding_count = static_cast<double>(std::count_if(
+            native_event_bindings.begin(),
+            native_event_bindings.end(),
+            [&](const NativeEventBinding &existing)
+            {
+                return existing.source_handle == binding.source_handle &&
+                       existing.event_name == binding.event_name;
+            }));
+
+        events.push_back({.category = "prg.event.bind",
+                          .detail = (*source_object)->prog_id + "." + event_name + " -> " + binding.delegate_name,
+                          .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+        return make_number_value(binding_count);
+    }
+
+    PrgValue PrgRuntimeSession::Impl::raise_native_event(
+        const Frame &source_frame,
+        const std::vector<PrgValue> &arguments,
+        const std::vector<std::optional<std::string>> &argument_references)
+    {
+        if (arguments.size() < 2U)
+        {
+            return make_boolean_value(false);
+        }
+
+        auto source_object = resolve_ole_object(arguments[0]);
+        if (!source_object.has_value() || (*source_object)->source.empty())
+        {
+            return make_boolean_value(false);
+        }
+
+        const std::string event_name = normalize_identifier(trim_copy(value_as_string(arguments[1])));
+        if (event_name.empty())
+        {
+            return make_boolean_value(false);
+        }
+
+        std::vector<PrgValue> event_arguments;
+        std::vector<std::optional<std::string>> event_argument_references;
+        if (arguments.size() > 2U)
+        {
+            event_arguments.assign(arguments.begin() + 2U, arguments.end());
+        }
+        if (argument_references.size() > 2U)
+        {
+            event_argument_references.assign(argument_references.begin() + 2U, argument_references.end());
+        }
+
+        std::vector<NativeEventBinding> bindings;
+        bindings.reserve(native_event_bindings.size());
+        for (const NativeEventBinding &binding : native_event_bindings)
+        {
+            if (binding.source_handle == (*source_object)->handle &&
+                binding.event_name == event_name)
+            {
+                bindings.push_back(binding);
+            }
+        }
+
+        const std::string active_event_key =
+            std::to_string((*source_object)->handle) + ":" + event_name;
+        if (active_native_event_keys.find(active_event_key) != active_native_event_keys.end())
+        {
+            return make_boolean_value(true);
+        }
+
+        active_native_event_keys.insert(active_event_key);
+        const auto invoke_delegates_for_phase = [&](bool after_source_method)
+        {
+            for (const NativeEventBinding &binding : bindings)
+            {
+                const bool binding_after_source_method = (binding.flags & 1) != 0;
+                if (binding_after_source_method == after_source_method)
+                {
+                    (void)invoke_native_event_delegate(binding, event_arguments, event_argument_references);
+                }
+            }
+        };
+
+        invoke_delegates_for_phase(false);
+        (void)invoke_native_object_method_body_if_present(
+            **source_object,
+            event_name,
+            source_frame,
+            event_arguments,
+            event_argument_references);
+        invoke_delegates_for_phase(true);
+        active_native_event_keys.erase(active_event_key);
+
+        events.push_back({.category = "prg.event.raise",
+                          .detail = (*source_object)->prog_id + "." + event_name,
+                          .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+        return make_boolean_value(true);
+    }
+
+    PrgValue PrgRuntimeSession::Impl::unbind_native_events(
+        const std::vector<PrgValue> &arguments)
+    {
+        if (arguments.empty())
+        {
+            return make_number_value(0.0);
+        }
+
+        const std::size_t before_count = native_event_bindings.size();
+        const auto erase_from = std::remove_if(
+            native_event_bindings.begin(),
+            native_event_bindings.end(),
+            [&](const NativeEventBinding &binding)
+            {
+                if (arguments.size() == 1U)
+                {
+                    int object_handle = 0;
+                    std::string object_prog_id;
+                    return parse_object_handle_reference(arguments[0], object_handle, object_prog_id) &&
+                           (binding.source_handle == object_handle ||
+                            (!binding.target_is_routine && binding.target_handle == object_handle));
+                }
+
+                int source_handle = 0;
+                std::string source_prog_id;
+                if (!parse_object_handle_reference(arguments[0], source_handle, source_prog_id) ||
+                    binding.source_handle != source_handle)
+                {
+                    return false;
+                }
+
+                const std::string event_name = normalize_identifier(trim_copy(value_as_string(arguments[1])));
+                if (event_name.empty() || binding.event_name != event_name)
+                {
+                    return false;
+                }
+
+                if (arguments.size() == 3U && binding.target_is_routine)
+                {
+                    return normalize_identifier(binding.delegate_name) ==
+                           normalize_identifier(trim_copy(value_as_string(arguments[2])));
+                }
+
+                if (arguments.size() >= 4U && !binding.target_is_routine)
+                {
+                    int target_handle = 0;
+                    std::string target_prog_id;
+                    return parse_object_handle_reference(arguments[2], target_handle, target_prog_id) &&
+                           binding.target_handle == target_handle &&
+                           normalize_identifier(binding.delegate_name) ==
+                               normalize_identifier(trim_copy(value_as_string(arguments[3])));
+                }
+
+                return arguments.size() == 2U;
+            });
+        native_event_bindings.erase(erase_from, native_event_bindings.end());
+
+        const std::size_t removed_count = before_count - native_event_bindings.size();
+        if (removed_count != 0U)
+        {
+            events.push_back({.category = "prg.event.unbind",
+                              .detail = std::to_string(removed_count),
+                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+        }
+        return make_number_value(static_cast<double>(removed_count));
     }
 
     PrgValue PrgRuntimeSession::Impl::release_native_object(
@@ -1771,6 +2207,16 @@ namespace copperfin::runtime
 
         for (const int handle : release_order)
         {
+            native_event_bindings.erase(
+                std::remove_if(
+                    native_event_bindings.begin(),
+                    native_event_bindings.end(),
+                    [handle](const NativeEventBinding &binding)
+                    {
+                        return binding.source_handle == handle ||
+                               (!binding.target_is_routine && binding.target_handle == handle);
+                    }),
+                native_event_bindings.end());
             ole_objects.erase(handle);
         }
 

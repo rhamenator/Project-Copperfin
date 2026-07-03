@@ -124,6 +124,9 @@
                 std::function<std::optional<PrgValue>(const PrgValue &, const std::string &)> read_native_member_callback,
                 std::function<bool(const PrgValue &, const std::string &, const PrgValue &)> write_native_member_callback,
                 std::function<void(const std::string &, std::vector<PrgValue>)> assign_array_callback,
+                std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> bindevent_callback,
+                std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> raiseevent_callback,
+                std::function<PrgValue(const std::vector<PrgValue> &)> unbindevents_callback,
                 std::function<std::size_t()> memowidth_callback,
                 std::function<std::optional<PrgValue>(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> base_method_invoke_callback,
                 std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> user_routine_invoke_callback,
@@ -186,6 +189,9 @@
                   read_native_member_callback_(std::move(read_native_member_callback)),
                   write_native_member_callback_(std::move(write_native_member_callback)),
                   assign_array_callback_(std::move(assign_array_callback)),
+                  bindevent_callback_(std::move(bindevent_callback)),
+                  raiseevent_callback_(std::move(raiseevent_callback)),
+                  unbindevents_callback_(std::move(unbindevents_callback)),
                   memowidth_callback_(std::move(memowidth_callback)),
                   base_method_invoke_callback_(std::move(base_method_invoke_callback)),
                   user_routine_invoke_callback_(std::move(user_routine_invoke_callback)),
@@ -649,6 +655,24 @@
                 if (function == "count" || function == "sum" || function == "avg" || function == "average" || function == "min" || function == "max")
                 {
                     return aggregate_callback_(function, raw_arguments);
+                }
+                if (function == "bindevent")
+                {
+                    return bindevent_callback_
+                        ? bindevent_callback_(arguments, argument_references)
+                        : make_number_value(0.0);
+                }
+                if (function == "raiseevent")
+                {
+                    return raiseevent_callback_
+                        ? raiseevent_callback_(arguments, argument_references)
+                        : make_boolean_value(false);
+                }
+                if (function == "unbindevents")
+                {
+                    return unbindevents_callback_
+                        ? unbindevents_callback_(arguments)
+                        : make_number_value(0.0);
                 }
                 if (function == "select")
                 {
@@ -2028,6 +2052,9 @@
             std::function<std::optional<PrgValue>(const PrgValue &, const std::string &)> read_native_member_callback_;
             std::function<bool(const PrgValue &, const std::string &, const PrgValue &)> write_native_member_callback_;
             std::function<void(const std::string &, std::vector<PrgValue>)> assign_array_callback_;
+            std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> bindevent_callback_;
+            std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> raiseevent_callback_;
+            std::function<PrgValue(const std::vector<PrgValue> &)> unbindevents_callback_;
             std::function<std::size_t()> memowidth_callback_;
             std::function<std::optional<PrgValue>(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> base_method_invoke_callback_;
             std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> user_routine_invoke_callback_;
