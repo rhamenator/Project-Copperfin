@@ -878,7 +878,8 @@
                         }
 
                         const std::string normalized = lowercase_copy(trimmed);
-                        return has_suffix(normalized, ".vcx") ||
+                        return has_suffix(normalized, ".prg") ||
+                               has_suffix(normalized, ".vcx") ||
                                has_suffix(normalized, ".dll") ||
                                has_suffix(normalized, ".ocx") ||
                                has_suffix(normalized, ".exe") ||
@@ -888,16 +889,20 @@
                     };
 
                     const bool explicit_server = !trim_copy(server).empty();
+                    const bool explicit_native_prg_library =
+                        !explicit_server &&
+                        lowercase_copy(std::filesystem::path(trim_copy(library)).extension().string()) == ".prg";
                     const bool library_looks_explicit = looks_like_library_target(library);
                     const bool bare_native_candidate = !explicit_server && (!trim_copy(library).empty() ? !library_looks_explicit : true);
 
                     std::vector<PrgValue> constructor_arguments;
                     std::vector<std::optional<std::string>> constructor_argument_references;
-                    if (bare_native_candidate)
+                    if (bare_native_candidate || explicit_native_prg_library)
                     {
-                        constructor_arguments.reserve(arguments.size() > 0U ? arguments.size() - 1U : 0U);
-                        constructor_argument_references.reserve(argument_references.size() > 0U ? argument_references.size() - 1U : 0U);
-                        for (std::size_t index = 1U; index < arguments.size(); ++index)
+                        const std::size_t constructor_start_index = explicit_native_prg_library ? 2U : 1U;
+                        constructor_arguments.reserve(arguments.size() > constructor_start_index ? arguments.size() - constructor_start_index : 0U);
+                        constructor_argument_references.reserve(argument_references.size() > constructor_start_index ? argument_references.size() - constructor_start_index : 0U);
+                        for (std::size_t index = constructor_start_index; index < arguments.size(); ++index)
                         {
                             constructor_arguments.push_back(arguments[index]);
                             constructor_argument_references.push_back(

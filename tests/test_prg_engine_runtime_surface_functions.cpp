@@ -945,6 +945,141 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_newobject_with_explicit_prg_library_activates_native_class_and_preserves_explicit_targets()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_newobject_explicit_prg_library";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path library_path = temp_root / "widgetlib.prg";
+        write_text(
+            library_path,
+            "DEFINE CLASS LibraryWidget AS Custom\n"
+            "    Caption = 'Library'\n"
+            "    lInitRan = .F.\n"
+            "    nValue = 1\n"
+            "    PROCEDURE Init\n"
+            "        LPARAMETERS tnSeed\n"
+            "        tnSeed = tnSeed + 2\n"
+            "        THIS.Caption = 'LibraryInit'\n"
+            "        THIS.lInitRan = .T.\n"
+            "        THIS.nValue = tnSeed\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "newobject_explicit_prg_library.prg";
+        write_text(
+            main_path,
+            "nSeed = 4\n"
+            "oWidget = NEWOBJECT('LibraryWidget', 'widgetlib.prg', @nSeed)\n"
+            "cCaption = oWidget.Caption\n"
+            "lInitRan = oWidget.lInitRan\n"
+            "nStored = oWidget.nValue\n"
+            "nSeedAfter = nSeed\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 12)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "oRemote = NEWOBJECT('Session', 'app.vcx', '', '', .F., 'AppServer01')\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("explicit PRG NEWOBJECT script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("ccaption", "LibraryInit");
+        check("linitran", "true");
+        check("nstored", "6");
+        check("nseedafter", "6");
+        check("ldictset", "true");
+        check("ndictcompare", "12");
+
+        expect(state.ole_objects.size() == 3U,
+               "explicit PRG NEWOBJECT script should register native, COM, and server-targeted objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            const auto &native_object = state.ole_objects[0];
+            expect(native_object.prog_id == "LibraryWidget",
+                   "explicit PRG NEWOBJECT should preserve the external class identity");
+            expect(native_object.source == library_path.string(),
+                   "explicit PRG NEWOBJECT should preserve the resolved PRG library path as object provenance");
+
+            const auto caption = native_object.properties.find("caption");
+            const auto init_ran = native_object.properties.find("linitran");
+            const auto value = native_object.properties.find("nvalue");
+            if (caption != native_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(caption->second) == "LibraryInit",
+                       "explicit PRG NEWOBJECT should persist Init-updated caption state");
+            }
+            else
+            {
+                expect(false, "explicit PRG NEWOBJECT should materialize the caption property");
+            }
+            if (init_ran != native_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(init_ran->second) == "true",
+                       "explicit PRG NEWOBJECT should persist Init-updated flags");
+            }
+            else
+            {
+                expect(false, "explicit PRG NEWOBJECT should materialize the Init flag");
+            }
+            if (value != native_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(value->second) == "6",
+                       "explicit PRG NEWOBJECT should persist constructor/by-reference updates");
+            }
+            else
+            {
+                expect(false, "explicit PRG NEWOBJECT should materialize the numeric property");
+            }
+
+            expect(state.ole_objects[1].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while explicit PRG library activation lands");
+            expect(state.ole_objects[2].prog_id == "Session",
+                   "server-targeted NEWOBJECT should remain stable while explicit PRG library activation lands");
+            expect(state.ole_objects[2].source == "app.vcx@AppServer01",
+                   "server-targeted NEWOBJECT should preserve library/server source metadata");
+        }
+
+        const bool has_native_init_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.init" &&
+                   event.detail == "LibraryWidget.Init";
+        });
+        expect(has_native_init_event,
+               "explicit PRG NEWOBJECT should emit native Init events");
+
+        const bool has_remote_detail = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "ole.newobject" &&
+                   event.detail == "Session:app.vcx@AppServer01";
+        });
+        expect(has_remote_detail,
+               "server-targeted NEWOBJECT should preserve event detail while explicit PRG library activation lands");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_prg_object_methods_bind_this_and_persist_instance_state()
     {
         namespace fs = std::filesystem;
@@ -2957,6 +3092,7 @@ int main()
     test_newobject_getpem_setpem_compobj_functions();
     test_createobject_instantiates_native_prg_class_and_preserves_plain_object_creation();
     test_newobject_instantiates_native_prg_class_and_preserves_ole_newobject();
+    test_newobject_with_explicit_prg_library_activates_native_class_and_preserves_explicit_targets();
     test_native_prg_object_methods_bind_this_and_persist_instance_state();
     test_native_prg_init_runs_during_object_creation_and_preserves_plain_creation();
     test_createobject_arguments_flow_into_native_init_while_newobject_and_non_native_creation_stay_stable();
