@@ -665,13 +665,26 @@ Program parse_program(const std::string& path) {
             const std::string body = trim_copy(line.substr(11U));
             const std::size_t as_position = find_keyword_top_level(body, "AS");
             if (as_position != std::string::npos) {
+                const std::size_t of_position = find_keyword_top_level_from(body, "OF", as_position + 2U);
                 const std::size_t with_position = find_keyword_top_level_from(body, "WITH", as_position + 2U);
                 NativeChildObjectDeclaration declaration;
                 declaration.name = trim_copy(body.substr(0U, as_position));
+                const std::size_t class_end =
+                    of_position == std::string::npos
+                        ? with_position
+                        : with_position == std::string::npos
+                              ? of_position
+                              : std::min(of_position, with_position);
                 declaration.class_name = trim_copy(
-                    with_position == std::string::npos
+                    class_end == std::string::npos
                         ? body.substr(as_position + 2U)
-                        : body.substr(as_position + 2U, with_position - as_position - 2U));
+                        : body.substr(as_position + 2U, class_end - as_position - 2U));
+                if (of_position != std::string::npos) {
+                    declaration.source_path = trim_copy(
+                        with_position == std::string::npos
+                            ? body.substr(of_position + 2U)
+                            : body.substr(of_position + 2U, with_position - of_position - 2U));
+                }
                 declaration.declaration_location = {.file_path = normalize_path(path), .line = line_number};
                 declaration.text = line;
                 if (with_position != std::string::npos) {
@@ -690,9 +703,16 @@ Program parse_program(const std::string& path) {
             const std::string body = trim_copy(line.substr(7U));
             const std::size_t as_position = find_keyword_top_level(body, "AS");
             if (as_position != std::string::npos) {
+                const std::size_t of_position = find_keyword_top_level_from(body, "OF", as_position + 2U);
                 NativeChildObjectDeclaration declaration;
                 declaration.name = trim_copy(body.substr(0U, as_position));
-                declaration.class_name = trim_copy(body.substr(as_position + 2U));
+                declaration.class_name = trim_copy(
+                    of_position == std::string::npos
+                        ? body.substr(as_position + 2U)
+                        : body.substr(as_position + 2U, of_position - as_position - 2U));
+                if (of_position != std::string::npos) {
+                    declaration.source_path = trim_copy(body.substr(of_position + 2U));
+                }
                 declaration.declaration_location = {.file_path = normalize_path(path), .line = line_number};
                 declaration.text = line;
                 if (!declaration.name.empty() && !declaration.class_name.empty()) {

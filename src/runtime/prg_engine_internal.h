@@ -167,6 +167,7 @@ struct Routine {
 struct NativeChildObjectDeclaration {
     std::string name;
     std::string class_name;
+    std::string source_path;
     SourceLocation declaration_location{};
     std::string text;
     std::vector<Statement> property_statements;

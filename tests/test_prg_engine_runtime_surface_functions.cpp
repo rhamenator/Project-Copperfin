@@ -1387,6 +1387,126 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_declarative_children_materialize_from_external_prg_sources_before_parent_init()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_declarative_external_children";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path library_path = temp_root / "buttons.prg";
+        write_text(
+            library_path,
+            "DEFINE CLASS SaveButton AS Custom\n"
+            "    Caption = 'Save'\n"
+            "    FUNCTION OwnerCaption\n"
+            "        RETURN PARENT.Caption\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ArchiveButton AS Custom\n"
+            "    Caption = 'Archive'\n"
+            "    FUNCTION OwnerCaption\n"
+            "        RETURN PARENT.Caption\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "native_declarative_external_children.prg";
+        write_text(
+            main_path,
+            "oAdd = CREATEOBJECT('DemoFormAdd')\n"
+            "oBlock = NEWOBJECT('DemoFormBlock')\n"
+            "cAddInitChildCaption = oAdd.cInitChildCaption\n"
+            "cBlockInitChildCaption = oBlock.cInitChildCaption\n"
+            "cAddChildCaption = oAdd.cmdSave.Caption\n"
+            "cBlockChildCaption = oBlock.cmdArchive.Caption\n"
+            "cAddOwnerCaption = oAdd.cmdSave.OwnerCaption()\n"
+            "cBlockOwnerCaption = oBlock.cmdArchive.OwnerCaption()\n"
+            "lAddChildHasParent = PEMSTATUS(oAdd.cmdSave, 'Parent', 1)\n"
+            "lBlockChildHasParent = PEMSTATUS(oBlock.cmdArchive, 'Parent', 1)\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 13)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS DemoFormAdd AS Custom\n"
+            "    Caption = 'MainFormAdd'\n"
+            "    cInitChildCaption = ''\n"
+            "    ADD OBJECT cmdSave AS SaveButton OF buttons.prg\n"
+            "    PROCEDURE Init\n"
+            "        THIS.cInitChildCaption = THIS.cmdSave.Caption\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DemoFormBlock AS Custom\n"
+            "    Caption = 'MainFormBlock'\n"
+            "    cInitChildCaption = ''\n"
+            "    OBJECT cmdArchive AS ArchiveButton OF buttons.prg\n"
+            "        Caption = 'ArchiveNow'\n"
+            "    ENDOBJECT\n"
+            "    PROCEDURE Init\n"
+            "        THIS.cInitChildCaption = THIS.cmdArchive.Caption\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("declarative external child script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("caddinitchildcaption", "Save");
+        check("cblockinitchildcaption", "ArchiveNow");
+        check("caddchildcaption", "Save");
+        check("cblockchildcaption", "ArchiveNow");
+        check("caddownercaption", "MainFormAdd");
+        check("cblockownercaption", "MainFormBlock");
+        check("laddchildhasparent", "true");
+        check("lblockchildhasparent", "true");
+        check("ldictset", "true");
+        check("ndictcompare", "13");
+
+        expect(state.ole_objects.size() == 5U,
+               "declarative external child script should register CREATEOBJECT parent/child, NEWOBJECT parent/child, and COM objects");
+        if (state.ole_objects.size() == 5U)
+        {
+            expect(state.ole_objects[0].prog_id == "DemoFormAdd",
+                   "declarative external child script should preserve the ADD parent class identity");
+            expect(state.ole_objects[1].prog_id == "SaveButton",
+                   "declarative external child script should materialize the one-line external child class");
+            expect(state.ole_objects[1].source == library_path.string(),
+                   "declarative external child script should preserve the resolved one-line external child source path");
+            expect(state.ole_objects[2].prog_id == "DemoFormBlock",
+                   "declarative external child script should preserve the block parent class identity");
+            expect(state.ole_objects[3].prog_id == "ArchiveButton",
+                   "declarative external child script should materialize the block external child class");
+            expect(state.ole_objects[3].source == library_path.string(),
+                   "declarative external child script should preserve the resolved block external child source path");
+            const auto block_child_caption = state.ole_objects[3].properties.find("caption");
+            expect(block_child_caption != state.ole_objects[3].properties.end() &&
+                       copperfin::runtime::format_value(block_child_caption->second) == "ArchiveNow",
+                   "declarative external child script should still apply block child property overrides from the parent PRG");
+            expect(state.ole_objects[4].prog_id == "Scripting.Dictionary",
+                   "COM behavior should remain stable while declarative external child activation lands");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_child_methods_resolve_thisform_through_parent_chain()
     {
         namespace fs = std::filesystem;
@@ -4011,6 +4131,7 @@ int main()
     test_native_class_body_add_object_materializes_children_before_init();
     test_native_class_body_add_object_with_property_clauses_materialize_before_parent_init();
     test_native_class_body_object_blocks_materialize_children_before_parent_init();
+    test_declarative_children_materialize_from_external_prg_sources_before_parent_init();
     test_native_child_methods_resolve_thisform_through_parent_chain();
     test_native_child_methods_resolve_thisformset_through_owner_chain();
     test_dotted_native_child_chains_traverse_contained_objects();

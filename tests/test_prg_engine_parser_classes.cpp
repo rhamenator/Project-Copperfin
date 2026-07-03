@@ -291,6 +291,62 @@ void test_parse_class_body_object_blocks_capture_child_properties() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_parse_declarative_child_external_prg_sources() {
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_parser_child_external_prg";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path program_path = temp_root / "class_body_child_external_prg.prg";
+    copperfin::test_support::write_text(
+        program_path,
+        "DEFINE CLASS DemoForm AS Custom\n"
+        "    ADD OBJECT cmdSave AS SaveButton OF buttons.prg\n"
+        "    OBJECT cmdArchive AS ArchiveButton OF buttons.prg\n"
+        "        Caption = 'ArchiveNow'\n"
+        "    ENDOBJECT\n"
+        "ENDDEFINE\n");
+
+    const copperfin::runtime::Program program = copperfin::runtime::parse_program(program_path.string());
+    const auto class_found = program.classes.find("demoform");
+    copperfin::test_support::expect(class_found != program.classes.end(),
+                                    "declarative child external PRG test should parse the owning class definition");
+    if (class_found != program.classes.end()) {
+        const auto& class_definition = class_found->second;
+        copperfin::test_support::expect(class_definition.child_object_declarations.size() == 2U,
+                                        "declarative child external PRG test should capture both child declarations");
+        if (class_definition.child_object_declarations.size() == 2U) {
+            const auto& add_declaration = class_definition.child_object_declarations[0];
+            const auto& block_declaration = class_definition.child_object_declarations[1];
+            copperfin::test_support::expect(add_declaration.name == "cmdSave",
+                                            "declarative child external PRG test should preserve the one-line child name");
+            copperfin::test_support::expect(add_declaration.class_name == "SaveButton",
+                                            "declarative child external PRG test should preserve the one-line child class name");
+            copperfin::test_support::expect(add_declaration.source_path == "buttons.prg",
+                                            "declarative child external PRG test should preserve the one-line child source path");
+            copperfin::test_support::expect(add_declaration.property_statements.empty(),
+                                            "declarative child external PRG test should keep the plain one-line child free of property clauses");
+
+            copperfin::test_support::expect(block_declaration.name == "cmdArchive",
+                                            "declarative child external PRG test should preserve the block child name");
+            copperfin::test_support::expect(block_declaration.class_name == "ArchiveButton",
+                                            "declarative child external PRG test should preserve the block child class name");
+            copperfin::test_support::expect(block_declaration.source_path == "buttons.prg",
+                                            "declarative child external PRG test should preserve the block child source path");
+            copperfin::test_support::expect(block_declaration.property_statements.size() == 1U,
+                                            "declarative child external PRG test should preserve block child property assignments");
+            if (block_declaration.property_statements.size() == 1U) {
+                copperfin::test_support::expect(block_declaration.property_statements[0].identifier == "Caption",
+                                                "declarative child external PRG test should preserve block child property name");
+                copperfin::test_support::expect(block_declaration.property_statements[0].expression == "'ArchiveNow'",
+                                                "declarative child external PRG test should preserve block child property expression");
+            }
+        }
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -299,6 +355,7 @@ int main() {
     test_parse_class_body_add_object_declarations_distinct_from_property_assignments();
     test_parse_class_body_add_object_with_property_clauses();
     test_parse_class_body_object_blocks_capture_child_properties();
+    test_parse_declarative_child_external_prg_sources();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

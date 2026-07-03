@@ -482,7 +482,7 @@
                     RuntimeOleObjectState *child_object = instantiate_native_class_object(
                         frame,
                         child_declaration.class_name,
-                        runtime_object->source,
+                        resolve_declarative_native_child_program_path(*runtime_object, child_declaration.source_path),
                         "classbody.addobject",
                         {},
                         {},
@@ -562,6 +562,29 @@
             }
 
             return runtime_object;
+        }
+
+        std::string resolve_declarative_native_child_program_path(
+            const RuntimeOleObjectState &runtime_object,
+            const std::string &source_path) const
+        {
+            const std::string trimmed_source_path = trim_copy(source_path);
+            if (trimmed_source_path.empty())
+            {
+                return runtime_object.source;
+            }
+
+            std::filesystem::path program_path(trimmed_source_path);
+            if (program_path.is_relative())
+            {
+                program_path = std::filesystem::path(current_default_directory()) / program_path;
+            }
+            program_path = program_path.lexically_normal();
+
+            std::error_code ignored;
+            return std::filesystem::exists(program_path, ignored)
+                ? program_path.string()
+                : trimmed_source_path;
         }
 
         const Statement *current_statement() const
