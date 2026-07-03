@@ -1437,6 +1437,8 @@
                                           init_method_name,
                                           *init_method,
                                           this_reference,
+                                          init_method_name.substr(0U, init_method_name.rfind('.')),
+                                          "init",
                                           effective_constructor_arguments,
                                           constructor_argument_references);
                         (void)run_expression_invoked_routine_until_return(return_depth);

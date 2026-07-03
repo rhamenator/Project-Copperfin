@@ -121,6 +121,7 @@
                 std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback,
                 std::function<void(const std::string &, std::vector<PrgValue>)> assign_array_callback,
                 std::function<std::size_t()> memowidth_callback,
+                std::function<std::optional<PrgValue>(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> base_method_invoke_callback,
                 std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> user_routine_invoke_callback,
                 std::function<PrgValue(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> declared_dll_invoke_callback)
                 : current_work_area_(current_work_area),
@@ -180,6 +181,7 @@
                   resolve_object_callback_(std::move(resolve_object_callback)),
                   assign_array_callback_(std::move(assign_array_callback)),
                   memowidth_callback_(std::move(memowidth_callback)),
+                  base_method_invoke_callback_(std::move(base_method_invoke_callback)),
                   user_routine_invoke_callback_(std::move(user_routine_invoke_callback)),
                   declared_dll_invoke_callback_(std::move(declared_dll_invoke_callback)),
                   text_(text),
@@ -1307,6 +1309,16 @@
                         return make_number_value(0.0);
                     }
                 }
+                if (function == "dodefault")
+                {
+                    if (base_method_invoke_callback_)
+                    {
+                        const auto base_result =
+                            base_method_invoke_callback_(arguments, argument_references);
+                        return base_result.value_or(make_empty_value());
+                    }
+                    return make_empty_value();
+                }
                 if (const auto path_result = evaluate_path_function(function, arguments, default_directory_))
                 {
                     return *path_result;
@@ -2001,6 +2013,7 @@
             std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback_;
             std::function<void(const std::string &, std::vector<PrgValue>)> assign_array_callback_;
             std::function<std::size_t()> memowidth_callback_;
+            std::function<std::optional<PrgValue>(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> base_method_invoke_callback_;
             std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> user_routine_invoke_callback_;
             std::function<PrgValue(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> declared_dll_invoke_callback_;
             const std::string &text_;

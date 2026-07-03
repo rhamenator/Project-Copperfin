@@ -1639,6 +1639,163 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_dodefault";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_dodefault.prg";
+        write_text(
+            main_path,
+            "nSeed = 5\n"
+            "oCreate = CREATEOBJECT('ChildWidget', @nSeed)\n"
+            "oPlain = CREATEOBJECT('Empty')\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "oPlain.Extra = 'plain'\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 7)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "cDescribe = oCreate.Describe('prefix')\n"
+            "cWho = oCreate.Who()\n"
+            "nSeedAfter = nSeed\n"
+            "cCaption = oCreate.Caption\n"
+            "nStored = oCreate.nValue\n"
+            "lParentInit = oCreate.lParentInit\n"
+            "lChildInit = oCreate.lChildInit\n"
+            "cPlain = oPlain.Extra\n"
+            "RETURN\n"
+            "DEFINE CLASS ParentWidget AS Custom\n"
+            "    Caption = 'Parent'\n"
+            "    nValue = 0\n"
+            "    lParentInit = .F.\n"
+            "    PROCEDURE Init\n"
+            "        LPARAMETERS tnSeed\n"
+            "        tnSeed = tnSeed + 2\n"
+            "        THIS.nValue = tnSeed\n"
+            "        THIS.Caption = THIS.Caption + '-P'\n"
+            "        THIS.lParentInit = .T.\n"
+            "        RETURN THIS.Caption\n"
+            "    ENDPROC\n"
+            "    FUNCTION Describe\n"
+            "        LPARAMETERS tcPrefix\n"
+            "        RETURN tcPrefix + ':' + THIS.Caption\n"
+            "    ENDFUNC\n"
+            "    FUNCTION Who\n"
+            "        RETURN 'Parent'\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ChildWidget AS ParentWidget\n"
+            "    Caption = 'Child'\n"
+            "    lChildInit = .F.\n"
+            "    PROCEDURE Init\n"
+            "        LPARAMETERS tnSeed\n"
+            "        LOCAL lcBaseCaption\n"
+            "        lcBaseCaption = DODEFAULT(@tnSeed)\n"
+            "        THIS.Caption = lcBaseCaption + '-C'\n"
+            "        THIS.lChildInit = .T.\n"
+            "        RETURN THIS.Caption\n"
+            "    ENDPROC\n"
+            "    FUNCTION Describe\n"
+            "        LPARAMETERS tcPrefix\n"
+            "        RETURN DODEFAULT(tcPrefix) + ':Child'\n"
+            "    ENDFUNC\n"
+            "    FUNCTION Who\n"
+            "        RETURN DODEFAULT() + '+Child'\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native DODEFAULT script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cdescribe", "prefix:Child-P-C:Child");
+        check("cwho", "Parent+Child");
+        check("nseedafter", "7");
+        check("ccaption", "Child-P-C");
+        check("nstored", "7");
+        check("lparentinit", "true");
+        check("lchildinit", "true");
+        check("cplain", "plain");
+        check("ldictset", "true");
+        check("ndictcompare", "7");
+
+        expect(state.ole_objects.size() == 3U,
+               "native DODEFAULT script should register native, plain, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            const auto &native_object = state.ole_objects[0];
+            expect(native_object.prog_id == "ChildWidget",
+                   "native DODEFAULT should preserve child class identity");
+            const auto caption = native_object.properties.find("caption");
+            const auto value = native_object.properties.find("nvalue");
+            const auto parent_init = native_object.properties.find("lparentinit");
+            const auto child_init = native_object.properties.find("lchildinit");
+            expect(caption != native_object.properties.end(),
+                   "native DODEFAULT should preserve child/base Init-updated caption state");
+            expect(value != native_object.properties.end(),
+                   "native DODEFAULT should preserve by-reference Init-updated numeric state");
+            expect(parent_init != native_object.properties.end(),
+                   "native DODEFAULT should preserve parent Init state");
+            expect(child_init != native_object.properties.end(),
+                   "native DODEFAULT should preserve child Init state");
+            if (caption != native_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(caption->second) == "Child-P-C",
+                       "native DODEFAULT should compose child Init logic after base Init");
+            }
+            if (value != native_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(value->second) == "7",
+                       "native DODEFAULT should preserve base Init by-reference write-back results");
+            }
+            if (parent_init != native_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(parent_init->second) == "true",
+                       "native DODEFAULT should run parent Init through the base-call path");
+            }
+            if (child_init != native_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(child_init->second) == "true",
+                       "native DODEFAULT should continue child Init logic after the base-call path");
+            }
+
+            expect(state.ole_objects[1].prog_id == "Empty",
+                   "plain CREATEOBJECT should remain stable while native DODEFAULT lands");
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while native DODEFAULT lands");
+        }
+
+        const bool has_base_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.baseinvoke" &&
+                   (event.detail == "ParentWidget.Init" ||
+                    event.detail == "ParentWidget.Describe" ||
+                    event.detail == "ParentWidget.Who");
+        });
+        expect(has_base_invoke_event,
+               "native DODEFAULT should emit a base-invoke runtime event");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_codepage_and_misc_runtime_surface_functions()
     {
         namespace fs = std::filesystem;
@@ -2317,6 +2474,7 @@ int main()
     test_newobject_arguments_flow_into_native_init_while_createobject_and_com_newobject_stay_stable();
     test_native_object_method_and_init_preserve_by_reference_argument_updates();
     test_same_prg_native_class_inheritance_applies_parent_defaults_methods_and_init();
+    test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow();
     test_codepage_and_misc_runtime_surface_functions();
     test_lookup_expression_function();
     test_lookup_expression_function_supports_sql_cursors();

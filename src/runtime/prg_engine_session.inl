@@ -49,6 +49,8 @@
             const std::string &routine_name,
             const Routine &routine,
             const PrgValue &this_reference,
+            const std::string &native_method_class_name = {},
+            const std::string &native_method_name = {},
             std::vector<PrgValue> call_arguments = {},
             std::vector<std::optional<std::string>> call_argument_references = {})
         {
@@ -58,6 +60,8 @@
             frame.routine = &routine;
             frame.call_arguments = std::move(call_arguments);
             frame.call_argument_references = std::move(call_argument_references);
+            frame.native_method_class_name = normalize_identifier(native_method_class_name);
+            frame.native_method_name = normalize_identifier(native_method_name);
             frame.locals["this"] = this_reference;
             frame.local_names.insert("this");
             stack.push_back(std::move(frame));
@@ -129,27 +133,27 @@
                 reverse_lineage.rend());
         }
 
-        const Routine *find_native_object_method(
-            const RuntimeOleObjectState &runtime_object,
+        const Routine *find_native_same_prg_method(
+            const Program &program,
+            const std::string &class_name,
             const std::string &member_name,
-            std::string &program_path,
-            std::string &qualified_routine_name)
+            bool include_starting_class,
+            std::string &qualified_routine_name,
+            std::string *defining_class_name = nullptr) const
         {
-            if (runtime_object.source.empty())
-            {
-                return nullptr;
-            }
-
-            Program &program = load_program(runtime_object.source);
+            const std::string normalized_member_name = normalize_identifier(member_name);
             const PrgClassDefinition *current_class =
-                find_native_same_prg_class(program, runtime_object.prog_id);
+                find_native_same_prg_class(program, class_name);
             if (current_class == nullptr)
             {
                 return nullptr;
             }
+            if (!include_starting_class)
+            {
+                current_class = find_native_same_prg_base_class(program, *current_class);
+            }
 
             std::set<std::string> visited;
-            const std::string normalized_member_name = normalize_identifier(member_name);
             while (current_class != nullptr)
             {
                 const std::string normalized_class_name = normalize_identifier(current_class->name);
@@ -162,10 +166,13 @@
                 const auto method_found = current_class->methods.find(normalized_member_name);
                 if (method_found != current_class->methods.end())
                 {
-                    program_path = program.path;
-                    qualified_routine_name =
-                        (current_class->name.empty() ? runtime_object.prog_id : current_class->name) +
-                        "." + method_found->second.name;
+                    const std::string resolved_class_name =
+                        current_class->name.empty() ? class_name : current_class->name;
+                    if (defining_class_name != nullptr)
+                    {
+                        *defining_class_name = resolved_class_name;
+                    }
+                    qualified_routine_name = resolved_class_name + "." + method_found->second.name;
                     return &method_found->second;
                 }
 
@@ -173,6 +180,27 @@
             }
 
             return nullptr;
+        }
+
+        const Routine *find_native_object_method(
+            const RuntimeOleObjectState &runtime_object,
+            const std::string &member_name,
+            std::string &program_path,
+            std::string &qualified_routine_name)
+        {
+            if (runtime_object.source.empty())
+            {
+                return nullptr;
+            }
+
+            Program &program = load_program(runtime_object.source);
+            program_path = program.path;
+            return find_native_same_prg_method(
+                program,
+                runtime_object.prog_id,
+                member_name,
+                true,
+                qualified_routine_name);
         }
 
         const Statement *current_statement() const

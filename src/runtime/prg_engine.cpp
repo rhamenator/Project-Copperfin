@@ -161,6 +161,8 @@ namespace copperfin::runtime
             std::vector<CaseState> cases;
             std::vector<WithState> withs;
             std::vector<TryState> tries;
+            std::string native_method_class_name;
+            std::string native_method_name;
             bool evaluate_conditional_else = false;
         };
 
@@ -471,6 +473,10 @@ namespace copperfin::runtime
         std::optional<PrgValue> invoke_expression_user_routine(
             const Frame &source_frame,
             const std::string &identifier,
+            const std::vector<PrgValue> &arguments,
+            const std::vector<std::optional<std::string>> &argument_references);
+        std::optional<PrgValue> invoke_expression_base_method(
+            const Frame &source_frame,
             const std::vector<PrgValue> &arguments,
             const std::vector<std::optional<std::string>> &argument_references);
         PrgValue run_expression_invoked_routine_until_return(std::size_t return_depth);
@@ -797,6 +803,8 @@ namespace copperfin::runtime
                                       native_method_name,
                                       *native_method,
                                       this_reference,
+                                      native_method_name.substr(0U, native_method_name.rfind('.')),
+                                      leaf,
                                       arguments,
                                       argument_references);
                     return run_expression_invoked_routine_until_return(return_depth);
@@ -1301,6 +1309,12 @@ namespace copperfin::runtime
                 return found != memowidth_by_session.end() ? found->second : 50U;
             },
             [this, &frame](
+                const std::vector<PrgValue> &arguments,
+                const std::vector<std::optional<std::string>> &argument_references) -> std::optional<PrgValue>
+            {
+                return invoke_expression_base_method(frame, arguments, argument_references);
+            },
+            [this, &frame](
                 const std::string &identifier,
                 const std::vector<PrgValue> &arguments,
                 const std::vector<std::optional<std::string>> &argument_references) -> std::optional<PrgValue>
@@ -1337,6 +1351,73 @@ namespace copperfin::runtime
 
         const std::size_t return_depth = stack.size();
         push_routine_frame(program.path, found->second, arguments, argument_references);
+        return run_expression_invoked_routine_until_return(return_depth);
+    }
+
+    std::optional<PrgValue> PrgRuntimeSession::Impl::invoke_expression_base_method(
+        const Frame &source_frame,
+        const std::vector<PrgValue> &arguments,
+        const std::vector<std::optional<std::string>> &argument_references)
+    {
+        if (source_frame.native_method_class_name.empty() || source_frame.native_method_name.empty())
+        {
+            return std::nullopt;
+        }
+
+        const auto this_found = source_frame.locals.find("this");
+        if (this_found == source_frame.locals.end())
+        {
+            return std::nullopt;
+        }
+
+        auto runtime_object = resolve_ole_object(this_found->second);
+        if (!runtime_object.has_value())
+        {
+            return std::nullopt;
+        }
+
+        Program &program = load_program(source_frame.file_path);
+        std::string base_method_name;
+        std::string base_defining_class_name;
+        const Routine *base_method = find_native_same_prg_method(
+            program,
+            source_frame.native_method_class_name,
+            source_frame.native_method_name,
+            false,
+            base_method_name,
+            &base_defining_class_name);
+        if (base_method == nullptr)
+        {
+            return std::nullopt;
+        }
+
+        if (!can_push_frame())
+        {
+            throw std::runtime_error(call_depth_limit_message());
+        }
+
+        RuntimeOleObjectState *object_state = *runtime_object;
+        object_state->last_action = "dodefault:" + source_frame.native_method_name;
+        ++object_state->action_count;
+        events.push_back({.category = "prg.object.baseinvoke",
+                          .detail = base_method_name,
+                          .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+
+        const std::size_t return_depth = stack.size();
+        const auto &effective_arguments =
+            arguments.empty() ? source_frame.call_arguments : arguments;
+        const auto &effective_argument_references =
+            arguments.empty() ? source_frame.call_argument_references : argument_references;
+        push_method_frame(program.path,
+                          base_method_name,
+                          *base_method,
+                          this_found->second,
+                          base_defining_class_name,
+                          source_frame.native_method_name,
+                          std::vector<PrgValue>(effective_arguments.begin(), effective_arguments.end()),
+                          std::vector<std::optional<std::string>>(
+                              effective_argument_references.begin(),
+                              effective_argument_references.end()));
         return run_expression_invoked_routine_until_return(return_depth);
     }
 
