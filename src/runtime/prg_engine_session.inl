@@ -769,15 +769,29 @@
 
         void capture_last_error_context(const Frame &frame, const Statement &statement)
         {
-            last_fault_location = statement.location;
-            last_fault_statement = statement.text;
-            last_error_code = classify_runtime_error_code(last_error_message);
-            last_error_work_area = current_selected_work_area();
-            last_error_procedure = frame.routine_name;
+            const bool compatibility_matches_current_fault =
+                last_error_compatibility.preserve_fault_context ||
+                (last_fault_location.file_path == statement.location.file_path &&
+                 last_fault_location.line == statement.location.line &&
+                 last_fault_statement == statement.text);
+            const bool preserve_fault_context = last_error_compatibility.preserve_fault_context;
+            if (!preserve_fault_context)
+            {
+                last_fault_location = statement.location;
+                last_fault_statement = statement.text;
+                last_error_work_area = current_selected_work_area();
+                last_error_procedure = frame.routine_name;
+            }
+            last_error_code =
+                compatibility_matches_current_fault && last_error_compatibility.explicit_error_code.has_value()
+                    ? *last_error_compatibility.explicit_error_code
+                    : classify_runtime_error_code(last_error_message);
             const bool preserve_compatibility =
                 last_error_code == 1526 ||
                 last_error_code == 1429 ||
-                last_error_compatibility.thrown_user_value.has_value();
+                (compatibility_matches_current_fault && last_error_compatibility.thrown_user_value.has_value()) ||
+                (compatibility_matches_current_fault && last_error_compatibility.explicit_error_code.has_value()) ||
+                last_error_compatibility.preserve_fault_context;
             if (!preserve_compatibility)
             {
                 last_error_compatibility = {};
@@ -851,9 +865,45 @@
             return snapshot == nullptr ? last_error_compatibility : snapshot->compatibility;
         }
 
+        [[nodiscard]] bool has_active_exception_context() const
+        {
+            if (!error_metadata_stack.empty() || handling_error)
+            {
+                return true;
+            }
+
+            for (const Frame &frame : stack)
+            {
+                for (const TryState &try_state : frame.tries)
+                {
+                    if (try_state.handling_error)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        void remember_active_exception_reference(const PrgValue &reference)
+        {
+            last_error_compatibility.active_exception_reference = reference;
+            if (!error_metadata_stack.empty())
+            {
+                error_metadata_stack.back().compatibility.active_exception_reference = reference;
+            }
+        }
+
         PrgValue materialize_catch_exception_object()
         {
             const AErrorCompatibilitySnapshot &compatibility = current_error_compatibility();
+            if (compatibility.preserve_fault_context &&
+                compatibility.active_exception_reference.has_value())
+            {
+                remember_active_exception_reference(*compatibility.active_exception_reference);
+                return *compatibility.active_exception_reference;
+            }
             std::string detail = current_error_message();
             if (!compatibility.sql_detail.empty())
             {
@@ -883,7 +933,10 @@
             object_state.properties["uservalue"] = compatibility.thrown_user_value.value_or(make_empty_value());
 
             auto [inserted, _] = ole_objects.emplace(handle, std::move(object_state));
-            return make_string_value("object:" + inserted->second.prog_id + "#" + std::to_string(inserted->second.handle));
+            const PrgValue reference =
+                make_string_value("object:" + inserted->second.prog_id + "#" + std::to_string(inserted->second.handle));
+            remember_active_exception_reference(reference);
+            return reference;
         }
 
         void record_sql_aerror_context(const std::string &detail,

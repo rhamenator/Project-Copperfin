@@ -168,6 +168,8 @@ void test_repeated_nested_faults_refresh_stack_frame_and_statement_metadata();
 void test_try_catch_finally_handles_runtime_errors();
 void test_catch_to_binds_exception_object_with_error_metadata();
 void test_throw_is_catchable_and_preserves_exception_uservalue();
+void test_bare_throw_rethrows_active_exception_object();
+void test_bare_throw_without_active_exception_creates_user_thrown_default();
 void test_try_finally_runs_without_catch_on_success();
 void test_file_operation_runtime_errors_localize();
 void test_residual_dispatch_runtime_errors_localize();

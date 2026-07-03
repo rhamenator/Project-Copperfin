@@ -2085,12 +2085,42 @@
                 return {};
             case StatementKind::throw_statement:
             {
-                const PrgValue thrown_value = statement.expression.empty()
-                    ? make_empty_value()
-                    : evaluate_expression(statement.expression, frame);
-                last_error_message = format_value(thrown_value);
+                if (statement.expression.empty())
+                {
+                    if (has_active_exception_context())
+                    {
+                        last_error_message = current_error_message();
+                        last_error_code = current_error_code();
+                        last_error_work_area = current_error_work_area();
+                        last_error_procedure = current_error_procedure();
+                        last_fault_location = current_fault_location();
+                        last_fault_statement = current_fault_statement();
+                        last_error_compatibility = current_error_compatibility();
+                        last_error_compatibility.explicit_error_code = last_error_code;
+                        last_error_compatibility.preserve_fault_context = true;
+                    }
+                    else
+                    {
+                        last_error_message = runtime_text("Runtime.Prg.Core.Error.UserThrown");
+                        last_error_code = 2071;
+                        last_error_work_area = current_selected_work_area();
+                        last_error_procedure = frame.routine_name;
+                        last_error_compatibility = {};
+                        last_error_compatibility.explicit_error_code = 2071;
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                    }
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                const PrgValue thrown_value = evaluate_expression(statement.expression, frame);
+                last_error_message = runtime_text("Runtime.Prg.Core.Error.UserThrown");
+                last_error_code = 2071;
+                last_error_work_area = current_selected_work_area();
+                last_error_procedure = frame.routine_name;
                 last_error_compatibility = {};
                 last_error_compatibility.thrown_user_value = thrown_value;
+                last_error_compatibility.explicit_error_code = 2071;
                 last_fault_location = statement.location;
                 last_fault_statement = statement.text;
                 return {.ok = false, .message = last_error_message};

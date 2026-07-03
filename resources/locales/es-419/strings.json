@@ -1332,6 +1332,7 @@
   "Runtime.Prg.Core.Error.ResourceOutOfMemory": "Falla de recurso de runtime: memoria agotada. La ejecucion se pauso de forma segura.",
   "Runtime.Prg.Core.Error.ResourceSystemError": "Falla de recurso de runtime: error de sistema: {detail}",
   "Runtime.Prg.Core.Error.RuntimeFault": "Falla de runtime: {detail}",
+  "Runtime.Prg.Core.Error.UserThrown": "Error lanzado por el usuario.",
   "Runtime.Prg.Core.Error.UnknownRuntimeFault": "Falla de runtime: excepcion desconocida",
   "Runtime.Prg.Core.Error.XAssetBootstrapMaterializeFailed": "No se pudo materializar el bootstrap xAsset para: {path}",
   "Runtime.Prg.Session.Error.NoRunnableStartupMethodsFoundInAsset": "No se encontraron metodos de inicio ejecutables en el asset: {path}",

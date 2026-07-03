@@ -1332,6 +1332,7 @@
   "Runtime.Prg.Core.Error.ResourceOutOfMemory": "Runtime resource fault: out of memory. Execution paused safely.",
   "Runtime.Prg.Core.Error.ResourceSystemError": "Runtime resource fault: system error: {detail}",
   "Runtime.Prg.Core.Error.RuntimeFault": "Runtime fault: {detail}",
+  "Runtime.Prg.Core.Error.UserThrown": "User Thrown Error.",
   "Runtime.Prg.Core.Error.UnknownRuntimeFault": "Runtime fault: unknown exception",
   "Runtime.Prg.Core.Error.XAssetBootstrapMaterializeFailed": "Unable to materialize xAsset bootstrap for: {path}",
   "Runtime.Prg.Session.Error.NoRunnableStartupMethodsFoundInAsset": "No runnable startup methods were found in asset: {path}",
