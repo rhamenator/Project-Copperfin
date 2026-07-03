@@ -1052,6 +1052,101 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_child_methods_resolve_thisform_through_parent_chain()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_thisform";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_thisform.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('DemoForm')\n"
+            "oChild = oForm.cmdSave\n"
+            "cOwnerCaption = oChild.OwnerCaption()\n"
+            "cSavedCaption = oChild.TriggerSave()\n"
+            "cFormCaptionAfterSave = oForm.Caption\n"
+            "oFormRef = oChild.OwnerRef()\n"
+            "cOwnerRefCaption = oFormRef.Caption\n"
+            "RETURN\n"
+            "DEFINE CLASS DemoForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddObject('cmdSave', 'SaveButton')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "    FUNCTION Save\n"
+            "        THIS.Caption = THIS.Caption + '-Saved'\n"
+            "        RETURN THIS.Caption\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS Custom\n"
+            "    FUNCTION OwnerCaption\n"
+            "        RETURN THISFORM.Caption\n"
+            "    ENDFUNC\n"
+            "    FUNCTION TriggerSave\n"
+            "        RETURN THISFORM.Save()\n"
+            "    ENDFUNC\n"
+            "    FUNCTION OwnerRef\n"
+            "        RETURN THISFORM\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native THISFORM script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cownercaption", "MainForm");
+        check("csavedcaption", "MainForm-Saved");
+        check("cformcaptionaftersave", "MainForm-Saved");
+        check("cownerrefcaption", "MainForm-Saved");
+
+        expect(state.ole_objects.size() == 2U,
+               "native THISFORM script should register parent and child objects");
+        if (state.ole_objects.size() == 2U)
+        {
+            const auto &parent_object = state.ole_objects[0];
+            const auto caption = parent_object.properties.find("caption");
+            if (caption != parent_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(caption->second) == "MainForm-Saved",
+                       "native THISFORM should let child methods update the owning form");
+            }
+            else
+            {
+                expect(false, "native THISFORM should preserve the owning form caption property");
+            }
+        }
+
+        const bool has_save_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   event.detail == "DemoForm.Save";
+        });
+        expect(has_save_invoke_event,
+               "native THISFORM should route child method calls into parent methods");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_newobject_with_explicit_prg_library_activates_native_class_and_preserves_explicit_targets()
     {
         namespace fs = std::filesystem;
@@ -3200,6 +3295,7 @@ int main()
     test_createobject_instantiates_native_prg_class_and_preserves_plain_object_creation();
     test_newobject_instantiates_native_prg_class_and_preserves_ole_newobject();
     test_native_addobject_materializes_child_objects_and_child_methods_see_parent();
+    test_native_child_methods_resolve_thisform_through_parent_chain();
     test_newobject_with_explicit_prg_library_activates_native_class_and_preserves_explicit_targets();
     test_native_prg_object_methods_bind_this_and_persist_instance_state();
     test_native_prg_init_runs_during_object_creation_and_preserves_plain_creation();

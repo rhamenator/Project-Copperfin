@@ -859,6 +859,7 @@ namespace copperfin::runtime
                                       native_method_name.substr(0U, native_method_name.rfind('.')),
                                       leaf,
                                       native_object_parent_reference(*runtime_object),
+                                      native_object_owner_form_reference(*runtime_object),
                                       arguments,
                                       argument_references);
                     return run_expression_invoked_routine_until_return(return_depth);
@@ -1519,6 +1520,7 @@ namespace copperfin::runtime
                           native_defining_class_name,
                           normalize_identifier(identifier),
                           native_object_parent_reference(runtime_object),
+                          native_object_owner_form_reference(runtime_object),
                           std::vector<PrgValue>(arguments.begin(), arguments.end()),
                           std::vector<std::optional<std::string>>(
                               argument_references.begin(),
@@ -1592,6 +1594,13 @@ namespace copperfin::runtime
                               return parent_found == source_frame.locals.end()
                                   ? std::nullopt
                                   : std::optional<PrgValue>(parent_found->second);
+                          }(),
+                          [&source_frame]() -> std::optional<PrgValue>
+                          {
+                              const auto form_found = source_frame.locals.find("thisform");
+                              return form_found == source_frame.locals.end()
+                                  ? std::nullopt
+                                  : std::optional<PrgValue>(form_found->second);
                           }(),
                           std::vector<PrgValue>(effective_arguments.begin(), effective_arguments.end()),
                           std::vector<std::optional<std::string>>(

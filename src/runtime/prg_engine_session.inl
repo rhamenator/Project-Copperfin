@@ -52,6 +52,7 @@
             const std::string &native_method_class_name = {},
             const std::string &native_method_name = {},
             const std::optional<PrgValue> &parent_reference = std::nullopt,
+            const std::optional<PrgValue> &owner_form_reference = std::nullopt,
             std::vector<PrgValue> call_arguments = {},
             std::vector<std::optional<std::string>> call_argument_references = {})
         {
@@ -69,6 +70,11 @@
             {
                 frame.locals["parent"] = *parent_reference;
                 frame.local_names.insert("parent");
+            }
+            if (owner_form_reference.has_value())
+            {
+                frame.locals["thisform"] = *owner_form_reference;
+                frame.local_names.insert("thisform");
             }
             stack.push_back(std::move(frame));
         }
@@ -225,6 +231,46 @@
                 : std::nullopt;
         }
 
+        std::optional<PrgValue> native_object_owner_form_reference(
+            const RuntimeOleObjectState &runtime_object) const
+        {
+            auto current_reference = native_object_parent_reference(runtime_object);
+            if (!current_reference.has_value())
+            {
+                return std::nullopt;
+            }
+
+            std::set<int> visited_handles;
+            while (current_reference.has_value())
+            {
+                int handle = 0;
+                std::string prog_id;
+                if (!parse_object_handle_reference(*current_reference, handle, prog_id))
+                {
+                    return std::nullopt;
+                }
+                if (!visited_handles.insert(handle).second)
+                {
+                    return current_reference;
+                }
+
+                const auto found = ole_objects.find(handle);
+                if (found == ole_objects.end())
+                {
+                    return current_reference;
+                }
+
+                const auto parent_reference = native_object_parent_reference(found->second);
+                if (!parent_reference.has_value())
+                {
+                    return current_reference;
+                }
+                current_reference = parent_reference;
+            }
+
+            return std::nullopt;
+        }
+
         RuntimeOleObjectState *instantiate_native_class_object(
             const Frame &frame,
             const std::string &prog_id,
@@ -359,6 +405,7 @@
                                   init_method_name.substr(0U, init_method_name.rfind('.')),
                                   "init",
                                   parent_reference,
+                                  native_object_owner_form_reference(*runtime_object),
                                   effective_constructor_arguments,
                                   constructor_argument_references);
                 (void)run_expression_invoked_routine_until_return(return_depth);
