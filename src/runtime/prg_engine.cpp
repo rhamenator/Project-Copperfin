@@ -515,6 +515,15 @@ namespace copperfin::runtime
         PrgValue inspect_native_events(
             const std::vector<PrgValue> &arguments,
             const std::vector<std::string> &raw_arguments);
+        std::optional<PrgValue> read_native_property_if_present(
+            RuntimeOleObjectState &runtime_object,
+            const std::string &property_name,
+            const Frame &source_frame);
+        bool write_native_property_if_present(
+            RuntimeOleObjectState &runtime_object,
+            const std::string &property_name,
+            const PrgValue &assigned_value,
+            const Frame &source_frame);
         std::optional<PrgValue> invoke_native_object_method_body_if_present(
             RuntimeOleObjectState &runtime_object,
             const std::string &identifier,
@@ -1108,34 +1117,10 @@ namespace copperfin::runtime
                                   .detail = runtime_object->prog_id + "." + effective_property_path,
                                   .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
                 const std::string property_name = normalize_identifier(effective_property_path);
-                if (auto access_result = invoke_native_object_method_if_present(
-                        *runtime_object,
-                        property_name + "_access",
-                        frame,
-                        {},
-                        {});
-                    access_result.has_value())
+                if (auto property_result = read_native_property_if_present(*runtime_object, property_name, frame);
+                    property_result.has_value())
                 {
-                    return *access_result;
-                }
-                if (auto metadata_value = read_native_identity_metadata(*runtime_object, property_name);
-                    metadata_value.has_value())
-                {
-                    return *metadata_value;
-                }
-                if (auto collection_value = read_native_collection_member(*runtime_object, property_name);
-                    collection_value.has_value())
-                {
-                    return *collection_value;
-                }
-                if (is_native_identity_member_name(*runtime_object, property_name))
-                {
-                    return make_empty_value();
-                }
-                const auto property = runtime_object->properties.find(property_name);
-                if (property != runtime_object->properties.end())
-                {
-                    return property->second;
+                    return *property_result;
                 }
                 if (normalize_identifier(runtime_object->prog_id) == "scripting.dictionary")
                 {
@@ -1502,12 +1487,7 @@ namespace copperfin::runtime
                 {
                     return std::nullopt;
                 }
-                return invoke_native_object_method_if_present(
-                    **object,
-                    member_name + "_access",
-                    frame,
-                    {},
-                    {});
+                return read_native_property_if_present(**object, member_name, frame);
             },
             [this, &frame](const PrgValue &value, const std::string &member_name, const PrgValue &assigned_value) -> bool
             {
@@ -1516,13 +1496,7 @@ namespace copperfin::runtime
                 {
                     return false;
                 }
-                return invoke_native_object_method_if_present(
-                           **object,
-                           member_name + "_assign",
-                           frame,
-                           {assigned_value},
-                           {})
-                    .has_value();
+                return write_native_property_if_present(**object, member_name, assigned_value, frame);
             },
             [this](const std::string &name, std::vector<PrgValue> values)
             {
@@ -2289,6 +2263,180 @@ namespace copperfin::runtime
 
         assign_array(array_name, std::move(values), 5U);
         return make_number_value(static_cast<double>(array_length(array_name, 1)));
+    }
+
+    std::optional<PrgValue> PrgRuntimeSession::Impl::read_native_property_if_present(
+        RuntimeOleObjectState &runtime_object,
+        const std::string &property_name,
+        const Frame &source_frame)
+    {
+        const std::string normalized_property_name = normalize_identifier(property_name);
+        if (normalized_property_name.empty())
+        {
+            return std::nullopt;
+        }
+
+        const auto perform_property_read = [&]() -> std::optional<PrgValue>
+        {
+            if (auto access_result = invoke_native_object_method_body_if_present(
+                    runtime_object,
+                    normalized_property_name + "_access",
+                    source_frame,
+                    {},
+                    {});
+                access_result.has_value())
+            {
+                return *access_result;
+            }
+            if (auto metadata_value = read_native_identity_metadata(runtime_object, normalized_property_name);
+                metadata_value.has_value())
+            {
+                return *metadata_value;
+            }
+            if (auto collection_value = read_native_collection_member(runtime_object, normalized_property_name);
+                collection_value.has_value())
+            {
+                return *collection_value;
+            }
+            if (is_native_identity_member_name(runtime_object, normalized_property_name))
+            {
+                return make_empty_value();
+            }
+            const auto property = runtime_object.properties.find(normalized_property_name);
+            if (property != runtime_object.properties.end())
+            {
+                return property->second;
+            }
+            return std::nullopt;
+        };
+
+        std::vector<NativeEventBinding> bindings;
+        bindings.reserve(native_event_bindings.size());
+        for (const NativeEventBinding &binding : native_event_bindings)
+        {
+            if (binding.source_handle == runtime_object.handle &&
+                binding.event_name == normalized_property_name &&
+                (binding.flags & 2) == 0)
+            {
+                bindings.push_back(binding);
+            }
+        }
+
+        const std::string active_event_key =
+            std::to_string(runtime_object.handle) + ":" + normalized_property_name;
+        const bool already_active =
+            active_native_event_keys.find(active_event_key) != active_native_event_keys.end();
+
+        if (!bindings.empty() && !already_active)
+        {
+            active_native_event_keys.insert(active_event_key);
+            const auto invoke_delegates_for_phase = [&](bool after_source_member)
+            {
+                for (const NativeEventBinding &binding : bindings)
+                {
+                    const bool binding_after_source_member = (binding.flags & 1) != 0;
+                    if (binding_after_source_member == after_source_member)
+                    {
+                        (void)invoke_native_event_delegate(
+                            binding,
+                            {.source_handle = runtime_object.handle,
+                             .event_name = normalized_property_name,
+                             .event_type = 2},
+                            {},
+                            {});
+                    }
+                }
+            };
+
+            invoke_delegates_for_phase(false);
+            auto result = perform_property_read();
+            invoke_delegates_for_phase(true);
+            active_native_event_keys.erase(active_event_key);
+            return result;
+        }
+
+        return perform_property_read();
+    }
+
+    bool PrgRuntimeSession::Impl::write_native_property_if_present(
+        RuntimeOleObjectState &runtime_object,
+        const std::string &property_name,
+        const PrgValue &assigned_value,
+        const Frame &source_frame)
+    {
+        const std::string normalized_property_name = normalize_identifier(property_name);
+        if (normalized_property_name.empty())
+        {
+            return false;
+        }
+
+        const auto perform_property_write = [&]() -> bool
+        {
+            if (invoke_native_object_method_body_if_present(
+                    runtime_object,
+                    normalized_property_name + "_assign",
+                    source_frame,
+                    {assigned_value},
+                    {}).has_value())
+            {
+                return true;
+            }
+            if (!is_native_identity_member_name(runtime_object, normalized_property_name) &&
+                !is_native_child_parent_member_name(runtime_object, normalized_property_name) &&
+                !is_native_collection_readonly_member_name(runtime_object, normalized_property_name))
+            {
+                runtime_object.properties[normalized_property_name] = assigned_value;
+                return true;
+            }
+            return false;
+        };
+
+        std::vector<NativeEventBinding> bindings;
+        bindings.reserve(native_event_bindings.size());
+        for (const NativeEventBinding &binding : native_event_bindings)
+        {
+            if (binding.source_handle == runtime_object.handle &&
+                binding.event_name == normalized_property_name &&
+                (binding.flags & 2) == 0)
+            {
+                bindings.push_back(binding);
+            }
+        }
+
+        const std::string active_event_key =
+            std::to_string(runtime_object.handle) + ":" + normalized_property_name;
+        const bool already_active =
+            active_native_event_keys.find(active_event_key) != active_native_event_keys.end();
+
+        if (!bindings.empty() && !already_active)
+        {
+            active_native_event_keys.insert(active_event_key);
+            const auto invoke_delegates_for_phase = [&](bool after_source_member)
+            {
+                for (const NativeEventBinding &binding : bindings)
+                {
+                    const bool binding_after_source_member = (binding.flags & 1) != 0;
+                    if (binding_after_source_member == after_source_member)
+                    {
+                        (void)invoke_native_event_delegate(
+                            binding,
+                            {.source_handle = runtime_object.handle,
+                             .event_name = normalized_property_name,
+                             .event_type = 2},
+                            {assigned_value},
+                            {});
+                    }
+                }
+            };
+
+            invoke_delegates_for_phase(false);
+            const bool result = perform_property_write();
+            invoke_delegates_for_phase(true);
+            active_native_event_keys.erase(active_event_key);
+            return result;
+        }
+
+        return perform_property_write();
     }
 
     PrgValue PrgRuntimeSession::Impl::release_native_object(

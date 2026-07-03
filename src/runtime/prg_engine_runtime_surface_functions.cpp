@@ -944,17 +944,23 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             collection_value.has_value()) {
             return *collection_value;
         }
-        const auto prop_it = runtime_object->properties.find(member_name);
-        if (prop_it != runtime_object->properties.end()) {
-            return prop_it->second;
+        if (runtime_object->source.empty()) {
+            const auto prop_it = runtime_object->properties.find(member_name);
+            if (prop_it != runtime_object->properties.end()) {
+                return prop_it->second;
+            }
         }
-        if (object_has_accessor_property(*runtime_object, member_name)) {
+        if (!runtime_object->source.empty()) {
             if (read_native_member_callback) {
                 const auto member_value = read_native_member_callback(arguments[0], member_name);
                 if (member_value.has_value()) {
                     return *member_value;
                 }
             }
+            if (object_has_accessor_property(*runtime_object, member_name)) {
+                return make_boolean_value(true);
+            }
+        } else if (object_has_accessor_property(*runtime_object, member_name)) {
             return make_boolean_value(true);
         }
         if (is_native_collection_member_name(*runtime_object, member_name)) {
@@ -986,10 +992,17 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_collection_readonly_member_name(*runtime_object, member_name)) {
             return make_boolean_value(false);
         }
-        if (object_has_assigner_property(*runtime_object, member_name)) {
+        if (!runtime_object->source.empty() &&
+            (object_has_assigner_property(*runtime_object, member_name) ||
+             runtime_object->properties.contains(member_name) ||
+             object_has_member(runtime_object->methods, member_name) ||
+             object_has_member(runtime_object->events, member_name))) {
             return make_boolean_value(
                 write_native_member_callback &&
                 write_native_member_callback(arguments[0], member_name, arguments[2]));
+        }
+        if (object_has_assigner_property(*runtime_object, member_name)) {
+            return make_boolean_value(false);
         }
         if (object_has_member(runtime_object->methods, member_name) ||
             object_has_member(runtime_object->events, member_name)) {

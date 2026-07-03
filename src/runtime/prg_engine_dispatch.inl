@@ -587,12 +587,11 @@
                     const std::string property_name = normalize_identifier(effective_member_path);
                     if (!property_name.empty())
                     {
-                        if (invoke_native_object_method_if_present(
+                        if (write_native_property_if_present(
                                 *runtime_object,
-                                property_name + "_assign",
-                                frame,
-                                {assignment_value},
-                                {}).has_value())
+                                property_name,
+                                assignment_value,
+                                frame))
                         {
                             runtime_object->last_action = effective_member_path + " = " + value_as_string(assignment_value);
                             ++runtime_object->action_count;
@@ -600,12 +599,6 @@
                                               .detail = runtime_object->prog_id + "." + runtime_object->last_action,
                                               .location = statement.location});
                             return {};
-                        }
-                        if (!is_native_identity_member_name(*runtime_object, property_name) &&
-                            !is_native_child_parent_member_name(*runtime_object, property_name) &&
-                            !is_native_collection_readonly_member_name(*runtime_object, property_name))
-                        {
-                            runtime_object->properties[property_name] = assignment_value;
                         }
                     }
                     runtime_object->last_action = effective_member_path + " = " + value_as_string(assignment_value);
