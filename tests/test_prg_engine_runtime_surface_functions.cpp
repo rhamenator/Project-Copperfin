@@ -1290,6 +1290,97 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_addobject_external_child_base_aclass_reflects_inheritance_chain()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_addobject_external_child_base_aclass";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path root_library_path = temp_root / "rootbuttons.prg";
+        write_text(
+            root_library_path,
+            "DEFINE CLASS ParentButton AS Custom\n"
+            "ENDDEFINE\n");
+
+        const fs::path button_library_path = temp_root / "buttons.prg";
+        write_text(
+            button_library_path,
+            "DEFINE CLASS SaveButton AS ParentButton OF rootbuttons.prg\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "native_addobject_external_child_base_aclass.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('DemoForm')\n"
+            "oChild = oForm.cmdSave\n"
+            "nClassCount = ACLASS(aClass, oChild)\n"
+            "cClass1 = aClass[1]\n"
+            "cClass2 = aClass[2]\n"
+            "cClass3 = aClass[3]\n"
+            "cClass4 = aClass[4]\n"
+            "RETURN\n"
+            "DEFINE CLASS DemoForm AS Custom\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddObject('cmdSave', 'SaveButton', 'buttons.prg')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native ADDOBJECT external child-base ACLASS script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("nclasscount", "4");
+        check("cclass1", "SAVEBUTTON");
+        check("cclass2", "PARENTBUTTON");
+        check("cclass3", "CUSTOM");
+        check("cclass4", "OBJECT");
+
+        expect(state.ole_objects.size() == 2U,
+               "native ADDOBJECT external child-base ACLASS should register parent and child objects");
+        if (state.ole_objects.size() == 2U)
+        {
+            const auto &child_object = state.ole_objects[1];
+            expect(child_object.prog_id == "SaveButton",
+                   "native ADDOBJECT external child-base ACLASS should preserve child identity");
+            expect(child_object.class_library == root_library_path.string(),
+                   "native ADDOBJECT external child-base ACLASS should preserve external child ClassLibrary path");
+            expect(child_object.class_hierarchy.size() == 4U,
+                   "native ADDOBJECT external child-base ACLASS should preserve runtime child class hierarchy");
+            if (child_object.class_hierarchy.size() == 4U)
+            {
+                expect(child_object.class_hierarchy[0] == "SAVEBUTTON",
+                       "native ADDOBJECT external child-base ACLASS should store the derived child class first");
+                expect(child_object.class_hierarchy[1] == "PARENTBUTTON",
+                       "native ADDOBJECT external child-base ACLASS should store the external parent class second");
+                expect(child_object.class_hierarchy[2] == "CUSTOM",
+                       "native ADDOBJECT external child-base ACLASS should store the builtin base token");
+                expect(child_object.class_hierarchy[3] == "OBJECT",
+                       "native ADDOBJECT external child-base ACLASS should store the terminal object token");
+            }
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_class_body_add_object_materializes_children_before_init()
     {
         namespace fs = std::filesystem;
@@ -8688,6 +8779,108 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_inherited_external_base_addobject_external_child_base_aclass_reflects_inheritance_chain()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_external_base_inherited_addobject_external_child_base_aclass";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path root_library_path = temp_root / "rootbuttons.prg";
+        write_text(
+            root_library_path,
+            "DEFINE CLASS ParentButton AS Custom\n"
+            "ENDDEFINE\n");
+
+        const fs::path widget_library_path = temp_root / "widgetlib.prg";
+        write_text(
+            widget_library_path,
+            "DEFINE CLASS ParentForm AS Custom\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddObject('cmdSave', 'SaveButton', 'buttons.prg')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        const fs::path button_library_path = temp_root / "buttons.prg";
+        write_text(
+            button_library_path,
+            "DEFINE CLASS SaveButton AS ParentButton OF rootbuttons.prg\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "external_base_inherited_addobject_external_child_base_aclass.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildForm')\n"
+            "oChild = oCreate.cmdSave\n"
+            "nClassCount = ACLASS(aClass, oChild)\n"
+            "cClass1 = aClass[1]\n"
+            "cClass2 = aClass[2]\n"
+            "cClass3 = aClass[3]\n"
+            "cClass4 = aClass[4]\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildForm AS ParentForm OF widgetlib.prg\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("external-base inherited ADDOBJECT external child-base ACLASS script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("nclasscount", "4");
+        check("cclass1", "SAVEBUTTON");
+        check("cclass2", "PARENTBUTTON");
+        check("cclass3", "CUSTOM");
+        check("cclass4", "OBJECT");
+
+        expect(state.ole_objects.size() == 2U,
+               "external-base inherited ADDOBJECT external child-base ACLASS should register parent and child objects");
+        if (state.ole_objects.size() == 2U)
+        {
+            const auto &parent_object = state.ole_objects[0];
+            const auto &child_object = state.ole_objects[1];
+            expect(parent_object.prog_id == "ChildForm",
+                   "external-base inherited ADDOBJECT external child-base ACLASS should preserve parent identity");
+            expect(child_object.prog_id == "SaveButton",
+                   "external-base inherited ADDOBJECT external child-base ACLASS should preserve child identity");
+            expect(child_object.source == button_library_path.string(),
+                   "external-base inherited ADDOBJECT external child-base ACLASS should preserve child source path");
+            expect(child_object.class_library == root_library_path.string(),
+                   "external-base inherited ADDOBJECT external child-base ACLASS should preserve external child ClassLibrary path");
+            expect(child_object.class_hierarchy.size() == 4U,
+                   "external-base inherited ADDOBJECT external child-base ACLASS should preserve runtime child class hierarchy");
+            if (child_object.class_hierarchy.size() == 4U)
+            {
+                expect(child_object.class_hierarchy[0] == "SAVEBUTTON",
+                       "external-base inherited ADDOBJECT external child-base ACLASS should store the derived child class first");
+                expect(child_object.class_hierarchy[1] == "PARENTBUTTON",
+                       "external-base inherited ADDOBJECT external child-base ACLASS should store the external parent class second");
+                expect(child_object.class_hierarchy[2] == "CUSTOM",
+                       "external-base inherited ADDOBJECT external child-base ACLASS should store the builtin base token");
+                expect(child_object.class_hierarchy[3] == "OBJECT",
+                       "external-base inherited ADDOBJECT external child-base ACLASS should store the terminal object token");
+            }
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow()
     {
         namespace fs = std::filesystem;
@@ -10713,6 +10906,7 @@ int main()
     test_native_object_method_and_init_preserve_by_reference_argument_updates();
     test_native_addobject_materializes_external_prg_child_objects_and_preserves_init_flow();
     test_native_addobject_external_child_base_surfaces_classlibrary_provenance();
+    test_native_addobject_external_child_base_aclass_reflects_inheritance_chain();
     test_same_prg_native_class_inheritance_applies_parent_defaults_methods_and_init();
     test_native_class_inheritance_loads_external_prg_base_sources();
     test_same_prg_native_aclass_reflects_inheritance_chain();
@@ -10776,6 +10970,7 @@ int main()
     test_inherited_declarative_children_from_external_prg_bases_resolve_against_defining_library();
     test_inherited_external_prg_base_methods_resolve_addobject_children_against_defining_library();
     test_inherited_external_base_addobject_external_child_base_surfaces_classlibrary_provenance();
+    test_inherited_external_base_addobject_external_child_base_aclass_reflects_inheritance_chain();
     test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow();
     test_same_prg_native_bare_helper_calls_resolve_to_current_instance_before_top_level_routines();
     test_inherited_external_prg_base_methods_resolve_bare_helper_calls_against_defining_library();
