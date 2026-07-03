@@ -836,6 +836,45 @@ namespace copperfin::runtime
                                       .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
                     return make_boolean_value(true);
                 }
+                if (leaf == "removeobject" && !runtime_object->source.empty() && !arguments.empty())
+                {
+                    const std::string child_name = normalize_identifier(trim_copy(value_as_string(arguments[0])));
+                    if (child_name.empty())
+                    {
+                        return make_boolean_value(false);
+                    }
+
+                    const auto child_property = runtime_object->properties.find(child_name);
+                    if (child_property == runtime_object->properties.end())
+                    {
+                        return make_boolean_value(false);
+                    }
+
+                    const auto child_object = resolve_ole_object(child_property->second);
+                    if (!child_object.has_value())
+                    {
+                        return make_boolean_value(false);
+                    }
+
+                    const auto child_parent = native_object_parent_reference(**child_object);
+                    int parent_handle = 0;
+                    std::string parent_prog_id;
+                    if (!child_parent.has_value() ||
+                        !parse_object_handle_reference(*child_parent, parent_handle, parent_prog_id) ||
+                        parent_handle != runtime_object->handle)
+                    {
+                        return make_boolean_value(false);
+                    }
+
+                    (*child_object)->properties.erase("parent");
+                    runtime_object->properties.erase(child_name);
+                    runtime_object->last_action = effective_member_path + "(" + child_name + ")";
+                    ++runtime_object->action_count;
+                    events.push_back({.category = "prg.object.removeobject",
+                                      .detail = runtime_object->prog_id + "." + child_name,
+                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                    return make_boolean_value(true);
+                }
                 std::string native_method_program_path;
                 std::string native_method_name;
                 if (const Routine *native_method = find_native_object_method(

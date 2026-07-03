@@ -1339,6 +1339,97 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_removeobject_detaches_child_and_clears_parent_reference()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_removeobject";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_removeobject.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('DemoForm')\n"
+            "oChild = oForm.cmdSave\n"
+            "cChildCaptionBeforeRemove = oChild.Caption\n"
+            "lRemoved = oForm.RemoveObject('cmdSave')\n"
+            "lRemovedMissing = oForm.RemoveObject('cmdSave')\n"
+            "lHasChildAfterRemove = PEMSTATUS(oForm, 'cmdSave', 1)\n"
+            "xRemovedChild = GETPEM(oForm, 'cmdSave')\n"
+            "lChildHasParentAfterRemove = PEMSTATUS(oChild, 'Parent', 1)\n"
+            "cChildCaptionAfterRemove = oChild.Caption\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 16)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS DemoForm AS Custom\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddObject('cmdSave', 'SaveButton')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS Custom\n"
+            "    Caption = 'Save'\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native REMOVEOBJECT script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cchildcaptionbeforeremove", "Save");
+        check("lremoved", "true");
+        check("lremovedmissing", "false");
+        check("lhaschildafterremove", "false");
+        check("lchildhasparentafterremove", "false");
+        check("cchildcaptionafterremove", "Save");
+        check("ldictset", "true");
+        check("ndictcompare", "16");
+
+        const auto removed_child = state.globals.find("xremovedchild");
+        expect(removed_child != state.globals.end() &&
+                   removed_child->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "native REMOVEOBJECT should make GETPEM() return empty for the removed child");
+
+        expect(state.ole_objects.size() == 3U,
+               "native REMOVEOBJECT script should register parent, detached child, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            expect(!state.ole_objects[0].properties.contains("cmdsave"),
+                   "native REMOVEOBJECT should remove the child reference from the parent");
+            expect(!state.ole_objects[1].properties.contains("parent"),
+                   "native REMOVEOBJECT should clear the detached child's parent reference");
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM behavior should remain stable while native REMOVEOBJECT lands");
+        }
+
+        const bool has_removeobject_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.removeobject" &&
+                   event.detail == "DemoForm.cmdsave";
+        });
+        expect(has_removeobject_event,
+               "native REMOVEOBJECT should emit detachment events");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_newobject_with_explicit_prg_library_activates_native_class_and_preserves_explicit_targets()
     {
         namespace fs = std::filesystem;
@@ -3490,6 +3581,7 @@ int main()
     test_native_child_methods_resolve_thisform_through_parent_chain();
     test_dotted_native_child_chains_traverse_contained_objects();
     test_dotted_native_child_assignments_traverse_contained_objects();
+    test_native_removeobject_detaches_child_and_clears_parent_reference();
     test_newobject_with_explicit_prg_library_activates_native_class_and_preserves_explicit_targets();
     test_native_prg_object_methods_bind_this_and_persist_instance_state();
     test_native_prg_init_runs_during_object_creation_and_preserves_plain_creation();
