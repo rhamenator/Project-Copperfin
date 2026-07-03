@@ -763,7 +763,8 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         if (property_name.empty()) {
             return make_boolean_value(false);
         }
-        if (is_native_identity_member_name(*runtime_object, property_name)) {
+        if (is_native_identity_member_name(*runtime_object, property_name) ||
+            native_child_parent_member_name_matches(*runtime_object, property_name)) {
             return make_boolean_value(false);
         }
         const PrgValue initial_value = arguments.size() >= 3U ? arguments[2] : make_empty_value();
