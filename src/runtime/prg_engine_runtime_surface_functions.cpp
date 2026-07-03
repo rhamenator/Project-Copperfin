@@ -858,6 +858,10 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         if (property_name.empty()) {
             return make_boolean_value(false);
         }
+        if (is_native_identity_member_name(*runtime_object, property_name) ||
+            native_child_parent_member_name_matches(*runtime_object, property_name)) {
+            return make_boolean_value(false);
+        }
         const std::size_t removed = runtime_object->properties.erase(property_name);
         return make_boolean_value(removed != 0U);
     }
