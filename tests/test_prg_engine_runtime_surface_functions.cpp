@@ -4536,6 +4536,139 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_createobject_and_newobject_instantiate_same_prg_pagefooter_native_class()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_pagefooter_class";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_pagefooter_class.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('WorkerPageFooter')\n"
+            "oLeaf = NEWOBJECT('WorkerPageFooter')\n"
+            "cCreateHeight = ALLTRIM(STR(oCreate.Height))\n"
+            "cLeafHeight = ALLTRIM(STR(oLeaf.Height))\n"
+            "cCreateDescribe = oCreate.Describe('prefix')\n"
+            "cLeafDescribe = oLeaf.Describe('leaf')\n"
+            "cCreateBaseClass = oCreate.BaseClass\n"
+            "cLeafBaseClass = oLeaf.BaseClass\n"
+            "cCreateClass = oCreate.Class\n"
+            "cLeafClass = oLeaf.Class\n"
+            "lCreateHasDescribe = GETPEM(oCreate, 'Describe')\n"
+            "lLeafHasDescribe = GETPEM(oLeaf, 'Describe')\n"
+            "lCreateHasBaseClass = PEMSTATUS(oCreate, 'BaseClass', 1)\n"
+            "lLeafHasBaseClass = PEMSTATUS(oLeaf, 'BaseClass', 1)\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 167)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS WorkerPageFooter AS PageFooter\n"
+            "    Height = 18\n"
+            "    FUNCTION Describe\n"
+            "        LPARAMETERS tcPrefix\n"
+            "        RETURN tcPrefix + ':' + ALLTRIM(STR(THIS.Height))\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native PageFooter-base class script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("ccreateheight", "18");
+        check("cleafheight", "18");
+        check("ccreatedescribe", "prefix:18");
+        check("cleafdescribe", "leaf:18");
+        check("ccreatebaseclass", "PageFooter");
+        check("cleafbaseclass", "PageFooter");
+        check("ccreateclass", "WorkerPageFooter");
+        check("cleafclass", "WorkerPageFooter");
+        check("lcreatehasdescribe", "true");
+        check("lleafhasdescribe", "true");
+        check("lcreatehasbaseclass", "true");
+        check("lleafhasbaseclass", "true");
+        check("ldictset", "true");
+        check("ndictcompare", "167");
+
+        expect(state.ole_objects.size() == 3U,
+               "native PageFooter-base CREATEOBJECT/NEWOBJECT plus COM NEWOBJECT should register three runtime objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            const auto &create_object = state.ole_objects[0];
+            const auto &leaf_object = state.ole_objects[1];
+            expect(create_object.prog_id == "WorkerPageFooter",
+                   "native PageFooter-base CREATEOBJECT should preserve the PRG class name");
+            expect(create_object.source == main_path.string(),
+                   "native PageFooter-base CREATEOBJECT should preserve defining PRG provenance");
+            expect(create_object.base_class_name == "PageFooter",
+                   "native PageFooter-base CREATEOBJECT should preserve the builtin PageFooter base token");
+            expect(create_object.class_library.empty(),
+                   "native PageFooter-base CREATEOBJECT should keep ClassLibrary empty for same-PRG classes");
+            expect(create_object.class_hierarchy.size() == 3U,
+                   "native PageFooter-base CREATEOBJECT should persist native class hierarchy including PageFooter");
+            if (create_object.class_hierarchy.size() == 3U)
+            {
+                expect(create_object.class_hierarchy[0] == "WORKERPAGEFOOTER",
+                       "native PageFooter-base CREATEOBJECT should store the native class first");
+                expect(create_object.class_hierarchy[1] == "PAGEFOOTER",
+                       "native PageFooter-base CREATEOBJECT should store the builtin PageFooter base second");
+                expect(create_object.class_hierarchy[2] == "OBJECT",
+                       "native PageFooter-base CREATEOBJECT should store the terminal OBJECT token third");
+            }
+
+            expect(leaf_object.prog_id == "WorkerPageFooter",
+                   "native PageFooter-base NEWOBJECT should preserve the PRG class name");
+            expect(leaf_object.source == main_path.string(),
+                   "native PageFooter-base NEWOBJECT should preserve defining PRG provenance");
+            expect(leaf_object.base_class_name == "PageFooter",
+                   "native PageFooter-base NEWOBJECT should preserve the builtin PageFooter base token");
+            expect(leaf_object.class_library.empty(),
+                   "native PageFooter-base NEWOBJECT should keep ClassLibrary empty for same-PRG classes");
+            expect(leaf_object.class_hierarchy.size() == 3U,
+                   "native PageFooter-base NEWOBJECT should persist native class hierarchy including PageFooter");
+            if (leaf_object.class_hierarchy.size() == 3U)
+            {
+                expect(leaf_object.class_hierarchy[0] == "WORKERPAGEFOOTER",
+                       "native PageFooter-base NEWOBJECT should store the native class first");
+                expect(leaf_object.class_hierarchy[1] == "PAGEFOOTER",
+                       "native PageFooter-base NEWOBJECT should store the builtin PageFooter base second");
+                expect(leaf_object.class_hierarchy[2] == "OBJECT",
+                       "native PageFooter-base NEWOBJECT should store the terminal OBJECT token third");
+            }
+
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while PageFooter-base native activation lands");
+        }
+
+        const bool has_describe_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   event.detail == "WorkerPageFooter.Describe";
+        });
+        expect(has_describe_invoke_event,
+               "native PageFooter-base activation should dispatch ordinary native method calls");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_addobject_materializes_child_objects_and_child_methods_see_parent()
     {
         namespace fs = std::filesystem;
@@ -37992,6 +38125,7 @@ int main()
     test_createobject_and_newobject_instantiate_same_prg_commandgroup_native_class();
     test_createobject_and_newobject_instantiate_same_prg_olecontrol_native_class();
     test_createobject_and_newobject_instantiate_same_prg_pageheader_native_class();
+    test_createobject_and_newobject_instantiate_same_prg_pagefooter_native_class();
     test_native_addobject_materializes_child_objects_and_child_methods_see_parent();
     test_native_class_body_add_object_materializes_children_before_init();
     test_native_class_body_add_object_with_property_clauses_materialize_before_parent_init();
