@@ -39036,6 +39036,140 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_external_prg_base_property_bindevent_dispatch_preserves_current_event_metadata()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_external_prg_property_bindevent";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path library_path = temp_root / "widgetlib.prg";
+        write_text(
+            library_path,
+            "DEFINE CLASS ParentWidget AS Custom\n"
+            "    cBacking = 'Parent'\n"
+            "    nRaw = 5\n"
+            "    FUNCTION Caption_Access\n"
+            "        RETURN THIS.cBacking + ':A'\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE Caption_Assign\n"
+            "        LPARAMETERS tcValue\n"
+            "        THIS.cBacking = tcValue + ':S'\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "external_property_bindevent.prg";
+        write_text(
+            main_path,
+            "cLog = ''\n"
+            "nCaptionCalls = 0\n"
+            "nRawCalls = 0\n"
+            "oCreate = CREATEOBJECT('ChildWidget')\n"
+            "nBindCaption = BINDEVENT(oCreate, 'Caption', 'HandleCaption')\n"
+            "nBindRaw = BINDEVENT(oCreate, 'nRaw', 'HandleRaw', 1)\n"
+            "cCaptionBefore = oCreate.Caption\n"
+            "oCreate.Caption = 'Set'\n"
+            "cCaptionAfter = oCreate.Caption\n"
+            "nRawBefore = oCreate.nRaw\n"
+            "oCreate.nRaw = 9\n"
+            "nRawAfter = oCreate.nRaw\n"
+            "cGetCaption = GETPEM(oCreate, 'Caption')\n"
+            "lSetCaption = SETPEM(oCreate, 'Caption', 'PemSet')\n"
+            "cAfterSetPem = oCreate.Caption\n"
+            "lSetRaw = SETPEM(oCreate, 'nRaw', 11)\n"
+            "nAfterSetPemRaw = oCreate.nRaw\n"
+            "RETURN\n"
+            "PROCEDURE HandleCaption\n"
+            "    LPARAMETERS tuValue\n"
+            "    nCaptionCalls = nCaptionCalls + 1\n"
+            "    nRows = AEVENTS(aCurrent, 0)\n"
+            "    cLog = cLog + '[caption:' + aCurrent[2] + ':' + TRANSFORM(aCurrent[3]) + ':' + TRANSFORM(PCOUNT()) + ':' + IIF(PCOUNT() = 0, 'none', TRANSFORM(tuValue)) + ']'\n"
+            "    IF nCaptionCalls = 1\n"
+            "        nCaptionFirstRows = nRows\n"
+            "        lCaptionFirstSource = COMPOBJ(aCurrent[1], oCreate)\n"
+            "    ENDIF\n"
+            "    RETURN\n"
+            "ENDPROC\n"
+            "PROCEDURE HandleRaw\n"
+            "    LPARAMETERS tuValue\n"
+            "    nRawCalls = nRawCalls + 1\n"
+            "    nRows = AEVENTS(aCurrentRaw, 0)\n"
+            "    cLog = cLog + '[raw:' + aCurrentRaw[2] + ':' + TRANSFORM(aCurrentRaw[3]) + ':' + TRANSFORM(PCOUNT()) + ':' + IIF(PCOUNT() = 0, 'none', TRANSFORM(tuValue)) + ']'\n"
+            "    IF nRawCalls = 1\n"
+            "        nRawFirstRows = nRows\n"
+            "        lRawFirstSource = COMPOBJ(aCurrentRaw[1], oCreate)\n"
+            "    ENDIF\n"
+            "    RETURN\n"
+            "ENDPROC\n"
+            "DEFINE CLASS ChildWidget AS ParentWidget OF widgetlib.prg\n"
+            "    cBacking = 'Child'\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("external-base property BINDEVENT script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("nbindcaption", "1");
+        check("nbindraw", "1");
+        check("ccaptionbefore", "Child:A");
+        check("ccaptionafter", "Set:S:A");
+        check("nrawbefore", "5");
+        check("nrawafter", "9");
+        check("cgetcaption", "Set:S:A");
+        check("lsetcaption", "true");
+        check("caftersetpem", "PemSet:S:A");
+        check("lsetraw", "true");
+        check("naftersetpemraw", "11");
+        check("ncaptioncalls", "6");
+        check("nrawcalls", "5");
+        check("ncaptionfirstrows", "3");
+        check("lcaptionfirstsource", "true");
+        check("nrawfirstrows", "3");
+        check("lrawfirstsource", "true");
+        check("clog",
+              "[caption:caption:2:0:none][caption:caption:2:1:Set][caption:caption:2:0:none][raw:nraw:2:0:none][raw:nraw:2:1:9][raw:nraw:2:0:none][caption:caption:2:0:none][caption:caption:2:1:PemSet][caption:caption:2:0:none][raw:nraw:2:1:11][raw:nraw:2:0:none]");
+
+        expect(state.ole_objects.size() == 1U,
+               "external-base property BINDEVENT script should register one native object");
+        if (state.ole_objects.size() == 1U)
+        {
+            const auto &native_object = state.ole_objects[0];
+            expect(native_object.prog_id == "ChildWidget",
+                   "external-base property BINDEVENT should preserve child class identity");
+            expect(native_object.class_library == library_path.string(),
+                   "external-base property BINDEVENT should preserve external base class-library provenance");
+        }
+
+        const bool has_delegate_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.event.delegate" &&
+                   (event.detail == "caption -> HandleCaption" ||
+                    event.detail == "nraw -> HandleRaw");
+        });
+        expect(has_delegate_event,
+               "external-base property BINDEVENT dispatch should emit delegate events");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_codepage_and_misc_runtime_surface_functions()
     {
         namespace fs = std::filesystem;
@@ -39962,6 +40096,7 @@ int main()
     test_external_prg_base_accessor_backed_properties_dispatch_and_reflect();
     test_native_accessor_backed_properties_setpem_routes_through_assign_methods();
     test_external_prg_base_accessor_backed_properties_setpem_routes_through_assign_methods();
+    test_external_prg_base_property_bindevent_dispatch_preserves_current_event_metadata();
     test_codepage_and_misc_runtime_surface_functions();
     test_lookup_expression_function();
     test_lookup_expression_function_supports_sql_cursors();
