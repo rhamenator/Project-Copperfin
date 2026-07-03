@@ -4202,9 +4202,11 @@ namespace
             "oCreate = CREATEOBJECT('ChildWidget')\n"
             "lRemoveClass = REMOVEPROPERTY(oCreate, 'Class')\n"
             "lRemoveBaseClass = REMOVEPROPERTY(oCreate, 'BaseClass')\n"
+            "lRemoveParentClass = REMOVEPROPERTY(oCreate, 'ParentClass')\n"
             "lRemoveClassLibrary = REMOVEPROPERTY(oCreate, 'ClassLibrary')\n"
             "cClassAfter = GETPEM(oCreate, 'Class')\n"
             "cBaseClassAfter = GETPEM(oCreate, 'BaseClass')\n"
+            "cParentClassAfter = GETPEM(oCreate, 'ParentClass')\n"
             "xClassLibraryAfter = GETPEM(oCreate, 'ClassLibrary')\n"
             "RETURN\n"
             "DEFINE CLASS ParentWidget AS Custom\n"
@@ -4234,9 +4236,11 @@ namespace
 
         check("lremoveclass", "false");
         check("lremovebaseclass", "false");
+        check("lremoveparentclass", "false");
         check("lremoveclasslibrary", "false");
         check("cclassafter", "ChildWidget");
         check("cbaseclassafter", "ParentWidget");
+        check("cparentclassafter", "ParentWidget");
 
         const auto class_library_after = state.globals.find("xclasslibraryafter");
         expect(class_library_after != state.globals.end() &&
@@ -4258,6 +4262,8 @@ namespace
                    "native identity REMOVEPROPERTY should not materialize a writable Class property shadow");
             expect(!native_object.properties.contains("baseclass"),
                    "native identity REMOVEPROPERTY should not materialize a writable BaseClass property shadow");
+            expect(!native_object.properties.contains("parentclass"),
+                   "native identity REMOVEPROPERTY should not materialize a writable ParentClass property shadow");
             expect(!native_object.properties.contains("classlibrary"),
                    "native identity REMOVEPROPERTY should not materialize a writable ClassLibrary property shadow");
         }
@@ -4288,9 +4294,11 @@ namespace
             "nDictCompare = GETPEM(oDict, 'comparemode')\n"
             "lRemoveClass = REMOVEPROPERTY(oCreate, 'Class')\n"
             "lRemoveBaseClass = REMOVEPROPERTY(oCreate, 'BaseClass')\n"
+            "lRemoveParentClass = REMOVEPROPERTY(oCreate, 'ParentClass')\n"
             "lRemoveClassLibrary = REMOVEPROPERTY(oCreate, 'ClassLibrary')\n"
             "cClassAfter = GETPEM(oCreate, 'Class')\n"
             "cBaseClassAfter = GETPEM(oCreate, 'BaseClass')\n"
+            "cParentClassAfter = GETPEM(oCreate, 'ParentClass')\n"
             "cClassLibraryAfter = GETPEM(oCreate, 'ClassLibrary')\n"
             "RETURN\n"
             "DEFINE CLASS ChildWidget AS ParentWidget OF widgetlib.prg\n"
@@ -4318,9 +4326,11 @@ namespace
 
         check("lremoveclass", "false");
         check("lremovebaseclass", "false");
+        check("lremoveparentclass", "false");
         check("lremoveclasslibrary", "false");
         check("cclassafter", "ChildWidget");
         check("cbaseclassafter", "ParentWidget");
+        check("cparentclassafter", "ParentWidget");
         check("cclasslibraryafter", library_path.string());
         check("ldictset", "true");
         check("ndictcompare", "29");
@@ -4340,6 +4350,8 @@ namespace
                    "external identity REMOVEPROPERTY should not materialize a writable Class property shadow");
             expect(!native_object.properties.contains("baseclass"),
                    "external identity REMOVEPROPERTY should not materialize a writable BaseClass property shadow");
+            expect(!native_object.properties.contains("parentclass"),
+                   "external identity REMOVEPROPERTY should not materialize a writable ParentClass property shadow");
             expect(!native_object.properties.contains("classlibrary"),
                    "external identity REMOVEPROPERTY should not materialize a writable ClassLibrary property shadow");
 
