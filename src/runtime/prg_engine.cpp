@@ -802,11 +802,16 @@ namespace copperfin::runtime
                         return make_boolean_value(false);
                     }
 
+                    const std::string child_library =
+                        arguments.size() >= 3U ? trim_copy(value_as_string(arguments[2])) : std::string{};
+                    const bool explicit_native_prg_library =
+                        lowercase_copy(std::filesystem::path(child_library).extension().string()) == ".prg";
+                    const std::size_t constructor_start_index = explicit_native_prg_library ? 3U : 2U;
                     std::vector<PrgValue> child_constructor_arguments;
                     std::vector<std::optional<std::string>> child_argument_references;
-                    child_constructor_arguments.reserve(arguments.size() > 2U ? arguments.size() - 2U : 0U);
-                    child_argument_references.reserve(argument_references.size() > 2U ? argument_references.size() - 2U : 0U);
-                    for (std::size_t index = 2U; index < arguments.size(); ++index)
+                    child_constructor_arguments.reserve(arguments.size() > constructor_start_index ? arguments.size() - constructor_start_index : 0U);
+                    child_argument_references.reserve(argument_references.size() > constructor_start_index ? argument_references.size() - constructor_start_index : 0U);
+                    for (std::size_t index = constructor_start_index; index < arguments.size(); ++index)
                     {
                         child_constructor_arguments.push_back(arguments[index]);
                         child_argument_references.push_back(
@@ -818,7 +823,9 @@ namespace copperfin::runtime
                     RuntimeOleObjectState *child_object = instantiate_native_class_object(
                         frame,
                         child_class,
-                        runtime_object->source,
+                        explicit_native_prg_library
+                            ? resolve_native_prg_program_path(child_library, runtime_object->source)
+                            : runtime_object->source,
                         "addobject",
                         child_constructor_arguments,
                         child_argument_references,

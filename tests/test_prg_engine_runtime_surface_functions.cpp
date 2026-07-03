@@ -1052,6 +1052,142 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_addobject_materializes_external_prg_child_objects_and_preserves_init_flow()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_addobject_external_library";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path library_path = temp_root / "buttons.prg";
+        write_text(
+            library_path,
+            "DEFINE CLASS SaveButton AS Custom\n"
+            "    Caption = 'Save'\n"
+            "    nSeed = 0\n"
+            "    PROCEDURE Init\n"
+            "        LPARAMETERS tnSeed\n"
+            "        THIS.nSeed = tnSeed\n"
+            "        THIS.Caption = THIS.Caption + '-' + ALLTRIM(STR(tnSeed))\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "    FUNCTION OwnerCaption\n"
+            "        RETURN PARENT.Caption\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "native_addobject_external_library.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('DemoForm')\n"
+            "oChild = oForm.cmdSave\n"
+            "lHasChild = PEMSTATUS(oForm, 'cmdSave', 1)\n"
+            "lChildHasParent = PEMSTATUS(oChild, 'Parent', 1)\n"
+            "lChildAdded = oForm.lChildAdded\n"
+            "cInitChildCaption = oForm.cInitChildCaption\n"
+            "cInitOwnerCaption = oForm.cInitOwnerCaption\n"
+            "nChildSeed = oChild.nSeed\n"
+            "cChildCaption = oChild.Caption\n"
+            "cOwnerCaption = oChild.OwnerCaption()\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 14)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS DemoForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    lChildAdded = .F.\n"
+            "    cInitChildCaption = ''\n"
+            "    cInitOwnerCaption = ''\n"
+            "    PROCEDURE Init\n"
+            "        THIS.lChildAdded = THIS.AddObject('cmdSave', 'SaveButton', 'buttons.prg', 7)\n"
+            "        THIS.cInitChildCaption = THIS.cmdSave.Caption\n"
+            "        THIS.cInitOwnerCaption = THIS.cmdSave.OwnerCaption()\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native external-library ADDOBJECT script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lhaschild", "true");
+        check("lchildhasparent", "true");
+        check("lchildadded", "true");
+        check("cinitchildcaption", "Save-7");
+        check("cinitownercaption", "MainForm");
+        check("nchildseed", "7");
+        check("cchildcaption", "Save-7");
+        check("cownercaption", "MainForm");
+        check("ldictset", "true");
+        check("ndictcompare", "14");
+
+        expect(state.ole_objects.size() == 3U,
+               "native external-library ADDOBJECT script should register parent, child, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            const auto &parent_object = state.ole_objects[0];
+            const auto &child_object = state.ole_objects[1];
+            expect(parent_object.prog_id == "DemoForm",
+                   "native external-library ADDOBJECT should preserve the parent class identity");
+            expect(child_object.prog_id == "SaveButton",
+                   "native external-library ADDOBJECT should preserve the child class identity");
+            expect(child_object.source == library_path.string(),
+                   "native external-library ADDOBJECT should preserve the resolved PRG library path as child provenance");
+            expect(parent_object.properties.contains("cmdsave"),
+                   "native external-library ADDOBJECT should materialize the child reference on the parent");
+            const auto child_parent = child_object.properties.find("parent");
+            const auto child_seed = child_object.properties.find("nseed");
+            if (child_parent != child_object.properties.end())
+            {
+                expect(child_parent->second.kind == copperfin::runtime::PrgValueKind::string,
+                       "native external-library ADDOBJECT should persist a PARENT object reference on the child");
+            }
+            else
+            {
+                expect(false, "native external-library ADDOBJECT should materialize the child PARENT reference");
+            }
+            if (child_seed != child_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(child_seed->second) == "7",
+                       "native external-library ADDOBJECT should preserve child Init constructor values");
+            }
+            else
+            {
+                expect(false, "native external-library ADDOBJECT should materialize child Init state");
+            }
+
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM behavior should remain stable while external-library ADDOBJECT lands");
+        }
+
+        const bool has_addobject_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.addobject" &&
+                   event.detail == "DemoForm.cmdsave:SaveButton";
+        });
+        expect(has_addobject_event,
+               "native external-library ADDOBJECT should emit child materialization events");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_class_body_add_object_materializes_children_before_init()
     {
         namespace fs = std::filesystem;
@@ -4328,6 +4464,7 @@ int main()
     test_createobject_arguments_flow_into_native_init_while_newobject_and_non_native_creation_stay_stable();
     test_newobject_arguments_flow_into_native_init_while_createobject_and_com_newobject_stay_stable();
     test_native_object_method_and_init_preserve_by_reference_argument_updates();
+    test_native_addobject_materializes_external_prg_child_objects_and_preserves_init_flow();
     test_same_prg_native_class_inheritance_applies_parent_defaults_methods_and_init();
     test_native_class_inheritance_loads_external_prg_base_sources();
     test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow();
