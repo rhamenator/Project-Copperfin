@@ -49,6 +49,11 @@ int main() {
     test_do_with_parameters_binds_arguments_in_called_routine();
     test_call_with_parameters_binds_arguments_in_called_routine();
     test_call_external_target_with_by_reference_updates_caller_variable();
+    test_expression_level_function_call_assigns_return_value();
+    test_expression_level_procedure_call_assigns_return_value();
+    test_expression_level_function_call_supports_by_reference_arguments();
+    test_expression_level_function_call_works_in_if_predicates();
+    test_expression_level_function_call_can_chain_nested_user_routines();
     test_on_error_do_handler_dispatches_routine();
     test_on_error_do_with_handler_receives_error_metadata();
     test_aerror_populates_structured_runtime_error_array();

@@ -1347,6 +1347,8 @@
   "Runtime.PrgStaticAnalysis.Diagnostic.PRG1002.Message": "DO WHILE block is missing ENDDO.",
   "Runtime.Prg.Expression.Error.DivisionByZero": "Division by zero",
   "Runtime.Prg.Expression.Error.ExpectedFunctionArgument": "Expected function argument",
+  "Runtime.Prg.Expression.Error.UserRoutineAbortedExecution": "[!! Üšëř-ðëƒïñëð řøüţïñë çåļļ åßøřţëð ţħë çüřřëñţ ëxëçüţïøñ šţåçķ ðüřïñğ ëxpřëššïøñ ëvåļüåţïøñ !!]",
+  "Runtime.Prg.Expression.Error.UserRoutineEnteredEventLoop": "[!! Üšëř-ðëƒïñëð řøüţïñë çåļļ çåññøţ ëñţëř ŘËÅÐ ËVËÑŢŠ ðüřïñğ ëxpřëššïøñ ëvåļüåţïøñ !!]",
   "Runtime.Prg.Expression.Error.IntegerDivisionByZero": "Division by zero in integer expression",
   "Runtime.Prg.Numeric.Error.PositiveArgumentRequired": "{function} requires a positive argument (got {value})",
   "Runtime.Prg.Numeric.Error.UnitRangeArgumentRequired": "{function} requires an argument between -1 and 1 (got {value})",

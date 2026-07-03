@@ -121,6 +121,7 @@
                 std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback,
                 std::function<void(const std::string &, std::vector<PrgValue>)> assign_array_callback,
                 std::function<std::size_t()> memowidth_callback,
+                std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> user_routine_invoke_callback,
                 std::function<PrgValue(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> declared_dll_invoke_callback)
                 : current_work_area_(current_work_area),
                   next_free_work_area_callback_(std::move(next_free_work_area_callback)),
@@ -179,6 +180,7 @@
                   resolve_object_callback_(std::move(resolve_object_callback)),
                   assign_array_callback_(std::move(assign_array_callback)),
                   memowidth_callback_(std::move(memowidth_callback)),
+                  user_routine_invoke_callback_(std::move(user_routine_invoke_callback)),
                   declared_dll_invoke_callback_(std::move(declared_dll_invoke_callback)),
                   text_(text),
                   frame_(frame),
@@ -1279,6 +1281,15 @@
                     }
                     // If result is empty the callback may mean "not found", fall through.
                 }
+                if (user_routine_invoke_callback_)
+                {
+                    const auto user_routine_result =
+                        user_routine_invoke_callback_(function, arguments, argument_references);
+                    if (user_routine_result.has_value())
+                    {
+                        return *user_routine_result;
+                    }
+                }
                 return make_string_value(function);
             }
 
@@ -1927,6 +1938,7 @@
             std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback_;
             std::function<void(const std::string &, std::vector<PrgValue>)> assign_array_callback_;
             std::function<std::size_t()> memowidth_callback_;
+            std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> user_routine_invoke_callback_;
             std::function<PrgValue(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> declared_dll_invoke_callback_;
             const std::string &text_;
             const Frame &frame_;

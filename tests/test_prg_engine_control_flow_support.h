@@ -215,6 +215,11 @@ void test_do_with_parameters_binds_arguments_in_called_routine();
 void test_call_with_parameters_binds_arguments_in_called_routine();
 void test_call_external_target_with_by_reference_updates_caller_variable();
 void test_do_with_by_reference_updates_caller_variable();
+void test_expression_level_function_call_assigns_return_value();
+void test_expression_level_procedure_call_assigns_return_value();
+void test_expression_level_function_call_supports_by_reference_arguments();
+void test_expression_level_function_call_works_in_if_predicates();
+void test_expression_level_function_call_can_chain_nested_user_routines();
 
 }  // namespace cf_test_prg_engine_control_flow
 

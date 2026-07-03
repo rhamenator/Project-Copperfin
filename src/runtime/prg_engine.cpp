@@ -42,6 +42,7 @@
 #include <system_error>
 #include <thread>
 #include <chrono>
+#include <deque>
 #include <utility>
 
 #if defined(_WIN32)
@@ -378,7 +379,7 @@ namespace copperfin::runtime
 
         RuntimeSessionOptions options;
         std::map<std::string, Program> programs;
-        std::vector<Frame> stack;
+        std::deque<Frame> stack;
         std::map<std::string, PrgValue> globals;
         std::optional<PrgValue> last_return_value;
         std::map<std::string, RuntimeArray> arrays;
@@ -466,6 +467,12 @@ namespace copperfin::runtime
 #undef COPPERFIN_PRG_ENGINE_IMPL_CONTEXT
         bool dispatch_event_handler(const std::string &routine_name);
         bool dispatch_error_handler();
+        std::optional<PrgValue> invoke_expression_user_routine(
+            const Frame &source_frame,
+            const std::string &identifier,
+            const std::vector<PrgValue> &arguments,
+            const std::vector<std::optional<std::string>> &argument_references);
+        PrgValue run_expression_invoked_routine_until_return(std::size_t return_depth);
         RuntimeWatchResult evaluate_watch_expression(const std::string &expression);
         ExecutionOutcome execute_current_statement();
         RuntimePauseState run(DebugResumeAction action);
@@ -1254,6 +1261,13 @@ namespace copperfin::runtime
                 const auto found = memowidth_by_session.find(current_data_session);
                 return found != memowidth_by_session.end() ? found->second : 50U;
             },
+            [this, &frame](
+                const std::string &identifier,
+                const std::vector<PrgValue> &arguments,
+                const std::vector<std::optional<std::string>> &argument_references) -> std::optional<PrgValue>
+            {
+                return invoke_expression_user_routine(frame, identifier, arguments, argument_references);
+            },
             [this](
                 const std::string &fn_key,
                 const std::vector<PrgValue> &fn_args,
@@ -1262,6 +1276,125 @@ namespace copperfin::runtime
                 return invoke_declared_dll_function(fn_key, fn_args, fn_argument_references);
             });
         return parser.parse();
+    }
+
+    std::optional<PrgValue> PrgRuntimeSession::Impl::invoke_expression_user_routine(
+        const Frame &source_frame,
+        const std::string &identifier,
+        const std::vector<PrgValue> &arguments,
+        const std::vector<std::optional<std::string>> &argument_references)
+    {
+        Program &program = load_program(source_frame.file_path);
+        const auto found = program.routines.find(normalize_identifier(identifier));
+        if (found == program.routines.end())
+        {
+            return std::nullopt;
+        }
+
+        if (!can_push_frame())
+        {
+            throw std::runtime_error(call_depth_limit_message());
+        }
+
+        const std::size_t return_depth = stack.size();
+        push_routine_frame(program.path, found->second, arguments, argument_references);
+        return run_expression_invoked_routine_until_return(return_depth);
+    }
+
+    PrgValue PrgRuntimeSession::Impl::run_expression_invoked_routine_until_return(std::size_t return_depth)
+    {
+        while (true)
+        {
+            while (stack.size() > return_depth &&
+                   (stack.back().routine == nullptr || stack.back().pc >= stack.back().routine->statements.size()))
+            {
+                pop_frame();
+            }
+
+            if (stack.size() < return_depth)
+            {
+                waiting_for_events = false;
+                throw std::runtime_error(
+                    runtime_text("Runtime.Prg.Expression.Error.UserRoutineAbortedExecution"));
+            }
+
+            if (stack.size() == return_depth)
+            {
+                return last_return_value.value_or(make_empty_value());
+            }
+
+            const Statement *next = current_statement();
+            if (next == nullptr)
+            {
+                pop_frame();
+                continue;
+            }
+
+            if (executed_statement_count >= max_executed_statements)
+            {
+                last_error_message = step_budget_limit_message();
+                last_fault_location = next->location;
+                last_fault_statement = next->text;
+                events.push_back({.category = "runtime.error",
+                                  .detail = last_error_message,
+                                  .location = next->location});
+                throw std::runtime_error(last_error_message);
+            }
+
+            const ExecutionOutcome outcome = execute_current_statement();
+            if (!outcome.ok)
+            {
+                bool handled_by_try = false;
+                if (!stack.empty())
+                {
+                    capture_last_error_context(stack.back(), *next);
+                    handled_by_try = dispatch_try_handler(stack.back(), *next);
+                }
+                if (!handled_by_try)
+                {
+                    const std::size_t depth_at_fault = stack.size();
+                    for (std::size_t index = 1U; index < depth_at_fault && !handled_by_try; ++index)
+                    {
+                        Frame &parent = stack[depth_at_fault - 1U - index];
+                        const bool has_open_try = std::any_of(
+                            parent.tries.begin(),
+                            parent.tries.end(),
+                            [](const TryState &state)
+                            {
+                                return !state.handling_error;
+                            });
+                        if (has_open_try)
+                        {
+                            while (stack.size() > depth_at_fault - index)
+                            {
+                                pop_frame();
+                            }
+                            if (!stack.empty())
+                            {
+                                handled_by_try = dispatch_try_handler(stack.back(), *next);
+                            }
+                            break;
+                        }
+                    }
+                }
+                if (handled_by_try)
+                {
+                    continue;
+                }
+                if (dispatch_error_handler())
+                {
+                    continue;
+                }
+                throw std::runtime_error(outcome.message);
+            }
+
+            if (outcome.waiting_for_events)
+            {
+                waiting_for_events = false;
+                throw std::runtime_error(
+                    runtime_text("Runtime.Prg.Expression.Error.UserRoutineEnteredEventLoop"));
+            }
+        }
     }
 
     RuntimeWatchResult PrgRuntimeSession::Impl::evaluate_watch_expression(const std::string &expression)
