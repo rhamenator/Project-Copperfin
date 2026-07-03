@@ -139,6 +139,36 @@ void test_parse_mixed_class_blocks_and_top_level_routines_stays_stable() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_parse_define_class_external_prg_base_sources() {
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_parser_define_class_external_base";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path program_path = temp_root / "external_base.prg";
+    copperfin::test_support::write_text(
+        program_path,
+        "DEFINE CLASS ChildWidget AS ParentWidget OF widgets.prg\n"
+        "    Caption = 'Child'\n"
+        "ENDDEFINE\n");
+
+    const copperfin::runtime::Program program = copperfin::runtime::parse_program(program_path.string());
+    const auto class_found = program.classes.find("childwidget");
+    copperfin::test_support::expect(class_found != program.classes.end(),
+                                    "external base class PRG should parse the owning class definition");
+    if (class_found != program.classes.end()) {
+        const auto& class_definition = class_found->second;
+        copperfin::test_support::expect(class_definition.base_class_name == "ParentWidget",
+                                        "external base class PRG should preserve the base class name separately from the source path");
+        copperfin::test_support::expect(class_definition.base_class_source_path == "widgets.prg",
+                                        "external base class PRG should preserve the external base source path");
+        copperfin::test_support::expect(class_definition.property_statements.size() == 1U,
+                                        "external base class PRG should keep ordinary class property assignments stable");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_parse_class_body_add_object_declarations_distinct_from_property_assignments() {
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_parser_class_body_add_object";
     std::error_code ignored;
@@ -352,6 +382,7 @@ void test_parse_declarative_child_external_prg_sources() {
 int main() {
     test_parse_define_class_captures_metadata_and_methods();
     test_parse_mixed_class_blocks_and_top_level_routines_stays_stable();
+    test_parse_define_class_external_prg_base_sources();
     test_parse_class_body_add_object_declarations_distinct_from_property_assignments();
     test_parse_class_body_add_object_with_property_clauses();
     test_parse_class_body_object_blocks_capture_child_properties();

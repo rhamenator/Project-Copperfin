@@ -176,6 +176,7 @@ struct NativeChildObjectDeclaration {
 struct PrgClassDefinition {
     std::string name;
     std::string base_class_name;
+    std::string base_class_source_path;
     SourceLocation declaration_location{};
     std::vector<Statement> property_statements;
     std::vector<NativeChildObjectDeclaration> child_object_declarations;

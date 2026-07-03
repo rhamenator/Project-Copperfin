@@ -605,6 +605,10 @@ Program parse_program(const std::string& path) {
         if (current_class == nullptr && current == &program.main && starts_with_insensitive(line, "DEFINE CLASS ")) {
             const std::string body = trim_copy(line.substr(13U));
             const std::size_t as_position = find_keyword_top_level(body, "AS");
+            const std::size_t of_position =
+                as_position == std::string::npos
+                    ? std::string::npos
+                    : find_keyword_top_level_from(body, "OF", as_position + 2U);
 
             PrgClassDefinition class_definition;
             class_definition.name = trim_copy(
@@ -614,7 +618,13 @@ Program parse_program(const std::string& path) {
             class_definition.base_class_name = trim_copy(
                 as_position == std::string::npos
                     ? std::string{}
-                    : body.substr(as_position + 2U));
+                    : of_position == std::string::npos
+                        ? body.substr(as_position + 2U)
+                        : body.substr(as_position + 2U, of_position - as_position - 2U));
+            class_definition.base_class_source_path = trim_copy(
+                of_position == std::string::npos
+                    ? std::string{}
+                    : body.substr(of_position + 2U));
             class_definition.declaration_location = {.file_path = normalize_path(path), .line = line_number};
             current_class = &program.classes[normalize_identifier(class_definition.name)];
             *current_class = std::move(class_definition);

@@ -2809,6 +2809,191 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_class_inheritance_loads_external_prg_base_sources()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_external_base_inheritance";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path library_path = temp_root / "widgetlib.prg";
+        write_text(
+            library_path,
+            "DEFINE CLASS ParentWidget AS Custom\n"
+            "    Caption = 'Parent'\n"
+            "    nBase = 4\n"
+            "    lInitRan = .F.\n"
+            "    PROCEDURE Init\n"
+            "        THIS.Caption = THIS.Caption + '-Init'\n"
+            "        THIS.lInitRan = .T.\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "    FUNCTION Describe\n"
+            "        RETURN THIS.Caption\n"
+            "    ENDFUNC\n"
+            "    FUNCTION Who\n"
+            "        RETURN 'Parent'\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "native_external_base_inheritance.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildWidget')\n"
+            "oNew = NEWOBJECT('LeafWidget')\n"
+            "oPlain = CREATEOBJECT('Empty')\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "oPlain.Extra = 'plain'\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 16)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "cCreateDescribe = oCreate.Describe()\n"
+            "cCreateWho = oCreate.Who()\n"
+            "cNewDescribe = oNew.Describe()\n"
+            "cNewWho = oNew.Who()\n"
+            "cPlain = oPlain.Extra\n"
+            "nCreateBase = oCreate.nBase\n"
+            "nCreateChild = oCreate.nChild\n"
+            "lCreateInitRan = oCreate.lInitRan\n"
+            "nNewBase = oNew.nBase\n"
+            "nNewChild = oNew.nChild\n"
+            "lNewInitRan = oNew.lInitRan\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildWidget AS ParentWidget OF widgetlib.prg\n"
+            "    Caption = 'Child'\n"
+            "    nChild = 9\n"
+            "    FUNCTION Who\n"
+            "        RETURN 'Child'\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS LeafWidget AS ChildWidget\n"
+            "    nBase = 12\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("external base class inheritance script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("ccreatedescribe", "Child-Init");
+        check("ccreatewho", "Child");
+        check("cnewdescribe", "Child-Init");
+        check("cnewwho", "Child");
+        check("cplain", "plain");
+        check("ncreatebase", "4");
+        check("ncreatechild", "9");
+        check("lcreateinitran", "true");
+        check("nnewbase", "12");
+        check("nnewchild", "9");
+        check("lnewinitran", "true");
+        check("ldictset", "true");
+        check("ndictcompare", "16");
+
+        expect(state.ole_objects.size() == 4U,
+               "external base class inheritance should register CREATEOBJECT, NEWOBJECT, plain, and COM objects");
+        if (state.ole_objects.size() == 4U)
+        {
+            const auto &create_object = state.ole_objects[0];
+            expect(create_object.prog_id == "ChildWidget",
+                   "external base class inheritance should preserve child class identity");
+            expect(create_object.source == main_path.string(),
+                   "external base class inheritance should preserve the child class source as object provenance");
+
+            const auto create_caption = create_object.properties.find("caption");
+            const auto create_base = create_object.properties.find("nbase");
+            const auto create_child = create_object.properties.find("nchild");
+            const auto create_init = create_object.properties.find("linitran");
+            expect(create_caption != create_object.properties.end(),
+                   "external base class inheritance should materialize inherited Init-updated caption state");
+            expect(create_base != create_object.properties.end(),
+                   "external base class inheritance should materialize parent defaults from the external PRG library");
+            expect(create_child != create_object.properties.end(),
+                   "external base class inheritance should keep child-local properties");
+            expect(create_init != create_object.properties.end(),
+                   "external base class inheritance should materialize inherited Init flags from the external PRG library");
+            if (create_caption != create_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(create_caption->second) == "Child-Init",
+                       "external base class inheritance should let inherited external Init see child-overridden properties");
+            }
+            if (create_base != create_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(create_base->second) == "4",
+                       "external base class inheritance should keep parent defaults from the external PRG library");
+            }
+            if (create_child != create_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(create_child->second) == "9",
+                       "external base class inheritance should keep child-local default properties");
+            }
+            if (create_init != create_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(create_init->second) == "true",
+                       "external base class inheritance should run inherited external Init when the child does not override it");
+            }
+            expect(std::find(create_object.methods.begin(), create_object.methods.end(), "Describe") != create_object.methods.end(),
+                   "external base class inheritance should expose inherited external methods on the runtime object");
+            expect(std::find(create_object.methods.begin(), create_object.methods.end(), "Who") != create_object.methods.end(),
+                   "external base class inheritance should retain child overrides in the runtime method list");
+            expect(std::find(create_object.methods.begin(), create_object.methods.end(), "Init") != create_object.methods.end(),
+                   "external base class inheritance should expose inherited external Init in runtime member enumeration");
+
+            const auto &new_object = state.ole_objects[1];
+            expect(new_object.prog_id == "LeafWidget",
+                   "external base class inheritance should preserve leaf class identity");
+            const auto new_base = new_object.properties.find("nbase");
+            const auto new_child = new_object.properties.find("nchild");
+            if (new_base != new_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(new_base->second) == "12",
+                       "external base class inheritance should let leaf defaults override external parent values");
+            }
+            else
+            {
+                expect(false, "external base class inheritance should materialize leaf override properties");
+            }
+            if (new_child != new_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(new_child->second) == "9",
+                       "external base class inheritance should retain inherited child properties above the external base");
+            }
+            else
+            {
+                expect(false, "external base class inheritance should materialize inherited child properties");
+            }
+
+            expect(state.ole_objects[2].prog_id == "Empty",
+                   "plain CREATEOBJECT should remain stable while external base inheritance lands");
+            expect(state.ole_objects[3].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while external base inheritance lands");
+        }
+
+        const bool has_external_inherited_init_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.init" &&
+                   event.detail == "ParentWidget.Init";
+        });
+        expect(has_external_inherited_init_event,
+               "external base class inheritance should emit the inherited external Init event when the parent Init runs");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow()
     {
         namespace fs = std::filesystem;
@@ -4144,6 +4329,7 @@ int main()
     test_newobject_arguments_flow_into_native_init_while_createobject_and_com_newobject_stay_stable();
     test_native_object_method_and_init_preserve_by_reference_argument_updates();
     test_same_prg_native_class_inheritance_applies_parent_defaults_methods_and_init();
+    test_native_class_inheritance_loads_external_prg_base_sources();
     test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow();
     test_same_prg_native_bare_helper_calls_resolve_to_current_instance_before_top_level_routines();
     test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();

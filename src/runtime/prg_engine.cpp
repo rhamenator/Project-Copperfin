@@ -1534,16 +1534,17 @@ namespace copperfin::runtime
         Program &program = load_program(runtime_object.source);
         std::string native_method_name;
         std::string native_defining_class_name;
-        const Routine *native_method = find_native_same_prg_method(
-            program,
-            source_frame.native_method_class_name.empty()
-                ? runtime_object.prog_id
-                : source_frame.native_method_class_name,
-            identifier,
-            true,
-            native_method_name,
-            &native_defining_class_name);
-        if (native_method == nullptr)
+        const auto native_method =
+            find_native_class_method_lookup(
+                program,
+                source_frame.native_method_class_name.empty()
+                    ? runtime_object.prog_id
+                    : source_frame.native_method_class_name,
+                identifier,
+                true,
+                native_method_name,
+                &native_defining_class_name);
+        if (!native_method.has_value())
         {
             return std::nullopt;
         }
@@ -1562,9 +1563,9 @@ namespace copperfin::runtime
         const std::size_t return_depth = stack.size();
         const PrgValue this_reference =
             make_string_value("object:" + runtime_object.prog_id + "#" + std::to_string(runtime_object.handle));
-        push_method_frame(program.path,
+        push_method_frame(native_method->program->path,
                           native_method_name,
-                          *native_method,
+                          *native_method->routine,
                           this_reference,
                           native_defining_class_name,
                           normalize_identifier(identifier),
@@ -1602,14 +1603,15 @@ namespace copperfin::runtime
         Program &program = load_program(source_frame.file_path);
         std::string base_method_name;
         std::string base_defining_class_name;
-        const Routine *base_method = find_native_same_prg_method(
-            program,
-            source_frame.native_method_class_name,
-            source_frame.native_method_name,
-            false,
-            base_method_name,
-            &base_defining_class_name);
-        if (base_method == nullptr)
+        const auto base_method =
+            find_native_class_method_lookup(
+                program,
+                source_frame.native_method_class_name,
+                source_frame.native_method_name,
+                false,
+                base_method_name,
+                &base_defining_class_name);
+        if (!base_method.has_value())
         {
             return std::nullopt;
         }
@@ -1631,9 +1633,9 @@ namespace copperfin::runtime
             arguments.empty() ? source_frame.call_arguments : arguments;
         const auto &effective_argument_references =
             arguments.empty() ? source_frame.call_argument_references : argument_references;
-        push_method_frame(program.path,
+        push_method_frame(base_method->program->path,
                           base_method_name,
-                          *base_method,
+                          *base_method->routine,
                           this_found->second,
                           base_defining_class_name,
                           source_frame.native_method_name,
