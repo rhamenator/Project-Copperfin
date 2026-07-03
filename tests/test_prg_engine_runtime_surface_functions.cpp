@@ -1833,6 +1833,123 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_external_prg_base_child_methods_resolve_parent_thisform_and_thisformset()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_external_prg_child_method_ownership";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path library_path = temp_root / "buttons.prg";
+        write_text(
+            library_path,
+            "DEFINE CLASS ParentButton AS Custom\n"
+            "    FUNCTION ParentCaption\n"
+            "        RETURN PARENT.Caption\n"
+            "    ENDFUNC\n"
+            "    FUNCTION FormCaption\n"
+            "        RETURN THISFORM.Caption\n"
+            "    ENDFUNC\n"
+            "    FUNCTION FormsetCaption\n"
+            "        RETURN THISFORMSET.Caption\n"
+            "    ENDFUNC\n"
+            "    FUNCTION TriggerFormSave\n"
+            "        RETURN THISFORM.Save()\n"
+            "    ENDFUNC\n"
+            "    FUNCTION TriggerFormsetSave\n"
+            "        RETURN THISFORMSET.Save()\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "external_child_method_ownership.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('DemoForm')\n"
+            "oChild = oForm.cmdSave\n"
+            "cParentCaption = oChild.ParentCaption()\n"
+            "cFormCaption = oChild.FormCaption()\n"
+            "cFormsetCaption = oChild.FormsetCaption()\n"
+            "cSavedCaption = oChild.TriggerFormSave()\n"
+            "cFormCaptionAfterSave = oForm.Caption\n"
+            "cSavedCaption2 = oChild.TriggerFormsetSave()\n"
+            "cFormCaptionAfterSave2 = oForm.Caption\n"
+            "RETURN\n"
+            "DEFINE CLASS DemoForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddObject('cmdSave', 'SaveButton')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "    FUNCTION Save\n"
+            "        THIS.Caption = THIS.Caption + '-Saved'\n"
+            "        RETURN THIS.Caption\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS ParentButton OF buttons.prg\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("external-base child ownership script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cparentcaption", "MainForm");
+        check("cformcaption", "MainForm");
+        check("cformsetcaption", "MainForm");
+        check("csavedcaption", "MainForm-Saved");
+        check("cformcaptionaftersave", "MainForm-Saved");
+        check("csavedcaption2", "MainForm-Saved-Saved");
+        check("cformcaptionaftersave2", "MainForm-Saved-Saved");
+
+        expect(state.ole_objects.size() == 2U,
+               "external-base child ownership script should register parent and child objects");
+        if (state.ole_objects.size() == 2U)
+        {
+            const auto &parent_object = state.ole_objects[0];
+            const auto &child_object = state.ole_objects[1];
+            expect(parent_object.prog_id == "DemoForm",
+                   "external-base child ownership should preserve parent class identity");
+            expect(child_object.prog_id == "SaveButton",
+                   "external-base child ownership should preserve child class identity");
+            const auto caption = parent_object.properties.find("caption");
+            if (caption != parent_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(caption->second) == "MainForm-Saved-Saved",
+                       "external-base child ownership should let inherited child methods update the owning form");
+            }
+            else
+            {
+                expect(false, "external-base child ownership should preserve the owning form caption property");
+            }
+        }
+
+        const bool has_save_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   event.detail == "DemoForm.Save";
+        });
+        expect(has_save_invoke_event,
+               "external-base child ownership should route inherited child method calls into parent methods");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_dotted_native_child_chains_traverse_contained_objects()
     {
         namespace fs = std::filesystem;
@@ -5299,6 +5416,7 @@ int main()
     test_declarative_children_materialize_from_external_prg_sources_before_parent_init();
     test_native_child_methods_resolve_thisform_through_parent_chain();
     test_native_child_methods_resolve_thisformset_through_owner_chain();
+    test_external_prg_base_child_methods_resolve_parent_thisform_and_thisformset();
     test_dotted_native_child_chains_traverse_contained_objects();
     test_dotted_native_child_assignments_traverse_contained_objects();
     test_native_removeobject_detaches_child_and_clears_parent_reference();
