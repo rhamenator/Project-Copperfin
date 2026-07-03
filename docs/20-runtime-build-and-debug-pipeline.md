@@ -110,10 +110,12 @@ Current behavior:
 - `DO FORM` now resolves quoted/space-containing paths through the same normalized asset-path flow used by other surface-launch commands
 - startup assets that legacy projects mark as excluded are now still staged when they are required for runtime startup
 - packaged xAsset startup paths now carry their memo sidecars forward so the bootstrap runtime can open real designer assets instead of dead table shells
+- PRG-style execution currently uses a heap-backed frame stack inside the native runtime session rather than recursive host-stack growth, with a tested `MAXCALLDEPTH` guardrail so parity work does not recreate the stack-overflow failure profile of the original `VFP.exe`
 
 Current limitations:
 
 - the native execution engine is `PRG-first`, not yet the full FoxPro/VFP command/runtime surface
+- upcoming runtime-parity gaps such as expression-level user-defined routine calls and native `DEFINE CLASS` / `ENDDEFINE` support must preserve the stack-frugal PRG execution model instead of routing through unbounded native recursion
 - xBase code embedded in `SCX/VCX` assets is now partially executable through `METHODS` bootstrapping, but deeper event/lifecycle fidelity still needs work
 - `MNX` startup activation plus first nested submenu dispatch now work, but richer menu navigation, broader command routing, and broader surface parity still need work
 - `FRX/LBX` now launch directly into preview/event-loop mode, but richer report execution semantics, expression evaluation, output generation, and designer/runtime parity still need work

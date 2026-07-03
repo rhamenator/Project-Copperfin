@@ -96,6 +96,16 @@ Copperfin's parity target is **exact duplication of VFP9 behavior, including und
 
 Outside of these two exception categories, an undocumented edge case is in scope for exact parity, not excluded by default. Edge-case behavior should be validated against real, installed VFP9 (observed product behavior) or shipped documentation per `docs/07-clean-room-rules.md` — never against decompiled VFP9 binaries, which remain a restricted input.
 
+## Runtime Safety Requirement
+
+For PRG-style execution, Copperfin must remain stack-frugal rather than reproducing the native-stack failure profile of the original `VFP.exe`.
+
+- routine and expression evaluation work should prefer heap-backed or otherwise bounded execution state over unbounded C++ call-stack growth
+- deeply nested or recursive PRG workloads must fail through catchable runtime faults before native stack exhaustion becomes possible
+- future runtime-parity work, including user-defined function calls inside expressions and native class/method execution, must preserve this constraint rather than reintroducing stack-overflow behavior as an accidental side effect of parity work
+
+This is a product requirement, not an optimization detail.
+
 ## Requirements Recovery Principle
 
 Copperfin did not begin with a complete up-front requirements set, so a later requirements-recovery pass is a product-quality goal rather than an optional documentation exercise.
