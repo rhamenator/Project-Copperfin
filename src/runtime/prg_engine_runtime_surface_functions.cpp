@@ -476,6 +476,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
     const std::function<std::optional<std::size_t>(const RuntimeSurfaceCursorSnapshot&, const std::string&)>& load_cursor_snapshot_callback,
     const std::function<RuntimeOleObjectState*(const PrgValue&)>& resolve_object_callback,
     const std::function<std::optional<PrgValue>(const PrgValue&, const std::string&)>& read_native_member_callback,
+    const std::function<bool(const PrgValue&, const std::string&, const PrgValue&)>& write_native_member_callback,
     const std::function<void(const std::string&, std::vector<PrgValue>)>& assign_array_callback,
     const std::function<void(const std::string&, const std::string&)>& record_event_callback) {
     auto record_runtime_warning = [&](const std::string& detail) {
@@ -719,6 +720,11 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         if (is_scripting_dictionary_object(*runtime_object) && member_name == "count") {
             return make_boolean_value(false);
+        }
+        if (object_has_assigner_property(*runtime_object, member_name)) {
+            return make_boolean_value(
+                write_native_member_callback &&
+                write_native_member_callback(arguments[0], member_name, arguments[2]));
         }
         if (object_has_member(runtime_object->methods, member_name) ||
             object_has_member(runtime_object->events, member_name)) {

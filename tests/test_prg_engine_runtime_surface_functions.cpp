@@ -2167,6 +2167,124 @@ namespace
         }
     }
 
+    void test_native_accessor_backed_properties_setpem_routes_through_assign_methods()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_accessor_setpem";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_accessor_setpem.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildWidget')\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lSetCaption = SETPEM(oCreate, 'Caption', 'Renamed')\n"
+            "cBackingAfterAssign = oCreate.cBacking\n"
+            "cCaptionAfterAssign = oCreate.Caption\n"
+            "cGetCaptionAfterAssign = GETPEM(oCreate, 'Caption')\n"
+            "lSetStatus = SETPEM(oCreate, 'Status', 'Blocked')\n"
+            "cStatusAfterFailedSet = GETPEM(oCreate, 'Status')\n"
+            "lSetRawBacking = SETPEM(oCreate, 'cBacking', 'Direct')\n"
+            "cBackingAfterRawSet = oCreate.cBacking\n"
+            "cCaptionAfterRawSet = oCreate.Caption\n"
+            "lSetDict = SETPEM(oDict, 'comparemode', 11)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS ParentWidget AS Custom\n"
+            "    cBacking = 'Parent'\n"
+            "    cStatusBacking = 'Ready'\n"
+            "    FUNCTION Caption_Access\n"
+            "        RETURN THIS.cBacking + ':A'\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE Caption_Assign\n"
+            "        LPARAMETERS tcValue\n"
+            "        THIS.cBacking = tcValue + ':S'\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "    FUNCTION Status_Access\n"
+            "        RETURN THIS.cStatusBacking + ':R'\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ChildWidget AS ParentWidget\n"
+            "    cBacking = 'Child'\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native accessor SETPEM script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lsetcaption", "true");
+        check("cbackingafterassign", "Renamed:S");
+        check("ccaptionafterassign", "Renamed:S:A");
+        check("cgetcaptionafterassign", "Renamed:S:A");
+        check("lsetstatus", "false");
+        check("cstatusafterfailedset", "Ready:R");
+        check("lsetrawbacking", "true");
+        check("cbackingafterrawset", "Direct");
+        check("ccaptionafterrawset", "Direct:A");
+        check("lsetdict", "true");
+        check("ndictcompare", "11");
+
+        expect(state.ole_objects.size() == 2U,
+               "native accessor SETPEM script should register native and COM objects");
+        if (state.ole_objects.size() == 2U)
+        {
+            expect(state.ole_objects[0].prog_id == "ChildWidget",
+                   "native accessor SETPEM should preserve child class identity");
+            expect(state.ole_objects[1].prog_id == "Scripting.Dictionary",
+                   "COM object SETPEM behavior should remain stable while native assigner routing lands");
+
+            const auto backing = state.ole_objects[0].properties.find("cbacking");
+            const auto status = state.ole_objects[0].properties.find("cstatusbacking");
+            if (backing != state.ole_objects[0].properties.end())
+            {
+                expect(copperfin::runtime::format_value(backing->second) == "Direct",
+                       "native accessor SETPEM should leave final raw backing state visible");
+            }
+            else
+            {
+                expect(false, "native accessor SETPEM should preserve the raw backing property");
+            }
+            if (status != state.ole_objects[0].properties.end())
+            {
+                expect(copperfin::runtime::format_value(status->second) == "Ready",
+                       "native accessor SETPEM should not mutate access-only backing state");
+            }
+            else
+            {
+                expect(false, "native accessor SETPEM should preserve the access-only backing property");
+            }
+        }
+
+        const bool has_assign_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   event.detail == "ParentWidget.Caption_Assign";
+        });
+        expect(has_assign_invoke_event,
+               "native accessor SETPEM should emit native assigner invoke events");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_codepage_and_misc_runtime_surface_functions()
     {
         namespace fs = std::filesystem;
@@ -2849,6 +2967,7 @@ int main()
     test_same_prg_native_bare_helper_calls_resolve_to_current_instance_before_top_level_routines();
     test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();
     test_native_accessor_backed_properties_reflect_through_getpem_pemstatus_and_amembers();
+    test_native_accessor_backed_properties_setpem_routes_through_assign_methods();
     test_codepage_and_misc_runtime_surface_functions();
     test_lookup_expression_function();
     test_lookup_expression_function_supports_sql_cursors();

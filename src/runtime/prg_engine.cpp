@@ -1329,6 +1329,21 @@ namespace copperfin::runtime
                     {},
                     {});
             },
+            [this, &frame](const PrgValue &value, const std::string &member_name, const PrgValue &assigned_value) -> bool
+            {
+                auto object = resolve_ole_object(value);
+                if (!object.has_value())
+                {
+                    return false;
+                }
+                return invoke_native_object_method_if_present(
+                           **object,
+                           member_name + "_assign",
+                           frame,
+                           {assigned_value},
+                           {})
+                    .has_value();
+            },
             [this](const std::string &name, std::vector<PrgValue> values)
             {
                 assign_array(name, std::move(values));
