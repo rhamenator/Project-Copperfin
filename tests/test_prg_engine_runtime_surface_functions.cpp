@@ -4131,6 +4131,124 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_external_prg_base_methods_reflect_through_getpem_pemstatus_and_amembers()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_external_base_method_reflection";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path library_path = temp_root / "widgetlib.prg";
+        write_text(
+            library_path,
+            "DEFINE CLASS ParentWidget AS Custom\n"
+            "    Caption = 'Parent'\n"
+            "    FUNCTION Describe\n"
+            "        LPARAMETERS tcPrefix\n"
+            "        RETURN tcPrefix + ':' + THIS.Caption\n"
+            "    ENDFUNC\n"
+            "    FUNCTION Who\n"
+            "        RETURN 'Parent'\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "external_base_method_reflection.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildWidget')\n"
+            "oPlain = CREATEOBJECT('Empty')\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "oPlain.Extra = 'plain'\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 23)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "lHasDescribe = GETPEM(oCreate, 'Describe')\n"
+            "lHasWho = PEMSTATUS(oCreate, 'Who', 1)\n"
+            "lHasPing = PEMSTATUS(oCreate, 'Ping', 1)\n"
+            "nMembersMethods = AMEMBERS(aMembersMethods, oCreate, 2)\n"
+            "cMethod1 = aMembersMethods[1]\n"
+            "cMethod2 = aMembersMethods[2]\n"
+            "cMethod3 = aMembersMethods[3]\n"
+            "cDescribe = oCreate.Describe('prefix')\n"
+            "cWho = oCreate.Who()\n"
+            "cPing = oCreate.Ping()\n"
+            "cPlain = oPlain.Extra\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildWidget AS ParentWidget OF widgetlib.prg\n"
+            "    Caption = 'Child'\n"
+            "    FUNCTION Ping\n"
+            "        RETURN 'Child'\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("external-base method reflection script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lhasdescribe", "true");
+        check("lhaswho", "true");
+        check("lhasping", "true");
+        check("nmembersmethods", "3");
+        check("cmethod1", "DESCRIBE");
+        check("cmethod2", "PING");
+        check("cmethod3", "WHO");
+        check("cdescribe", "prefix:Child");
+        check("cwho", "Parent");
+        check("cping", "Child");
+        check("cplain", "plain");
+        check("ldictset", "true");
+        check("ndictcompare", "23");
+
+        expect(state.ole_objects.size() == 3U,
+               "external-base method reflection should register native, plain, and COM objects");
+        if (state.ole_objects.size() == 3U)
+        {
+            const auto &native_object = state.ole_objects[0];
+            expect(native_object.prog_id == "ChildWidget",
+                   "external-base method reflection should preserve child class identity");
+            expect(native_object.source == main_path.string(),
+                   "external-base method reflection should preserve the derived class provenance");
+            expect(std::find(native_object.methods.begin(), native_object.methods.end(), "Describe") != native_object.methods.end(),
+                   "external-base method reflection should materialize inherited methods in runtime object metadata");
+            expect(std::find(native_object.methods.begin(), native_object.methods.end(), "Who") != native_object.methods.end(),
+                   "external-base method reflection should preserve external-base methods in runtime object metadata");
+            expect(std::find(native_object.methods.begin(), native_object.methods.end(), "Ping") != native_object.methods.end(),
+                   "external-base method reflection should preserve derived methods in runtime object metadata");
+            expect(state.ole_objects[1].prog_id == "Empty",
+                   "plain CREATEOBJECT should remain stable while external-base method reflection lands");
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while external-base method reflection lands");
+        }
+
+        const bool has_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   (event.detail == "ParentWidget.Describe" ||
+                    event.detail == "ParentWidget.Who" ||
+                    event.detail == "ChildWidget.Ping");
+        });
+        expect(has_invoke_event,
+               "external-base method reflection should emit inherited and derived method invoke events");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes()
     {
         namespace fs = std::filesystem;
@@ -5435,6 +5553,7 @@ int main()
     test_same_prg_native_bare_helper_calls_resolve_to_current_instance_before_top_level_routines();
     test_inherited_external_prg_base_methods_resolve_bare_helper_calls_against_defining_library();
     test_external_prg_base_methods_support_dodefault_dispatch();
+    test_external_prg_base_methods_reflect_through_getpem_pemstatus_and_amembers();
     test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();
     test_native_accessor_backed_properties_reflect_through_getpem_pemstatus_and_amembers();
     test_external_prg_base_accessor_backed_properties_dispatch_and_reflect();
