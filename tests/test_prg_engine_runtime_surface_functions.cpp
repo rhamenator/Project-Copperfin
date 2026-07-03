@@ -4773,6 +4773,123 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_same_prg_native_parentclass_reads_through_ordinary_properties()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_parentclass_property_reads";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_parentclass_property_reads.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildWidget')\n"
+            "cParentClass = oCreate.ParentClass\n"
+            "RETURN\n"
+            "DEFINE CLASS ParentWidget AS Custom\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ChildWidget AS ParentWidget\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native ParentClass property-read script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto it = state.globals.find("cparentclass");
+        if (it == state.globals.end())
+        {
+            expect(false, "cparentclass variable not found");
+        }
+        else
+        {
+            expect(copperfin::runtime::format_value(it->second) == "ParentWidget",
+                   std::string("cparentclass expected 'ParentWidget' got '") +
+                       copperfin::runtime::format_value(it->second) + "'");
+        }
+
+        expect(state.ole_objects.size() == 1U,
+               "native ParentClass property reads should register one native object");
+        if (state.ole_objects.size() == 1U)
+        {
+            expect(state.ole_objects[0].prog_id == "ChildWidget",
+                   "native ParentClass property reads should preserve child class identity");
+            expect(state.ole_objects[0].base_class_name == "ParentWidget",
+                   "native ParentClass property reads should preserve the immediate parent class name");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_external_prg_parentclass_reads_through_ordinary_properties()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_external_prg_parentclass_property_reads";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path library_path = temp_root / "widgetlib.prg";
+        write_text(
+            library_path,
+            "DEFINE CLASS ParentWidget AS Custom\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "external_parentclass_property_reads.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildWidget')\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 34)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "cParentClass = oCreate.ParentClass\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildWidget AS ParentWidget OF widgetlib.prg\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("external ParentClass property-read script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cparentclass", "ParentWidget");
+        check("ldictset", "true");
+        check("ndictcompare", "34");
+
+        expect(state.ole_objects.size() == 2U,
+               "external ParentClass property reads should register native and COM objects");
+        if (state.ole_objects.size() == 2U)
+        {
+            expect(state.ole_objects[0].prog_id == "ChildWidget",
+                   "external ParentClass property reads should preserve child class identity");
+            expect(state.ole_objects[0].base_class_name == "ParentWidget",
+                   "external ParentClass property reads should preserve the immediate external parent class name");
+            expect(state.ole_objects[1].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while external ParentClass property reads land");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_inherited_declarative_children_from_external_prg_bases_resolve_against_defining_library()
     {
         namespace fs = std::filesystem;
@@ -7093,6 +7210,8 @@ int main()
     test_external_prg_identity_metadata_cannot_be_shadowed_through_direct_assignment();
     test_same_prg_native_identity_metadata_reads_through_ordinary_properties();
     test_external_prg_identity_metadata_reads_through_ordinary_properties();
+    test_same_prg_native_parentclass_reads_through_ordinary_properties();
+    test_external_prg_parentclass_reads_through_ordinary_properties();
     test_inherited_declarative_children_from_external_prg_bases_resolve_against_defining_library();
     test_inherited_external_prg_base_methods_resolve_addobject_children_against_defining_library();
     test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow();

@@ -511,9 +511,10 @@ bool is_native_identity_member_name(const RuntimeOleObjectState& runtime_object,
 
 std::optional<PrgValue> read_native_identity_metadata(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
-    // Ordinary dotted reads intentionally trail reflection parity here; ParentClass stays reflection-only until #3287.
+    // Ordinary dotted reads intentionally trail reflection parity for metadata we have not widened yet.
     if (normalized_member_name != "class" &&
         normalized_member_name != "baseclass" &&
+        normalized_member_name != "parentclass" &&
         normalized_member_name != "classlibrary")
     {
         return std::nullopt;
