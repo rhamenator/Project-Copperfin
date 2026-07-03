@@ -2933,6 +2933,308 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_release_detaches_external_base_contained_child_while_owner_and_sibling_remain_alive()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_release_external_base_child";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path root_library_path = temp_root / "rootbuttons.prg";
+        write_text(
+            root_library_path,
+            "DEFINE CLASS RootButton AS Custom\n"
+            "ENDDEFINE\n");
+
+        const fs::path button_library_path = temp_root / "buttons.prg";
+        write_text(
+            button_library_path,
+            "DEFINE CLASS ParentButton AS RootButton OF rootbuttons.prg\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "native_release_external_base_child.prg";
+        write_text(
+            main_path,
+            "cDestroyLog = ''\n"
+            "cChildParentCaptionDuringDestroy = ''\n"
+            "nChildDestroyCount = 0\n"
+            "oForm = CREATEOBJECT('DemoForm')\n"
+            "oChild = oForm.cmdSave\n"
+            "oSibling = oForm.cmdCancel\n"
+            "cChildClassLibraryBeforeRelease = oChild.ClassLibrary\n"
+            "cSiblingCaptionBeforeRelease = oSibling.Caption\n"
+            "lReleased = oChild.Release()\n"
+            "cDestroyLogAfter = cDestroyLog\n"
+            "cChildParentCaptionAfter = cChildParentCaptionDuringDestroy\n"
+            "nChildDestroyCountAfter = nChildDestroyCount\n"
+            "cOwnerCaptionAfterRelease = oForm.Caption\n"
+            "lOwnerStillHasSave = PEMSTATUS(oForm, 'cmdSave', 1)\n"
+            "xReleasedChild = GETPEM(oForm, 'cmdSave')\n"
+            "lOwnerStillHasCancel = PEMSTATUS(oForm, 'cmdCancel', 1)\n"
+            "cSiblingCaptionAfterRelease = oForm.cmdCancel.Caption\n"
+            "lHeldChildHasParentAfterRelease = PEMSTATUS(oChild, 'Parent', 1)\n"
+            "xHeldChildParentAfterRelease = GETPEM(oChild, 'Parent')\n"
+            "lHeldChildHasClassLibraryAfterRelease = PEMSTATUS(oChild, 'ClassLibrary', 1)\n"
+            "xHeldChildClassLibraryAfterRelease = GETPEM(oChild, 'ClassLibrary')\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 93)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS DemoForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddObject('cmdSave', 'SaveButton')\n"
+            "        THIS.AddObject('cmdCancel', 'CancelButton')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS ParentButton OF buttons.prg\n"
+            "    Caption = 'Save'\n"
+            "    PROCEDURE Destroy\n"
+            "        cDestroyLog = cDestroyLog + 'child>'\n"
+            "        cChildParentCaptionDuringDestroy = PARENT.Caption\n"
+            "        nChildDestroyCount = nChildDestroyCount + 1\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS CancelButton AS Custom\n"
+            "    Caption = 'Cancel'\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Release external-base child script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cchildclasslibrarybeforerelease", button_library_path.string());
+        check("csiblingcaptionbeforerelease", "Cancel");
+        check("lreleased", "true");
+        check("cdestroylogafter", "child>");
+        check("cchildparentcaptionafter", "MainForm");
+        check("nchilddestroycountafter", "1");
+        check("cownercaptionafterrelease", "MainForm");
+        check("lownerstillhassave", "false");
+        check("lownerstillhascancel", "true");
+        check("csiblingcaptionafterrelease", "Cancel");
+        check("lheldchildhasparentafterrelease", "false");
+        check("lheldchildhasclasslibraryafterrelease", "false");
+        check("ldictset", "true");
+        check("ndictcompare", "93");
+
+        const auto released_child = state.globals.find("xreleasedchild");
+        expect(released_child != state.globals.end() &&
+                   released_child->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "native Release external-base child should invalidate GETPEM() on the owner's released child slot");
+
+        const auto held_child_parent = state.globals.find("xheldchildparentafterrelease");
+        expect(held_child_parent != state.globals.end() &&
+                   held_child_parent->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "native Release external-base child should invalidate GETPEM() on the held child's Parent");
+
+        const auto held_child_class_library = state.globals.find("xheldchildclasslibraryafterrelease");
+        expect(held_child_class_library != state.globals.end() &&
+                   held_child_class_library->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "native Release external-base child should invalidate GETPEM() on the held released child's ClassLibrary");
+
+        expect(state.ole_objects.size() == 3U,
+               "native Release external-base child should leave owner, surviving sibling, and COM objects registered");
+        if (state.ole_objects.size() == 3U)
+        {
+            expect(state.ole_objects[0].prog_id == "DemoForm",
+                   "native Release external-base child should keep the owner object alive");
+            expect(state.ole_objects[0].source == main_path.string(),
+                   "native Release external-base child should preserve the owner source path");
+            expect(!state.ole_objects[0].properties.contains("cmdsave"),
+                   "native Release external-base child should detach the released child from the owner");
+            expect(state.ole_objects[0].properties.contains("cmdcancel"),
+                   "native Release external-base child should preserve the surviving sibling on the owner");
+            expect(state.ole_objects[1].prog_id == "CancelButton",
+                   "native Release external-base child should preserve the surviving sibling object");
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while native external-base child Release lands");
+        }
+
+        const bool has_child_destroy_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.destroy" &&
+                   event.detail == "SaveButton.Destroy";
+        });
+        expect(has_child_destroy_event,
+               "native Release external-base child should dispatch the child Destroy method");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_inherited_external_base_release_detaches_external_base_contained_child_while_owner_and_sibling_remain_alive()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_inherited_external_release_external_base_child";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path root_library_path = temp_root / "rootbuttons.prg";
+        write_text(
+            root_library_path,
+            "DEFINE CLASS RootButton AS Custom\n"
+            "ENDDEFINE\n");
+
+        const fs::path button_library_path = temp_root / "buttons.prg";
+        write_text(
+            button_library_path,
+            "DEFINE CLASS ParentButton AS RootButton OF rootbuttons.prg\n"
+            "ENDDEFINE\n");
+
+        const fs::path widget_library_path = temp_root / "widgetlib.prg";
+        write_text(
+            widget_library_path,
+            "DEFINE CLASS ParentForm AS Custom\n"
+            "    Caption = 'MainForm'\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddObject('cmdSave', 'SaveButton')\n"
+            "        THIS.AddObject('cmdCancel', 'CancelButton')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS ParentButton OF buttons.prg\n"
+            "    Caption = 'Save'\n"
+            "    PROCEDURE Destroy\n"
+            "        cDestroyLog = cDestroyLog + 'child>'\n"
+            "        cChildParentCaptionDuringDestroy = PARENT.Caption\n"
+            "        nChildDestroyCount = nChildDestroyCount + 1\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS CancelButton AS Custom\n"
+            "    Caption = 'Cancel'\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "inherited_external_release_external_base_child.prg";
+        write_text(
+            main_path,
+            "cDestroyLog = ''\n"
+            "cChildParentCaptionDuringDestroy = ''\n"
+            "nChildDestroyCount = 0\n"
+            "oCreate = CREATEOBJECT('ChildForm')\n"
+            "oChild = oCreate.cmdSave\n"
+            "oSibling = oCreate.cmdCancel\n"
+            "cChildClassLibraryBeforeRelease = oChild.ClassLibrary\n"
+            "cSiblingCaptionBeforeRelease = oSibling.Caption\n"
+            "lReleased = oChild.Release()\n"
+            "cDestroyLogAfter = cDestroyLog\n"
+            "cChildParentCaptionAfter = cChildParentCaptionDuringDestroy\n"
+            "nChildDestroyCountAfter = nChildDestroyCount\n"
+            "cOwnerCaptionAfterRelease = oCreate.Caption\n"
+            "lOwnerStillHasSave = PEMSTATUS(oCreate, 'cmdSave', 1)\n"
+            "xReleasedChild = GETPEM(oCreate, 'cmdSave')\n"
+            "lOwnerStillHasCancel = PEMSTATUS(oCreate, 'cmdCancel', 1)\n"
+            "cSiblingCaptionAfterRelease = oCreate.cmdCancel.Caption\n"
+            "lHeldChildHasParentAfterRelease = PEMSTATUS(oChild, 'Parent', 1)\n"
+            "xHeldChildParentAfterRelease = GETPEM(oChild, 'Parent')\n"
+            "lHeldChildHasClassLibraryAfterRelease = PEMSTATUS(oChild, 'ClassLibrary', 1)\n"
+            "xHeldChildClassLibraryAfterRelease = GETPEM(oChild, 'ClassLibrary')\n"
+            "oDict = NEWOBJECT('Scripting.Dictionary', 'vbscript.dll')\n"
+            "lDictSet = SETPEM(oDict, 'comparemode', 94)\n"
+            "nDictCompare = GETPEM(oDict, 'comparemode')\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildForm AS ParentForm OF widgetlib.prg\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("inherited external Release external-base child script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cchildclasslibrarybeforerelease", button_library_path.string());
+        check("csiblingcaptionbeforerelease", "Cancel");
+        check("lreleased", "true");
+        check("cdestroylogafter", "child>");
+        check("cchildparentcaptionafter", "MainForm");
+        check("nchilddestroycountafter", "1");
+        check("cownercaptionafterrelease", "MainForm");
+        check("lownerstillhassave", "false");
+        check("lownerstillhascancel", "true");
+        check("csiblingcaptionafterrelease", "Cancel");
+        check("lheldchildhasparentafterrelease", "false");
+        check("lheldchildhasclasslibraryafterrelease", "false");
+        check("ldictset", "true");
+        check("ndictcompare", "94");
+
+        const auto released_child = state.globals.find("xreleasedchild");
+        expect(released_child != state.globals.end() &&
+                   released_child->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "inherited external Release external-base child should invalidate GETPEM() on the owner's released child slot");
+
+        const auto held_child_parent = state.globals.find("xheldchildparentafterrelease");
+        expect(held_child_parent != state.globals.end() &&
+                   held_child_parent->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "inherited external Release external-base child should invalidate GETPEM() on the held child's Parent");
+
+        const auto held_child_class_library = state.globals.find("xheldchildclasslibraryafterrelease");
+        expect(held_child_class_library != state.globals.end() &&
+                   held_child_class_library->second.kind == copperfin::runtime::PrgValueKind::empty,
+               "inherited external Release external-base child should invalidate GETPEM() on the held released child's ClassLibrary");
+
+        expect(state.ole_objects.size() == 3U,
+               "inherited external Release external-base child should leave owner, surviving sibling, and COM objects registered");
+        if (state.ole_objects.size() == 3U)
+        {
+            expect(state.ole_objects[0].prog_id == "ChildForm",
+                   "inherited external Release external-base child should keep the owner object alive");
+            expect(state.ole_objects[0].source == main_path.string(),
+                   "inherited external Release external-base child should preserve the owner source path");
+            expect(!state.ole_objects[0].properties.contains("cmdsave"),
+                   "inherited external Release external-base child should detach the released child from the owner");
+            expect(state.ole_objects[0].properties.contains("cmdcancel"),
+                   "inherited external Release external-base child should preserve the surviving sibling on the owner");
+            expect(state.ole_objects[1].prog_id == "CancelButton",
+                   "inherited external Release external-base child should preserve the surviving sibling object");
+            expect(state.ole_objects[2].prog_id == "Scripting.Dictionary",
+                   "COM NEWOBJECT should remain stable while inherited external child Release lands");
+        }
+
+        const bool has_child_destroy_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.destroy" &&
+                   event.detail == "SaveButton.Destroy";
+        });
+        expect(has_child_destroy_event,
+               "inherited external Release external-base child should dispatch the child Destroy method");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_newobject_with_explicit_prg_library_activates_native_class_and_preserves_explicit_targets()
     {
         namespace fs = std::filesystem;
@@ -14087,6 +14389,8 @@ int main()
     test_native_release_invokes_destroy_and_invalidates_standalone_object();
     test_native_release_recursively_destroys_contained_children_and_invalidates_owner_chain();
     test_native_release_detaches_contained_child_while_owner_and_sibling_remain_alive();
+    test_native_release_detaches_external_base_contained_child_while_owner_and_sibling_remain_alive();
+    test_inherited_external_base_release_detaches_external_base_contained_child_while_owner_and_sibling_remain_alive();
     test_newobject_with_explicit_prg_library_activates_native_class_and_preserves_explicit_targets();
     test_native_prg_object_methods_bind_this_and_persist_instance_state();
     test_native_prg_init_runs_during_object_creation_and_preserves_plain_creation();
