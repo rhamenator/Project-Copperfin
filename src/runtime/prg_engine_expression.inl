@@ -616,9 +616,11 @@
                         const std::size_t column = arguments.size() < 2U
                                                        ? 1U
                                                        : static_cast<std::size_t>(std::max<double>(0.0, value_as_number(arguments[1])));
-                        return array_value_callback_(identifier, row, column);
+                        return apply_postfix_member_and_collection_access(
+                            array_value_callback_(identifier, row, column));
                     }
-                    return evaluate_function(identifier, arguments, raw_arguments, argument_references);
+                    return apply_postfix_member_and_collection_access(
+                        evaluate_function(identifier, arguments, raw_arguments, argument_references));
                 }
 
                 return apply_postfix_member_and_collection_access(resolve_identifier(identifier));
@@ -1494,6 +1496,12 @@
                 while (true)
                 {
                     skip_whitespace();
+                    if (match("("))
+                    {
+                        current = parse_native_collection_item_access(current, ')');
+                        continue;
+                    }
+
                     if (match("["))
                     {
                         current = parse_native_collection_item_access(current, ']');
