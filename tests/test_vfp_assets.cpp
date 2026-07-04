@@ -1165,6 +1165,27 @@ void test_inspect_asset_reports_missing_companions_and_unparseable_indexes() {
                 "The DBF-family asset expects a memo sidecar file, but the sidecar is missing.",
         "#2387: memo sidecar validation output should preserve code, severity, and default message text");
 
+    const fs::path label_path = temp_dir / "missing_sidecar.lbx";
+    {
+        const auto bytes = make_vfp_header();
+        std::ofstream output(label_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+
+    const auto label_result = copperfin::vfp::inspect_asset(label_path.string());
+    expect(label_result.ok, "inspect_asset should succeed for a readable LBX even when its sidecar is missing");
+    expect(
+        has_validation_issue(label_result, "memo.sidecar_missing", "missing_sidecar.lbt"),
+        "#3215: inspect_asset should report the LBX memo sidecar path through the label family route");
+    const auto* missing_label_sidecar_issue =
+        find_validation_issue(label_result, "memo.sidecar_missing", "missing_sidecar.lbt");
+    expect(
+        missing_label_sidecar_issue != nullptr &&
+            missing_label_sidecar_issue->severity == copperfin::vfp::AssetValidationSeverity::error &&
+            missing_label_sidecar_issue->message ==
+                "The DBF-family asset expects a memo sidecar file, but the sidecar is missing.",
+        "#3215: label-family memo sidecar validation should stay aligned with other DBF-family assets");
+
     const fs::path table_path = temp_dir / "broken_index.dbf";
     const fs::path bad_cdx_path = temp_dir / "broken_index.cdx";
     {
