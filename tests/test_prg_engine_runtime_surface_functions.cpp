@@ -10638,6 +10638,132 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_listbox_selected_property_stays_coherent()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_listbox_selected";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_listbox_selected.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('ListBox')\n"
+            "oPlain.AddItem('Alpha')\n"
+            "oPlain.AddItem('Beta')\n"
+            "oPlain.AddItem('Gamma')\n"
+            "nSelectSlot = 2\n"
+            "oPlain.Selected(1) = .T.\n"
+            "oPlain.Selected(m.nSelectSlot) = .T.\n"
+            "lSelected1 = oPlain.Selected(1)\n"
+            "lSelected2 = oPlain.Selected(2)\n"
+            "lSelected3 = oPlain.Selected(3)\n"
+            "nIndexAfterSecondSelect = oPlain.ListIndex\n"
+            "cDisplayAfterSecondSelect = oPlain.DisplayValue\n"
+            "oPlain.Selected(2) = .F.\n"
+            "lSelected2AfterClear = oPlain.Selected(2)\n"
+            "nIndexAfterClear = oPlain.ListIndex\n"
+            "cDisplayAfterClear = oPlain.DisplayValue\n"
+            "oPlain.Selected(3) = .T.\n"
+            "oPlain.RemoveItem(2)\n"
+            "nCountAfterRemove = oPlain.ListCount\n"
+            "lSelected1AfterRemove = oPlain.Selected(1)\n"
+            "lSelected2AfterRemove = oPlain.Selected(2)\n"
+            "nIndexAfterRemove = oPlain.ListIndex\n"
+            "cDisplayAfterRemove = oPlain.DisplayValue\n"
+            "lSetPemSelected1 = SETPEM(oPlain, 'Selected(1)', .T.)\n"
+            "lSelected1AfterSetPem = oPlain.Selected(1)\n"
+            "lSetPemMissing = SETPEM(oPlain, 'Selected(9)', .T.)\n"
+            "oSeed = CREATEOBJECT('SeededList')\n"
+            "lSeedRow1 = oSeed.Selected(1)\n"
+            "lSeedRow2 = oSeed.Selected(2)\n"
+            "nSeedIndex = oSeed.ListIndex\n"
+            "cSeedDisplay = oSeed.DisplayValue\n"
+            "RETURN\n"
+            "DEFINE CLASS SeededList AS ListBox\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddItem('North')\n"
+            "        THIS.AddItem('South')\n"
+            "        THIS.Selected(2) = .T.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native ListBox Selected property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lselected1", "true");
+        check("lselected2", "true");
+        check("lselected3", "false");
+        check("nindexaftersecondselect", "2");
+        check("cdisplayaftersecondselect", "Beta");
+        check("lselected2afterclear", "false");
+        check("nindexafterclear", "1");
+        check("cdisplayafterclear", "Alpha");
+        check("ncountafterremove", "2");
+        check("lselected1afterremove", "true");
+        check("lselected2afterremove", "true");
+        check("nindexafterremove", "2");
+        check("cdisplayafterremove", "Gamma");
+        check("lsetpemselected1", "true");
+        check("lselected1aftersetpem", "true");
+        check("lsetpemmissing", "false");
+        check("lseedrow1", "false");
+        check("lseedrow2", "true");
+        check("nseedindex", "2");
+        check("cseeddisplay", "South");
+
+        expect(state.ole_objects.size() == 2U,
+               "native ListBox Selected coverage should register plain and derived list boxes");
+        if (state.ole_objects.size() == 2U)
+        {
+            const auto &plain_list = state.ole_objects[0];
+            const auto &seed_list = state.ole_objects[1];
+
+            const auto plain_listindex = plain_list.properties.find("listindex");
+            const auto seed_listindex = seed_list.properties.find("listindex");
+
+            expect(plain_list.list_selected.size() == 2U,
+                   "plain ListBox Selected coverage should preserve two selection-state slots after removal");
+            if (plain_list.list_selected.size() == 2U)
+            {
+                expect(plain_list.list_selected[0],
+                       "plain ListBox Selected coverage should preserve the first selection bit after removal");
+                expect(plain_list.list_selected[1],
+                       "plain ListBox Selected coverage should shift the later selection bit with the removed row");
+            }
+            expect(plain_listindex != plain_list.properties.end() &&
+                       copperfin::runtime::format_value(plain_listindex->second) == "1",
+                   "plain ListBox Selected coverage should keep ListIndex synchronized after the final SETPEM() selection change");
+            expect(seed_list.list_selected.size() == 2U &&
+                       !seed_list.list_selected[0] &&
+                       seed_list.list_selected[1],
+                   "derived ListBox Selected coverage should preserve Init-time selection bits");
+            expect(seed_listindex != seed_list.properties.end() &&
+                       copperfin::runtime::format_value(seed_listindex->second) == "2",
+                   "derived ListBox Selected coverage should keep ListIndex synchronized during Init");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_combobox_boundcolumn_columncount_and_columnwidths_defaults_mutate_and_stay_builtin()
     {
         namespace fs = std::filesystem;
@@ -50532,6 +50658,7 @@ int main()
     test_native_list_controls_listcount_list_and_removeitem_stay_coherent();
     test_native_list_controls_addlistitem_newitemid_and_multicolumn_list_stay_coherent();
     test_native_list_controls_listitemid_selection_stays_coherent();
+    test_native_listbox_selected_property_stays_coherent();
     test_native_combobox_boundcolumn_columncount_and_columnwidths_defaults_mutate_and_stay_builtin();
     test_native_grid_columncount_defaults_materialize_columns_and_stay_builtin();
     test_native_column_bound_defaults_coordinate_controlsource_and_stay_builtin();

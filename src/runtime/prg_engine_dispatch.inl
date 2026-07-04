@@ -545,6 +545,44 @@
             auto assign_runtime_target_value = [&](const std::string &raw_identifier, const PrgValue &assignment_value) -> ExecutionOutcome
             {
                 std::string assignment_identifier = resolve_runtime_target_identifier(raw_identifier, frame);
+                if (assignment_identifier.find('.') != std::string::npos &&
+                    assignment_identifier.find('(') != std::string::npos)
+                {
+                    const auto separator = assignment_identifier.find('.');
+                    const std::string object_part = assignment_identifier.substr(0U, separator);
+                    if (normalize_identifier(object_part) != "m")
+                    {
+                        const std::string member_path = assignment_identifier.substr(separator + 1U);
+                        if (starts_with_insensitive(normalize_identifier(member_path), "selected("))
+                        {
+                            const PrgValue object_value = lookup_variable(frame, object_part);
+                            auto object = resolve_ole_object(object_value);
+                            if (object.has_value())
+                            {
+                                const auto resolved_path = resolve_runtime_object_member_path(frame, object_part, member_path);
+                                RuntimeOleObjectState *runtime_object =
+                                    resolved_path.runtime_object == nullptr ? *object : resolved_path.runtime_object;
+                                const std::string effective_member_path =
+                                    resolved_path.remaining_member_path.empty()
+                                        ? member_path
+                                        : resolved_path.remaining_member_path;
+                                if (write_native_property_if_present(
+                                        *runtime_object,
+                                        effective_member_path,
+                                        assignment_value,
+                                        frame))
+                                {
+                                    runtime_object->last_action = effective_member_path + " = " + value_as_string(assignment_value);
+                                    ++runtime_object->action_count;
+                                    events.push_back({.category = "ole.set",
+                                                      .detail = runtime_object->prog_id + "." + runtime_object->last_action,
+                                                      .location = statement.location});
+                                    return {};
+                                }
+                            }
+                        }
+                    }
+                }
                 if (assign_array_element(assignment_identifier, frame, assignment_value))
                 {
                     return {};

@@ -3847,6 +3847,40 @@ namespace copperfin::runtime
             return false;
         }
 
+        auto resolve_selected_member_slot = [&]() -> std::optional<std::size_t>
+        {
+            const auto literal_slot =
+                parse_native_list_control_selected_member_slot(runtime_object, property_name);
+            if (literal_slot.has_value())
+            {
+                return literal_slot;
+            }
+
+            if (!starts_with_insensitive(normalized_property_name, "selected(") ||
+                normalized_property_name.back() != ')')
+            {
+                return std::nullopt;
+            }
+
+            const std::size_t open_paren = property_name.find('(');
+            const std::size_t close_paren = property_name.rfind(')');
+            if (open_paren == std::string::npos || close_paren == std::string::npos ||
+                close_paren <= open_paren + 1U)
+            {
+                return std::nullopt;
+            }
+
+            const PrgValue selector_value = evaluate_expression(
+                property_name.substr(open_paren + 1U, close_paren - open_paren - 1U),
+                source_frame);
+            const long long requested_index = std::llround(value_as_number(selector_value));
+            if (requested_index < 1LL)
+            {
+                return std::nullopt;
+            }
+            return static_cast<std::size_t>(requested_index - 1LL);
+        };
+
         const auto perform_property_write = [&]() -> bool
         {
             if (invoke_native_object_method_body_if_present(
@@ -3909,6 +3943,14 @@ namespace copperfin::runtime
                 if (is_native_listitemid_member_name(runtime_object, normalized_property_name))
                 {
                     return write_native_list_control_item_id(runtime_object, assigned_value);
+                }
+                if (const auto selected_slot = resolve_selected_member_slot();
+                    selected_slot.has_value())
+                {
+                    return write_native_list_control_selected_slot(
+                        runtime_object,
+                        *selected_slot,
+                        assigned_value);
                 }
                 if (is_native_controlsource_member_name(runtime_object, normalized_property_name) &&
                     is_native_column_runtime_object(runtime_object))
