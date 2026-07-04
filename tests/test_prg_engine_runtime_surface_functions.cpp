@@ -7754,6 +7754,107 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_combobox_style_defaults_mutate_and_stay_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_combobox_style";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_combobox_style.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('ComboBox')\n"
+            "lPlainHasStyle = PEMSTATUS(oPlain, 'Style', 1)\n"
+            "lPlainStyleReadOnly = PEMSTATUS(oPlain, 'Style', 5)\n"
+            "nPlainBefore = oPlain.Style\n"
+            "xPlainGetPemBefore = GETPEM(oPlain, 'Style')\n"
+            "oPlain.Style = 2\n"
+            "nPlainAfterDirectAssign = oPlain.Style\n"
+            "lPlainSetPem = SETPEM(oPlain, 'Style', 0)\n"
+            "nPlainAfterSetPem = oPlain.Style\n"
+            "lPlainAddProperty = ADDPROPERTY(oPlain, 'Style', 1)\n"
+            "lPlainRemoveProperty = REMOVEPROPERTY(oPlain, 'Style')\n"
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "nChildBefore = oForm.cboMonth.Style\n"
+            "nChildRead = oForm.cmdProbe.ReadStyle()\n"
+            "oForm.cmdProbe.MakeDropDownList()\n"
+            "nChildAfterChild = oForm.cboMonth.Style\n"
+            "lChildSetPem = SETPEM(oForm.cboMonth, 'Style', 0)\n"
+            "nChildAfterSetPem = oForm.cboMonth.Style\n"
+            "xChildGetPem = GETPEM(oForm.cboMonth, 'Style')\n"
+            "lChildHasStyle = PEMSTATUS(oForm.cboMonth, 'Style', 1)\n"
+            "lChildStyleReadOnly = PEMSTATUS(oForm.cboMonth, 'Style', 5)\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oForm.cboMonth, 1)\n"
+            "lPropHasStyle = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'STYLE'\n"
+            "        lPropHasStyle = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('PickerCombo')\n"
+            "nDerivedBefore = oDerived.Style\n"
+            "RETURN\n"
+            "DEFINE CLASS ProbeButton AS CommandButton\n"
+            "    FUNCTION ReadStyle\n"
+            "        RETURN THISFORM.cboMonth.Style\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE MakeDropDownList\n"
+            "        THISFORM.cboMonth.Style = 2\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    ADD OBJECT cboMonth AS ComboBox WITH Style = 2\n"
+            "    ADD OBJECT cmdProbe AS ProbeButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS PickerCombo AS ComboBox\n"
+            "    Style = 2\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native ComboBox Style property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplainhasstyle", "true");
+        check("lplainstylereadonly", "false");
+        check("nplainbefore", "0");
+        check("xplaingetpembefore", "0");
+        check("nplainafterdirectassign", "2");
+        check("lplainsetpem", "true");
+        check("nplainaftersetpem", "0");
+        check("lplainaddproperty", "false");
+        check("lplainremoveproperty", "false");
+        check("nchildbefore", "2");
+        check("nchildread", "2");
+        check("nchildafterchild", "2");
+        check("lchildsetpem", "true");
+        check("nchildaftersetpem", "0");
+        check("xchildgetpem", "0");
+        check("lchildhasstyle", "true");
+        check("lchildstylereadonly", "false");
+        check("lprophasstyle", "true");
+        check("nderivedbefore", "2");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_text_entry_readonly_defaults_mutate_and_stay_builtin()
     {
         namespace fs = std::filesystem;
@@ -46555,6 +46656,7 @@ int main()
     test_native_form_scrollbars_defaults_are_runtime_readonly_and_stay_builtin();
     test_native_visual_enabled_defaults_mutates_and_stays_builtin();
     test_native_visual_visible_defaults_mutates_and_stays_builtin();
+    test_native_combobox_style_defaults_mutate_and_stay_builtin();
     test_native_text_entry_readonly_defaults_mutate_and_stay_builtin();
     test_native_grid_and_column_readonly_defaults_mutate_and_stay_builtin();
     test_native_checkbox_and_spinner_readonly_defaults_mutate_and_stay_builtin();

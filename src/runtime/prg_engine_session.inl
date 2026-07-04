@@ -245,6 +245,12 @@
                 runtime_object.properties["value"] = make_string_value("");
             }
 
+            if (normalized_base_class == "combobox" &&
+                !runtime_object.properties.contains("style"))
+            {
+                runtime_object.properties["style"] = make_number_value(0.0);
+            }
+
             if ((normalized_base_class == "textbox" ||
                  normalized_base_class == "editbox" ||
                  normalized_base_class == "grid" ||
