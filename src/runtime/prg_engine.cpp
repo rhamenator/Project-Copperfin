@@ -2241,7 +2241,7 @@ namespace copperfin::runtime
         {
             target_object->last_action = effective_member_path + "()";
             ++target_object->action_count;
-            if (leaf == "additem" || leaf == "removeitem")
+            if (leaf == "additem" || leaf == "addlistitem" || leaf == "removeitem")
             {
                 events.push_back({.category = "prg.object." + leaf,
                                   .detail = target_object->prog_id + "." + effective_member_path,
@@ -3868,6 +3868,7 @@ namespace copperfin::runtime
                 !is_native_controlcount_member_name(runtime_object, normalized_property_name) &&
                 !is_native_child_collection_member_name(runtime_object, normalized_property_name) &&
                 !is_native_listcount_member_name(runtime_object, normalized_property_name) &&
+                !is_native_newitemid_member_name(runtime_object, normalized_property_name) &&
                 !is_native_name_member_name(runtime_object, normalized_property_name) &&
                 !is_native_splitbar_member_name(runtime_object, normalized_property_name) &&
                 !is_native_leftcolumn_member_name(runtime_object, normalized_property_name) &&

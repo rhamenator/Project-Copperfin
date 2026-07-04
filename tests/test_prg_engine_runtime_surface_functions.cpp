@@ -10284,6 +10284,203 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_list_controls_addlistitem_newitemid_and_multicolumn_list_stay_coherent()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_list_controls_addlistitem";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_list_controls_addlistitem.prg";
+        write_text(
+            main_path,
+            "oPlainCombo = CREATEOBJECT('ComboBox')\n"
+            "oPlainCombo.ColumnCount = 3\n"
+            "lHasAddListItem = PEMSTATUS(oPlainCombo, 'AddListItem', 1)\n"
+            "lGetAddListItem = GETPEM(oPlainCombo, 'AddListItem')\n"
+            "lHasNewItemId = PEMSTATUS(oPlainCombo, 'NewItemId', 1)\n"
+            "lNewItemIdReadOnly = PEMSTATUS(oPlainCombo, 'NewItemId', 5)\n"
+            "xNewItemIdBefore = GETPEM(oPlainCombo, 'NewItemId')\n"
+            "nPlainMethodCount = AMEMBERS(aPlainMethods, oPlainCombo, 2)\n"
+            "nPlainHasAddListItem = ASCAN(aPlainMethods, 'ADDLISTITEM')\n"
+            "nFirstAdd = oPlainCombo.AddListItem('Cleveland')\n"
+            "nFirstItemId = oPlainCombo.NewItemId\n"
+            "nSecondCol1 = oPlainCombo.AddListItem('Ohio', oPlainCombo.NewItemId, 2)\n"
+            "nThirdCol1 = oPlainCombo.AddListItem('44122', oPlainCombo.NewItemId, 3)\n"
+            "nSecondAdd = oPlainCombo.AddListItem('Buffalo')\n"
+            "nSecondItemId = oPlainCombo.NewItemId\n"
+            "nSecondCol2 = oPlainCombo.AddListItem('New York', oPlainCombo.NewItemId, 2)\n"
+            "nSecondCol3 = oPlainCombo.AddListItem('14228', oPlainCombo.NewItemId, 3)\n"
+            "nCountAfterAdds = oPlainCombo.ListCount\n"
+            "xNewItemIdAfterAdds = GETPEM(oPlainCombo, 'NewItemId')\n"
+            "cRow1Col1 = oPlainCombo.List(1)\n"
+            "cRow1Col2 = oPlainCombo.List(1, 2)\n"
+            "cRow1Col3 = oPlainCombo.List(1, 3)\n"
+            "cRow2Col1 = oPlainCombo.List(2)\n"
+            "cRow2Col2 = oPlainCombo.List(2, 2)\n"
+            "cRow2Col3 = oPlainCombo.List(2, 3)\n"
+            "cMissingCol = oPlainCombo.List(2, 4)\n"
+            "oPlainCombo.ListIndex = 2\n"
+            "cDisplayBeforeRemove = oPlainCombo.DisplayValue\n"
+            "oPlainCombo.RemoveItem(1)\n"
+            "nCountAfterRemove = oPlainCombo.ListCount\n"
+            "nIndexAfterRemove = oPlainCombo.ListIndex\n"
+            "cDisplayAfterRemove = oPlainCombo.DisplayValue\n"
+            "cRemainingCol1 = oPlainCombo.List(1)\n"
+            "cRemainingCol2 = oPlainCombo.List(1, 2)\n"
+            "cRemainingCol3 = oPlainCombo.List(1, 3)\n"
+            "lSetPemNewItemId = SETPEM(oPlainCombo, 'NewItemId', 99)\n"
+            "lAddPropertyNewItemId = ADDPROPERTY(oPlainCombo, 'NewItemId', 99)\n"
+            "lRemovePropertyNewItemId = REMOVEPROPERTY(oPlainCombo, 'NewItemId')\n"
+            "oSeedList = CREATEOBJECT('SeededList')\n"
+            "nSeedCount = oSeedList.ListCount\n"
+            "nSeedItemId = oSeedList.NewItemId\n"
+            "cSeedRow1Col1 = oSeedList.List(1)\n"
+            "cSeedRow1Col2 = oSeedList.List(1, 2)\n"
+            "cSeedRow2Col1 = oSeedList.List(2)\n"
+            "cSeedRow2Col2 = oSeedList.List(2, 2)\n"
+            "cSeedDisplay = oSeedList.DisplayValue\n"
+            "RETURN\n"
+            "DEFINE CLASS SeededList AS ListBox\n"
+            "    ColumnCount = 2\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddListItem('North')\n"
+            "        THIS.AddListItem('N', THIS.NewItemId, 2)\n"
+            "        THIS.AddListItem('South')\n"
+            "        THIS.AddListItem('S', THIS.NewItemId, 2)\n"
+            "        THIS.ListIndex = 2\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native AddListItem/NewItemId multicolumn list-control script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lhasaddlistitem", "true");
+        check("lgetaddlistitem", "true");
+        check("lhasnewitemid", "true");
+        check("lnewitemidreadonly", "true");
+        check("xnewitemidbefore", "0");
+        check("nfirstadd", "1");
+        check("nfirstitemid", "1");
+        check("nsecondcol1", "1");
+        check("nthirdcol1", "1");
+        check("nsecondadd", "2");
+        check("nseconditemid", "2");
+        check("nsecondcol2", "2");
+        check("nsecondcol3", "2");
+        check("ncountafteradds", "2");
+        check("xnewitemidafteradds", "2");
+        check("crow1col1", "Cleveland");
+        check("crow1col2", "Ohio");
+        check("crow1col3", "44122");
+        check("crow2col1", "Buffalo");
+        check("crow2col2", "New York");
+        check("crow2col3", "14228");
+        check("cmissingcol", "");
+        check("cdisplaybeforeremove", "Buffalo");
+        check("ncountafterremove", "1");
+        check("nindexafterremove", "1");
+        check("cdisplayafterremove", "Buffalo");
+        check("cremainingcol1", "Buffalo");
+        check("cremainingcol2", "New York");
+        check("cremainingcol3", "14228");
+        check("lsetpemnewitemid", "false");
+        check("laddpropertynewitemid", "false");
+        check("lremovepropertynewitemid", "false");
+        check("nseedcount", "2");
+        check("nseeditemid", "2");
+        check("cseedrow1col1", "North");
+        check("cseedrow1col2", "N");
+        check("cseedrow2col1", "South");
+        check("cseedrow2col2", "S");
+        check("cseeddisplay", "South");
+
+        const auto plain_has_addlistitem = state.globals.find("nplainhasaddlistitem");
+        expect(plain_has_addlistitem != state.globals.end(),
+               "nPlainHasAddListItem variable should be present");
+        if (plain_has_addlistitem != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(plain_has_addlistitem->second) != "0",
+                   "AMEMBERS(..., 2) should expose the native AddListItem builtin for ComboBox");
+        }
+
+        expect(state.ole_objects.size() == 2U,
+               "native AddListItem/NewItemId coverage should register plain and derived list controls");
+        if (state.ole_objects.size() == 2U)
+        {
+            const auto &plain_combo = state.ole_objects[0];
+            const auto &seed_list = state.ole_objects[1];
+
+            const auto plain_newitemid = plain_combo.properties.find("newitemid");
+            const auto seed_newitemid = seed_list.properties.find("newitemid");
+
+            expect(plain_combo.list_rows.size() == 1U,
+                   "plain ComboBox AddListItem coverage should preserve one multicolumn row after removal");
+            if (plain_combo.list_rows.size() == 1U)
+            {
+                expect(plain_combo.list_rows[0].size() == 3U,
+                       "plain ComboBox AddListItem coverage should preserve three columns on the remaining row");
+                if (plain_combo.list_rows[0].size() == 3U)
+                {
+                    expect(copperfin::runtime::format_value(plain_combo.list_rows[0][0]) == "Buffalo",
+                           "plain ComboBox AddListItem coverage should preserve remaining row column 1");
+                    expect(copperfin::runtime::format_value(plain_combo.list_rows[0][1]) == "New York",
+                           "plain ComboBox AddListItem coverage should preserve remaining row column 2");
+                    expect(copperfin::runtime::format_value(plain_combo.list_rows[0][2]) == "14228",
+                           "plain ComboBox AddListItem coverage should preserve remaining row column 3");
+                }
+            }
+            expect(plain_combo.collection_items.size() == 1U &&
+                       copperfin::runtime::format_value(plain_combo.collection_items[0]) == "Buffalo",
+                   "plain ComboBox AddListItem coverage should keep first-column runtime items synchronized");
+            expect(plain_newitemid != plain_combo.properties.end() &&
+                       copperfin::runtime::format_value(plain_newitemid->second) == "2",
+                   "plain ComboBox AddListItem coverage should preserve the most recently added item id");
+
+            expect(seed_list.list_rows.size() == 2U,
+                   "derived ListBox AddListItem coverage should preserve Init-time multicolumn rows");
+            if (seed_list.list_rows.size() == 2U)
+            {
+                expect(seed_list.list_rows[0].size() == 2U &&
+                           copperfin::runtime::format_value(seed_list.list_rows[0][1]) == "N",
+                       "derived ListBox AddListItem coverage should preserve row 1 column 2");
+                expect(seed_list.list_rows[1].size() == 2U &&
+                           copperfin::runtime::format_value(seed_list.list_rows[1][1]) == "S",
+                       "derived ListBox AddListItem coverage should preserve row 2 column 2");
+            }
+            expect(seed_newitemid != seed_list.properties.end() &&
+                       copperfin::runtime::format_value(seed_newitemid->second) == "2",
+                   "derived ListBox AddListItem coverage should preserve the most recently added item id");
+        }
+
+        const bool has_addlistitem_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.addlistitem";
+        });
+        expect(has_addlistitem_event,
+               "native AddListItem coverage should emit representative list-control method events");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_combobox_boundcolumn_columncount_and_columnwidths_defaults_mutate_and_stay_builtin()
     {
         namespace fs = std::filesystem;
@@ -50176,6 +50373,7 @@ int main()
     test_native_displayvalue_defaults_mutates_and_stays_builtin();
     test_native_list_controls_additem_builtin_populates_runtime_items();
     test_native_list_controls_listcount_list_and_removeitem_stay_coherent();
+    test_native_list_controls_addlistitem_newitemid_and_multicolumn_list_stay_coherent();
     test_native_combobox_boundcolumn_columncount_and_columnwidths_defaults_mutate_and_stay_builtin();
     test_native_grid_columncount_defaults_materialize_columns_and_stay_builtin();
     test_native_column_bound_defaults_coordinate_controlsource_and_stay_builtin();

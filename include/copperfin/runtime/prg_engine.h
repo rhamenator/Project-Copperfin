@@ -131,6 +131,7 @@ struct RuntimeOleObjectState {
     std::map<std::string, PrgValue> default_properties{};
     std::vector<PrgValue> collection_items{};
     std::vector<std::string> collection_item_keys{};
+    std::vector<std::vector<PrgValue>> list_rows{};
     std::vector<std::string> class_hierarchy{};
     std::string base_class_name{};
     std::string class_library{};

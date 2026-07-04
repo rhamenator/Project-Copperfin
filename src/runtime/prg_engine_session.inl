@@ -870,6 +870,13 @@
                 runtime_object.properties["listcount"] = make_number_value(0.0);
             }
 
+            if ((normalized_base_class == "combobox" ||
+                 normalized_base_class == "listbox") &&
+                !runtime_object.properties.contains("newitemid"))
+            {
+                runtime_object.properties["newitemid"] = make_number_value(0.0);
+            }
+
             if (normalized_base_class == "combobox" &&
                 !runtime_object.properties.contains("boundcolumn"))
             {
