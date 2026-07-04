@@ -601,9 +601,11 @@ Program parse_program(const std::string& path) {
             continue;
         }
 
+        const std::string trimmed_line = trim_copy(line);
         const std::string upper = uppercase_copy(line);
-        if (current_class == nullptr && current == &program.main && starts_with_insensitive(line, "DEFINE CLASS ")) {
-            const std::string body = trim_copy(line.substr(13U));
+        const std::string trimmed_upper = uppercase_copy(trimmed_line);
+        if (current_class == nullptr && current == &program.main && starts_with_insensitive(trimmed_line, "DEFINE CLASS ")) {
+            const std::string body = trim_copy(trimmed_line.substr(13U));
             const std::size_t as_position = find_keyword_top_level(body, "AS");
             const std::size_t of_position =
                 as_position == std::string::npos
@@ -631,11 +633,11 @@ Program parse_program(const std::string& path) {
             current = &program.main;
             continue;
         }
-        if (current_child_object != nullptr && upper == "ENDOBJECT") {
+        if (current_child_object != nullptr && trimmed_upper == "ENDOBJECT") {
             current_child_object = nullptr;
             continue;
         }
-        if (current_class != nullptr && upper == "ENDDEFINE") {
+        if (current_class != nullptr && trimmed_upper == "ENDDEFINE") {
             current_child_object = nullptr;
             current_class = nullptr;
             current = &program.main;
@@ -671,8 +673,8 @@ Program parse_program(const std::string& path) {
             }
             continue;
         }
-        if (current_class != nullptr && current == &program.main && starts_with_insensitive(line, "ADD OBJECT ")) {
-            const std::string body = trim_copy(line.substr(11U));
+        if (current_class != nullptr && current == &program.main && starts_with_insensitive(trimmed_line, "ADD OBJECT ")) {
+            const std::string body = trim_copy(trimmed_line.substr(11U));
             const std::size_t as_position = find_keyword_top_level(body, "AS");
             if (as_position != std::string::npos) {
                 const std::size_t of_position = find_keyword_top_level_from(body, "OF", as_position + 2U);
@@ -696,7 +698,7 @@ Program parse_program(const std::string& path) {
                             : body.substr(of_position + 2U, with_position - of_position - 2U));
                 }
                 declaration.declaration_location = {.file_path = normalize_path(path), .line = line_number};
-                declaration.text = line;
+                declaration.text = trimmed_line;
                 if (with_position != std::string::npos) {
                     declaration.property_statements = parse_child_object_property_clauses(
                         path,
@@ -709,8 +711,8 @@ Program parse_program(const std::string& path) {
                 }
             }
         }
-        if (current_class != nullptr && current == &program.main && starts_with_insensitive(line, "OBJECT ")) {
-            const std::string body = trim_copy(line.substr(7U));
+        if (current_class != nullptr && current == &program.main && starts_with_insensitive(trimmed_line, "OBJECT ")) {
+            const std::string body = trim_copy(trimmed_line.substr(7U));
             const std::size_t as_position = find_keyword_top_level(body, "AS");
             if (as_position != std::string::npos) {
                 const std::size_t of_position = find_keyword_top_level_from(body, "OF", as_position + 2U);
@@ -724,7 +726,7 @@ Program parse_program(const std::string& path) {
                     declaration.source_path = trim_copy(body.substr(of_position + 2U));
                 }
                 declaration.declaration_location = {.file_path = normalize_path(path), .line = line_number};
-                declaration.text = line;
+                declaration.text = trimmed_line;
                 if (!declaration.name.empty() && !declaration.class_name.empty()) {
                     current_class->child_object_declarations.push_back(std::move(declaration));
                     current_child_object = &current_class->child_object_declarations.back();

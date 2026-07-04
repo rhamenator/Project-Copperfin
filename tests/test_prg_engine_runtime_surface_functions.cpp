@@ -38693,6 +38693,113 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_runtime_native_visual_controls_without_hwnd_fail_deterministically()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_missing_hwnd_controls";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "runtime_missing_hwnd_controls.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "lButtonHasHwnd = PEMSTATUS(oForm.cmdSave, 'hWnd', 1)\n"
+            "xButtonGetPem = GETPEM(oForm.cmdSave, 'hWnd')\n"
+            "lButtonSetHwnd = SETPEM(oForm.cmdSave, 'hWnd', 77)\n"
+            "TRY\n"
+            "  xButtonDirect = oForm.cmdSave.hWnd\n"
+            "CATCH TO oButtonErr\n"
+            "  cButtonErr = oButtonErr.Message\n"
+            "ENDTRY\n"
+            "lTextHasHwnd = PEMSTATUS(oForm.txtName, 'hWnd', 1)\n"
+            "xTextGetPem = GETPEM(oForm.txtName, 'hWnd')\n"
+            "lTextSetHwnd = SETPEM(oForm.txtName, 'hWnd', 88)\n"
+            "TRY\n"
+            "  xTextDirect = oForm.txtName.hWnd\n"
+            "CATCH TO oTextErr\n"
+            "  cTextErr = oTextErr.Message\n"
+            "ENDTRY\n"
+            "lContainerHasHwnd = PEMSTATUS(oForm.cntHost, 'hWnd', 1)\n"
+            "xContainerGetPem = GETPEM(oForm.cntHost, 'hWnd')\n"
+            "lContainerSetHwnd = SETPEM(oForm.cntHost, 'hWnd', 99)\n"
+            "TRY\n"
+            "  xContainerDirect = oForm.cntHost.hWnd\n"
+            "CATCH TO oContainerErr\n"
+            "  cContainerErr = oContainerErr.Message\n"
+            "ENDTRY\n"
+            "RETURN\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    ADD OBJECT cmdSave AS CommandButton\n"
+            "    ADD OBJECT txtName AS TextBox\n"
+            "    ADD OBJECT cntHost AS Container\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("Unsupported native control hWnd script should complete: ") + state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lbuttonhashwnd", "false");
+        check("xbuttongetpem", "");
+        check("lbuttonsethwnd", "false");
+        check("ltexthashwnd", "false");
+        check("xtextgetpem", "");
+        check("ltextsethwnd", "false");
+        check("lcontainerhashwnd", "false");
+        check("xcontainergetpem", "");
+        check("lcontainersethwnd", "false");
+
+        const auto button_error = state.globals.find("cbuttonerr");
+        const auto text_error = state.globals.find("ctexterr");
+        const auto container_error = state.globals.find("ccontainererr");
+        expect(button_error != state.globals.end(),
+               "Unsupported CommandButton hWnd read should populate CATCH text");
+        expect(text_error != state.globals.end(),
+               "Unsupported TextBox hWnd read should populate CATCH text");
+        expect(container_error != state.globals.end(),
+               "Unsupported Container hWnd read should populate CATCH text");
+
+        if (button_error != state.globals.end())
+        {
+            const std::string message = copperfin::runtime::format_value(button_error->second);
+            const std::string folded = copperfin::test_support::lowercase_copy(message);
+            expect(folded.find("commandbutton.hwnd") != std::string::npos,
+                   "Unsupported CommandButton hWnd read should preserve the missing member identifier");
+        }
+        if (text_error != state.globals.end())
+        {
+            const std::string message = copperfin::runtime::format_value(text_error->second);
+            const std::string folded = copperfin::test_support::lowercase_copy(message);
+            expect(folded.find("textbox.hwnd") != std::string::npos,
+                   "Unsupported TextBox hWnd read should preserve the missing member identifier");
+        }
+        if (container_error != state.globals.end())
+        {
+            const std::string message = copperfin::runtime::format_value(container_error->second);
+            const std::string folded = copperfin::test_support::lowercase_copy(message);
+            expect(folded.find("container.hwnd") != std::string::npos,
+                   "Unsupported Container hWnd read should preserve the missing member identifier");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_same_prg_native_bindevent_property_access_and_assign_dispatch_preserve_current_event_metadata()
     {
         namespace fs = std::filesystem;
@@ -40770,6 +40877,7 @@ int main()
         test_same_prg_native_aevents_zero_reports_current_event_metadata_during_delegate_dispatch();
         test_same_prg_native_windows_message_bindevent_and_aevents_dispatch_during_read_events();
         test_runtime_hwnd_and_sys2326_sys2327_surfaces_bind_representative_window_objects();
+        test_runtime_native_visual_controls_without_hwnd_fail_deterministically();
         test_same_prg_native_bindevent_property_access_and_assign_dispatch_preserve_current_event_metadata();
         test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();
     test_native_accessor_backed_properties_reflect_through_getpem_pemstatus_and_amembers();

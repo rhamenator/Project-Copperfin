@@ -117,6 +117,36 @@
             return end == 0U ? std::string{} : trimmed.substr(0U, end);
         }
 
+        bool is_supported_native_base_class_name(const std::string &class_name) const
+        {
+            const std::string normalized_class_name =
+                normalize_identifier(native_same_prg_base_class_name(class_name));
+            return normalized_class_name == "checkbox" ||
+                   normalized_class_name == "combobox" ||
+                   normalized_class_name == "commandbutton" ||
+                   normalized_class_name == "commandgroup" ||
+                   normalized_class_name == "container" ||
+                   normalized_class_name == "custom" ||
+                   normalized_class_name == "editbox" ||
+                   normalized_class_name == "form" ||
+                   normalized_class_name == "grid" ||
+                   normalized_class_name == "image" ||
+                   normalized_class_name == "label" ||
+                   normalized_class_name == "line" ||
+                   normalized_class_name == "listbox" ||
+                   normalized_class_name == "object" ||
+                   normalized_class_name == "optionbutton" ||
+                   normalized_class_name == "optiongroup" ||
+                   normalized_class_name == "page" ||
+                   normalized_class_name == "pageframe" ||
+                   normalized_class_name == "separator" ||
+                   normalized_class_name == "shape" ||
+                   normalized_class_name == "spinner" ||
+                   normalized_class_name == "textbox" ||
+                   normalized_class_name == "timer" ||
+                   normalized_class_name == "toolbar";
+        }
+
         std::string resolve_native_prg_program_path(
             const std::string &source_path,
             const std::string &fallback_path = {}) const
@@ -423,20 +453,6 @@
             }
 
             std::size_t consumed_segments = 0U;
-            const auto current_matches_parent_of_child = [&](const RuntimeOleObjectState &child_object) -> bool
-            {
-                const auto parent_reference = native_object_parent_reference(child_object);
-                if (!parent_reference.has_value())
-                {
-                    return false;
-                }
-
-                int parent_handle = 0;
-                std::string parent_prog_id;
-                return parse_object_handle_reference(*parent_reference, parent_handle, parent_prog_id) &&
-                       parent_handle == current_object->handle;
-            };
-
             for (std::size_t index = 0U; index + 1U < segments.size(); ++index)
             {
                 const std::string property_name = normalize_identifier(segments[index]);
@@ -452,14 +468,7 @@
                     break;
                 }
 
-                RuntimeOleObjectState *next_object = *nested_object;
-                const bool parent_step = property_name == "parent";
-                if (!parent_step && !current_matches_parent_of_child(*next_object))
-                {
-                    break;
-                }
-
-                current_object = next_object;
+                current_object = *nested_object;
                 consumed_segments = index + 1U;
             }
 
@@ -521,7 +530,36 @@
             const auto class_found = program.classes.find(normalize_identifier(prog_id));
             if (class_found == program.classes.end())
             {
-                return nullptr;
+                if (!is_supported_native_base_class_name(prog_id))
+                {
+                    return nullptr;
+                }
+
+                const int handle = next_ole_handle++;
+                RuntimeOleObjectState object_state{
+                    .handle = handle,
+                    .prog_id = native_same_prg_base_class_name(prog_id),
+                    .source = {},
+                    .last_action = source_tag,
+                    .action_count = 1};
+                if (parent_reference.has_value())
+                {
+                    object_state.properties["parent"] = *parent_reference;
+                }
+                object_state.base_class_name = native_same_prg_base_class_name(prog_id);
+                const std::string class_token = uppercase_copy(trim_copy(object_state.prog_id));
+                if (!class_token.empty())
+                {
+                    object_state.class_hierarchy.push_back(class_token);
+                }
+                if (object_state.class_hierarchy.empty() || object_state.class_hierarchy.back() != "OBJECT")
+                {
+                    object_state.class_hierarchy.push_back("OBJECT");
+                }
+                assign_native_window_metadata(object_state);
+
+                auto [object_it, _] = ole_objects.emplace(handle, std::move(object_state));
+                return &object_it->second;
             }
 
             if (native_class_instantiation_depth >= max_call_depth)

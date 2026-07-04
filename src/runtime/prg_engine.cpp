@@ -1169,6 +1169,16 @@ namespace copperfin::runtime
                 {
                     return *property_result;
                 }
+                if (!runtime_object->class_hierarchy.empty() &&
+                    property_name == "hwnd" &&
+                    !runtime_object->native_hwnd.has_value())
+                {
+                    return raise_ole_fault(runtime_object->prog_id + "." + effective_property_path,
+                                           object_name,
+                                           runtime_text(
+                                               "Runtime.Prg.Core.Error.OleMemberNotFoundForPropertyRead",
+                                               {{"memberIdentifier", runtime_object->prog_id + "." + effective_property_path}}));
+                }
                 if (normalize_identifier(runtime_object->prog_id) == "scripting.dictionary")
                 {
                     return raise_ole_fault(runtime_object->prog_id + "." + effective_property_path,
@@ -1534,7 +1544,68 @@ namespace copperfin::runtime
                 {
                     return std::nullopt;
                 }
-                return read_native_property_if_present(**object, member_name, frame);
+
+                RuntimeOleObjectState *target_object = *object;
+                std::vector<std::string> segments;
+                std::size_t start = 0U;
+                while (start <= member_name.size())
+                {
+                    const std::size_t separator = member_name.find('.', start);
+                    std::string segment = separator == std::string::npos
+                                              ? member_name.substr(start)
+                                              : member_name.substr(start, separator - start);
+                    segment = trim_copy(segment);
+                    if (!segment.empty())
+                    {
+                        segments.push_back(segment);
+                    }
+                    if (separator == std::string::npos)
+                    {
+                        break;
+                    }
+                    start = separator + 1U;
+                }
+                if (segments.empty())
+                {
+                    return std::nullopt;
+                }
+
+                for (std::size_t index = 0U; index + 1U < segments.size(); ++index)
+                {
+                    const auto property = target_object->properties.find(normalize_identifier(segments[index]));
+                    if (property == target_object->properties.end())
+                    {
+                        return std::nullopt;
+                    }
+                    const auto nested_object = resolve_ole_object(property->second);
+                    if (!nested_object.has_value())
+                    {
+                        return std::nullopt;
+                    }
+                    target_object = *nested_object;
+                }
+
+                const std::string &leaf_member_name = segments.back();
+                const std::string normalized_member_name = normalize_identifier(leaf_member_name);
+                if (!normalized_member_name.empty() &&
+                    !target_object->class_hierarchy.empty() &&
+                    normalized_member_name == "hwnd" &&
+                    !target_object->native_hwnd.has_value())
+                {
+                    const Statement *statement = current_statement();
+                    const std::string action_text = statement == nullptr ? member_name : statement->text;
+                    const std::string detail = target_object->prog_id + "." + leaf_member_name;
+                    record_ole_aerror_context(detail,
+                                              "Copperfin OLE",
+                                              target_object->prog_id,
+                                              action_text,
+                                              1429);
+                    throw std::runtime_error(
+                        runtime_text(
+                            "Runtime.Prg.Core.Error.OleMemberNotFoundForPropertyRead",
+                            {{"memberIdentifier", detail}}));
+                }
+                return read_native_property_if_present(*target_object, leaf_member_name, frame);
             },
             [this, &frame](const PrgValue &value, const std::string &member_name, const PrgValue &assigned_value) -> bool
             {
