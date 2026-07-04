@@ -486,7 +486,8 @@
                 skip_whitespace();
                 if (match("["))
                 {
-                    return parse_array_element_access(identifier, ']');
+                    return apply_postfix_member_and_collection_access(
+                        parse_indexed_identifier_access(identifier, ']'));
                 }
 
                 if (match("("))
@@ -620,7 +621,7 @@
                     return evaluate_function(identifier, arguments, raw_arguments, argument_references);
                 }
 
-                return resolve_identifier(identifier);
+                return apply_postfix_member_and_collection_access(resolve_identifier(identifier));
             }
 
             PrgValue evaluate_function(
@@ -1472,6 +1473,99 @@
                 }
                 match(std::string(1U, close_delimiter));
                 return array_value_callback_(array_name, row, column);
+            }
+
+            PrgValue parse_indexed_identifier_access(const std::string &identifier, char close_delimiter)
+            {
+                const PrgValue selector = parse_comparison();
+                if (array_exists_callback_(identifier))
+                {
+                    return finish_array_element_access(identifier, selector, close_delimiter);
+                }
+
+                return finish_native_collection_item_access(
+                    resolve_identifier(identifier),
+                    selector,
+                    close_delimiter);
+            }
+
+            PrgValue apply_postfix_member_and_collection_access(PrgValue current)
+            {
+                while (true)
+                {
+                    skip_whitespace();
+                    if (match("["))
+                    {
+                        current = parse_native_collection_item_access(current, ']');
+                        continue;
+                    }
+
+                    if (!match("."))
+                    {
+                        return current;
+                    }
+
+                    const std::string member_name = parse_identifier();
+                    if (member_name.empty())
+                    {
+                        return {};
+                    }
+
+                    const auto member_value = read_native_member_callback_(current, member_name);
+                    if (!member_value.has_value())
+                    {
+                        return {};
+                    }
+                    current = *member_value;
+                }
+            }
+
+            PrgValue parse_native_collection_item_access(const PrgValue &collection_value, char close_delimiter)
+            {
+                const PrgValue selector = parse_comparison();
+                return finish_native_collection_item_access(collection_value, selector, close_delimiter);
+            }
+
+            PrgValue finish_array_element_access(
+                const std::string &array_name,
+                const PrgValue &row_selector,
+                char close_delimiter)
+            {
+                const std::size_t row = static_cast<std::size_t>(
+                    std::max<double>(0.0, value_as_number(row_selector)));
+                std::size_t column = 1U;
+                skip_whitespace();
+                if (match(","))
+                {
+                    column = static_cast<std::size_t>(
+                        std::max<double>(0.0, value_as_number(parse_comparison())));
+                }
+                match(std::string(1U, close_delimiter));
+                return array_value_callback_(array_name, row, column);
+            }
+
+            PrgValue finish_native_collection_item_access(
+                const PrgValue &collection_value,
+                const PrgValue &selector,
+                char close_delimiter)
+            {
+                skip_whitespace();
+                if (match(","))
+                {
+                    (void)parse_comparison();
+                }
+                match(std::string(1U, close_delimiter));
+
+                RuntimeOleObjectState *runtime_object = resolve_object_callback_(collection_value);
+                if (runtime_object == nullptr ||
+                    !is_native_collection_object(*runtime_object))
+                {
+                    return {};
+                }
+
+                const auto item_value =
+                    invoke_native_collection_method(*runtime_object, "item", {selector});
+                return item_value.value_or(make_empty_value());
             }
 
             std::string resolve_array_argument_name(

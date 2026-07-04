@@ -6022,6 +6022,71 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_collection_subscript_access_routes_to_items_and_preserves_member_chains()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_collection_subscript_item";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_collection_subscript_item.prg";
+        write_text(
+            main_path,
+            "DIMENSION aNames[2]\n"
+            "aNames[1] = 'array-one'\n"
+            "aNames[2] = 'array-two'\n"
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "cArrayByBracket = aNames[2]\n"
+            "cFirstControlBaseClass = oForm.Controls[1].BaseClass\n"
+            "cSecondObjectBaseClass = oForm.Objects[2].BaseClass\n"
+            "oDefaultItem = oForm.Controls(1)\n"
+            "cDefaultItemBaseClass = oDefaultItem.BaseClass\n"
+            "cGridColumnName = oForm.grdLedger.Columns[1].Name\n"
+            "cGridColumnCurrentControl = oForm.grdLedger.Columns[1].CurrentControl\n"
+            "cNestedGridColumnCurrentControl = oForm.Controls[2].Columns[1].CurrentControl\n"
+            "RETURN\n"
+            "DEFINE CLASS SaveButton AS CommandButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS LedgerGrid AS Grid\n"
+            "    ColumnCount = 1\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "    ADD OBJECT grdLedger AS LedgerGrid\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Collection subscript script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("carraybybracket", "array-two");
+        check("cfirstcontrolbaseclass", "CommandButton");
+        check("csecondobjectbaseclass", "Grid");
+        check("cdefaultitembaseclass", "CommandButton");
+        check("cgridcolumnname", "Column1");
+        check("cgridcolumncurrentcontrol", "Text1");
+        check("cnestedgridcolumncurrentcontrol", "Text1");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_objects_child_collection_reflects_count_item_and_foreach_without_leaking_hidden_runtime_surfaces()
     {
         namespace fs = std::filesystem;
@@ -49149,6 +49214,7 @@ int main()
     test_createobject_and_newobject_instantiate_same_prg_cursoradapter_native_class();
     test_createobject_and_newobject_instantiate_same_prg_collection_native_class();
     test_native_collection_default_item_invocation_routes_bare_and_member_path_calls();
+    test_native_collection_subscript_access_routes_to_items_and_preserves_member_chains();
     test_native_objects_child_collection_reflects_count_item_and_foreach_without_leaking_hidden_runtime_surfaces();
     test_native_controls_child_collection_reflects_count_item_and_foreach_without_leaking_hidden_runtime_surfaces();
     test_native_controlcount_reflects_controls_count_and_stays_read_only();
