@@ -292,9 +292,39 @@
             }
 
             if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("allowcellselection"))
+            {
+                runtime_object.properties["allowcellselection"] = make_boolean_value(true);
+            }
+
+            if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("gridlines"))
+            {
+                runtime_object.properties["gridlines"] = make_number_value(3.0);
+            }
+
+            if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("highlight"))
+            {
+                runtime_object.properties["highlight"] = make_boolean_value(true);
+            }
+
+            if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("highlightrow"))
+            {
+                runtime_object.properties["highlightrow"] = make_boolean_value(true);
+            }
+
+            if (normalized_base_class == "grid" &&
                 !runtime_object.properties.contains("leftcolumn"))
             {
                 runtime_object.properties["leftcolumn"] = make_number_value(1.0);
+            }
+
+            if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("recordmark"))
+            {
+                runtime_object.properties["recordmark"] = make_boolean_value(true);
             }
 
             if (normalized_base_class == "grid" &&

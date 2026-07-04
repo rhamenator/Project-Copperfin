@@ -8239,6 +8239,240 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_grid_display_properties_default_mutate_and_stay_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_grid_display_properties";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_grid_display_properties.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('Grid')\n"
+            "lPlainHasAllowCellSelection = PEMSTATUS(oPlain, 'AllowCellSelection', 1)\n"
+            "lPlainAllowCellSelectionReadOnly = PEMSTATUS(oPlain, 'AllowCellSelection', 5)\n"
+            "lPlainHasGridLines = PEMSTATUS(oPlain, 'GridLines', 1)\n"
+            "lPlainGridLinesReadOnly = PEMSTATUS(oPlain, 'GridLines', 5)\n"
+            "lPlainHasHighlight = PEMSTATUS(oPlain, 'Highlight', 1)\n"
+            "lPlainHighlightReadOnly = PEMSTATUS(oPlain, 'Highlight', 5)\n"
+            "lPlainHasHighlightRow = PEMSTATUS(oPlain, 'HighlightRow', 1)\n"
+            "lPlainHighlightRowReadOnly = PEMSTATUS(oPlain, 'HighlightRow', 5)\n"
+            "lPlainHasRecordMark = PEMSTATUS(oPlain, 'RecordMark', 1)\n"
+            "lPlainRecordMarkReadOnly = PEMSTATUS(oPlain, 'RecordMark', 5)\n"
+            "lPlainAllowBefore = oPlain.AllowCellSelection\n"
+            "nPlainGridLinesBefore = oPlain.GridLines\n"
+            "lPlainHighlightBefore = oPlain.Highlight\n"
+            "lPlainHighlightRowBefore = oPlain.HighlightRow\n"
+            "lPlainRecordMarkBefore = oPlain.RecordMark\n"
+            "xPlainAllowGetPemBefore = GETPEM(oPlain, 'AllowCellSelection')\n"
+            "xPlainGridLinesGetPemBefore = GETPEM(oPlain, 'GridLines')\n"
+            "oPlain.AllowCellSelection = .F.\n"
+            "oPlain.GridLines = 2\n"
+            "oPlain.Highlight = .F.\n"
+            "oPlain.HighlightRow = .F.\n"
+            "oPlain.RecordMark = .F.\n"
+            "lPlainAllowAfterDirectAssign = oPlain.AllowCellSelection\n"
+            "nPlainGridLinesAfterDirectAssign = oPlain.GridLines\n"
+            "lPlainHighlightAfterDirectAssign = oPlain.Highlight\n"
+            "lPlainHighlightRowAfterDirectAssign = oPlain.HighlightRow\n"
+            "lPlainRecordMarkAfterDirectAssign = oPlain.RecordMark\n"
+            "lPlainAllowSetPem = SETPEM(oPlain, 'AllowCellSelection', .T.)\n"
+            "lPlainGridLinesSetPem = SETPEM(oPlain, 'GridLines', 1)\n"
+            "lPlainHighlightSetPem = SETPEM(oPlain, 'Highlight', .T.)\n"
+            "lPlainHighlightRowSetPem = SETPEM(oPlain, 'HighlightRow', .T.)\n"
+            "lPlainRecordMarkSetPem = SETPEM(oPlain, 'RecordMark', .T.)\n"
+            "lPlainAllowAfterSetPem = oPlain.AllowCellSelection\n"
+            "nPlainGridLinesAfterSetPem = oPlain.GridLines\n"
+            "lPlainHighlightAfterSetPem = oPlain.Highlight\n"
+            "lPlainHighlightRowAfterSetPem = oPlain.HighlightRow\n"
+            "lPlainRecordMarkAfterSetPem = oPlain.RecordMark\n"
+            "lPlainAllowAddProperty = ADDPROPERTY(oPlain, 'AllowCellSelection', .F.)\n"
+            "lPlainAllowRemoveProperty = REMOVEPROPERTY(oPlain, 'AllowCellSelection')\n"
+            "lPlainGridLinesAddProperty = ADDPROPERTY(oPlain, 'GridLines', 0)\n"
+            "lPlainGridLinesRemoveProperty = REMOVEPROPERTY(oPlain, 'GridLines')\n"
+            "lPlainHighlightAddProperty = ADDPROPERTY(oPlain, 'Highlight', .F.)\n"
+            "lPlainHighlightRemoveProperty = REMOVEPROPERTY(oPlain, 'Highlight')\n"
+            "lPlainHighlightRowAddProperty = ADDPROPERTY(oPlain, 'HighlightRow', .F.)\n"
+            "lPlainHighlightRowRemoveProperty = REMOVEPROPERTY(oPlain, 'HighlightRow')\n"
+            "lPlainRecordMarkAddProperty = ADDPROPERTY(oPlain, 'RecordMark', .F.)\n"
+            "lPlainRecordMarkRemoveProperty = REMOVEPROPERTY(oPlain, 'RecordMark')\n"
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "lGridAllowBefore = oForm.grdCust.AllowCellSelection\n"
+            "nGridGridLinesBefore = oForm.grdCust.GridLines\n"
+            "lGridHighlightBefore = oForm.grdCust.Highlight\n"
+            "lGridHighlightRowBefore = oForm.grdCust.HighlightRow\n"
+            "lGridRecordMarkBefore = oForm.grdCust.RecordMark\n"
+            "lGridAllowRead = oForm.cmdProbe.ReadAllowCellSelection()\n"
+            "nGridGridLinesRead = oForm.cmdProbe.ReadGridLines()\n"
+            "lGridHighlightRead = oForm.cmdProbe.ReadHighlight()\n"
+            "lGridHighlightRowRead = oForm.cmdProbe.ReadHighlightRow()\n"
+            "lGridRecordMarkRead = oForm.cmdProbe.ReadRecordMark()\n"
+            "oForm.cmdProbe.RestyleGrid()\n"
+            "lGridAllowAfterChild = oForm.grdCust.AllowCellSelection\n"
+            "nGridGridLinesAfterChild = oForm.grdCust.GridLines\n"
+            "lGridHighlightAfterChild = oForm.grdCust.Highlight\n"
+            "lGridHighlightRowAfterChild = oForm.grdCust.HighlightRow\n"
+            "lGridRecordMarkAfterChild = oForm.grdCust.RecordMark\n"
+            "xGridAllowGetPem = GETPEM(oForm.grdCust, 'AllowCellSelection')\n"
+            "xGridGridLinesGetPem = GETPEM(oForm.grdCust, 'GridLines')\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oForm.grdCust, 1)\n"
+            "lPropHasAllowCellSelection = .F.\n"
+            "lPropHasGridLines = .F.\n"
+            "lPropHasHighlight = .F.\n"
+            "lPropHasHighlightRow = .F.\n"
+            "lPropHasRecordMark = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    DO CASE\n"
+            "    CASE UPPER(aPropMembers[i]) == 'ALLOWCELLSELECTION'\n"
+            "        lPropHasAllowCellSelection = .T.\n"
+            "    CASE UPPER(aPropMembers[i]) == 'GRIDLINES'\n"
+            "        lPropHasGridLines = .T.\n"
+            "    CASE UPPER(aPropMembers[i]) == 'HIGHLIGHT'\n"
+            "        lPropHasHighlight = .T.\n"
+            "    CASE UPPER(aPropMembers[i]) == 'HIGHLIGHTROW'\n"
+            "        lPropHasHighlightRow = .T.\n"
+            "    CASE UPPER(aPropMembers[i]) == 'RECORDMARK'\n"
+            "        lPropHasRecordMark = .T.\n"
+            "    ENDCASE\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('StyledGrid')\n"
+            "lDerivedAllowBefore = oDerived.AllowCellSelection\n"
+            "nDerivedGridLinesBefore = oDerived.GridLines\n"
+            "lDerivedHighlightBefore = oDerived.Highlight\n"
+            "lDerivedHighlightRowBefore = oDerived.HighlightRow\n"
+            "lDerivedRecordMarkBefore = oDerived.RecordMark\n"
+            "RETURN\n"
+            "DEFINE CLASS ProbeButton AS CommandButton\n"
+            "    FUNCTION ReadAllowCellSelection\n"
+            "        RETURN THISFORM.grdCust.AllowCellSelection\n"
+            "    ENDFUNC\n"
+            "    FUNCTION ReadGridLines\n"
+            "        RETURN THISFORM.grdCust.GridLines\n"
+            "    ENDFUNC\n"
+            "    FUNCTION ReadHighlight\n"
+            "        RETURN THISFORM.grdCust.Highlight\n"
+            "    ENDFUNC\n"
+            "    FUNCTION ReadHighlightRow\n"
+            "        RETURN THISFORM.grdCust.HighlightRow\n"
+            "    ENDFUNC\n"
+            "    FUNCTION ReadRecordMark\n"
+            "        RETURN THISFORM.grdCust.RecordMark\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE RestyleGrid\n"
+            "        THISFORM.grdCust.AllowCellSelection = .T.\n"
+            "        THISFORM.grdCust.GridLines = 0\n"
+            "        THISFORM.grdCust.Highlight = .T.\n"
+            "        THISFORM.grdCust.HighlightRow = .T.\n"
+            "        THISFORM.grdCust.RecordMark = .T.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    ADD OBJECT grdCust AS Grid WITH AllowCellSelection = .F., GridLines = 2, Highlight = .F., HighlightRow = .F., RecordMark = .F.\n"
+            "    ADD OBJECT cmdProbe AS ProbeButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS StyledGrid AS Grid\n"
+            "    AllowCellSelection = .F.\n"
+            "    GridLines = 2\n"
+            "    Highlight = .F.\n"
+            "    HighlightRow = .F.\n"
+            "    RecordMark = .F.\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Grid display property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplainhasallowcellselection", "true");
+        check("lplainallowcellselectionreadonly", "false");
+        check("lplainhasgridlines", "true");
+        check("lplaingridlinesreadonly", "false");
+        check("lplainhashighlight", "true");
+        check("lplainhighlightreadonly", "false");
+        check("lplainhashighlightrow", "true");
+        check("lplainhighlightrowreadonly", "false");
+        check("lplainhasrecordmark", "true");
+        check("lplainrecordmarkreadonly", "false");
+        check("lplainallowbefore", "true");
+        check("nplaingridlinesbefore", "3");
+        check("lplainhighlightbefore", "true");
+        check("lplainhighlightrowbefore", "true");
+        check("lplainrecordmarkbefore", "true");
+        check("xplainallowgetpembefore", "true");
+        check("xplaingridlinesgetpembefore", "3");
+        check("lplainallowafterdirectassign", "false");
+        check("nplaingridlinesafterdirectassign", "2");
+        check("lplainhighlightafterdirectassign", "false");
+        check("lplainhighlightrowafterdirectassign", "false");
+        check("lplainrecordmarkafterdirectassign", "false");
+        check("lplainallowsetpem", "true");
+        check("lplaingridlinessetpem", "true");
+        check("lplainhighlightsetpem", "true");
+        check("lplainhighlightrowsetpem", "true");
+        check("lplainrecordmarksetpem", "true");
+        check("lplainallowaftersetpem", "true");
+        check("nplaingridlinesaftersetpem", "1");
+        check("lplainhighlightaftersetpem", "true");
+        check("lplainhighlightrowaftersetpem", "true");
+        check("lplainrecordmarkaftersetpem", "true");
+        check("lplainallowaddproperty", "false");
+        check("lplainallowremoveproperty", "false");
+        check("lplaingridlinesaddproperty", "false");
+        check("lplaingridlinesremoveproperty", "false");
+        check("lplainhighlightaddproperty", "false");
+        check("lplainhighlightremoveproperty", "false");
+        check("lplainhighlightrowaddproperty", "false");
+        check("lplainhighlightrowremoveproperty", "false");
+        check("lplainrecordmarkaddproperty", "false");
+        check("lplainrecordmarkremoveproperty", "false");
+        check("lgridallowbefore", "false");
+        check("ngridgridlinesbefore", "2");
+        check("lgridhighlightbefore", "false");
+        check("lgridhighlightrowbefore", "false");
+        check("lgridrecordmarkbefore", "false");
+        check("lgridallowread", "false");
+        check("ngridgridlinesread", "2");
+        check("lgridhighlightread", "false");
+        check("lgridhighlightrowread", "false");
+        check("lgridrecordmarkread", "false");
+        check("lgridallowafterchild", "true");
+        check("ngridgridlinesafterchild", "0");
+        check("lgridhighlightafterchild", "true");
+        check("lgridhighlightrowafterchild", "true");
+        check("lgridrecordmarkafterchild", "true");
+        check("xgridallowgetpem", "true");
+        check("xgridgridlinesgetpem", "0");
+        check("lprophasallowcellselection", "true");
+        check("lprophasgridlines", "true");
+        check("lprophashighlight", "true");
+        check("lprophashighlightrow", "true");
+        check("lprophasrecordmark", "true");
+        check("lderivedallowbefore", "false");
+        check("nderivedgridlinesbefore", "2");
+        check("lderivedhighlightbefore", "false");
+        check("lderivedhighlightrowbefore", "false");
+        check("lderivedrecordmarkbefore", "false");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_recordsourcetype_defaults_mutates_and_stays_builtin()
     {
         namespace fs = std::filesystem;
@@ -48496,6 +48730,7 @@ int main()
     test_native_dynamiccurrentcontrol_defaults_mutates_and_stays_builtin();
     test_native_recordsource_defaults_mutates_and_stays_builtin();
     test_native_leftcolumn_defaults_are_runtime_readonly_and_stay_builtin();
+    test_native_grid_display_properties_default_mutate_and_stay_builtin();
     test_native_recordsourcetype_defaults_mutates_and_stays_builtin();
     test_native_rowsource_defaults_mutates_and_stays_builtin();
     test_native_rowsourcetype_defaults_mutates_and_stays_builtin();
