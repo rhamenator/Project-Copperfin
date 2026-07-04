@@ -131,6 +131,7 @@
             const std::string normalized_class_name =
                 normalize_identifier(native_same_prg_base_class_name(class_name));
             return normalized_class_name == "checkbox" ||
+                   normalized_class_name == "column" ||
                    normalized_class_name == "combobox" ||
                    normalized_class_name == "commandbutton" ||
                    normalized_class_name == "commandgroup" ||
@@ -247,7 +248,9 @@
             if ((normalized_base_class == "textbox" ||
                  normalized_base_class == "editbox" ||
                  normalized_base_class == "grid" ||
-                 normalized_base_class == "column") &&
+                 normalized_base_class == "column" ||
+                 normalized_base_class == "checkbox" ||
+                 normalized_base_class == "spinner") &&
                 !runtime_object.properties.contains("readonly"))
             {
                 runtime_object.properties["readonly"] = make_boolean_value(false);

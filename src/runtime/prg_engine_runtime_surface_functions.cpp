@@ -934,7 +934,9 @@ bool native_control_readonly_member_name_matches(
     return normalized_base_class == "textbox" ||
            normalized_base_class == "editbox" ||
            normalized_base_class == "grid" ||
-           normalized_base_class == "column";
+           normalized_base_class == "column" ||
+           normalized_base_class == "checkbox" ||
+           normalized_base_class == "spinner";
 }
 
 bool native_name_member_name_matches(

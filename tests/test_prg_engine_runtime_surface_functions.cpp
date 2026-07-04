@@ -7966,6 +7966,118 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_checkbox_and_spinner_readonly_defaults_mutate_and_stay_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_checkbox_spinner_readonly";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_checkbox_spinner_readonly.prg";
+        write_text(
+            main_path,
+            "oCheck = CREATEOBJECT('CheckBox')\n"
+            "lCheckHasReadOnly = PEMSTATUS(oCheck, 'ReadOnly', 1)\n"
+            "lCheckReadOnlyReadOnly = PEMSTATUS(oCheck, 'ReadOnly', 5)\n"
+            "lCheckBefore = oCheck.ReadOnly\n"
+            "xCheckGetPemBefore = GETPEM(oCheck, 'ReadOnly')\n"
+            "oCheck.ReadOnly = .T.\n"
+            "lCheckAfterDirectAssign = oCheck.ReadOnly\n"
+            "lCheckSetPem = SETPEM(oCheck, 'ReadOnly', .F.)\n"
+            "lCheckAfterSetPem = oCheck.ReadOnly\n"
+            "lCheckAddProperty = ADDPROPERTY(oCheck, 'ReadOnly', .T.)\n"
+            "lCheckRemoveProperty = REMOVEPROPERTY(oCheck, 'ReadOnly')\n"
+            "nCheckPropMembers = AMEMBERS(aCheckPropMembers, oCheck, 1)\n"
+            "lCheckPropHasReadOnly = .F.\n"
+            "FOR i = 1 TO nCheckPropMembers\n"
+            "    IF UPPER(aCheckPropMembers[i]) == 'READONLY'\n"
+            "        lCheckPropHasReadOnly = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerivedCheck = CREATEOBJECT('WorkerCheck')\n"
+            "lDerivedCheckBefore = oDerivedCheck.ReadOnly\n"
+            "oDerivedCheck.ReadOnly = .F.\n"
+            "lDerivedCheckAfterDirectAssign = oDerivedCheck.ReadOnly\n"
+            "oSpinner = CREATEOBJECT('Spinner')\n"
+            "lSpinnerHasReadOnly = PEMSTATUS(oSpinner, 'ReadOnly', 1)\n"
+            "lSpinnerReadOnlyReadOnly = PEMSTATUS(oSpinner, 'ReadOnly', 5)\n"
+            "lSpinnerBefore = oSpinner.ReadOnly\n"
+            "xSpinnerGetPemBefore = GETPEM(oSpinner, 'ReadOnly')\n"
+            "oSpinner.ReadOnly = .T.\n"
+            "lSpinnerAfterDirectAssign = oSpinner.ReadOnly\n"
+            "lSpinnerSetPem = SETPEM(oSpinner, 'ReadOnly', .F.)\n"
+            "lSpinnerAfterSetPem = oSpinner.ReadOnly\n"
+            "lSpinnerAddProperty = ADDPROPERTY(oSpinner, 'ReadOnly', .T.)\n"
+            "lSpinnerRemoveProperty = REMOVEPROPERTY(oSpinner, 'ReadOnly')\n"
+            "nSpinnerPropMembers = AMEMBERS(aSpinnerPropMembers, oSpinner, 1)\n"
+            "lSpinnerPropHasReadOnly = .F.\n"
+            "FOR j = 1 TO nSpinnerPropMembers\n"
+            "    IF UPPER(aSpinnerPropMembers[j]) == 'READONLY'\n"
+            "        lSpinnerPropHasReadOnly = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerivedSpinner = CREATEOBJECT('WorkerSpinner')\n"
+            "lDerivedSpinnerBefore = oDerivedSpinner.ReadOnly\n"
+            "lDerivedSpinnerSetPem = SETPEM(oDerivedSpinner, 'ReadOnly', .F.)\n"
+            "lDerivedSpinnerAfterSetPem = oDerivedSpinner.ReadOnly\n"
+            "RETURN\n"
+            "DEFINE CLASS WorkerCheck AS CheckBox\n"
+            "    ReadOnly = .T.\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS WorkerSpinner AS Spinner\n"
+            "    ReadOnly = .T.\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native CheckBox/Spinner ReadOnly property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lcheckhasreadonly", "true");
+        check("lcheckreadonlyreadonly", "false");
+        check("lcheckbefore", "false");
+        check("xcheckgetpembefore", "false");
+        check("lcheckafterdirectassign", "true");
+        check("lchecksetpem", "true");
+        check("lcheckaftersetpem", "false");
+        check("lcheckaddproperty", "false");
+        check("lcheckremoveproperty", "false");
+        check("lcheckprophasreadonly", "true");
+        check("lderivedcheckbefore", "true");
+        check("lderivedcheckafterdirectassign", "false");
+        check("lspinnerhasreadonly", "true");
+        check("lspinnerreadonlyreadonly", "false");
+        check("lspinnerbefore", "false");
+        check("xspinnergetpembefore", "false");
+        check("lspinnerafterdirectassign", "true");
+        check("lspinnersetpem", "true");
+        check("lspinneraftersetpem", "false");
+        check("lspinneraddproperty", "false");
+        check("lspinnerremoveproperty", "false");
+        check("lspinnerprophasreadonly", "true");
+        check("lderivedspinnerbefore", "true");
+        check("lderivedspinnersetpem", "true");
+        check("lderivedspinneraftersetpem", "false");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_name_reflects_parent_chain_and_stays_builtin()
     {
         namespace fs = std::filesystem;
@@ -46444,6 +46556,7 @@ int main()
     test_native_visual_visible_defaults_mutates_and_stays_builtin();
     test_native_text_entry_readonly_defaults_mutate_and_stay_builtin();
     test_native_grid_and_column_readonly_defaults_mutate_and_stay_builtin();
+    test_native_checkbox_and_spinner_readonly_defaults_mutate_and_stay_builtin();
     test_native_string_control_value_defaults_mutates_and_stays_builtin();
     test_native_name_reflects_parent_chain_and_stays_builtin();
     test_createobject_and_newobject_instantiate_same_prg_exception_native_class();
