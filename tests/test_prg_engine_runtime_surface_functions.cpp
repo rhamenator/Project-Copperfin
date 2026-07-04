@@ -39214,6 +39214,133 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_runtime_olecontrol_timeout_policy_surfaces_remain_coherent()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_olecontrol_timeout_policy";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "runtime_olecontrol_timeout_policy.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "lAdded = oForm.AddObject('axHost', 'OleControl', 'MSComctlLib.ListViewCtrl')\n"
+            "nHostRequestPending = oForm.axHost.OLERequestPendingTimeout\n"
+            "nHostServerBusy = oForm.axHost.OLEServerBusyTimeout\n"
+            "lHostRaiseError = oForm.axHost.OLEServerBusyRaiseError\n"
+            "xHostRequestPendingGetPem = GETPEM(oForm.axHost, 'OLERequestPendingTimeout')\n"
+            "xHostServerBusyGetPem = GETPEM(oForm.axHost, 'OLEServerBusyTimeout')\n"
+            "xHostRaiseErrorGetPem = GETPEM(oForm.axHost, 'OLEServerBusyRaiseError')\n"
+            "lHostHasRequestPending = PEMSTATUS(oForm.axHost, 'OLERequestPendingTimeout', 1)\n"
+            "lHostHasServerBusy = PEMSTATUS(oForm.axHost, 'OLEServerBusyTimeout', 1)\n"
+            "lHostHasRaiseError = PEMSTATUS(oForm.axHost, 'OLEServerBusyRaiseError', 1)\n"
+            "lHostRequestPendingReadOnly = PEMSTATUS(oForm.axHost, 'OLERequestPendingTimeout', 5)\n"
+            "lHostServerBusyReadOnly = PEMSTATUS(oForm.axHost, 'OLEServerBusyTimeout', 5)\n"
+            "lHostRaiseErrorReadOnly = PEMSTATUS(oForm.axHost, 'OLEServerBusyRaiseError', 5)\n"
+            "lSetHostRequestPending = SETPEM(oForm.axHost, 'OLERequestPendingTimeout', 0)\n"
+            "lSetHostServerBusy = SETPEM(oForm.axHost, 'OLEServerBusyTimeout', 1200)\n"
+            "lSetHostRaiseError = SETPEM(oForm.axHost, 'OLEServerBusyRaiseError', .T.)\n"
+            "nHostRequestPendingAfterSet = oForm.axHost.OLERequestPendingTimeout\n"
+            "nHostServerBusyAfterSet = oForm.axHost.OLEServerBusyTimeout\n"
+            "lHostRaiseErrorAfterSet = oForm.axHost.OLEServerBusyRaiseError\n"
+            "oDoc = CREATEOBJECT('ExcelDoc')\n"
+            "nDocRequestPending = oDoc.OLERequestPendingTimeout\n"
+            "nDocServerBusy = oDoc.OLEServerBusyTimeout\n"
+            "lDocRaiseError = oDoc.OLEServerBusyRaiseError\n"
+            "xDocRequestPendingGetPem = GETPEM(oDoc, 'OLERequestPendingTimeout')\n"
+            "xDocServerBusyGetPem = GETPEM(oDoc, 'OLEServerBusyTimeout')\n"
+            "xDocRaiseErrorGetPem = GETPEM(oDoc, 'OLEServerBusyRaiseError')\n"
+            "lDocHasRequestPending = PEMSTATUS(oDoc, 'OLERequestPendingTimeout', 1)\n"
+            "lDocHasServerBusy = PEMSTATUS(oDoc, 'OLEServerBusyTimeout', 1)\n"
+            "lDocHasRaiseError = PEMSTATUS(oDoc, 'OLEServerBusyRaiseError', 1)\n"
+            "lDocRequestPendingReadOnly = PEMSTATUS(oDoc, 'OLERequestPendingTimeout', 5)\n"
+            "lDocServerBusyReadOnly = PEMSTATUS(oDoc, 'OLEServerBusyTimeout', 5)\n"
+            "lDocRaiseErrorReadOnly = PEMSTATUS(oDoc, 'OLEServerBusyRaiseError', 5)\n"
+            "lSetDocRequestPending = SETPEM(oDoc, 'OLERequestPendingTimeout', 750)\n"
+            "lSetDocServerBusy = SETPEM(oDoc, 'OLEServerBusyTimeout', 3200)\n"
+            "lSetDocRaiseError = SETPEM(oDoc, 'OLEServerBusyRaiseError', .F.)\n"
+            "nDocRequestPendingAfterSet = oDoc.OLERequestPendingTimeout\n"
+            "nDocServerBusyAfterSet = oDoc.OLEServerBusyTimeout\n"
+            "lDocRaiseErrorAfterSet = oDoc.OLEServerBusyRaiseError\n"
+            "lHostDoVerbAfterTimeoutPolicy = oForm.axHost.DoVerb(-1)\n"
+            "lDocDoVerbAfterTimeoutPolicy = oDoc.DoVerb(0)\n"
+            "RETURN\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ExcelDoc AS OLEControl\n"
+            "    OLEClass = 'Excel.Sheet'\n"
+            "    DocumentFile = 'C:\\EXCEL\\BOOK1.XLS'\n"
+            "    OLETypeAllowed = 1\n"
+            "    OLERequestPendingTimeout = 250\n"
+            "    OLEServerBusyTimeout = 9000\n"
+            "    OLEServerBusyRaiseError = .T.\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("OleControl timeout-policy script should complete: ") + state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("ladded", "true");
+        check("nhostrequestpending", "5000");
+        check("nhostserverbusy", "5000");
+        check("lhostraiseerror", "false");
+        check("xhostrequestpendinggetpem", "5000");
+        check("xhostserverbusygetpem", "5000");
+        check("xhostraiseerrorgetpem", "false");
+        check("lhosthasrequestpending", "true");
+        check("lhosthasserverbusy", "true");
+        check("lhosthasraiseerror", "true");
+        check("lhostrequestpendingreadonly", "false");
+        check("lhostserverbusyreadonly", "false");
+        check("lhostraiseerrorreadonly", "false");
+        check("lsethostrequestpending", "true");
+        check("lsethostserverbusy", "true");
+        check("lsethostraiseerror", "true");
+        check("nhostrequestpendingafterset", "0");
+        check("nhostserverbusyafterset", "1200");
+        check("lhostraiseerrorafterset", "true");
+
+        check("ndocrequestpending", "250");
+        check("ndocserverbusy", "9000");
+        check("ldocraiseerror", "true");
+        check("xdocrequestpendinggetpem", "250");
+        check("xdocserverbusygetpem", "9000");
+        check("xdocraiseerrorgetpem", "true");
+        check("ldochasrequestpending", "true");
+        check("ldochasserverbusy", "true");
+        check("ldochasraiseerror", "true");
+        check("ldocrequestpendingreadonly", "false");
+        check("ldocserverbusyreadonly", "false");
+        check("ldocraiseerrorreadonly", "false");
+        check("lsetdocrequestpending", "true");
+        check("lsetdocserverbusy", "true");
+        check("lsetdocraiseerror", "true");
+        check("ndocrequestpendingafterset", "750");
+        check("ndocserverbusyafterset", "3200");
+        check("ldocraiseerrorafterset", "false");
+        check("lhostdoverbaftertimeoutpolicy", "true");
+        check("ldocdoverbaftertimeoutpolicy", "true");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_runtime_native_visual_controls_without_hwnd_fail_deterministically()
     {
         namespace fs = std::filesystem;
@@ -41402,6 +41529,7 @@ int main()
         test_runtime_olecontrol_documentfile_and_oletypeallowed_surfaces_remain_coherent();
         test_runtime_olecontrol_object_and_doverb_surfaces_remain_coherent();
         test_runtime_olecontrol_autoactivate_and_autoverbmenu_surfaces_remain_coherent();
+        test_runtime_olecontrol_timeout_policy_surfaces_remain_coherent();
         test_runtime_native_visual_controls_without_hwnd_fail_deterministically();
         test_same_prg_native_bindevent_property_access_and_assign_dispatch_preserve_current_event_metadata();
         test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();

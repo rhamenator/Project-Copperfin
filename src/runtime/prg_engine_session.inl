@@ -168,6 +168,30 @@
             }
         }
 
+        void seed_native_olecontrol_timeout_policy_properties(RuntimeOleObjectState &runtime_object)
+        {
+            if (!is_native_olecontrol_host_object(runtime_object))
+            {
+                return;
+            }
+
+            if (!runtime_object.properties.contains("olerequestpendingtimeout"))
+            {
+                runtime_object.properties["olerequestpendingtimeout"] = make_int64_value(5000);
+            }
+            if (!runtime_object.properties.contains("oleserverbusytimeout"))
+            {
+                // VFP help documents the busy-timeout surface but not an explicit
+                // default, so keep the native OleControl lane deterministic with a
+                // representative 5-second retry window.
+                runtime_object.properties["oleserverbusytimeout"] = make_int64_value(5000);
+            }
+            if (!runtime_object.properties.contains("oleserverbusyraiseerror"))
+            {
+                runtime_object.properties["oleserverbusyraiseerror"] = make_boolean_value(false);
+            }
+        }
+
         RuntimeOleObjectState *ensure_native_olecontrol_object_surface(RuntimeOleObjectState &runtime_object)
         {
             if (!is_native_olecontrol_host_object(runtime_object))
@@ -631,6 +655,7 @@
                         object_state.properties["oletypeallowed"] = make_int64_value(-2);
                         object_state.properties["autoactivate"] = make_int64_value(2);
                         object_state.properties["autoverbmenu"] = make_boolean_value(true);
+                        seed_native_olecontrol_timeout_policy_properties(object_state);
                     }
                 }
                 const std::string class_token = uppercase_copy(trim_copy(object_state.prog_id));
@@ -768,6 +793,7 @@
                         evaluate_expression(property_statement.expression, frame);
                 }
             }
+            seed_native_olecontrol_timeout_policy_properties(*runtime_object);
             (void)ensure_native_olecontrol_object_surface(*runtime_object);
             (void)read_native_collection_member(*runtime_object, "count");
             const PrgValue runtime_object_reference = make_runtime_object_reference(*runtime_object);
