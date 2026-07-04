@@ -20,7 +20,9 @@ internal static class Program
         TestLocalizationCatalogFallsBackToEnglish();
         TestLocalizationCatalogKeepsSupportedLocaleKeysAligned();
         TestLocalizationCatalogFormatsWithInvariantCulture();
+        TestLocalizationCatalogLocalizesCommandBootstrapErrors();
         TestLocalizationCatalogLocalizesStudioAssetKinds();
+        TestDesignerSelectionDefaultsToEnvironmentLocalization();
         TestStudioHostProcessStartInfoKeepsExecutableLaunchArguments();
         TestStudioHostProcessStartInfoWrapsWindowsBatchHosts();
         TestDottedClassMemberResolvesToLongestProjectSymbolPrefix();
@@ -136,6 +138,29 @@ internal static class Program
             "localized formatting should preserve numeric arguments with invariant formatting");
     }
 
+    private static void TestLocalizationCatalogLocalizesCommandBootstrapErrors()
+    {
+        var english = new CopperfinLocalization("en-US");
+        Expect(english.Text("AssetEditor.Error.MenuCommandServiceUnavailable") == "Unable to get menu command service.",
+            "English catalog should preserve the VSIX menu-command-service error text");
+
+        var spanish = new CopperfinLocalization("es-MX");
+        Expect(spanish.Text("AssetEditor.Error.MenuCommandServiceUnavailable") == "No se pudo obtener el servicio de comandos del menú.",
+            "Spanish catalog should localize the VSIX menu-command-service error text");
+
+        var portuguese = new CopperfinLocalization("pt");
+        Expect(portuguese.Text("AssetEditor.Error.MenuCommandServiceUnavailable") == "Não foi possível obter o serviço de comandos do menu.",
+            "Portuguese catalog should localize the VSIX menu-command-service error text");
+
+        var pseudo = new CopperfinLocalization("qps-ploc");
+        var pseudoText = pseudo.Text("AssetEditor.Error.MenuCommandServiceUnavailable");
+        Expect(!string.Equals(pseudoText, english.Text("AssetEditor.Error.MenuCommandServiceUnavailable"), StringComparison.Ordinal),
+            "qps-ploc should not fall back to raw English for VSIX menu-command-service error text");
+        Expect(pseudoText.StartsWith("[!! ", StringComparison.Ordinal) &&
+               pseudoText.EndsWith(" !!]", StringComparison.Ordinal),
+            "qps-ploc should decorate the VSIX menu-command-service error text");
+    }
+
     private static void TestLocalizationCatalogLocalizesStudioAssetKinds()
     {
         var english = new CopperfinLocalization("en-US");
@@ -169,6 +194,62 @@ internal static class Program
         var unsupported = new CopperfinLocalization("de-DE");
         Expect(CopperfinStudioHostBridge.DescribeAssetKind("customer.frx", unsupported) == "Visual report",
             "unsupported locales should keep English asset-kind fallback labels");
+    }
+
+    private static void TestDesignerSelectionDefaultsToEnvironmentLocalization()
+    {
+        var previousLocale = Environment.GetEnvironmentVariable("COPPERFIN_UI_LOCALE");
+
+        try
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_UI_LOCALE", "qps-ploc");
+
+            var selection = CopperfinDesignerSelection.FromSnapshot(
+                "report",
+                new CopperfinStudioSnapshotObject
+                {
+                    RecordIndex = 7,
+                    Deleted = true,
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "OBJTYPE", Value = "8" },
+                        new() { Name = "OBJCODE", Value = "53" },
+                        new() { Name = "EXPR", Value = "\"customer.name\"" },
+                        new() { Name = "HPOS", Value = "10" },
+                        new() { Name = "VPOS", Value = "20" },
+                        new() { Name = "WIDTH", Value = "120" },
+                        new() { Name = "HEIGHT", Value = "24" },
+                        new() { Name = "FONTFACE", Value = "\"Arial\"" },
+                        new() { Name = "FONTSIZE", Value = "9" },
+                        new() { Name = "FONTSTYLE", Value = "0" }
+                    }
+                });
+
+            Expect(selection is not null, "designer selection should materialize from report snapshot data");
+            if (selection is null)
+            {
+                return;
+            }
+
+            var properties = selection.GetProperties();
+            var objectState = properties.Find("OBJECTSTATE", false);
+            Expect(objectState is not null, "designer selection should expose the report object-state field");
+            if (objectState is null)
+            {
+                return;
+            }
+
+            var value = objectState.GetValue(selection)?.ToString() ?? string.Empty;
+            Expect(objectState.DisplayName.StartsWith("[!! ", StringComparison.Ordinal),
+                "environment-defaulted designer selections should pseudo-localize display names");
+            Expect(value.StartsWith("[!! ", StringComparison.Ordinal) &&
+                   value.EndsWith(" !!]", StringComparison.Ordinal),
+                "environment-defaulted designer selections should pseudo-localize state values");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_UI_LOCALE", previousLocale);
+        }
     }
 
     private static void TestStudioHostProcessStartInfoKeepsExecutableLaunchArguments()

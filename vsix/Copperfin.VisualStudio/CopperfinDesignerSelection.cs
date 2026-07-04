@@ -75,12 +75,18 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
 
     public static CopperfinDesignerSelection? FromSnapshot(string assetFamily, CopperfinStudioSnapshotObject snapshotObject, CopperfinLocalization? localization = null)
     {
+        localization ??= CopperfinLocalization.FromEnvironment();
+
         var selection = new CopperfinDesignerSelection
         {
             RecordIndex = snapshotObject.RecordIndex
         };
 
-        string L(string key, string fallback) => localization?.Text(key) ?? fallback;
+        string L(string key, string fallback)
+        {
+            var localized = localization.Text(key);
+            return string.Equals(localized, key, StringComparison.Ordinal) ? fallback : localized;
+        }
 
         switch (assetFamily)
         {
@@ -602,12 +608,8 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
 
     private static string BuildStateText(CopperfinLocalization? localization, bool deleted)
     {
-        if (localization is not null)
-        {
-            return localization.Text(deleted ? "AssetEditor.State.Deleted" : "AssetEditor.State.Live");
-        }
-
-        return deleted ? "Deleted" : "Live";
+        localization ??= CopperfinLocalization.FromEnvironment();
+        return localization.Text(deleted ? "AssetEditor.State.Deleted" : "AssetEditor.State.Live");
     }
 
     public bool TryGetUpdate(string propertyName, out string targetName, out string serializedValue)

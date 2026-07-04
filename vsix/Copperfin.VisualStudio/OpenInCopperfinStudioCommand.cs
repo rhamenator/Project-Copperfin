@@ -37,7 +37,7 @@ internal sealed class OpenInCopperfinStudioCommand
         var commandService = await package.GetServiceAsync(typeof(IMenuCommandService)) as OleMenuCommandService;
         if (commandService is null)
         {
-            throw new InvalidOperationException("Unable to get menu command service.");
+            throw new InvalidOperationException(Localization.Text("AssetEditor.Error.MenuCommandServiceUnavailable"));
         }
 
         _ = new OpenInCopperfinStudioCommand(package, commandService);
