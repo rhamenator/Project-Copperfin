@@ -2236,6 +2236,16 @@ namespace copperfin::runtime
         {
             return *native_result;
         }
+        if (auto list_control_result = invoke_native_list_control_method(*target_object, leaf, arguments);
+            list_control_result.has_value())
+        {
+            target_object->last_action = effective_member_path + "()";
+            ++target_object->action_count;
+            events.push_back({.category = "prg.object.additem",
+                              .detail = target_object->prog_id + "." + effective_member_path,
+                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            return *list_control_result;
+        }
         if (leaf == "move" &&
             is_native_visual_runtime_object(*target_object))
         {
@@ -3898,6 +3908,10 @@ namespace copperfin::runtime
                     normalized_property_name == "readonly")
                 {
                     normalize_native_combobox_readonly_invariant(runtime_object);
+                }
+                if (normalized_property_name == "listindex")
+                {
+                    sync_native_list_control_displayvalue_from_selection(runtime_object);
                 }
                 return true;
             }

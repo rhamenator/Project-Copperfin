@@ -9965,6 +9965,174 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_list_controls_additem_builtin_populates_runtime_items()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_list_controls_additem";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_list_controls_additem.prg";
+        write_text(
+            main_path,
+            "oPlainCombo = CREATEOBJECT('ComboBox')\n"
+            "lPlainHasAddItem = PEMSTATUS(oPlainCombo, 'AddItem', 1)\n"
+            "lPlainGetAddItem = GETPEM(oPlainCombo, 'AddItem')\n"
+            "nPlainMethodCount = AMEMBERS(aPlainMethods, oPlainCombo, 2)\n"
+            "nPlainHasAddItem = ASCAN(aPlainMethods, 'ADDITEM')\n"
+            "nPlainInsert1 = oPlainCombo.AddItem('March')\n"
+            "nPlainInsert2 = oPlainCombo.AddItem('April')\n"
+            "nPlainInsertBefore = oPlainCombo.AddItem('February', 1)\n"
+            "oPlainCombo.ListIndex = 2\n"
+            "cPlainSelected = oPlainCombo.DisplayValue\n"
+            "oPlainList = CREATEOBJECT('ListBox')\n"
+            "nListInsert1 = oPlainList.AddItem('2024')\n"
+            "nListInsert2 = oPlainList.AddItem('2026')\n"
+            "nListInsertMiddle = oPlainList.AddItem('2025', 2)\n"
+            "oPlainList.ListIndex = 2\n"
+            "cListSelected = oPlainList.DisplayValue\n"
+            "oSeedCombo = CREATEOBJECT('SeededCombo')\n"
+            "oSeedList = CREATEOBJECT('SeededList')\n"
+            "cSeedComboSelected = oSeedCombo.DisplayValue\n"
+            "cSeedListSelected = oSeedList.DisplayValue\n"
+            "RETURN\n"
+            "DEFINE CLASS SeededCombo AS ComboBox\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddItem('Alpha')\n"
+            "        THIS.AddItem('Gamma')\n"
+            "        THIS.AddItem('Beta', 2)\n"
+            "        THIS.ListIndex = 2\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SeededList AS ListBox\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddItem('North')\n"
+            "        THIS.AddItem('South')\n"
+            "        THIS.ListIndex = 2\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native AddItem list-control script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplainhasadditem", "true");
+        check("lplaingetadditem", "true");
+        check("nplaininsert1", "1");
+        check("nplaininsert2", "2");
+        check("nplaininsertbefore", "1");
+        check("cplainselected", "March");
+        check("nlistinsert1", "1");
+        check("nlistinsert2", "2");
+        check("nlistinsertmiddle", "2");
+        check("clistselected", "2025");
+        check("cseedcomboselected", "Beta");
+        check("cseedlistselected", "South");
+
+        const auto plain_has_additem = state.globals.find("nplainhasadditem");
+        expect(plain_has_additem != state.globals.end(),
+               "nPlainHasAddItem variable should be present");
+        if (plain_has_additem != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(plain_has_additem->second) != "0",
+                   "AMEMBERS(..., 2) should expose the native AddItem builtin for ComboBox");
+        }
+
+        expect(state.ole_objects.size() == 4U,
+               "native AddItem list-control script should register plain and derived combo/list objects");
+        if (state.ole_objects.size() == 4U)
+        {
+            const auto &plain_combo = state.ole_objects[0];
+            const auto &plain_list = state.ole_objects[1];
+            const auto &seed_combo = state.ole_objects[2];
+            const auto &seed_list = state.ole_objects[3];
+
+            const auto expect_items = [&](const copperfin::runtime::RuntimeOleObjectState &runtime_object,
+                                          const std::vector<std::string> &expected_items,
+                                          const std::string &message_prefix)
+            {
+                expect(runtime_object.collection_items.size() == expected_items.size(),
+                       message_prefix + " should preserve the expected AddItem row count");
+                if (runtime_object.collection_items.size() != expected_items.size())
+                {
+                    return;
+                }
+
+                for (std::size_t index = 0; index < expected_items.size(); ++index)
+                {
+                    expect(copperfin::runtime::format_value(runtime_object.collection_items[index]) == expected_items[index],
+                           message_prefix + " item " + std::to_string(index + 1U) + " expected '" +
+                               expected_items[index] + "'");
+                }
+            };
+
+            expect(plain_combo.prog_id == "ComboBox",
+                   "plain ComboBox AddItem coverage should preserve the built-in class identity");
+            expect(plain_list.prog_id == "ListBox",
+                   "plain ListBox AddItem coverage should preserve the built-in class identity");
+            expect(seed_combo.prog_id == "SeededCombo",
+                   "derived ComboBox AddItem coverage should preserve the PRG class identity");
+            expect(seed_list.prog_id == "SeededList",
+                   "derived ListBox AddItem coverage should preserve the PRG class identity");
+
+            expect_items(plain_combo, {"February", "March", "April"},
+                         "plain ComboBox AddItem coverage");
+            expect_items(plain_list, {"2024", "2025", "2026"},
+                         "plain ListBox AddItem coverage");
+            expect_items(seed_combo, {"Alpha", "Beta", "Gamma"},
+                         "derived ComboBox AddItem coverage");
+            expect_items(seed_list, {"North", "South"},
+                         "derived ListBox AddItem coverage");
+
+            const auto plain_combo_listindex = plain_combo.properties.find("listindex");
+            const auto plain_combo_display = plain_combo.properties.find("displayvalue");
+            const auto plain_list_display = plain_list.properties.find("displayvalue");
+            const auto seed_combo_display = seed_combo.properties.find("displayvalue");
+            const auto seed_list_display = seed_list.properties.find("displayvalue");
+            expect(plain_combo_listindex != plain_combo.properties.end() &&
+                       copperfin::runtime::format_value(plain_combo_listindex->second) == "2",
+                   "plain ComboBox AddItem coverage should preserve the selected ListIndex");
+            expect(plain_combo_display != plain_combo.properties.end() &&
+                       copperfin::runtime::format_value(plain_combo_display->second) == "March",
+                   "plain ComboBox AddItem coverage should synchronize DisplayValue from the selected item");
+            expect(plain_list_display != plain_list.properties.end() &&
+                       copperfin::runtime::format_value(plain_list_display->second) == "2025",
+                   "plain ListBox AddItem coverage should synchronize DisplayValue from the selected item");
+            expect(seed_combo_display != seed_combo.properties.end() &&
+                       copperfin::runtime::format_value(seed_combo_display->second) == "Beta",
+                   "derived ComboBox AddItem coverage should preserve Init-time selected display text");
+            expect(seed_list_display != seed_list.properties.end() &&
+                       copperfin::runtime::format_value(seed_list_display->second) == "South",
+                   "derived ListBox AddItem coverage should preserve Init-time selected display text");
+        }
+
+        const bool has_additem_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.additem";
+        });
+        expect(has_additem_event,
+               "native AddItem coverage should emit representative list-control method events");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_combobox_boundcolumn_columncount_and_columnwidths_defaults_mutate_and_stay_builtin()
     {
         namespace fs = std::filesystem;
@@ -49855,6 +50023,7 @@ int main()
     test_native_rowsourcetype_defaults_mutates_and_stays_builtin();
     test_native_listindex_defaults_mutates_and_stays_builtin();
     test_native_displayvalue_defaults_mutates_and_stays_builtin();
+    test_native_list_controls_additem_builtin_populates_runtime_items();
     test_native_combobox_boundcolumn_columncount_and_columnwidths_defaults_mutate_and_stay_builtin();
     test_native_grid_columncount_defaults_materialize_columns_and_stay_builtin();
     test_native_column_bound_defaults_coordinate_controlsource_and_stay_builtin();

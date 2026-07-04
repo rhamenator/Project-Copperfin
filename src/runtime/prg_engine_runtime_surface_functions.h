@@ -68,6 +68,10 @@ std::optional<PrgValue> read_native_collection_member(RuntimeOleObjectState& run
 std::optional<PrgValue> invoke_native_collection_method(RuntimeOleObjectState& runtime_object,
                                                         const std::string& normalized_method_name,
                                                         const std::vector<PrgValue>& arguments);
+std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState& runtime_object,
+                                                          const std::string& normalized_method_name,
+                                                          const std::vector<PrgValue>& arguments);
+void sync_native_list_control_displayvalue_from_selection(RuntimeOleObjectState& runtime_object);
 std::optional<PrgValue> read_native_identity_metadata(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 
 std::optional<PrgValue> evaluate_runtime_surface_function(

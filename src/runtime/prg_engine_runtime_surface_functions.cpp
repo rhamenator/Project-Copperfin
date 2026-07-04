@@ -540,11 +540,97 @@ bool is_builtin_native_runtime_method_name(
         return true;
     }
 
+    if (normalized_member_name == "additem") {
+        const std::string normalized_base_class =
+            normalize_identifier(trim_copy(runtime_object.base_class_name));
+        return normalized_base_class == "combobox" ||
+               normalized_base_class == "listbox";
+    }
+
     return false;
 }
 
 bool is_scripting_dictionary_object(const RuntimeOleObjectState& runtime_object) {
     return normalize_identifier(runtime_object.prog_id) == "scripting.dictionary";
+}
+
+bool is_native_list_control_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "combobox" ||
+           normalized_base_class == "listbox";
+}
+
+bool native_list_control_rowsourcetype_supports_additem(const RuntimeOleObjectState& runtime_object) {
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return false;
+    }
+
+    const auto rowsourcetype = runtime_object.properties.find("rowsourcetype");
+    if (rowsourcetype == runtime_object.properties.end()) {
+        return true;
+    }
+
+    const long long value = std::llround(value_as_number(rowsourcetype->second));
+    return value == 0LL || value == 1LL;
+}
+
+std::optional<std::size_t> native_list_control_selected_slot(const RuntimeOleObjectState& runtime_object) {
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return std::nullopt;
+    }
+
+    const auto listindex = runtime_object.properties.find("listindex");
+    if (listindex == runtime_object.properties.end()) {
+        return std::nullopt;
+    }
+
+    const long long selected_index = std::llround(value_as_number(listindex->second));
+    if (selected_index < 1LL ||
+        static_cast<std::size_t>(selected_index) > runtime_object.collection_items.size()) {
+        return std::nullopt;
+    }
+
+    return static_cast<std::size_t>(selected_index - 1LL);
+}
+
+void sync_native_list_control_displayvalue_from_selection_impl(RuntimeOleObjectState& runtime_object) {
+    if (const auto selected_slot = native_list_control_selected_slot(runtime_object);
+        selected_slot.has_value()) {
+        runtime_object.properties["displayvalue"] =
+            make_string_value(value_as_string(runtime_object.collection_items[*selected_slot]));
+    }
+}
+
+std::int64_t next_native_list_control_item_id(const RuntimeOleObjectState& runtime_object) {
+    std::int64_t next_id = 1;
+    for (const std::string& key : runtime_object.collection_item_keys) {
+        if (key.empty()) {
+            continue;
+        }
+        try {
+            next_id = std::max(next_id, static_cast<std::int64_t>(std::stoll(key) + 1LL));
+        } catch (const std::exception&) {
+        }
+    }
+    return next_id;
+}
+
+std::optional<std::size_t> resolve_native_list_control_insert_slot(
+    const RuntimeOleObjectState& runtime_object,
+    const std::vector<PrgValue>& arguments) {
+    if (arguments.size() < 2U) {
+        return runtime_object.collection_items.size();
+    }
+
+    const long long requested_index = std::llround(value_as_number(arguments[1]));
+    if (requested_index < 1LL) {
+        return std::nullopt;
+    }
+    if (static_cast<std::size_t>(requested_index) > runtime_object.collection_items.size()) {
+        return runtime_object.collection_items.size();
+    }
+    return static_cast<std::size_t>(requested_index - 1LL);
 }
 
 void sync_native_collection_count(RuntimeOleObjectState& runtime_object) {
@@ -1590,6 +1676,9 @@ std::vector<std::string> collect_object_member_names(const RuntimeOleObjectState
         if (is_builtin_native_runtime_method_name(runtime_object, "resettodefault")) {
             unique_members.insert("resettodefault");
         }
+        if (is_builtin_native_runtime_method_name(runtime_object, "additem")) {
+            unique_members.insert("additem");
+        }
         if (is_native_collection_object(runtime_object)) {
             unique_members.insert("item");
             if (!runtime_object.read_only_collection_surface) {
@@ -1623,6 +1712,11 @@ std::vector<std::string> collect_object_member_names(const RuntimeOleObjectState
 }
 
 }  // namespace
+
+void sync_native_list_control_displayvalue_from_selection(RuntimeOleObjectState& runtime_object)
+{
+    sync_native_list_control_displayvalue_from_selection_impl(runtime_object);
+}
 
 bool is_native_identity_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
@@ -2005,6 +2099,53 @@ std::optional<PrgValue> invoke_native_collection_method(RuntimeOleObjectState& r
     }
 
     return std::nullopt;
+}
+
+std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState& runtime_object,
+                                                          const std::string& normalized_method_name,
+                                                          const std::vector<PrgValue>& arguments)
+{
+    if (!is_native_list_control_runtime_object(runtime_object) ||
+        normalized_method_name != "additem") {
+        return std::nullopt;
+    }
+
+    if (arguments.empty() ||
+        !native_list_control_rowsourcetype_supports_additem(runtime_object)) {
+        return make_number_value(0.0);
+    }
+
+    if (arguments.size() >= 3U) {
+        const long long requested_column = std::llround(value_as_number(arguments[2]));
+        if (requested_column != 1LL) {
+            return make_number_value(0.0);
+        }
+    }
+
+    const auto insert_slot = resolve_native_list_control_insert_slot(runtime_object, arguments);
+    if (!insert_slot.has_value()) {
+        return make_number_value(0.0);
+    }
+
+    const PrgValue inserted_item = make_string_value(value_as_string(arguments[0]));
+    const std::int64_t item_id = next_native_list_control_item_id(runtime_object);
+    runtime_object.collection_items.insert(
+        runtime_object.collection_items.begin() + static_cast<std::ptrdiff_t>(*insert_slot),
+        inserted_item);
+    runtime_object.collection_item_keys.insert(
+        runtime_object.collection_item_keys.begin() + static_cast<std::ptrdiff_t>(*insert_slot),
+        std::to_string(item_id));
+
+    const auto listindex = runtime_object.properties.find("listindex");
+    if (listindex != runtime_object.properties.end()) {
+        const long long selected_index = std::llround(value_as_number(listindex->second));
+        if (selected_index >= 1LL &&
+            static_cast<std::size_t>(selected_index) >= *insert_slot + 1U) {
+            listindex->second = make_number_value(static_cast<double>(selected_index + 1LL));
+        }
+    }
+    sync_native_list_control_displayvalue_from_selection_impl(runtime_object);
+    return make_number_value(static_cast<double>(*insert_slot + 1U));
 }
 
 std::optional<PrgValue> read_native_identity_metadata(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
