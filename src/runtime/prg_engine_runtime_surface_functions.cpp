@@ -704,6 +704,18 @@ bool native_controlcount_member_name_matches(
            runtime_object.properties.contains("controlcount");
 }
 
+bool native_form_lockscreen_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "lockscreen") {
+        return false;
+    }
+
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "form" &&
+           runtime_object.properties.contains("lockscreen");
+}
+
 std::vector<std::string> collect_native_identity_member_names(const RuntimeOleObjectState& runtime_object) {
     std::vector<std::string> members;
     if (get_native_identity_reflection_metadata(runtime_object, "hwnd").has_value()) {
@@ -1069,6 +1081,11 @@ bool is_native_child_parent_member_name(const RuntimeOleObjectState& runtime_obj
 bool is_native_controlcount_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_controlcount_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_form_lockscreen_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_form_lockscreen_member_name_matches(runtime_object, normalized_member_name);
 }
 
 bool is_native_collection_object(const RuntimeOleObjectState& runtime_object)
@@ -1506,6 +1523,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         if (is_native_identity_member_name(*runtime_object, property_name) ||
             is_native_controlcount_member_name(*runtime_object, property_name) ||
+            is_native_form_lockscreen_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_creation_time_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_object_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_inspection_member_name(*runtime_object, property_name) ||
@@ -1680,6 +1698,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         if (is_native_identity_member_name(*runtime_object, property_name) ||
             is_native_controlcount_member_name(*runtime_object, property_name) ||
+            is_native_form_lockscreen_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_creation_time_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_object_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_inspection_member_name(*runtime_object, property_name) ||

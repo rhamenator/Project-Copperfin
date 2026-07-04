@@ -6274,6 +6274,92 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_form_lockscreen_defaults_mutates_and_stays_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_form_lockscreen";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_form_lockscreen.prg";
+        write_text(
+            main_path,
+            "oBaseForm = CREATEOBJECT('Form')\n"
+            "lBaseHasLockScreen = PEMSTATUS(oBaseForm, 'LockScreen', 1)\n"
+            "lBaseLockScreenReadOnly = PEMSTATUS(oBaseForm, 'LockScreen', 5)\n"
+            "lBaseBefore = oBaseForm.LockScreen\n"
+            "xBaseGetPemBefore = GETPEM(oBaseForm, 'LockScreen')\n"
+            "oBaseForm.LockScreen = .T.\n"
+            "lBaseAfterDirectAssign = oBaseForm.LockScreen\n"
+            "lBaseSetPem = SETPEM(oBaseForm, 'LockScreen', .F.)\n"
+            "lBaseAfterSetPem = oBaseForm.LockScreen\n"
+            "lBaseAddProperty = ADDPROPERTY(oBaseForm, 'LockScreen', .T.)\n"
+            "lBaseRemoveProperty = REMOVEPROPERTY(oBaseForm, 'LockScreen')\n"
+            "oDerived = CREATEOBJECT('DemoForm')\n"
+            "lDerivedBefore = oDerived.LockScreen\n"
+            "cChildBefore = oDerived.cmdSave.ReadLock()\n"
+            "oDerived.cmdSave.LockForm()\n"
+            "lDerivedAfterChild = oDerived.LockScreen\n"
+            "xDerivedGetPem = GETPEM(oDerived, 'LockScreen')\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oDerived, 1)\n"
+            "lPropHasLockScreen = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'LOCKSCREEN'\n"
+            "        lPropHasLockScreen = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "RETURN\n"
+            "DEFINE CLASS SaveButton AS CommandButton\n"
+            "    FUNCTION ReadLock\n"
+            "        RETURN IIF(THISFORM.LockScreen, 'T', 'F')\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE LockForm\n"
+            "        THISFORM.LockScreen = .T.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DemoForm AS Form\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Form LockScreen property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lbasehaslockscreen", "true");
+        check("lbaselockscreenreadonly", "false");
+        check("lbasebefore", "false");
+        check("xbasegetpembefore", "false");
+        check("lbaseafterdirectassign", "true");
+        check("lbasesetpem", "true");
+        check("lbaseaftersetpem", "false");
+        check("lbaseaddproperty", "false");
+        check("lbaseremoveproperty", "false");
+        check("lderivedbefore", "false");
+        check("cchildbefore", "F");
+        check("lderivedafterchild", "true");
+        check("xderivedgetpem", "true");
+        check("lprophaslockscreen", "true");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_createobject_and_newobject_instantiate_same_prg_exception_native_class()
     {
         namespace fs = std::filesystem;
@@ -43960,6 +44046,7 @@ int main()
     test_native_objects_child_collection_reflects_count_item_and_foreach_without_leaking_hidden_runtime_surfaces();
     test_native_controls_child_collection_reflects_count_item_and_foreach_without_leaking_hidden_runtime_surfaces();
     test_native_controlcount_reflects_controls_count_and_stays_read_only();
+    test_native_form_lockscreen_defaults_mutates_and_stays_builtin();
     test_createobject_and_newobject_instantiate_same_prg_exception_native_class();
     test_native_addobject_materializes_child_objects_and_child_methods_see_parent();
     test_native_class_body_add_object_materializes_children_before_init();
