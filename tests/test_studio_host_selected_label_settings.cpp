@@ -3,9 +3,8 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/vfp/dbf_table.h"
-#include "test_environment_support.h"
+#include "test_locale_catalog_environment_support.h"
 
-#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -19,36 +18,7 @@
 namespace {
 
 int failures = 0;
-using copperfin::test_support::ScopedEnvironmentValue;
-using copperfin::test_support::set_env_value;
-
-struct ScopedDefaultLocaleCatalogEnvironment {
-    ScopedEnvironmentValue locale;
-    ScopedEnvironmentValue locale_dir;
-
-    ScopedDefaultLocaleCatalogEnvironment()
-        : locale("COPPERFIN_LOCALE"),
-          locale_dir("COPPERFIN_LOCALE_DIR") {
-        set_env_value("COPPERFIN_LOCALE", "en-US", true);
-        set_env_value(
-            "COPPERFIN_LOCALE_DIR",
-            [] {
-                std::filesystem::path ancestor = std::filesystem::absolute(std::filesystem::current_path());
-                for (;;) {
-                    const auto candidate = ancestor / "resources" / "locales";
-                    if (std::filesystem::exists(candidate)) {
-                        return candidate.lexically_normal().string();
-                    }
-                    const auto parent = ancestor.parent_path();
-                    if (parent == ancestor) {
-                        return candidate.lexically_normal().string();
-                    }
-                    ancestor = parent;
-                }
-            }(),
-            true);
-    }
-};
+using copperfin::test_support::ScopedDefaultLocaleCatalogEnvironment;
 
 void expect(bool condition, const std::string& message) {
     if (!condition) {
