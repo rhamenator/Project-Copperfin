@@ -274,6 +274,68 @@ void test_materialize_excluded_xasset_startup_package() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_uppercase_xasset_companion_assets_are_staged() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_uppercase_xasset_companions";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    write_text(project_dir / "startup.scx", "synthetic form table");
+    write_text(project_dir / "startup.SCT", "synthetic uppercase form memo");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "uppercase_form_demo.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "UppercaseFormCompanionDemo";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "UppercaseFormCompanionDemo";
+    workspace.build_plan.output_path = (output_dir / "UppercaseFormCompanionDemo.exe").string();
+    workspace.build_plan.startup_item = "startup.scx";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "startup.scx", .relative_path = "startup.scx", .type_title = "Form", .excluded = true}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false);
+
+    expect(plan.ok, "uppercase xasset companion runtime package plan should be created");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+
+    expect(result.ok, "uppercase xasset companion runtime package should materialize");
+    if (result.ok) {
+        const fs::path content_root(result.plan.content_root);
+        expect(fs::exists(content_root / "startup.scx"), "xasset startup should be staged");
+        expect(fs::exists(content_root / "startup.SCT"),
+               "#3510: runtime packaging should stage uppercase SCX memo companions with resolved source casing");
+        expect(!fs::exists(content_root / "startup.sct"),
+               "#3510: runtime packaging should not rewrite uppercase SCX companion names to lowercase during staging");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_vfp_style_parent_relative_assets_resolve_and_stage_under_content_root() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_vfp_parent_relative";
@@ -512,6 +574,73 @@ void test_startup_dbf_companion_assets_are_staged() {
             runtime_manifest.find("asset=1|startup.dbf|") < runtime_manifest.find("|true|true|") &&
             runtime_manifest.find("|true|true|", runtime_manifest.find("asset=1|startup.dbf|")) != std::string::npos,
             "runtime manifest should report the startup DBF asset as copied");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_uppercase_dbf_companion_assets_are_staged() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_uppercase_dbf_companions";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    write_text(project_dir / "startup.dbf", "synthetic dbf");
+    write_text(project_dir / "startup.FPT", "synthetic uppercase memo");
+    write_text(project_dir / "startup.CDX", "synthetic uppercase index");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "uppercase_companion_demo.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "UppercaseDbfCompanionDemo";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "UppercaseDbfCompanionDemo";
+    workspace.build_plan.output_path = (output_dir / "UppercaseDbfCompanionDemo.exe").string();
+    workspace.build_plan.startup_item = "startup.dbf";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "startup.dbf", .relative_path = "startup.dbf", .type_title = "Table", .excluded = true}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false);
+
+    expect(plan.ok, "uppercase dbf companion runtime package plan should be created");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+
+    expect(result.ok, "uppercase dbf companion runtime package should materialize");
+    if (result.ok) {
+        const fs::path content_root(result.plan.content_root);
+        expect(fs::exists(content_root / "startup.dbf"), "startup DBF should be staged");
+        expect(fs::exists(content_root / "startup.FPT"),
+               "#3510: runtime packaging should stage uppercase DBF memo companions with resolved source casing");
+        expect(fs::exists(content_root / "startup.CDX"),
+               "#3510: runtime packaging should stage uppercase DBF index companions with resolved source casing");
+        expect(!fs::exists(content_root / "startup.fpt"),
+               "#3510: runtime packaging should not rewrite uppercase DBF memo companion names to lowercase during staging");
+        expect(!fs::exists(content_root / "startup.cdx"),
+               "#3510: runtime packaging should not rewrite uppercase DBF index companion names to lowercase during staging");
     }
 
     fs::remove_all(temp_root, ignored);

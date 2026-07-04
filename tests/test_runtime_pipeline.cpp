@@ -10,6 +10,7 @@ int main() {
     test_materialize_runtime_package();
     test_generated_launcher_forwards_manifest_and_debug_flag();
     test_materialize_excluded_xasset_startup_package();
+    test_uppercase_xasset_companion_assets_are_staged();
     test_vfp_style_parent_relative_assets_resolve_and_stage_under_content_root();
     test_vfp_source_layout_parent_relative_assets_resolve_by_tail_match();
     test_dotnet_launcher_request_falls_back_to_native_host_when_unavailable();
@@ -24,6 +25,7 @@ int main() {
     test_runtime_package_emits_csharp_transpilation_for_class_library_objects();
     test_runtime_manifest_records_generated_compiler_contract_digests();
     test_startup_dbf_companion_assets_are_staged();
+    test_uppercase_dbf_companion_assets_are_staged();
     test_runtime_package_license_fields_bump_manifest_schema_versions();
     test_security_enabled_runtime_host_name_validation();
     test_runtime_security_role_environment_fidelity();

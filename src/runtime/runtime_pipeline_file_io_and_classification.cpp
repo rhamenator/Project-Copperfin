@@ -118,6 +118,42 @@ bool has_parent_traversal_segment(const std::string& value) {
     });
 }
 
+std::optional<std::filesystem::path> resolve_existing_path_casefold(const std::filesystem::path& candidate) {
+    std::error_code error;
+    if (std::filesystem::exists(candidate, error) && !error) {
+        return candidate.lexically_normal();
+    }
+
+    const std::string file_name = candidate.filename().string();
+    if (file_name.empty()) {
+        return std::nullopt;
+    }
+
+    std::filesystem::path search_root = candidate.parent_path();
+    if (search_root.empty()) {
+        search_root = ".";
+    }
+
+    error.clear();
+    if (!std::filesystem::exists(search_root, error) || error) {
+        return std::nullopt;
+    }
+
+    for (std::filesystem::directory_iterator it(search_root, error), end; it != end; it.increment(error)) {
+        if (error) {
+            error.clear();
+            continue;
+        }
+
+        const std::filesystem::path entry_path = it->path();
+        if (lowercase_copy(entry_path.filename().string()) == lowercase_copy(file_name)) {
+            return entry_path.lexically_normal();
+        }
+    }
+
+    return std::nullopt;
+}
+
 std::optional<std::filesystem::path> find_case_insensitive_tail_match_under_root(
     const std::filesystem::path& search_root,
     const std::string& value) {
@@ -547,14 +583,15 @@ void copy_companion_files_if_present(
     const std::filesystem::path source(asset.source_path);
     const std::filesystem::path staged(asset.staged_path);
     for (const auto& companion_source : infer_companion_source_paths(source)) {
-        if (!std::filesystem::exists(companion_source)) {
+        const auto resolved_companion_source = resolve_existing_path_casefold(companion_source);
+        if (!resolved_companion_source.has_value()) {
             continue;
         }
 
         auto companion_destination = staged;
-        companion_destination.replace_extension(companion_source.extension().string());
+        companion_destination.replace_extension(resolved_companion_source->extension().string());
         std::string error;
-        if (!copy_file_if_exists(companion_source, companion_destination, error)) {
+        if (!copy_file_if_exists(*resolved_companion_source, companion_destination, error)) {
             warnings.push_back(error);
         }
     }
