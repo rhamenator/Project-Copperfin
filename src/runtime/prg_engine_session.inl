@@ -279,6 +279,12 @@
             {
                 runtime_object.properties["minbutton"] = make_boolean_value(true);
             }
+
+            if (normalized_base_class == "form" &&
+                !runtime_object.properties.contains("maxbutton"))
+            {
+                runtime_object.properties["maxbutton"] = make_boolean_value(true);
+            }
         }
 
         void seed_native_olecontrol_timeout_policy_properties(RuntimeOleObjectState &runtime_object)
