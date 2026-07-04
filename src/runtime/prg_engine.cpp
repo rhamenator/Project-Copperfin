@@ -181,6 +181,57 @@ namespace copperfin::runtime
             });
         }
 
+        bool is_native_visual_runtime_object(const RuntimeOleObjectState &runtime_object)
+        {
+            if (runtime_object.class_hierarchy.empty())
+            {
+                return false;
+            }
+
+            const std::string normalized_base_class =
+                normalize_identifier(trim_copy(runtime_object.base_class_name));
+            return normalized_base_class == "checkbox" ||
+                   normalized_base_class == "combobox" ||
+                   normalized_base_class == "commandbutton" ||
+                   normalized_base_class == "commandgroup" ||
+                   normalized_base_class == "container" ||
+                   normalized_base_class == "editbox" ||
+                   normalized_base_class == "form" ||
+                   normalized_base_class == "grid" ||
+                   normalized_base_class == "image" ||
+                   normalized_base_class == "label" ||
+                   normalized_base_class == "line" ||
+                   normalized_base_class == "listbox" ||
+                   normalized_base_class == "olecontrol" ||
+                   normalized_base_class == "optionbutton" ||
+                   normalized_base_class == "optiongroup" ||
+                   normalized_base_class == "page" ||
+                   normalized_base_class == "pageframe" ||
+                   normalized_base_class == "separator" ||
+                   normalized_base_class == "shape" ||
+                   normalized_base_class == "spinner" ||
+                   normalized_base_class == "textbox" ||
+                   normalized_base_class == "toolbar";
+        }
+
+        bool is_builtin_native_noarg_method_name(
+            const RuntimeOleObjectState &runtime_object,
+            const std::string &normalized_member_name)
+        {
+            if (normalized_member_name == "refresh")
+            {
+                return !runtime_object.class_hierarchy.empty();
+            }
+
+            if ((normalized_member_name == "show" || normalized_member_name == "hide") &&
+                is_native_visual_runtime_object(runtime_object))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         void ensure_fault_context_defaults(
             const Statement *statement,
             SourceLocation &last_fault_location,
@@ -1138,6 +1189,22 @@ namespace copperfin::runtime
                     runtime_object->last_action = effective_member_path + "()";
                     ++runtime_object->action_count;
                     events.push_back({.category = "prg.object.refresh",
+                                      .detail = runtime_object->prog_id + "." + effective_member_path,
+                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                    return make_empty_value();
+                }
+                if ((leaf == "show" || leaf == "hide") &&
+                    is_native_visual_runtime_object(*runtime_object))
+                {
+                    const bool visible = leaf == "show";
+                    (void)write_native_property_if_present(
+                        *runtime_object,
+                        "visible",
+                        make_boolean_value(visible),
+                        frame);
+                    runtime_object->last_action = effective_member_path + "()";
+                    ++runtime_object->action_count;
+                    events.push_back({.category = visible ? "prg.object.show" : "prg.object.hide",
                                       .detail = runtime_object->prog_id + "." + effective_member_path,
                                       .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
                     return make_empty_value();

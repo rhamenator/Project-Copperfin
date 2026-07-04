@@ -37527,6 +37527,145 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_show_hide_builtin_fallback_updates_visible_state()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_show_hide_builtin";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_show_hide_builtin.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "oForm.Hide\n"
+            "oForm.cmdSave.Hide()\n"
+            "oForm.cmdSave.Show\n"
+            "lFormVisible = oForm.Visible\n"
+            "lButtonVisible = oForm.cmdSave.Visible\n"
+            "RETURN\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    ADD OBJECT cmdSave AS CommandButton\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Show/Hide builtin fallback script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto form_visible = state.globals.find("lformvisible");
+        expect(form_visible != state.globals.end(),
+               "native Show/Hide builtin fallback script should preserve form visibility state");
+        if (form_visible != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(form_visible->second) == "false",
+                   "native Hide builtin fallback should set form Visible to false");
+        }
+
+        const auto button_visible = state.globals.find("lbuttonvisible");
+        expect(button_visible != state.globals.end(),
+               "native Show/Hide builtin fallback script should preserve child visibility state");
+        if (button_visible != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(button_visible->second) == "true",
+                   "native Show builtin fallback should set child Visible to true");
+        }
+
+        const std::size_t hide_event_count = static_cast<std::size_t>(std::count_if(
+            state.events.begin(),
+            state.events.end(),
+            [](const auto &event)
+            {
+                return event.category == "prg.object.hide";
+            }));
+        expect(hide_event_count == 2U,
+               "native Show/Hide builtin fallback should emit one hide event per representative hide call");
+
+        const std::size_t show_event_count = static_cast<std::size_t>(std::count_if(
+            state.events.begin(),
+            state.events.end(),
+            [](const auto &event)
+            {
+                return event.category == "prg.object.show";
+            }));
+        expect(show_event_count == 1U,
+               "native Show/Hide builtin fallback should emit one show event per representative show call");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_native_show_override_wins_over_builtin_visible_toggle()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_show_override";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_show_override.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "oForm.Show()\n"
+            "lShowRan = oForm.lShowRan\n"
+            "lVisible = oForm.Visible\n"
+            "RETURN\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    Visible = .F.\n"
+            "    lShowRan = .F.\n"
+            "    PROCEDURE Show\n"
+            "        THIS.lShowRan = .T.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Show override script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto show_ran = state.globals.find("lshowran");
+        expect(show_ran != state.globals.end(),
+               "native Show override script should preserve show override flag");
+        if (show_ran != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(show_ran->second) == "true",
+                   "native Show override should still invoke the class-defined Show method");
+        }
+
+        const auto visible = state.globals.find("lvisible");
+        expect(visible != state.globals.end(),
+               "native Show override script should preserve visible state");
+        if (visible != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(visible->second) == "false",
+                   "native Show override should not fall through to the builtin visible toggle");
+        }
+
+        const bool has_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   event.detail == "MainForm.Show";
+        });
+        expect(has_invoke_event,
+               "native Show override should emit a prg.object.invoke event");
+
+        const bool has_builtin_show_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.show";
+        });
+        expect(!has_builtin_show_event,
+               "native Show override should not emit the builtin prg.object.show event");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_same_prg_native_bare_helper_calls_resolve_to_current_instance_before_top_level_routines()
     {
         namespace fs = std::filesystem;
@@ -42500,6 +42639,8 @@ int main()
     test_native_setall_recurses_over_descendants_and_honors_class_filters();
     test_bare_dotted_native_refresh_statement_invokes_same_prg_override();
     test_native_refresh_builtin_fallback_succeeds_for_form_and_children();
+    test_native_show_hide_builtin_fallback_updates_visible_state();
+    test_native_show_override_wins_over_builtin_visible_toggle();
     test_same_prg_native_bare_helper_calls_resolve_to_current_instance_before_top_level_routines();
     test_inherited_external_prg_base_methods_resolve_bare_helper_calls_against_defining_library();
     test_external_prg_base_methods_support_dodefault_dispatch();

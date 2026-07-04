@@ -972,7 +972,7 @@
                 }
 
                 if (!runtime_object_member_matches(resolved_path.runtime_object->methods, normalized_leaf) &&
-                    !(normalized_leaf == "refresh" && !resolved_path.runtime_object->class_hierarchy.empty()))
+                    !is_builtin_native_noarg_method_name(*resolved_path.runtime_object, normalized_leaf))
                 {
                     return false;
                 }
