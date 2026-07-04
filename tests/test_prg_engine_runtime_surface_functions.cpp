@@ -8325,6 +8325,194 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_combobox_boundcolumn_columncount_and_columnwidths_defaults_mutate_and_stay_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_combobox_list_shape";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_combobox_list_shape.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('ComboBox')\n"
+            "lPlainHasBoundColumn = PEMSTATUS(oPlain, 'BoundColumn', 1)\n"
+            "lPlainBoundColumnReadOnly = PEMSTATUS(oPlain, 'BoundColumn', 5)\n"
+            "nPlainBoundColumnBefore = oPlain.BoundColumn\n"
+            "xPlainBoundColumnGetPemBefore = GETPEM(oPlain, 'BoundColumn')\n"
+            "oPlain.BoundColumn = 2\n"
+            "nPlainBoundColumnAfterDirectAssign = oPlain.BoundColumn\n"
+            "lPlainBoundColumnSetPem = SETPEM(oPlain, 'BoundColumn', 3)\n"
+            "nPlainBoundColumnAfterSetPem = oPlain.BoundColumn\n"
+            "lPlainBoundColumnAddProperty = ADDPROPERTY(oPlain, 'BoundColumn', 4)\n"
+            "lPlainBoundColumnRemoveProperty = REMOVEPROPERTY(oPlain, 'BoundColumn')\n"
+            "lPlainHasColumnCount = PEMSTATUS(oPlain, 'ColumnCount', 1)\n"
+            "lPlainColumnCountReadOnly = PEMSTATUS(oPlain, 'ColumnCount', 5)\n"
+            "nPlainColumnCountBefore = oPlain.ColumnCount\n"
+            "xPlainColumnCountGetPemBefore = GETPEM(oPlain, 'ColumnCount')\n"
+            "oPlain.ColumnCount = 2\n"
+            "nPlainColumnCountAfterDirectAssign = oPlain.ColumnCount\n"
+            "lPlainColumnCountSetPem = SETPEM(oPlain, 'ColumnCount', 4)\n"
+            "nPlainColumnCountAfterSetPem = oPlain.ColumnCount\n"
+            "lPlainColumnCountAddProperty = ADDPROPERTY(oPlain, 'ColumnCount', 5)\n"
+            "lPlainColumnCountRemoveProperty = REMOVEPROPERTY(oPlain, 'ColumnCount')\n"
+            "lPlainHasColumnWidths = PEMSTATUS(oPlain, 'ColumnWidths', 1)\n"
+            "lPlainColumnWidthsReadOnly = PEMSTATUS(oPlain, 'ColumnWidths', 5)\n"
+            "cPlainColumnWidthsBefore = oPlain.ColumnWidths\n"
+            "xPlainColumnWidthsGetPemBefore = GETPEM(oPlain, 'ColumnWidths')\n"
+            "oPlain.ColumnWidths = '72,0'\n"
+            "cPlainColumnWidthsAfterDirectAssign = oPlain.ColumnWidths\n"
+            "lPlainColumnWidthsSetPem = SETPEM(oPlain, 'ColumnWidths', '60,12')\n"
+            "cPlainColumnWidthsAfterSetPem = oPlain.ColumnWidths\n"
+            "lPlainColumnWidthsAddProperty = ADDPROPERTY(oPlain, 'ColumnWidths', 'shadow')\n"
+            "lPlainColumnWidthsRemoveProperty = REMOVEPROPERTY(oPlain, 'ColumnWidths')\n"
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "nChildBoundColumnBefore = oForm.cboMonth.BoundColumn\n"
+            "nChildColumnCountBefore = oForm.cboMonth.ColumnCount\n"
+            "cChildColumnWidthsBefore = oForm.cboMonth.ColumnWidths\n"
+            "nChildBoundColumnRead = oForm.cmdProbe.ReadBoundColumn()\n"
+            "nChildColumnCountRead = oForm.cmdProbe.ReadColumnCount()\n"
+            "cChildColumnWidthsRead = oForm.cmdProbe.ReadColumnWidths()\n"
+            "oForm.cmdProbe.ReconfigureCombo()\n"
+            "nChildBoundColumnAfterChild = oForm.cboMonth.BoundColumn\n"
+            "nChildColumnCountAfterChild = oForm.cboMonth.ColumnCount\n"
+            "cChildColumnWidthsAfterChild = oForm.cboMonth.ColumnWidths\n"
+            "lChildBoundColumnSetPem = SETPEM(oForm.cboMonth, 'BoundColumn', 2)\n"
+            "nChildBoundColumnAfterSetPem = oForm.cboMonth.BoundColumn\n"
+            "xChildBoundColumnGetPem = GETPEM(oForm.cboMonth, 'BoundColumn')\n"
+            "lChildBoundColumnReadOnly = PEMSTATUS(oForm.cboMonth, 'BoundColumn', 5)\n"
+            "lChildColumnCountSetPem = SETPEM(oForm.cboMonth, 'ColumnCount', 5)\n"
+            "nChildColumnCountAfterSetPem = oForm.cboMonth.ColumnCount\n"
+            "xChildColumnCountGetPem = GETPEM(oForm.cboMonth, 'ColumnCount')\n"
+            "lChildColumnCountReadOnly = PEMSTATUS(oForm.cboMonth, 'ColumnCount', 5)\n"
+            "lChildColumnWidthsSetPem = SETPEM(oForm.cboMonth, 'ColumnWidths', '80,0,24,0,12')\n"
+            "cChildColumnWidthsAfterSetPem = oForm.cboMonth.ColumnWidths\n"
+            "xChildColumnWidthsGetPem = GETPEM(oForm.cboMonth, 'ColumnWidths')\n"
+            "lChildColumnWidthsReadOnly = PEMSTATUS(oForm.cboMonth, 'ColumnWidths', 5)\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oForm.cboMonth, 1)\n"
+            "lPropHasBoundColumn = .F.\n"
+            "lPropHasColumnCount = .F.\n"
+            "lPropHasColumnWidths = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    DO CASE\n"
+            "    CASE UPPER(aPropMembers[i]) == 'BOUNDCOLUMN'\n"
+            "        lPropHasBoundColumn = .T.\n"
+            "    CASE UPPER(aPropMembers[i]) == 'COLUMNCOUNT'\n"
+            "        lPropHasColumnCount = .T.\n"
+            "    CASE UPPER(aPropMembers[i]) == 'COLUMNWIDTHS'\n"
+            "        lPropHasColumnWidths = .T.\n"
+            "    ENDCASE\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('DateCombo')\n"
+            "nDerivedBoundColumnBefore = oDerived.BoundColumn\n"
+            "nDerivedColumnCountBefore = oDerived.ColumnCount\n"
+            "cDerivedColumnWidthsBefore = oDerived.ColumnWidths\n"
+            "RETURN\n"
+            "DEFINE CLASS ProbeButton AS CommandButton\n"
+            "    FUNCTION ReadBoundColumn\n"
+            "        RETURN THISFORM.cboMonth.BoundColumn\n"
+            "    ENDFUNC\n"
+            "    FUNCTION ReadColumnCount\n"
+            "        RETURN THISFORM.cboMonth.ColumnCount\n"
+            "    ENDFUNC\n"
+            "    FUNCTION ReadColumnWidths\n"
+            "        RETURN THISFORM.cboMonth.ColumnWidths\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE ReconfigureCombo\n"
+            "        THISFORM.cboMonth.BoundColumn = 3\n"
+            "        THISFORM.cboMonth.ColumnCount = 3\n"
+            "        THISFORM.cboMonth.ColumnWidths = '72,0,18'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    ADD OBJECT cboMonth AS ComboBox WITH BoundColumn = 2, ColumnCount = 2, ColumnWidths = '72,0'\n"
+            "    ADD OBJECT cmdProbe AS ProbeButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DateCombo AS ComboBox\n"
+            "    BoundColumn = 2\n"
+            "    ColumnCount = 2\n"
+            "    ColumnWidths = '90,0'\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native ComboBox BoundColumn/ColumnCount/ColumnWidths script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplainhasboundcolumn", "true");
+        check("lplainboundcolumnreadonly", "false");
+        check("nplainboundcolumnbefore", "1");
+        check("xplainboundcolumngetpembefore", "1");
+        check("nplainboundcolumnafterdirectassign", "2");
+        check("lplainboundcolumnsetpem", "true");
+        check("nplainboundcolumnaftersetpem", "3");
+        check("lplainboundcolumnaddproperty", "false");
+        check("lplainboundcolumnremoveproperty", "false");
+        check("lplainhascolumncount", "true");
+        check("lplaincolumncountreadonly", "false");
+        check("nplaincolumncountbefore", "0");
+        check("xplaincolumncountgetpembefore", "0");
+        check("nplaincolumncountafterdirectassign", "2");
+        check("lplaincolumncountsetpem", "true");
+        check("nplaincolumncountaftersetpem", "4");
+        check("lplaincolumncountaddproperty", "false");
+        check("lplaincolumncountremoveproperty", "false");
+        check("lplainhascolumnwidths", "true");
+        check("lplaincolumnwidthsreadonly", "false");
+        check("cplaincolumnwidthsbefore", "");
+        check("xplaincolumnwidthsgetpembefore", "");
+        check("cplaincolumnwidthsafterdirectassign", "72,0");
+        check("lplaincolumnwidthssetpem", "true");
+        check("cplaincolumnwidthsaftersetpem", "60,12");
+        check("lplaincolumnwidthsaddproperty", "false");
+        check("lplaincolumnwidthsremoveproperty", "false");
+        check("nchildboundcolumnbefore", "2");
+        check("nchildcolumncountbefore", "2");
+        check("cchildcolumnwidthsbefore", "72,0");
+        check("nchildboundcolumnread", "2");
+        check("nchildcolumncountread", "2");
+        check("cchildcolumnwidthsread", "72,0");
+        check("nchildboundcolumnafterchild", "3");
+        check("nchildcolumncountafterchild", "3");
+        check("cchildcolumnwidthsafterchild", "72,0,18");
+        check("lchildboundcolumnsetpem", "true");
+        check("nchildboundcolumnaftersetpem", "2");
+        check("xchildboundcolumngetpem", "2");
+        check("lchildboundcolumnreadonly", "false");
+        check("lchildcolumncountsetpem", "true");
+        check("nchildcolumncountaftersetpem", "5");
+        check("xchildcolumncountgetpem", "5");
+        check("lchildcolumncountreadonly", "false");
+        check("lchildcolumnwidthssetpem", "true");
+        check("cchildcolumnwidthsaftersetpem", "80,0,24,0,12");
+        check("xchildcolumnwidthsgetpem", "80,0,24,0,12");
+        check("lchildcolumnwidthsreadonly", "false");
+        check("lprophasboundcolumn", "true");
+        check("lprophascolumncount", "true");
+        check("lprophascolumnwidths", "true");
+        check("nderivedboundcolumnbefore", "2");
+        check("nderivedcolumncountbefore", "2");
+        check("cderivedcolumnwidthsbefore", "90,0");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_visual_backcolor_defaults_mutate_and_stay_builtin()
     {
         namespace fs = std::filesystem;
@@ -47577,6 +47765,7 @@ int main()
     test_native_controlsource_defaults_mutates_and_stays_builtin();
     test_native_rowsource_defaults_mutates_and_stays_builtin();
     test_native_rowsourcetype_defaults_mutates_and_stays_builtin();
+    test_native_combobox_boundcolumn_columncount_and_columnwidths_defaults_mutate_and_stay_builtin();
     test_native_visual_backcolor_defaults_mutate_and_stay_builtin();
     test_native_visual_forecolor_defaults_mutate_and_stay_builtin();
     test_native_release_thisform_command_releases_owner_form();
