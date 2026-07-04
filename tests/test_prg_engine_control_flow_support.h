@@ -9,6 +9,7 @@
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "../src/runtime/prg_engine_command_helpers.h"
+#include "test_environment_support.h"
 #include "prg_engine_test_support.h"
 #include <algorithm>
 #include <chrono>
@@ -42,8 +43,6 @@ using namespace copperfin::test_support;
 
 namespace cf_test_prg_engine_control_flow {
 
-struct ScopedEnvironmentValue;
-
 // ==== Shared test helpers and fixtures ====
 void set_env_value(const std::string& name, const std::string& value, bool has_value);
 std::size_t count_missing_locale_keys(
@@ -51,23 +50,7 @@ std::size_t count_missing_locale_keys(
     std::string_view locale,
     const std::vector<std::string_view>& keys);
 std::string build_nested_do_chain_script(std::size_t nested_routine_count);
-struct ScopedEnvironmentValue {
-    std::string name;
-    bool had_value = false;
-    std::string original_value;
-
-    explicit ScopedEnvironmentValue(std::string environment_name)
-        : name(std::move(environment_name)) {
-        if (const char* current = std::getenv(name.c_str())) {
-            had_value = true;
-            original_value = current;
-        }
-    }
-
-    ~ScopedEnvironmentValue() {
-        set_env_value(name, original_value, had_value);
-    }
-};
+using ScopedEnvironmentValue = copperfin::test_support::ScopedEnvironmentValue;
 
 // ==== Control-flow construct tests (DO WHILE/CASE, FOR EACH, SCAN, WITH, TEXT/ENDTEXT, command scanning) ====
 void test_command_keyword_scanner_ignores_nested_text();

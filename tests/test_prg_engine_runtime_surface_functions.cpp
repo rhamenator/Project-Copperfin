@@ -4,6 +4,7 @@
 
 #include "copperfin/runtime/prg_engine.h"
 #include "prg_engine_test_support.h"
+#include "test_environment_support.h"
 #include "copperfin/vfp/dbf_table.h"
 
 #include <algorithm>
@@ -101,18 +102,18 @@ namespace
             }
         }
 
-        const char *locale_candidates[] = {
-            std::getenv("LC_ALL"),
-            std::getenv("LC_CTYPE"),
-            std::getenv("LANG"),
+        const std::optional<std::string> locale_candidates[] = {
+            copperfin::test_support::getenv_optional("LC_ALL"),
+            copperfin::test_support::getenv_optional("LC_CTYPE"),
+            copperfin::test_support::getenv_optional("LANG"),
         };
-        for (const char *candidate : locale_candidates)
+        for (const auto &candidate : locale_candidates)
         {
-            if (candidate == nullptr)
+            if (!candidate.has_value())
             {
                 continue;
             }
-            if (const auto parsed = parse_codeset_to_code_page(candidate); parsed.has_value())
+            if (const auto parsed = parse_codeset_to_code_page(*candidate); parsed.has_value())
             {
                 return *parsed;
             }

@@ -8,6 +8,7 @@
 #include "copperfin/localization/localization.h"
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/vfp/dbf_table.h"
+#include "test_environment_support.h"
 #include "prg_engine_test_support.h"
 #include <algorithm>
 #include <cerrno>
@@ -37,30 +38,12 @@ namespace cf_test_prg_engine_data_io {
 
 using namespace copperfin::test_support;
 
-struct ScopedEnvironmentValue;
-
 // ==== Shared test helpers and fixtures ====
 void set_env_value(const std::string& name, const std::string& value, bool has_value);
 void test_runtime_array_mutator_functions();
 void test_set_filter_dimension_sleep_runtime_errors_localize();
 void test_aerror_content_for_sql_passthrough_fault();
-struct ScopedEnvironmentValue {
-    std::string name;
-    bool had_value = false;
-    std::string original_value;
-
-    explicit ScopedEnvironmentValue(std::string environment_name)
-        : name(std::move(environment_name)) {
-        if (const char* current = std::getenv(name.c_str())) {
-            had_value = true;
-            original_value = current;
-        }
-    }
-
-    ~ScopedEnvironmentValue() {
-        set_env_value(name, original_value, had_value);
-    }
-};
+using ScopedEnvironmentValue = copperfin::test_support::ScopedEnvironmentValue;
 
 // ==== SCATTER/GATHER tests (memvar/array/name targets, field filters) ====
 void test_scatter_memvar_from_current_record();

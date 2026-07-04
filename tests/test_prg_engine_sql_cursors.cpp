@@ -5,6 +5,7 @@
 #include "copperfin/localization/localization.h"
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/vfp/dbf_table.h"
+#include "test_environment_support.h"
 #include "prg_engine_test_support.h"
 
 #include <algorithm>
@@ -18,41 +19,8 @@ namespace {
 
 using namespace copperfin::test_support;
 
-void set_env_value(const std::string& name, const std::string& value, bool has_value) {
-#ifdef _WIN32
-    if (has_value) {
-        _putenv_s(name.c_str(), value.c_str());
-    } else {
-        _putenv_s(name.c_str(), "");
-    }
-#else
-    if (has_value) {
-        setenv(name.c_str(), value.c_str(), 1);
-    } else {
-        unsetenv(name.c_str());
-    }
-#endif
-}
-
-struct ScopedEnvironmentValue {
-    std::string name;
-    std::string original_value;
-    bool had_value;
-
-    explicit ScopedEnvironmentValue(std::string environment_name)
-        : name(std::move(environment_name)),
-          original_value(),
-          had_value(false) {
-        if (const char* current = std::getenv(name.c_str())) {
-            original_value = current;
-            had_value = true;
-        }
-    }
-
-    ~ScopedEnvironmentValue() {
-        set_env_value(name, original_value, had_value);
-    }
-};
+using copperfin::test_support::ScopedEnvironmentValue;
+using copperfin::test_support::set_env_value;
 
 void test_sqlprimarykeys_and_sqlforeignkeys_metadata_cursors() {
     namespace fs = std::filesystem;

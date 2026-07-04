@@ -6,19 +6,7 @@
 
 namespace cf_test_prg_engine_data_io {
 void set_env_value(const std::string& name, const std::string& value, bool has_value) {
-#ifdef _WIN32
-    if (has_value) {
-        _putenv_s(name.c_str(), value.c_str());
-    } else {
-        _putenv_s(name.c_str(), "");
-    }
-#else
-    if (has_value) {
-        setenv(name.c_str(), value.c_str(), 1);
-    } else {
-        unsetenv(name.c_str());
-    }
-#endif
+    copperfin::test_support::set_env_value(name, value, has_value);
 }
 
 void test_runtime_array_mutator_functions() {
