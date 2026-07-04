@@ -876,7 +876,7 @@ void test_asessions_returns_at_least_default_session() {
     fs::remove_all(temp_root, ignored);
 }
 
-void test_afont_returns_non_empty_stub_array() {
+void test_afont_returns_host_aware_font_array_with_deterministic_size_contract() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_afont";
     std::error_code ignored;
@@ -887,7 +887,10 @@ void test_afont_returns_non_empty_stub_array() {
     write_text(
         main_path,
         "nAll    = AFONT(aAllFonts)\n"
-        "nArial  = AFONT(aArialSizes, 'Arial')\n"
+        "cFirst  = aAllFonts(1)\n"
+        "nKnown  = AFONT(aKnownSizes, cFirst)\n"
+        "nExact  = AFONT(aKnownExact, cFirst, 12)\n"
+        "nFirstSize = aKnownSizes(1)\n"
         "nBogus  = AFONT(aBogus, 'ZZZNoSuchFont')\n"
         "RETURN\n");
 
@@ -898,20 +901,32 @@ void test_afont_returns_non_empty_stub_array() {
     expect(state.completed, "AFONT script should complete");
 
     const auto all = state.globals.find("nall");
-    const auto arial = state.globals.find("narial");
+    const auto known = state.globals.find("nknown");
+    const auto exact = state.globals.find("nexact");
+    const auto first_size = state.globals.find("nfirstsize");
     const auto bogus = state.globals.find("nbogus");
-    expect(all   != state.globals.end(), "AFONT all-fonts count should be captured");
-    expect(arial != state.globals.end(), "AFONT Arial sizes count should be captured");
-    expect(bogus != state.globals.end(), "AFONT unknown-font count should be captured");
+    expect(all        != state.globals.end(), "AFONT all-fonts count should be captured");
+    expect(known      != state.globals.end(), "AFONT known-font size-list count should be captured");
+    expect(exact      != state.globals.end(), "AFONT size-filter result should be captured");
+    expect(first_size != state.globals.end(), "AFONT first known size should be captured");
+    expect(bogus      != state.globals.end(), "AFONT unknown-font count should be captured");
     if (all != state.globals.end()) {
         const std::string av = copperfin::runtime::format_value(all->second);
         expect(av != "0" && !av.empty() && av != "false",
             "AFONT with no filter should return at least one font name");
     }
-    if (arial != state.globals.end()) {
-        const std::string arv = copperfin::runtime::format_value(arial->second);
-        expect(arv != "0" && !arv.empty() && arv != "false",
-            "AFONT('Arial') should return a non-empty size list");
+    if (known != state.globals.end()) {
+        const std::string kv = copperfin::runtime::format_value(known->second);
+        expect(kv != "0" && !kv.empty() && kv != "false",
+            "AFONT for a reported host font should return a non-empty size list");
+    }
+    if (exact != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exact->second) == "1",
+            "AFONT size-filter queries should accept a representative positive size for a reported host font");
+    }
+    if (first_size != state.globals.end()) {
+        expect(copperfin::runtime::format_value(first_size->second) == "8",
+            "AFONT deterministic size enumeration should begin with the shared MVP size list");
     }
     if (bogus != state.globals.end()) {
         expect(copperfin::runtime::format_value(bogus->second) == "0",
@@ -1214,7 +1229,7 @@ int main() {
     test_store_uses_assignment_target_semantics();
     test_ascan_macro_expanded_predicate_and_metadata_cleanup();
     test_asessions_returns_at_least_default_session();
-    test_afont_returns_non_empty_stub_array();
+    test_afont_returns_host_aware_font_array_with_deterministic_size_contract();
     test_aprinters_returns_non_empty_array();
     test_agetfileversion_existing_and_missing_files();
 

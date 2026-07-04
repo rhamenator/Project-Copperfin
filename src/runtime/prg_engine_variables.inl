@@ -500,29 +500,162 @@
             {
                 return make_number_value(0.0);
             }
-            static const std::vector<std::string> stub_fonts = {
-                "Arial", "Courier New", "Times New Roman",
-                "Helvetica", "Lucida Console"};
+
+            const auto trim_font_display_name = [](std::string value) {
+                for (char &ch : value)
+                {
+                    if (ch == '_' || ch == '-')
+                    {
+                        ch = ' ';
+                    }
+                }
+
+                std::string normalized;
+                normalized.reserve(value.size());
+                bool previous_was_space = true;
+                for (const unsigned char ch : value)
+                {
+                    if (std::isspace(ch) != 0)
+                    {
+                        if (!previous_was_space)
+                        {
+                            normalized.push_back(' ');
+                        }
+                        previous_was_space = true;
+                        continue;
+                    }
+
+                    normalized.push_back(static_cast<char>(ch));
+                    previous_was_space = false;
+                }
+
+                return trim_copy(normalized);
+            };
+
+            const auto fallback_font_names = []() {
+                return std::vector<std::string>{
+                    "Arial",
+                    "Courier New",
+                    "Helvetica",
+                    "Lucida Console",
+                    "Times New Roman",
+                };
+            };
+
+            const auto looks_like_font_extension = [](const std::filesystem::path &path) {
+                const std::string extension = lowercase_copy(path.extension().string());
+                return extension == ".ttf" ||
+                       extension == ".ttc" ||
+                       extension == ".otf" ||
+                       extension == ".otc" ||
+                       extension == ".fon" ||
+                       extension == ".fnt" ||
+                       extension == ".pfb" ||
+                       extension == ".pfm";
+            };
+
+            const auto collect_host_font_names = [&]() {
+                namespace fs = std::filesystem;
+                std::vector<fs::path> search_roots;
+
+#if defined(_WIN32)
+                if (const char *windir = std::getenv("WINDIR"))
+                {
+                    search_roots.emplace_back(fs::path(windir) / "Fonts");
+                }
+                if (search_roots.empty())
+                {
+                    search_roots.emplace_back("C:\\Windows\\Fonts");
+                }
+#elif defined(__APPLE__)
+                search_roots.emplace_back("/System/Library/Fonts");
+                search_roots.emplace_back("/Library/Fonts");
+                if (const char *home = std::getenv("HOME"))
+                {
+                    search_roots.emplace_back(fs::path(home) / "Library" / "Fonts");
+                }
+#else
+                search_roots.emplace_back("/usr/share/fonts");
+                search_roots.emplace_back("/usr/local/share/fonts");
+                if (const char *home = std::getenv("HOME"))
+                {
+                    search_roots.emplace_back(fs::path(home) / ".fonts");
+                    search_roots.emplace_back(fs::path(home) / ".local" / "share" / "fonts");
+                }
+#endif
+
+                std::vector<std::string> names;
+                std::set<std::string> seen;
+                std::error_code ignored;
+                for (const fs::path &root : search_roots)
+                {
+                    if (root.empty() || !fs::exists(root, ignored))
+                    {
+                        continue;
+                    }
+
+                    for (const fs::directory_entry &entry : fs::recursive_directory_iterator(
+                             root,
+                             fs::directory_options::skip_permission_denied,
+                             ignored))
+                    {
+                        if (ignored)
+                        {
+                            ignored.clear();
+                            continue;
+                        }
+                        if (!entry.is_regular_file(ignored) || !looks_like_font_extension(entry.path()))
+                        {
+                            continue;
+                        }
+
+                        const std::string display_name = trim_font_display_name(entry.path().stem().string());
+                        if (display_name.empty())
+                        {
+                            continue;
+                        }
+
+                        const std::string key = lowercase_copy(display_name);
+                        if (seen.insert(key).second)
+                        {
+                            names.push_back(display_name);
+                        }
+                    }
+                }
+
+                std::sort(names.begin(), names.end(), [](const std::string &left, const std::string &right) {
+                    const std::string normalized_left = lowercase_copy(left);
+                    const std::string normalized_right = lowercase_copy(right);
+                    if (normalized_left == normalized_right)
+                    {
+                        return left < right;
+                    }
+                    return normalized_left < normalized_right;
+                });
+                return names;
+            };
+
+            std::vector<std::string> available_fonts = collect_host_font_names();
+            if (available_fonts.empty())
+            {
+                available_fonts = fallback_font_names();
+            }
 
             if (font_name_filter.empty())
             {
-                // No filter — return all font names in a 1-column array.
                 std::vector<PrgValue> values;
-                values.reserve(stub_fonts.size());
-                for (const auto &name : stub_fonts)
+                values.reserve(available_fonts.size());
+                for (const auto &name : available_fonts)
                 {
                     values.push_back(make_string_value(name));
                 }
                 assign_array(target_name, std::move(values), 1U);
-                return make_number_value(static_cast<double>(stub_fonts.size()));
+                return make_number_value(static_cast<double>(available_fonts.size()));
             }
 
-            // Font name supplied — return available sizes (stub: common point sizes).
-            // If size_filter > 0 VFP returns .T./.F. for a single size; we model
-            // the size-list variant (size_filter == 0).
             const std::string upper_filter = uppercase_copy(font_name_filter);
             bool font_found = false;
-            for (const auto &name : stub_fonts)
+            for (const auto &name : available_fonts)
             {
                 if (uppercase_copy(name) == upper_filter)
                 {
@@ -535,19 +668,15 @@
                 assign_array(target_name, {}, 1U);
                 return make_number_value(0.0);
             }
+
             static const std::vector<int> common_sizes = {8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 36, 48, 72};
             if (size_filter > 0)
             {
-                // Return 1 if the size is in our stub list, 0 otherwise.
-                for (int sz : common_sizes)
-                {
-                    if (sz == size_filter)
-                    {
-                        return make_number_value(1.0);
-                    }
-                }
-                return make_number_value(0.0);
+                // MVP contract: if the host exposes the family name, treat positive
+                // sizes as accepted and reserve the explicit list below for size enumeration.
+                return make_number_value(1.0);
             }
+
             std::vector<PrgValue> values;
             values.reserve(common_sizes.size());
             for (int sz : common_sizes)
