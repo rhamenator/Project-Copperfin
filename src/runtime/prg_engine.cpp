@@ -3520,7 +3520,17 @@ namespace copperfin::runtime
                 !is_native_child_parent_member_name(runtime_object, normalized_property_name) &&
                 !is_native_collection_readonly_member_name(runtime_object, normalized_property_name))
             {
+                if (normalized_property_name == "readonly" &&
+                    native_combobox_readonly_assignment_blocked(runtime_object, assigned_value))
+                {
+                    return false;
+                }
                 runtime_object.properties[normalized_property_name] = assigned_value;
+                if (normalized_property_name == "style" ||
+                    normalized_property_name == "readonly")
+                {
+                    normalize_native_combobox_readonly_invariant(runtime_object);
+                }
                 return true;
             }
             return false;

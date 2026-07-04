@@ -252,6 +252,7 @@
             }
 
             if ((normalized_base_class == "textbox" ||
+                 normalized_base_class == "combobox" ||
                  normalized_base_class == "editbox" ||
                  normalized_base_class == "grid" ||
                  normalized_base_class == "column" ||
@@ -261,6 +262,8 @@
             {
                 runtime_object.properties["readonly"] = make_boolean_value(false);
             }
+
+            normalize_native_combobox_readonly_invariant(runtime_object);
 
             if (normalized_base_class == "form" &&
                 !runtime_object.properties.contains("showwindow"))

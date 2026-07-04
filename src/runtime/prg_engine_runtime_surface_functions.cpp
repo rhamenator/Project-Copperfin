@@ -934,6 +934,21 @@ bool native_combobox_style_member_name_matches(
     return normalized_base_class == "combobox";
 }
 
+bool native_combobox_is_drop_down_list_style(const RuntimeOleObjectState& runtime_object) {
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    if (normalized_base_class != "combobox") {
+        return false;
+    }
+
+    const auto style = runtime_object.properties.find("style");
+    if (style == runtime_object.properties.end()) {
+        return false;
+    }
+
+    return std::llround(value_as_number(style->second)) == 2LL;
+}
+
 bool native_control_readonly_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
@@ -945,6 +960,7 @@ bool native_control_readonly_member_name_matches(
     const std::string normalized_base_class =
         normalize_identifier(trim_copy(runtime_object.base_class_name));
     return normalized_base_class == "textbox" ||
+           normalized_base_class == "combobox" ||
            normalized_base_class == "editbox" ||
            normalized_base_class == "grid" ||
            normalized_base_class == "column" ||
@@ -1418,6 +1434,25 @@ bool is_native_visual_geometry_member_name(const RuntimeOleObjectState& runtime_
 bool is_native_control_readonly_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_control_readonly_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool native_combobox_readonly_assignment_blocked(const RuntimeOleObjectState& runtime_object, const PrgValue& assigned_value)
+{
+    return native_combobox_is_drop_down_list_style(runtime_object) &&
+           value_as_bool(assigned_value);
+}
+
+void normalize_native_combobox_readonly_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!native_combobox_is_drop_down_list_style(runtime_object)) {
+        return;
+    }
+
+    const auto readonly = runtime_object.properties.find("readonly");
+    if (readonly != runtime_object.properties.end() &&
+        value_as_bool(readonly->second)) {
+        readonly->second = make_boolean_value(false);
+    }
 }
 
 bool is_native_combobox_style_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
@@ -2045,11 +2080,25 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         if (object_has_member(runtime_object->methods, member_name) ||
             object_has_member(runtime_object->events, member_name)) {
+            if (member_name == "readonly" &&
+                native_combobox_readonly_assignment_blocked(*runtime_object, arguments[2])) {
+                return make_boolean_value(false);
+            }
             runtime_object->properties[member_name] = arguments[2];
+            if (member_name == "style" || member_name == "readonly") {
+                normalize_native_combobox_readonly_invariant(*runtime_object);
+            }
             return make_boolean_value(true);
         }
         if (runtime_object->properties.contains(member_name)) {
+            if (member_name == "readonly" &&
+                native_combobox_readonly_assignment_blocked(*runtime_object, arguments[2])) {
+                return make_boolean_value(false);
+            }
             runtime_object->properties[member_name] = arguments[2];
+            if (member_name == "style" || member_name == "readonly") {
+                normalize_native_combobox_readonly_invariant(*runtime_object);
+            }
             return make_boolean_value(true);
         }
         return make_boolean_value(false);

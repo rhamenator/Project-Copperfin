@@ -7855,6 +7855,131 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_combobox_readonly_defaults_mutate_and_honor_style_guard()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_combobox_readonly";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_combobox_readonly.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('ComboBox')\n"
+            "lPlainHasReadOnly = PEMSTATUS(oPlain, 'ReadOnly', 1)\n"
+            "lPlainReadOnlyReadOnly = PEMSTATUS(oPlain, 'ReadOnly', 5)\n"
+            "lPlainBefore = oPlain.ReadOnly\n"
+            "xPlainGetPemBefore = GETPEM(oPlain, 'ReadOnly')\n"
+            "oPlain.ReadOnly = .T.\n"
+            "lPlainAfterDirectAssign = oPlain.ReadOnly\n"
+            "oPlain.Style = 2\n"
+            "nPlainStyleAfterList = oPlain.Style\n"
+            "lPlainAfterStyleList = oPlain.ReadOnly\n"
+            "oPlain.ReadOnly = .T.\n"
+            "lPlainAfterBlockedDirectAssign = oPlain.ReadOnly\n"
+            "lPlainSetPemBlocked = SETPEM(oPlain, 'ReadOnly', .T.)\n"
+            "lPlainAfterBlockedSetPem = oPlain.ReadOnly\n"
+            "oPlain.Style = 0\n"
+            "lPlainSetPemAllowed = SETPEM(oPlain, 'ReadOnly', .T.)\n"
+            "lPlainAfterAllowedSetPem = oPlain.ReadOnly\n"
+            "lPlainAddProperty = ADDPROPERTY(oPlain, 'ReadOnly', .T.)\n"
+            "lPlainRemoveProperty = REMOVEPROPERTY(oPlain, 'ReadOnly')\n"
+            "oForm = CREATEOBJECT('ListForm')\n"
+            "nChildStyle = oForm.cboMonth.Style\n"
+            "lChildBefore = oForm.cboMonth.ReadOnly\n"
+            "lChildRead = oForm.cmdProbe.ReadListReadOnly()\n"
+            "oForm.cmdProbe.TryMakeReadOnly()\n"
+            "lChildAfterChild = oForm.cboMonth.ReadOnly\n"
+            "lChildSetPemBlocked = SETPEM(oForm.cboMonth, 'ReadOnly', .T.)\n"
+            "lChildAfterBlockedSetPem = oForm.cboMonth.ReadOnly\n"
+            "xChildGetPem = GETPEM(oForm.cboMonth, 'ReadOnly')\n"
+            "lChildHasReadOnly = PEMSTATUS(oForm.cboMonth, 'ReadOnly', 1)\n"
+            "lChildReadOnlyReadOnly = PEMSTATUS(oForm.cboMonth, 'ReadOnly', 5)\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oForm.cboMonth, 1)\n"
+            "lPropHasReadOnly = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'READONLY'\n"
+            "        lPropHasReadOnly = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oEditable = CREATEOBJECT('EditableCombo')\n"
+            "lEditableBefore = oEditable.ReadOnly\n"
+            "oListDerived = CREATEOBJECT('ListCombo')\n"
+            "nListDerivedStyle = oListDerived.Style\n"
+            "lListDerivedBefore = oListDerived.ReadOnly\n"
+            "RETURN\n"
+            "DEFINE CLASS ProbeButton AS CommandButton\n"
+            "    FUNCTION ReadListReadOnly\n"
+            "        RETURN THISFORM.cboMonth.ReadOnly\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE TryMakeReadOnly\n"
+            "        THISFORM.cboMonth.ReadOnly = .T.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ListForm AS Form\n"
+            "    ADD OBJECT cboMonth AS ComboBox WITH Style = 2\n"
+            "    ADD OBJECT cmdProbe AS ProbeButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS EditableCombo AS ComboBox\n"
+            "    ReadOnly = .T.\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ListCombo AS ComboBox\n"
+            "    Style = 2\n"
+            "    ReadOnly = .T.\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native ComboBox ReadOnly property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplainhasreadonly", "true");
+        check("lplainreadonlyreadonly", "false");
+        check("lplainbefore", "false");
+        check("xplaingetpembefore", "false");
+        check("lplainafterdirectassign", "true");
+        check("nplainstyleafterlist", "2");
+        check("lplainafterstylelist", "false");
+        check("lplainafterblockeddirectassign", "false");
+        check("lplainsetpemblocked", "false");
+        check("lplainafterblockedsetpem", "false");
+        check("lplainsetpemallowed", "true");
+        check("lplainafterallowedsetpem", "true");
+        check("lplainaddproperty", "false");
+        check("lplainremoveproperty", "false");
+        check("nchildstyle", "2");
+        check("lchildbefore", "false");
+        check("lchildread", "false");
+        check("lchildafterchild", "false");
+        check("lchildsetpemblocked", "false");
+        check("lchildafterblockedsetpem", "false");
+        check("xchildgetpem", "false");
+        check("lchildhasreadonly", "true");
+        check("lchildreadonlyreadonly", "false");
+        check("lprophasreadonly", "true");
+        check("leditablebefore", "true");
+        check("nlistderivedstyle", "2");
+        check("llistderivedbefore", "false");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_text_entry_readonly_defaults_mutate_and_stay_builtin()
     {
         namespace fs = std::filesystem;
@@ -46657,6 +46782,7 @@ int main()
     test_native_visual_enabled_defaults_mutates_and_stays_builtin();
     test_native_visual_visible_defaults_mutates_and_stays_builtin();
     test_native_combobox_style_defaults_mutate_and_stay_builtin();
+    test_native_combobox_readonly_defaults_mutate_and_honor_style_guard();
     test_native_text_entry_readonly_defaults_mutate_and_stay_builtin();
     test_native_grid_and_column_readonly_defaults_mutate_and_stay_builtin();
     test_native_checkbox_and_spinner_readonly_defaults_mutate_and_stay_builtin();
