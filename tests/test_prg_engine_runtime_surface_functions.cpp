@@ -6878,6 +6878,92 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_form_autocenter_defaults_mutates_and_stays_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_form_autocenter";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_form_autocenter.prg";
+        write_text(
+            main_path,
+            "oBaseForm = CREATEOBJECT('Form')\n"
+            "lBaseHasAutoCenter = PEMSTATUS(oBaseForm, 'AutoCenter', 1)\n"
+            "lBaseAutoCenterReadOnly = PEMSTATUS(oBaseForm, 'AutoCenter', 5)\n"
+            "lBaseBefore = oBaseForm.AutoCenter\n"
+            "xBaseGetPemBefore = GETPEM(oBaseForm, 'AutoCenter')\n"
+            "oBaseForm.AutoCenter = .T.\n"
+            "lBaseAfterDirectAssign = oBaseForm.AutoCenter\n"
+            "lBaseSetPem = SETPEM(oBaseForm, 'AutoCenter', .F.)\n"
+            "lBaseAfterSetPem = oBaseForm.AutoCenter\n"
+            "lBaseAddProperty = ADDPROPERTY(oBaseForm, 'AutoCenter', .T.)\n"
+            "lBaseRemoveProperty = REMOVEPROPERTY(oBaseForm, 'AutoCenter')\n"
+            "oDerived = CREATEOBJECT('DemoForm')\n"
+            "lDerivedBefore = oDerived.AutoCenter\n"
+            "cChildBefore = oDerived.cmdSave.ReadAutoCenter()\n"
+            "oDerived.cmdSave.EnableCentering()\n"
+            "lDerivedAfterChild = oDerived.AutoCenter\n"
+            "xDerivedGetPem = GETPEM(oDerived, 'AutoCenter')\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oDerived, 1)\n"
+            "lPropHasAutoCenter = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'AUTOCENTER'\n"
+            "        lPropHasAutoCenter = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "RETURN\n"
+            "DEFINE CLASS SaveButton AS CommandButton\n"
+            "    FUNCTION ReadAutoCenter\n"
+            "        RETURN IIF(THISFORM.AutoCenter, 'T', 'F')\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE EnableCentering\n"
+            "        THISFORM.AutoCenter = .T.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DemoForm AS Form\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Form AutoCenter property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lbasehasautocenter", "true");
+        check("lbaseautocenterreadonly", "false");
+        check("lbasebefore", "false");
+        check("xbasegetpembefore", "false");
+        check("lbaseafterdirectassign", "true");
+        check("lbasesetpem", "true");
+        check("lbaseaftersetpem", "false");
+        check("lbaseaddproperty", "false");
+        check("lbaseremoveproperty", "false");
+        check("lderivedbefore", "false");
+        check("cchildbefore", "F");
+        check("lderivedafterchild", "true");
+        check("xderivedgetpem", "true");
+        check("lprophasautocenter", "true");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_visual_enabled_defaults_mutates_and_stays_builtin()
     {
         namespace fs = std::filesystem;
@@ -45780,6 +45866,7 @@ int main()
     test_native_form_closable_defaults_mutates_and_stays_builtin();
     test_native_form_minbutton_defaults_mutates_and_stays_builtin();
     test_native_form_maxbutton_defaults_mutates_and_stays_builtin();
+    test_native_form_autocenter_defaults_mutates_and_stays_builtin();
     test_native_setfocus_builtin_fallback_updates_owner_activecontrol();
     test_native_setfocus_override_wins_over_builtin_activecontrol_toggle();
     test_runtime_application_activeform_aliases_track_representative_native_form();
