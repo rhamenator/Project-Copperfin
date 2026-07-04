@@ -40033,6 +40033,92 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_runtime_olecontrol_direct_member_shadowing_stays_blocked()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_olecontrol_direct_member_shadowing";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "runtime_olecontrol_direct_member_shadowing.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "lAdded = oForm.AddObject('axHost', 'OleControl', 'MSComctlLib.ListViewCtrl')\n"
+            "lAddHostLeft = ADDPROPERTY(oForm.axHost, 'Left', 99)\n"
+            "lRemoveHostLeft = REMOVEPROPERTY(oForm.axHost, 'Left')\n"
+            "oForm.axHost.Left = 25\n"
+            "nHostDirectLeft = oForm.axHost.Left\n"
+            "nHostObjectLeft = oForm.axHost.Object.Left\n"
+            "xHostDirectLeftGetPem = GETPEM(oForm.axHost, 'Left')\n"
+            "nHostProps = AMEMBERS(aHostProps, oForm.axHost, 1)\n"
+            "nHostHasLeft = ASCAN(aHostProps, 'LEFT')\n"
+            "oDoc = CREATEOBJECT('ExcelDoc')\n"
+            "lAddDocVisible = ADDPROPERTY(oDoc, 'Visible', .F.)\n"
+            "lRemoveDocVisible = REMOVEPROPERTY(oDoc, 'Visible')\n"
+            "oDoc.Visible = .T.\n"
+            "lDocDirectVisible = oDoc.Visible\n"
+            "lDocObjectVisible = oDoc.Object.Visible\n"
+            "xDocDirectVisibleGetPem = GETPEM(oDoc, 'Visible')\n"
+            "nDocProps = AMEMBERS(aDocProps, oDoc, 1)\n"
+            "nDocHasVisible = ASCAN(aDocProps, 'VISIBLE')\n"
+            "RETURN\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ExcelDoc AS OLEControl\n"
+            "    OLEClass = 'Excel.Sheet'\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("OleControl direct-member shadowing script should complete: ") + state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("laddhostleft", "false");
+        check("lremovehostleft", "false");
+        check("nhostdirectleft", "25");
+        check("nhostobjectleft", "25");
+        check("xhostdirectleftgetpem", "25");
+        check("ladddocvisible", "false");
+        check("lremovedocvisible", "false");
+        check("ldocdirectvisible", "true");
+        check("ldocobjectvisible", "true");
+        check("xdocdirectvisiblegetpem", "true");
+
+        const auto expect_positive = [&](const std::string &name, const std::string &message)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " variable not found");
+            if (it != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(it->second) != "0",
+                       message + " expected a positive ASCAN() result");
+            }
+        };
+
+        expect_positive("nhosthasleft",
+                        "Direct host AMEMBERS(..., 1) should continue exposing Left after blocked shadow/remove attempts");
+        expect_positive("ndochasvisible",
+                        "Direct class-defined AMEMBERS(..., 1) should continue exposing Visible after blocked shadow/remove attempts");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_runtime_native_visual_controls_without_hwnd_fail_deterministically()
     {
         namespace fs = std::filesystem;
@@ -42230,6 +42316,7 @@ int main()
         test_runtime_olecontrol_direct_member_reflection_remains_coherent();
         test_runtime_olecontrol_direct_member_setpem_remains_coherent();
         test_runtime_olecontrol_direct_member_amembers_remains_coherent();
+        test_runtime_olecontrol_direct_member_shadowing_stays_blocked();
         test_runtime_native_visual_controls_without_hwnd_fail_deterministically();
         test_same_prg_native_bindevent_property_access_and_assign_dispatch_preserve_current_event_metadata();
         test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();

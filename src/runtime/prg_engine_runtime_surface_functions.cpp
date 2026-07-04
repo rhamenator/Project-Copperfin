@@ -1103,6 +1103,14 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_collection_member_name(*runtime_object, property_name)) {
             return make_boolean_value(false);
         }
+        if (!reflectable_member_exists_locally(*runtime_object, property_name)) {
+            if (RuntimeOleObjectState* object_surface =
+                    resolve_direct_olecontrol_reflection_surface(*runtime_object);
+                object_surface != nullptr &&
+                reflectable_member_exists_locally(*object_surface, property_name)) {
+                return make_boolean_value(false);
+            }
+        }
         const PrgValue initial_value = arguments.size() >= 3U ? arguments[2] : make_empty_value();
         runtime_object->properties[property_name] = initial_value;
         return make_boolean_value(true);
@@ -1262,6 +1270,14 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             native_child_parent_member_name_matches(*runtime_object, property_name) ||
             is_native_collection_member_name(*runtime_object, property_name)) {
             return make_boolean_value(false);
+        }
+        if (!runtime_object->properties.contains(property_name)) {
+            if (RuntimeOleObjectState* object_surface =
+                    resolve_direct_olecontrol_reflection_surface(*runtime_object);
+                object_surface != nullptr &&
+                reflectable_member_exists_locally(*object_surface, property_name)) {
+                return make_boolean_value(false);
+            }
         }
         const std::size_t removed = runtime_object->properties.erase(property_name);
         return make_boolean_value(removed != 0U);
