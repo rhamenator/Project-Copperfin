@@ -84,6 +84,8 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Error.ManifestEmptyOrInvalid\": \"Manifest is empty or invalid.\",\n"
         "  \"RuntimeHost.Error.ManifestMissingRuntimeHostSha256\": \"Security-enabled manifest is missing runtime_host_sha256.\",\n"
         "  \"RuntimeHost.Error.ManifestNotFound\": \"Manifest file not found.\",\n"
+        "  \"RuntimeHost.Error.ManifestVersionMissing\": \"Manifest is missing manifest_version.\",\n"
+        "  \"RuntimeHost.Error.ManifestVersionUnsupported\": \"Unsupported manifest_version: {version}. Supported versions: {supportedVersions}.\",\n"
         "  \"RuntimeHost.Prompt.QuitConfirm\": \"Do you want to quit this application? [{yesToken}/{defaultNoToken}]: \",\n"
         "  \"RuntimeHost.Error.RuntimeHostSha256Mismatch\": \"Runtime host hash does not match manifest digest.\",\n"
         "  \"RuntimeHost.Error.SecurityPolicyDenied\": \"Security policy denied {permission} for role '{role}'.\",\n"
@@ -144,6 +146,8 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Error.ManifestEmptyOrInvalid\": \"El manifiesto esta vacio o no es valido.\",\n"
         "  \"RuntimeHost.Error.ManifestMissingRuntimeHostSha256\": \"Al manifiesto con seguridad habilitada le falta runtime_host_sha256.\",\n"
         "  \"RuntimeHost.Error.ManifestNotFound\": \"No se encontro el archivo de manifiesto.\",\n"
+        "  \"RuntimeHost.Error.ManifestVersionMissing\": \"Al manifiesto le falta manifest_version.\",\n"
+        "  \"RuntimeHost.Error.ManifestVersionUnsupported\": \"manifest_version no es compatible: {version}. Las versiones compatibles son: {supportedVersions}.\",\n"
         "  \"RuntimeHost.Prompt.QuitConfirm\": \"Desea salir de esta aplicacion? [{yesToken}/{defaultNoToken}]: \",\n"
         "  \"RuntimeHost.Error.RuntimeHostSha256Mismatch\": \"El hash del runtime host no coincide con el digest del manifiesto.\",\n"
         "  \"RuntimeHost.Error.SecurityPolicyDenied\": \"La politica de seguridad denego {permission} para el rol '{role}'.\",\n"
@@ -192,6 +196,8 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Error.ManifestEmptyOrInvalid\": \"O manifesto esta vazio ou e invalido.\",\n"
         "  \"RuntimeHost.Error.ManifestMissingRuntimeHostSha256\": \"Falta runtime_host_sha256 no manifesto com seguranca habilitada.\",\n"
         "  \"RuntimeHost.Error.ManifestNotFound\": \"Arquivo de manifesto nao encontrado.\",\n"
+        "  \"RuntimeHost.Error.ManifestVersionMissing\": \"Falta manifest_version no manifesto.\",\n"
+        "  \"RuntimeHost.Error.ManifestVersionUnsupported\": \"manifest_version nao e compativel: {version}. As versoes compativeis sao: {supportedVersions}.\",\n"
         "  \"RuntimeHost.Prompt.QuitConfirm\": \"Deseja sair deste aplicativo? [{yesToken}/{defaultNoToken}]: \",\n"
         "  \"RuntimeHost.Error.RuntimeHostSha256Mismatch\": \"O hash do runtime host nao corresponde ao digest do manifesto.\",\n"
         "  \"RuntimeHost.Error.SecurityPolicyDenied\": \"A politica de seguranca negou {permission} para a funcao '{role}'.\",\n"
@@ -1277,6 +1283,88 @@ void test_runtime_host_security_denial_audit_details_localize_without_changing_a
                "#2592: es-419 manifest-hash denials should localize audit detail prose");
         expect(audit_text.find("hash verification failed") == std::string::npos,
                "#2592: es-419 manifest-hash denials should not leave the raw English hash-verification wrapper");
+    }
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_runtime_host_validates_manifest_versions_without_changing_error_contracts(
+    const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_manifest_version_contracts";
+    const fs::path locale_root = temp_root / "locales";
+    const fs::path startup_path = temp_root / "main.prg";
+    const fs::path supported_manifest_path = temp_root / "supported_v2.cfmanifest";
+    const fs::path missing_manifest_path = temp_root / "missing_version.cfmanifest";
+    const fs::path unsupported_manifest_path = temp_root / "unsupported_version.cfmanifest";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_runtime_host_usage_catalogs(locale_root);
+    write_text(startup_path, "RETURN\n");
+
+    const std::string base_manifest =
+        "project_title=ManifestVersionContract\n"
+        "project_path=" + (temp_root / "demo.pjx").string() + "\n"
+        "package_root=" + temp_root.string() + "\n"
+        "content_root=" + temp_root.string() + "\n"
+        "working_directory=" + temp_root.string() + "\n"
+        "startup_item=main.prg\n"
+        "startup_source=" + startup_path.string() + "\n"
+        "configuration=debug\n"
+        "security_enabled=false\n"
+        "security_role=developer\n"
+        "security_mode=off\n"
+        "dotnet_story=none\n";
+    write_text(supported_manifest_path, "manifest_version=2\n" + base_manifest);
+    write_text(missing_manifest_path, base_manifest);
+    write_text(unsupported_manifest_path, "manifest_version=99\n" + base_manifest);
+
+    {
+        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {"--manifest", supported_manifest_path.string()},
+            temp_root);
+        expect(process.exit_code == 0,
+               "runtime host should accept supported manifest_version=2 package contracts");
+        expect(process.stdout_text.find("status: ok") != std::string::npos,
+               "runtime host should preserve machine-readable success status for supported manifest versions");
+    }
+
+    {
+        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {"--manifest", missing_manifest_path.string()},
+            temp_root);
+        expect(process.exit_code == 4,
+               "runtime host should reject manifests that omit manifest_version");
+        expect(process.stdout_text.find("status: error") != std::string::npos,
+               "runtime host missing-manifest-version failures should preserve machine-readable status");
+        expect(process.stdout_text.find("error: Manifest is missing manifest_version.") != std::string::npos,
+               "runtime host should report a localized missing-manifest-version error");
+    }
+
+    {
+        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "es-419");
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {"--manifest", unsupported_manifest_path.string()},
+            temp_root);
+        expect(process.exit_code == 4,
+               "runtime host should reject unsupported manifest versions");
+        expect(process.stdout_text.find("status: error") != std::string::npos,
+               "runtime host unsupported-manifest-version failures should preserve machine-readable status");
+        expect(process.stdout_text.find("error: manifest_version no es compatible: 99. Las versiones compatibles son: 1, 2.") != std::string::npos,
+               "runtime host should localize unsupported-manifest-version errors while preserving the rejected value");
+        expect(process.stdout_text.find("Unsupported manifest_version: 99. Supported versions: 1, 2.") == std::string::npos,
+               "runtime host unsupported-manifest-version localization should not fall back to raw English prose");
     }
 
     if (failures == 0) {
@@ -3185,6 +3273,7 @@ int main(int argc, char** argv) {
     test_runtime_host_supports_xasset_action_breakpoint_commands(argv[1]);
     test_runtime_host_surfaces_xasset_breakpoint_metadata_in_pause_output(argv[1]);
     test_runtime_host_rejects_extension_payload_basename_fallback(argv[1]);
+    test_runtime_host_validates_manifest_versions_without_changing_error_contracts(argv[1]);
     test_runtime_host_manifest_verification_errors_localize_without_changing_contracts(argv[1]);
     test_runtime_host_security_denial_audit_details_localize_without_changing_audit_contracts(argv[1]);
     test_runtime_host_rejects_ai_federation_planning_without_ai_permission(argv[1]);

@@ -397,6 +397,8 @@
   "RuntimeHost.Error.ManifestEmptyOrInvalid": "O manifesto esta vazio ou e invalido.",
   "RuntimeHost.Error.ManifestMissingRuntimeHostSha256": "Falta runtime_host_sha256 no manifesto com seguranca habilitada.",
   "RuntimeHost.Error.ManifestNotFound": "Arquivo de manifesto nao encontrado.",
+  "RuntimeHost.Error.ManifestVersionMissing": "Falta manifest_version no manifesto.",
+  "RuntimeHost.Error.ManifestVersionUnsupported": "manifest_version nao e compativel: {version}. As versoes compativeis sao: {supportedVersions}.",
   "RuntimeHost.Error.RuntimeHostSha256Mismatch": "O hash do runtime host nao corresponde ao digest do manifesto.",
   "RuntimeHost.Error.SecurityPolicyDenied": "A politica de seguranca negou {permission} para a funcao '{role}'.",
   "RuntimeHost.Error.ExtensionPayloadMalformed": "A entrada extension_payload do manifesto esta malformada.",

@@ -779,6 +779,8 @@ std::string unescape_manifest_value(std::string value) {
 }
 
 using ManifestMap = std::multimap<std::string, std::string>;
+constexpr int kMinimumSupportedManifestVersion = 1;
+constexpr int kMaximumSupportedManifestVersion = 2;
 
 enum class PackagePathBindingMode {
     allow_filename_fallback,
@@ -814,6 +816,51 @@ std::vector<std::string> all_values(const ManifestMap& values, const std::string
         result.push_back(iterator->second);
     }
     return result;
+}
+
+std::optional<int> parse_manifest_version_value(const std::string& value) {
+    const std::string trimmed = trim_copy(value);
+    if (trimmed.empty()) {
+        return std::nullopt;
+    }
+    if (!std::all_of(trimmed.begin(), trimmed.end(), [](unsigned char ch) {
+            return std::isdigit(ch) != 0;
+        })) {
+        return std::nullopt;
+    }
+
+    try {
+        return std::stoi(trimmed);
+    } catch (const std::exception&) {
+        return std::nullopt;
+    }
+}
+
+bool validate_manifest_version(
+    const ManifestMap& manifest,
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string& error) {
+    const std::string raw_version = first_value(manifest, "manifest_version");
+    if (trim_copy(raw_version).empty()) {
+        error = localized_message(catalog, "RuntimeHost.Error.ManifestVersionMissing");
+        return false;
+    }
+
+    const auto parsed_version = parse_manifest_version_value(raw_version);
+    if (!parsed_version.has_value() ||
+        *parsed_version < kMinimumSupportedManifestVersion ||
+        *parsed_version > kMaximumSupportedManifestVersion) {
+        error = localized_message(
+            catalog,
+            "RuntimeHost.Error.ManifestVersionUnsupported",
+            {
+                {"supportedVersions", "1, 2"},
+                {"version", raw_version}
+            });
+        return false;
+    }
+
+    return true;
 }
 
 std::vector<std::string> split_pipe(const std::string& value) {
@@ -1597,6 +1644,12 @@ int main(int argc, char** argv) {
     if (manifest.empty()) {
         std::cout << "status: error\n";
         print_error_line(catalog, localized_message(catalog, "RuntimeHost.Error.ManifestEmptyOrInvalid"));
+        return 4;
+    }
+    std::string manifest_version_error;
+    if (!validate_manifest_version(manifest, catalog, manifest_version_error)) {
+        std::cout << "status: error\n";
+        print_error_line(catalog, manifest_version_error);
         return 4;
     }
 

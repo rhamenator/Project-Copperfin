@@ -755,6 +755,8 @@
   "RuntimeHost.Error.ManifestEmptyOrInvalid": "Manifest is empty or invalid.",
   "RuntimeHost.Error.ManifestMissingRuntimeHostSha256": "Security-enabled manifest is missing runtime_host_sha256.",
   "RuntimeHost.Error.ManifestNotFound": "Manifest file not found.",
+  "RuntimeHost.Error.ManifestVersionMissing": "Manifest is missing manifest_version.",
+  "RuntimeHost.Error.ManifestVersionUnsupported": "Unsupported manifest_version: {version}. Supported versions: {supportedVersions}.",
   "RuntimeHost.Error.RuntimeHostSha256Mismatch": "Runtime host hash does not match manifest digest.",
   "RuntimeHost.Error.SecurityPolicyDenied": "Security policy denied {permission} for role '{role}'.",
   "RuntimeHost.Error.ExtensionPayloadMalformed": "extension_payload entry is malformed in manifest.",
