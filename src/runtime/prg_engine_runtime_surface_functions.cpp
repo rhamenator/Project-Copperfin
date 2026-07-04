@@ -2740,9 +2740,10 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
         return make_number_value(0.0);
     }
 
+    long long requested_column = 1LL;
     if (arguments.size() >= 3U) {
-        const long long requested_column = std::llround(value_as_number(arguments[2]));
-        if (requested_column != 1LL) {
+        requested_column = std::llround(value_as_number(arguments[2]));
+        if (requested_column < 1LL) {
             return make_number_value(0.0);
         }
     }
@@ -2754,9 +2755,12 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
 
     const PrgValue inserted_item = make_string_value(value_as_string(arguments[0]));
     const std::int64_t item_id = next_native_list_control_item_id(runtime_object);
+    std::vector<PrgValue> inserted_row;
+    inserted_row.resize(static_cast<std::size_t>(requested_column), make_string_value(""));
+    inserted_row[static_cast<std::size_t>(requested_column - 1LL)] = inserted_item;
     runtime_object.list_rows.insert(
         runtime_object.list_rows.begin() + static_cast<std::ptrdiff_t>(*insert_slot),
-        std::vector<PrgValue>{inserted_item});
+        std::move(inserted_row));
     runtime_object.collection_item_keys.insert(
         runtime_object.collection_item_keys.begin() + static_cast<std::ptrdiff_t>(*insert_slot),
         std::to_string(item_id));
