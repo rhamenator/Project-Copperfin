@@ -6,6 +6,7 @@
 #define COPPERFIN_TEST_STUDIO_HOST_JSON_SUPPORT_H
 
 #include "test_environment_support.h"
+#include "test_locale_catalog_environment_support.h"
 #include "copperfin/localization/localization.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "copperfin/vfp/visual_asset_editor.h"
@@ -45,8 +46,6 @@ namespace cf_test_studio_host_json {
 
 #endif
 
-struct ScopedEnvironmentValue;
-struct ScopedDefaultLocaleCatalogEnvironment;
 struct ProcessResult;
 
 // ==== Shared test helpers (process invocation, locale env, assertion helpers, generic fixtures) ====
@@ -94,52 +93,8 @@ std::string visual_object_order(const std::filesystem::path& form_path);
 void delete_existing_textbox(const std::filesystem::path& form_path, const std::string& evidence);
 void write_synthetic_form_table_with_container_object(const std::filesystem::path& form_path);
 void write_synthetic_table_with_data_environment(const std::filesystem::path& asset_path);
-struct ScopedEnvironmentValue {
-    std::string name;
-    std::string original;
-    bool had_original = false;
-
-    explicit ScopedEnvironmentValue(const std::string& environment_name)
-        : name(environment_name),
-          original(getenv_value(name)) {
-        had_original = !original.empty();
-        set_env_value(name, "", false);
-    }
-
-    ~ScopedEnvironmentValue() {
-        set_env_value(name, original, had_original);
-    }
-};
-struct ScopedDefaultLocaleCatalogEnvironment {
-    ScopedEnvironmentValue locale;
-    ScopedEnvironmentValue locale_dir;
-
-    ScopedDefaultLocaleCatalogEnvironment()
-        : locale("COPPERFIN_LOCALE"),
-          locale_dir("COPPERFIN_LOCALE_DIR") {
-        set_env_value("COPPERFIN_LOCALE", "en-US", true);
-        set_env_value(
-            "COPPERFIN_LOCALE_DIR",
-            [] {
-                // COPPERFIN_LOCALE_DIR must resolve to the repo's resources/locales
-                // tree regardless of the test process's cwd (ctest runs tests from
-                // the build directory, not the repo root).
-                std::filesystem::path ancestor = std::filesystem::absolute(std::filesystem::current_path());
-                for (;;) {
-                    const auto candidate = ancestor / "resources" / "locales";
-                    if (std::filesystem::exists(candidate)) {
-                        return candidate.lexically_normal().string();
-                    }
-                    const auto parent = ancestor.parent_path();
-                    if (parent == ancestor) {
-                        return candidate.lexically_normal().string();
-                    }
-                    ancestor = parent;
-                }
-            }(),
-            true);
-    }
-};
+using copperfin::test_support::ScopedDefaultLocaleCatalogEnvironment;
+using copperfin::test_support::ScopedEnvironmentValue;
 struct ProcessResult {
     int exit_code = -1;
     std::string stdout_text;
