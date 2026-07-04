@@ -897,6 +897,20 @@ bool native_string_control_value_member_name_matches(
            normalized_base_class == "combobox";
 }
 
+bool native_text_entry_readonly_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "readonly" ||
+        !runtime_object.properties.contains("readonly")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "textbox" ||
+           normalized_base_class == "editbox";
+}
+
 bool native_name_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
@@ -1348,6 +1362,11 @@ bool is_native_visual_visible_member_name(const RuntimeOleObjectState& runtime_o
 bool is_native_visual_geometry_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_geometry_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_text_entry_readonly_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_text_entry_readonly_member_name_matches(runtime_object, normalized_member_name);
 }
 
 bool is_native_string_control_value_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
@@ -1814,6 +1833,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_visual_enabled_member_name(*runtime_object, property_name) ||
             is_native_visual_visible_member_name(*runtime_object, property_name) ||
             is_native_visual_geometry_member_name(*runtime_object, property_name) ||
+            is_native_text_entry_readonly_member_name(*runtime_object, property_name) ||
             is_native_string_control_value_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_creation_time_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_object_member_name(*runtime_object, property_name) ||
@@ -2007,6 +2027,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_visual_enabled_member_name(*runtime_object, property_name) ||
             is_native_visual_visible_member_name(*runtime_object, property_name) ||
             is_native_visual_geometry_member_name(*runtime_object, property_name) ||
+            is_native_text_entry_readonly_member_name(*runtime_object, property_name) ||
             is_native_string_control_value_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_creation_time_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_object_member_name(*runtime_object, property_name) ||

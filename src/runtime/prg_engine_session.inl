@@ -244,6 +244,13 @@
                 runtime_object.properties["value"] = make_string_value("");
             }
 
+            if ((normalized_base_class == "textbox" ||
+                 normalized_base_class == "editbox") &&
+                !runtime_object.properties.contains("readonly"))
+            {
+                runtime_object.properties["readonly"] = make_boolean_value(false);
+            }
+
             if (normalized_base_class == "form" &&
                 !runtime_object.properties.contains("showwindow"))
             {

@@ -7575,6 +7575,107 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_text_entry_readonly_defaults_mutate_and_stay_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_text_entry_readonly";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_text_entry_readonly.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('TextBox')\n"
+            "lPlainHasReadOnly = PEMSTATUS(oPlain, 'ReadOnly', 1)\n"
+            "lPlainReadOnlyReadOnly = PEMSTATUS(oPlain, 'ReadOnly', 5)\n"
+            "lPlainBefore = oPlain.ReadOnly\n"
+            "xPlainGetPemBefore = GETPEM(oPlain, 'ReadOnly')\n"
+            "oPlain.ReadOnly = .T.\n"
+            "lPlainAfterDirectAssign = oPlain.ReadOnly\n"
+            "lPlainSetPem = SETPEM(oPlain, 'ReadOnly', .F.)\n"
+            "lPlainAfterSetPem = oPlain.ReadOnly\n"
+            "lPlainAddProperty = ADDPROPERTY(oPlain, 'ReadOnly', .T.)\n"
+            "lPlainRemoveProperty = REMOVEPROPERTY(oPlain, 'ReadOnly')\n"
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "lTextBefore = oForm.txtName.ReadOnly\n"
+            "lEditBefore = oForm.edtNotes.ReadOnly\n"
+            "lChildRead = oForm.cmdProbe.ReadTextReadOnly()\n"
+            "oForm.cmdProbe.MakeEditable()\n"
+            "lTextAfterChild = oForm.txtName.ReadOnly\n"
+            "lEditAfterChild = oForm.edtNotes.ReadOnly\n"
+            "lChildSetPem = SETPEM(oForm.edtNotes, 'ReadOnly', .T.)\n"
+            "lEditAfterSetPem = oForm.edtNotes.ReadOnly\n"
+            "xChildGetPem = GETPEM(oForm.txtName, 'ReadOnly')\n"
+            "lChildHasReadOnly = PEMSTATUS(oForm.edtNotes, 'ReadOnly', 1)\n"
+            "lChildReadOnlyReadOnly = PEMSTATUS(oForm.edtNotes, 'ReadOnly', 5)\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oForm.edtNotes, 1)\n"
+            "lPropHasReadOnly = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'READONLY'\n"
+            "        lPropHasReadOnly = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "RETURN\n"
+            "DEFINE CLASS ProbeButton AS CommandButton\n"
+            "    FUNCTION ReadTextReadOnly\n"
+            "        RETURN THISFORM.txtName.ReadOnly\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE MakeEditable\n"
+            "        THISFORM.txtName.ReadOnly = .F.\n"
+            "        THISFORM.edtNotes.ReadOnly = .F.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    ADD OBJECT txtName AS TextBox WITH ReadOnly = .T.\n"
+            "    ADD OBJECT edtNotes AS EditBox WITH ReadOnly = .T.\n"
+            "    ADD OBJECT cmdProbe AS ProbeButton\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native text-entry ReadOnly property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplainhasreadonly", "true");
+        check("lplainreadonlyreadonly", "false");
+        check("lplainbefore", "false");
+        check("xplaingetpembefore", "false");
+        check("lplainafterdirectassign", "true");
+        check("lplainsetpem", "true");
+        check("lplainaftersetpem", "false");
+        check("lplainaddproperty", "false");
+        check("lplainremoveproperty", "false");
+        check("ltextbefore", "true");
+        check("leditbefore", "true");
+        check("lchildread", "true");
+        check("ltextafterchild", "false");
+        check("leditafterchild", "false");
+        check("lchildsetpem", "true");
+        check("leditaftersetpem", "true");
+        check("xchildgetpem", "false");
+        check("lchildhasreadonly", "true");
+        check("lchildreadonlyreadonly", "false");
+        check("lprophasreadonly", "true");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_name_reflects_parent_chain_and_stays_builtin()
     {
         namespace fs = std::filesystem;
@@ -45998,6 +46099,7 @@ int main()
     test_native_form_scrollbars_defaults_are_runtime_readonly_and_stay_builtin();
     test_native_visual_enabled_defaults_mutates_and_stays_builtin();
     test_native_visual_visible_defaults_mutates_and_stays_builtin();
+    test_native_text_entry_readonly_defaults_mutate_and_stay_builtin();
     test_native_string_control_value_defaults_mutates_and_stays_builtin();
     test_native_name_reflects_parent_chain_and_stays_builtin();
     test_createobject_and_newobject_instantiate_same_prg_exception_native_class();
