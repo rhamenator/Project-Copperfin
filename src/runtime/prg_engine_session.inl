@@ -261,6 +261,12 @@
             {
                 runtime_object.properties["lockscreen"] = make_boolean_value(false);
             }
+
+            if (normalized_base_class == "form" &&
+                !runtime_object.properties.contains("controlbox"))
+            {
+                runtime_object.properties["controlbox"] = make_boolean_value(true);
+            }
         }
 
         void seed_native_olecontrol_timeout_policy_properties(RuntimeOleObjectState &runtime_object)

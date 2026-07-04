@@ -741,6 +741,18 @@ bool native_form_lockscreen_member_name_matches(
            runtime_object.properties.contains("lockscreen");
 }
 
+bool native_form_controlbox_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "controlbox") {
+        return false;
+    }
+
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "form" &&
+           runtime_object.properties.contains("controlbox");
+}
+
 bool native_visual_enabled_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
@@ -1180,6 +1192,11 @@ bool is_native_form_showwindow_member_name(const RuntimeOleObjectState& runtime_
 bool is_native_form_lockscreen_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_form_lockscreen_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_form_controlbox_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_form_controlbox_member_name_matches(runtime_object, normalized_member_name);
 }
 
 bool is_native_visual_enabled_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
@@ -1648,6 +1665,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_form_alwaysontop_member_name(*runtime_object, property_name) ||
             is_native_form_showwindow_member_name(*runtime_object, property_name) ||
             is_native_form_lockscreen_member_name(*runtime_object, property_name) ||
+            is_native_form_controlbox_member_name(*runtime_object, property_name) ||
             is_native_visual_enabled_member_name(*runtime_object, property_name) ||
             is_native_visual_visible_member_name(*runtime_object, property_name) ||
             is_native_visual_geometry_member_name(*runtime_object, property_name) ||
@@ -1831,6 +1849,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_form_alwaysontop_member_name(*runtime_object, property_name) ||
             is_native_form_showwindow_member_name(*runtime_object, property_name) ||
             is_native_form_lockscreen_member_name(*runtime_object, property_name) ||
+            is_native_form_controlbox_member_name(*runtime_object, property_name) ||
             is_native_visual_enabled_member_name(*runtime_object, property_name) ||
             is_native_visual_visible_member_name(*runtime_object, property_name) ||
             is_native_visual_geometry_member_name(*runtime_object, property_name) ||
