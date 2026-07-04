@@ -1061,6 +1061,17 @@ bool native_leftcolumn_member_name_matches(
     return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "grid";
 }
 
+bool native_columnorder_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "columnorder" ||
+        !runtime_object.properties.contains("columnorder")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "column";
+}
+
 bool native_recordmark_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
@@ -1804,6 +1815,11 @@ bool is_native_leftcolumn_member_name(const RuntimeOleObjectState& runtime_objec
     return native_leftcolumn_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_columnorder_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_columnorder_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_recordmark_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_recordmark_member_name_matches(runtime_object, normalized_member_name);
@@ -2338,6 +2354,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_splitbar_member_name(*runtime_object, property_name) ||
             is_native_currentcontrol_member_name(*runtime_object, property_name) ||
             is_native_dynamiccurrentcontrol_member_name(*runtime_object, property_name) ||
+            is_native_columnorder_member_name(*runtime_object, property_name) ||
             is_native_recordsource_member_name(*runtime_object, property_name) ||
             is_native_leftcolumn_member_name(*runtime_object, property_name) ||
             is_native_recordmark_member_name(*runtime_object, property_name) ||
@@ -2501,6 +2518,11 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         if (object_has_member(runtime_object->methods, member_name) ||
             object_has_member(runtime_object->events, member_name)) {
+            if (member_name == "columnorder") {
+                return make_boolean_value(
+                    write_native_member_callback &&
+                    write_native_member_callback(arguments[0], member_name, arguments[2]));
+            }
             if (member_name == "readonly" &&
                 native_combobox_readonly_assignment_blocked(*runtime_object, arguments[2])) {
                 return make_boolean_value(false);
@@ -2512,6 +2534,11 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             return make_boolean_value(true);
         }
         if (runtime_object->properties.contains(member_name)) {
+            if (member_name == "columnorder") {
+                return make_boolean_value(
+                    write_native_member_callback &&
+                    write_native_member_callback(arguments[0], member_name, arguments[2]));
+            }
             if (member_name == "readonly" &&
                 native_combobox_readonly_assignment_blocked(*runtime_object, arguments[2])) {
                 return make_boolean_value(false);
@@ -2575,6 +2602,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_splitbar_member_name(*runtime_object, property_name) ||
             is_native_currentcontrol_member_name(*runtime_object, property_name) ||
             is_native_dynamiccurrentcontrol_member_name(*runtime_object, property_name) ||
+            is_native_columnorder_member_name(*runtime_object, property_name) ||
             is_native_recordsource_member_name(*runtime_object, property_name) ||
             is_native_leftcolumn_member_name(*runtime_object, property_name) ||
             is_native_recordmark_member_name(*runtime_object, property_name) ||

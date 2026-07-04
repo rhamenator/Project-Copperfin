@@ -1198,6 +1198,12 @@ namespace copperfin::runtime
 
                     assign_native_runtime_object_name(*child_object, child_name_text);
                     runtime_object->properties[child_name] = make_runtime_object_reference(*child_object);
+                    if (child_object->properties.contains("columnorder"))
+                    {
+                        (void)write_native_columnorder_property(
+                            *child_object,
+                            child_object->properties["columnorder"]);
+                    }
                     (void)sync_native_owned_children_collection(*runtime_object);
                     runtime_object->last_action = effective_member_path + "(" + child_name + "," + child_class + ")";
                     ++runtime_object->action_count;
@@ -3522,6 +3528,10 @@ namespace copperfin::runtime
                 !is_native_child_parent_member_name(runtime_object, normalized_property_name) &&
                 !is_native_collection_readonly_member_name(runtime_object, normalized_property_name))
             {
+                if (is_native_columnorder_member_name(runtime_object, normalized_property_name))
+                {
+                    return write_native_columnorder_property(runtime_object, assigned_value);
+                }
                 if (normalized_property_name == "readonly" &&
                     native_combobox_readonly_assignment_blocked(runtime_object, assigned_value))
                 {

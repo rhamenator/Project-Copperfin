@@ -8762,6 +8762,124 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_columnorder_default_reorders_siblings_and_stays_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_columnorder";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_columnorder.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('Column')\n"
+            "lPlainHasColumnOrder = PEMSTATUS(oPlain, 'ColumnOrder', 1)\n"
+            "lPlainColumnOrderReadOnly = PEMSTATUS(oPlain, 'ColumnOrder', 5)\n"
+            "nPlainBefore = oPlain.ColumnOrder\n"
+            "xPlainGetPemBefore = GETPEM(oPlain, 'ColumnOrder')\n"
+            "oPlain.ColumnOrder = 4\n"
+            "nPlainAfterDirectAssign = oPlain.ColumnOrder\n"
+            "lPlainSetPem = SETPEM(oPlain, 'ColumnOrder', 2)\n"
+            "nPlainAfterSetPem = oPlain.ColumnOrder\n"
+            "lPlainAddProperty = ADDPROPERTY(oPlain, 'ColumnOrder', 9)\n"
+            "lPlainRemoveProperty = REMOVEPROPERTY(oPlain, 'ColumnOrder')\n"
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "nFirstBefore = oForm.grd.colFirst.ColumnOrder\n"
+            "nSecondBefore = oForm.grd.colSecond.ColumnOrder\n"
+            "nThirdBefore = oForm.grd.colThird.ColumnOrder\n"
+            "nProbeRead = oForm.cmdProbe.ReadFirstOrder()\n"
+            "oForm.cmdProbe.MoveFirstToThird()\n"
+            "nFirstAfterChild = oForm.grd.colFirst.ColumnOrder\n"
+            "nSecondAfterChild = oForm.grd.colSecond.ColumnOrder\n"
+            "nThirdAfterChild = oForm.grd.colThird.ColumnOrder\n"
+            "lThirdSetPem = SETPEM(oForm.grd.colThird, 'ColumnOrder', 1)\n"
+            "nFirstAfterSetPem = oForm.grd.colFirst.ColumnOrder\n"
+            "nSecondAfterSetPem = oForm.grd.colSecond.ColumnOrder\n"
+            "nThirdAfterSetPem = oForm.grd.colThird.ColumnOrder\n"
+            "xFirstGetPem = GETPEM(oForm.grd.colFirst, 'ColumnOrder')\n"
+            "lGridHasColumnOrder = PEMSTATUS(oForm.grd.colFirst, 'ColumnOrder', 1)\n"
+            "lGridColumnOrderReadOnly = PEMSTATUS(oForm.grd.colFirst, 'ColumnOrder', 5)\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oForm.grd.colFirst, 1)\n"
+            "lPropHasColumnOrder = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'COLUMNORDER'\n"
+            "        lPropHasColumnOrder = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('OrderedColumn')\n"
+            "nDerivedBefore = oDerived.ColumnOrder\n"
+            "RETURN\n"
+            "DEFINE CLASS ProbeButton AS CommandButton\n"
+            "    FUNCTION ReadFirstOrder\n"
+            "        RETURN THISFORM.grd.colFirst.ColumnOrder\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE MoveFirstToThird\n"
+            "        THISFORM.grd.colFirst.ColumnOrder = 3\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS OrderedGrid AS Grid\n"
+            "    ADD OBJECT colFirst AS Column WITH ColumnOrder = 1\n"
+            "    ADD OBJECT colSecond AS Column WITH ColumnOrder = 2\n"
+            "    ADD OBJECT colThird AS Column WITH ColumnOrder = 3\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    ADD OBJECT grd AS OrderedGrid\n"
+            "    ADD OBJECT cmdProbe AS ProbeButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS OrderedColumn AS Column\n"
+            "    ColumnOrder = 7\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native ColumnOrder property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplainhascolumnorder", "true");
+        check("lplaincolumnorderreadonly", "false");
+        check("nplainbefore", "1");
+        check("xplaingetpembefore", "1");
+        check("nplainafterdirectassign", "4");
+        check("lplainsetpem", "true");
+        check("nplainaftersetpem", "2");
+        check("lplainaddproperty", "false");
+        check("lplainremoveproperty", "false");
+        check("nfirstbefore", "1");
+        check("nsecondbefore", "2");
+        check("nthirdbefore", "3");
+        check("nproberead", "1");
+        check("nfirstafterchild", "3");
+        check("nsecondafterchild", "1");
+        check("nthirdafterchild", "2");
+        check("lthirdsetpem", "true");
+        check("nfirstaftersetpem", "3");
+        check("nsecondaftersetpem", "2");
+        check("nthirdaftersetpem", "1");
+        check("xfirstgetpem", "3");
+        check("lgridhascolumnorder", "true");
+        check("lgridcolumnorderreadonly", "false");
+        check("lprophascolumnorder", "true");
+        check("nderivedbefore", "7");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_recordsourcetype_defaults_mutates_and_stays_builtin()
     {
         namespace fs = std::filesystem;
@@ -49023,6 +49141,7 @@ int main()
     test_native_deletemark_default_mutates_and_stays_builtin();
     test_native_splitbar_defaults_are_runtime_readonly_and_stay_builtin();
     test_native_allowaddnew_default_mutates_and_stays_builtin();
+    test_native_columnorder_default_reorders_siblings_and_stays_builtin();
     test_native_recordsourcetype_defaults_mutates_and_stays_builtin();
     test_native_rowsource_defaults_mutates_and_stays_builtin();
     test_native_rowsourcetype_defaults_mutates_and_stays_builtin();

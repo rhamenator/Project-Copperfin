@@ -199,6 +199,179 @@
             }
         }
 
+        bool is_native_grid_runtime_object(const RuntimeOleObjectState &runtime_object) const
+        {
+            return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "grid";
+        }
+
+        bool is_native_column_runtime_object(const RuntimeOleObjectState &runtime_object) const
+        {
+            return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "column";
+        }
+
+        int normalize_native_column_order_value(const PrgValue &value, int fallback = 1) const
+        {
+            long long normalized_order = fallback;
+            try
+            {
+                normalized_order = std::llround(value_as_number(value));
+            }
+            catch (...)
+            {
+                normalized_order = fallback;
+            }
+
+            if (normalized_order < 1LL)
+            {
+                normalized_order = 1LL;
+            }
+            if (normalized_order > 2147483647LL)
+            {
+                normalized_order = 2147483647LL;
+            }
+            return static_cast<int>(normalized_order);
+        }
+
+        int next_native_grid_column_order(const RuntimeOleObjectState &runtime_object)
+        {
+            if (!is_native_column_runtime_object(runtime_object))
+            {
+                return 1;
+            }
+
+            const auto parent_reference = native_object_parent_reference(runtime_object);
+            if (!parent_reference.has_value())
+            {
+                return 1;
+            }
+
+            int parent_handle = 0;
+            std::string parent_prog_id;
+            if (!parse_object_handle_reference(*parent_reference, parent_handle, parent_prog_id))
+            {
+                return 1;
+            }
+
+            const auto parent_found = ole_objects.find(parent_handle);
+            if (parent_found == ole_objects.end() ||
+                !is_native_grid_runtime_object(parent_found->second))
+            {
+                return 1;
+            }
+
+            int max_order = 0;
+            for (const int child_handle : collect_native_owned_child_handles(parent_found->second))
+            {
+                const auto child_found = ole_objects.find(child_handle);
+                if (child_found == ole_objects.end() ||
+                    !is_native_column_runtime_object(child_found->second))
+                {
+                    continue;
+                }
+
+                const auto order = child_found->second.properties.find("columnorder");
+                if (order == child_found->second.properties.end())
+                {
+                    max_order = std::max(max_order, 1);
+                    continue;
+                }
+
+                max_order = std::max(
+                    max_order,
+                    normalize_native_column_order_value(order->second, max_order + 1));
+            }
+
+            return std::max(1, max_order + 1);
+        }
+
+        bool write_native_columnorder_property(
+            RuntimeOleObjectState &runtime_object,
+            const PrgValue &assigned_value)
+        {
+            if (!is_native_column_runtime_object(runtime_object))
+            {
+                return false;
+            }
+
+            const int target_order = normalize_native_column_order_value(assigned_value, 1);
+            const auto existing_order = runtime_object.properties.find("columnorder");
+            const int current_order =
+                existing_order == runtime_object.properties.end()
+                    ? target_order
+                    : normalize_native_column_order_value(existing_order->second, target_order);
+
+            const auto parent_reference = native_object_parent_reference(runtime_object);
+            if (!parent_reference.has_value())
+            {
+                runtime_object.properties["columnorder"] = make_number_value(static_cast<double>(target_order));
+                return true;
+            }
+
+            int parent_handle = 0;
+            std::string parent_prog_id;
+            if (!parse_object_handle_reference(*parent_reference, parent_handle, parent_prog_id))
+            {
+                runtime_object.properties["columnorder"] = make_number_value(static_cast<double>(target_order));
+                return true;
+            }
+
+            const auto parent_found = ole_objects.find(parent_handle);
+            if (parent_found == ole_objects.end() ||
+                !is_native_grid_runtime_object(parent_found->second))
+            {
+                runtime_object.properties["columnorder"] = make_number_value(static_cast<double>(target_order));
+                return true;
+            }
+
+            std::vector<RuntimeOleObjectState *> sibling_columns;
+            for (const int child_handle : collect_native_owned_child_handles(parent_found->second))
+            {
+                const auto child_found = ole_objects.find(child_handle);
+                if (child_found == ole_objects.end() ||
+                    !is_native_column_runtime_object(child_found->second))
+                {
+                    continue;
+                }
+
+                sibling_columns.push_back(&child_found->second);
+            }
+
+            if (target_order != current_order)
+            {
+                for (RuntimeOleObjectState *sibling_column : sibling_columns)
+                {
+                    if (sibling_column == nullptr || sibling_column->handle == runtime_object.handle)
+                    {
+                        continue;
+                    }
+
+                    const auto sibling_order = sibling_column->properties.find("columnorder");
+                    const int sibling_value =
+                        sibling_order == sibling_column->properties.end()
+                            ? 1
+                            : normalize_native_column_order_value(sibling_order->second, 1);
+
+                    if (target_order > current_order &&
+                        sibling_value > current_order &&
+                        sibling_value <= target_order)
+                    {
+                        sibling_column->properties["columnorder"] =
+                            make_number_value(static_cast<double>(sibling_value - 1));
+                    }
+                    else if (target_order < current_order &&
+                             sibling_value >= target_order &&
+                             sibling_value < current_order)
+                    {
+                        sibling_column->properties["columnorder"] =
+                            make_number_value(static_cast<double>(sibling_value + 1));
+                    }
+                }
+            }
+
+            runtime_object.properties["columnorder"] = make_number_value(static_cast<double>(target_order));
+            return true;
+        }
+
         void seed_native_visual_properties(RuntimeOleObjectState &runtime_object)
         {
             const std::string normalized_base_class =
@@ -283,6 +456,13 @@
                 !runtime_object.properties.contains("dynamiccurrentcontrol"))
             {
                 runtime_object.properties["dynamiccurrentcontrol"] = make_string_value("Text1");
+            }
+
+            if (normalized_base_class == "column" &&
+                !runtime_object.properties.contains("columnorder"))
+            {
+                runtime_object.properties["columnorder"] =
+                    make_number_value(static_cast<double>(next_native_grid_column_order(runtime_object)));
             }
 
             if (normalized_base_class == "grid" &&
@@ -1643,6 +1823,12 @@
                     assign_native_runtime_object_name(*child_object, child_name_text);
 
                     runtime_object->properties[child_name] = make_runtime_object_reference(*child_object);
+                    if (child_object->properties.contains("columnorder"))
+                    {
+                        (void)write_native_columnorder_property(
+                            *child_object,
+                            child_object->properties["columnorder"]);
+                    }
                     runtime_object->last_action = "addobject(" + child_name + "," + child_declaration.class_name + ")";
                     ++runtime_object->action_count;
                     events.push_back({.category = "prg.object.addobject",
