@@ -6706,6 +6706,92 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_form_minbutton_defaults_mutates_and_stays_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_form_minbutton";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_form_minbutton.prg";
+        write_text(
+            main_path,
+            "oBaseForm = CREATEOBJECT('Form')\n"
+            "lBaseHasMinButton = PEMSTATUS(oBaseForm, 'MinButton', 1)\n"
+            "lBaseMinButtonReadOnly = PEMSTATUS(oBaseForm, 'MinButton', 5)\n"
+            "lBaseBefore = oBaseForm.MinButton\n"
+            "xBaseGetPemBefore = GETPEM(oBaseForm, 'MinButton')\n"
+            "oBaseForm.MinButton = .F.\n"
+            "lBaseAfterDirectAssign = oBaseForm.MinButton\n"
+            "lBaseSetPem = SETPEM(oBaseForm, 'MinButton', .T.)\n"
+            "lBaseAfterSetPem = oBaseForm.MinButton\n"
+            "lBaseAddProperty = ADDPROPERTY(oBaseForm, 'MinButton', .F.)\n"
+            "lBaseRemoveProperty = REMOVEPROPERTY(oBaseForm, 'MinButton')\n"
+            "oDerived = CREATEOBJECT('DemoForm')\n"
+            "lDerivedBefore = oDerived.MinButton\n"
+            "cChildBefore = oDerived.cmdSave.ReadMinButton()\n"
+            "oDerived.cmdSave.DisableMinimize()\n"
+            "lDerivedAfterChild = oDerived.MinButton\n"
+            "xDerivedGetPem = GETPEM(oDerived, 'MinButton')\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oDerived, 1)\n"
+            "lPropHasMinButton = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'MINBUTTON'\n"
+            "        lPropHasMinButton = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "RETURN\n"
+            "DEFINE CLASS SaveButton AS CommandButton\n"
+            "    FUNCTION ReadMinButton\n"
+            "        RETURN IIF(THISFORM.MinButton, 'T', 'F')\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE DisableMinimize\n"
+            "        THISFORM.MinButton = .F.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DemoForm AS Form\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Form MinButton property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lbasehasminbutton", "true");
+        check("lbaseminbuttonreadonly", "false");
+        check("lbasebefore", "true");
+        check("xbasegetpembefore", "true");
+        check("lbaseafterdirectassign", "false");
+        check("lbasesetpem", "true");
+        check("lbaseaftersetpem", "true");
+        check("lbaseaddproperty", "false");
+        check("lbaseremoveproperty", "false");
+        check("lderivedbefore", "true");
+        check("cchildbefore", "T");
+        check("lderivedafterchild", "false");
+        check("xderivedgetpem", "false");
+        check("lprophasminbutton", "true");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_visual_enabled_defaults_mutates_and_stays_builtin()
     {
         namespace fs = std::filesystem;
@@ -45606,6 +45692,7 @@ int main()
     test_native_form_showwindow_defaults_mutates_and_stays_builtin();
     test_native_form_controlbox_defaults_mutates_and_stays_builtin();
     test_native_form_closable_defaults_mutates_and_stays_builtin();
+    test_native_form_minbutton_defaults_mutates_and_stays_builtin();
     test_native_setfocus_builtin_fallback_updates_owner_activecontrol();
     test_native_setfocus_override_wins_over_builtin_activecontrol_toggle();
     test_runtime_application_activeform_aliases_track_representative_native_form();
