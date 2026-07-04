@@ -7577,8 +7577,25 @@
                 else
                 {
                     // RELEASE <varlist>
+                    std::set<int> released_special_handles;
                     for (const auto &raw : statement.names)
                     {
+                        const std::string normalized_name =
+                            normalize_memory_variable_identifier(trim_copy(raw));
+                        if (normalized_name == "thisform" || normalized_name == "thisformset")
+                        {
+                            const auto local = frame.locals.find(normalized_name);
+                            if (local != frame.locals.end())
+                            {
+                                if (auto runtime_object = resolve_ole_object(local->second);
+                                    runtime_object.has_value() &&
+                                    released_special_handles.insert((*runtime_object)->handle).second)
+                                {
+                                    (void)release_native_object(**runtime_object, normalized_name);
+                                    continue;
+                                }
+                            }
+                        }
                         release_memory_binding(frame, raw, true);
                     }
                 }

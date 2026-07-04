@@ -38926,6 +38926,114 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_release_thisform_command_releases_owner_form()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_release_thisform";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_release_thisform.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "lReleaseReturned = oForm.cmdClose.CloseOwner()\n"
+            "RETURN\n"
+            "DEFINE CLASS CloseButton AS CommandButton\n"
+            "    FUNCTION CloseOwner\n"
+            "        RELEASE THISFORM\n"
+            "        lMethodContinued = .T.\n"
+            "        RETURN .T.\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    ADD OBJECT cmdClose AS CloseButton\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native RELEASE THISFORM script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lreleasereturned", "true");
+        check("lmethodcontinued", "true");
+
+        expect(state.ole_objects.empty(),
+               "native RELEASE THISFORM should tear down the owner form and its child objects");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_native_release_thisformset_command_releases_owner_alias()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_release_thisformset";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_release_thisformset.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "lReleaseReturned = oForm.cmdClose.CloseOwner()\n"
+            "RETURN\n"
+            "DEFINE CLASS CloseButton AS CommandButton\n"
+            "    FUNCTION CloseOwner\n"
+            "        RELEASE THISFORMSET\n"
+            "        lMethodContinued = .T.\n"
+            "        RETURN .T.\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    ADD OBJECT cmdClose AS CloseButton\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native RELEASE THISFORMSET script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lreleasereturned", "true");
+        check("lmethodcontinued", "true");
+
+        expect(state.ole_objects.empty(),
+               "native RELEASE THISFORMSET should tear down the representative owner alias and its child objects");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_resettodefault_builtin_fallback_restores_inherited_defaults()
     {
         namespace fs = std::filesystem;
@@ -44414,6 +44522,8 @@ int main()
     test_native_setfocus_builtin_fallback_updates_owner_activecontrol();
     test_native_setfocus_override_wins_over_builtin_activecontrol_toggle();
     test_runtime_application_activeform_aliases_track_representative_native_form();
+    test_native_release_thisform_command_releases_owner_form();
+    test_native_release_thisformset_command_releases_owner_alias();
     test_native_resettodefault_builtin_fallback_restores_inherited_defaults();
     test_native_resettodefault_override_wins_over_builtin_default_restore();
     test_native_builtin_methods_reflect_through_pemstatus_getpem_and_amembers();
