@@ -7754,6 +7754,107 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_controlsource_defaults_mutates_and_stays_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_controlsource";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_controlsource.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('TextBox')\n"
+            "lPlainHasControlSource = PEMSTATUS(oPlain, 'ControlSource', 1)\n"
+            "lPlainControlSourceReadOnly = PEMSTATUS(oPlain, 'ControlSource', 5)\n"
+            "cPlainBefore = oPlain.ControlSource\n"
+            "xPlainGetPemBefore = GETPEM(oPlain, 'ControlSource')\n"
+            "oPlain.ControlSource = 'customer.first_name'\n"
+            "cPlainAfterDirectAssign = oPlain.ControlSource\n"
+            "lPlainSetPem = SETPEM(oPlain, 'ControlSource', 'customer.last_name')\n"
+            "cPlainAfterSetPem = oPlain.ControlSource\n"
+            "lPlainAddProperty = ADDPROPERTY(oPlain, 'ControlSource', 'shadow')\n"
+            "lPlainRemoveProperty = REMOVEPROPERTY(oPlain, 'ControlSource')\n"
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "cChildBefore = oForm.cboMonth.ControlSource\n"
+            "cChildRead = oForm.cmdProbe.ReadControlSource()\n"
+            "oForm.cmdProbe.BindMonth()\n"
+            "cChildAfterChild = oForm.cboMonth.ControlSource\n"
+            "lChildSetPem = SETPEM(oForm.cboMonth, 'ControlSource', 'invoice.fiscal_month')\n"
+            "cChildAfterSetPem = oForm.cboMonth.ControlSource\n"
+            "xChildGetPem = GETPEM(oForm.cboMonth, 'ControlSource')\n"
+            "lChildHasControlSource = PEMSTATUS(oForm.cboMonth, 'ControlSource', 1)\n"
+            "lChildControlSourceReadOnly = PEMSTATUS(oForm.cboMonth, 'ControlSource', 5)\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oForm.cboMonth, 1)\n"
+            "lPropHasControlSource = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'CONTROLSOURCE'\n"
+            "        lPropHasControlSource = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('BoundEdit')\n"
+            "cDerivedBefore = oDerived.ControlSource\n"
+            "RETURN\n"
+            "DEFINE CLASS ProbeButton AS CommandButton\n"
+            "    FUNCTION ReadControlSource\n"
+            "        RETURN THISFORM.cboMonth.ControlSource\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE BindMonth\n"
+            "        THISFORM.cboMonth.ControlSource = 'invoice.calendar_month'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    ADD OBJECT cboMonth AS ComboBox WITH ControlSource = 'invoice.report_month'\n"
+            "    ADD OBJECT cmdProbe AS ProbeButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS BoundEdit AS EditBox\n"
+            "    ControlSource = 'customer.notes'\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native ControlSource property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplainhascontrolsource", "true");
+        check("lplaincontrolsourcereadonly", "false");
+        check("cplainbefore", "");
+        check("xplaingetpembefore", "");
+        check("cplainafterdirectassign", "customer.first_name");
+        check("lplainsetpem", "true");
+        check("cplainaftersetpem", "customer.last_name");
+        check("lplainaddproperty", "false");
+        check("lplainremoveproperty", "false");
+        check("cchildbefore", "invoice.report_month");
+        check("cchildread", "invoice.report_month");
+        check("cchildafterchild", "invoice.calendar_month");
+        check("lchildsetpem", "true");
+        check("cchildaftersetpem", "invoice.fiscal_month");
+        check("xchildgetpem", "invoice.fiscal_month");
+        check("lchildhascontrolsource", "true");
+        check("lchildcontrolsourcereadonly", "false");
+        check("lprophascontrolsource", "true");
+        check("cderivedbefore", "customer.notes");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_combobox_style_defaults_mutate_and_stay_builtin()
     {
         namespace fs = std::filesystem;
@@ -47229,6 +47330,7 @@ int main()
     test_runtime_application_activeform_aliases_track_representative_native_form();
     test_runtime_application_caption_aliases_track_representative_caption();
     test_runtime_application_windowstate_aliases_track_representative_state();
+    test_native_controlsource_defaults_mutates_and_stays_builtin();
     test_native_visual_backcolor_defaults_mutate_and_stay_builtin();
     test_native_visual_forecolor_defaults_mutate_and_stay_builtin();
     test_native_release_thisform_command_releases_owner_form();

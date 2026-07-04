@@ -263,6 +263,16 @@
                 runtime_object.properties["value"] = make_string_value("");
             }
 
+            if ((normalized_base_class == "textbox" ||
+                 normalized_base_class == "combobox" ||
+                 normalized_base_class == "editbox" ||
+                 normalized_base_class == "checkbox" ||
+                 normalized_base_class == "spinner") &&
+                !runtime_object.properties.contains("controlsource"))
+            {
+                runtime_object.properties["controlsource"] = make_string_value("");
+            }
+
             if (normalized_base_class == "combobox" &&
                 !runtime_object.properties.contains("style"))
             {
