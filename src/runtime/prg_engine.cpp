@@ -3941,6 +3941,7 @@ namespace copperfin::runtime
                 !is_native_controlcount_member_name(runtime_object, normalized_property_name) &&
                 !is_native_child_collection_member_name(runtime_object, normalized_property_name) &&
                 !is_native_listcount_member_name(runtime_object, normalized_property_name) &&
+                !is_native_newindex_member_name(runtime_object, normalized_property_name) &&
                 !is_native_newitemid_member_name(runtime_object, normalized_property_name) &&
                 !is_native_name_member_name(runtime_object, normalized_property_name) &&
                 !is_native_splitbar_member_name(runtime_object, normalized_property_name) &&

@@ -10481,6 +10481,127 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_list_controls_newindex_stays_coherent()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_list_controls_newindex";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_list_controls_newindex.prg";
+        write_text(
+            main_path,
+            "oPlainCombo = CREATEOBJECT('ComboBox')\n"
+            "lHasNewIndex = PEMSTATUS(oPlainCombo, 'NewIndex', 1)\n"
+            "lNewIndexReadOnly = PEMSTATUS(oPlainCombo, 'NewIndex', 5)\n"
+            "xNewIndexBefore = GETPEM(oPlainCombo, 'NewIndex')\n"
+            "nPlainPropCount = AMEMBERS(aPlainProps, oPlainCombo, 1)\n"
+            "nPlainHasNewIndex = ASCAN(aPlainProps, 'NEWINDEX')\n"
+            "oPlainCombo.AddItem('March')\n"
+            "nNewIndexAfterAdd1 = oPlainCombo.NewIndex\n"
+            "oPlainCombo.AddItem('April')\n"
+            "nNewIndexAfterAdd2 = oPlainCombo.NewIndex\n"
+            "oPlainCombo.AddItem('February', 1)\n"
+            "nNewIndexAfterInsert = oPlainCombo.NewIndex\n"
+            "oPlainCombo.RemoveItem(1)\n"
+            "nNewIndexAfterRemoveInserted = oPlainCombo.NewIndex\n"
+            "oPlainCombo.AddListItem('Alpha', 10)\n"
+            "nNewIndexAfterAddListItem1 = oPlainCombo.NewIndex\n"
+            "oPlainCombo.AddListItem('Beta', 20)\n"
+            "nNewIndexAfterAddListItem2 = oPlainCombo.NewIndex\n"
+            "oPlainCombo.RemoveListItem(10)\n"
+            "nNewIndexAfterRemoveListItem = oPlainCombo.NewIndex\n"
+            "lSetPemNewIndex = SETPEM(oPlainCombo, 'NewIndex', 99)\n"
+            "lAddPropertyNewIndex = ADDPROPERTY(oPlainCombo, 'NewIndex', 99)\n"
+            "lRemovePropertyNewIndex = REMOVEPROPERTY(oPlainCombo, 'NewIndex')\n"
+            "oSeedList = CREATEOBJECT('SeededList')\n"
+            "nSeedCount = oSeedList.ListCount\n"
+            "nSeedNewIndex = oSeedList.NewIndex\n"
+            "cSeedItem1 = oSeedList.List(1)\n"
+            "cSeedItem2 = oSeedList.List(2)\n"
+            "RETURN\n"
+            "DEFINE CLASS SeededList AS ListBox\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddItem('North')\n"
+            "        THIS.AddItem('South')\n"
+            "        THIS.AddItem('East', 2)\n"
+            "        THIS.RemoveItem(1)\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native NewIndex list-control script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lhasnewindex", "true");
+        check("lnewindexreadonly", "true");
+        check("xnewindexbefore", "0");
+        check("nnewindexafteradd1", "1");
+        check("nnewindexafteradd2", "2");
+        check("nnewindexafterinsert", "1");
+        check("nnewindexafterremoveinserted", "0");
+        check("nnewindexafteraddlistitem1", "3");
+        check("nnewindexafteraddlistitem2", "4");
+        check("nnewindexafterremovelistitem", "3");
+        check("lsetpemnewindex", "false");
+        check("laddpropertynewindex", "false");
+        check("lremovepropertynewindex", "false");
+        check("nseedcount", "2");
+        check("nseednewindex", "1");
+        check("cseeditem1", "East");
+        check("cseeditem2", "South");
+
+        const auto plain_has_newindex = state.globals.find("nplainhasnewindex");
+        expect(plain_has_newindex != state.globals.end(),
+               "nPlainHasNewIndex variable should be present");
+        if (plain_has_newindex != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(plain_has_newindex->second) != "0",
+                   "AMEMBERS(..., 1) should expose the native NewIndex builtin for ComboBox");
+        }
+
+        expect(state.ole_objects.size() == 2U,
+               "native NewIndex coverage should register plain and derived list controls");
+        if (state.ole_objects.size() == 2U)
+        {
+            const auto &plain_combo = state.ole_objects[0];
+            const auto &seed_list = state.ole_objects[1];
+
+            const auto plain_newindex = plain_combo.properties.find("newindex");
+            const auto seed_newindex = seed_list.properties.find("newindex");
+
+            expect(plain_combo.collection_items.size() == 3U,
+                   "plain ComboBox NewIndex coverage should preserve the expected remaining row count");
+            expect(plain_newindex != plain_combo.properties.end() &&
+                       copperfin::runtime::format_value(plain_newindex->second) == "3",
+                   "plain ComboBox NewIndex coverage should keep the built-in property synchronized after RemoveListItem()");
+            expect(seed_list.collection_items.size() == 2U,
+                   "derived ListBox NewIndex coverage should preserve Init-time insert/remove row state");
+            expect(seed_newindex != seed_list.properties.end() &&
+                       copperfin::runtime::format_value(seed_newindex->second) == "1",
+                   "derived ListBox NewIndex coverage should keep the built-in property synchronized during Init");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_list_controls_listitemid_selection_stays_coherent()
     {
         namespace fs = std::filesystem;
@@ -50954,6 +51075,7 @@ int main()
     test_native_list_controls_additem_builtin_populates_runtime_items();
     test_native_list_controls_listcount_list_and_removeitem_stay_coherent();
     test_native_list_controls_addlistitem_newitemid_and_multicolumn_list_stay_coherent();
+    test_native_list_controls_newindex_stays_coherent();
     test_native_list_controls_listitemid_selection_stays_coherent();
     test_native_list_controls_selectedid_selection_stays_coherent();
     test_native_list_controls_removelistitem_stays_coherent();

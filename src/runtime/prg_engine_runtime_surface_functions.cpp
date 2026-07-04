@@ -799,6 +799,21 @@ bool remove_native_list_control_slot(
         listindex->second = make_number_value(static_cast<double>(selected_index));
     }
 
+    const auto newindex = runtime_object.properties.find("newindex");
+    if (newindex != runtime_object.properties.end()) {
+        long long last_added_index = std::llround(value_as_number(newindex->second));
+        const long long removed_index = static_cast<long long>(slot + 1U);
+        const long long new_count = static_cast<long long>(runtime_object.collection_items.size());
+        if (last_added_index == removed_index) {
+            last_added_index = 0LL;
+        } else if (last_added_index > removed_index) {
+            --last_added_index;
+        } else if (last_added_index > new_count) {
+            last_added_index = std::max(0LL, new_count);
+        }
+        newindex->second = make_number_value(static_cast<double>(last_added_index));
+    }
+
     sync_native_list_control_displayvalue_from_selection_impl(runtime_object);
     return true;
 }
@@ -1518,6 +1533,20 @@ bool native_listcount_member_name_matches(
     const std::string& normalized_member_name) {
     if (normalized_member_name != "listcount" ||
         !runtime_object.properties.contains("listcount")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "combobox" ||
+           normalized_base_class == "listbox";
+}
+
+bool native_newindex_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "newindex" ||
+        !runtime_object.properties.contains("newindex")) {
         return false;
     }
 
@@ -2399,6 +2428,11 @@ bool is_native_listcount_member_name(const RuntimeOleObjectState& runtime_object
     return native_listcount_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_newindex_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_newindex_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_newitemid_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_newitemid_member_name_matches(runtime_object, normalized_member_name);
@@ -2631,6 +2665,8 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
             runtime_object.list_selected.push_back(false);
             sync_native_list_control_primary_state_from_rows(runtime_object);
             sync_native_list_control_count_impl(runtime_object);
+            runtime_object.properties["newindex"] =
+                make_number_value(static_cast<double>(runtime_object.list_rows.size()));
             runtime_object.properties["newitemid"] = make_number_value(static_cast<double>(item_id));
             return make_number_value(static_cast<double>(item_id));
         }
@@ -2729,6 +2765,8 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
         false);
     sync_native_list_control_primary_state_from_rows(runtime_object);
     sync_native_list_control_count_impl(runtime_object);
+    runtime_object.properties["newindex"] =
+        make_number_value(static_cast<double>(*insert_slot + 1U));
     runtime_object.properties["newitemid"] = make_number_value(static_cast<double>(item_id));
 
     const auto listindex = runtime_object.properties.find("listindex");
@@ -2851,6 +2889,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         return get_native_identity_reflection_metadata(runtime_object, member_name).has_value() ||
                native_controlcount_member_name_matches(runtime_object, member_name) ||
                native_listcount_member_name_matches(runtime_object, member_name) ||
+               native_newindex_member_name_matches(runtime_object, member_name) ||
                native_newitemid_member_name_matches(runtime_object, member_name) ||
                native_listitemid_member_name_matches(runtime_object, member_name) ||
                native_visual_geometry_member_name_matches(runtime_object, member_name) ||
@@ -2866,6 +2905,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         return get_native_identity_reflection_metadata(runtime_object, member_name).has_value() ||
                native_controlcount_member_name_matches(runtime_object, member_name) ||
                native_listcount_member_name_matches(runtime_object, member_name) ||
+               native_newindex_member_name_matches(runtime_object, member_name) ||
                native_newitemid_member_name_matches(runtime_object, member_name) ||
                native_child_collection_member_name_matches(runtime_object, member_name) ||
                is_native_splitbar_member_name(runtime_object, member_name) ||
@@ -3140,6 +3180,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_listindex_member_name(*runtime_object, property_name) ||
             is_native_displayvalue_member_name(*runtime_object, property_name) ||
             is_native_listcount_member_name(*runtime_object, property_name) ||
+            is_native_newindex_member_name(*runtime_object, property_name) ||
             is_native_newitemid_member_name(*runtime_object, property_name) ||
             is_native_listitemid_member_name(*runtime_object, property_name) ||
             is_native_boundcolumn_member_name(*runtime_object, property_name) ||
@@ -3274,6 +3315,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         if (native_child_parent_member_name_matches(*runtime_object, member_name) ||
             is_native_controlcount_member_name(*runtime_object, member_name) ||
             is_native_listcount_member_name(*runtime_object, member_name) ||
+            is_native_newindex_member_name(*runtime_object, member_name) ||
             is_native_newitemid_member_name(*runtime_object, member_name) ||
             is_native_child_collection_member_name(*runtime_object, member_name) ||
             is_native_name_member_name(*runtime_object, member_name) ||
@@ -3434,6 +3476,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_listindex_member_name(*runtime_object, property_name) ||
             is_native_displayvalue_member_name(*runtime_object, property_name) ||
             is_native_listcount_member_name(*runtime_object, property_name) ||
+            is_native_newindex_member_name(*runtime_object, property_name) ||
             is_native_newitemid_member_name(*runtime_object, property_name) ||
             is_native_listitemid_member_name(*runtime_object, property_name) ||
             is_native_boundcolumn_member_name(*runtime_object, property_name) ||
