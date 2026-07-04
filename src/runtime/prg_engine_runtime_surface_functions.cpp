@@ -973,6 +973,17 @@ bool native_recordsource_member_name_matches(
     return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "grid";
 }
 
+bool native_allowaddnew_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "allowaddnew" ||
+        !runtime_object.properties.contains("allowaddnew")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "grid";
+}
+
 bool native_allowcellselection_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
@@ -1753,6 +1764,11 @@ bool is_native_recordsource_member_name(const RuntimeOleObjectState& runtime_obj
     return native_recordsource_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_allowaddnew_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_allowaddnew_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_allowcellselection_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_allowcellselection_member_name_matches(runtime_object, normalized_member_name);
@@ -2313,6 +2329,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_control_readonly_member_name(*runtime_object, property_name) ||
             is_native_string_control_value_member_name(*runtime_object, property_name) ||
             is_native_controlsource_member_name(*runtime_object, property_name) ||
+            is_native_allowaddnew_member_name(*runtime_object, property_name) ||
             is_native_allowcellselection_member_name(*runtime_object, property_name) ||
             is_native_gridlines_member_name(*runtime_object, property_name) ||
             is_native_highlight_member_name(*runtime_object, property_name) ||
@@ -2549,6 +2566,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_control_readonly_member_name(*runtime_object, property_name) ||
             is_native_string_control_value_member_name(*runtime_object, property_name) ||
             is_native_controlsource_member_name(*runtime_object, property_name) ||
+            is_native_allowaddnew_member_name(*runtime_object, property_name) ||
             is_native_allowcellselection_member_name(*runtime_object, property_name) ||
             is_native_gridlines_member_name(*runtime_object, property_name) ||
             is_native_highlight_member_name(*runtime_object, property_name) ||

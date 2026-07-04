@@ -298,6 +298,12 @@
             }
 
             if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("allowaddnew"))
+            {
+                runtime_object.properties["allowaddnew"] = make_boolean_value(false);
+            }
+
+            if (normalized_base_class == "grid" &&
                 !runtime_object.properties.contains("gridlines"))
             {
                 runtime_object.properties["gridlines"] = make_number_value(3.0);
@@ -1257,6 +1263,8 @@
             if (is_native_identity_member_name(runtime_object, normalized_property_name) ||
                 is_native_controlcount_member_name(runtime_object, normalized_property_name) ||
                 is_native_name_member_name(runtime_object, normalized_property_name) ||
+                is_native_splitbar_member_name(runtime_object, normalized_property_name) ||
+                is_native_leftcolumn_member_name(runtime_object, normalized_property_name) ||
                 is_native_olecontrol_creation_time_member_name(runtime_object, normalized_property_name) ||
                 is_native_olecontrol_object_member_name(runtime_object, normalized_property_name) ||
                 is_native_olecontrol_inspection_member_name(runtime_object, normalized_property_name) ||

@@ -8661,6 +8661,107 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_allowaddnew_default_mutates_and_stays_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_allowaddnew";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_allowaddnew.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('Grid')\n"
+            "lPlainHasAllowAddNew = PEMSTATUS(oPlain, 'AllowAddNew', 1)\n"
+            "lPlainAllowAddNewReadOnly = PEMSTATUS(oPlain, 'AllowAddNew', 5)\n"
+            "lPlainBefore = oPlain.AllowAddNew\n"
+            "xPlainGetPemBefore = GETPEM(oPlain, 'AllowAddNew')\n"
+            "oPlain.AllowAddNew = .T.\n"
+            "lPlainAfterDirectAssign = oPlain.AllowAddNew\n"
+            "lPlainSetPem = SETPEM(oPlain, 'AllowAddNew', .F.)\n"
+            "lPlainAfterSetPem = oPlain.AllowAddNew\n"
+            "lPlainAddProperty = ADDPROPERTY(oPlain, 'AllowAddNew', .T.)\n"
+            "lPlainRemoveProperty = REMOVEPROPERTY(oPlain, 'AllowAddNew')\n"
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "lGridBefore = oForm.grdCust.AllowAddNew\n"
+            "lGridRead = oForm.cmdProbe.ReadAllowAddNew()\n"
+            "oForm.cmdProbe.RestyleGrid()\n"
+            "lGridAfterChild = oForm.grdCust.AllowAddNew\n"
+            "lGridSetPem = SETPEM(oForm.grdCust, 'AllowAddNew', .T.)\n"
+            "lGridAfterSetPem = oForm.grdCust.AllowAddNew\n"
+            "xGridGetPem = GETPEM(oForm.grdCust, 'AllowAddNew')\n"
+            "lGridHasAllowAddNew = PEMSTATUS(oForm.grdCust, 'AllowAddNew', 1)\n"
+            "lGridAllowAddNewReadOnly = PEMSTATUS(oForm.grdCust, 'AllowAddNew', 5)\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oForm.grdCust, 1)\n"
+            "lPropHasAllowAddNew = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'ALLOWADDNEW'\n"
+            "        lPropHasAllowAddNew = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('StyledGrid')\n"
+            "lDerivedBefore = oDerived.AllowAddNew\n"
+            "RETURN\n"
+            "DEFINE CLASS ProbeButton AS CommandButton\n"
+            "    FUNCTION ReadAllowAddNew\n"
+            "        RETURN THISFORM.grdCust.AllowAddNew\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE RestyleGrid\n"
+            "        THISFORM.grdCust.AllowAddNew = .F.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    ADD OBJECT grdCust AS Grid WITH AllowAddNew = .T.\n"
+            "    ADD OBJECT cmdProbe AS ProbeButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS StyledGrid AS Grid\n"
+            "    AllowAddNew = .T.\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native AllowAddNew property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplainhasallowaddnew", "true");
+        check("lplainallowaddnewreadonly", "false");
+        check("lplainbefore", "false");
+        check("xplaingetpembefore", "false");
+        check("lplainafterdirectassign", "true");
+        check("lplainsetpem", "true");
+        check("lplainaftersetpem", "false");
+        check("lplainaddproperty", "false");
+        check("lplainremoveproperty", "false");
+        check("lgridbefore", "true");
+        check("lgridread", "true");
+        check("lgridafterchild", "false");
+        check("lgridsetpem", "true");
+        check("lgridaftersetpem", "true");
+        check("xgridgetpem", "true");
+        check("lgridhasallowaddnew", "true");
+        check("lgridallowaddnewreadonly", "false");
+        check("lprophasallowaddnew", "true");
+        check("lderivedbefore", "true");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_recordsourcetype_defaults_mutates_and_stays_builtin()
     {
         namespace fs = std::filesystem;
@@ -48921,6 +49022,7 @@ int main()
     test_native_grid_display_properties_default_mutate_and_stay_builtin();
     test_native_deletemark_default_mutates_and_stays_builtin();
     test_native_splitbar_defaults_are_runtime_readonly_and_stay_builtin();
+    test_native_allowaddnew_default_mutates_and_stays_builtin();
     test_native_recordsourcetype_defaults_mutates_and_stays_builtin();
     test_native_rowsource_defaults_mutates_and_stays_builtin();
     test_native_rowsourcetype_defaults_mutates_and_stays_builtin();
