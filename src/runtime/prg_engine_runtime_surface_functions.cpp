@@ -1882,29 +1882,57 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
     if (function == "cpdbf") {
         return make_number_value(1252.0);
     }
-    // GETPICT([cTitle [, cFileName]]) — headless stub: record event and return ""
+    // GETPICT([cTitle [, cFileName]]) — headless contract: emit payload and preserve
+    // the current selection when the host does not provide a replacement.
     if (function == "getpict") {
         const std::string title = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
+        const std::string current_file = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{};
         if (record_event_callback) {
-            record_event_callback("runtime.getpict", title);
+            std::ostringstream detail;
+            detail << "mode=headless";
+            detail << " title=" << std::quoted(title);
+            detail << " current=" << std::quoted(current_file);
+            detail << " result=" << std::quoted(current_file);
+            record_event_callback("runtime.getpict", detail.str());
         }
-        return make_string_value({});
+        return make_string_value(current_file);
     }
-    // GETCOLOR([nDefaultColor [, cTitle]]) — headless stub: record event and return 0
+    // GETCOLOR([nDefaultColor [, cTitle]]) — headless contract: emit payload and
+    // preserve the provided default color when the host does not override it.
     if (function == "getcolor") {
+        const double default_color = arguments.empty() ? 0.0 : value_as_number(arguments[0]);
         const std::string title = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{};
         if (record_event_callback) {
-            record_event_callback("runtime.getcolor", title);
+            std::ostringstream detail;
+            detail << "mode=headless";
+            detail << " default=" << std::llround(default_color);
+            detail << " title=" << std::quoted(title);
+            detail << " result=" << std::llround(default_color);
+            record_event_callback("runtime.getcolor", detail.str());
         }
-        return make_number_value(0.0);
+        return make_number_value(default_color);
     }
-    // GETFONT(cFontName [, nFontSize [, cFontStyle]]) — headless stub: record event and return ""
-    if (function == "getfont" && !arguments.empty()) {
-        const std::string font_name = value_as_string(arguments[0]);
+    // GETFONT([cFontName [, nFontSize [, cFontStyle]]]) — headless contract: emit
+    // payload and preserve the provided current font when the host does not override it.
+    if (function == "getfont") {
+        const std::string font_name = !arguments.empty() ? value_as_string(arguments[0]) : std::string{};
+        const long long font_size =
+            arguments.size() >= 2U ? std::llround(value_as_number(arguments[1])) : 0LL;
+        const std::string font_style = arguments.size() >= 3U ? value_as_string(arguments[2]) : std::string{};
         if (record_event_callback) {
-            record_event_callback("runtime.getfont", font_name);
+            std::ostringstream detail;
+            detail << "mode=headless";
+            detail << " name=" << std::quoted(font_name);
+            if (arguments.size() >= 2U) {
+                detail << " size=" << font_size;
+            }
+            if (arguments.size() >= 3U) {
+                detail << " style=" << std::quoted(font_style);
+            }
+            detail << " result=" << std::quoted(font_name);
+            record_event_callback("runtime.getfont", detail.str());
         }
-        return make_string_value({});
+        return make_string_value(font_name);
     }
     // VARREAD() — name of variable currently being read/edited (interactive mode only)
     // Returns "" in headless runtime.

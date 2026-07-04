@@ -42605,12 +42605,12 @@ namespace
             "cCpConverted    = CPCONVERT(1252, 1252, 'hello')\n"
             // CPDBF first-pass stub
             "nCpDbf          = CPDBF()\n"
-            // GETPICT headless stub
-            "cPict           = GETPICT('Select Image')\n"
-            // GETCOLOR headless stub
-            "nColor          = GETCOLOR()\n"
-            // GETFONT headless stub
-            "cFont           = GETFONT('Arial')\n"
+            // GETPICT headless contract
+            "cPict           = GETPICT('Select Image', 'current.bmp')\n"
+            // GETCOLOR headless contract
+            "nColor          = GETCOLOR(255, 'Pick Accent')\n"
+            // GETFONT headless contract
+            "cFont           = GETFONT('Arial', 12, 'B')\n"
             // VARREAD headless stub
             "cVarRead        = VARREAD()\n"
             // NEWID unique identifiers
@@ -42642,13 +42642,62 @@ namespace
         check("ncpcurrentuni",  "65001");
         check("ccpconverted",   "hello");
         check("ncpdbf",         "1252");
-        check("cpict",          "");
-        check("ncolor",         "0");
-        check("cfont",          "");
+        check("cpict",          "current.bmp");
+        check("ncolor",         "255");
+        check("cfont",          "Arial");
         check("cvarread",       "");
         check("lidsdistinct",   "true");
         // UUID: 8-4-4-4-12 hex = 36 characters
         check("nidlen", "36");
+
+        const auto find_event = [&](const std::string& category) -> const copperfin::runtime::RuntimeEvent* {
+            for (const auto& event : state.events) {
+                if (event.category == category) {
+                    return &event;
+                }
+            }
+            return nullptr;
+        };
+
+        const auto* getpict_event = find_event("runtime.getpict");
+        const auto* getcolor_event = find_event("runtime.getcolor");
+        const auto* getfont_event = find_event("runtime.getfont");
+        expect(getpict_event != nullptr, "GETPICT function should emit a runtime.getpict event");
+        expect(getcolor_event != nullptr, "GETCOLOR function should emit a runtime.getcolor event");
+        expect(getfont_event != nullptr, "GETFONT function should emit a runtime.getfont event");
+
+        if (getpict_event != nullptr) {
+            expect(getpict_event->detail.find("mode=headless") != std::string::npos,
+                "GETPICT event should declare the headless compatibility mode");
+            expect(getpict_event->detail.find("title=\"Select Image\"") != std::string::npos,
+                "GETPICT event should include the requested title");
+            expect(getpict_event->detail.find("current=\"current.bmp\"") != std::string::npos,
+                "GETPICT event should include the current file selection");
+            expect(getpict_event->detail.find("result=\"current.bmp\"") != std::string::npos,
+                "GETPICT event should include the deterministic fallback result");
+        }
+        if (getcolor_event != nullptr) {
+            expect(getcolor_event->detail.find("mode=headless") != std::string::npos,
+                "GETCOLOR event should declare the headless compatibility mode");
+            expect(getcolor_event->detail.find("default=255") != std::string::npos,
+                "GETCOLOR event should include the requested default color");
+            expect(getcolor_event->detail.find("title=\"Pick Accent\"") != std::string::npos,
+                "GETCOLOR event should include the requested title");
+            expect(getcolor_event->detail.find("result=255") != std::string::npos,
+                "GETCOLOR event should include the deterministic fallback result");
+        }
+        if (getfont_event != nullptr) {
+            expect(getfont_event->detail.find("mode=headless") != std::string::npos,
+                "GETFONT event should declare the headless compatibility mode");
+            expect(getfont_event->detail.find("name=\"Arial\"") != std::string::npos,
+                "GETFONT event should include the requested font name");
+            expect(getfont_event->detail.find("size=12") != std::string::npos,
+                "GETFONT event should include the requested font size");
+            expect(getfont_event->detail.find("style=\"B\"") != std::string::npos,
+                "GETFONT event should include the requested font style");
+            expect(getfont_event->detail.find("result=\"Arial\"") != std::string::npos,
+                "GETFONT event should include the deterministic fallback result");
+        }
 
         fs::remove_all(temp_root, ignored);
     }
