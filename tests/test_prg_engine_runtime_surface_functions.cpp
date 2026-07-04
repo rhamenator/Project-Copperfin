@@ -37527,6 +37527,154 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_move_builtin_fallback_updates_visual_geometry()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_move_builtin";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_move_builtin.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "oForm.Move(-5000)\n"
+            "oForm.cmdSave.Move(30, 40, 120, 22)\n"
+            "nFormLeft = oForm.Left\n"
+            "nFormTop = oForm.Top\n"
+            "nFormWidth = oForm.Width\n"
+            "nFormHeight = oForm.Height\n"
+            "nButtonLeft = oForm.cmdSave.Left\n"
+            "nButtonTop = oForm.cmdSave.Top\n"
+            "nButtonWidth = oForm.cmdSave.Width\n"
+            "nButtonHeight = oForm.cmdSave.Height\n"
+            "RETURN\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    Left = 11\n"
+            "    Top = 12\n"
+            "    Width = 200\n"
+            "    Height = 150\n"
+            "    ADD OBJECT cmdSave AS CommandButton\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Move builtin fallback script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " variable not found");
+            if (it != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(it->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(it->second) + "'");
+            }
+        };
+
+        check("nformleft", "-5000");
+        check("nformtop", "12");
+        check("nformwidth", "200");
+        check("nformheight", "150");
+        check("nbuttonleft", "30");
+        check("nbuttontop", "40");
+        check("nbuttonwidth", "120");
+        check("nbuttonheight", "22");
+
+        const std::size_t move_event_count = static_cast<std::size_t>(std::count_if(
+            state.events.begin(),
+            state.events.end(),
+            [](const auto &event)
+            {
+                return event.category == "prg.object.move";
+            }));
+        expect(move_event_count == 2U,
+               "native Move builtin fallback should emit one move event per representative move call");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_native_move_override_wins_over_builtin_geometry_updates()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_move_override";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_move_override.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MoveForm')\n"
+            "oForm.Move(55, 66, 77, 88)\n"
+            "lMoveRan = oForm.lMoveRan\n"
+            "nLeft = oForm.Left\n"
+            "nTop = oForm.Top\n"
+            "nWidth = oForm.Width\n"
+            "nHeight = oForm.Height\n"
+            "RETURN\n"
+            "DEFINE CLASS MoveForm AS Form\n"
+            "    Left = 11\n"
+            "    Top = 12\n"
+            "    Width = 200\n"
+            "    Height = 150\n"
+            "    lMoveRan = .F.\n"
+            "    PROCEDURE Move\n"
+            "        LPARAMETERS tnLeft, tnTop, tnWidth, tnHeight\n"
+            "        THIS.lMoveRan = .T.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Move override script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " variable not found");
+            if (it != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(it->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(it->second) + "'");
+            }
+        };
+
+        check("lmoveran", "true");
+        check("nleft", "11");
+        check("ntop", "12");
+        check("nwidth", "200");
+        check("nheight", "150");
+
+        const bool has_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   event.detail == "MoveForm.Move";
+        });
+        expect(has_invoke_event,
+               "native Move override should emit a prg.object.invoke event");
+
+        const bool has_builtin_move_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.move";
+        });
+        expect(!has_builtin_move_event,
+               "native Move override should not emit the builtin prg.object.move event");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_show_hide_builtin_fallback_updates_visible_state()
     {
         namespace fs = std::filesystem;
@@ -37973,19 +38121,23 @@ namespace
             main_path,
             "oForm = CREATEOBJECT('MainForm')\n"
             "lHasRefresh = PEMSTATUS(oForm, 'Refresh', 1)\n"
+            "lHasMove = PEMSTATUS(oForm, 'Move', 1)\n"
             "lHasShow = PEMSTATUS(oForm, 'Show', 1)\n"
             "lHasHide = PEMSTATUS(oForm, 'Hide', 1)\n"
             "lHasReset = PEMSTATUS(oForm, 'ResetToDefault', 1)\n"
             "lHasTextSetFocus = PEMSTATUS(oForm.txtName, 'SetFocus', 1)\n"
+            "lMoveReadOnly = PEMSTATUS(oForm, 'Move', 5)\n"
             "lShowReadOnly = PEMSTATUS(oForm, 'Show', 5)\n"
             "lResetReadOnly = PEMSTATUS(oForm, 'ResetToDefault', 5)\n"
             "lTextSetFocusReadOnly = PEMSTATUS(oForm.txtName, 'SetFocus', 5)\n"
+            "lGetMove = GETPEM(oForm, 'Move')\n"
             "lGetShow = GETPEM(oForm, 'Show')\n"
             "lGetReset = GETPEM(oForm, 'ResetToDefault')\n"
             "lGetTextSetFocus = GETPEM(oForm.txtName, 'SetFocus')\n"
             "nFormMethods = AMEMBERS(aFormMethods, oForm, 2)\n"
             "nFormUnion = AMEMBERS(aFormUnion, oForm, 3)\n"
             "nTextMethods = AMEMBERS(aTextMethods, oForm.txtName, 2)\n"
+            "nFormHasMove = ASCAN(aFormMethods, 'MOVE')\n"
             "nFormHasRefresh = ASCAN(aFormMethods, 'REFRESH')\n"
             "nFormHasShow = ASCAN(aFormMethods, 'SHOW')\n"
             "nFormHasHide = ASCAN(aFormMethods, 'HIDE')\n"
@@ -38017,13 +38169,16 @@ namespace
         };
 
         check("lhasrefresh", "true");
+        check("lhasmove", "true");
         check("lhasshow", "true");
         check("lhashide", "true");
         check("lhasreset", "true");
         check("lhastextsetfocus", "true");
+        check("lmovereadonly", "false");
         check("lshowreadonly", "false");
         check("lresetreadonly", "false");
         check("ltextsetfocusreadonly", "false");
+        check("lgetmove", "true");
         check("lgetshow", "true");
         check("lgetreset", "true");
         check("lgettextsetfocus", "true");
@@ -38039,6 +38194,8 @@ namespace
             }
         };
 
+        expect_positive("nformhasmove",
+                        "AMEMBERS(..., 2) should expose the shipped native Move builtin");
         expect_positive("nformhasrefresh",
                         "AMEMBERS(..., 2) should expose the shipped native Refresh builtin");
         expect_positive("nformhasshow",
@@ -43026,6 +43183,8 @@ int main()
     test_native_setall_recurses_over_descendants_and_honors_class_filters();
     test_bare_dotted_native_refresh_statement_invokes_same_prg_override();
     test_native_refresh_builtin_fallback_succeeds_for_form_and_children();
+    test_native_move_builtin_fallback_updates_visual_geometry();
+    test_native_move_override_wins_over_builtin_geometry_updates();
     test_native_show_hide_builtin_fallback_updates_visible_state();
     test_native_show_override_wins_over_builtin_visible_toggle();
     test_native_setfocus_builtin_fallback_updates_owner_activecontrol();

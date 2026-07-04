@@ -1213,6 +1213,56 @@ namespace copperfin::runtime
                 {
                     return *native_result;
                 }
+                if (leaf == "move" &&
+                    is_native_visual_runtime_object(*runtime_object))
+                {
+                    if (arguments.empty())
+                    {
+                        return make_empty_value();
+                    }
+
+                    const bool left_written = write_native_property_if_present(
+                        *runtime_object,
+                        "left",
+                        make_number_value(value_as_number(arguments[0])),
+                        frame);
+                    if (!left_written)
+                    {
+                        return make_empty_value();
+                    }
+
+                    if (arguments.size() >= 2U)
+                    {
+                        (void)write_native_property_if_present(
+                            *runtime_object,
+                            "top",
+                            make_number_value(value_as_number(arguments[1])),
+                            frame);
+                    }
+                    if (arguments.size() >= 3U)
+                    {
+                        (void)write_native_property_if_present(
+                            *runtime_object,
+                            "width",
+                            make_number_value(value_as_number(arguments[2])),
+                            frame);
+                    }
+                    if (arguments.size() >= 4U)
+                    {
+                        (void)write_native_property_if_present(
+                            *runtime_object,
+                            "height",
+                            make_number_value(value_as_number(arguments[3])),
+                            frame);
+                    }
+
+                    runtime_object->last_action = effective_member_path + "()";
+                    ++runtime_object->action_count;
+                    events.push_back({.category = "prg.object.move",
+                                      .detail = runtime_object->prog_id + "." + effective_member_path,
+                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                    return make_empty_value();
+                }
                 if (leaf == "refresh" && !runtime_object->class_hierarchy.empty())
                 {
                     runtime_object->last_action = effective_member_path + "()";

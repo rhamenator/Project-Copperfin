@@ -240,6 +240,11 @@ bool is_builtin_native_runtime_method_name(
         return true;
     }
 
+    if (normalized_member_name == "move" &&
+        is_native_visual_runtime_object(runtime_object)) {
+        return true;
+    }
+
     if ((normalized_member_name == "show" || normalized_member_name == "hide") &&
         is_native_visual_runtime_object(runtime_object)) {
         return true;
@@ -687,6 +692,9 @@ std::vector<std::string> collect_object_member_names(const RuntimeOleObjectState
         }
         if (is_builtin_native_runtime_method_name(runtime_object, "refresh")) {
             unique_members.insert("refresh");
+        }
+        if (is_builtin_native_runtime_method_name(runtime_object, "move")) {
+            unique_members.insert("move");
         }
         if (is_builtin_native_runtime_method_name(runtime_object, "show")) {
             unique_members.insert("show");
