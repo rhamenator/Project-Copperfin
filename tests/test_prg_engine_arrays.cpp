@@ -4,6 +4,7 @@
 
 #include "copperfin/runtime/prg_engine.h"
 #include "prg_engine_test_support.h"
+#include "test_environment_support.h"
 
 #include <cstdlib>
 #include <filesystem>
@@ -936,31 +937,124 @@ void test_afont_returns_host_aware_font_array_with_deterministic_size_contract()
     fs::remove_all(temp_root, ignored);
 }
 
-void test_aprinters_returns_non_empty_array() {
+void test_aprinters_supports_injected_enumeration_and_deterministic_no_printer_fallback() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_aprinters";
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
-    const fs::path main_path = temp_root / "aprinters.prg";
+    const fs::path fake_path = temp_root / "fake-bin";
+    const fs::path empty_path = temp_root / "empty-bin";
+    fs::create_directories(fake_path);
+    fs::create_directories(empty_path);
+
+#if defined(_WIN32)
+    const fs::path fake_lpstat = fake_path / "lpstat.cmd";
+    write_text(
+        fake_lpstat,
+        "@echo off\r\n"
+        "if \"%1\"==\"-a\" (\r\n"
+        "  echo Office_Printer accepting requests since Sat Jul 4 01:00:11 2026\r\n"
+        "  echo Label_Printer accepting requests since Sat Jul 4 01:00:18 2026\r\n"
+        "  exit /b 0\r\n"
+        ")\r\n"
+        "if \"%1\"==\"-p\" (\r\n"
+        "  echo printer Office_Printer is idle. enabled since Sat Jul 4 01:00:11 2026\r\n"
+        "  echo printer Label_Printer is idle. enabled since Sat Jul 4 01:00:18 2026\r\n"
+        "  exit /b 0\r\n"
+        ")\r\n"
+        "exit /b 0\r\n");
+#else
+    const fs::path fake_lpstat = fake_path / "lpstat";
+    write_text(
+        fake_lpstat,
+        "#!/bin/sh\n"
+        "if [ \"$1\" = \"-a\" ]; then\n"
+        "  echo \"Office_Printer accepting requests since Sat Jul 4 01:00:11 2026\"\n"
+        "  echo \"Label_Printer accepting requests since Sat Jul 4 01:00:18 2026\"\n"
+        "  exit 0\n"
+        "fi\n"
+        "if [ \"$1\" = \"-p\" ]; then\n"
+        "  echo \"printer Office_Printer is idle. enabled since Sat Jul 4 01:00:11 2026\"\n"
+        "  echo \"printer Label_Printer is idle. enabled since Sat Jul 4 01:00:18 2026\"\n"
+        "  exit 0\n"
+        "fi\n"
+        "exit 0\n");
+    fs::permissions(
+        fake_lpstat,
+        fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec,
+        fs::perm_options::add,
+        ignored);
+#endif
+
+    const fs::path main_path = temp_root / "aprinters_enumerated.prg";
     write_text(
         main_path,
         "nCount = APRINTERS(aPrint)\n"
+        "cFirst = aPrint(1)\n"
+        "cSecond = aPrint(2)\n"
         "RETURN\n");
 
-    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
-        make_runtime_session_options(main_path.string(), temp_root.string()));
+    {
+        copperfin::test_support::ScopedEnvironmentValue scoped_path("PATH");
+        scoped_path.set(fake_path.string());
 
-    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-    expect(state.completed, "APRINTERS script should complete");
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
 
-    const auto count = state.globals.find("ncount");
-    expect(count != state.globals.end(), "APRINTERS count should be captured");
-    if (count != state.globals.end()) {
-        const std::string cv = copperfin::runtime::format_value(count->second);
-        expect(cv != "0" && !cv.empty() && cv != "false",
-            "APRINTERS should return at least one entry");
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "APRINTERS injected-enumeration script should complete");
+
+        const auto count = state.globals.find("ncount");
+        const auto first = state.globals.find("cfirst");
+        const auto second = state.globals.find("csecond");
+        expect(count != state.globals.end(), "APRINTERS injected count should be captured");
+        expect(first != state.globals.end(), "APRINTERS injected first printer should be captured");
+        expect(second != state.globals.end(), "APRINTERS injected second printer should be captured");
+        if (count != state.globals.end()) {
+            expect(copperfin::runtime::format_value(count->second) == "2",
+                "APRINTERS injected enumeration should return the scripted printer count");
+        }
+        if (first != state.globals.end()) {
+            expect(copperfin::runtime::format_value(first->second) == "Office_Printer",
+                "APRINTERS injected enumeration should preserve the first scripted printer name");
+        }
+        if (second != state.globals.end()) {
+            expect(copperfin::runtime::format_value(second->second) == "Label_Printer",
+                "APRINTERS injected enumeration should preserve the second scripted printer name");
+        }
+    }
+
+    const fs::path fallback_path = temp_root / "aprinters_fallback.prg";
+    write_text(
+        fallback_path,
+        "nCount = APRINTERS(aPrint)\n"
+        "cFirst = aPrint(1)\n"
+        "RETURN\n");
+
+    {
+        copperfin::test_support::ScopedEnvironmentValue scoped_path("PATH");
+        scoped_path.set(empty_path.string());
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(fallback_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "APRINTERS fallback script should complete");
+
+        const auto count = state.globals.find("ncount");
+        const auto first = state.globals.find("cfirst");
+        expect(count != state.globals.end(), "APRINTERS fallback count should be captured");
+        expect(first != state.globals.end(), "APRINTERS fallback first entry should be captured");
+        if (count != state.globals.end()) {
+            expect(copperfin::runtime::format_value(count->second) == "1",
+                "APRINTERS fallback should return a single deterministic placeholder entry");
+        }
+        if (first != state.globals.end()) {
+            expect(copperfin::runtime::format_value(first->second) == "(none)",
+                "APRINTERS fallback should return the deterministic no-printer placeholder");
+        }
     }
 
     fs::remove_all(temp_root, ignored);
@@ -1230,7 +1324,7 @@ int main() {
     test_ascan_macro_expanded_predicate_and_metadata_cleanup();
     test_asessions_returns_at_least_default_session();
     test_afont_returns_host_aware_font_array_with_deterministic_size_contract();
-    test_aprinters_returns_non_empty_array();
+    test_aprinters_supports_injected_enumeration_and_deterministic_no_printer_fallback();
     test_agetfileversion_existing_and_missing_files();
 
     if (test_failures() != 0) {

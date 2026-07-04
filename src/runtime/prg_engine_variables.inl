@@ -696,32 +696,91 @@
             {
                 return make_number_value(0.0);
             }
-            std::vector<PrgValue> values;
-#if defined(__linux__)
-            // Attempt a lightweight enumeration via /dev/lp* and cups if available;
-            // fall back to the stub entry on any failure.
-            std::error_code ignored;
-            namespace fs = std::filesystem;
-            bool found_any = false;
-            if (fs::exists("/dev", ignored))
-            {
-                for (const auto &entry : fs::directory_iterator("/dev", ignored))
+            const auto parse_lpstat_queue_name = [](const std::string &line) {
+                const std::string trimmed = trim_copy(line);
+                if (trimmed.empty())
                 {
-                    const std::string filename = entry.path().filename().string();
-                    if (filename.rfind("lp", 0U) == 0U)
+                    return std::string{};
+                }
+
+                if (trimmed.rfind("printer ", 0U) == 0U)
+                {
+                    const std::size_t name_begin = 8U;
+                    const std::size_t name_end = trimmed.find_first_of(" \t", name_begin);
+                    return name_end == std::string::npos
+                               ? trimmed.substr(name_begin)
+                               : trimmed.substr(name_begin, name_end - name_begin);
+                }
+
+                const std::size_t name_end = trimmed.find_first_of(" \t");
+                return name_end == std::string::npos ? trimmed : trimmed.substr(0U, name_end);
+            };
+
+            const auto collect_lpstat_printers = [&](const std::string &command) {
+                std::vector<std::string> names;
+                std::set<std::string> seen;
+#if defined(_WIN32)
+                FILE *pipe = _popen(command.c_str(), "r");
+#else
+                FILE *pipe = popen(command.c_str(), "r");
+#endif
+                if (pipe == nullptr)
+                {
+                    return names;
+                }
+
+                std::array<char, 512> buffer{};
+                while (std::fgets(buffer.data(), static_cast<int>(buffer.size()), pipe) != nullptr)
+                {
+                    const std::string name = parse_lpstat_queue_name(buffer.data());
+                    if (name.empty())
                     {
-                        values.push_back(make_string_value(entry.path().string()));
-                        found_any = true;
+                        continue;
+                    }
+
+                    const std::string key = lowercase_copy(name);
+                    if (seen.insert(key).second)
+                    {
+                        names.push_back(name);
                     }
                 }
+
+#if defined(_WIN32)
+                (void)_pclose(pipe);
+#else
+                (void)pclose(pipe);
+#endif
+
+                return names;
+            };
+
+#if defined(_WIN32)
+            std::vector<std::string> printer_names = collect_lpstat_printers("lpstat -a 2>NUL");
+            if (printer_names.empty())
+            {
+                printer_names = collect_lpstat_printers("lpstat -p 2>NUL");
             }
-            if (!found_any)
+#else
+            std::vector<std::string> printer_names = collect_lpstat_printers("lpstat -a 2>/dev/null");
+            if (printer_names.empty())
+            {
+                printer_names = collect_lpstat_printers("lpstat -p 2>/dev/null");
+            }
+#endif
+
+            std::vector<PrgValue> values;
+            if (printer_names.empty())
             {
                 values.push_back(make_string_value("(none)"));
             }
-#else
-            values.push_back(make_string_value("(none)"));
-#endif
+            else
+            {
+                values.reserve(printer_names.size());
+                for (const std::string &printer_name : printer_names)
+                {
+                    values.push_back(make_string_value(printer_name));
+                }
+            }
             const std::size_t printer_count = values.size();
             assign_array(target_name, std::move(values), 1U);
             return make_number_value(static_cast<double>(printer_count));
