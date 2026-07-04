@@ -173,14 +173,16 @@
             }
         }
 
-        void seed_native_form_properties(RuntimeOleObjectState &runtime_object)
+        void seed_native_visual_properties(RuntimeOleObjectState &runtime_object)
         {
-            if (normalize_identifier(runtime_object.base_class_name) != "form")
+            if (is_native_visual_runtime_object(runtime_object) &&
+                !runtime_object.properties.contains("enabled"))
             {
-                return;
+                runtime_object.properties["enabled"] = make_boolean_value(true);
             }
 
-            if (!runtime_object.properties.contains("lockscreen"))
+            if (normalize_identifier(runtime_object.base_class_name) == "form" &&
+                !runtime_object.properties.contains("lockscreen"))
             {
                 runtime_object.properties["lockscreen"] = make_boolean_value(false);
             }
@@ -1054,7 +1056,7 @@
                     object_state.class_hierarchy.push_back("OBJECT");
                 }
                 assign_native_window_metadata(object_state);
-                seed_native_form_properties(object_state);
+                seed_native_visual_properties(object_state);
                 append_builtin_native_olecontrol_methods(object_state);
                 object_state.default_properties = object_state.properties;
                 object_state.default_properties.erase("parent");
@@ -1184,7 +1186,7 @@
             }
             seed_native_olecontrol_timeout_policy_properties(*runtime_object);
             seed_native_olecontrol_verb_inspection_properties(*runtime_object);
-            seed_native_form_properties(*runtime_object);
+            seed_native_visual_properties(*runtime_object);
             if (RuntimeOleObjectState *object_surface = ensure_native_olecontrol_object_surface(*runtime_object);
                 object_surface != nullptr)
             {
