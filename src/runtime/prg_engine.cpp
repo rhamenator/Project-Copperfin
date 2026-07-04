@@ -662,6 +662,7 @@ namespace copperfin::runtime
         std::map<int, RuntimeOleObjectState> ole_objects;
         std::optional<int> representative_active_form_handle;
         std::string representative_application_caption = "Microsoft Visual FoxPro";
+        int representative_application_window_state = 0;
         std::vector<NativeEventBinding> native_event_bindings;
         std::set<std::string> active_native_event_keys;
         std::vector<CurrentNativeEventContext> active_native_event_contexts;
@@ -1628,6 +1629,11 @@ namespace copperfin::runtime
                     normalized_property_path == "_vfp.caption")
                 {
                     return make_string_value(representative_application_caption);
+                }
+                if (normalized_property_path == "_screen.windowstate" ||
+                    normalized_property_path == "_vfp.windowstate")
+                {
+                    return make_int64_value(static_cast<std::int64_t>(representative_application_window_state));
                 }
                 const auto raise_ole_fault = [&](const std::string &detail,
                                                  const std::string &source,

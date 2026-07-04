@@ -561,14 +561,27 @@
                     }
                     const std::string member_path = assignment_identifier.substr(separator + 1U);
                     const std::string normalized_object_part = normalize_identifier(object_part);
-                    if ((normalized_object_part == "_screen" || normalized_object_part == "_vfp") &&
-                        normalize_identifier(member_path) == "caption")
+                    if (normalized_object_part == "_screen" || normalized_object_part == "_vfp")
                     {
-                        representative_application_caption = value_as_string(assignment_value);
-                        events.push_back({.category = "ole.set",
-                                          .detail = object_part + ".Caption = " + representative_application_caption,
-                                          .location = statement.location});
-                        return {};
+                        const std::string normalized_member_path = normalize_identifier(member_path);
+                        if (normalized_member_path == "caption")
+                        {
+                            representative_application_caption = value_as_string(assignment_value);
+                            events.push_back({.category = "ole.set",
+                                              .detail = object_part + ".Caption = " + representative_application_caption,
+                                              .location = statement.location});
+                            return {};
+                        }
+                        if (normalized_member_path == "windowstate")
+                        {
+                            representative_application_window_state =
+                                static_cast<int>(std::llround(value_as_number(assignment_value)));
+                            events.push_back({.category = "ole.set",
+                                              .detail = object_part + ".WindowState = " +
+                                                            std::to_string(representative_application_window_state),
+                                              .location = statement.location});
+                            return {};
+                        }
                     }
                     const PrgValue object_value = lookup_variable(frame, object_part);
                     auto object = resolve_ole_object(object_value);
