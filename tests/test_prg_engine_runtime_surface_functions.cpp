@@ -39878,6 +39878,86 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_runtime_olecontrol_direct_member_setpem_remains_coherent()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_olecontrol_direct_member_setpem";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "runtime_olecontrol_direct_member_setpem.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "lAdded = oForm.AddObject('axHost', 'OleControl', 'MSComctlLib.ListViewCtrl')\n"
+            "lSetHostLeft = SETPEM(oForm.axHost, 'Left', 33)\n"
+            "nHostDirectLeft = oForm.axHost.Left\n"
+            "nHostObjectLeft = oForm.axHost.Object.Left\n"
+            "xHostDirectLeftGetPem = GETPEM(oForm.axHost, 'Left')\n"
+            "xHostObjectLeftGetPem = GETPEM(oForm.axHost.Object, 'Left')\n"
+            "oDoc = CREATEOBJECT('ExcelDoc')\n"
+            "lSetDocVisible = SETPEM(oDoc, 'Visible', .T.)\n"
+            "lDocDirectVisible = oDoc.Visible\n"
+            "lDocObjectVisible = oDoc.Object.Visible\n"
+            "xDocDirectVisibleGetPem = GETPEM(oDoc, 'Visible')\n"
+            "xDocObjectVisibleGetPem = GETPEM(oDoc.Object, 'Visible')\n"
+            "RETURN\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ExcelDoc AS OLEControl\n"
+            "    OLEClass = 'Excel.Sheet'\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("OleControl direct-member SETPEM script should complete: ") + state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        const auto expect_same = [&](const std::string &left_name, const std::string &right_name, const std::string &message)
+        {
+            const auto left = state.globals.find(left_name);
+            const auto right = state.globals.find(right_name);
+            expect(left != state.globals.end(), left_name + " variable not found");
+            expect(right != state.globals.end(), right_name + " variable not found");
+            if (left != state.globals.end() && right != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(left->second) == copperfin::runtime::format_value(right->second),
+                       message);
+            }
+        };
+
+        check("lsethostleft", "true");
+        check("lsetdocvisible", "true");
+        check("nhostdirectleft", "33");
+        check("nhostobjectleft", "33");
+        check("ldocdirectvisible", "true");
+        check("ldocobjectvisible", "true");
+
+        expect_same("xhostdirectleftgetpem",
+                    "xhostobjectleftgetpem",
+                    "Direct host GETPEM() should match the explicit .Object Left state after SETPEM()");
+        expect_same("xdocdirectvisiblegetpem",
+                    "xdocobjectvisiblegetpem",
+                    "Direct class-defined GETPEM() should match the explicit .Object Visible state after SETPEM()");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_runtime_native_visual_controls_without_hwnd_fail_deterministically()
     {
         namespace fs = std::filesystem;
@@ -42073,6 +42153,7 @@ int main()
         test_runtime_olecontrol_application_conflict_paths_require_object_remain_coherent();
         test_runtime_olecontrol_explicit_object_reference_assignment_remains_coherent();
         test_runtime_olecontrol_direct_member_reflection_remains_coherent();
+        test_runtime_olecontrol_direct_member_setpem_remains_coherent();
         test_runtime_native_visual_controls_without_hwnd_fail_deterministically();
         test_same_prg_native_bindevent_property_access_and_assign_dispatch_preserve_current_event_metadata();
         test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();

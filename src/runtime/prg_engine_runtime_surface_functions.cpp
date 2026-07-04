@@ -1181,6 +1181,15 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_collection_readonly_member_name(*runtime_object, member_name)) {
             return make_boolean_value(false);
         }
+        if (!reflectable_member_exists_locally(*runtime_object, member_name)) {
+            if (RuntimeOleObjectState* object_surface =
+                    resolve_direct_olecontrol_reflection_surface(*runtime_object);
+                object_surface != nullptr) {
+                return make_boolean_value(
+                    write_native_member_callback &&
+                    write_native_member_callback(arguments[0], member_name, arguments[2]));
+            }
+        }
         if (!runtime_object->source.empty() &&
             (object_has_assigner_property(*runtime_object, member_name) ||
              runtime_object->properties.contains(member_name) ||
