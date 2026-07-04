@@ -39712,6 +39712,95 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_runtime_olecontrol_explicit_object_reference_assignment_remains_coherent()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_olecontrol_object_reference_assignment";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "runtime_olecontrol_object_reference_assignment.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "lAddImage = oForm.AddObject('oleImageList', 'OleControl', 'MSComctlLib.ImageListCtrl')\n"
+            "lAddTree = oForm.AddObject('oleTree', 'OleControl', 'MSComctlLib.TreeCtrl')\n"
+            "oHostImageRef = oForm.oleImageList.Object\n"
+            "oForm.oleTree.ImageList = oForm.oleImageList.Object\n"
+            "oHostTreeImageListDirect = oForm.oleTree.ImageList\n"
+            "oHostTreeImageListObject = oForm.oleTree.Object.ImageList\n"
+            "cHostTreeCompose = oForm.oleTree.Compose()\n"
+            "oImageDoc = CREATEOBJECT('ImageListHost')\n"
+            "oTreeDoc = CREATEOBJECT('TreeHost')\n"
+            "oDocImageRef = oImageDoc.Object\n"
+            "oTreeDoc.ImageList = oImageDoc.Object\n"
+            "oDocTreeImageListDirect = oTreeDoc.ImageList\n"
+            "oDocTreeImageListObject = oTreeDoc.Object.ImageList\n"
+            "cDocTreeCompose = oTreeDoc.Compose()\n"
+            "RETURN\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ImageListHost AS OLEControl\n"
+            "    OLEClass = 'MSComctlLib.ImageListCtrl'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS TreeHost AS OLEControl\n"
+            "    OLEClass = 'MSComctlLib.TreeCtrl'\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("OleControl explicit Object-reference assignment script should complete: ") + state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("laddimage", "true");
+        check("laddtree", "true");
+        check("chosttreecompose", "ole:MSComctlLib.TreeCtrl.compose");
+        check("cdoctreecompose", "ole:MSComctlLib.TreeCtrl.compose");
+
+        const auto expect_same = [&](const std::string &left_name, const std::string &right_name, const std::string &message)
+        {
+            const auto left = state.globals.find(left_name);
+            const auto right = state.globals.find(right_name);
+            expect(left != state.globals.end(), left_name + " variable not found");
+            expect(right != state.globals.end(), right_name + " variable not found");
+            if (left != state.globals.end() && right != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(left->second) == copperfin::runtime::format_value(right->second),
+                       message);
+            }
+        };
+
+        expect_same("ohostimageref",
+                    "ohosttreeimagelistdirect",
+                    "Direct host ImageList assignment should preserve the explicit .Object source reference");
+        expect_same("ohostimageref",
+                    "ohosttreeimagelistobject",
+                    "Nested host Object.ImageList should preserve the explicit .Object source reference");
+        expect_same("odocimageref",
+                    "odoctreeimagelistdirect",
+                    "Direct class-defined ImageList assignment should preserve the explicit .Object source reference");
+        expect_same("odocimageref",
+                    "odoctreeimagelistobject",
+                    "Nested class-defined Object.ImageList should preserve the explicit .Object source reference");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_runtime_native_visual_controls_without_hwnd_fail_deterministically()
     {
         namespace fs = std::filesystem;
@@ -41905,6 +41994,7 @@ int main()
         test_runtime_olecontrol_objectverbs_surfaces_remain_coherent();
         test_runtime_olecontrol_direct_contained_member_routing_remains_coherent();
         test_runtime_olecontrol_application_conflict_paths_require_object_remain_coherent();
+        test_runtime_olecontrol_explicit_object_reference_assignment_remains_coherent();
         test_runtime_native_visual_controls_without_hwnd_fail_deterministically();
         test_same_prg_native_bindevent_property_access_and_assign_dispatch_preserve_current_event_metadata();
         test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();
