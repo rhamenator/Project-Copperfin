@@ -38708,10 +38708,17 @@ namespace
             "oForm = CREATEOBJECT('MainForm')\n"
             "lAdded = oForm.AddObject('axHost', 'OleControl', 'MSComctlLib.ListViewCtrl')\n"
             "nHostHwnd = oForm.axHost.hWnd\n"
+            "cHostOleClass = oForm.axHost.OLEClass\n"
             "xHostGetPem = GETPEM(oForm.axHost, 'hWnd')\n"
+            "xHostOleClassGetPem = GETPEM(oForm.axHost, 'OLEClass')\n"
             "lHostHasHwnd = PEMSTATUS(oForm.axHost, 'hWnd', 1)\n"
+            "lHostHasOleClass = PEMSTATUS(oForm.axHost, 'OLEClass', 1)\n"
             "lHostHwndReadOnly = PEMSTATUS(oForm.axHost, 'hWnd', 5)\n"
+            "lHostOleClassReadOnly = PEMSTATUS(oForm.axHost, 'OLEClass', 5)\n"
             "lSetHostHwnd = SETPEM(oForm.axHost, 'hWnd', 88)\n"
+            "lSetHostOleClass = SETPEM(oForm.axHost, 'OLEClass', 'Other.Control')\n"
+            "lRemoveHostOleClass = REMOVEPROPERTY(oForm.axHost, 'OLEClass')\n"
+            "cHostOleClassAfterSet = oForm.axHost.OLEClass\n"
             "cHostBaseClass = oForm.axHost.BaseClass\n"
             "nHostWHandle = SYS(2326, nHostHwnd)\n"
             "nHostRoundTrip = SYS(2327, nHostWHandle)\n"
@@ -38811,9 +38818,15 @@ namespace
         };
 
         check("ladded", "true");
+        check("chostoleclass", "MSComctlLib.ListViewCtrl");
+        check("chostoleclassafterset", "MSComctlLib.ListViewCtrl");
         check("lhosthashwnd", "true");
+        check("lhosthasoleclass", "true");
         check("lhosthwndreadonly", "true");
+        check("lhostoleclassreadonly", "true");
         check("lsethosthwnd", "false");
+        check("lsethostoleclass", "false");
+        check("lremovehostoleclass", "false");
         check("chostbaseclass", "OleControl");
         check("nbindhost", "1");
         check("nhostdispatchhwnd", copperfin::runtime::format_value(state.globals.at("nhosthwnd")));
@@ -38824,11 +38837,23 @@ namespace
         const std::int64_t host_round_trip = require_number("nhostroundtrip");
         const std::int64_t host_dispatch_whandle = require_number("nhostdispatchwhandle");
         const std::int64_t host_dispatch_round_trip = require_number("nhostdispatchroundtrip");
+        const auto host_oleclass_property = state.globals.find("chostoleclass");
+        const auto host_oleclass_getpem = state.globals.find("xhostoleclassgetpem");
+        expect(host_oleclass_property != state.globals.end(),
+               "OleControl provenance slice should capture the host OLEClass through ordinary property access");
+        expect(host_oleclass_getpem != state.globals.end(),
+               "OleControl provenance slice should capture the host OLEClass through GETPEM()");
 
         expect(host_whandle > 0,
                "OleControl hWnd translation should expose a positive WHANDLE");
         expect(host_hwnd_after == host_getpem,
                "OleControl hWnd should read consistently through ordinary property access and GETPEM()");
+        if (host_oleclass_property != state.globals.end() && host_oleclass_getpem != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(host_oleclass_property->second) ==
+                       copperfin::runtime::format_value(host_oleclass_getpem->second),
+                   "OleControl provenance should read consistently through ordinary property access and GETPEM()");
+        }
         expect(host_round_trip == host_hwnd_after,
                "SYS(2326/2327) should round-trip the OleControl hWnd");
         expect(host_hwnd_after == 100000 + host_whandle,

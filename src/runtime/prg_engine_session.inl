@@ -548,6 +548,15 @@
                     object_state.properties["parent"] = *parent_reference;
                 }
                 object_state.base_class_name = native_same_prg_base_class_name(prog_id);
+                if (normalize_identifier(object_state.base_class_name) == "olecontrol" &&
+                    !constructor_arguments.empty())
+                {
+                    const std::string oleclass = trim_copy(value_as_string(constructor_arguments.front()));
+                    if (!oleclass.empty())
+                    {
+                        object_state.properties["oleclass"] = make_string_value(oleclass);
+                    }
+                }
                 const std::string class_token = uppercase_copy(trim_copy(object_state.prog_id));
                 if (!class_token.empty())
                 {
