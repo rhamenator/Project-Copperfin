@@ -1821,10 +1821,14 @@ std::optional<int> try_handle_visual_property_reorder_batch(
             visual_property_reorder_batch_parse.request);
         const auto undo_status = copperfin::vfp::query_visual_object_undo(
             visual_property_reorder_batch_parse.request.path);
+        auto output_result = result;
+        if (output_result.ok) {
+            output_result.affected_object_count = visual_property_reorder_batch_parse.request.properties.size();
+        }
         if (visual_property_reorder_batch_parse.output_json) {
-            print_json_visual_method_update_result(result, undo_status, "visualPropertyReorderBatch");
+            print_json_visual_method_update_result(output_result, undo_status, "visualPropertyReorderBatch");
         } else {
-            print_text_visual_method_update_result(result, undo_status);
+            print_text_visual_method_update_result(output_result, undo_status);
         }
         return result.ok ? 0 : 4;
     }
