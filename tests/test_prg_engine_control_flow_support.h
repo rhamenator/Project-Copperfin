@@ -85,6 +85,7 @@ void test_print_command_emits_event();
 void test_erase_copy_rename_file_commands();
 void test_for_each_iterates_array_elements();
 void test_for_each_single_element_expression();
+void test_for_each_iterates_native_collection_direct_and_member_path();
 
 // ==== Variable scope and lifetime tests (PRIVATE/PUBLIC/RELEASE/CLEAR MEMORY/STORE) ====
 void test_private_declaration_masks_caller_variable();

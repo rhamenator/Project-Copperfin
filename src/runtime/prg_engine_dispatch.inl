@@ -7466,9 +7466,19 @@
                 }
                 else
                 {
-                    // Evaluate as expression; treat result as single element
+                    // Evaluate as expression; native Collection objects iterate
+                    // their contained items, and everything else is a single element.
                     const PrgValue result = evaluate_expression(collection_expr, frame);
-                    elements.push_back(result);
+                    if (const auto runtime_object = resolve_ole_object(result);
+                        runtime_object.has_value() &&
+                        is_native_collection_object(**runtime_object))
+                    {
+                        elements = (*runtime_object)->collection_items;
+                    }
+                    else
+                    {
+                        elements.push_back(result);
+                    }
                 }
 
                 if (elements.empty())

@@ -85,6 +85,7 @@ int main() {
     test_file_operation_runtime_errors_localize();
     test_for_each_iterates_array_elements();
     test_for_each_single_element_expression();
+    test_for_each_iterates_native_collection_direct_and_member_path();
     test_release_vars_erases_named_globals();
     test_release_all_clears_all_globals();
     test_release_all_clears_current_frame_locals_without_global_leak();
