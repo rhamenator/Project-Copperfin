@@ -657,6 +657,7 @@ namespace copperfin::runtime
         std::map<int, std::size_t> memowidth_by_session;
         std::map<int, std::map<int, RuntimeSqlConnectionState>> sql_connections_by_session;
         std::map<int, RuntimeOleObjectState> ole_objects;
+        std::optional<int> representative_active_form_handle;
         std::vector<NativeEventBinding> native_event_bindings;
         std::set<std::string> active_native_event_keys;
         std::vector<CurrentNativeEventContext> active_native_event_contexts;
@@ -719,6 +720,9 @@ namespace copperfin::runtime
         void assign_native_window_metadata(RuntimeOleObjectState &runtime_object);
         [[nodiscard]] std::optional<std::intptr_t> hwnd_from_whandle(std::intptr_t whandle) const;
         [[nodiscard]] std::optional<std::intptr_t> whandle_from_hwnd(std::intptr_t hwnd) const;
+        RuntimeOleObjectState *representative_active_form_object();
+        const RuntimeOleObjectState *representative_active_form_object() const;
+        void note_representative_active_form(const RuntimeOleObjectState &runtime_object);
         std::optional<std::intptr_t> dispatch_windows_message(
             std::intptr_t hwnd,
             std::uint32_t message,
@@ -1050,6 +1054,23 @@ namespace copperfin::runtime
                 const std::vector<PrgValue> &arguments,
                 const std::vector<std::optional<std::string>> &argument_references)
             {
+                const auto active_form_member_tail = [](const std::string &path) -> std::optional<std::string>
+                {
+                    const std::size_t separator = path.find('.');
+                    const std::string first_segment = trim_copy(
+                        separator == std::string::npos
+                            ? path
+                            : path.substr(0U, separator));
+                    if (normalize_identifier(first_segment) != "activeform")
+                    {
+                        return std::nullopt;
+                    }
+                    if (separator == std::string::npos)
+                    {
+                        return std::string{};
+                    }
+                    return path.substr(separator + 1U);
+                };
                 const Statement *statement = current_statement();
                 const std::string action_text = statement == nullptr
                     ? base_name + "." + member_path + "()"
@@ -1065,7 +1086,22 @@ namespace copperfin::runtime
                                               1429);
                     throw std::runtime_error(message);
                 };
-                const auto resolved_path = resolve_runtime_object_member_path(frame, base_name, member_path);
+                ResolvedRuntimeObjectMemberPath resolved_path;
+                const std::string normalized_base_name = normalize_identifier(base_name);
+                if (normalized_base_name == "_vfp" || normalized_base_name == "_screen")
+                {
+                    if (const auto active_form_tail = active_form_member_tail(member_path);
+                        active_form_tail.has_value() && !active_form_tail->empty())
+                    {
+                        resolved_path = resolve_runtime_object_member_path(
+                            representative_active_form_object(),
+                            *active_form_tail);
+                    }
+                }
+                if (resolved_path.runtime_object == nullptr)
+                {
+                    resolved_path = resolve_runtime_object_member_path(frame, base_name, member_path);
+                }
                 if (resolved_path.runtime_object == nullptr)
                 {
                     return raise_ole_fault(base_name + "." + member_path + "()",
@@ -1296,6 +1332,10 @@ namespace copperfin::runtime
                         "visible",
                         make_boolean_value(visible),
                         frame);
+                    if (visible)
+                    {
+                        note_representative_active_form(*runtime_object);
+                    }
                     runtime_object->last_action = effective_member_path + "()";
                     ++runtime_object->action_count;
                     events.push_back({.category = visible ? "prg.object.show" : "prg.object.hide",
@@ -1308,6 +1348,7 @@ namespace copperfin::runtime
                 {
                     const PrgValue runtime_object_reference =
                         make_string_value("object:" + runtime_object->prog_id + "#" + std::to_string(runtime_object->handle));
+                    note_representative_active_form(*runtime_object);
                     if (const auto owner_form_reference = native_object_owner_form_reference(*runtime_object);
                         owner_form_reference.has_value())
                     {
@@ -1509,6 +1550,37 @@ namespace copperfin::runtime
             },
             [this, &frame](const std::string &property_path)
             {
+                const auto active_form_member_tail = [](const std::string &path) -> std::optional<std::string>
+                {
+                    const std::size_t separator = path.find('.');
+                    if (separator == std::string::npos)
+                    {
+                        return std::nullopt;
+                    }
+
+                    const std::string base_name = trim_copy(path.substr(0U, separator));
+                    const std::string normalized_base_name = normalize_identifier(base_name);
+                    if (normalized_base_name != "_vfp" && normalized_base_name != "_screen")
+                    {
+                        return std::nullopt;
+                    }
+
+                    const std::string member_path = path.substr(separator + 1U);
+                    const std::size_t member_separator = member_path.find('.');
+                    const std::string first_segment = trim_copy(
+                        member_separator == std::string::npos
+                            ? member_path
+                            : member_path.substr(0U, member_separator));
+                    if (normalize_identifier(first_segment) != "activeform")
+                    {
+                        return std::nullopt;
+                    }
+                    if (member_separator == std::string::npos)
+                    {
+                        return std::string{};
+                    }
+                    return member_path.substr(member_separator + 1U);
+                };
                 const Statement *statement = current_statement();
                 const std::string action_text = statement == nullptr ? property_path : statement->text;
                 const std::string normalized_property_path = normalize_identifier(property_path);
@@ -1519,6 +1591,17 @@ namespace copperfin::runtime
                 if (normalized_property_path == "_vfp.hwnd")
                 {
                     return make_int64_value(static_cast<std::int64_t>(kCopperfinVfpMainWindowHwnd));
+                }
+                if (normalized_property_path == "_screen.activeform" ||
+                    normalized_property_path == "_vfp.activeform")
+                {
+                    if (const RuntimeOleObjectState *runtime_object = representative_active_form_object();
+                        runtime_object != nullptr)
+                    {
+                        return make_string_value(
+                            "object:" + runtime_object->prog_id + "#" + std::to_string(runtime_object->handle));
+                    }
+                    return make_empty_value();
                 }
                 const auto raise_ole_fault = [&](const std::string &detail,
                                                  const std::string &source,
@@ -1531,6 +1614,62 @@ namespace copperfin::runtime
                                               1429);
                     throw std::runtime_error(message);
                 };
+                if (const auto active_form_tail = active_form_member_tail(property_path);
+                    active_form_tail.has_value() && !active_form_tail->empty())
+                {
+                    RuntimeOleObjectState *runtime_object = representative_active_form_object();
+                    if (runtime_object == nullptr)
+                    {
+                        return make_empty_value();
+                    }
+
+                    const auto resolved_path =
+                        resolve_runtime_object_member_path(runtime_object, *active_form_tail);
+                    if (resolved_path.runtime_object == nullptr)
+                    {
+                        return raise_ole_fault(property_path,
+                                               property_path.substr(0U, property_path.find('.')),
+                                               runtime_text(
+                                                   "Runtime.Prg.Core.Error.OleObjectNotFoundForPropertyRead",
+                                                   {{"propertyPath", property_path}}));
+                    }
+
+                    runtime_object = resolved_path.runtime_object;
+                    const std::string effective_property_path =
+                        resolved_path.remaining_member_path.empty()
+                            ? *active_form_tail
+                            : resolved_path.remaining_member_path;
+                    runtime_object->last_action = effective_property_path;
+                    ++runtime_object->action_count;
+                    events.push_back({.category = "ole.get",
+                                      .detail = runtime_object->prog_id + "." + effective_property_path,
+                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                    const std::string property_name = normalize_identifier(effective_property_path);
+                    if (auto property_result = read_native_property_if_present(*runtime_object, property_name, frame);
+                        property_result.has_value())
+                    {
+                        return *property_result;
+                    }
+                    if (!runtime_object->class_hierarchy.empty() &&
+                        property_name == "hwnd" &&
+                        !runtime_object->native_hwnd.has_value())
+                    {
+                        return raise_ole_fault(runtime_object->prog_id + "." + effective_property_path,
+                                               property_path.substr(0U, property_path.find('.')),
+                                               runtime_text(
+                                                   "Runtime.Prg.Core.Error.OleMemberNotFoundForPropertyRead",
+                                                   {{"memberIdentifier", runtime_object->prog_id + "." + effective_property_path}}));
+                    }
+                    if (normalize_identifier(runtime_object->prog_id) == "scripting.dictionary")
+                    {
+                        return raise_ole_fault(runtime_object->prog_id + "." + effective_property_path,
+                                               property_path.substr(0U, property_path.find('.')),
+                                               runtime_text(
+                                                   "Runtime.Prg.Core.Error.OleMemberNotFoundForPropertyRead",
+                                                   {{"memberIdentifier", runtime_object->prog_id + "." + effective_property_path}}));
+                    }
+                    return make_string_value("ole:" + runtime_object->prog_id + "." + effective_property_path);
+                }
                 const auto separator = property_path.find('.');
                 if (separator == std::string::npos)
                 {
@@ -2183,6 +2322,60 @@ namespace copperfin::runtime
             }
         }
         return std::nullopt;
+    }
+
+    RuntimeOleObjectState *PrgRuntimeSession::Impl::representative_active_form_object()
+    {
+        if (!representative_active_form_handle.has_value())
+        {
+            return nullptr;
+        }
+
+        const auto found = ole_objects.find(*representative_active_form_handle);
+        if (found == ole_objects.end() ||
+            normalize_identifier(trim_copy(found->second.base_class_name)) != "form")
+        {
+            return nullptr;
+        }
+
+        return &found->second;
+    }
+
+    const RuntimeOleObjectState *PrgRuntimeSession::Impl::representative_active_form_object() const
+    {
+        if (!representative_active_form_handle.has_value())
+        {
+            return nullptr;
+        }
+
+        const auto found = ole_objects.find(*representative_active_form_handle);
+        if (found == ole_objects.end() ||
+            normalize_identifier(trim_copy(found->second.base_class_name)) != "form")
+        {
+            return nullptr;
+        }
+
+        return &found->second;
+    }
+
+    void PrgRuntimeSession::Impl::note_representative_active_form(const RuntimeOleObjectState &runtime_object)
+    {
+        if (normalize_identifier(trim_copy(runtime_object.base_class_name)) == "form")
+        {
+            representative_active_form_handle = runtime_object.handle;
+            return;
+        }
+
+        if (const auto owner_form_reference = native_object_owner_form_reference(runtime_object);
+            owner_form_reference.has_value())
+        {
+            int owner_form_handle = 0;
+            std::string owner_form_prog_id;
+            if (parse_object_handle_reference(*owner_form_reference, owner_form_handle, owner_form_prog_id))
+            {
+                representative_active_form_handle = owner_form_handle;
+            }
+        }
     }
 
     std::optional<PrgValue> PrgRuntimeSession::Impl::invoke_expression_user_routine(

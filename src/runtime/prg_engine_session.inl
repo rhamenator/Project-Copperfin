@@ -727,18 +727,15 @@
         };
 
         ResolvedRuntimeObjectMemberPath resolve_runtime_object_member_path(
-            const Frame &frame,
-            const std::string &base_name,
+            RuntimeOleObjectState *runtime_object,
             const std::string &member_path)
         {
-            const PrgValue object_value = lookup_variable(frame, base_name);
-            auto object = resolve_ole_object(object_value);
-            if (!object.has_value())
+            RuntimeOleObjectState *current_object = runtime_object;
+            if (current_object == nullptr)
             {
                 return {};
             }
 
-            RuntimeOleObjectState *current_object = *object;
             std::vector<std::string> segments;
             std::size_t start = 0U;
             while (start <= member_path.size())
@@ -795,6 +792,18 @@
             }
 
             return {.runtime_object = current_object, .remaining_member_path = remaining_member_path};
+        }
+
+        ResolvedRuntimeObjectMemberPath resolve_runtime_object_member_path(
+            const Frame &frame,
+            const std::string &base_name,
+            const std::string &member_path)
+        {
+            const PrgValue object_value = lookup_variable(frame, base_name);
+            auto object = resolve_ole_object(object_value);
+            return resolve_runtime_object_member_path(
+                object.has_value() ? *object : nullptr,
+                member_path);
         }
 
         std::vector<int> collect_native_owned_child_handles(const RuntimeOleObjectState &runtime_object)

@@ -38864,6 +38864,68 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_runtime_application_activeform_aliases_track_representative_native_form()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_activeform_aliases";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "runtime_activeform_aliases.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "oForm.Show()\n"
+            "oForm.oToolbar.cmdRed.SetFocus()\n"
+            "oVfpActive = _VFP.ActiveForm\n"
+            "oScreenActive = _SCREEN.ActiveForm\n"
+            "cVfpActiveBaseClass = oVfpActive.BaseClass\n"
+            "cScreenActiveCaption = oScreenActive.Caption\n"
+            "cDirectActiveCaption = _VFP.ActiveForm.Caption\n"
+            "lNestedEnabled = _VFP.ActiveForm.oToolbar.cmdRed.Enabled\n"
+            "cActiveControlBaseClass = _SCREEN.ActiveForm.ActiveControl.BaseClass\n"
+            "_SCREEN.ActiveForm.Hide()\n"
+            "lVisibleAfterHide = oForm.Visible\n"
+            "RETURN\n"
+            "DEFINE CLASS MainToolbar AS Toolbar\n"
+            "    ADD OBJECT cmdRed AS CommandButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    Caption = 'ColorHost'\n"
+            "    ADD OBJECT oToolbar AS MainToolbar\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("runtime ActiveForm alias script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cvfpactivebaseclass", "Form");
+        check("cscreenactivecaption", "ColorHost");
+        check("cdirectactivecaption", "ColorHost");
+        check("lnestedenabled", "true");
+        check("cactivecontrolbaseclass", "CommandButton");
+        check("lvisibleafterhide", "false");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_resettodefault_builtin_fallback_restores_inherited_defaults()
     {
         namespace fs = std::filesystem;
@@ -44351,6 +44413,7 @@ int main()
     test_native_show_override_wins_over_builtin_visible_toggle();
     test_native_setfocus_builtin_fallback_updates_owner_activecontrol();
     test_native_setfocus_override_wins_over_builtin_activecontrol_toggle();
+    test_runtime_application_activeform_aliases_track_representative_native_form();
     test_native_resettodefault_builtin_fallback_restores_inherited_defaults();
     test_native_resettodefault_override_wins_over_builtin_default_restore();
     test_native_builtin_methods_reflect_through_pemstatus_getpem_and_amembers();
