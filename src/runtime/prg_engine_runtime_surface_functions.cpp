@@ -540,7 +540,8 @@ bool is_builtin_native_runtime_method_name(
         return true;
     }
 
-    if (normalized_member_name == "additem") {
+    if (normalized_member_name == "additem" ||
+        normalized_member_name == "removeitem") {
         const std::string normalized_base_class =
             normalize_identifier(trim_copy(runtime_object.base_class_name));
         return normalized_base_class == "combobox" ||
@@ -599,7 +600,19 @@ void sync_native_list_control_displayvalue_from_selection_impl(RuntimeOleObjectS
         selected_slot.has_value()) {
         runtime_object.properties["displayvalue"] =
             make_string_value(value_as_string(runtime_object.collection_items[*selected_slot]));
+        return;
     }
+
+    runtime_object.properties["displayvalue"] = make_string_value("");
+}
+
+void sync_native_list_control_count_impl(RuntimeOleObjectState& runtime_object) {
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return;
+    }
+
+    runtime_object.properties["listcount"] =
+        make_number_value(static_cast<double>(runtime_object.collection_items.size()));
 }
 
 std::int64_t next_native_list_control_item_id(const RuntimeOleObjectState& runtime_object) {
@@ -1268,6 +1281,20 @@ bool native_displayvalue_member_name_matches(
            normalized_base_class == "listbox";
 }
 
+bool native_listcount_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "listcount" ||
+        !runtime_object.properties.contains("listcount")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "combobox" ||
+           normalized_base_class == "listbox";
+}
+
 bool native_boundcolumn_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
@@ -1679,6 +1706,9 @@ std::vector<std::string> collect_object_member_names(const RuntimeOleObjectState
         if (is_builtin_native_runtime_method_name(runtime_object, "additem")) {
             unique_members.insert("additem");
         }
+        if (is_builtin_native_runtime_method_name(runtime_object, "removeitem")) {
+            unique_members.insert("removeitem");
+        }
         if (is_native_collection_object(runtime_object)) {
             unique_members.insert("item");
             if (!runtime_object.read_only_collection_surface) {
@@ -1716,6 +1746,11 @@ std::vector<std::string> collect_object_member_names(const RuntimeOleObjectState
 void sync_native_list_control_displayvalue_from_selection(RuntimeOleObjectState& runtime_object)
 {
     sync_native_list_control_displayvalue_from_selection_impl(runtime_object);
+}
+
+void sync_native_list_control_count(RuntimeOleObjectState& runtime_object)
+{
+    sync_native_list_control_count_impl(runtime_object);
 }
 
 bool is_native_identity_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
@@ -1982,6 +2017,11 @@ bool is_native_displayvalue_member_name(const RuntimeOleObjectState& runtime_obj
     return native_displayvalue_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_listcount_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_listcount_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_boundcolumn_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_boundcolumn_member_name_matches(runtime_object, normalized_member_name);
@@ -2105,8 +2145,73 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
                                                           const std::string& normalized_method_name,
                                                           const std::vector<PrgValue>& arguments)
 {
-    if (!is_native_list_control_runtime_object(runtime_object) ||
-        normalized_method_name != "additem") {
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return std::nullopt;
+    }
+
+    if (normalized_method_name == "list") {
+        if (arguments.empty()) {
+            return make_string_value("");
+        }
+
+        const long long requested_index = std::llround(value_as_number(arguments[0]));
+        if (requested_index < 1LL ||
+            static_cast<std::size_t>(requested_index) > runtime_object.collection_items.size()) {
+            return make_string_value("");
+        }
+
+        if (arguments.size() >= 2U) {
+            const long long requested_column = std::llround(value_as_number(arguments[1]));
+            if (requested_column != 1LL) {
+                return make_string_value("");
+            }
+        }
+
+        return make_string_value(value_as_string(
+            runtime_object.collection_items[static_cast<std::size_t>(requested_index - 1LL)]));
+    }
+
+    if (normalized_method_name == "removeitem") {
+        if (arguments.empty() ||
+            !native_list_control_rowsourcetype_supports_additem(runtime_object)) {
+            return make_empty_value();
+        }
+
+        const long long requested_index = std::llround(value_as_number(arguments[0]));
+        if (requested_index < 1LL ||
+            static_cast<std::size_t>(requested_index) > runtime_object.collection_items.size()) {
+            return make_empty_value();
+        }
+
+        runtime_object.collection_items.erase(
+            runtime_object.collection_items.begin() + static_cast<std::ptrdiff_t>(requested_index - 1LL));
+        runtime_object.collection_item_keys.erase(
+            runtime_object.collection_item_keys.begin() + static_cast<std::ptrdiff_t>(requested_index - 1LL));
+        sync_native_list_control_count_impl(runtime_object);
+
+        const auto listindex = runtime_object.properties.find("listindex");
+        if (listindex != runtime_object.properties.end()) {
+            long long selected_index = std::llround(value_as_number(listindex->second));
+            const long long new_count = static_cast<long long>(runtime_object.collection_items.size());
+            if (selected_index == requested_index) {
+                if (new_count <= 0LL) {
+                    selected_index = 0LL;
+                } else if (selected_index > new_count) {
+                    selected_index = new_count;
+                }
+            } else if (selected_index > requested_index) {
+                --selected_index;
+            } else if (selected_index > new_count) {
+                selected_index = std::max(0LL, new_count);
+            }
+            listindex->second = make_number_value(static_cast<double>(selected_index));
+        }
+
+        sync_native_list_control_displayvalue_from_selection_impl(runtime_object);
+        return make_empty_value();
+    }
+
+    if (normalized_method_name != "additem") {
         return std::nullopt;
     }
 
@@ -2135,6 +2240,7 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
     runtime_object.collection_item_keys.insert(
         runtime_object.collection_item_keys.begin() + static_cast<std::ptrdiff_t>(*insert_slot),
         std::to_string(item_id));
+    sync_native_list_control_count_impl(runtime_object);
 
     const auto listindex = runtime_object.properties.find("listindex");
     if (listindex != runtime_object.properties.end()) {
@@ -2255,6 +2361,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                                                       const std::string& member_name) {
         return get_native_identity_reflection_metadata(runtime_object, member_name).has_value() ||
                native_controlcount_member_name_matches(runtime_object, member_name) ||
+               native_listcount_member_name_matches(runtime_object, member_name) ||
                native_visual_geometry_member_name_matches(runtime_object, member_name) ||
                is_native_collection_member_name(runtime_object, member_name) ||
                runtime_object.properties.contains(member_name) ||
@@ -2267,6 +2374,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                                                         const std::string& member_name) {
         return get_native_identity_reflection_metadata(runtime_object, member_name).has_value() ||
                native_controlcount_member_name_matches(runtime_object, member_name) ||
+               native_listcount_member_name_matches(runtime_object, member_name) ||
                native_child_collection_member_name_matches(runtime_object, member_name) ||
                is_native_splitbar_member_name(runtime_object, member_name) ||
                is_native_leftcolumn_member_name(runtime_object, member_name) ||
@@ -2539,6 +2647,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_rowsourcetype_member_name(*runtime_object, property_name) ||
             is_native_listindex_member_name(*runtime_object, property_name) ||
             is_native_displayvalue_member_name(*runtime_object, property_name) ||
+            is_native_listcount_member_name(*runtime_object, property_name) ||
             is_native_boundcolumn_member_name(*runtime_object, property_name) ||
             is_native_columncount_member_name(*runtime_object, property_name) ||
             is_native_column_bound_member_name(*runtime_object, property_name) ||
@@ -2575,6 +2684,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         const std::string member_name = normalize_identifier(trim_copy(value_as_string(arguments[1])));
         if (runtime_object == nullptr || member_name.empty()) {
             return make_empty_value();
+        }
+        if (is_native_listcount_member_name(*runtime_object, member_name)) {
+            sync_native_list_control_count(*runtime_object);
         }
         if (const auto metadata_value = get_native_identity_reflection_metadata(*runtime_object, member_name);
             metadata_value.has_value()) {
@@ -2660,6 +2772,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         if (native_child_parent_member_name_matches(*runtime_object, member_name) ||
             is_native_controlcount_member_name(*runtime_object, member_name) ||
+            is_native_listcount_member_name(*runtime_object, member_name) ||
             is_native_child_collection_member_name(*runtime_object, member_name) ||
             is_native_name_member_name(*runtime_object, member_name) ||
             is_native_splitbar_member_name(*runtime_object, member_name) ||
@@ -2796,6 +2909,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_rowsourcetype_member_name(*runtime_object, property_name) ||
             is_native_listindex_member_name(*runtime_object, property_name) ||
             is_native_displayvalue_member_name(*runtime_object, property_name) ||
+            is_native_listcount_member_name(*runtime_object, property_name) ||
             is_native_boundcolumn_member_name(*runtime_object, property_name) ||
             is_native_columncount_member_name(*runtime_object, property_name) ||
             is_native_column_bound_member_name(*runtime_object, property_name) ||

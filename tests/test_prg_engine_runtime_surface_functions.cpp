@@ -10133,6 +10133,157 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_list_controls_listcount_list_and_removeitem_stay_coherent()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_list_controls_listcount_removeitem";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_list_controls_listcount_removeitem.prg";
+        write_text(
+            main_path,
+            "oPlainCombo = CREATEOBJECT('ComboBox')\n"
+            "lHasListCount = PEMSTATUS(oPlainCombo, 'ListCount', 1)\n"
+            "lListCountReadOnly = PEMSTATUS(oPlainCombo, 'ListCount', 5)\n"
+            "lHasRemoveItem = PEMSTATUS(oPlainCombo, 'RemoveItem', 1)\n"
+            "xListCountBefore = GETPEM(oPlainCombo, 'ListCount')\n"
+            "oPlainCombo.AddItem('March')\n"
+            "oPlainCombo.AddItem('April')\n"
+            "oPlainCombo.AddItem('February', 1)\n"
+            "nCountAfterAdds = oPlainCombo.ListCount\n"
+            "xListCountAfterAdds = GETPEM(oPlainCombo, 'ListCount')\n"
+            "cItem1 = oPlainCombo.List(1)\n"
+            "cItem2 = oPlainCombo.List(2, 1)\n"
+            "cMissing = oPlainCombo.List(4)\n"
+            "oPlainCombo.ListIndex = 2\n"
+            "cBeforeRemoveDisplay = oPlainCombo.DisplayValue\n"
+            "oPlainCombo.RemoveItem(1)\n"
+            "nCountAfterRemove1 = oPlainCombo.ListCount\n"
+            "nIndexAfterRemove1 = oPlainCombo.ListIndex\n"
+            "cDisplayAfterRemove1 = oPlainCombo.DisplayValue\n"
+            "cItem1AfterRemove1 = oPlainCombo.List(1)\n"
+            "cItem2AfterRemove1 = oPlainCombo.List(2)\n"
+            "oPlainCombo.ListIndex = 2\n"
+            "oPlainCombo.RemoveItem(2)\n"
+            "nCountAfterRemove2 = oPlainCombo.ListCount\n"
+            "nIndexAfterRemove2 = oPlainCombo.ListIndex\n"
+            "cDisplayAfterRemove2 = oPlainCombo.DisplayValue\n"
+            "oPlainCombo.RemoveItem(1)\n"
+            "nCountAfterRemove3 = oPlainCombo.ListCount\n"
+            "nIndexAfterRemove3 = oPlainCombo.ListIndex\n"
+            "cDisplayAfterRemove3 = oPlainCombo.DisplayValue\n"
+            "lSetPemListCount = SETPEM(oPlainCombo, 'ListCount', 99)\n"
+            "lAddPropertyListCount = ADDPROPERTY(oPlainCombo, 'ListCount', 99)\n"
+            "lRemovePropertyListCount = REMOVEPROPERTY(oPlainCombo, 'ListCount')\n"
+            "oSeedList = CREATEOBJECT('SeededList')\n"
+            "nSeedCount = oSeedList.ListCount\n"
+            "cSeedItem1 = oSeedList.List(1)\n"
+            "cSeedItem2 = oSeedList.List(2)\n"
+            "nSeedIndex = oSeedList.ListIndex\n"
+            "cSeedDisplay = oSeedList.DisplayValue\n"
+            "RETURN\n"
+            "DEFINE CLASS SeededList AS ListBox\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddItem('North')\n"
+            "        THIS.AddItem('South')\n"
+            "        THIS.AddItem('East')\n"
+            "        THIS.ListIndex = 3\n"
+            "        THIS.RemoveItem(2)\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native ListCount/List/RemoveItem list-control script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lhaslistcount", "true");
+        check("llistcountreadonly", "true");
+        check("lhasremoveitem", "true");
+        check("xlistcountbefore", "0");
+        check("ncountafteradds", "3");
+        check("xlistcountafteradds", "3");
+        check("citem1", "February");
+        check("citem2", "March");
+        check("cmissing", "");
+        check("cbeforeremovedisplay", "March");
+        check("ncountafterremove1", "2");
+        check("nindexafterremove1", "1");
+        check("cdisplayafterremove1", "March");
+        check("citem1afterremove1", "March");
+        check("citem2afterremove1", "April");
+        check("ncountafterremove2", "1");
+        check("nindexafterremove2", "1");
+        check("cdisplayafterremove2", "March");
+        check("ncountafterremove3", "0");
+        check("nindexafterremove3", "0");
+        check("cdisplayafterremove3", "");
+        check("lsetpemlistcount", "false");
+        check("laddpropertylistcount", "false");
+        check("lremovepropertylistcount", "false");
+        check("nseedcount", "2");
+        check("cseeditem1", "North");
+        check("cseeditem2", "East");
+        check("nseedindex", "2");
+        check("cseeddisplay", "East");
+
+        expect(state.ole_objects.size() == 2U,
+               "native ListCount/List/RemoveItem coverage should register plain and derived list controls");
+        if (state.ole_objects.size() == 2U)
+        {
+            const auto &plain_combo = state.ole_objects[0];
+            const auto &seed_list = state.ole_objects[1];
+
+            const auto plain_listcount = plain_combo.properties.find("listcount");
+            const auto plain_display = plain_combo.properties.find("displayvalue");
+            const auto seed_listcount = seed_list.properties.find("listcount");
+            const auto seed_display = seed_list.properties.find("displayvalue");
+
+            expect(plain_combo.collection_items.empty(),
+                   "plain ComboBox RemoveItem coverage should leave no runtime rows after all removals");
+            expect(plain_listcount != plain_combo.properties.end() &&
+                       copperfin::runtime::format_value(plain_listcount->second) == "0",
+                   "plain ComboBox RemoveItem coverage should keep ListCount synchronized");
+            expect(plain_display != plain_combo.properties.end() &&
+                       copperfin::runtime::format_value(plain_display->second).empty(),
+                   "plain ComboBox RemoveItem coverage should clear DisplayValue when selection becomes empty");
+            expect(seed_list.collection_items.size() == 2U,
+                   "derived ListBox RemoveItem coverage should preserve Init-time row removals");
+            expect(seed_listcount != seed_list.properties.end() &&
+                       copperfin::runtime::format_value(seed_listcount->second) == "2",
+                   "derived ListBox RemoveItem coverage should keep ListCount synchronized");
+            expect(seed_display != seed_list.properties.end() &&
+                       copperfin::runtime::format_value(seed_display->second) == "East",
+                   "derived ListBox RemoveItem coverage should preserve the shifted selected display text");
+        }
+
+        const bool has_removeitem_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.removeitem";
+        });
+        expect(has_removeitem_event,
+               "native RemoveItem coverage should emit representative list-control method events");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_combobox_boundcolumn_columncount_and_columnwidths_defaults_mutate_and_stay_builtin()
     {
         namespace fs = std::filesystem;
@@ -50024,6 +50175,7 @@ int main()
     test_native_listindex_defaults_mutates_and_stays_builtin();
     test_native_displayvalue_defaults_mutates_and_stays_builtin();
     test_native_list_controls_additem_builtin_populates_runtime_items();
+    test_native_list_controls_listcount_list_and_removeitem_stay_coherent();
     test_native_combobox_boundcolumn_columncount_and_columnwidths_defaults_mutate_and_stay_builtin();
     test_native_grid_columncount_defaults_materialize_columns_and_stay_builtin();
     test_native_column_bound_defaults_coordinate_controlsource_and_stay_builtin();

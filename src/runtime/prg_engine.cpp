@@ -2241,9 +2241,12 @@ namespace copperfin::runtime
         {
             target_object->last_action = effective_member_path + "()";
             ++target_object->action_count;
-            events.push_back({.category = "prg.object.additem",
-                              .detail = target_object->prog_id + "." + effective_member_path,
-                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            if (leaf == "additem" || leaf == "removeitem")
+            {
+                events.push_back({.category = "prg.object." + leaf,
+                                  .detail = target_object->prog_id + "." + effective_member_path,
+                                  .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            }
             return *list_control_result;
         }
         if (leaf == "move" &&
@@ -3756,6 +3759,10 @@ namespace copperfin::runtime
             {
                 return *collection_value;
             }
+            if (is_native_listcount_member_name(runtime_object, normalized_property_name))
+            {
+                sync_native_list_control_count(runtime_object);
+            }
             if (is_native_identity_member_name(runtime_object, normalized_property_name))
             {
                 return make_empty_value();
@@ -3860,6 +3867,7 @@ namespace copperfin::runtime
             if (!is_native_identity_member_name(runtime_object, normalized_property_name) &&
                 !is_native_controlcount_member_name(runtime_object, normalized_property_name) &&
                 !is_native_child_collection_member_name(runtime_object, normalized_property_name) &&
+                !is_native_listcount_member_name(runtime_object, normalized_property_name) &&
                 !is_native_name_member_name(runtime_object, normalized_property_name) &&
                 !is_native_splitbar_member_name(runtime_object, normalized_property_name) &&
                 !is_native_leftcolumn_member_name(runtime_object, normalized_property_name) &&

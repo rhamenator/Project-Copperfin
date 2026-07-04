@@ -863,6 +863,13 @@
                 runtime_object.properties["displayvalue"] = make_string_value("");
             }
 
+            if ((normalized_base_class == "combobox" ||
+                 normalized_base_class == "listbox") &&
+                !runtime_object.properties.contains("listcount"))
+            {
+                runtime_object.properties["listcount"] = make_number_value(0.0);
+            }
+
             if (normalized_base_class == "combobox" &&
                 !runtime_object.properties.contains("boundcolumn"))
             {
