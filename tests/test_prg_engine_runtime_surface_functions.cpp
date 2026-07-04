@@ -37324,6 +37324,102 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_setall_recurses_over_descendants_and_honors_class_filters()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_setall";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_setall.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "nFlagUpdated = oForm.SetAll('lFlag', .F.)\n"
+            "nTagUpdated = oForm.SetAll('cTagValue', 'Queued', 'SaveButton')\n"
+            "lHostFlag = oForm.cmdHost.lFlag\n"
+            "lContainerFlag = oForm.cntMain.lFlag\n"
+            "lNestedFlag = oForm.cntMain.cmdNested.lFlag\n"
+            "lPlainFlag = oForm.cntMain.cmdPlain.lFlag\n"
+            "lTextFlag = oForm.cntMain.txtName.lFlag\n"
+            "cHostTag = oForm.cmdHost.cTagValue\n"
+            "cNestedTag = oForm.cntMain.cmdNested.cTagValue\n"
+            "cPlainTag = oForm.cntMain.cmdPlain.cTagValue\n"
+            "lContainerHasTag = PEMSTATUS(oForm.cntMain, 'cTagValue', 1)\n"
+            "lTextHasTag = PEMSTATUS(oForm.cntMain.txtName, 'cTagValue', 1)\n"
+            "RETURN\n"
+            "DEFINE CLASS SaveButton AS CommandButton\n"
+            "    cTagValue = 'Save'\n"
+            "    lFlag = .T.\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS PlainButton AS CommandButton\n"
+            "    cTagValue = 'Plain'\n"
+            "    lFlag = .T.\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS NameBox AS TextBox\n"
+            "    lFlag = .T.\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainContainer AS Container\n"
+            "    lFlag = .T.\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    lFlag = .T.\n"
+            "    ADD OBJECT cmdHost AS SaveButton\n"
+            "    ADD OBJECT cntMain AS MainContainer\n"
+            "    PROCEDURE Init\n"
+            "        THIS.cntMain.AddObject('cmdNested', 'SaveButton')\n"
+            "        THIS.cntMain.AddObject('cmdPlain', 'PlainButton')\n"
+            "        THIS.cntMain.AddObject('txtName', 'NameBox')\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native SetAll script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("nflagupdated", "5");
+        check("ntagupdated", "2");
+        check("lhostflag", "false");
+        check("lcontainerflag", "false");
+        check("lnestedflag", "false");
+        check("lplainflag", "false");
+        check("ltextflag", "false");
+        check("chosttag", "Queued");
+        check("cnestedtag", "Queued");
+        check("cplaintag", "Plain");
+        check("lcontainerhastag", "false");
+        check("ltexthastag", "false");
+
+        const std::size_t setall_event_count = static_cast<std::size_t>(std::count_if(
+            state.events.begin(),
+            state.events.end(),
+            [](const auto &event)
+            {
+                return event.category == "prg.object.setall";
+            }));
+        expect(setall_event_count == 2U,
+               "native SetAll should emit one runtime event per SetAll invocation");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_same_prg_native_bare_helper_calls_resolve_to_current_instance_before_top_level_routines()
     {
         namespace fs = std::filesystem;
@@ -42294,6 +42390,7 @@ int main()
     test_native_addobject_deeper_external_child_external_base_classlibrary_cannot_be_shadowed_through_direct_assignment();
     test_inherited_external_base_addobject_deeper_external_child_external_base_classlibrary_cannot_be_shadowed_through_direct_assignment();
     test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow();
+    test_native_setall_recurses_over_descendants_and_honors_class_filters();
     test_same_prg_native_bare_helper_calls_resolve_to_current_instance_before_top_level_routines();
     test_inherited_external_prg_base_methods_resolve_bare_helper_calls_against_defining_library();
     test_external_prg_base_methods_support_dodefault_dispatch();

@@ -123,6 +123,64 @@ namespace copperfin::runtime
             return make_empty_value();
         }
 
+        bool runtime_object_member_matches(
+            const std::vector<std::string> &members,
+            const std::string &normalized_member_name)
+        {
+            return std::any_of(members.begin(), members.end(), [&](const std::string &member_name)
+            {
+                return normalize_identifier(member_name) == normalized_member_name;
+            });
+        }
+
+        bool runtime_object_method_ends_with_suffix(
+            const std::string &method_name,
+            const std::string &suffix,
+            std::string *stem = nullptr)
+        {
+            const std::string normalized_method = normalize_identifier(method_name);
+            if (normalized_method.size() <= suffix.size() ||
+                normalized_method.compare(normalized_method.size() - suffix.size(), suffix.size(), suffix) != 0)
+            {
+                return false;
+            }
+
+            if (normalized_method[normalized_method.size() - suffix.size() - 1U] != '_')
+            {
+                return false;
+            }
+
+            if (stem != nullptr)
+            {
+                *stem = normalized_method.substr(0U, normalized_method.size() - suffix.size() - 1U);
+            }
+            return true;
+        }
+
+        bool runtime_object_has_accessor_property(
+            const RuntimeOleObjectState &runtime_object,
+            const std::string &normalized_property_name)
+        {
+            return std::any_of(runtime_object.methods.begin(), runtime_object.methods.end(), [&](const std::string &method_name)
+            {
+                std::string stem;
+                return runtime_object_method_ends_with_suffix(method_name, "access", &stem) &&
+                       stem == normalized_property_name;
+            });
+        }
+
+        bool runtime_object_has_assigner_property(
+            const RuntimeOleObjectState &runtime_object,
+            const std::string &normalized_property_name)
+        {
+            return std::any_of(runtime_object.methods.begin(), runtime_object.methods.end(), [&](const std::string &method_name)
+            {
+                std::string stem;
+                return runtime_object_method_ends_with_suffix(method_name, "assign", &stem) &&
+                       stem == normalized_property_name;
+            });
+        }
+
         void ensure_fault_context_defaults(
             const Statement *statement,
             SourceLocation &last_fault_location,
@@ -1052,6 +1110,14 @@ namespace copperfin::runtime
                                       .detail = runtime_object->prog_id + "." + child_name,
                                       .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
                     return make_boolean_value(true);
+                }
+                if (leaf == "setall" && !runtime_object->source.empty())
+                {
+                    return apply_native_setall(
+                        *runtime_object,
+                        frame,
+                        effective_member_path,
+                        arguments);
                 }
                 if (leaf == "release" && !runtime_object->source.empty())
                 {

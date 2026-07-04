@@ -716,6 +716,163 @@
             return child_handles;
         }
 
+        std::vector<int> collect_native_setall_child_handles(const RuntimeOleObjectState &runtime_object)
+        {
+            std::vector<int> child_handles;
+            for (const auto &[property_name, property_value] : runtime_object.properties)
+            {
+                if (property_name == "parent")
+                {
+                    continue;
+                }
+
+                const auto child_object = resolve_ole_object(property_value);
+                if (!child_object.has_value())
+                {
+                    continue;
+                }
+
+                const auto child_parent = native_object_parent_reference(**child_object);
+                int parent_handle = 0;
+                std::string parent_prog_id;
+                if (!child_parent.has_value() ||
+                    !parse_object_handle_reference(*child_parent, parent_handle, parent_prog_id) ||
+                    parent_handle != runtime_object.handle)
+                {
+                    continue;
+                }
+
+                child_handles.push_back((*child_object)->handle);
+            }
+
+            return child_handles;
+        }
+
+        bool native_setall_candidate_has_writable_property(
+            RuntimeOleObjectState &runtime_object,
+            const std::string &normalized_property_name)
+        {
+            if (normalized_property_name.empty())
+            {
+                return false;
+            }
+
+            if (is_native_identity_member_name(runtime_object, normalized_property_name) ||
+                is_native_olecontrol_creation_time_member_name(runtime_object, normalized_property_name) ||
+                is_native_olecontrol_object_member_name(runtime_object, normalized_property_name) ||
+                is_native_olecontrol_inspection_member_name(runtime_object, normalized_property_name) ||
+                is_native_olecontrol_conflict_member_name(runtime_object, normalized_property_name) ||
+                is_native_child_parent_member_name(runtime_object, normalized_property_name) ||
+                is_native_collection_readonly_member_name(runtime_object, normalized_property_name))
+            {
+                return false;
+            }
+
+            if (runtime_object.properties.contains(normalized_property_name) ||
+                runtime_object_has_assigner_property(runtime_object, normalized_property_name))
+            {
+                return true;
+            }
+
+            if (runtime_object_has_accessor_property(runtime_object, normalized_property_name))
+            {
+                return runtime_object_has_assigner_property(runtime_object, normalized_property_name);
+            }
+
+            if (runtime_object_member_matches(runtime_object.methods, normalized_property_name) ||
+                runtime_object_member_matches(runtime_object.events, normalized_property_name))
+            {
+                return false;
+            }
+
+            if (is_native_olecontrol_host_object(runtime_object))
+            {
+                RuntimeOleObjectState *object_surface = ensure_native_olecontrol_object_surface(runtime_object);
+                if (object_surface != nullptr && object_surface->handle != runtime_object.handle)
+                {
+                    return native_setall_candidate_has_writable_property(
+                        *object_surface,
+                        normalized_property_name);
+                }
+            }
+
+            return false;
+        }
+
+        PrgValue apply_native_setall(
+            RuntimeOleObjectState &runtime_object,
+            const Frame &source_frame,
+            const std::string &effective_member_path,
+            const std::vector<PrgValue> &arguments)
+        {
+            if (arguments.size() < 2U)
+            {
+                return make_boolean_value(false);
+            }
+
+            const std::string property_name = normalize_identifier(trim_copy(value_as_string(arguments[0])));
+            if (property_name.empty())
+            {
+                return make_boolean_value(false);
+            }
+
+            const std::string class_filter =
+                arguments.size() >= 3U
+                    ? normalize_identifier(trim_copy(value_as_string(arguments[2])))
+                    : std::string{};
+
+            std::size_t updated_count = 0U;
+            std::vector<int> pending = collect_native_setall_child_handles(runtime_object);
+            std::set<int> visited_handles;
+            while (!pending.empty())
+            {
+                const int handle = pending.back();
+                pending.pop_back();
+                if (!visited_handles.insert(handle).second)
+                {
+                    continue;
+                }
+
+                const auto found = ole_objects.find(handle);
+                if (found == ole_objects.end())
+                {
+                    continue;
+                }
+
+                RuntimeOleObjectState &child_object = found->second;
+                std::vector<int> nested_children = collect_native_setall_child_handles(child_object);
+                pending.insert(pending.end(), nested_children.begin(), nested_children.end());
+
+                if (!class_filter.empty() &&
+                    normalize_identifier(trim_copy(child_object.prog_id)) != class_filter)
+                {
+                    continue;
+                }
+
+                if (!native_setall_candidate_has_writable_property(child_object, property_name))
+                {
+                    continue;
+                }
+
+                if (write_native_property_if_present(
+                        child_object,
+                        property_name,
+                        arguments[1],
+                        source_frame))
+                {
+                    ++updated_count;
+                }
+            }
+
+            runtime_object.last_action = effective_member_path + "(" + property_name + ")";
+            ++runtime_object.action_count;
+            events.push_back({.category = "prg.object.setall",
+                              .detail = runtime_object.prog_id + "." + property_name + ":" +
+                                            std::to_string(updated_count),
+                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            return make_number_value(static_cast<double>(updated_count));
+        }
+
         RuntimeOleObjectState *instantiate_native_class_object(
             const Frame &frame,
             const std::string &prog_id,
