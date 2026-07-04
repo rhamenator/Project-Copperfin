@@ -126,6 +126,7 @@ struct RuntimeOleObjectState {
     int action_count = 0;
     std::optional<std::intptr_t> native_hwnd{};
     std::map<std::string, PrgValue> properties{};
+    std::map<std::string, PrgValue> default_properties{};
     std::vector<PrgValue> collection_items{};
     std::vector<std::string> collection_item_keys{};
     std::vector<std::string> class_hierarchy{};

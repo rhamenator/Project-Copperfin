@@ -929,6 +929,8 @@
                 }
                 assign_native_window_metadata(object_state);
                 append_builtin_native_olecontrol_methods(object_state);
+                object_state.default_properties = object_state.properties;
+                object_state.default_properties.erase("parent");
 
                 auto [object_it, _] = ole_objects.emplace(handle, std::move(object_state));
                 (void)ensure_native_olecontrol_object_surface(object_it->second);
@@ -1061,6 +1063,8 @@
                 (void)ensure_native_olecontrol_application_conflict_surface(*runtime_object, *object_surface);
             }
             (void)read_native_collection_member(*runtime_object, "count");
+            runtime_object->default_properties = runtime_object->properties;
+            runtime_object->default_properties.erase("parent");
             const PrgValue runtime_object_reference = make_runtime_object_reference(*runtime_object);
             for (const NativeClassLookup &lineage_class : class_lineage)
             {

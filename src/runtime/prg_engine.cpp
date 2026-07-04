@@ -1271,6 +1271,43 @@ namespace copperfin::runtime
                                       .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
                     return make_empty_value();
                 }
+                if (leaf == "resettodefault" && !runtime_object->class_hierarchy.empty())
+                {
+                    if (arguments.empty())
+                    {
+                        return make_boolean_value(false);
+                    }
+
+                    const std::string property_name = trim_copy(value_as_string(arguments.front()));
+                    const std::string normalized_property_name = normalize_identifier(property_name);
+                    if (normalized_property_name.empty())
+                    {
+                        return make_boolean_value(false);
+                    }
+
+                    const auto default_value = runtime_object->default_properties.find(normalized_property_name);
+                    if (default_value == runtime_object->default_properties.end())
+                    {
+                        return make_boolean_value(false);
+                    }
+
+                    const bool restored = write_native_property_if_present(
+                        *runtime_object,
+                        property_name,
+                        default_value->second,
+                        frame);
+                    if (!restored)
+                    {
+                        return make_boolean_value(false);
+                    }
+
+                    runtime_object->last_action = effective_member_path + "(" + property_name + ")";
+                    ++runtime_object->action_count;
+                    events.push_back({.category = "prg.object.resettodefault",
+                                      .detail = runtime_object->prog_id + "." + normalized_property_name,
+                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                    return make_boolean_value(true);
+                }
                 if (is_native_olecontrol_host_object(*runtime_object) && leaf == "doverb")
                 {
                     RuntimeOleObjectState *object_surface = ensure_native_olecontrol_object_surface(*runtime_object);

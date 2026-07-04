@@ -37807,6 +37807,159 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_resettodefault_builtin_fallback_restores_inherited_defaults()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_resettodefault_builtin";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_resettodefault_builtin.prg";
+        write_text(
+            main_path,
+            "oListener = CREATEOBJECT('ReportListenerShim')\n"
+            "oListener.cTextFile = 'override.txt'\n"
+            "oListener.nPageCount = 9\n"
+            "lResetText = oListener.ResetToDefault('cTextFile')\n"
+            "lResetPage = oListener.ResetToDefault('nPageCount')\n"
+            "cTextAfter = oListener.cTextFile\n"
+            "nPageAfter = oListener.nPageCount\n"
+            "RETURN\n"
+            "DEFINE CLASS BaseListener AS Custom\n"
+            "    cTextFile = 'seed.txt'\n"
+            "    nPageCount = 4\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ReportListenerShim AS BaseListener\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native ResetToDefault builtin fallback script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto reset_text = state.globals.find("lresettext");
+        expect(reset_text != state.globals.end(),
+               "native ResetToDefault builtin fallback script should preserve first reset result");
+        if (reset_text != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(reset_text->second) == "true",
+                   "native ResetToDefault builtin fallback should report success for inherited text defaults");
+        }
+
+        const auto reset_page = state.globals.find("lresetpage");
+        expect(reset_page != state.globals.end(),
+               "native ResetToDefault builtin fallback script should preserve second reset result");
+        if (reset_page != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(reset_page->second) == "true",
+                   "native ResetToDefault builtin fallback should report success for inherited numeric defaults");
+        }
+
+        const auto text_after = state.globals.find("ctextafter");
+        expect(text_after != state.globals.end(),
+               "native ResetToDefault builtin fallback script should preserve restored text value");
+        if (text_after != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(text_after->second) == "seed.txt",
+                   "native ResetToDefault builtin fallback should restore inherited text defaults");
+        }
+
+        const auto page_after = state.globals.find("npageafter");
+        expect(page_after != state.globals.end(),
+               "native ResetToDefault builtin fallback script should preserve restored numeric value");
+        if (page_after != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(page_after->second) == "4",
+                   "native ResetToDefault builtin fallback should restore inherited numeric defaults");
+        }
+
+        const std::size_t reset_event_count = static_cast<std::size_t>(std::count_if(
+            state.events.begin(),
+            state.events.end(),
+            [](const auto &event)
+            {
+                return event.category == "prg.object.resettodefault";
+            }));
+        expect(reset_event_count == 2U,
+               "native ResetToDefault builtin fallback should emit one event per representative reset call");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_native_resettodefault_override_wins_over_builtin_default_restore()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_resettodefault_override";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_resettodefault_override.prg";
+        write_text(
+            main_path,
+            "oThing = CREATEOBJECT('ResetBox')\n"
+            "oThing.cValue = 'changed'\n"
+            "oThing.ResetToDefault('cValue')\n"
+            "lResetRan = oThing.lResetRan\n"
+            "cValueAfter = oThing.cValue\n"
+            "RETURN\n"
+            "DEFINE CLASS ResetBox AS Custom\n"
+            "    cValue = 'seed'\n"
+            "    lResetRan = .F.\n"
+            "    PROCEDURE ResetToDefault\n"
+            "        LPARAMETERS tcProperty\n"
+            "        THIS.lResetRan = .T.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native ResetToDefault override script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto reset_ran = state.globals.find("lresetran");
+        expect(reset_ran != state.globals.end(),
+               "native ResetToDefault override script should preserve override flag");
+        if (reset_ran != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(reset_ran->second) == "true",
+                   "native ResetToDefault override should still invoke the class-defined method");
+        }
+
+        const auto value_after = state.globals.find("cvalueafter");
+        expect(value_after != state.globals.end(),
+               "native ResetToDefault override script should preserve post-call property state");
+        if (value_after != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(value_after->second) == "changed",
+                   "native ResetToDefault override should not fall through to the builtin default restore");
+        }
+
+        const bool has_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   event.detail == "ResetBox.ResetToDefault";
+        });
+        expect(has_invoke_event,
+               "native ResetToDefault override should emit a prg.object.invoke event");
+
+        const bool has_builtin_reset_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.resettodefault";
+        });
+        expect(!has_builtin_reset_event,
+               "native ResetToDefault override should not emit the builtin prg.object.resettodefault event");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_same_prg_native_bare_helper_calls_resolve_to_current_instance_before_top_level_routines()
     {
         namespace fs = std::filesystem;
@@ -42784,6 +42937,8 @@ int main()
     test_native_show_override_wins_over_builtin_visible_toggle();
     test_native_setfocus_builtin_fallback_updates_owner_activecontrol();
     test_native_setfocus_override_wins_over_builtin_activecontrol_toggle();
+    test_native_resettodefault_builtin_fallback_restores_inherited_defaults();
+    test_native_resettodefault_override_wins_over_builtin_default_restore();
     test_same_prg_native_bare_helper_calls_resolve_to_current_instance_before_top_level_routines();
     test_inherited_external_prg_base_methods_resolve_bare_helper_calls_against_defining_library();
     test_external_prg_base_methods_support_dodefault_dispatch();
