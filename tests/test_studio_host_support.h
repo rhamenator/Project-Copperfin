@@ -46,6 +46,7 @@ bool has_descriptor_id(const std::vector<Descriptor>& descriptors, std::string_v
 // ==== Document-open and object/menu snapshot tests ====
 void test_open_document_path_error_resolves_through_localization_catalog();
 void test_open_document_infers_form_sidecar();
+void test_open_document_infers_read_only_from_asset_family_writability();
 void test_open_document_uses_vfp_filename_for_display_name();
 void test_open_document_attaches_default_designer_contexts();
 void test_open_document_preserves_launch_selection_record_metadata();

@@ -87,6 +87,79 @@ void test_open_document_infers_form_sidecar() {
     fs::remove(temp_dir, ignored);
 }
 
+void test_open_document_infers_read_only_from_asset_family_writability() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_studio_host_read_only_document_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path form_path = temp_dir / "customer.scx";
+    const fs::path sidecar_path = temp_dir / "customer.sct";
+
+    {
+        const auto bytes = make_vfp_header();
+        std::ofstream output(form_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+
+    {
+        std::ofstream output(sidecar_path, std::ios::binary);
+        output << "memo-sidecar";
+    }
+
+    const auto writable_result = copperfin::studio::open_document({
+        .path = form_path.string(),
+        .read_only = false
+    });
+    expect(writable_result.ok, "#3506: writable sidecar-backed assets should open");
+    expect(!writable_result.document.read_only,
+           "#3506: writable sidecar-backed assets should remain editable unless explicitly launched read-only");
+
+    const auto main_original_permissions = fs::status(form_path, ignored).permissions();
+    const auto sidecar_original_permissions = fs::status(sidecar_path, ignored).permissions();
+    fs::permissions(
+        sidecar_path,
+        fs::perms::owner_write | fs::perms::group_write | fs::perms::others_write,
+        fs::perm_options::remove,
+        ignored);
+
+    const auto read_only_sidecar_result = copperfin::studio::open_document({
+        .path = form_path.string(),
+        .read_only = false
+    });
+    expect(read_only_sidecar_result.ok, "#3506: sidecar read-only assets should still open");
+    expect(read_only_sidecar_result.document.read_only,
+           "#3506: sidecar-backed assets should report read-only when the existing sidecar is not writable");
+
+    fs::permissions(sidecar_path, sidecar_original_permissions, fs::perm_options::replace, ignored);
+    fs::permissions(
+        form_path,
+        fs::perms::owner_write | fs::perms::group_write | fs::perms::others_write,
+        fs::perm_options::remove,
+        ignored);
+
+    const auto read_only_main_result = copperfin::studio::open_document({
+        .path = form_path.string(),
+        .read_only = false
+    });
+    expect(read_only_main_result.ok, "#3506: main-file read-only assets should still open");
+    expect(read_only_main_result.document.read_only,
+           "#3506: sidecar-backed assets should report read-only when the main asset file is not writable");
+
+    fs::permissions(form_path, main_original_permissions, fs::perm_options::replace, ignored);
+
+    const auto explicit_read_only_result = copperfin::studio::open_document({
+        .path = form_path.string(),
+        .read_only = true
+    });
+    expect(explicit_read_only_result.ok, "#3506: explicit read-only launches should still open");
+    expect(explicit_read_only_result.document.read_only,
+           "#3506: explicit read-only launches should continue to force read-only document state");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_open_document_uses_vfp_filename_for_display_name() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() / "copperfin_studio_host_vfp_filename_tests";

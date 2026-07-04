@@ -11,6 +11,7 @@
 #include <charconv>
 #include <cctype>
 #include <filesystem>
+#include <fstream>
 #include <optional>
 #include <string_view>
 
@@ -36,6 +37,31 @@ std::string document_text(
 std::string filename_of(const std::string& path) {
     const std::size_t separator = path.find_last_of("/\\");
     return separator == std::string::npos ? path : path.substr(separator + 1U);
+}
+
+bool path_is_writable(const std::filesystem::path& path) {
+    std::error_code ignored;
+    if (!std::filesystem::exists(path, ignored) || ignored) {
+        return false;
+    }
+
+    std::fstream stream(path, std::ios::in | std::ios::out | std::ios::binary);
+    return stream.is_open();
+}
+
+bool asset_family_is_writable(
+    const std::filesystem::path& path,
+    std::string_view sidecar_path,
+    bool has_sidecar) {
+    if (!path_is_writable(path)) {
+        return false;
+    }
+
+    if (!has_sidecar) {
+        return true;
+    }
+
+    return path_is_writable(std::filesystem::path(sidecar_path));
 }
 
 const vfp::DbfRecordValue* find_value(const vfp::DbfRecord& record, std::string_view field_name) {
@@ -852,7 +878,8 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
     document.kind = studio_asset_kind_from_vfp_family(inspection.family);
     document.sidecar_path = infer_sidecar_path(request.path, document.kind);
     document.has_sidecar = !document.sidecar_path.empty() && std::filesystem::exists(document.sidecar_path);
-    document.read_only = request.read_only;
+    document.read_only = request.read_only ||
+        !asset_family_is_writable(request.path, document.sidecar_path, document.has_sidecar);
     document.launched_from_visual_studio = request.launched_from_visual_studio;
     document.selection_record_available = request.selection_record_available;
     document.selection_line = request.line;
