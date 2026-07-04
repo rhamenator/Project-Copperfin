@@ -645,8 +645,22 @@ Program parse_program(const std::string& path) {
         }
         if (starts_with_insensitive(line, "PROCEDURE ") || starts_with_insensitive(line, "FUNCTION ")) {
             const auto separator = line.find(' ');
+            std::string routine_signature = trim_copy(line.substr(separator + 1U));
+            std::string inline_parameter_clause;
+            if (const std::size_t open_paren = routine_signature.find('(');
+                open_paren != std::string::npos)
+            {
+                const std::size_t close_paren = routine_signature.rfind(')');
+                if (close_paren != std::string::npos && close_paren > open_paren)
+                {
+                    inline_parameter_clause = trim_copy(
+                        routine_signature.substr(open_paren + 1U, close_paren - open_paren - 1U));
+                    routine_signature = trim_copy(routine_signature.substr(0U, open_paren));
+                }
+            }
+
             Routine routine;
-            routine.name = trim_copy(line.substr(separator + 1U));
+            routine.name = std::move(routine_signature);
             routine.kind = starts_with_insensitive(line, "FUNCTION ")
                 ? RoutineKind::function
                 : RoutineKind::procedure;
@@ -657,6 +671,16 @@ Program parse_program(const std::string& path) {
                 current = &program.routines[normalize_identifier(routine.name)];
             }
             *current = std::move(routine);
+            if (!inline_parameter_clause.empty())
+            {
+                Statement parameters = make_statement(
+                    StatementKind::lparameters_declaration,
+                    path,
+                    line_number,
+                    "LPARAMETERS " + inline_parameter_clause);
+                parameters.names = split_csv_like(inline_parameter_clause);
+                current->statements.push_back(std::move(parameters));
+            }
             continue;
         }
         if (starts_with_insensitive(line, "ENDPROC") || starts_with_insensitive(line, "ENDFUNC") || starts_with_insensitive(line, "END FUNC")) {

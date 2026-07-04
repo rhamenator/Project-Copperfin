@@ -761,6 +761,18 @@ namespace copperfin::runtime
             RuntimeOleObjectState &runtime_object,
             const std::string &property_name,
             const Frame &source_frame);
+        std::optional<PrgValue> invoke_runtime_object_reference_member(
+            const PrgValue &object_reference,
+            const std::string &member_path,
+            const Frame &source_frame,
+            const std::vector<PrgValue> &arguments,
+            const std::vector<std::optional<std::string>> &argument_references);
+        PrgValue invoke_runtime_object_member(
+            RuntimeOleObjectState &runtime_object,
+            const std::string &effective_member_path,
+            const Frame &source_frame,
+            const std::vector<PrgValue> &arguments,
+            const std::vector<std::optional<std::string>> &argument_references);
         bool write_native_property_if_present(
             RuntimeOleObjectState &runtime_object,
             const std::string &property_name,
@@ -1115,6 +1127,16 @@ namespace copperfin::runtime
                 };
                 ResolvedRuntimeObjectMemberPath resolved_path;
                 const std::string normalized_base_name = normalize_identifier(base_name);
+                if (const auto direct_result = invoke_runtime_object_reference_member(
+                        make_string_value(base_name),
+                        member_path,
+                        frame,
+                        arguments,
+                        argument_references);
+                    direct_result.has_value())
+                {
+                    return *direct_result;
+                }
                 if (normalized_base_name == "_vfp" || normalized_base_name == "_screen")
                 {
                     if (const auto forms_tail = application_forms_member_tail(member_path);
@@ -1156,469 +1178,16 @@ namespace copperfin::runtime
                                                {{"targetIdentifier", base_name + "." + member_path}}));
                 }
 
-                RuntimeOleObjectState *runtime_object = resolved_path.runtime_object;
-                const auto make_runtime_object_reference = [](const RuntimeOleObjectState &object_state) -> PrgValue
-                {
-                    return make_string_value("object:" + object_state.prog_id + "#" + std::to_string(object_state.handle));
-                };
                 const std::string effective_member_path =
                     resolved_path.remaining_member_path.empty()
                         ? member_path
                         : resolved_path.remaining_member_path;
-                const std::string leaf = normalize_identifier(
-                    effective_member_path.substr(
-                        effective_member_path.rfind('.') == std::string::npos
-                            ? 0U
-                            : effective_member_path.rfind('.') + 1U));
-                if (leaf == "addobject" && !runtime_object->source.empty() && arguments.size() >= 2U)
-                {
-                    const std::string child_name_text = trim_copy(value_as_string(arguments[0]));
-                    const std::string child_name = normalize_identifier(child_name_text);
-                    const std::string child_class = trim_copy(value_as_string(arguments[1]));
-                    if (child_name.empty() || child_class.empty())
-                    {
-                        return make_boolean_value(false);
-                    }
-
-                    const std::string child_library =
-                        arguments.size() >= 3U ? trim_copy(value_as_string(arguments[2])) : std::string{};
-                    const bool explicit_native_prg_library =
-                        lowercase_copy(std::filesystem::path(child_library).extension().string()) == ".prg";
-                    const std::string implicit_child_program_path =
-                        frame.native_method_class_name.empty()
-                            ? runtime_object->source
-                            : frame.file_path;
-                    const std::size_t constructor_start_index = explicit_native_prg_library ? 3U : 2U;
-                    std::vector<PrgValue> child_constructor_arguments;
-                    std::vector<std::optional<std::string>> child_argument_references;
-                    child_constructor_arguments.reserve(arguments.size() > constructor_start_index ? arguments.size() - constructor_start_index : 0U);
-                    child_argument_references.reserve(argument_references.size() > constructor_start_index ? argument_references.size() - constructor_start_index : 0U);
-                    for (std::size_t index = constructor_start_index; index < arguments.size(); ++index)
-                    {
-                        child_constructor_arguments.push_back(arguments[index]);
-                        child_argument_references.push_back(
-                            index < argument_references.size()
-                                ? argument_references[index]
-                                : std::optional<std::string>{});
-                    }
-
-                    const std::string primary_child_program_path =
-                        explicit_native_prg_library
-                            ? resolve_native_prg_program_path(child_library, implicit_child_program_path)
-                            : implicit_child_program_path;
-                    RuntimeOleObjectState *child_object = instantiate_native_class_object(
-                        frame,
-                        child_class,
-                        primary_child_program_path,
-                        "addobject",
-                        child_constructor_arguments,
-                        child_argument_references,
-                        make_runtime_object_reference(*runtime_object));
-                    if (child_object == nullptr && !explicit_native_prg_library)
-                    {
-                        const std::string owner_program_path = normalize_path(runtime_object->source);
-                        if (!owner_program_path.empty() &&
-                            owner_program_path != normalize_path(primary_child_program_path))
-                        {
-                            child_object = instantiate_native_class_object(
-                                frame,
-                                child_class,
-                                owner_program_path,
-                                "addobject",
-                                child_constructor_arguments,
-                                child_argument_references,
-                                make_runtime_object_reference(*runtime_object));
-                        }
-                    }
-                    if (child_object == nullptr)
-                    {
-                        return make_boolean_value(false);
-                    }
-
-                    assign_native_runtime_object_name(*child_object, child_name_text);
-                    runtime_object->properties[child_name] = make_runtime_object_reference(*child_object);
-                    if (child_object->properties.contains("columnorder"))
-                    {
-                        (void)write_native_columnorder_property(
-                            *child_object,
-                            child_object->properties["columnorder"]);
-                    }
-                    if (is_native_column_runtime_object(*runtime_object) &&
-                        native_column_bound_value(*runtime_object))
-                    {
-                        sync_native_column_child_controlsources(*runtime_object);
-                    }
-                    (void)sync_native_owned_children_collection(*runtime_object);
-                    runtime_object->last_action = effective_member_path + "(" + child_name + "," + child_class + ")";
-                    ++runtime_object->action_count;
-                    events.push_back({.category = "prg.object.addobject",
-                                      .detail = runtime_object->prog_id + "." + child_name + ":" + child_class,
-                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
-                    return make_boolean_value(true);
-                }
-                if (leaf == "removeobject" && !runtime_object->source.empty() && !arguments.empty())
-                {
-                    const std::string child_name = normalize_identifier(trim_copy(value_as_string(arguments[0])));
-                    if (child_name.empty())
-                    {
-                        return make_boolean_value(false);
-                    }
-
-                    const auto child_property = runtime_object->properties.find(child_name);
-                    if (child_property == runtime_object->properties.end())
-                    {
-                        return make_boolean_value(false);
-                    }
-
-                    const auto child_object = resolve_ole_object(child_property->second);
-                    if (!child_object.has_value())
-                    {
-                        return make_boolean_value(false);
-                    }
-                    if ((*child_object)->hidden_runtime_surface)
-                    {
-                        return make_boolean_value(false);
-                    }
-
-                    const auto child_parent = native_object_parent_reference(**child_object);
-                    int parent_handle = 0;
-                    std::string parent_prog_id;
-                    if (!child_parent.has_value() ||
-                        !parse_object_handle_reference(*child_parent, parent_handle, parent_prog_id) ||
-                        parent_handle != runtime_object->handle)
-                    {
-                        return make_boolean_value(false);
-                    }
-
-                    (*child_object)->properties.erase("parent");
-                    runtime_object->properties.erase(child_name);
-                    (void)sync_native_owned_children_collection(*runtime_object);
-                    runtime_object->last_action = effective_member_path + "(" + child_name + ")";
-                    ++runtime_object->action_count;
-                    events.push_back({.category = "prg.object.removeobject",
-                                      .detail = runtime_object->prog_id + "." + child_name,
-                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
-                    return make_boolean_value(true);
-                }
-                if (leaf == "setall" && !runtime_object->source.empty())
-                {
-                    return apply_native_setall(
-                        *runtime_object,
-                        frame,
-                        effective_member_path,
-                        arguments);
-                }
-                if (leaf == "release" && !runtime_object->source.empty())
-                {
-                    last_popped_frame_requested_nodefault = false;
-                    if (auto native_result = invoke_native_object_method_if_present(
-                            *runtime_object,
-                            leaf,
-                            frame,
-                            arguments,
-                            argument_references);
-                        native_result.has_value())
-                    {
-                        if (consume_last_popped_frame_requested_nodefault())
-                        {
-                            return *native_result;
-                        }
-                    }
-                    return release_native_object(*runtime_object, effective_member_path);
-                }
-                if (auto native_result = invoke_native_object_method_if_present(
-                        *runtime_object,
-                        leaf,
-                        frame,
-                        arguments,
-                        argument_references);
-                            native_result.has_value())
-                {
-                    return *native_result;
-                }
-                if (leaf == "move" &&
-                    is_native_visual_runtime_object(*runtime_object))
-                {
-                    if (arguments.empty())
-                    {
-                        return make_empty_value();
-                    }
-
-                    const bool left_written = write_native_property_if_present(
-                        *runtime_object,
-                        "left",
-                        make_number_value(value_as_number(arguments[0])),
-                        frame);
-                    if (!left_written)
-                    {
-                        return make_empty_value();
-                    }
-
-                    if (arguments.size() >= 2U)
-                    {
-                        (void)write_native_property_if_present(
-                            *runtime_object,
-                            "top",
-                            make_number_value(value_as_number(arguments[1])),
-                            frame);
-                    }
-                    if (arguments.size() >= 3U)
-                    {
-                        (void)write_native_property_if_present(
-                            *runtime_object,
-                            "width",
-                            make_number_value(value_as_number(arguments[2])),
-                            frame);
-                    }
-                    if (arguments.size() >= 4U)
-                    {
-                        (void)write_native_property_if_present(
-                            *runtime_object,
-                            "height",
-                            make_number_value(value_as_number(arguments[3])),
-                            frame);
-                    }
-
-                    runtime_object->last_action = effective_member_path + "()";
-                    ++runtime_object->action_count;
-                    events.push_back({.category = "prg.object.move",
-                                      .detail = runtime_object->prog_id + "." + effective_member_path,
-                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
-                    return make_empty_value();
-                }
-                if (leaf == "refresh" && !runtime_object->class_hierarchy.empty())
-                {
-                    runtime_object->last_action = effective_member_path + "()";
-                    ++runtime_object->action_count;
-                    events.push_back({.category = "prg.object.refresh",
-                                      .detail = runtime_object->prog_id + "." + effective_member_path,
-                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
-                    return make_empty_value();
-                }
-                if ((leaf == "show" || leaf == "hide") &&
-                    is_native_visual_runtime_object(*runtime_object))
-                {
-                    const bool visible = leaf == "show";
-                    (void)write_native_property_if_present(
-                        *runtime_object,
-                        "visible",
-                        make_boolean_value(visible),
-                        frame);
-                    if (visible)
-                    {
-                        note_representative_active_form(*runtime_object);
-                    }
-                    runtime_object->last_action = effective_member_path + "()";
-                    ++runtime_object->action_count;
-                    events.push_back({.category = visible ? "prg.object.show" : "prg.object.hide",
-                                      .detail = runtime_object->prog_id + "." + effective_member_path,
-                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
-                    return make_empty_value();
-                }
-                if (leaf == "setfocus" &&
-                    is_native_focusable_runtime_object(*runtime_object))
-                {
-                    const PrgValue runtime_object_reference =
-                        make_string_value("object:" + runtime_object->prog_id + "#" + std::to_string(runtime_object->handle));
-                    note_representative_active_form(*runtime_object);
-                    if (const auto owner_form_reference = native_object_owner_form_reference(*runtime_object);
-                        owner_form_reference.has_value())
-                    {
-                        if (auto owner_form = resolve_ole_object(*owner_form_reference);
-                            owner_form.has_value())
-                        {
-                            (void)write_native_property_if_present(
-                                **owner_form,
-                                "activecontrol",
-                                runtime_object_reference,
-                                frame);
-                        }
-                    }
-                    else if (normalize_identifier(trim_copy(runtime_object->base_class_name)) == "form")
-                    {
-                        (void)write_native_property_if_present(
-                            *runtime_object,
-                            "activecontrol",
-                            runtime_object_reference,
-                            frame);
-                    }
-                    runtime_object->last_action = effective_member_path + "()";
-                    ++runtime_object->action_count;
-                    events.push_back({.category = "prg.object.setfocus",
-                                      .detail = runtime_object->prog_id + "." + effective_member_path,
-                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
-                    return make_empty_value();
-                }
-                if (leaf == "resettodefault" && !runtime_object->class_hierarchy.empty())
-                {
-                    if (arguments.empty())
-                    {
-                        return make_boolean_value(false);
-                    }
-
-                    const std::string property_name = trim_copy(value_as_string(arguments.front()));
-                    const std::string normalized_property_name = normalize_identifier(property_name);
-                    if (normalized_property_name.empty())
-                    {
-                        return make_boolean_value(false);
-                    }
-
-                    const auto default_value = runtime_object->default_properties.find(normalized_property_name);
-                    if (default_value == runtime_object->default_properties.end())
-                    {
-                        return make_boolean_value(false);
-                    }
-
-                    const bool restored = write_native_property_if_present(
-                        *runtime_object,
-                        property_name,
-                        default_value->second,
-                        frame);
-                    if (!restored)
-                    {
-                        return make_boolean_value(false);
-                    }
-
-                    runtime_object->last_action = effective_member_path + "(" + property_name + ")";
-                    ++runtime_object->action_count;
-                    events.push_back({.category = "prg.object.resettodefault",
-                                      .detail = runtime_object->prog_id + "." + normalized_property_name,
-                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
-                    return make_boolean_value(true);
-                }
-                if (is_native_olecontrol_host_object(*runtime_object) && leaf == "doverb")
-                {
-                    RuntimeOleObjectState *object_surface = ensure_native_olecontrol_object_surface(*runtime_object);
-                    if (object_surface == nullptr)
-                    {
-                        return make_boolean_value(false);
-                    }
-
-                    const PrgValue verb = arguments.empty()
-                                              ? make_number_value(0.0)
-                                              : canonicalize_native_olecontrol_doverb_argument(arguments.front());
-                    runtime_object->last_action = effective_member_path + "(" + format_value(verb) + ")";
-                    ++runtime_object->action_count;
-                    events.push_back({.category = "ole.invoke",
-                                      .detail = runtime_object->prog_id + "." + effective_member_path + ":" + format_value(verb),
-                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
-                    object_surface->last_action = "activate:" + format_value(verb);
-                    ++object_surface->action_count;
-                    return make_boolean_value(true);
-                }
-                if (is_native_olecontrol_host_object(*runtime_object) && leaf == "objectverbs")
-                {
-                    return read_native_olecontrol_objectverb_by_index(*runtime_object, arguments).value_or(make_empty_value());
-                }
-                if (is_native_olecontrol_host_object(*runtime_object))
-                {
-                    RuntimeOleObjectState *object_surface = ensure_native_olecontrol_object_surface(*runtime_object);
-                    if (object_surface != nullptr)
-                    {
-                        if (auto nested_native_result = invoke_native_object_method_if_present(
-                                *object_surface,
-                                leaf,
-                                frame,
-                                arguments,
-                                argument_references);
-                            nested_native_result.has_value())
-                        {
-                            return *nested_native_result;
-                        }
-                        runtime_object = object_surface;
-                    }
-                }
-
-                runtime_object->last_action = effective_member_path + "()";
-                ++runtime_object->action_count;
-                events.push_back({.category = "ole.invoke",
-                                  .detail = runtime_object->prog_id + "." + effective_member_path,
-                                  .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
-                if (auto collection_result = invoke_native_collection_method(*runtime_object, leaf, arguments);
-                    collection_result.has_value())
-                {
-                    return *collection_result;
-                }
-                if (normalize_identifier(runtime_object->prog_id) == "scripting.dictionary")
-                {
-                    auto update_dictionary_count = [&]()
-                    {
-                        std::size_t entry_count = 0U;
-                        for (const auto &[property_name, property_value] : runtime_object->properties)
-                        {
-                            if (property_name != "count" && property_name != "comparemode")
-                            {
-                                ++entry_count;
-                            }
-                        }
-                        runtime_object->properties["count"] = make_number_value(static_cast<double>(entry_count));
-                    };
-                    const auto key_for_argument = [&](std::size_t index) -> std::string
-                    {
-                        return index < arguments.size()
-                            ? normalize_identifier(trim_copy(value_as_string(arguments[index])))
-                            : std::string{};
-                    };
-
-                    if (leaf == "add" && arguments.size() >= 2U)
-                    {
-                        const std::string key = key_for_argument(0U);
-                        if (!key.empty())
-                        {
-                            runtime_object->properties[key] = arguments[1];
-                            update_dictionary_count();
-                        }
-                        return make_boolean_value(true);
-                    }
-                    if (leaf == "exists" && !arguments.empty())
-                    {
-                        const std::string key = key_for_argument(0U);
-                        return make_boolean_value(!key.empty() && runtime_object->properties.contains(key));
-                    }
-                    if (leaf == "item" && !arguments.empty())
-                    {
-                        const std::string key = key_for_argument(0U);
-                        const auto found = runtime_object->properties.find(key);
-                        return found == runtime_object->properties.end() ? make_empty_value() : found->second;
-                    }
-                    if (leaf == "remove" && !arguments.empty())
-                    {
-                        const std::string key = key_for_argument(0U);
-                        if (!key.empty())
-                        {
-                            runtime_object->properties.erase(key);
-                            update_dictionary_count();
-                        }
-                        return make_boolean_value(true);
-                    }
-                    if (leaf == "removeall")
-                    {
-                        const auto comparemode = runtime_object->properties.find("comparemode");
-                        const PrgValue comparemode_value = comparemode == runtime_object->properties.end()
-                            ? make_number_value(0.0)
-                            : comparemode->second;
-                        runtime_object->properties.clear();
-                        runtime_object->properties["comparemode"] = comparemode_value;
-                        runtime_object->properties["count"] = make_number_value(0.0);
-                        return make_boolean_value(true);
-                    }
-
-                    return raise_ole_fault(runtime_object->prog_id + "." + effective_member_path + "()",
-                                           base_name,
-                                           runtime_text(
-                                               "Runtime.Prg.Core.Error.OleMemberNotFoundForMethodInvocation",
-                                               {{"memberIdentifier", runtime_object->prog_id + "." + effective_member_path}}));
-                }
-
-                if (leaf == "add" || leaf == "create" || leaf == "open" || leaf == "item")
-                {
-                    return make_string_value("object:" + runtime_object->prog_id + "." + effective_member_path + "#" + std::to_string(runtime_object->handle));
-                }
-                if (arguments.empty())
-                {
-                    return make_string_value("ole:" + runtime_object->prog_id + "." + effective_member_path);
-                }
-                return arguments.front();
+                return invoke_runtime_object_member(
+                    *resolved_path.runtime_object,
+                    effective_member_path,
+                    frame,
+                    arguments,
+                    argument_references);
             },
             [this, &frame](const std::string &property_path)
             {
@@ -2362,6 +1931,19 @@ namespace copperfin::runtime
                 }
                 return read_native_property_if_present(*target_object, leaf_member_name, frame);
             },
+            [this, &frame](
+                const PrgValue &value,
+                const std::string &member_name,
+                const std::vector<PrgValue> &arguments,
+                const std::vector<std::optional<std::string>> &argument_references) -> std::optional<PrgValue>
+            {
+                return invoke_runtime_object_reference_member(
+                    value,
+                    member_name,
+                    frame,
+                    arguments,
+                    argument_references);
+            },
             [this, &frame](const PrgValue &value, const std::string &member_name, const PrgValue &assigned_value) -> bool
             {
                 auto object = resolve_ole_object(value);
@@ -2439,6 +2021,512 @@ namespace copperfin::runtime
                 return invoke_declared_dll_function(fn_key, fn_args, fn_argument_references);
             });
         return parser.parse();
+    }
+
+    std::optional<PrgValue> PrgRuntimeSession::Impl::invoke_runtime_object_reference_member(
+        const PrgValue &object_reference,
+        const std::string &member_path,
+        const Frame &source_frame,
+        const std::vector<PrgValue> &arguments,
+        const std::vector<std::optional<std::string>> &argument_references)
+    {
+        auto object = resolve_ole_object(object_reference);
+        if (!object.has_value())
+        {
+            return std::nullopt;
+        }
+
+        const auto resolved_path = resolve_runtime_object_member_path(*object, member_path);
+        if (resolved_path.runtime_object == nullptr)
+        {
+            return std::nullopt;
+        }
+
+        return invoke_runtime_object_member(
+            *resolved_path.runtime_object,
+            resolved_path.remaining_member_path.empty()
+                ? member_path
+                : resolved_path.remaining_member_path,
+            source_frame,
+            arguments,
+            argument_references);
+    }
+
+    PrgValue PrgRuntimeSession::Impl::invoke_runtime_object_member(
+        RuntimeOleObjectState &runtime_object,
+        const std::string &effective_member_path,
+        const Frame &frame,
+        const std::vector<PrgValue> &arguments,
+        const std::vector<std::optional<std::string>> &argument_references)
+    {
+        const auto make_runtime_object_reference = [](const RuntimeOleObjectState &object_state) -> PrgValue
+        {
+            return make_string_value("object:" + object_state.prog_id + "#" + std::to_string(object_state.handle));
+        };
+        RuntimeOleObjectState *target_object = &runtime_object;
+        const std::string leaf = normalize_identifier(
+            effective_member_path.substr(
+                effective_member_path.rfind('.') == std::string::npos
+                    ? 0U
+                    : effective_member_path.rfind('.') + 1U));
+
+        if (leaf == "addobject" && !target_object->source.empty() && arguments.size() >= 2U)
+        {
+            const std::string child_name_text = trim_copy(value_as_string(arguments[0]));
+            const std::string child_name = normalize_identifier(child_name_text);
+            const std::string child_class = trim_copy(value_as_string(arguments[1]));
+            if (child_name.empty() || child_class.empty())
+            {
+                return make_boolean_value(false);
+            }
+
+            const std::string child_library =
+                arguments.size() >= 3U ? trim_copy(value_as_string(arguments[2])) : std::string{};
+            const bool explicit_native_prg_library =
+                lowercase_copy(std::filesystem::path(child_library).extension().string()) == ".prg";
+            const std::string implicit_child_program_path =
+                frame.native_method_class_name.empty()
+                    ? target_object->source
+                    : frame.file_path;
+            const std::size_t constructor_start_index = explicit_native_prg_library ? 3U : 2U;
+            std::vector<PrgValue> child_constructor_arguments;
+            std::vector<std::optional<std::string>> child_argument_references;
+            child_constructor_arguments.reserve(arguments.size() > constructor_start_index ? arguments.size() - constructor_start_index : 0U);
+            child_argument_references.reserve(argument_references.size() > constructor_start_index ? argument_references.size() - constructor_start_index : 0U);
+            for (std::size_t index = constructor_start_index; index < arguments.size(); ++index)
+            {
+                child_constructor_arguments.push_back(arguments[index]);
+                child_argument_references.push_back(
+                    index < argument_references.size()
+                        ? argument_references[index]
+                        : std::optional<std::string>{});
+            }
+
+            const std::string primary_child_program_path =
+                explicit_native_prg_library
+                    ? resolve_native_prg_program_path(child_library, implicit_child_program_path)
+                    : implicit_child_program_path;
+            RuntimeOleObjectState *child_object = instantiate_native_class_object(
+                frame,
+                child_class,
+                primary_child_program_path,
+                "addobject",
+                child_constructor_arguments,
+                child_argument_references,
+                make_runtime_object_reference(*target_object));
+            if (child_object == nullptr && !explicit_native_prg_library)
+            {
+                const std::string owner_program_path = normalize_path(target_object->source);
+                if (!owner_program_path.empty() &&
+                    owner_program_path != normalize_path(primary_child_program_path))
+                {
+                    child_object = instantiate_native_class_object(
+                        frame,
+                        child_class,
+                        owner_program_path,
+                        "addobject",
+                        child_constructor_arguments,
+                        child_argument_references,
+                        make_runtime_object_reference(*target_object));
+                }
+            }
+            if (child_object == nullptr)
+            {
+                return make_boolean_value(false);
+            }
+
+            assign_native_runtime_object_name(*child_object, child_name_text);
+            target_object->properties[child_name] = make_runtime_object_reference(*child_object);
+            if (child_object->properties.contains("columnorder"))
+            {
+                (void)write_native_columnorder_property(
+                    *child_object,
+                    child_object->properties["columnorder"]);
+            }
+            if (is_native_column_runtime_object(*target_object) &&
+                native_column_bound_value(*target_object))
+            {
+                sync_native_column_child_controlsources(*target_object);
+            }
+            (void)sync_native_owned_children_collection(*target_object);
+            target_object->last_action = effective_member_path + "(" + child_name + "," + child_class + ")";
+            ++target_object->action_count;
+            events.push_back({.category = "prg.object.addobject",
+                              .detail = target_object->prog_id + "." + child_name + ":" + child_class,
+                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            return make_boolean_value(true);
+        }
+        if (leaf == "removeobject" && !target_object->source.empty() && !arguments.empty())
+        {
+            const std::string child_name = normalize_identifier(trim_copy(value_as_string(arguments[0])));
+            if (child_name.empty())
+            {
+                return make_boolean_value(false);
+            }
+
+            const auto child_property = target_object->properties.find(child_name);
+            if (child_property == target_object->properties.end())
+            {
+                return make_boolean_value(false);
+            }
+
+            const auto child_object = resolve_ole_object(child_property->second);
+            if (!child_object.has_value())
+            {
+                return make_boolean_value(false);
+            }
+            if ((*child_object)->hidden_runtime_surface)
+            {
+                return make_boolean_value(false);
+            }
+
+            const auto child_parent = native_object_parent_reference(**child_object);
+            int parent_handle = 0;
+            std::string parent_prog_id;
+            if (!child_parent.has_value() ||
+                !parse_object_handle_reference(*child_parent, parent_handle, parent_prog_id) ||
+                parent_handle != target_object->handle)
+            {
+                return make_boolean_value(false);
+            }
+
+            (*child_object)->properties.erase("parent");
+            target_object->properties.erase(child_name);
+            (void)sync_native_owned_children_collection(*target_object);
+            target_object->last_action = effective_member_path + "(" + child_name + ")";
+            ++target_object->action_count;
+            events.push_back({.category = "prg.object.removeobject",
+                              .detail = target_object->prog_id + "." + child_name,
+                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            return make_boolean_value(true);
+        }
+        if (leaf == "setall" && !target_object->source.empty())
+        {
+            return apply_native_setall(
+                *target_object,
+                frame,
+                effective_member_path,
+                arguments);
+        }
+        if (leaf == "release" && !target_object->source.empty())
+        {
+            last_popped_frame_requested_nodefault = false;
+            if (auto native_result = invoke_native_object_method_if_present(
+                    *target_object,
+                    leaf,
+                    frame,
+                    arguments,
+                    argument_references);
+                native_result.has_value())
+            {
+                if (consume_last_popped_frame_requested_nodefault())
+                {
+                    return *native_result;
+                }
+            }
+            return release_native_object(*target_object, effective_member_path);
+        }
+        if (auto native_result = invoke_native_object_method_if_present(
+                *target_object,
+                leaf,
+                frame,
+                arguments,
+                argument_references);
+            native_result.has_value())
+        {
+            return *native_result;
+        }
+        if (leaf == "move" &&
+            is_native_visual_runtime_object(*target_object))
+        {
+            if (arguments.empty())
+            {
+                return make_empty_value();
+            }
+
+            const bool left_written = write_native_property_if_present(
+                *target_object,
+                "left",
+                make_number_value(value_as_number(arguments[0])),
+                frame);
+            if (!left_written)
+            {
+                return make_empty_value();
+            }
+
+            if (arguments.size() >= 2U)
+            {
+                (void)write_native_property_if_present(
+                    *target_object,
+                    "top",
+                    make_number_value(value_as_number(arguments[1])),
+                    frame);
+            }
+            if (arguments.size() >= 3U)
+            {
+                (void)write_native_property_if_present(
+                    *target_object,
+                    "width",
+                    make_number_value(value_as_number(arguments[2])),
+                    frame);
+            }
+            if (arguments.size() >= 4U)
+            {
+                (void)write_native_property_if_present(
+                    *target_object,
+                    "height",
+                    make_number_value(value_as_number(arguments[3])),
+                    frame);
+            }
+
+            target_object->last_action = effective_member_path + "()";
+            ++target_object->action_count;
+            events.push_back({.category = "prg.object.move",
+                              .detail = target_object->prog_id + "." + effective_member_path,
+                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            return make_empty_value();
+        }
+        if (leaf == "refresh" && !target_object->class_hierarchy.empty())
+        {
+            target_object->last_action = effective_member_path + "()";
+            ++target_object->action_count;
+            events.push_back({.category = "prg.object.refresh",
+                              .detail = target_object->prog_id + "." + effective_member_path,
+                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            return make_empty_value();
+        }
+        if ((leaf == "show" || leaf == "hide") &&
+            is_native_visual_runtime_object(*target_object))
+        {
+            const bool visible = leaf == "show";
+            (void)write_native_property_if_present(
+                *target_object,
+                "visible",
+                make_boolean_value(visible),
+                frame);
+            if (visible)
+            {
+                note_representative_active_form(*target_object);
+            }
+            target_object->last_action = effective_member_path + "()";
+            ++target_object->action_count;
+            events.push_back({.category = visible ? "prg.object.show" : "prg.object.hide",
+                              .detail = target_object->prog_id + "." + effective_member_path,
+                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            return make_empty_value();
+        }
+        if (leaf == "setfocus" &&
+            is_native_focusable_runtime_object(*target_object))
+        {
+            const PrgValue runtime_object_reference =
+                make_string_value("object:" + target_object->prog_id + "#" + std::to_string(target_object->handle));
+            note_representative_active_form(*target_object);
+            if (const auto owner_form_reference = native_object_owner_form_reference(*target_object);
+                owner_form_reference.has_value())
+            {
+                if (auto owner_form = resolve_ole_object(*owner_form_reference);
+                    owner_form.has_value())
+                {
+                    (void)write_native_property_if_present(
+                        **owner_form,
+                        "activecontrol",
+                        runtime_object_reference,
+                        frame);
+                }
+            }
+            else if (normalize_identifier(trim_copy(target_object->base_class_name)) == "form")
+            {
+                (void)write_native_property_if_present(
+                    *target_object,
+                    "activecontrol",
+                    runtime_object_reference,
+                    frame);
+            }
+            target_object->last_action = effective_member_path + "()";
+            ++target_object->action_count;
+            events.push_back({.category = "prg.object.setfocus",
+                              .detail = target_object->prog_id + "." + effective_member_path,
+                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            return make_empty_value();
+        }
+        if (leaf == "resettodefault" && !target_object->class_hierarchy.empty())
+        {
+            if (arguments.empty())
+            {
+                return make_boolean_value(false);
+            }
+
+            const std::string property_name = trim_copy(value_as_string(arguments.front()));
+            const std::string normalized_property_name = normalize_identifier(property_name);
+            if (normalized_property_name.empty())
+            {
+                return make_boolean_value(false);
+            }
+
+            const auto default_value = target_object->default_properties.find(normalized_property_name);
+            if (default_value == target_object->default_properties.end())
+            {
+                return make_boolean_value(false);
+            }
+
+            const bool restored = write_native_property_if_present(
+                *target_object,
+                property_name,
+                default_value->second,
+                frame);
+            if (!restored)
+            {
+                return make_boolean_value(false);
+            }
+
+            target_object->last_action = effective_member_path + "(" + property_name + ")";
+            ++target_object->action_count;
+            events.push_back({.category = "prg.object.resettodefault",
+                              .detail = target_object->prog_id + "." + normalized_property_name,
+                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            return make_boolean_value(true);
+        }
+        if (is_native_olecontrol_host_object(*target_object) && leaf == "doverb")
+        {
+            RuntimeOleObjectState *object_surface = ensure_native_olecontrol_object_surface(*target_object);
+            if (object_surface == nullptr)
+            {
+                return make_boolean_value(false);
+            }
+
+            const PrgValue verb = arguments.empty()
+                                      ? make_number_value(0.0)
+                                      : canonicalize_native_olecontrol_doverb_argument(arguments.front());
+            target_object->last_action = effective_member_path + "(" + format_value(verb) + ")";
+            ++target_object->action_count;
+            events.push_back({.category = "ole.invoke",
+                              .detail = target_object->prog_id + "." + effective_member_path + ":" + format_value(verb),
+                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            object_surface->last_action = "activate:" + format_value(verb);
+            ++object_surface->action_count;
+            return make_boolean_value(true);
+        }
+        if (is_native_olecontrol_host_object(*target_object) && leaf == "objectverbs")
+        {
+            return read_native_olecontrol_objectverb_by_index(*target_object, arguments).value_or(make_empty_value());
+        }
+        if (is_native_olecontrol_host_object(*target_object))
+        {
+            RuntimeOleObjectState *object_surface = ensure_native_olecontrol_object_surface(*target_object);
+            if (object_surface != nullptr)
+            {
+                if (auto nested_native_result = invoke_native_object_method_if_present(
+                        *object_surface,
+                        leaf,
+                        frame,
+                        arguments,
+                        argument_references);
+                    nested_native_result.has_value())
+                {
+                    return *nested_native_result;
+                }
+                target_object = object_surface;
+            }
+        }
+
+        target_object->last_action = effective_member_path + "()";
+        ++target_object->action_count;
+        events.push_back({.category = "ole.invoke",
+                          .detail = target_object->prog_id + "." + effective_member_path,
+                          .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+        if (auto collection_result = invoke_native_collection_method(*target_object, leaf, arguments);
+            collection_result.has_value())
+        {
+            return *collection_result;
+        }
+        if (normalize_identifier(target_object->prog_id) == "scripting.dictionary")
+        {
+            auto update_dictionary_count = [&]()
+            {
+                std::size_t entry_count = 0U;
+                for (const auto &[property_name, property_value] : target_object->properties)
+                {
+                    if (property_name != "count" && property_name != "comparemode")
+                    {
+                        ++entry_count;
+                    }
+                }
+                target_object->properties["count"] = make_number_value(static_cast<double>(entry_count));
+            };
+            const auto key_for_argument = [&](std::size_t index) -> std::string
+            {
+                return index < arguments.size()
+                    ? normalize_identifier(trim_copy(value_as_string(arguments[index])))
+                    : std::string{};
+            };
+
+            if (leaf == "add" && arguments.size() >= 2U)
+            {
+                const std::string key = key_for_argument(0U);
+                if (!key.empty())
+                {
+                    target_object->properties[key] = arguments[1];
+                    update_dictionary_count();
+                }
+                return make_boolean_value(true);
+            }
+            if (leaf == "exists" && !arguments.empty())
+            {
+                const std::string key = key_for_argument(0U);
+                return make_boolean_value(!key.empty() && target_object->properties.contains(key));
+            }
+            if (leaf == "item" && !arguments.empty())
+            {
+                const std::string key = key_for_argument(0U);
+                const auto found = target_object->properties.find(key);
+                return found == target_object->properties.end() ? make_empty_value() : found->second;
+            }
+            if (leaf == "remove" && !arguments.empty())
+            {
+                const std::string key = key_for_argument(0U);
+                if (!key.empty())
+                {
+                    target_object->properties.erase(key);
+                    update_dictionary_count();
+                }
+                return make_boolean_value(true);
+            }
+            if (leaf == "removeall")
+            {
+                const auto comparemode = target_object->properties.find("comparemode");
+                const PrgValue comparemode_value = comparemode == target_object->properties.end()
+                    ? make_number_value(0.0)
+                    : comparemode->second;
+                target_object->properties.clear();
+                target_object->properties["comparemode"] = comparemode_value;
+                target_object->properties["count"] = make_number_value(0.0);
+                return make_boolean_value(true);
+            }
+
+            const Statement *statement = current_statement();
+            const std::string action_text = statement == nullptr
+                ? target_object->prog_id + "." + effective_member_path + "()"
+                : statement->text;
+            record_ole_aerror_context(target_object->prog_id + "." + effective_member_path + "()",
+                                      "Copperfin OLE",
+                                      target_object->prog_id,
+                                      action_text,
+                                      1429);
+            throw std::runtime_error(
+                runtime_text(
+                    "Runtime.Prg.Core.Error.OleMemberNotFoundForMethodInvocation",
+                    {{"memberIdentifier", target_object->prog_id + "." + effective_member_path}}));
+        }
+
+        if (leaf == "add" || leaf == "create" || leaf == "open" || leaf == "item")
+        {
+            return make_string_value("object:" + target_object->prog_id + "." + effective_member_path + "#" + std::to_string(target_object->handle));
+        }
+        if (arguments.empty())
+        {
+            return make_string_value("ole:" + target_object->prog_id + "." + effective_member_path);
+        }
+        return arguments.front();
     }
 
     void PrgRuntimeSession::Impl::assign_native_window_metadata(RuntimeOleObjectState &runtime_object)

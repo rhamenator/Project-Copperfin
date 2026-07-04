@@ -43701,6 +43701,99 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_runtime_application_forms_aliases_invoke_builtin_and_custom_methods()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_forms_alias_method_invocation";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "runtime_forms_alias_method_invocation.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('AliasForm')\n"
+            "oForm.Show()\n"
+            "oForm.SetRefTable('direct')\n"
+            "cDirectSetId = oForm.cSetId\n"
+            "_SCREEN.Forms(1).Hide()\n"
+            "_VFP.Forms(1).Show()\n"
+            "_SCREEN.Forms(1).SetRefTable('foxref')\n"
+            "lVisibleAfterShow = oForm.Visible\n"
+            "cSetId = oForm.cSetId\n"
+            "RETURN\n"
+            "DEFINE CLASS AliasForm AS Form\n"
+            "    cSetId = ''\n"
+            "    PROCEDURE SetRefTable(tcSetId)\n"
+            "        THIS.cSetId = tcSetId\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("runtime Forms alias method invocation script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cdirectsetid", "direct");
+        check("lvisibleaftershow", "true");
+        check("csetid", "foxref");
+
+        const auto alias_form_it = std::find_if(state.ole_objects.begin(), state.ole_objects.end(), [](const auto &object)
+        {
+            return object.prog_id == "AliasForm";
+        });
+        expect(alias_form_it != state.ole_objects.end(),
+               "Forms alias method invocation script should retain the AliasForm runtime object");
+        if (alias_form_it != state.ole_objects.end())
+        {
+            expect(alias_form_it->source == main_path.string(),
+                   "Forms alias method invocation script should preserve AliasForm source metadata");
+            expect(std::find(alias_form_it->methods.begin(), alias_form_it->methods.end(), "SetRefTable") != alias_form_it->methods.end(),
+                   "Forms alias method invocation script should expose SetRefTable in the AliasForm method table");
+        }
+
+        const bool has_hide_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.hide" &&
+                   event.detail == "AliasForm.Hide";
+        });
+        expect(has_hide_event,
+               "Forms alias hide call should emit the builtin hide event against the selected form");
+
+        const bool has_show_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.show" &&
+                   event.detail == "AliasForm.Show";
+        });
+        expect(has_show_event,
+               "Forms alias show call should emit the builtin show event against the selected form");
+
+        const bool has_setref_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   event.detail == "AliasForm.SetRefTable";
+        });
+        expect(has_setref_invoke_event,
+               "Forms alias custom method call should emit a prg.object.invoke event");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_runtime_application_caption_aliases_track_representative_caption()
     {
         namespace fs = std::filesystem;
@@ -49601,6 +49694,7 @@ int main()
     test_native_setfocus_override_wins_over_builtin_activecontrol_toggle();
     test_runtime_application_activeform_aliases_track_representative_native_form();
     test_runtime_application_forms_aliases_track_representative_window_collection();
+    test_runtime_application_forms_aliases_invoke_builtin_and_custom_methods();
     test_runtime_application_caption_aliases_track_representative_caption();
     test_runtime_application_windowstate_aliases_track_representative_state();
     test_native_controlsource_defaults_mutates_and_stays_builtin();
