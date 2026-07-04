@@ -6534,6 +6534,90 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_string_control_value_defaults_mutates_and_stays_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_string_control_value";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_string_control_value.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('TextBox')\n"
+            "lPlainHasValue = PEMSTATUS(oPlain, 'Value', 1)\n"
+            "lPlainValueReadOnly = PEMSTATUS(oPlain, 'Value', 5)\n"
+            "cPlainBefore = oPlain.Value\n"
+            "xPlainGetPemBefore = GETPEM(oPlain, 'Value')\n"
+            "oPlain.Value = 'alpha'\n"
+            "cPlainAfterDirectAssign = oPlain.Value\n"
+            "lPlainSetPem = SETPEM(oPlain, 'Value', 'beta')\n"
+            "cPlainAfterSetPem = oPlain.Value\n"
+            "lPlainAddProperty = ADDPROPERTY(oPlain, 'Value', 'shadow')\n"
+            "lPlainRemoveProperty = REMOVEPROPERTY(oPlain, 'Value')\n"
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "cChildBefore = oForm.cboMonth.Value\n"
+            "oForm.cboMonth.Value = '07'\n"
+            "cChildAfterDirectAssign = oForm.cboMonth.Value\n"
+            "lChildSetPem = SETPEM(oForm.cboMonth, 'Value', '12')\n"
+            "cChildAfterSetPem = oForm.cboMonth.Value\n"
+            "xChildGetPem = GETPEM(oForm.cboMonth, 'Value')\n"
+            "lChildHasValue = PEMSTATUS(oForm.cboMonth, 'Value', 1)\n"
+            "lChildValueReadOnly = PEMSTATUS(oForm.cboMonth, 'Value', 5)\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oForm.cboMonth, 1)\n"
+            "lPropHasValue = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'VALUE'\n"
+            "        lPropHasValue = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "RETURN\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    ADD OBJECT cboMonth AS ComboBox\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native string-control Value property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplainhasvalue", "true");
+        check("lplainvaluereadonly", "false");
+        check("cplainbefore", "");
+        check("xplaingetpembefore", "");
+        check("cplainafterdirectassign", "alpha");
+        check("lplainsetpem", "true");
+        check("cplainaftersetpem", "beta");
+        check("lplainaddproperty", "false");
+        check("lplainremoveproperty", "false");
+        check("cchildbefore", "");
+        check("cchildafterdirectassign", "07");
+        check("lchildsetpem", "true");
+        check("cchildaftersetpem", "12");
+        check("xchildgetpem", "12");
+        check("lchildhasvalue", "true");
+        check("lchildvaluereadonly", "false");
+        check("lprophasvalue", "true");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_createobject_and_newobject_instantiate_same_prg_exception_native_class()
     {
         namespace fs = std::filesystem;
@@ -44708,6 +44792,7 @@ int main()
     test_native_form_lockscreen_defaults_mutates_and_stays_builtin();
     test_native_visual_enabled_defaults_mutates_and_stays_builtin();
     test_native_visual_visible_defaults_mutates_and_stays_builtin();
+    test_native_string_control_value_defaults_mutates_and_stays_builtin();
     test_createobject_and_newobject_instantiate_same_prg_exception_native_class();
     test_native_addobject_materializes_child_objects_and_child_methods_see_parent();
     test_native_class_body_add_object_materializes_children_before_init();

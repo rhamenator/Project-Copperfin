@@ -733,6 +733,20 @@ bool native_visual_visible_member_name_matches(
            runtime_object.properties.contains("visible");
 }
 
+bool native_string_control_value_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "value" ||
+        !runtime_object.properties.contains("value")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "textbox" ||
+           normalized_base_class == "combobox";
+}
+
 std::vector<std::string> collect_native_identity_member_names(const RuntimeOleObjectState& runtime_object) {
     std::vector<std::string> members;
     if (get_native_identity_reflection_metadata(runtime_object, "hwnd").has_value()) {
@@ -1113,6 +1127,11 @@ bool is_native_visual_enabled_member_name(const RuntimeOleObjectState& runtime_o
 bool is_native_visual_visible_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_visible_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_string_control_value_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_string_control_value_member_name_matches(runtime_object, normalized_member_name);
 }
 
 bool is_native_collection_object(const RuntimeOleObjectState& runtime_object)
@@ -1553,6 +1572,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_form_lockscreen_member_name(*runtime_object, property_name) ||
             is_native_visual_enabled_member_name(*runtime_object, property_name) ||
             is_native_visual_visible_member_name(*runtime_object, property_name) ||
+            is_native_string_control_value_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_creation_time_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_object_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_inspection_member_name(*runtime_object, property_name) ||
@@ -1730,6 +1750,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_form_lockscreen_member_name(*runtime_object, property_name) ||
             is_native_visual_enabled_member_name(*runtime_object, property_name) ||
             is_native_visual_visible_member_name(*runtime_object, property_name) ||
+            is_native_string_control_value_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_creation_time_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_object_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_inspection_member_name(*runtime_object, property_name) ||

@@ -184,6 +184,9 @@
 
         void seed_native_visual_properties(RuntimeOleObjectState &runtime_object)
         {
+            const std::string normalized_base_class =
+                normalize_identifier(trim_copy(runtime_object.base_class_name));
+
             if (is_native_visual_runtime_object(runtime_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("visible"))
@@ -197,7 +200,14 @@
                 runtime_object.properties["enabled"] = make_boolean_value(true);
             }
 
-            if (normalize_identifier(runtime_object.base_class_name) == "form" &&
+            if ((normalized_base_class == "textbox" ||
+                 normalized_base_class == "combobox") &&
+                !runtime_object.properties.contains("value"))
+            {
+                runtime_object.properties["value"] = make_string_value("");
+            }
+
+            if (normalized_base_class == "form" &&
                 !runtime_object.properties.contains("lockscreen"))
             {
                 runtime_object.properties["lockscreen"] = make_boolean_value(false);
