@@ -6360,6 +6360,92 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_form_alwaysontop_defaults_mutates_and_stays_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_form_alwaysontop";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_form_alwaysontop.prg";
+        write_text(
+            main_path,
+            "oBaseForm = CREATEOBJECT('Form')\n"
+            "lBaseHasAlwaysOnTop = PEMSTATUS(oBaseForm, 'AlwaysOnTop', 1)\n"
+            "lBaseAlwaysOnTopReadOnly = PEMSTATUS(oBaseForm, 'AlwaysOnTop', 5)\n"
+            "lBaseBefore = oBaseForm.AlwaysOnTop\n"
+            "xBaseGetPemBefore = GETPEM(oBaseForm, 'AlwaysOnTop')\n"
+            "oBaseForm.AlwaysOnTop = .T.\n"
+            "lBaseAfterDirectAssign = oBaseForm.AlwaysOnTop\n"
+            "lBaseSetPem = SETPEM(oBaseForm, 'AlwaysOnTop', .F.)\n"
+            "lBaseAfterSetPem = oBaseForm.AlwaysOnTop\n"
+            "lBaseAddProperty = ADDPROPERTY(oBaseForm, 'AlwaysOnTop', .T.)\n"
+            "lBaseRemoveProperty = REMOVEPROPERTY(oBaseForm, 'AlwaysOnTop')\n"
+            "oDerived = CREATEOBJECT('DemoForm')\n"
+            "lDerivedBefore = oDerived.AlwaysOnTop\n"
+            "cChildBefore = oDerived.cmdSave.ReadAlwaysOnTop()\n"
+            "oDerived.cmdSave.PinForm()\n"
+            "lDerivedAfterChild = oDerived.AlwaysOnTop\n"
+            "xDerivedGetPem = GETPEM(oDerived, 'AlwaysOnTop')\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oDerived, 1)\n"
+            "lPropHasAlwaysOnTop = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'ALWAYSONTOP'\n"
+            "        lPropHasAlwaysOnTop = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "RETURN\n"
+            "DEFINE CLASS SaveButton AS CommandButton\n"
+            "    FUNCTION ReadAlwaysOnTop\n"
+            "        RETURN IIF(THISFORM.AlwaysOnTop, 'T', 'F')\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE PinForm\n"
+            "        THISFORM.AlwaysOnTop = .T.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DemoForm AS Form\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Form AlwaysOnTop property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lbasehasalwaysontop", "true");
+        check("lbasealwaysontopreadonly", "false");
+        check("lbasebefore", "false");
+        check("xbasegetpembefore", "false");
+        check("lbaseafterdirectassign", "true");
+        check("lbasesetpem", "true");
+        check("lbaseaftersetpem", "false");
+        check("lbaseaddproperty", "false");
+        check("lbaseremoveproperty", "false");
+        check("lderivedbefore", "false");
+        check("cchildbefore", "F");
+        check("lderivedafterchild", "true");
+        check("xderivedgetpem", "true");
+        check("lprophasalwaysontop", "true");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_visual_enabled_defaults_mutates_and_stays_builtin()
     {
         namespace fs = std::filesystem;
@@ -45197,6 +45283,7 @@ int main()
     test_inherited_external_base_addobject_deeper_external_child_external_base_classlibrary_cannot_be_shadowed_through_direct_assignment();
     test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow();
     test_native_setall_recurses_over_descendants_and_honors_class_filters();
+    test_native_form_alwaysontop_defaults_mutates_and_stays_builtin();
     test_bare_dotted_native_refresh_statement_invokes_same_prg_override();
     test_bare_dotted_native_release_statement_uses_builtin_release_path();
     test_native_refresh_builtin_fallback_succeeds_for_form_and_children();

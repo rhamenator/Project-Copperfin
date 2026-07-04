@@ -245,6 +245,12 @@
             }
 
             if (normalized_base_class == "form" &&
+                !runtime_object.properties.contains("alwaysontop"))
+            {
+                runtime_object.properties["alwaysontop"] = make_boolean_value(false);
+            }
+
+            if (normalized_base_class == "form" &&
                 !runtime_object.properties.contains("lockscreen"))
             {
                 runtime_object.properties["lockscreen"] = make_boolean_value(false);
