@@ -958,6 +958,7 @@ bool native_controlsource_member_name_matches(
     return normalized_base_class == "textbox" ||
            normalized_base_class == "combobox" ||
            normalized_base_class == "editbox" ||
+           normalized_base_class == "column" ||
            normalized_base_class == "checkbox" ||
            normalized_base_class == "spinner";
 }
@@ -1207,6 +1208,17 @@ bool native_columncount_member_name_matches(
     return normalized_base_class == "combobox" ||
            normalized_base_class == "listbox" ||
            normalized_base_class == "grid";
+}
+
+bool native_column_bound_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "bound" ||
+        !runtime_object.properties.contains("bound")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "column";
 }
 
 bool native_columnwidths_member_name_matches(
@@ -1886,6 +1898,11 @@ bool is_native_columncount_member_name(const RuntimeOleObjectState& runtime_obje
     return native_columncount_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_column_bound_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_column_bound_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_columnwidths_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_columnwidths_member_name_matches(runtime_object, normalized_member_name);
@@ -2383,6 +2400,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_displayvalue_member_name(*runtime_object, property_name) ||
             is_native_boundcolumn_member_name(*runtime_object, property_name) ||
             is_native_columncount_member_name(*runtime_object, property_name) ||
+            is_native_column_bound_member_name(*runtime_object, property_name) ||
             is_native_columnwidths_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_creation_time_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_object_member_name(*runtime_object, property_name) ||
@@ -2538,7 +2556,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         if (object_has_member(runtime_object->methods, member_name) ||
             object_has_member(runtime_object->events, member_name)) {
             if (member_name == "columnorder" ||
-                member_name == "columncount") {
+                member_name == "columncount" ||
+                is_native_column_bound_member_name(*runtime_object, member_name) ||
+                is_native_controlsource_member_name(*runtime_object, member_name)) {
                 return make_boolean_value(
                     write_native_member_callback &&
                     write_native_member_callback(arguments[0], member_name, arguments[2]));
@@ -2555,7 +2575,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         if (runtime_object->properties.contains(member_name)) {
             if (member_name == "columnorder" ||
-                member_name == "columncount") {
+                member_name == "columncount" ||
+                is_native_column_bound_member_name(*runtime_object, member_name) ||
+                is_native_controlsource_member_name(*runtime_object, member_name)) {
                 return make_boolean_value(
                     write_native_member_callback &&
                     write_native_member_callback(arguments[0], member_name, arguments[2]));
@@ -2635,6 +2657,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_displayvalue_member_name(*runtime_object, property_name) ||
             is_native_boundcolumn_member_name(*runtime_object, property_name) ||
             is_native_columncount_member_name(*runtime_object, property_name) ||
+            is_native_column_bound_member_name(*runtime_object, property_name) ||
             is_native_columnwidths_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_creation_time_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_object_member_name(*runtime_object, property_name) ||

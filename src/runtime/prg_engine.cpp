@@ -1204,6 +1204,11 @@ namespace copperfin::runtime
                             *child_object,
                             child_object->properties["columnorder"]);
                     }
+                    if (is_native_column_runtime_object(*runtime_object) &&
+                        native_column_bound_value(*runtime_object))
+                    {
+                        sync_native_column_child_controlsources(*runtime_object);
+                    }
                     (void)sync_native_owned_children_collection(*runtime_object);
                     runtime_object->last_action = effective_member_path + "(" + child_name + "," + child_class + ")";
                     ++runtime_object->action_count;
@@ -3529,6 +3534,16 @@ namespace copperfin::runtime
                 !is_native_child_parent_member_name(runtime_object, normalized_property_name) &&
                 !is_native_collection_readonly_member_name(runtime_object, normalized_property_name))
             {
+                if (is_native_controlsource_member_name(runtime_object, normalized_property_name) &&
+                    !is_native_column_runtime_object(runtime_object) &&
+                    native_child_controlsource_write_blocked_by_parent_column(runtime_object))
+                {
+                    return false;
+                }
+                if (is_native_column_bound_member_name(runtime_object, normalized_property_name))
+                {
+                    return write_native_column_bound_property(runtime_object, assigned_value);
+                }
                 if (is_native_columnorder_member_name(runtime_object, normalized_property_name))
                 {
                     return write_native_columnorder_property(runtime_object, assigned_value);
@@ -3540,6 +3555,11 @@ namespace copperfin::runtime
                         runtime_object,
                         assigned_value,
                         source_frame);
+                }
+                if (is_native_controlsource_member_name(runtime_object, normalized_property_name) &&
+                    is_native_column_runtime_object(runtime_object))
+                {
+                    return write_native_column_controlsource_property(runtime_object, assigned_value);
                 }
                 if (normalized_property_name == "readonly" &&
                     native_combobox_readonly_assignment_blocked(runtime_object, assigned_value))

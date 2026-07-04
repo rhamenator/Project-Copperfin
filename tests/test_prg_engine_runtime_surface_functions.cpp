@@ -10018,6 +10018,136 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_column_bound_defaults_coordinate_controlsource_and_stay_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_column_bound";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_column_bound.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('Column')\n"
+            "lPlainHasBound = PEMSTATUS(oPlain, 'Bound', 1)\n"
+            "lPlainBoundReadOnly = PEMSTATUS(oPlain, 'Bound', 5)\n"
+            "lPlainHasControlSource = PEMSTATUS(oPlain, 'ControlSource', 1)\n"
+            "lPlainControlSourceReadOnly = PEMSTATUS(oPlain, 'ControlSource', 5)\n"
+            "lPlainBoundBefore = oPlain.Bound\n"
+            "cPlainControlSourceBefore = oPlain.ControlSource\n"
+            "xPlainBoundGetPemBefore = GETPEM(oPlain, 'Bound')\n"
+            "xPlainControlSourceGetPemBefore = GETPEM(oPlain, 'ControlSource')\n"
+            "oPlain.Bound = .F.\n"
+            "lPlainBoundAfterDirectAssign = oPlain.Bound\n"
+            "lPlainBoundSetPem = SETPEM(oPlain, 'Bound', .T.)\n"
+            "lPlainBoundAfterSetPem = oPlain.Bound\n"
+            "oPlain.ControlSource = 'customer.company'\n"
+            "cPlainControlSourceAfterDirectAssign = oPlain.ControlSource\n"
+            "lPlainControlSourceSetPem = SETPEM(oPlain, 'ControlSource', 'customer.contact')\n"
+            "cPlainControlSourceAfterSetPem = oPlain.ControlSource\n"
+            "lPlainBoundAddProperty = ADDPROPERTY(oPlain, 'Bound', .F.)\n"
+            "lPlainBoundRemoveProperty = REMOVEPROPERTY(oPlain, 'Bound')\n"
+            "oBound = CREATEOBJECT('InvoiceColumn')\n"
+            "lBoundBefore = oBound.Bound\n"
+            "cBoundColumnControlSourceBefore = oBound.ControlSource\n"
+            "cBoundChildControlSourceBefore = oBound.txtCell.ControlSource\n"
+            "oBound.txtCell.ControlSource = 'orders.note'\n"
+            "cBoundChildControlSourceAfterDirectBlocked = oBound.txtCell.ControlSource\n"
+            "lBoundChildSetPemBlocked = SETPEM(oBound.txtCell, 'ControlSource', 'orders.memo')\n"
+            "cBoundChildControlSourceAfterSetPemBlocked = oBound.txtCell.ControlSource\n"
+            "oBound.Bound = .F.\n"
+            "lBoundAfterUnbind = oBound.Bound\n"
+            "oBound.txtCell.ControlSource = 'orders.note'\n"
+            "cBoundChildControlSourceAfterDirectUnbound = oBound.txtCell.ControlSource\n"
+            "lBoundChildSetPemUnbound = SETPEM(oBound.txtCell, 'ControlSource', 'orders.memo')\n"
+            "cBoundChildControlSourceAfterSetPemUnbound = oBound.txtCell.ControlSource\n"
+            "oBound.ControlSource = 'orders.total'\n"
+            "cBoundColumnControlSourceAfterOverride = oBound.ControlSource\n"
+            "cBoundChildControlSourceAfterOverride = oBound.txtCell.ControlSource\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oBound, 1)\n"
+            "lPropHasBound = .F.\n"
+            "lPropHasControlSource = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    DO CASE\n"
+            "    CASE UPPER(aPropMembers[i]) == 'BOUND'\n"
+            "        lPropHasBound = .T.\n"
+            "    CASE UPPER(aPropMembers[i]) == 'CONTROLSOURCE'\n"
+            "        lPropHasControlSource = .T.\n"
+            "    ENDCASE\n"
+            "ENDFOR\n"
+            "oFree = CREATEOBJECT('FreeColumn')\n"
+            "lFreeBefore = oFree.Bound\n"
+            "cFreeColumnControlSourceBefore = oFree.ControlSource\n"
+            "cFreeChildControlSourceBefore = oFree.txtCell.ControlSource\n"
+            "RETURN\n"
+            "DEFINE CLASS InvoiceColumn AS Column\n"
+            "    ControlSource = 'orders.status'\n"
+            "    ADD OBJECT txtCell AS TextBox\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS FreeColumn AS Column\n"
+            "    Bound = .F.\n"
+            "    ControlSource = 'orders.header'\n"
+            "    ADD OBJECT txtCell AS TextBox WITH ControlSource = 'orders.note'\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Column Bound property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplainhasbound", "true");
+        check("lplainboundreadonly", "false");
+        check("lplainhascontrolsource", "true");
+        check("lplaincontrolsourcereadonly", "false");
+        check("lplainboundbefore", "true");
+        check("cplaincontrolsourcebefore", "");
+        check("xplainboundgetpembefore", "true");
+        check("xplaincontrolsourcegetpembefore", "");
+        check("lplainboundafterdirectassign", "false");
+        check("lplainboundsetpem", "true");
+        check("lplainboundaftersetpem", "true");
+        check("cplaincontrolsourceafterdirectassign", "customer.company");
+        check("lplaincontrolsourcesetpem", "true");
+        check("cplaincontrolsourceaftersetpem", "customer.contact");
+        check("lplainboundaddproperty", "false");
+        check("lplainboundremoveproperty", "false");
+        check("lboundbefore", "true");
+        check("cboundcolumncontrolsourcebefore", "orders.status");
+        check("cboundchildcontrolsourcebefore", "orders.status");
+        check("cboundchildcontrolsourceafterdirectblocked", "orders.status");
+        check("lboundchildsetpemblocked", "false");
+        check("cboundchildcontrolsourceaftersetpemblocked", "orders.status");
+        check("lboundafterunbind", "false");
+        check("cboundchildcontrolsourceafterdirectunbound", "orders.note");
+        check("lboundchildsetpemunbound", "true");
+        check("cboundchildcontrolsourceaftersetpemunbound", "orders.memo");
+        check("cboundcolumncontrolsourceafteroverride", "orders.total");
+        check("cboundchildcontrolsourceafteroverride", "orders.total");
+        check("lprophasbound", "true");
+        check("lprophascontrolsource", "true");
+        check("lfreebefore", "false");
+        check("cfreecolumncontrolsourcebefore", "orders.header");
+        check("cfreechildcontrolsourcebefore", "orders.note");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_visual_backcolor_defaults_mutate_and_stay_builtin()
     {
         namespace fs = std::filesystem;
@@ -49284,6 +49414,7 @@ int main()
     test_native_displayvalue_defaults_mutates_and_stays_builtin();
     test_native_combobox_boundcolumn_columncount_and_columnwidths_defaults_mutate_and_stay_builtin();
     test_native_grid_columncount_defaults_materialize_columns_and_stay_builtin();
+    test_native_column_bound_defaults_coordinate_controlsource_and_stay_builtin();
     test_native_visual_backcolor_defaults_mutate_and_stay_builtin();
     test_native_visual_forecolor_defaults_mutate_and_stay_builtin();
     test_native_release_thisform_command_releases_owner_form();

@@ -209,6 +209,107 @@
             return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "column";
         }
 
+        bool native_column_bound_value(
+            const RuntimeOleObjectState &runtime_object,
+            bool default_value = true) const
+        {
+            const auto bound = runtime_object.properties.find("bound");
+            return bound == runtime_object.properties.end()
+                       ? default_value
+                       : value_as_bool(bound->second);
+        }
+
+        RuntimeOleObjectState *native_parent_column_object(RuntimeOleObjectState &runtime_object)
+        {
+            const auto parent_reference = native_object_parent_reference(runtime_object);
+            if (!parent_reference.has_value())
+            {
+                return nullptr;
+            }
+
+            int parent_handle = 0;
+            std::string parent_prog_id;
+            if (!parse_object_handle_reference(*parent_reference, parent_handle, parent_prog_id))
+            {
+                return nullptr;
+            }
+
+            const auto parent_found = ole_objects.find(parent_handle);
+            if (parent_found == ole_objects.end() ||
+                !is_native_column_runtime_object(parent_found->second))
+            {
+                return nullptr;
+            }
+
+            return &parent_found->second;
+        }
+
+        void sync_native_column_child_controlsources(RuntimeOleObjectState &runtime_object)
+        {
+            if (!is_native_column_runtime_object(runtime_object))
+            {
+                return;
+            }
+
+            const auto control_source = runtime_object.properties.find("controlsource");
+            if (control_source == runtime_object.properties.end())
+            {
+                return;
+            }
+
+            for (const int child_handle : collect_native_owned_child_handles(runtime_object))
+            {
+                const auto child_found = ole_objects.find(child_handle);
+                if (child_found == ole_objects.end() ||
+                    child_found->second.hidden_runtime_surface ||
+                    !is_native_controlsource_member_name(child_found->second, "controlsource"))
+                {
+                    continue;
+                }
+
+                child_found->second.properties["controlsource"] = control_source->second;
+            }
+        }
+
+        bool write_native_column_bound_property(
+            RuntimeOleObjectState &runtime_object,
+            const PrgValue &assigned_value)
+        {
+            if (!is_native_column_runtime_object(runtime_object))
+            {
+                return false;
+            }
+
+            runtime_object.properties["bound"] = make_boolean_value(value_as_bool(assigned_value));
+            if (value_as_bool(assigned_value))
+            {
+                sync_native_column_child_controlsources(runtime_object);
+            }
+            return true;
+        }
+
+        bool write_native_column_controlsource_property(
+            RuntimeOleObjectState &runtime_object,
+            const PrgValue &assigned_value)
+        {
+            if (!is_native_column_runtime_object(runtime_object))
+            {
+                return false;
+            }
+
+            runtime_object.properties["controlsource"] = assigned_value;
+            sync_native_column_child_controlsources(runtime_object);
+            return true;
+        }
+
+        bool native_child_controlsource_write_blocked_by_parent_column(
+            RuntimeOleObjectState &runtime_object)
+        {
+            RuntimeOleObjectState *parent_column = native_parent_column_object(runtime_object);
+            return parent_column != nullptr &&
+                   native_column_bound_value(*parent_column);
+        }
+
         int normalize_native_grid_columncount_value(const PrgValue &value) const
         {
             long long normalized_count = -1LL;
@@ -628,6 +729,7 @@
 
             if ((normalized_base_class == "textbox" ||
                  normalized_base_class == "combobox" ||
+                 normalized_base_class == "column" ||
                  normalized_base_class == "editbox" ||
                  normalized_base_class == "checkbox" ||
                  normalized_base_class == "spinner") &&
@@ -653,6 +755,12 @@
             {
                 runtime_object.properties["columnorder"] =
                     make_number_value(static_cast<double>(next_native_grid_column_order(runtime_object)));
+            }
+
+            if (normalized_base_class == "column" &&
+                !runtime_object.properties.contains("bound"))
+            {
+                runtime_object.properties["bound"] = make_boolean_value(true);
             }
 
             if (normalized_base_class == "grid" &&
@@ -2089,6 +2197,11 @@
                                       .detail = runtime_object->prog_id + "." + child_name + ":" + child_declaration.class_name,
                                       .location = current_statement() == nullptr ? child_declaration.declaration_location : current_statement()->location});
                 }
+            }
+            if (is_native_column_runtime_object(*runtime_object) &&
+                native_column_bound_value(*runtime_object))
+            {
+                sync_native_column_child_controlsources(*runtime_object);
             }
             if (runtime_object->properties.contains("columncount") &&
                 is_native_grid_runtime_object(*runtime_object) &&
