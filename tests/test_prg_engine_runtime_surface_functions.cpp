@@ -5764,6 +5764,90 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_controls_child_collection_reflects_count_item_and_foreach_without_leaking_hidden_runtime_surfaces()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_controls_child_collection";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_controls_child_collection.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('DemoForm')\n"
+            "lHasControls = PEMSTATUS(oForm, 'Controls', 1)\n"
+            "nControlsCount = oForm.Controls.Count\n"
+            "oFirst = oForm.Controls(1)\n"
+            "cFirstTag = oFirst.cTag\n"
+            "cLoop = ''\n"
+            "FOR EACH oChild IN oForm.Controls FOXOBJECT\n"
+            "    cLoop = cLoop + IIF(EMPTY(cLoop), '', ',') + oChild.cTag\n"
+            "ENDFOR\n"
+            "lRemoved = oForm.RemoveObject('cmdSave')\n"
+            "nControlsCountAfterRemove = oForm.Controls.Count\n"
+            "oRemaining = oForm.Controls(1)\n"
+            "cRemainingTag = oRemaining.cTag\n"
+            "RETURN\n"
+            "DEFINE CLASS SaveButton AS CommandButton\n"
+            "    cTag = 'save'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS BadgeLabel AS Label\n"
+            "    cTag = 'badge'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DemoForm AS Form\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddObject('cmdSave', 'SaveButton')\n"
+            "        THIS.AddObject('lblBadge', 'BadgeLabel')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Controls child-collection script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lhascontrols", "true");
+        check("ncontrolscount", "2");
+        check("cfirsttag", "save");
+        check("cloop", "save,badge");
+        check("lremoved", "true");
+        check("ncontrolscountafterremove", "1");
+        check("cremainingtag", "badge");
+
+        expect(state.ole_objects.size() == 3U,
+               "native Controls child-collection surface should keep owner and detached child state without exporting the hidden synthetic collections");
+        if (state.ole_objects.size() == 3U)
+        {
+            expect(state.ole_objects[0].prog_id == "DemoForm",
+                   "native Controls child-collection surface should keep the owner object visible in exported runtime state");
+            const bool leaked_collection = std::any_of(state.ole_objects.begin(), state.ole_objects.end(), [](const auto &object_state)
+            {
+                return object_state.prog_id == "Collection";
+            });
+            expect(!leaked_collection,
+                   "native Controls child-collection surface should not leak the hidden synthetic Collection objects into exported runtime state");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_createobject_and_newobject_instantiate_same_prg_exception_native_class()
     {
         namespace fs = std::filesystem;
@@ -43211,6 +43295,7 @@ int main()
     test_createobject_and_newobject_instantiate_same_prg_collection_native_class();
     test_native_collection_default_item_invocation_routes_bare_and_member_path_calls();
     test_native_objects_child_collection_reflects_count_item_and_foreach_without_leaking_hidden_runtime_surfaces();
+    test_native_controls_child_collection_reflects_count_item_and_foreach_without_leaking_hidden_runtime_surfaces();
     test_createobject_and_newobject_instantiate_same_prg_exception_native_class();
     test_native_addobject_materializes_child_objects_and_child_methods_see_parent();
     test_native_class_body_add_object_materializes_children_before_init();

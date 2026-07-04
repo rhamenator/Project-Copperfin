@@ -342,7 +342,7 @@
             child_members.reserve(runtime_object.properties.size());
             for (const auto &[property_name, property_value] : runtime_object.properties)
             {
-                if (property_name == "parent" || property_name == "objects")
+                if (property_name == "parent" || property_name == "objects" || property_name == "controls")
                 {
                     continue;
                 }
@@ -372,59 +372,67 @@
                     make_string_value("object:" + (*child_object)->prog_id + "#" + std::to_string((*child_object)->handle)));
             }
 
-            RuntimeOleObjectState *collection_object = nullptr;
-            const auto objects_property = runtime_object.properties.find("objects");
-            if (objects_property != runtime_object.properties.end())
+            RuntimeOleObjectState *objects_collection = nullptr;
+            const auto sync_collection_surface = [&](const std::string &property_name) -> RuntimeOleObjectState *
             {
-                const auto nested = resolve_ole_object(objects_property->second);
-                if (nested.has_value() &&
-                    is_native_collection_object(**nested) &&
-                    (*nested)->hidden_runtime_surface &&
-                    (*nested)->read_only_collection_surface)
+                RuntimeOleObjectState *collection_object = nullptr;
+                const auto collection_property = runtime_object.properties.find(property_name);
+                if (collection_property != runtime_object.properties.end())
                 {
-                    collection_object = *nested;
+                    const auto nested = resolve_ole_object(collection_property->second);
+                    if (nested.has_value() &&
+                        is_native_collection_object(**nested) &&
+                        (*nested)->hidden_runtime_surface &&
+                        (*nested)->read_only_collection_surface)
+                    {
+                        collection_object = *nested;
+                    }
                 }
-            }
 
-            if (collection_object == nullptr && child_members.empty())
-            {
-                return nullptr;
-            }
+                if (collection_object == nullptr && child_members.empty())
+                {
+                    return nullptr;
+                }
 
-            if (collection_object == nullptr)
-            {
-                const int handle = next_ole_handle++;
-                RuntimeOleObjectState collection_state{
-                    .handle = handle,
-                    .prog_id = "Collection",
-                    .source = {},
-                    .last_action = "objects",
-                    .action_count = 1,
-                    .hidden_runtime_surface = true,
-                    .read_only_collection_surface = true};
-                collection_state.base_class_name = "Collection";
-                collection_state.class_hierarchy = {"COLLECTION", "OBJECT"};
-                collection_state.properties["parent"] =
+                if (collection_object == nullptr)
+                {
+                    const int handle = next_ole_handle++;
+                    RuntimeOleObjectState collection_state{
+                        .handle = handle,
+                        .prog_id = "Collection",
+                        .source = {},
+                        .last_action = property_name,
+                        .action_count = 1,
+                        .hidden_runtime_surface = true,
+                        .read_only_collection_surface = true};
+                    collection_state.base_class_name = "Collection";
+                    collection_state.class_hierarchy = {"COLLECTION", "OBJECT"};
+                    collection_state.properties["parent"] =
+                        make_string_value("object:" + runtime_object.prog_id + "#" + std::to_string(runtime_object.handle));
+                    auto [collection_it, _] = ole_objects.emplace(handle, std::move(collection_state));
+                    runtime_object.properties[property_name] =
+                        make_string_value("object:" + collection_it->second.prog_id + "#" + std::to_string(collection_it->second.handle));
+                    collection_object = &collection_it->second;
+                }
+
+                collection_object->properties["parent"] =
                     make_string_value("object:" + runtime_object.prog_id + "#" + std::to_string(runtime_object.handle));
-                auto [collection_it, _] = ole_objects.emplace(handle, std::move(collection_state));
-                runtime_object.properties["objects"] =
-                    make_string_value("object:" + collection_it->second.prog_id + "#" + std::to_string(collection_it->second.handle));
-                collection_object = &collection_it->second;
-            }
+                collection_object->collection_items.clear();
+                collection_object->collection_item_keys.clear();
+                collection_object->collection_items.reserve(child_members.size());
+                collection_object->collection_item_keys.reserve(child_members.size());
+                for (const auto &[child_name, child_reference] : child_members)
+                {
+                    collection_object->collection_items.push_back(child_reference);
+                    collection_object->collection_item_keys.push_back(child_name);
+                }
+                (void)read_native_collection_member(*collection_object, "count");
+                return collection_object;
+            };
 
-            collection_object->properties["parent"] =
-                make_string_value("object:" + runtime_object.prog_id + "#" + std::to_string(runtime_object.handle));
-            collection_object->collection_items.clear();
-            collection_object->collection_item_keys.clear();
-            collection_object->collection_items.reserve(child_members.size());
-            collection_object->collection_item_keys.reserve(child_members.size());
-            for (const auto &[child_name, child_reference] : child_members)
-            {
-                collection_object->collection_items.push_back(child_reference);
-                collection_object->collection_item_keys.push_back(child_name);
-            }
-            (void)read_native_collection_member(*collection_object, "count");
-            return collection_object;
+            objects_collection = sync_collection_surface("objects");
+            (void)sync_collection_surface("controls");
+            return objects_collection;
         }
 
         std::string resolve_native_prg_program_path(
