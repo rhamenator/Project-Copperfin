@@ -264,6 +264,12 @@
             }
 
             if (normalized_base_class == "form" &&
+                !runtime_object.properties.contains("windowstate"))
+            {
+                runtime_object.properties["windowstate"] = make_number_value(0.0);
+            }
+
+            if (normalized_base_class == "form" &&
                 !runtime_object.properties.contains("borderstyle"))
             {
                 runtime_object.properties["borderstyle"] = make_number_value(3.0);
