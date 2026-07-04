@@ -7953,6 +7953,104 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_dynamiccurrentcontrol_defaults_mutates_and_stays_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_dynamiccurrentcontrol";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_dynamiccurrentcontrol.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('Column')\n"
+            "lPlainHasDynamicCurrentControl = PEMSTATUS(oPlain, 'DynamicCurrentControl', 1)\n"
+            "lPlainDynamicCurrentControlReadOnly = PEMSTATUS(oPlain, 'DynamicCurrentControl', 5)\n"
+            "cPlainBefore = oPlain.DynamicCurrentControl\n"
+            "xPlainGetPemBefore = GETPEM(oPlain, 'DynamicCurrentControl')\n"
+            "oPlain.DynamicCurrentControl = 'chkReady'\n"
+            "cPlainAfterDirectAssign = oPlain.DynamicCurrentControl\n"
+            "lPlainSetPem = SETPEM(oPlain, 'DynamicCurrentControl', 'cmbReady')\n"
+            "cPlainAfterSetPem = oPlain.DynamicCurrentControl\n"
+            "lPlainAddProperty = ADDPROPERTY(oPlain, 'DynamicCurrentControl', 'shadow')\n"
+            "lPlainRemoveProperty = REMOVEPROPERTY(oPlain, 'DynamicCurrentControl')\n"
+            "oGrid = CREATEOBJECT('MainGrid')\n"
+            "cChildBefore = oGrid.colStatus.DynamicCurrentControl\n"
+            "cChildRead = oGrid.ReadDynamicCurrentControl()\n"
+            "oGrid.RebindControl()\n"
+            "cChildAfterChild = oGrid.colStatus.DynamicCurrentControl\n"
+            "lChildSetPem = SETPEM(oGrid.colStatus, 'DynamicCurrentControl', 'spnStatus')\n"
+            "cChildAfterSetPem = oGrid.colStatus.DynamicCurrentControl\n"
+            "xChildGetPem = GETPEM(oGrid.colStatus, 'DynamicCurrentControl')\n"
+            "lChildHasDynamicCurrentControl = PEMSTATUS(oGrid.colStatus, 'DynamicCurrentControl', 1)\n"
+            "lChildDynamicCurrentControlReadOnly = PEMSTATUS(oGrid.colStatus, 'DynamicCurrentControl', 5)\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oGrid.colStatus, 1)\n"
+            "lPropHasDynamicCurrentControl = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'DYNAMICCURRENTCONTROL'\n"
+            "        lPropHasDynamicCurrentControl = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('BoundColumn')\n"
+            "cDerivedBefore = oDerived.DynamicCurrentControl\n"
+            "RETURN\n"
+            "DEFINE CLASS MainGrid AS Grid\n"
+            "    ADD OBJECT colStatus AS Column WITH DynamicCurrentControl = 'chkStatus'\n"
+            "    FUNCTION ReadDynamicCurrentControl\n"
+            "        RETURN THIS.colStatus.DynamicCurrentControl\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE RebindControl\n"
+            "        THIS.colStatus.DynamicCurrentControl = 'cmbStatus'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS BoundColumn AS Column\n"
+            "    DynamicCurrentControl = 'spnHours'\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native DynamicCurrentControl property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplainhasdynamiccurrentcontrol", "true");
+        check("lplaindynamiccurrentcontrolreadonly", "false");
+        check("cplainbefore", "Text1");
+        check("xplaingetpembefore", "Text1");
+        check("cplainafterdirectassign", "chkReady");
+        check("lplainsetpem", "true");
+        check("cplainaftersetpem", "cmbReady");
+        check("lplainaddproperty", "false");
+        check("lplainremoveproperty", "false");
+        check("cchildbefore", "chkStatus");
+        check("cchildread", "chkStatus");
+        check("cchildafterchild", "cmbStatus");
+        check("lchildsetpem", "true");
+        check("cchildaftersetpem", "spnStatus");
+        check("xchildgetpem", "spnStatus");
+        check("lchildhasdynamiccurrentcontrol", "true");
+        check("lchilddynamiccurrentcontrolreadonly", "false");
+        check("lprophasdynamiccurrentcontrol", "true");
+        check("cderivedbefore", "spnHours");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_recordsource_defaults_mutates_and_stays_builtin()
     {
         namespace fs = std::filesystem;
@@ -48308,6 +48406,7 @@ int main()
     test_runtime_application_windowstate_aliases_track_representative_state();
     test_native_controlsource_defaults_mutates_and_stays_builtin();
     test_native_currentcontrol_defaults_mutates_and_stays_builtin();
+    test_native_dynamiccurrentcontrol_defaults_mutates_and_stays_builtin();
     test_native_recordsource_defaults_mutates_and_stays_builtin();
     test_native_recordsourcetype_defaults_mutates_and_stays_builtin();
     test_native_rowsource_defaults_mutates_and_stays_builtin();

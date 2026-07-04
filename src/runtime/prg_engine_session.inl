@@ -279,6 +279,12 @@
                 runtime_object.properties["currentcontrol"] = make_string_value("Text1");
             }
 
+            if (normalized_base_class == "column" &&
+                !runtime_object.properties.contains("dynamiccurrentcontrol"))
+            {
+                runtime_object.properties["dynamiccurrentcontrol"] = make_string_value("Text1");
+            }
+
             if (normalized_base_class == "grid" &&
                 !runtime_object.properties.contains("recordsource"))
             {
