@@ -19462,7 +19462,7 @@ namespace
         };
 
         check("nmembersprops", "4");
-        check("nmembersunion", "6");
+        check("nmembersunion", "7");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop3", "CLASS");
@@ -19537,7 +19537,7 @@ namespace
         };
 
         check("nmembersprops", "5");
-        check("nmembersunion", "7");
+        check("nmembersunion", "8");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop3", "CLASS");
@@ -22213,7 +22213,7 @@ namespace
         check("lchildclasslibraryreadonly", "true");
         check("cchildclasslibraryprop", button_library_path.string());
         check("nmembersprops", "5");
-        check("nmembersunion", "7");
+        check("nmembersunion", "8");
         check("cprop1", "BASECLASS");
         check("cprop2", "CLASS");
         check("cprop3", "CLASSLIBRARY");
@@ -22320,7 +22320,7 @@ namespace
         check("lchildclasslibraryreadonly", "true");
         check("cchildclasslibraryprop", button_library_path.string());
         check("nmembersprops", "5");
-        check("nmembersunion", "7");
+        check("nmembersunion", "8");
         check("cprop1", "BASECLASS");
         check("cprop2", "CLASS");
         check("cprop3", "CLASSLIBRARY");
@@ -22780,7 +22780,7 @@ namespace
         };
 
         check("nmembersprops", "5");
-        check("nmembersunion", "7");
+        check("nmembersunion", "8");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop3", "CLASS");
@@ -22867,7 +22867,7 @@ namespace
         };
 
         check("nmembersprops", "5");
-        check("nmembersunion", "7");
+        check("nmembersunion", "8");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop3", "CLASS");
@@ -22951,7 +22951,7 @@ namespace
         };
 
         check("nmembersprops", "5");
-        check("nmembersunion", "7");
+        check("nmembersunion", "8");
         check("lchildhasparent", "true");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
@@ -23040,7 +23040,7 @@ namespace
         };
 
         check("nmembersprops", "5");
-        check("nmembersunion", "7");
+        check("nmembersunion", "8");
         check("lchildhasparent", "true");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
@@ -31895,7 +31895,7 @@ namespace
         check("lchildbaseclassreadonly", "true");
         check("lchildparentclassreadonly", "true");
         check("nmembersprops", "5");
-        check("nmembersunion", "7");
+        check("nmembersunion", "8");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop3", "CLASS");
@@ -32043,7 +32043,7 @@ namespace
         check("lchildbaseclassreadonly", "true");
         check("lchildparentclassreadonly", "true");
         check("nmembersprops", "5");
-        check("nmembersunion", "7");
+        check("nmembersunion", "8");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop3", "CLASS");
@@ -33420,7 +33420,7 @@ namespace
         check("lchildparentclassreadonly", "true");
         check("lchildclasslibraryreadonly", "true");
         check("nmembersprops", "6");
-        check("nmembersunion", "8");
+        check("nmembersunion", "9");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop3", "CLASS");
@@ -34918,7 +34918,7 @@ namespace
         check("lchildparentclassreadonly", "true");
         check("lchildclasslibraryreadonly", "true");
         check("nmembersprops", "6");
-        check("nmembersunion", "8");
+        check("nmembersunion", "9");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop3", "CLASS");
@@ -34949,7 +34949,7 @@ namespace
         check("lleafchildparentclassreadonly", "true");
         check("lleafchildclasslibraryreadonly", "true");
         check("nleafmembersprops", "6");
-        check("nleafmembersunion", "8");
+        check("nleafmembersunion", "9");
         check("cleafprop1", "BASECLASS");
         check("cleafprop2", "CAPTION");
         check("cleafprop3", "CLASS");
@@ -37472,6 +37472,79 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_bare_dotted_native_release_statement_uses_builtin_release_path()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_bare_release_builtin";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_bare_release_builtin.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "oChild = oForm.cmdSave\n"
+            "oChild.Release\n"
+            "lOwnerHasChildAfter = PEMSTATUS(oForm, 'cmdSave', 1)\n"
+            "lHeldChildHasParentAfter = PEMSTATUS(oChild, 'Parent', 1)\n"
+            "cOwnerCaptionAfter = oForm.Caption\n"
+            "RETURN\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    Caption = 'Main'\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SaveButton AS Custom\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("bare dotted native Release builtin script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto owner_has_child_after = state.globals.find("lownerhaschildafter");
+        expect(owner_has_child_after != state.globals.end(),
+               "bare dotted native Release builtin script should preserve owner child-slot state");
+        if (owner_has_child_after != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(owner_has_child_after->second) == "false",
+                   "bare dotted native Release builtin should detach the released child from its owner");
+        }
+
+        const auto held_child_has_parent_after = state.globals.find("lheldchildhasparentafter");
+        expect(held_child_has_parent_after != state.globals.end(),
+               "bare dotted native Release builtin script should preserve held child parent state");
+        if (held_child_has_parent_after != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(held_child_has_parent_after->second) == "false",
+                   "bare dotted native Release builtin should invalidate Parent on the released child");
+        }
+
+        const auto owner_caption_after = state.globals.find("cownercaptionafter");
+        expect(owner_caption_after != state.globals.end(),
+               "bare dotted native Release builtin script should preserve owner state after child release");
+        if (owner_caption_after != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(owner_caption_after->second) == "Main",
+                   "bare dotted native Release builtin should keep the owner alive after child release");
+        }
+
+        const std::size_t release_event_count = static_cast<std::size_t>(std::count_if(
+            state.events.begin(),
+            state.events.end(),
+            [](const auto &event)
+            {
+                return event.category == "prg.object.release";
+            }));
+        expect(release_event_count == 1U,
+               "bare dotted native Release builtin should emit one release event");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_refresh_builtin_fallback_succeeds_for_form_and_children()
     {
         namespace fs = std::filesystem;
@@ -38120,16 +38193,19 @@ namespace
         write_text(
             main_path,
             "oForm = CREATEOBJECT('MainForm')\n"
+            "lHasRelease = PEMSTATUS(oForm, 'Release', 1)\n"
             "lHasRefresh = PEMSTATUS(oForm, 'Refresh', 1)\n"
             "lHasMove = PEMSTATUS(oForm, 'Move', 1)\n"
             "lHasShow = PEMSTATUS(oForm, 'Show', 1)\n"
             "lHasHide = PEMSTATUS(oForm, 'Hide', 1)\n"
             "lHasReset = PEMSTATUS(oForm, 'ResetToDefault', 1)\n"
             "lHasTextSetFocus = PEMSTATUS(oForm.txtName, 'SetFocus', 1)\n"
+            "lReleaseReadOnly = PEMSTATUS(oForm, 'Release', 5)\n"
             "lMoveReadOnly = PEMSTATUS(oForm, 'Move', 5)\n"
             "lShowReadOnly = PEMSTATUS(oForm, 'Show', 5)\n"
             "lResetReadOnly = PEMSTATUS(oForm, 'ResetToDefault', 5)\n"
             "lTextSetFocusReadOnly = PEMSTATUS(oForm.txtName, 'SetFocus', 5)\n"
+            "lGetRelease = GETPEM(oForm, 'Release')\n"
             "lGetMove = GETPEM(oForm, 'Move')\n"
             "lGetShow = GETPEM(oForm, 'Show')\n"
             "lGetReset = GETPEM(oForm, 'ResetToDefault')\n"
@@ -38137,6 +38213,7 @@ namespace
             "nFormMethods = AMEMBERS(aFormMethods, oForm, 2)\n"
             "nFormUnion = AMEMBERS(aFormUnion, oForm, 3)\n"
             "nTextMethods = AMEMBERS(aTextMethods, oForm.txtName, 2)\n"
+            "nFormHasRelease = ASCAN(aFormMethods, 'RELEASE')\n"
             "nFormHasMove = ASCAN(aFormMethods, 'MOVE')\n"
             "nFormHasRefresh = ASCAN(aFormMethods, 'REFRESH')\n"
             "nFormHasShow = ASCAN(aFormMethods, 'SHOW')\n"
@@ -38168,16 +38245,19 @@ namespace
             }
         };
 
+        check("lhasrelease", "true");
         check("lhasrefresh", "true");
         check("lhasmove", "true");
         check("lhasshow", "true");
         check("lhashide", "true");
         check("lhasreset", "true");
         check("lhastextsetfocus", "true");
+        check("lreleasereadonly", "false");
         check("lmovereadonly", "false");
         check("lshowreadonly", "false");
         check("lresetreadonly", "false");
         check("ltextsetfocusreadonly", "false");
+        check("lgetrelease", "true");
         check("lgetmove", "true");
         check("lgetshow", "true");
         check("lgetreset", "true");
@@ -38194,6 +38274,8 @@ namespace
             }
         };
 
+        expect_positive("nformhasrelease",
+                        "AMEMBERS(..., 2) should expose the shipped native Release builtin");
         expect_positive("nformhasmove",
                         "AMEMBERS(..., 2) should expose the shipped native Move builtin");
         expect_positive("nformhasrefresh",
@@ -38736,7 +38818,7 @@ namespace
         check("lhasdescribe", "true");
         check("lhaswho", "true");
         check("lhasping", "true");
-        check("nmembersmethods", "5");
+        check("nmembersmethods", "6");
         check("cmethod1", "DESCRIBE");
         check("cmethod2", "PING");
         check("cmethod3", "REFRESH");
@@ -41440,7 +41522,7 @@ namespace
         check("lcaptionreadonly", "false");
         check("lstatusreadonly", "true");
         check("nmembersprops", "7");
-        check("nmembersunion", "12");
+        check("nmembersunion", "13");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop4", "CLASS");
@@ -41546,7 +41628,7 @@ namespace
         check("lcaptionreadonly", "false");
         check("lstatusreadonly", "true");
         check("nmembersprops", "9");
-        check("nmembersunion", "14");
+        check("nmembersunion", "15");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop4", "CLASS");
@@ -43182,6 +43264,7 @@ int main()
     test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow();
     test_native_setall_recurses_over_descendants_and_honors_class_filters();
     test_bare_dotted_native_refresh_statement_invokes_same_prg_override();
+    test_bare_dotted_native_release_statement_uses_builtin_release_path();
     test_native_refresh_builtin_fallback_succeeds_for_form_and_children();
     test_native_move_builtin_fallback_updates_visual_geometry();
     test_native_move_override_wins_over_builtin_geometry_updates();

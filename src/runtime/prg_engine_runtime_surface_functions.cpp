@@ -235,6 +235,11 @@ bool is_builtin_native_runtime_method_name(
         return false;
     }
 
+    if (normalized_member_name == "release" &&
+        !runtime_object.source.empty()) {
+        return true;
+    }
+
     if (normalized_member_name == "refresh" ||
         normalized_member_name == "resettodefault") {
         return true;
@@ -689,6 +694,9 @@ std::vector<std::string> collect_object_member_names(const RuntimeOleObjectState
     if (include_methods) {
         for (const auto& method_name : runtime_object.methods) {
             unique_members.insert(normalize_identifier(method_name));
+        }
+        if (is_builtin_native_runtime_method_name(runtime_object, "release")) {
+            unique_members.insert("release");
         }
         if (is_builtin_native_runtime_method_name(runtime_object, "refresh")) {
             unique_members.insert("refresh");

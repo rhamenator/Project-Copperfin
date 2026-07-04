@@ -241,6 +241,12 @@ namespace copperfin::runtime
             const RuntimeOleObjectState &runtime_object,
             const std::string &normalized_member_name)
         {
+            if (normalized_member_name == "release" &&
+                !runtime_object.source.empty())
+            {
+                return true;
+            }
+
             if (normalized_member_name == "refresh")
             {
                 return !runtime_object.class_hierarchy.empty();
