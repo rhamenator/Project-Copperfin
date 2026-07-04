@@ -280,6 +280,13 @@
                 runtime_object.properties["rowsource"] = make_string_value("");
             }
 
+            if ((normalized_base_class == "combobox" ||
+                 normalized_base_class == "listbox") &&
+                !runtime_object.properties.contains("rowsourcetype"))
+            {
+                runtime_object.properties["rowsourcetype"] = make_number_value(0.0);
+            }
+
             if (normalized_base_class == "combobox" &&
                 !runtime_object.properties.contains("style"))
             {

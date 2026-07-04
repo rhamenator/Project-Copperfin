@@ -7977,6 +7977,128 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_rowsourcetype_defaults_mutates_and_stays_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_rowsourcetype";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_rowsourcetype.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('ComboBox')\n"
+            "lPlainHasRowSourceType = PEMSTATUS(oPlain, 'RowSourceType', 1)\n"
+            "lPlainRowSourceTypeReadOnly = PEMSTATUS(oPlain, 'RowSourceType', 5)\n"
+            "nPlainBefore = oPlain.RowSourceType\n"
+            "xPlainGetPemBefore = GETPEM(oPlain, 'RowSourceType')\n"
+            "oPlain.RowSourceType = 1\n"
+            "nPlainAfterDirectAssign = oPlain.RowSourceType\n"
+            "lPlainSetPem = SETPEM(oPlain, 'RowSourceType', 6)\n"
+            "nPlainAfterSetPem = oPlain.RowSourceType\n"
+            "lPlainAddProperty = ADDPROPERTY(oPlain, 'RowSourceType', 2)\n"
+            "lPlainRemoveProperty = REMOVEPROPERTY(oPlain, 'RowSourceType')\n"
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "nComboBefore = oForm.cboMonth.RowSourceType\n"
+            "nListBefore = oForm.lstYear.RowSourceType\n"
+            "nComboRead = oForm.cmdProbe.ReadComboRowSourceType()\n"
+            "nListRead = oForm.cmdProbe.ReadListRowSourceType()\n"
+            "oForm.cmdProbe.RebindLists()\n"
+            "nComboAfterChild = oForm.cboMonth.RowSourceType\n"
+            "nListAfterChild = oForm.lstYear.RowSourceType\n"
+            "lComboSetPem = SETPEM(oForm.cboMonth, 'RowSourceType', 2)\n"
+            "nComboAfterSetPem = oForm.cboMonth.RowSourceType\n"
+            "xComboGetPem = GETPEM(oForm.cboMonth, 'RowSourceType')\n"
+            "lComboHasRowSourceType = PEMSTATUS(oForm.cboMonth, 'RowSourceType', 1)\n"
+            "lComboRowSourceTypeReadOnly = PEMSTATUS(oForm.cboMonth, 'RowSourceType', 5)\n"
+            "lListSetPem = SETPEM(oForm.lstYear, 'RowSourceType', 7)\n"
+            "nListAfterSetPem = oForm.lstYear.RowSourceType\n"
+            "xListGetPem = GETPEM(oForm.lstYear, 'RowSourceType')\n"
+            "lListHasRowSourceType = PEMSTATUS(oForm.lstYear, 'RowSourceType', 1)\n"
+            "lListRowSourceTypeReadOnly = PEMSTATUS(oForm.lstYear, 'RowSourceType', 5)\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oForm.lstYear, 1)\n"
+            "lPropHasRowSourceType = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'ROWSOURCETYPE'\n"
+            "        lPropHasRowSourceType = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('BoundList')\n"
+            "nDerivedBefore = oDerived.RowSourceType\n"
+            "RETURN\n"
+            "DEFINE CLASS ProbeButton AS CommandButton\n"
+            "    FUNCTION ReadComboRowSourceType\n"
+            "        RETURN THISFORM.cboMonth.RowSourceType\n"
+            "    ENDFUNC\n"
+            "    FUNCTION ReadListRowSourceType\n"
+            "        RETURN THISFORM.lstYear.RowSourceType\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE RebindLists\n"
+            "        THISFORM.cboMonth.RowSourceType = 5\n"
+            "        THISFORM.lstYear.RowSourceType = 3\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    ADD OBJECT cboMonth AS ComboBox WITH RowSourceType = 6\n"
+            "    ADD OBJECT lstYear AS ListBox WITH RowSourceType = 2\n"
+            "    ADD OBJECT cmdProbe AS ProbeButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS BoundList AS ListBox\n"
+            "    RowSourceType = 4\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native RowSourceType property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplainhasrowsourcetype", "true");
+        check("lplainrowsourcetypereadonly", "false");
+        check("nplainbefore", "0");
+        check("xplaingetpembefore", "0");
+        check("nplainafterdirectassign", "1");
+        check("lplainsetpem", "true");
+        check("nplainaftersetpem", "6");
+        check("lplainaddproperty", "false");
+        check("lplainremoveproperty", "false");
+        check("ncombobefore", "6");
+        check("nlistbefore", "2");
+        check("ncomboread", "6");
+        check("nlistread", "2");
+        check("ncomboafterchild", "5");
+        check("nlistafterchild", "3");
+        check("lcombosetpem", "true");
+        check("ncomboaftersetpem", "2");
+        check("xcombogetpem", "2");
+        check("lcombohasrowsourcetype", "true");
+        check("lcomborowsourcetypereadonly", "false");
+        check("llistsetpem", "true");
+        check("nlistaftersetpem", "7");
+        check("xlistgetpem", "7");
+        check("llisthasrowsourcetype", "true");
+        check("llistrowsourcetypereadonly", "false");
+        check("lprophasrowsourcetype", "true");
+        check("nderivedbefore", "4");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_combobox_style_defaults_mutate_and_stay_builtin()
     {
         namespace fs = std::filesystem;
@@ -47454,6 +47576,7 @@ int main()
     test_runtime_application_windowstate_aliases_track_representative_state();
     test_native_controlsource_defaults_mutates_and_stays_builtin();
     test_native_rowsource_defaults_mutates_and_stays_builtin();
+    test_native_rowsourcetype_defaults_mutates_and_stays_builtin();
     test_native_visual_backcolor_defaults_mutate_and_stay_builtin();
     test_native_visual_forecolor_defaults_mutate_and_stay_builtin();
     test_native_release_thisform_command_releases_owner_form();
