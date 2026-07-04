@@ -6618,6 +6618,87 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_name_reflects_parent_chain_and_stays_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_name_property";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_name_property.prg";
+        write_text(
+            main_path,
+            "oSet = CREATEOBJECT('MainFormSet')\n"
+            "cSetName = oSet.Name\n"
+            "cFormName = oSet.frmWork.Name\n"
+            "cFormParentName = oSet.frmWork.Parent.Name\n"
+            "cButtonName = oSet.frmWork.cmdSave.Name\n"
+            "cButtonParentName = oSet.frmWork.cmdSave.Parent.Name\n"
+            "lSetHasName = PEMSTATUS(oSet, 'Name', 1)\n"
+            "lSetNameReadOnly = PEMSTATUS(oSet, 'Name', 5)\n"
+            "xSetGetPem = GETPEM(oSet, 'Name')\n"
+            "lSetPemName = SETPEM(oSet, 'Name', 'RenamedSet')\n"
+            "lAddSetName = ADDPROPERTY(oSet, 'Name', 'ShadowSet')\n"
+            "lRemoveSetName = REMOVEPROPERTY(oSet, 'Name')\n"
+            "oHost = CREATEOBJECT('HostForm')\n"
+            "lAddOk = oHost.AddObject('txtAdded', 'TextBox')\n"
+            "cHostName = oHost.Name\n"
+            "cAddedName = oHost.txtAdded.Name\n"
+            "cAddedParentName = oHost.txtAdded.Parent.Name\n"
+            "xAddedNameGetPem = GETPEM(oHost.txtAdded, 'Name')\n"
+            "lAddedNameReadOnly = PEMSTATUS(oHost.txtAdded, 'Name', 5)\n"
+            "RETURN\n"
+            "DEFINE CLASS WorkerForm AS Form\n"
+            "    ADD OBJECT cmdSave AS CommandButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainFormSet AS FormSet\n"
+            "    ADD OBJECT frmWork AS WorkerForm\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS HostForm AS Form\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Name property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("csetname", "MainFormSet");
+        check("cformname", "frmWork");
+        check("cformparentname", "MainFormSet");
+        check("cbuttonname", "cmdSave");
+        check("cbuttonparentname", "frmWork");
+        check("lsethasname", "true");
+        check("lsetnamereadonly", "true");
+        check("xsetgetpem", "MainFormSet");
+        check("lsetpemname", "false");
+        check("laddsetname", "false");
+        check("lremovesetname", "false");
+        check("laddok", "true");
+        check("chostname", "HostForm");
+        check("caddedname", "txtAdded");
+        check("caddedparentname", "HostForm");
+        check("xaddednamegetpem", "txtAdded");
+        check("laddednamereadonly", "true");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_createobject_and_newobject_instantiate_same_prg_exception_native_class()
     {
         namespace fs = std::filesystem;
@@ -44793,6 +44874,7 @@ int main()
     test_native_visual_enabled_defaults_mutates_and_stays_builtin();
     test_native_visual_visible_defaults_mutates_and_stays_builtin();
     test_native_string_control_value_defaults_mutates_and_stays_builtin();
+    test_native_name_reflects_parent_chain_and_stays_builtin();
     test_createobject_and_newobject_instantiate_same_prg_exception_native_class();
     test_native_addobject_materializes_child_objects_and_child_methods_see_parent();
     test_native_class_body_add_object_materializes_children_before_init();

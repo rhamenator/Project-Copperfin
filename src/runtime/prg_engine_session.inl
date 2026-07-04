@@ -182,6 +182,22 @@
             }
         }
 
+        void assign_native_runtime_object_name(RuntimeOleObjectState &runtime_object,
+                                               const std::string &name)
+        {
+            const std::string trimmed_name = trim_copy(name);
+            if (trimmed_name.empty())
+            {
+                return;
+            }
+
+            runtime_object.properties["name"] = make_string_value(trimmed_name);
+            if (!runtime_object.default_properties.empty())
+            {
+                runtime_object.default_properties["name"] = make_string_value(trimmed_name);
+            }
+        }
+
         void seed_native_visual_properties(RuntimeOleObjectState &runtime_object)
         {
             const std::string normalized_base_class =
@@ -974,6 +990,7 @@
 
             if (is_native_identity_member_name(runtime_object, normalized_property_name) ||
                 is_native_controlcount_member_name(runtime_object, normalized_property_name) ||
+                is_native_name_member_name(runtime_object, normalized_property_name) ||
                 is_native_olecontrol_creation_time_member_name(runtime_object, normalized_property_name) ||
                 is_native_olecontrol_object_member_name(runtime_object, normalized_property_name) ||
                 is_native_olecontrol_inspection_member_name(runtime_object, normalized_property_name) ||
@@ -1119,6 +1136,9 @@
                     object_state.properties["parent"] = *parent_reference;
                 }
                 object_state.base_class_name = native_same_prg_base_class_name(prog_id);
+                assign_native_runtime_object_name(
+                    object_state,
+                    native_same_prg_base_class_name(prog_id));
                 if (normalize_identifier(object_state.base_class_name) == "olecontrol" &&
                     !constructor_arguments.empty())
                 {
@@ -1198,6 +1218,9 @@
 
             object_state.base_class_name =
                 native_same_prg_base_class_name(class_definition.base_class_name);
+            assign_native_runtime_object_name(
+                object_state,
+                class_definition.name.empty() ? prog_id : class_definition.name);
             if (!trim_copy(class_definition.base_class_source_path).empty())
             {
                 object_state.class_library =
@@ -1288,7 +1311,8 @@
             {
                 for (const NativeChildObjectDeclaration &child_declaration : lineage_class.class_definition->child_object_declarations)
                 {
-                    const std::string child_name = normalize_identifier(child_declaration.name);
+                    const std::string child_name_text = trim_copy(child_declaration.name);
+                    const std::string child_name = normalize_identifier(child_name_text);
                     if (child_name.empty() || child_declaration.class_name.empty())
                     {
                         continue;
@@ -1340,6 +1364,7 @@
                         child_object->properties[property_name] =
                             evaluate_expression(property_statement.expression, frame);
                     }
+                    assign_native_runtime_object_name(*child_object, child_name_text);
 
                     runtime_object->properties[child_name] = make_runtime_object_reference(*child_object);
                     runtime_object->last_action = "addobject(" + child_name + "," + child_declaration.class_name + ")";

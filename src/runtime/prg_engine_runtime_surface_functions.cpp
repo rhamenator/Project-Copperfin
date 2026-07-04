@@ -747,6 +747,14 @@ bool native_string_control_value_member_name_matches(
            normalized_base_class == "combobox";
 }
 
+bool native_name_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "name" &&
+           !runtime_object.class_hierarchy.empty() &&
+           runtime_object.properties.contains("name");
+}
+
 std::vector<std::string> collect_native_identity_member_names(const RuntimeOleObjectState& runtime_object) {
     std::vector<std::string> members;
     if (get_native_identity_reflection_metadata(runtime_object, "hwnd").has_value()) {
@@ -1003,6 +1011,9 @@ std::vector<std::string> collect_object_member_names(const RuntimeOleObjectState
     if (include_properties) {
         for (const auto& [name, value] : runtime_object.properties) {
             (void)value;
+            if (native_name_member_name_matches(runtime_object, normalize_identifier(name))) {
+                continue;
+            }
             unique_members.insert(normalize_identifier(name));
         }
         if (is_native_collection_object(runtime_object)) {
@@ -1132,6 +1143,11 @@ bool is_native_visual_visible_member_name(const RuntimeOleObjectState& runtime_o
 bool is_native_string_control_value_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_string_control_value_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_name_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_name_member_name_matches(runtime_object, normalized_member_name);
 }
 
 bool is_native_collection_object(const RuntimeOleObjectState& runtime_object)
@@ -1350,6 +1366,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                is_native_olecontrol_object_member_name(runtime_object, member_name) ||
                is_native_olecontrol_inspection_member_name(runtime_object, member_name) ||
                is_native_olecontrol_conflict_member_name(runtime_object, member_name) ||
+               native_name_member_name_matches(runtime_object, member_name) ||
                native_child_parent_member_name_matches(runtime_object, member_name) ||
                is_native_collection_readonly_member_name(runtime_object, member_name) ||
                (is_scripting_dictionary_object(runtime_object) && member_name == "count") ||
@@ -1569,6 +1586,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         if (is_native_identity_member_name(*runtime_object, property_name) ||
             is_native_controlcount_member_name(*runtime_object, property_name) ||
+            is_native_name_member_name(*runtime_object, property_name) ||
             is_native_form_lockscreen_member_name(*runtime_object, property_name) ||
             is_native_visual_enabled_member_name(*runtime_object, property_name) ||
             is_native_visual_visible_member_name(*runtime_object, property_name) ||
@@ -1690,6 +1708,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         if (native_child_parent_member_name_matches(*runtime_object, member_name) ||
             is_native_controlcount_member_name(*runtime_object, member_name) ||
+            is_native_name_member_name(*runtime_object, member_name) ||
             is_native_olecontrol_creation_time_member_name(*runtime_object, member_name) ||
             is_native_olecontrol_object_member_name(*runtime_object, member_name) ||
             is_native_olecontrol_inspection_member_name(*runtime_object, member_name) ||
@@ -1747,6 +1766,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         if (is_native_identity_member_name(*runtime_object, property_name) ||
             is_native_controlcount_member_name(*runtime_object, property_name) ||
+            is_native_name_member_name(*runtime_object, property_name) ||
             is_native_form_lockscreen_member_name(*runtime_object, property_name) ||
             is_native_visual_enabled_member_name(*runtime_object, property_name) ||
             is_native_visual_visible_member_name(*runtime_object, property_name) ||

@@ -1131,7 +1131,8 @@ namespace copperfin::runtime
                             : effective_member_path.rfind('.') + 1U));
                 if (leaf == "addobject" && !runtime_object->source.empty() && arguments.size() >= 2U)
                 {
-                    const std::string child_name = normalize_identifier(trim_copy(value_as_string(arguments[0])));
+                    const std::string child_name_text = trim_copy(value_as_string(arguments[0]));
+                    const std::string child_name = normalize_identifier(child_name_text);
                     const std::string child_class = trim_copy(value_as_string(arguments[1]));
                     if (child_name.empty() || child_class.empty())
                     {
@@ -1193,6 +1194,7 @@ namespace copperfin::runtime
                         return make_boolean_value(false);
                     }
 
+                    assign_native_runtime_object_name(*child_object, child_name_text);
                     runtime_object->properties[child_name] = make_runtime_object_reference(*child_object);
                     (void)sync_native_owned_children_collection(*runtime_object);
                     runtime_object->last_action = effective_member_path + "(" + child_name + "," + child_class + ")";
@@ -3497,6 +3499,7 @@ namespace copperfin::runtime
             }
             if (!is_native_identity_member_name(runtime_object, normalized_property_name) &&
                 !is_native_controlcount_member_name(runtime_object, normalized_property_name) &&
+                !is_native_name_member_name(runtime_object, normalized_property_name) &&
                 !is_native_olecontrol_creation_time_member_name(runtime_object, normalized_property_name) &&
                 !is_native_olecontrol_object_member_name(runtime_object, normalized_property_name) &&
                 !is_native_olecontrol_inspection_member_name(runtime_object, normalized_property_name) &&
