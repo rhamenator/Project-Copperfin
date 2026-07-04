@@ -16,11 +16,20 @@
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+#include <optional>
 #include <random>
 #include <set>
 #include <sstream>
 #include <stdexcept>
 #include <system_error>
+
+#if defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
+#else
+#include <langinfo.h>
+#endif
 
 namespace copperfin::runtime {
 
@@ -80,6 +89,75 @@ std::string strip_surrounding_quotes(std::string text) {
         }
     }
     return text;
+}
+
+std::optional<int> parse_codeset_to_code_page(std::string codeset) {
+    codeset = uppercase_copy(trim_copy(std::move(codeset)));
+    if (codeset.empty()) {
+        return std::nullopt;
+    }
+
+    if (codeset == "UTF-8" || codeset == "UTF8" || codeset == "C.UTF-8") {
+        return 65001;
+    }
+    if (codeset == "US-ASCII" || codeset == "ASCII" || codeset == "ANSI_X3.4-1968" || codeset == "C") {
+        return 20127;
+    }
+
+    std::string digits;
+    digits.reserve(codeset.size());
+    for (const unsigned char ch : codeset) {
+        if (std::isdigit(ch) != 0) {
+            digits.push_back(static_cast<char>(ch));
+        }
+    }
+
+    if (!digits.empty()) {
+        try {
+            return std::stoi(digits);
+        } catch (const std::exception&) {
+        }
+    }
+
+    return std::nullopt;
+}
+
+int current_host_code_page() {
+#if defined(_WIN32)
+    const UINT active_code_page = GetACP();
+    return active_code_page == 0U ? 1252 : static_cast<int>(active_code_page);
+#else
+    if (const char* codeset = nl_langinfo(CODESET); codeset != nullptr) {
+        if (const auto parsed = parse_codeset_to_code_page(codeset); parsed.has_value()) {
+            return *parsed;
+        }
+    }
+
+    const char* locale_candidates[] = {
+        std::getenv("LC_ALL"),
+        std::getenv("LC_CTYPE"),
+        std::getenv("LANG"),
+    };
+    for (const char* candidate : locale_candidates) {
+        if (candidate == nullptr) {
+            continue;
+        }
+        if (const auto parsed = parse_codeset_to_code_page(candidate); parsed.has_value()) {
+            return *parsed;
+        }
+    }
+
+    return 1252;
+#endif
+}
+
+int current_host_oem_code_page() {
+#if defined(_WIN32)
+    const UINT oem_code_page = GetOEMCP();
+    return oem_code_page == 0U ? current_host_code_page() : static_cast<int>(oem_code_page);
+#else
+    return current_host_code_page();
+#endif
 }
 
 std::vector<std::filesystem::path> parse_set_path_entries(const std::string& set_path_value,
@@ -1864,13 +1942,20 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             << std::setw(12) << (lo4 & 0x0000FFFFFFFFFFFFULL);
         return make_string_value(oss.str());
     }
-    // CPCURRENT([nType]) — return current active code page number
-    // nType omitted or 0 → ANSI code page; nType 2 → OEM/Unicode mode indicator
+    // VFP9 help (dv_foxhelp.chm, CPCURRENT() topic):
+    // - omitted/0 => configured VFP code page, or current OS code page when no
+    //   CODEPAGE config item is in effect
+    // - 1 => current OS code page regardless of CODEPAGE config
+    // - 2 => underlying OS code page (MS-DOS/OEM on Windows)
+    //
+    // Copperfin's runtime does not yet project a CODEPAGE config item, so omitted
+    // and 0 explicitly read back the current host code page.
     if (function == "cpcurrent") {
         const int type_flag = arguments.empty() ? 0 : static_cast<int>(std::llround(value_as_number(arguments[0])));
-        // On Linux/cross-platform first pass: return 1252 (Windows Latin-1) for ANSI,
-        // 65001 for Unicode flag.
-        return make_number_value(type_flag == 2 ? 65001.0 : 1252.0);
+        if (type_flag == 2) {
+            return make_number_value(static_cast<double>(current_host_oem_code_page()));
+        }
+        return make_number_value(static_cast<double>(current_host_code_page()));
     }
     // CPCONVERT(nSourceCP, nTargetCP, cString [, nFlags]) — convert string between code pages
     // First-pass: identity conversion (return string unchanged).

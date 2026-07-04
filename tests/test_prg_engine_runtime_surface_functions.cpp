@@ -10,7 +10,16 @@
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#include <optional>
 #include <system_error>
+
+#if defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
+#else
+#include <langinfo.h>
+#endif
 
 #if defined(__GNUC__) || defined(__clang__)
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
@@ -20,6 +29,105 @@ namespace
 {
 
     using namespace copperfin::test_support;
+
+    std::optional<int> parse_codeset_to_code_page(std::string codeset)
+    {
+        const auto trim_ascii = [](std::string value) {
+            const auto first = std::find_if_not(value.begin(), value.end(), [](unsigned char ch) {
+                return std::isspace(ch) != 0;
+            });
+            const auto last = std::find_if_not(value.rbegin(), value.rend(), [](unsigned char ch) {
+                return std::isspace(ch) != 0;
+            }).base();
+            if (first >= last)
+            {
+                return std::string{};
+            }
+            return std::string(first, last);
+        };
+
+        codeset = uppercase_ascii(trim_ascii(std::move(codeset)));
+        if (codeset.empty())
+        {
+            return std::nullopt;
+        }
+
+        if (codeset == "UTF-8" || codeset == "UTF8" || codeset == "C.UTF-8")
+        {
+            return 65001;
+        }
+        if (codeset == "US-ASCII" || codeset == "ASCII" || codeset == "ANSI_X3.4-1968" || codeset == "C")
+        {
+            return 20127;
+        }
+
+        std::string digits;
+        for (const unsigned char ch : codeset)
+        {
+            if (std::isdigit(ch) != 0)
+            {
+                digits.push_back(static_cast<char>(ch));
+            }
+        }
+
+        if (!digits.empty())
+        {
+            try
+            {
+                return std::stoi(digits);
+            }
+            catch (const std::exception &)
+            {
+            }
+        }
+
+        return std::nullopt;
+    }
+
+    int expected_host_code_page()
+    {
+#if defined(_WIN32)
+        const UINT active_code_page = GetACP();
+        return active_code_page == 0U ? 1252 : static_cast<int>(active_code_page);
+#else
+        if (const char *codeset = nl_langinfo(CODESET); codeset != nullptr)
+        {
+            if (const auto parsed = parse_codeset_to_code_page(codeset); parsed.has_value())
+            {
+                return *parsed;
+            }
+        }
+
+        const char *locale_candidates[] = {
+            std::getenv("LC_ALL"),
+            std::getenv("LC_CTYPE"),
+            std::getenv("LANG"),
+        };
+        for (const char *candidate : locale_candidates)
+        {
+            if (candidate == nullptr)
+            {
+                continue;
+            }
+            if (const auto parsed = parse_codeset_to_code_page(candidate); parsed.has_value())
+            {
+                return *parsed;
+            }
+        }
+
+        return 1252;
+#endif
+    }
+
+    int expected_host_oem_code_page()
+    {
+#if defined(_WIN32)
+        const UINT oem_code_page = GetOEMCP();
+        return oem_code_page == 0U ? expected_host_code_page() : static_cast<int>(oem_code_page);
+#else
+        return expected_host_code_page();
+#endif
+    }
 
     void test_expression_runtime_surface_extensions()
     {
@@ -42600,7 +42708,9 @@ namespace
             // CPCURRENT
             "nCpCurrent      = CPCURRENT()\n"
             "nCpCurrentAnsi  = CPCURRENT(0)\n"
+            "nCpCurrentOs    = CPCURRENT(1)\n"
             "nCpCurrentUni   = CPCURRENT(2)\n"
+            "nCpCurrentBad   = CPCURRENT(99)\n"
             // CPCONVERT identity pass-through
             "cCpConverted    = CPCONVERT(1252, 1252, 'hello')\n"
             // CPDBF first-pass stub
@@ -42637,9 +42747,14 @@ namespace
             expect(actual == expected, name + ": expected \"" + expected + "\", got \"" + actual + "\"");
         };
 
-        check("ncpcurrent",     "1252");
-        check("ncpcurrentansi", "1252");
-        check("ncpcurrentuni",  "65001");
+        const std::string expected_host_code_page_text = std::to_string(expected_host_code_page());
+        const std::string expected_host_oem_code_page_text = std::to_string(expected_host_oem_code_page());
+
+        check("ncpcurrent",     expected_host_code_page_text);
+        check("ncpcurrentansi", expected_host_code_page_text);
+        check("ncpcurrentos",   expected_host_code_page_text);
+        check("ncpcurrentuni",  expected_host_oem_code_page_text);
+        check("ncpcurrentbad",  expected_host_code_page_text);
         check("ccpconverted",   "hello");
         check("ncpdbf",         "1252");
         check("cpict",          "current.bmp");
