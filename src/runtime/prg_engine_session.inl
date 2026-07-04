@@ -238,6 +238,15 @@
                 runtime_object.properties["enabled"] = make_boolean_value(true);
             }
 
+            if (is_native_visual_runtime_object(runtime_object) &&
+                !is_native_olecontrol_host_object(runtime_object) &&
+                !runtime_object.properties.contains("backcolor"))
+            {
+                // Headless contract: seed an explicit deterministic visual background
+                // until per-class VFP defaults are modeled with stronger evidence.
+                runtime_object.properties["backcolor"] = make_int64_value(16777215);
+            }
+
             if ((normalized_base_class == "textbox" ||
                  normalized_base_class == "combobox") &&
                 !runtime_object.properties.contains("value"))

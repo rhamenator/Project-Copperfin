@@ -7980,6 +7980,112 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_visual_backcolor_defaults_mutate_and_stay_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_visual_backcolor";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_visual_backcolor.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('Form')\n"
+            "lPlainHasBackColor = PEMSTATUS(oPlain, 'BackColor', 1)\n"
+            "lPlainBackColorReadOnly = PEMSTATUS(oPlain, 'BackColor', 5)\n"
+            "nPlainBefore = oPlain.BackColor\n"
+            "xPlainGetPemBefore = GETPEM(oPlain, 'BackColor')\n"
+            "oPlain.BackColor = 255\n"
+            "nPlainAfterDirectAssign = oPlain.BackColor\n"
+            "lPlainSetPem = SETPEM(oPlain, 'BackColor', 65280)\n"
+            "nPlainAfterSetPem = oPlain.BackColor\n"
+            "lPlainAddProperty = ADDPROPERTY(oPlain, 'BackColor', 1)\n"
+            "lPlainRemoveProperty = REMOVEPROPERTY(oPlain, 'BackColor')\n"
+            "oForm = CREATEOBJECT('PaintForm')\n"
+            "nFormBefore = oForm.BackColor\n"
+            "nChildBefore = oForm.cmdSave.BackColor\n"
+            "nChildRead = oForm.cmdProbe.ReadBackColor()\n"
+            "oForm.cmdProbe.PaintChild()\n"
+            "nChildAfterChild = oForm.cmdSave.BackColor\n"
+            "nFormAfterChild = oForm.BackColor\n"
+            "lChildSetPem = SETPEM(oForm.cmdSave, 'BackColor', 16776960)\n"
+            "nChildAfterSetPem = oForm.cmdSave.BackColor\n"
+            "xChildGetPem = GETPEM(oForm.cmdSave, 'BackColor')\n"
+            "lChildHasBackColor = PEMSTATUS(oForm.cmdSave, 'BackColor', 1)\n"
+            "lChildBackColorReadOnly = PEMSTATUS(oForm.cmdSave, 'BackColor', 5)\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oForm.cmdSave, 1)\n"
+            "lPropHasBackColor = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'BACKCOLOR'\n"
+            "        lPropHasBackColor = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('PaintButton')\n"
+            "nDerivedBefore = oDerived.BackColor\n"
+            "RETURN\n"
+            "DEFINE CLASS ProbeButton AS CommandButton\n"
+            "    FUNCTION ReadBackColor\n"
+            "        RETURN THISFORM.cmdSave.BackColor\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE PaintChild\n"
+            "        THISFORM.cmdSave.BackColor = 65535\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS PaintForm AS Form\n"
+            "    BackColor = 16711935\n"
+            "    ADD OBJECT cmdSave AS CommandButton WITH BackColor = 16711680\n"
+            "    ADD OBJECT cmdProbe AS ProbeButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS PaintButton AS CommandButton\n"
+            "    BackColor = 255\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native visual BackColor property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplainhasbackcolor", "true");
+        check("lplainbackcolorreadonly", "false");
+        check("nplainbefore", "16777215");
+        check("xplaingetpembefore", "16777215");
+        check("nplainafterdirectassign", "255");
+        check("lplainsetpem", "true");
+        check("nplainaftersetpem", "65280");
+        check("lplainaddproperty", "false");
+        check("lplainremoveproperty", "false");
+        check("nformbefore", "16711935");
+        check("nchildbefore", "16711680");
+        check("nchildread", "16711680");
+        check("nchildafterchild", "65535");
+        check("nformafterchild", "16711935");
+        check("lchildsetpem", "true");
+        check("nchildaftersetpem", "16776960");
+        check("xchildgetpem", "16776960");
+        check("lchildhasbackcolor", "true");
+        check("lchildbackcolorreadonly", "false");
+        check("lprophasbackcolor", "true");
+        check("nderivedbefore", "255");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_text_entry_readonly_defaults_mutate_and_stay_builtin()
     {
         namespace fs = std::filesystem;
@@ -47017,6 +47123,7 @@ int main()
     test_runtime_application_activeform_aliases_track_representative_native_form();
     test_runtime_application_caption_aliases_track_representative_caption();
     test_runtime_application_windowstate_aliases_track_representative_state();
+    test_native_visual_backcolor_defaults_mutate_and_stay_builtin();
     test_native_release_thisform_command_releases_owner_form();
     test_native_release_thisformset_command_releases_owner_alias();
     test_native_release_override_runs_before_builtin_release_path();
