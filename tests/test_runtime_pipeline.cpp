@@ -11,6 +11,9 @@ int main() {
     test_generated_launcher_forwards_manifest_and_debug_flag();
     test_materialize_excluded_xasset_startup_package();
     test_uppercase_xasset_companion_assets_are_staged();
+    test_menu_startup_assets_are_staged();
+    test_report_startup_assets_are_staged();
+    test_label_startup_assets_are_staged();
     test_vfp_style_parent_relative_assets_resolve_and_stage_under_content_root();
     test_vfp_source_layout_parent_relative_assets_resolve_by_tail_match();
     test_dotnet_launcher_request_falls_back_to_native_host_when_unavailable();

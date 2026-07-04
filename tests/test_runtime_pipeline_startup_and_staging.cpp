@@ -5,6 +5,112 @@
 #include "test_runtime_pipeline_support.h"
 
 namespace cf_test_runtime_pipeline {
+
+namespace {
+
+void expect_manifest_reports_startup_asset_copied(
+    const std::string& runtime_manifest,
+    const std::string& startup_name,
+    const std::string& message) {
+    const std::string asset_prefix = "asset=1|" + startup_name + "|";
+    expect(
+        runtime_manifest.find(asset_prefix) != std::string::npos &&
+        runtime_manifest.find(asset_prefix) < runtime_manifest.find("|true|true|") &&
+        runtime_manifest.find("|true|true|", runtime_manifest.find(asset_prefix)) != std::string::npos,
+        message);
+}
+
+void run_xasset_startup_companion_stage_smoke(
+    const std::string& temp_name,
+    const std::string& startup_name,
+    const std::string& startup_type_title,
+    const std::string& companion_extension,
+    const std::string& project_title) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / temp_name;
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    write_text(project_dir / startup_name, "synthetic xasset table");
+    fs::path companion_path = project_dir / startup_name;
+    companion_path.replace_extension(companion_extension);
+    write_text(companion_path, "synthetic xasset companion");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / (project_title + ".pjx")).string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = project_title;
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = project_title;
+    workspace.build_plan.output_path = (output_dir / (project_title + ".exe")).string();
+    workspace.build_plan.startup_item = startup_name;
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = startup_name, .relative_path = startup_name, .type_title = startup_type_title, .excluded = true}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false);
+
+    expect(plan.ok, startup_type_title + " startup contract plan should be created");
+    expect(plan.debug_plan.startup_source_path == (project_dir / startup_name).string(),
+           startup_type_title + " startup contract should preserve source-side startup path");
+    expect(plan.debug_plan.supports_breakpoints,
+           startup_type_title + " startup contract should advertise breakpoint support through xasset bootstrap");
+    expect(plan.debug_plan.supports_step_debugging,
+           startup_type_title + " startup contract should advertise step-debugging support through xasset bootstrap");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+
+    expect(result.ok, startup_type_title + " startup package should materialize");
+    if (result.ok) {
+        const fs::path content_root(result.plan.content_root);
+        const std::string runtime_manifest = read_text(result.plan.manifest_path);
+        const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
+
+        expect(fs::exists(content_root / startup_name),
+               startup_type_title + " startup asset should be staged even when marked excluded");
+        expect(fs::exists(content_root / companion_path.filename()),
+               startup_type_title + " startup companion sidecar should be staged");
+        expect_manifest_reports_startup_asset_copied(
+            runtime_manifest,
+            startup_name,
+            startup_type_title + " startup manifest line should report the staged startup asset as copied");
+        expect(manifest_value_for_key(debug_manifest, "startup_item") == quote_manifest_value(startup_name),
+               startup_type_title + " debug manifest should preserve startup_item");
+        expect(manifest_value_for_key(debug_manifest, "startup_source") == quote_manifest_value((project_dir / startup_name).string()),
+               startup_type_title + " debug manifest should preserve source-side startup provenance");
+        expect(manifest_value_for_key(debug_manifest, "supports_breakpoints") == "true",
+               startup_type_title + " debug manifest should preserve breakpoint support");
+        expect(manifest_value_for_key(debug_manifest, "supports_step_debugging") == "true",
+               startup_type_title + " debug manifest should preserve step-debugging support");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+}  // namespace
+
 void test_materialize_runtime_package() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_tests";
@@ -334,6 +440,33 @@ void test_uppercase_xasset_companion_assets_are_staged() {
     }
 
     fs::remove_all(temp_root, ignored);
+}
+
+void test_menu_startup_assets_are_staged() {
+    run_xasset_startup_companion_stage_smoke(
+        "copperfin_runtime_pipeline_menu_startup_companions",
+        "startup.mnx",
+        "Menu",
+        ".mnt",
+        "MenuStartupDemo");
+}
+
+void test_report_startup_assets_are_staged() {
+    run_xasset_startup_companion_stage_smoke(
+        "copperfin_runtime_pipeline_report_startup_companions",
+        "startup.frx",
+        "Report",
+        ".frt",
+        "ReportStartupDemo");
+}
+
+void test_label_startup_assets_are_staged() {
+    run_xasset_startup_companion_stage_smoke(
+        "copperfin_runtime_pipeline_label_startup_companions",
+        "startup.lbx",
+        "Label",
+        ".lbt",
+        "LabelStartupDemo");
 }
 
 void test_vfp_style_parent_relative_assets_resolve_and_stage_under_content_root() {
