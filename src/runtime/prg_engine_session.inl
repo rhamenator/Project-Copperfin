@@ -555,6 +555,8 @@
                     if (!oleclass.empty())
                     {
                         object_state.properties["oleclass"] = make_string_value(oleclass);
+                        object_state.properties["documentfile"] = make_string_value("");
+                        object_state.properties["oletypeallowed"] = make_int64_value(-2);
                     }
                 }
                 const std::string class_token = uppercase_copy(trim_copy(object_state.prog_id));

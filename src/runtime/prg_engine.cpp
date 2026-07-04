@@ -2816,7 +2816,7 @@ namespace copperfin::runtime
                 return true;
             }
             if (!is_native_identity_member_name(runtime_object, normalized_property_name) &&
-                !is_native_olecontrol_provenance_member_name(runtime_object, normalized_property_name) &&
+                !is_native_olecontrol_creation_time_member_name(runtime_object, normalized_property_name) &&
                 !is_native_child_parent_member_name(runtime_object, normalized_property_name) &&
                 !is_native_collection_readonly_member_name(runtime_object, normalized_property_name))
             {

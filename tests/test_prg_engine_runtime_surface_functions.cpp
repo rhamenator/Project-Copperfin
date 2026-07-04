@@ -38866,6 +38866,110 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_runtime_olecontrol_documentfile_and_oletypeallowed_surfaces_remain_coherent()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_olecontrol_documentfile";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "runtime_olecontrol_documentfile.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "lAdded = oForm.AddObject('axHost', 'OleControl', 'MSComctlLib.ListViewCtrl')\n"
+            "cHostDocumentFile = oForm.axHost.DocumentFile\n"
+            "nHostOleTypeAllowed = oForm.axHost.OLETypeAllowed\n"
+            "xHostDocumentFileGetPem = GETPEM(oForm.axHost, 'DocumentFile')\n"
+            "xHostOleTypeAllowedGetPem = GETPEM(oForm.axHost, 'OLETypeAllowed')\n"
+            "lHostHasDocumentFile = PEMSTATUS(oForm.axHost, 'DocumentFile', 1)\n"
+            "lHostHasOleTypeAllowed = PEMSTATUS(oForm.axHost, 'OLETypeAllowed', 1)\n"
+            "lHostDocumentFileReadOnly = PEMSTATUS(oForm.axHost, 'DocumentFile', 5)\n"
+            "lHostOleTypeAllowedReadOnly = PEMSTATUS(oForm.axHost, 'OLETypeAllowed', 5)\n"
+            "lSetHostDocumentFile = SETPEM(oForm.axHost, 'DocumentFile', 'C:\\Temp\\Host.xls')\n"
+            "lSetHostOleTypeAllowed = SETPEM(oForm.axHost, 'OLETypeAllowed', 1)\n"
+            "lRemoveHostDocumentFile = REMOVEPROPERTY(oForm.axHost, 'DocumentFile')\n"
+            "lRemoveHostOleTypeAllowed = REMOVEPROPERTY(oForm.axHost, 'OLETypeAllowed')\n"
+            "cHostDocumentFileAfterSet = oForm.axHost.DocumentFile\n"
+            "nHostOleTypeAllowedAfterSet = oForm.axHost.OLETypeAllowed\n"
+            "oDoc = CREATEOBJECT('ExcelDoc')\n"
+            "cDocDocumentFile = oDoc.DocumentFile\n"
+            "nDocOleTypeAllowed = oDoc.OLETypeAllowed\n"
+            "xDocDocumentFileGetPem = GETPEM(oDoc, 'DocumentFile')\n"
+            "xDocOleTypeAllowedGetPem = GETPEM(oDoc, 'OLETypeAllowed')\n"
+            "lDocHasDocumentFile = PEMSTATUS(oDoc, 'DocumentFile', 1)\n"
+            "lDocHasOleTypeAllowed = PEMSTATUS(oDoc, 'OLETypeAllowed', 1)\n"
+            "lDocDocumentFileReadOnly = PEMSTATUS(oDoc, 'DocumentFile', 5)\n"
+            "lDocOleTypeAllowedReadOnly = PEMSTATUS(oDoc, 'OLETypeAllowed', 5)\n"
+            "lSetDocDocumentFile = SETPEM(oDoc, 'DocumentFile', 'C:\\Temp\\Doc.xls')\n"
+            "lSetDocOleTypeAllowed = SETPEM(oDoc, 'OLETypeAllowed', 0)\n"
+            "lRemoveDocDocumentFile = REMOVEPROPERTY(oDoc, 'DocumentFile')\n"
+            "lRemoveDocOleTypeAllowed = REMOVEPROPERTY(oDoc, 'OLETypeAllowed')\n"
+            "cDocDocumentFileAfterSet = oDoc.DocumentFile\n"
+            "nDocOleTypeAllowedAfterSet = oDoc.OLETypeAllowed\n"
+            "RETURN\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ExcelDoc AS OLEControl\n"
+            "    OLEClass = 'Excel.Sheet'\n"
+            "    DocumentFile = 'C:\\EXCEL\\BOOK1.XLS'\n"
+            "    OLETypeAllowed = 1\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("OleControl DocumentFile/OLETypeAllowed script should complete: ") + state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("ladded", "true");
+        check("chostdocumentfile", "");
+        check("xhostdocumentfilegetpem", "");
+        check("nhostoletypeallowed", "-2");
+        check("xhostoletypeallowedgetpem", "-2");
+        check("lhosthasdocumentfile", "true");
+        check("lhosthasoletypeallowed", "true");
+        check("lhostdocumentfilereadonly", "true");
+        check("lhostoletypeallowedreadonly", "true");
+        check("lsethostdocumentfile", "false");
+        check("lsethostoletypeallowed", "false");
+        check("lremovehostdocumentfile", "false");
+        check("lremovehostoletypeallowed", "false");
+        check("chostdocumentfileafterset", "");
+        check("nhostoletypeallowedafterset", "-2");
+
+        check("cdocdocumentfile", "C:\\EXCEL\\BOOK1.XLS");
+        check("xdocdocumentfilegetpem", "C:\\EXCEL\\BOOK1.XLS");
+        check("ndocoletypeallowed", "1");
+        check("xdocoletypeallowedgetpem", "1");
+        check("ldochasdocumentfile", "true");
+        check("ldochasoletypeallowed", "true");
+        check("ldocdocumentfilereadonly", "true");
+        check("ldocoletypeallowedreadonly", "true");
+        check("lsetdocdocumentfile", "false");
+        check("lsetdocoletypeallowed", "false");
+        check("lremovedocdocumentfile", "false");
+        check("lremovedocoletypeallowed", "false");
+        check("cdocdocumentfileafterset", "C:\\EXCEL\\BOOK1.XLS");
+        check("ndocoletypeallowedafterset", "1");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_runtime_native_visual_controls_without_hwnd_fail_deterministically()
     {
         namespace fs = std::filesystem;
@@ -41051,6 +41155,7 @@ int main()
         test_same_prg_native_windows_message_bindevent_and_aevents_dispatch_during_read_events();
         test_runtime_hwnd_and_sys2326_sys2327_surfaces_bind_representative_window_objects();
         test_runtime_olecontrol_hwnd_and_windows_message_binding_surfaces_remain_coherent();
+        test_runtime_olecontrol_documentfile_and_oletypeallowed_surfaces_remain_coherent();
         test_runtime_native_visual_controls_without_hwnd_fail_deterministically();
         test_same_prg_native_bindevent_property_access_and_assign_dispatch_preserve_current_event_metadata();
         test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();
