@@ -39561,6 +39561,71 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_runtime_olecontrol_direct_contained_member_routing_remains_coherent()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_olecontrol_direct_members";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "runtime_olecontrol_direct_members.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "lAdded = oForm.AddObject('axHost', 'OleControl', 'MSComctlLib.ListViewCtrl')\n"
+            "oForm.axHost.Left = 25\n"
+            "nHostDirectLeft = oForm.axHost.Left\n"
+            "nHostObjectLeft = oForm.axHost.Object.Left\n"
+            "cHostDirectCompose = oForm.axHost.Compose()\n"
+            "cHostObjectCompose = oForm.axHost.Object.Compose()\n"
+            "oDoc = CREATEOBJECT('ExcelDoc')\n"
+            "oDoc.Visible = .T.\n"
+            "lDocDirectVisible = oDoc.Visible\n"
+            "lDocObjectVisible = oDoc.Object.Visible\n"
+            "cDocDirectCompose = oDoc.Compose()\n"
+            "cDocObjectCompose = oDoc.Object.Compose()\n"
+            "RETURN\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ExcelDoc AS OLEControl\n"
+            "    OLEClass = 'Excel.Sheet'\n"
+            "    DocumentFile = 'C:\\EXCEL\\BOOK1.XLS'\n"
+            "    OLETypeAllowed = 1\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("OleControl direct contained-member routing script should complete: ") + state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("ladded", "true");
+        check("nhostdirectleft", "25");
+        check("nhostobjectleft", "25");
+        check("chostdirectcompose", "ole:MSComctlLib.ListViewCtrl.compose");
+        check("chostobjectcompose", "ole:MSComctlLib.ListViewCtrl.compose");
+        check("ldocdirectvisible", "true");
+        check("ldocobjectvisible", "true");
+        check("cdocdirectcompose", "ole:Excel.Sheet.compose");
+        check("cdocobjectcompose", "ole:Excel.Sheet.compose");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_runtime_native_visual_controls_without_hwnd_fail_deterministically()
     {
         namespace fs = std::filesystem;
@@ -41752,6 +41817,7 @@ int main()
         test_runtime_olecontrol_timeout_policy_surfaces_remain_coherent();
         test_runtime_olecontrol_named_doverb_surfaces_remain_coherent();
         test_runtime_olecontrol_objectverbs_surfaces_remain_coherent();
+        test_runtime_olecontrol_direct_contained_member_routing_remains_coherent();
         test_runtime_native_visual_controls_without_hwnd_fail_deterministically();
         test_same_prg_native_bindevent_property_access_and_assign_dispatch_preserve_current_event_metadata();
         test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();

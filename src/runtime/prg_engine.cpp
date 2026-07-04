@@ -1091,6 +1091,24 @@ namespace copperfin::runtime
                 {
                     return read_native_olecontrol_objectverb_by_index(*runtime_object, arguments).value_or(make_empty_value());
                 }
+                if (is_native_olecontrol_host_object(*runtime_object))
+                {
+                    RuntimeOleObjectState *object_surface = ensure_native_olecontrol_object_surface(*runtime_object);
+                    if (object_surface != nullptr)
+                    {
+                        if (auto nested_native_result = invoke_native_object_method_if_present(
+                                *object_surface,
+                                leaf,
+                                frame,
+                                arguments,
+                                argument_references);
+                            nested_native_result.has_value())
+                        {
+                            return *nested_native_result;
+                        }
+                        runtime_object = object_surface;
+                    }
+                }
 
                 runtime_object->last_action = effective_member_path + "()";
                 ++runtime_object->action_count;
@@ -2813,6 +2831,14 @@ namespace copperfin::runtime
             {
                 return property->second;
             }
+            if (is_native_olecontrol_host_object(runtime_object))
+            {
+                RuntimeOleObjectState *object_surface = ensure_native_olecontrol_object_surface(runtime_object);
+                if (object_surface != nullptr && object_surface->handle != runtime_object.handle)
+                {
+                    return read_native_property_if_present(*object_surface, property_name, source_frame);
+                }
+            }
             return std::nullopt;
         };
 
@@ -2886,6 +2912,16 @@ namespace copperfin::runtime
                     {}).has_value())
             {
                 return true;
+            }
+            if (is_native_olecontrol_host_object(runtime_object) &&
+                !runtime_object.properties.contains(normalized_property_name))
+            {
+                RuntimeOleObjectState *object_surface = ensure_native_olecontrol_object_surface(runtime_object);
+                if (object_surface != nullptr && object_surface->handle != runtime_object.handle &&
+                    write_native_property_if_present(*object_surface, property_name, assigned_value, source_frame))
+                {
+                    return true;
+                }
             }
             if (!is_native_identity_member_name(runtime_object, normalized_property_name) &&
                 !is_native_olecontrol_creation_time_member_name(runtime_object, normalized_property_name) &&
