@@ -5,6 +5,7 @@
 #ifndef COPPERFIN_TEST_RUNTIME_PIPELINE_SUPPORT_H
 #define COPPERFIN_TEST_RUNTIME_PIPELINE_SUPPORT_H
 
+#include "test_environment_support.h"
 #include "copperfin/localization/localization.h"
 #include "copperfin/platform/extensibility_model.h"
 #include "copperfin/runtime/runtime_pipeline.h"
@@ -15,7 +16,6 @@
 #include <algorithm>
 #include <cerrno>
 #include <cctype>
-#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -36,8 +36,6 @@
 
 
 namespace cf_test_runtime_pipeline {
-
-struct ScopedEnvironmentVariable;
 
 // ==== Shared test helpers and fixtures ====
 void expect(bool condition, const std::string& message);
@@ -87,26 +85,15 @@ void run_library_output_warning_debug_manifest_smoke(const std::string& output_k
 
 extern int failures;
 struct ScopedEnvironmentVariable {
-    std::string name;
-    std::string original;
-    bool had_original = false;
+    copperfin::test_support::ScopedEnvironmentValue scoped_;
 
     explicit ScopedEnvironmentVariable(const std::string& var_name, const std::string& value)
-        : name(var_name),
-          original(getenv_value(name)) {
-        had_original = !original.empty();
-        set_env_variable(name, value, true);
+        : scoped_(var_name) {
+        scoped_.set(value);
     }
 
     explicit ScopedEnvironmentVariable(const std::string& var_name)
-        : name(var_name),
-          original(getenv_value(name)) {
-        had_original = !original.empty();
-        set_env_variable(name, "", false);
-    }
-
-    ~ScopedEnvironmentVariable() {
-        set_env_variable(name, original, had_original);
+        : scoped_(var_name) {
     }
 };
 
