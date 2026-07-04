@@ -7,6 +7,7 @@
 #include "copperfin/vfp/dbf_table.h"
 
 #include <algorithm>
+#include <cerrno>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -19,6 +20,7 @@
 #define NOMINMAX
 #include <windows.h>
 #else
+#include <iconv.h>
 #include <langinfo.h>
 #endif
 
@@ -145,6 +147,220 @@ namespace
         stream.flush();
         expect(stream.good(), "DBF fixture code-page patch should succeed");
     }
+
+    bool is_supported_vfp_code_page(int code_page)
+    {
+        switch (code_page)
+        {
+            case 437:
+            case 620:
+            case 737:
+            case 850:
+            case 852:
+            case 857:
+            case 861:
+            case 865:
+            case 866:
+            case 874:
+            case 895:
+            case 932:
+            case 936:
+            case 949:
+            case 950:
+            case 1250:
+            case 1251:
+            case 1252:
+            case 1253:
+            case 1254:
+            case 1255:
+            case 1256:
+            case 10000:
+            case 10006:
+            case 10007:
+            case 10029:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+#if defined(_WIN32)
+    std::optional<std::string> expected_host_code_page_conversion(
+        int source_code_page,
+        int target_code_page,
+        const std::string &input)
+    {
+        const int wide_count = MultiByteToWideChar(
+            static_cast<UINT>(source_code_page),
+            0,
+            input.data(),
+            static_cast<int>(input.size()),
+            nullptr,
+            0);
+        if (wide_count <= 0)
+        {
+            return std::nullopt;
+        }
+
+        std::wstring wide_text(static_cast<std::size_t>(wide_count), L'\0');
+        if (MultiByteToWideChar(
+                static_cast<UINT>(source_code_page),
+                0,
+                input.data(),
+                static_cast<int>(input.size()),
+                wide_text.data(),
+                wide_count) <= 0)
+        {
+            return std::nullopt;
+        }
+
+        const int byte_count = WideCharToMultiByte(
+            static_cast<UINT>(target_code_page),
+            0,
+            wide_text.data(),
+            wide_count,
+            nullptr,
+            0,
+            nullptr,
+            nullptr);
+        if (byte_count <= 0)
+        {
+            return std::nullopt;
+        }
+
+        std::string output(static_cast<std::size_t>(byte_count), '\0');
+        if (WideCharToMultiByte(
+                static_cast<UINT>(target_code_page),
+                0,
+                wide_text.data(),
+                wide_count,
+                output.data(),
+                byte_count,
+                nullptr,
+                nullptr) <= 0)
+        {
+            return std::nullopt;
+        }
+
+        return output;
+    }
+#else
+    std::optional<std::string> iconv_encoding_name_for_code_page(int code_page)
+    {
+        switch (code_page)
+        {
+            case 437:
+                return "CP437";
+            case 620:
+                return "CP620";
+            case 737:
+                return "CP737";
+            case 850:
+                return "CP850";
+            case 852:
+                return "CP852";
+            case 857:
+                return "CP857";
+            case 861:
+                return "CP861";
+            case 865:
+                return "CP865";
+            case 866:
+                return "CP866";
+            case 874:
+                return "CP874";
+            case 895:
+                return "CP895";
+            case 932:
+                return "CP932";
+            case 936:
+                return "CP936";
+            case 949:
+                return "CP949";
+            case 950:
+                return "CP950";
+            case 1250:
+                return "CP1250";
+            case 1251:
+                return "CP1251";
+            case 1252:
+                return "CP1252";
+            case 1253:
+                return "CP1253";
+            case 1254:
+                return "CP1254";
+            case 1255:
+                return "CP1255";
+            case 1256:
+                return "CP1256";
+            case 10000:
+                return "MACINTOSH";
+            case 10006:
+                return "MACGREEK";
+            case 10007:
+                return "MACCYRILLIC";
+            case 10029:
+                return "MACCENTRALEUROPE";
+            default:
+                return std::nullopt;
+        }
+    }
+
+    std::optional<std::string> expected_host_code_page_conversion(
+        int source_code_page,
+        int target_code_page,
+        const std::string &input)
+    {
+        const std::optional<std::string> source_name = iconv_encoding_name_for_code_page(source_code_page);
+        const std::optional<std::string> target_name = iconv_encoding_name_for_code_page(target_code_page);
+        if (!source_name.has_value() || !target_name.has_value())
+        {
+            return std::nullopt;
+        }
+
+        iconv_t converter = iconv_open(target_name->c_str(), source_name->c_str());
+        if (converter == reinterpret_cast<iconv_t>(-1))
+        {
+            return std::nullopt;
+        }
+
+        std::string output(std::max<std::size_t>(input.size() * 4U, 16U), '\0');
+        char *input_buffer = const_cast<char *>(input.data());
+        std::size_t input_remaining = input.size();
+        char *output_buffer = output.data();
+        std::size_t output_remaining = output.size();
+
+        while (true)
+        {
+            const std::size_t result = iconv(
+                converter,
+                &input_buffer,
+                &input_remaining,
+                &output_buffer,
+                &output_remaining);
+            if (result != static_cast<std::size_t>(-1))
+            {
+                break;
+            }
+
+            if (errno == E2BIG)
+            {
+                const std::size_t bytes_written = output.size() - output_remaining;
+                output.resize(output.size() * 2U, '\0');
+                output_buffer = output.data() + bytes_written;
+                output_remaining = output.size() - bytes_written;
+                continue;
+            }
+
+            iconv_close(converter);
+            return std::nullopt;
+        }
+
+        iconv_close(converter);
+        output.resize(output.size() - output_remaining);
+        return output;
+    }
+#endif
 
     void test_expression_runtime_surface_extensions()
     {
@@ -42930,6 +43146,91 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_cpconvert_uses_host_code_page_conversion_with_safe_fallbacks()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_cpconvert";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "cpconvert.prg";
+        write_text(
+            main_path,
+            "cIdentity         = CPCONVERT(1252, 1252, 'hello')\n"
+            "cSupported        = CPCONVERT(437, 1252, CHR(142))\n"
+            "cInvalid          = CPCONVERT(99999, 1252, 'hello')\n"
+            "cUnsupportedHost  = CPCONVERT(620, 1252, 'A')\n"
+            "cBinaryIdentity   = CPCONVERT(1252, 1252, CHR(0) + CHR(255))\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "CPCONVERT script should complete");
+
+        const auto require_string = [&](const std::string &name) -> std::string
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return {};
+            }
+            expect(it->second.kind == copperfin::runtime::PrgValueKind::string,
+                   name + " should remain a string value");
+            return it->second.kind == copperfin::runtime::PrgValueKind::string
+                       ? it->second.string_value
+                       : std::string{};
+        };
+
+        expect(require_string("cidentity") == "hello",
+               "same-codepage CPCONVERT should preserve plain text");
+
+        const std::string supported_input(1, static_cast<char>(0x8E));
+        const std::optional<std::string> expected_supported =
+            expected_host_code_page_conversion(437, 1252, supported_input);
+        expect(expected_supported.has_value(),
+               "host conversion helper should support the CPCONVERT 437->1252 regression");
+        if (expected_supported.has_value())
+        {
+            expect(require_string("csupported") == *expected_supported,
+                   "supported CPCONVERT should follow host conversion semantics");
+        }
+
+        expect(require_string("cinvalid") == "hello",
+               "invalid CPCONVERT code pages should fall back to the original byte sequence");
+
+        const std::string unsupported_input = "A";
+        const std::optional<std::string> expected_unsupported =
+            is_supported_vfp_code_page(620)
+                ? expected_host_code_page_conversion(620, 1252, unsupported_input)
+                : std::nullopt;
+        const std::string actual_unsupported = require_string("cunsupportedhost");
+        if (expected_unsupported.has_value())
+        {
+            expect(actual_unsupported == *expected_unsupported,
+                   "host-supported CPCONVERT 620->1252 conversion should succeed");
+        }
+        else
+        {
+            expect(actual_unsupported == unsupported_input,
+                   "unsupported-host CPCONVERT should fall back to the original byte sequence");
+        }
+
+        const std::string binary_identity = require_string("cbinaryidentity");
+        expect(binary_identity.size() == 2U,
+               "same-codepage CPCONVERT should preserve embedded NUL and trailing bytes");
+        if (binary_identity.size() == 2U)
+        {
+            expect(static_cast<unsigned char>(binary_identity[0]) == 0x00U &&
+                       static_cast<unsigned char>(binary_identity[1]) == 0xFFU,
+                   "same-codepage CPCONVERT should preserve binary string bytes exactly");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_lookup_expression_function()
     {
         namespace fs = std::filesystem;
@@ -43828,6 +44129,7 @@ int main()
     test_codepage_and_misc_runtime_surface_functions();
     test_cpdbf_reads_table_code_page_metadata();
     test_cpdbf_missing_alias_reports_error();
+    test_cpconvert_uses_host_code_page_conversion_with_safe_fallbacks();
     test_lookup_expression_function();
     test_lookup_expression_function_supports_sql_cursors();
     test_lookup_supports_macro_alias_and_tag_arguments();
