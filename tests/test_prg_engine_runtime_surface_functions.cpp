@@ -39626,6 +39626,92 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_runtime_olecontrol_application_conflict_paths_require_object_remain_coherent()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_olecontrol_application_conflicts";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "runtime_olecontrol_application_conflicts.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "lAdded = oForm.AddObject('axHost', 'OleControl', 'Excel.Sheet')\n"
+            "cHostApplicationName = oForm.axHost.Application.Name\n"
+            "cHostObjectApplicationName = oForm.axHost.Object.Application.Name\n"
+            "cHostApplicationQuit = oForm.axHost.Application.Quit()\n"
+            "cHostObjectApplicationQuit = oForm.axHost.Object.Application.Quit()\n"
+            "lHostHasApplication = PEMSTATUS(oForm.axHost, 'Application', 1)\n"
+            "lHostApplicationReadOnly = PEMSTATUS(oForm.axHost, 'Application', 5)\n"
+            "lSetHostApplication = SETPEM(oForm.axHost, 'Application', 7)\n"
+            "lRemoveHostApplication = REMOVEPROPERTY(oForm.axHost, 'Application')\n"
+            "oForm.axHost.Left = 25\n"
+            "nHostDirectLeft = oForm.axHost.Left\n"
+            "oDoc = CREATEOBJECT('ExcelDoc')\n"
+            "cDocApplicationName = oDoc.Application.Name\n"
+            "cDocObjectApplicationName = oDoc.Object.Application.Name\n"
+            "cDocApplicationQuit = oDoc.Application.Quit()\n"
+            "cDocObjectApplicationQuit = oDoc.Object.Application.Quit()\n"
+            "lDocHasApplication = PEMSTATUS(oDoc, 'Application', 1)\n"
+            "lDocApplicationReadOnly = PEMSTATUS(oDoc, 'Application', 5)\n"
+            "lSetDocApplication = SETPEM(oDoc, 'Application', 8)\n"
+            "lRemoveDocApplication = REMOVEPROPERTY(oDoc, 'Application')\n"
+            "oDoc.Visible = .T.\n"
+            "lDocDirectVisible = oDoc.Visible\n"
+            "RETURN\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ExcelDoc AS OLEControl\n"
+            "    OLEClass = 'Excel.Sheet'\n"
+            "    DocumentFile = 'C:\\EXCEL\\BOOK1.XLS'\n"
+            "    OLETypeAllowed = 1\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("OleControl Application conflict script should complete: ") + state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("ladded", "true");
+        check("chostapplicationname", "Microsoft Visual FoxPro");
+        check("chostobjectapplicationname", "Microsoft Excel");
+        check("chostapplicationquit", "ole:Microsoft Visual FoxPro.quit");
+        check("chostobjectapplicationquit", "ole:Excel.Application.quit");
+        check("lhosthasapplication", "true");
+        check("lhostapplicationreadonly", "true");
+        check("lsethostapplication", "false");
+        check("lremovehostapplication", "false");
+        check("nhostdirectleft", "25");
+
+        check("cdocapplicationname", "Microsoft Visual FoxPro");
+        check("cdocobjectapplicationname", "Microsoft Excel");
+        check("cdocapplicationquit", "ole:Microsoft Visual FoxPro.quit");
+        check("cdocobjectapplicationquit", "ole:Excel.Application.quit");
+        check("ldochasapplication", "true");
+        check("ldocapplicationreadonly", "true");
+        check("lsetdocapplication", "false");
+        check("lremovedocapplication", "false");
+        check("ldocdirectvisible", "true");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_runtime_native_visual_controls_without_hwnd_fail_deterministically()
     {
         namespace fs = std::filesystem;
@@ -41818,6 +41904,7 @@ int main()
         test_runtime_olecontrol_named_doverb_surfaces_remain_coherent();
         test_runtime_olecontrol_objectverbs_surfaces_remain_coherent();
         test_runtime_olecontrol_direct_contained_member_routing_remains_coherent();
+        test_runtime_olecontrol_application_conflict_paths_require_object_remain_coherent();
         test_runtime_native_visual_controls_without_hwnd_fail_deterministically();
         test_same_prg_native_bindevent_property_access_and_assign_dispatch_preserve_current_event_metadata();
         test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();

@@ -207,6 +207,87 @@
             runtime_object.properties["objectverbscount"] = make_int64_value(2);
         }
 
+        std::string representative_olecontrol_application_name(const std::string &oleclass) const
+        {
+            const std::string normalized = normalize_identifier(trim_copy(oleclass));
+            if (normalized.rfind("excel.", 0U) == 0U)
+            {
+                return "Microsoft Excel";
+            }
+            if (normalized.rfind("word.", 0U) == 0U)
+            {
+                return "Microsoft Word";
+            }
+            return trim_copy(oleclass).empty() ? std::string("OLE Application") : trim_copy(oleclass);
+        }
+
+        std::string representative_olecontrol_application_progid(const std::string &oleclass) const
+        {
+            const std::string trimmed = trim_copy(oleclass);
+            const std::size_t separator = trimmed.find('.');
+            if (separator == std::string::npos || separator == 0U)
+            {
+                return trimmed.empty() ? std::string("Application") : trimmed + ".Application";
+            }
+            return trimmed.substr(0U, separator) + ".Application";
+        }
+
+        RuntimeOleObjectState *ensure_native_olecontrol_application_conflict_surface(
+            RuntimeOleObjectState &runtime_object,
+            RuntimeOleObjectState &object_surface)
+        {
+            if (!is_native_olecontrol_host_object(runtime_object))
+            {
+                return nullptr;
+            }
+
+            const auto existing_host_application = runtime_object.properties.find("application");
+            if (existing_host_application != runtime_object.properties.end())
+            {
+                const auto nested = resolve_ole_object(existing_host_application->second);
+                if (nested.has_value())
+                {
+                    return *nested;
+                }
+            }
+
+            const auto oleclass = runtime_object.properties.find("oleclass");
+            const std::string automation_prog_id =
+                oleclass == runtime_object.properties.end() ? std::string{} : trim_copy(value_as_string(oleclass->second));
+
+            const int host_application_handle = next_ole_handle++;
+            RuntimeOleObjectState host_application_surface{
+                .handle = host_application_handle,
+                .prog_id = "Microsoft Visual FoxPro",
+                .source = {},
+                .last_action = "application",
+                .action_count = 1};
+            host_application_surface.properties["name"] = make_string_value("Microsoft Visual FoxPro");
+            auto [host_application_it, _] = ole_objects.emplace(host_application_handle, std::move(host_application_surface));
+            runtime_object.properties["application"] =
+                make_string_value("object:" + host_application_it->second.prog_id + "#" +
+                                  std::to_string(host_application_it->second.handle));
+
+            if (!object_surface.properties.contains("application"))
+            {
+                const int object_application_handle = next_ole_handle++;
+                RuntimeOleObjectState object_application_surface{
+                    .handle = object_application_handle,
+                    .prog_id = representative_olecontrol_application_progid(automation_prog_id),
+                    .source = {},
+                    .last_action = "application",
+                    .action_count = 1};
+                object_application_surface.properties["name"] =
+                    make_string_value(representative_olecontrol_application_name(automation_prog_id));
+                auto [object_application_it, __] = ole_objects.emplace(object_application_handle, std::move(object_application_surface));
+                object_surface.properties["application"] =
+                    make_string_value("object:" + object_application_it->second.prog_id + "#" +
+                                      std::to_string(object_application_it->second.handle));
+            }
+
+            return &host_application_it->second;
+        }
+
         RuntimeOleObjectState *ensure_native_olecontrol_object_surface(RuntimeOleObjectState &runtime_object)
         {
             if (!is_native_olecontrol_host_object(runtime_object))
@@ -246,6 +327,7 @@
             auto [object_it, _] = ole_objects.emplace(handle, std::move(object_surface));
             runtime_object.properties["object"] =
                 make_string_value("object:" + object_it->second.prog_id + "#" + std::to_string(object_it->second.handle));
+            (void)ensure_native_olecontrol_application_conflict_surface(runtime_object, object_it->second);
             return &object_it->second;
         }
 
@@ -811,7 +893,11 @@
             }
             seed_native_olecontrol_timeout_policy_properties(*runtime_object);
             seed_native_olecontrol_verb_inspection_properties(*runtime_object);
-            (void)ensure_native_olecontrol_object_surface(*runtime_object);
+            if (RuntimeOleObjectState *object_surface = ensure_native_olecontrol_object_surface(*runtime_object);
+                object_surface != nullptr)
+            {
+                (void)ensure_native_olecontrol_application_conflict_surface(*runtime_object, *object_surface);
+            }
             (void)read_native_collection_member(*runtime_object, "count");
             const PrgValue runtime_object_reference = make_runtime_object_reference(*runtime_object);
             for (const NativeClassLookup &lineage_class : class_lineage)
