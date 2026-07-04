@@ -124,6 +124,8 @@ struct RuntimeOleObjectState {
     std::string source{};
     std::string last_action{};
     int action_count = 0;
+    bool hidden_runtime_surface = false;
+    bool read_only_collection_surface = false;
     std::optional<std::intptr_t> native_hwnd{};
     std::map<std::string, PrgValue> properties{};
     std::map<std::string, PrgValue> default_properties{};

@@ -336,6 +336,97 @@
             return &object_it->second;
         }
 
+        RuntimeOleObjectState *sync_native_owned_children_collection(RuntimeOleObjectState &runtime_object)
+        {
+            std::vector<std::pair<std::string, PrgValue>> child_members;
+            child_members.reserve(runtime_object.properties.size());
+            for (const auto &[property_name, property_value] : runtime_object.properties)
+            {
+                if (property_name == "parent" || property_name == "objects")
+                {
+                    continue;
+                }
+                if (property_name == "object" && is_native_olecontrol_host_object(runtime_object))
+                {
+                    continue;
+                }
+
+                const auto child_object = resolve_ole_object(property_value);
+                if (!child_object.has_value() || (*child_object)->hidden_runtime_surface)
+                {
+                    continue;
+                }
+
+                const auto child_parent = native_object_parent_reference(**child_object);
+                int parent_handle = 0;
+                std::string parent_prog_id;
+                if (!child_parent.has_value() ||
+                    !parse_object_handle_reference(*child_parent, parent_handle, parent_prog_id) ||
+                    parent_handle != runtime_object.handle)
+                {
+                    continue;
+                }
+
+                child_members.emplace_back(
+                    property_name,
+                    make_string_value("object:" + (*child_object)->prog_id + "#" + std::to_string((*child_object)->handle)));
+            }
+
+            RuntimeOleObjectState *collection_object = nullptr;
+            const auto objects_property = runtime_object.properties.find("objects");
+            if (objects_property != runtime_object.properties.end())
+            {
+                const auto nested = resolve_ole_object(objects_property->second);
+                if (nested.has_value() &&
+                    is_native_collection_object(**nested) &&
+                    (*nested)->hidden_runtime_surface &&
+                    (*nested)->read_only_collection_surface)
+                {
+                    collection_object = *nested;
+                }
+            }
+
+            if (collection_object == nullptr && child_members.empty())
+            {
+                return nullptr;
+            }
+
+            if (collection_object == nullptr)
+            {
+                const int handle = next_ole_handle++;
+                RuntimeOleObjectState collection_state{
+                    .handle = handle,
+                    .prog_id = "Collection",
+                    .source = {},
+                    .last_action = "objects",
+                    .action_count = 1,
+                    .hidden_runtime_surface = true,
+                    .read_only_collection_surface = true};
+                collection_state.base_class_name = "Collection";
+                collection_state.class_hierarchy = {"COLLECTION", "OBJECT"};
+                collection_state.properties["parent"] =
+                    make_string_value("object:" + runtime_object.prog_id + "#" + std::to_string(runtime_object.handle));
+                auto [collection_it, _] = ole_objects.emplace(handle, std::move(collection_state));
+                runtime_object.properties["objects"] =
+                    make_string_value("object:" + collection_it->second.prog_id + "#" + std::to_string(collection_it->second.handle));
+                collection_object = &collection_it->second;
+            }
+
+            collection_object->properties["parent"] =
+                make_string_value("object:" + runtime_object.prog_id + "#" + std::to_string(runtime_object.handle));
+            collection_object->collection_items.clear();
+            collection_object->collection_item_keys.clear();
+            collection_object->collection_items.reserve(child_members.size());
+            collection_object->collection_item_keys.reserve(child_members.size());
+            for (const auto &[child_name, child_reference] : child_members)
+            {
+                collection_object->collection_items.push_back(child_reference);
+                collection_object->collection_item_keys.push_back(child_name);
+            }
+            (void)read_native_collection_member(*collection_object, "count");
+            return collection_object;
+        }
+
         std::string resolve_native_prg_program_path(
             const std::string &source_path,
             const std::string &fallback_path = {}) const
@@ -728,6 +819,10 @@
 
                 const auto child_object = resolve_ole_object(property_value);
                 if (!child_object.has_value())
+                {
+                    continue;
+                }
+                if ((*child_object)->hidden_runtime_surface)
                 {
                     continue;
                 }
@@ -1131,6 +1226,7 @@
                                       .location = current_statement() == nullptr ? child_declaration.declaration_location : current_statement()->location});
                 }
             }
+            (void)sync_native_owned_children_collection(*runtime_object);
 
             std::string init_program_path;
             std::string init_method_name;
@@ -2824,7 +2920,10 @@
             }
             for (const auto &[_, object] : ole_objects)
             {
-                state.ole_objects.push_back(object);
+                if (!object.hidden_runtime_surface)
+                {
+                    state.ole_objects.push_back(object);
+                }
             }
 
             if (reason == DebugPauseReason::error)

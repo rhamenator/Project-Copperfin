@@ -1151,6 +1151,7 @@ namespace copperfin::runtime
                     }
 
                     runtime_object->properties[child_name] = make_runtime_object_reference(*child_object);
+                    (void)sync_native_owned_children_collection(*runtime_object);
                     runtime_object->last_action = effective_member_path + "(" + child_name + "," + child_class + ")";
                     ++runtime_object->action_count;
                     events.push_back({.category = "prg.object.addobject",
@@ -1177,6 +1178,10 @@ namespace copperfin::runtime
                     {
                         return make_boolean_value(false);
                     }
+                    if ((*child_object)->hidden_runtime_surface)
+                    {
+                        return make_boolean_value(false);
+                    }
 
                     const auto child_parent = native_object_parent_reference(**child_object);
                     int parent_handle = 0;
@@ -1190,6 +1195,7 @@ namespace copperfin::runtime
 
                     (*child_object)->properties.erase("parent");
                     runtime_object->properties.erase(child_name);
+                    (void)sync_native_owned_children_collection(*runtime_object);
                     runtime_object->last_action = effective_member_path + "(" + child_name + ")";
                     ++runtime_object->action_count;
                     events.push_back({.category = "prg.object.removeobject",
@@ -3435,6 +3441,7 @@ namespace copperfin::runtime
                                 ++property_it;
                             }
                         }
+                        (void)sync_native_owned_children_collection(parent_found->second);
                     }
                 }
             }

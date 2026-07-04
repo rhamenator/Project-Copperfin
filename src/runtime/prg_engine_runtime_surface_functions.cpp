@@ -717,10 +717,12 @@ std::vector<std::string> collect_object_member_names(const RuntimeOleObjectState
             unique_members.insert("resettodefault");
         }
         if (is_native_collection_object(runtime_object)) {
-            unique_members.insert("add");
             unique_members.insert("item");
-            unique_members.insert("remove");
-            unique_members.insert("removeall");
+            if (!runtime_object.read_only_collection_surface) {
+                unique_members.insert("add");
+                unique_members.insert("remove");
+                unique_members.insert("removeall");
+            }
         }
     }
     if (include_events) {
@@ -790,10 +792,11 @@ bool is_native_collection_member_name(const RuntimeOleObjectState& runtime_objec
         return false;
     }
     return normalized_member_name == "count" ||
-           normalized_member_name == "add" ||
            normalized_member_name == "item" ||
-           normalized_member_name == "remove" ||
-           normalized_member_name == "removeall";
+           (!runtime_object.read_only_collection_surface &&
+            (normalized_member_name == "add" ||
+             normalized_member_name == "remove" ||
+             normalized_member_name == "removeall"));
 }
 
 bool is_native_collection_readonly_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
@@ -816,6 +819,11 @@ std::optional<PrgValue> invoke_native_collection_method(RuntimeOleObjectState& r
 {
     if (!is_native_collection_object(runtime_object)) {
         return std::nullopt;
+    }
+
+    if (runtime_object.read_only_collection_surface &&
+        normalized_method_name != "item") {
+        return make_boolean_value(false);
     }
 
     if (normalized_method_name == "add" && !arguments.empty()) {
