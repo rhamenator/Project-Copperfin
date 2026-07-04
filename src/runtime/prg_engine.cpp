@@ -75,6 +75,24 @@ namespace copperfin::runtime
         constexpr std::intptr_t kCopperfinScreenWhandle = 900001;
         constexpr std::intptr_t kCopperfinVfpWhandle = 900002;
 
+        PrgValue canonicalize_native_olecontrol_doverb_argument(const PrgValue &verb)
+        {
+            if (verb.kind == PrgValueKind::string)
+            {
+                const std::string normalized_verb = normalize_identifier(trim_copy(value_as_string(verb)));
+                if (normalized_verb == "edit")
+                {
+                    return make_number_value(-1.0);
+                }
+                if (normalized_verb == "open")
+                {
+                    return make_number_value(-2.0);
+                }
+            }
+
+            return verb;
+        }
+
         void ensure_fault_context_defaults(
             const Statement *statement,
             SourceLocation &last_fault_location,
@@ -1027,7 +1045,9 @@ namespace copperfin::runtime
                         return make_boolean_value(false);
                     }
 
-                    const PrgValue verb = arguments.empty() ? make_number_value(0.0) : arguments.front();
+                    const PrgValue verb = arguments.empty()
+                                              ? make_number_value(0.0)
+                                              : canonicalize_native_olecontrol_doverb_argument(arguments.front());
                     runtime_object->last_action = effective_member_path + "(" + format_value(verb) + ")";
                     ++runtime_object->action_count;
                     events.push_back({.category = "ole.invoke",

@@ -39341,6 +39341,111 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_runtime_olecontrol_named_doverb_surfaces_remain_coherent()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_olecontrol_named_doverb";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "runtime_olecontrol_named_doverb.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "lAdded = oForm.AddObject('axHost', 'OleControl', 'MSComctlLib.ListViewCtrl')\n"
+            "lHostDoVerbNamedEdit = oForm.axHost.DoVerb(' edit ')\n"
+            "lHostDoVerbNamedOpen = oForm.axHost.DoVerb('OPEN')\n"
+            "oDoc = CREATEOBJECT('ExcelDoc')\n"
+            "lDocDoVerbNamedEdit = oDoc.DoVerb('Edit')\n"
+            "lDocDoVerbNamedOpen = oDoc.DoVerb(' open ')\n"
+            "RETURN\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ExcelDoc AS OLEControl\n"
+            "    OLEClass = 'Excel.Sheet'\n"
+            "    DocumentFile = 'C:\\EXCEL\\BOOK1.XLS'\n"
+            "    OLETypeAllowed = 1\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("OleControl named DoVerb script should complete: ") + state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("ladded", "true");
+        check("lhostdoverbnamededit", "true");
+        check("lhostdoverbnamedopen", "true");
+        check("ldocdoverbnamededit", "true");
+        check("ldocdoverbnamedopen", "true");
+
+        bool saw_host_edit = false;
+        bool saw_host_open = false;
+        bool saw_doc_edit = false;
+        bool saw_doc_open = false;
+        for (const auto &object_state : state.ole_objects)
+        {
+            if (object_state.prog_id == "MSComctlLib.ListViewCtrl" &&
+                object_state.last_action == "activate:-2")
+            {
+                saw_host_open = true;
+            }
+            if (object_state.prog_id == "Excel.Sheet" &&
+                object_state.last_action == "activate:-2")
+            {
+                saw_doc_open = true;
+            }
+        }
+        for (const auto &event : state.events)
+        {
+            if (event.category != "ole.invoke")
+            {
+                continue;
+            }
+            if (event.detail == "OleControl.doverb:-1")
+            {
+                saw_host_edit = true;
+            }
+            if (event.detail == "OleControl.doverb:-2")
+            {
+                saw_host_open = true;
+            }
+            if (event.detail == "ExcelDoc.doverb:-1")
+            {
+                saw_doc_edit = true;
+            }
+            if (event.detail == "ExcelDoc.doverb:-2")
+            {
+                saw_doc_open = true;
+            }
+        }
+
+        expect(saw_host_edit,
+               "Named host DoVerb('edit') should canonicalize to the representative edit activation verb");
+        expect(saw_host_open,
+               "Named host DoVerb('open') should canonicalize to the representative open activation verb");
+        expect(saw_doc_edit,
+               "Named class-defined DoVerb('edit') should canonicalize to the representative edit activation verb");
+        expect(saw_doc_open,
+               "Named class-defined DoVerb('open') should canonicalize to the representative open activation verb");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_runtime_native_visual_controls_without_hwnd_fail_deterministically()
     {
         namespace fs = std::filesystem;
@@ -41530,6 +41635,7 @@ int main()
         test_runtime_olecontrol_object_and_doverb_surfaces_remain_coherent();
         test_runtime_olecontrol_autoactivate_and_autoverbmenu_surfaces_remain_coherent();
         test_runtime_olecontrol_timeout_policy_surfaces_remain_coherent();
+        test_runtime_olecontrol_named_doverb_surfaces_remain_coherent();
         test_runtime_native_visual_controls_without_hwnd_fail_deterministically();
         test_same_prg_native_bindevent_property_access_and_assign_dispatch_preserve_current_event_metadata();
         test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();
