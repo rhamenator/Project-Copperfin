@@ -8,17 +8,28 @@
 #include "prg_engine_helpers.h"
 
 #include <cctype>
+#include <filesystem>
 #include <fstream>
+#include <set>
 
 namespace copperfin::runtime {
 
 namespace {
+
+namespace fs = std::filesystem;
 
 struct LogicalLine {
     std::size_t line_number = 0;
     std::string text{};
     bool is_text_block = false;
     std::string block_text{};
+};
+
+using PreprocessorDefineMap = std::map<std::string, std::string>;
+
+struct PreprocessorState {
+    PreprocessorDefineMap defines;
+    std::set<std::string> include_stack;
 };
 
 std::string strip_inline_comment(const std::string& line) {
@@ -194,6 +205,215 @@ std::vector<LogicalLine> load_logical_lines(const std::string& path) {
     }
 
     return lines;
+}
+
+bool is_preprocessor_identifier_start(const char ch) {
+    return std::isalpha(static_cast<unsigned char>(ch)) != 0 || ch == '_';
+}
+
+bool is_preprocessor_identifier_char(const char ch) {
+    return std::isalnum(static_cast<unsigned char>(ch)) != 0 || ch == '_';
+}
+
+std::string substitute_preprocessor_constants(
+    const std::string& text,
+    const PreprocessorDefineMap& defines,
+    std::set<std::string>& expansion_stack);
+
+std::string expand_preprocessor_identifier(
+    const std::string& identifier,
+    const PreprocessorDefineMap& defines,
+    std::set<std::string>& expansion_stack) {
+    const auto define = defines.find(normalize_identifier(identifier));
+    if (define == defines.end()) {
+        return identifier;
+    }
+    if (!expansion_stack.insert(define->first).second) {
+        return define->second;
+    }
+
+    const std::string expanded = substitute_preprocessor_constants(define->second, defines, expansion_stack);
+    expansion_stack.erase(define->first);
+    return expanded;
+}
+
+std::string substitute_preprocessor_constants(
+    const std::string& text,
+    const PreprocessorDefineMap& defines,
+    std::set<std::string>& expansion_stack) {
+    std::string expanded;
+    expanded.reserve(text.size());
+
+    char quote_delimiter = '\0';
+    std::size_t bracket_depth = 0U;
+    std::size_t brace_depth = 0U;
+    for (std::size_t index = 0; index < text.size();) {
+        const char ch = text[index];
+        if (quote_delimiter != '\0') {
+            expanded += ch;
+            if (ch == quote_delimiter) {
+                if ((index + 1U) < text.size() && text[index + 1U] == quote_delimiter) {
+                    expanded += text[index + 1U];
+                    index += 2U;
+                    continue;
+                }
+                quote_delimiter = '\0';
+            }
+            ++index;
+            continue;
+        }
+
+        if (ch == '\'' || ch == '"') {
+            quote_delimiter = ch;
+            expanded += ch;
+            ++index;
+            continue;
+        }
+        if (ch == '[') {
+            ++bracket_depth;
+            expanded += ch;
+            ++index;
+            continue;
+        }
+        if (ch == ']' && bracket_depth > 0U) {
+            --bracket_depth;
+            expanded += ch;
+            ++index;
+            continue;
+        }
+        if (ch == '{') {
+            ++brace_depth;
+            expanded += ch;
+            ++index;
+            continue;
+        }
+        if (ch == '}' && brace_depth > 0U) {
+            --brace_depth;
+            expanded += ch;
+            ++index;
+            continue;
+        }
+
+        if (bracket_depth == 0U &&
+            brace_depth == 0U &&
+            is_preprocessor_identifier_start(ch)) {
+            std::size_t token_end = index + 1U;
+            while (token_end < text.size() && is_preprocessor_identifier_char(text[token_end])) {
+                ++token_end;
+            }
+            expanded += expand_preprocessor_identifier(text.substr(index, token_end - index), defines, expansion_stack);
+            index = token_end;
+            continue;
+        }
+
+        expanded += ch;
+        ++index;
+    }
+
+    return expanded;
+}
+
+std::string substitute_preprocessor_constants(const std::string& text, const PreprocessorDefineMap& defines) {
+    std::set<std::string> expansion_stack;
+    return substitute_preprocessor_constants(text, defines, expansion_stack);
+}
+
+bool try_parse_include_directive(const std::string& line, std::string& include_path_text) {
+    const std::string trimmed = trim_copy(line);
+    if (!starts_with_insensitive(trimmed, "#INCLUDE")) {
+        return false;
+    }
+
+    const std::string body = trim_copy(trimmed.substr(8U));
+    if (body.size() < 2U) {
+        return false;
+    }
+    if ((body.front() == '"' && body.back() == '"') ||
+        (body.front() == '<' && body.back() == '>')) {
+        include_path_text = body.substr(1U, body.size() - 2U);
+        return !include_path_text.empty();
+    }
+    return false;
+}
+
+bool try_parse_define_directive(
+    const std::string& line,
+    std::string& identifier,
+    std::string& expression) {
+    const std::string trimmed = trim_copy(line);
+    if (!starts_with_insensitive(trimmed, "#DEFINE")) {
+        return false;
+    }
+
+    const std::string body = trim_copy(trimmed.substr(7U));
+    if (body.empty()) {
+        return false;
+    }
+
+    const auto [name_token, remainder] = split_first_word(body);
+    identifier = trim_copy(name_token);
+    expression = trim_copy(remainder);
+    return !identifier.empty();
+}
+
+fs::path resolve_include_path(const fs::path& owning_path, const std::string& include_path_text) {
+    const fs::path candidate = owning_path.parent_path() / fs::path(include_path_text);
+    std::error_code error;
+    if (fs::exists(candidate, error)) {
+        return candidate.lexically_normal();
+    }
+    return {};
+}
+
+void append_preprocessed_logical_lines(
+    const fs::path& path,
+    PreprocessorState& state,
+    const bool emit_non_directive_lines,
+    std::vector<LogicalLine>& output_lines) {
+    for (const auto& logical_line : load_logical_lines(path.string())) {
+        const std::string trimmed = trim_copy(logical_line.text);
+        if (trimmed.empty()) {
+            if (emit_non_directive_lines) {
+                output_lines.push_back(logical_line);
+            }
+            continue;
+        }
+
+        std::string include_path_text;
+        if (try_parse_include_directive(trimmed, include_path_text)) {
+            const fs::path include_path = resolve_include_path(path, include_path_text);
+            if (!include_path.empty()) {
+                const std::string include_key = include_path.string();
+                if (state.include_stack.insert(include_key).second) {
+                    append_preprocessed_logical_lines(include_path, state, false, output_lines);
+                    state.include_stack.erase(include_key);
+                }
+            }
+            continue;
+        }
+
+        std::string identifier;
+        std::string expression;
+        if (try_parse_define_directive(trimmed, identifier, expression)) {
+            state.defines[normalize_identifier(identifier)] = expression;
+            continue;
+        }
+
+        if (!emit_non_directive_lines) {
+            continue;
+        }
+
+        LogicalLine expanded_line = logical_line;
+        expanded_line.text = substitute_preprocessor_constants(logical_line.text, state.defines);
+        output_lines.push_back(std::move(expanded_line));
+    }
+}
+
+std::vector<LogicalLine> load_preprocessed_logical_lines(const std::string& path) {
+    std::vector<LogicalLine> output_lines;
+    PreprocessorState state;
+    append_preprocessed_logical_lines(fs::path(path), state, true, output_lines);
+    return output_lines;
 }
 
 Statement make_statement(StatementKind kind, const std::string& path, std::size_t line, const std::string& text) {
@@ -591,7 +811,7 @@ Program parse_program(const std::string& path) {
     Routine* current = &program.main;
     PrgClassDefinition* current_class = nullptr;
     NativeChildObjectDeclaration* current_child_object = nullptr;
-    for (const auto& logical_line : load_logical_lines(path)) {
+    for (const auto& logical_line : load_preprocessed_logical_lines(path)) {
         const std::size_t line_number = logical_line.line_number;
         const std::string line = trim_copy(logical_line.text);
         if (line.empty()) {

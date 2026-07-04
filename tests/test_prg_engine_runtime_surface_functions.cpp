@@ -6752,6 +6752,72 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_form_windowtype_include_define_constants_drive_modal_checks()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_form_windowtype_include_define";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path header_path = temp_root / "ui.h";
+        write_text(
+            header_path,
+            "#DEFINE WINDOWTYPE_MODELESS 0\n"
+            "#DEFINE WINDOWTYPE_MODAL 1\n");
+
+        const fs::path main_path = temp_root / "native_form_windowtype_include_define.prg";
+        write_text(
+            main_path,
+            "#INCLUDE \"ui.h\"\n"
+            "oDerived = CREATEOBJECT('DemoForm')\n"
+            "lBeforeIsModeless = (oDerived.WindowType = WINDOWTYPE_MODELESS)\n"
+            "nChildBefore = oDerived.cmdSave.ReadWindowType()\n"
+            "oDerived.cmdSave.MakeModal()\n"
+            "lAfterIsModal = (oDerived.WindowType = WINDOWTYPE_MODAL)\n"
+            "lChildReadsModal = (oDerived.cmdSave.ReadWindowType() = WINDOWTYPE_MODAL)\n"
+            "RETURN\n"
+            "DEFINE CLASS SaveButton AS CommandButton\n"
+            "    FUNCTION ReadWindowType\n"
+            "        RETURN THISFORM.WindowType\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE MakeModal\n"
+            "        THISFORM.WindowType = WINDOWTYPE_MODAL\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DemoForm AS Form\n"
+            "    WindowType = WINDOWTYPE_MODELESS\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Form WindowType include/define script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lbeforeismodeless", "true");
+        check("nchildbefore", "0");
+        check("lafterismodal", "true");
+        check("lchildreadsmodal", "true");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_form_windowstate_defaults_mutates_and_stays_builtin()
     {
         namespace fs = std::filesystem;
@@ -49452,6 +49518,7 @@ int main()
     test_native_controlcount_reflects_controls_count_and_stays_read_only();
     test_native_form_lockscreen_defaults_mutates_and_stays_builtin();
     test_native_form_windowtype_defaults_mutates_and_stays_builtin();
+    test_native_form_windowtype_include_define_constants_drive_modal_checks();
     test_native_form_windowstate_defaults_mutates_and_stays_builtin();
     test_native_form_borderstyle_defaults_mutates_and_stays_builtin();
     test_native_form_titlebar_defaults_mutates_and_stays_builtin();

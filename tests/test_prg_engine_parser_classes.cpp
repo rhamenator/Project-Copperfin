@@ -377,6 +377,61 @@ void test_parse_declarative_child_external_prg_sources() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_parse_include_and_define_constants_expand_before_class_body_parsing() {
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_parser_include_define_constants";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path header_path = temp_root / "ui.h";
+    copperfin::test_support::write_text(
+        header_path,
+        "#DEFINE WINDOWTYPE_MODELESS 0\n"
+        "#DEFINE WINDOWTYPE_MODAL 1\n"
+        "#DEFINE FORM_CAPTION 'IncludedDemo'\n");
+
+    const fs::path program_path = temp_root / "include_define_demo.prg";
+    copperfin::test_support::write_text(
+        program_path,
+        "#INCLUDE \"ui.h\"\n"
+        "DEFINE CLASS DemoForm AS Form\n"
+        "    Caption = FORM_CAPTION\n"
+        "    WindowType = WINDOWTYPE_MODAL\n"
+        "ENDDEFINE\n"
+        "nWindowType = WINDOWTYPE_MODELESS\n");
+
+    const copperfin::runtime::Program program = copperfin::runtime::parse_program(program_path.string());
+    const auto class_found = program.classes.find("demoform");
+    copperfin::test_support::expect(class_found != program.classes.end(),
+                                    "include/define constant parser test should parse the owning class definition");
+    if (class_found != program.classes.end()) {
+        const auto& class_definition = class_found->second;
+        copperfin::test_support::expect(class_definition.property_statements.size() == 2U,
+                                        "include/define constant parser test should preserve both class property assignments");
+        if (class_definition.property_statements.size() == 2U) {
+            copperfin::test_support::expect(class_definition.property_statements[0].identifier == "Caption",
+                                            "include/define constant parser test should preserve the class caption property name");
+            copperfin::test_support::expect(class_definition.property_statements[0].expression == "'IncludedDemo'",
+                                            "include/define constant parser test should expand included string constants in class assignments");
+            copperfin::test_support::expect(class_definition.property_statements[1].identifier == "WindowType",
+                                            "include/define constant parser test should preserve the class windowtype property name");
+            copperfin::test_support::expect(class_definition.property_statements[1].expression == "1",
+                                            "include/define constant parser test should expand included numeric constants in class assignments");
+        }
+    }
+
+    copperfin::test_support::expect(program.main.statements.size() == 1U,
+                                    "include/define constant parser test should preserve top-level statements after the class");
+    if (program.main.statements.size() == 1U) {
+        copperfin::test_support::expect(program.main.statements[0].kind == copperfin::runtime::StatementKind::assignment,
+                                        "include/define constant parser test should keep expanded top-level constants as assignments");
+        copperfin::test_support::expect(program.main.statements[0].expression == "0",
+                                        "include/define constant parser test should expand included top-level constants before normal parsing");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -387,6 +442,7 @@ int main() {
     test_parse_class_body_add_object_with_property_clauses();
     test_parse_class_body_object_blocks_capture_child_properties();
     test_parse_declarative_child_external_prg_sources();
+    test_parse_include_and_define_constants_expand_before_class_body_parsing();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";
