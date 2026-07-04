@@ -921,6 +921,65 @@
             {
                 return ensure_object_parent_path(segments, source_tag);
             };
+            auto try_invoke_bare_native_member_expression = [&](const std::string &expression) -> bool
+            {
+                const std::string trimmed_expression = trim_copy(expression);
+                if (trimmed_expression.empty() || trimmed_expression.find('.') == std::string::npos)
+                {
+                    return false;
+                }
+
+                if (!std::all_of(trimmed_expression.begin(), trimmed_expression.end(), [](unsigned char ch)
+                    {
+                        return std::isalnum(ch) != 0 || ch == '_' || ch == '.';
+                    }))
+                {
+                    return false;
+                }
+
+                const std::size_t separator = trimmed_expression.find('.');
+                if (separator == std::string::npos || separator == 0U || separator + 1U >= trimmed_expression.size())
+                {
+                    return false;
+                }
+
+                const std::string base_name = trim_copy(trimmed_expression.substr(0U, separator));
+                const std::string member_path = trim_copy(trimmed_expression.substr(separator + 1U));
+                if (!is_bare_identifier_text(base_name) || member_path.empty())
+                {
+                    return false;
+                }
+
+                const auto resolved_path = resolve_runtime_object_member_path(frame, base_name, member_path);
+                if (resolved_path.runtime_object == nullptr)
+                {
+                    return false;
+                }
+
+                const std::string effective_member_path =
+                    resolved_path.remaining_member_path.empty()
+                        ? member_path
+                        : resolved_path.remaining_member_path;
+                const std::size_t leaf_separator = effective_member_path.rfind('.');
+                const std::string leaf_member_name =
+                    leaf_separator == std::string::npos
+                        ? effective_member_path
+                        : effective_member_path.substr(leaf_separator + 1U);
+                const std::string normalized_leaf = normalize_identifier(leaf_member_name);
+                if (normalized_leaf.empty())
+                {
+                    return false;
+                }
+
+                if (!runtime_object_member_matches(resolved_path.runtime_object->methods, normalized_leaf) &&
+                    !(normalized_leaf == "refresh" && !resolved_path.runtime_object->class_hierarchy.empty()))
+                {
+                    return false;
+                }
+
+                (void)evaluate_expression(trimmed_expression + "()", frame);
+                return true;
+            };
 
             switch (statement.kind)
             {
@@ -940,7 +999,10 @@
                     }
                     else
                     {
-                        (void)evaluate_expression(statement.expression, frame);
+                        if (!try_invoke_bare_native_member_expression(statement.expression))
+                        {
+                            (void)evaluate_expression(statement.expression, frame);
+                        }
                     }
                 }
                 return {};

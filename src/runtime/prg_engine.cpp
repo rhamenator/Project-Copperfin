@@ -1129,9 +1129,18 @@ namespace copperfin::runtime
                         frame,
                         arguments,
                         argument_references);
-                    native_result.has_value())
+                            native_result.has_value())
                 {
                     return *native_result;
+                }
+                if (leaf == "refresh" && !runtime_object->class_hierarchy.empty())
+                {
+                    runtime_object->last_action = effective_member_path + "()";
+                    ++runtime_object->action_count;
+                    events.push_back({.category = "prg.object.refresh",
+                                      .detail = runtime_object->prog_id + "." + effective_member_path,
+                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                    return make_empty_value();
                 }
                 if (is_native_olecontrol_host_object(*runtime_object) && leaf == "doverb")
                 {

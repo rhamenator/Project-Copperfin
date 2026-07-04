@@ -37420,6 +37420,113 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_bare_dotted_native_refresh_statement_invokes_same_prg_override()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_bare_refresh_override";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_bare_refresh_override.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "lRefreshRan = oForm.lRefreshRan\n"
+            "RETURN\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    lRefreshRan = .F.\n"
+            "    PROCEDURE Init\n"
+            "        THIS.Refresh\n"
+            "    ENDPROC\n"
+            "    PROCEDURE Refresh\n"
+            "        THIS.lRefreshRan = .T.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("bare dotted native Refresh override script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto refreshed = state.globals.find("lrefreshran");
+        expect(refreshed != state.globals.end(),
+               "bare dotted native Refresh override script should preserve refresh flag");
+        if (refreshed != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(refreshed->second) == "true",
+                   "bare dotted native Refresh override should invoke the class-defined Refresh method");
+        }
+
+        const bool has_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   event.detail == "MainForm.Refresh";
+        });
+        expect(has_invoke_event,
+               "bare dotted native Refresh override should emit a prg.object.invoke event");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_native_refresh_builtin_fallback_succeeds_for_form_and_children()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_refresh_builtin";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_refresh_builtin.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "oForm.Refresh()\n"
+            "oForm.cmdSave.Refresh\n"
+            "oForm.cntHost.cmdInner.Refresh\n"
+            "lAfter = .T.\n"
+            "RETURN\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    ADD OBJECT cmdSave AS CommandButton\n"
+            "    ADD OBJECT cntHost AS Container\n"
+            "    PROCEDURE Init\n"
+            "        THIS.cntHost.AddObject('cmdInner', 'CommandButton')\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Refresh builtin fallback script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto after = state.globals.find("lafter");
+        expect(after != state.globals.end(),
+               "native Refresh builtin fallback script should preserve post-refresh execution");
+        if (after != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(after->second) == "true",
+                   "native Refresh builtin fallback should keep execution moving after form/child refresh calls");
+        }
+
+        const std::size_t refresh_event_count = static_cast<std::size_t>(std::count_if(
+            state.events.begin(),
+            state.events.end(),
+            [](const auto &event)
+            {
+                return event.category == "prg.object.refresh";
+            }));
+        expect(refresh_event_count == 3U,
+               "native Refresh builtin fallback should emit one refresh event for each representative refresh call");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_same_prg_native_bare_helper_calls_resolve_to_current_instance_before_top_level_routines()
     {
         namespace fs = std::filesystem;
@@ -42391,6 +42498,8 @@ int main()
     test_inherited_external_base_addobject_deeper_external_child_external_base_classlibrary_cannot_be_shadowed_through_direct_assignment();
     test_same_prg_native_dodefault_dispatches_base_methods_and_preserves_byref_init_flow();
     test_native_setall_recurses_over_descendants_and_honors_class_filters();
+    test_bare_dotted_native_refresh_statement_invokes_same_prg_override();
+    test_native_refresh_builtin_fallback_succeeds_for_form_and_children();
     test_same_prg_native_bare_helper_calls_resolve_to_current_instance_before_top_level_routines();
     test_inherited_external_prg_base_methods_resolve_bare_helper_calls_against_defining_library();
     test_external_prg_base_methods_support_dodefault_dispatch();
