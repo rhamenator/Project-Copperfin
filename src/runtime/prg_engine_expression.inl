@@ -123,6 +123,7 @@
                 std::function<std::optional<std::size_t>(const RuntimeSurfaceCursorSnapshot &, const std::string &)> load_cursor_snapshot_callback,
                 std::function<void(const std::string &, const std::string &)> record_event_callback,
                 std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback,
+                std::function<RuntimeOleObjectState*(const std::string &)> resolve_object_path_callback,
                 std::function<std::optional<PrgValue>(const PrgValue &, const std::string &)> read_native_member_callback,
                 std::function<bool(const PrgValue &, const std::string &, const PrgValue &)> write_native_member_callback,
                 std::function<std::optional<std::int64_t>(std::int64_t)> whandle_from_hwnd_callback,
@@ -191,6 +192,7 @@
                   load_cursor_snapshot_callback_(std::move(load_cursor_snapshot_callback)),
                   record_event_callback_(std::move(record_event_callback)),
                   resolve_object_callback_(std::move(resolve_object_callback)),
+                  resolve_object_path_callback_(std::move(resolve_object_path_callback)),
                   read_native_member_callback_(std::move(read_native_member_callback)),
                   write_native_member_callback_(std::move(write_native_member_callback)),
                   whandle_from_hwnd_callback_(std::move(whandle_from_hwnd_callback)),
@@ -628,6 +630,42 @@
                 const std::vector<std::optional<std::string>> &argument_references)
             {
                 const std::string function = normalize_identifier(identifier);
+                const auto try_native_collection_default_item =
+                    [&]() -> std::optional<PrgValue>
+                {
+                    if (arguments.empty())
+                    {
+                        return std::nullopt;
+                    }
+
+                    RuntimeOleObjectState *runtime_object = resolve_object_path_callback_(identifier);
+                    if (runtime_object == nullptr ||
+                        !is_native_collection_object(*runtime_object))
+                    {
+                        return std::nullopt;
+                    }
+
+                    const auto member_separator = identifier.find('.');
+                    const std::string base_name =
+                        member_separator == std::string::npos
+                            ? identifier
+                            : identifier.substr(0U, member_separator);
+                    const std::string member_path =
+                        member_separator == std::string::npos
+                            ? std::string("item")
+                            : identifier.substr(member_separator + 1U) + ".item";
+                    return ole_invoke_callback_(base_name,
+                                                member_path,
+                                                arguments,
+                                                argument_references);
+                };
+
+                if (const auto collection_default_item = try_native_collection_default_item();
+                    collection_default_item.has_value())
+                {
+                    return *collection_default_item;
+                }
+
                 const auto member_separator = function.find('.');
                 if (member_separator != std::string::npos)
                 {
@@ -2066,6 +2104,7 @@
             std::function<std::optional<std::size_t>(const RuntimeSurfaceCursorSnapshot &, const std::string &)> load_cursor_snapshot_callback_;
             std::function<void(const std::string &, const std::string &)> record_event_callback_;
             std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback_;
+            std::function<RuntimeOleObjectState*(const std::string &)> resolve_object_path_callback_;
             std::function<std::optional<PrgValue>(const PrgValue &, const std::string &)> read_native_member_callback_;
             std::function<bool(const PrgValue &, const std::string &, const PrgValue &)> write_native_member_callback_;
             std::function<std::optional<std::int64_t>(std::int64_t)> whandle_from_hwnd_callback_;

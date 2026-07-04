@@ -1924,6 +1924,43 @@ namespace copperfin::runtime
                 auto object = resolve_ole_object(value);
                 return object.has_value() ? *object : nullptr;
             },
+            [this, &frame](const std::string &identifier) -> RuntimeOleObjectState *
+            {
+                const auto separator = identifier.find('.');
+                if (separator == std::string::npos)
+                {
+                    const PrgValue value = lookup_variable(frame, identifier);
+                    auto object = resolve_ole_object(value);
+                    return object.has_value() ? *object : nullptr;
+                }
+
+                const std::string object_name = identifier.substr(0U, separator);
+                const std::string member_path = identifier.substr(separator + 1U);
+                const auto resolved_path = resolve_runtime_object_member_path(frame, object_name, member_path);
+                if (resolved_path.runtime_object == nullptr)
+                {
+                    return nullptr;
+                }
+
+                const std::string effective_member_path =
+                    resolved_path.remaining_member_path.empty()
+                        ? member_path
+                        : resolved_path.remaining_member_path;
+                if (effective_member_path.find('.') != std::string::npos)
+                {
+                    return nullptr;
+                }
+
+                const auto property = resolved_path.runtime_object->properties.find(
+                    normalize_identifier(effective_member_path));
+                if (property == resolved_path.runtime_object->properties.end())
+                {
+                    return nullptr;
+                }
+
+                auto object = resolve_ole_object(property->second);
+                return object.has_value() ? *object : nullptr;
+            },
             [this, &frame](const PrgValue &value, const std::string &member_name) -> std::optional<PrgValue>
             {
                 auto object = resolve_ole_object(value);

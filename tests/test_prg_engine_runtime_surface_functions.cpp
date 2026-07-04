@@ -5611,6 +5611,75 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_collection_default_item_invocation_routes_bare_and_member_path_calls()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_collection_default_item";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_collection_default_item.prg";
+        write_text(
+            main_path,
+            "DIMENSION aNames[2]\n"
+            "aNames[1] = 'array-one'\n"
+            "aNames[2] = 'array-two'\n"
+            "oHost = CREATEOBJECT('HostBox')\n"
+            "oItems = oHost.oItems\n"
+            "oItems.Add('alpha')\n"
+            "oItems.Add('beta', 'second')\n"
+            "cBareIndex = oItems(1)\n"
+            "cMemberIndex = oHost.oItems(2)\n"
+            "cMemberKey = oHost.oItems('second')\n"
+            "cExplicitKey = oHost.oItems.Item('second')\n"
+            "cArrayValue = aNames(2)\n"
+            "nFunctionValue = DoubleIt(3)\n"
+            "RETURN\n"
+            "FUNCTION DoubleIt\n"
+            "    LPARAMETERS tnValue\n"
+            "    RETURN tnValue * 2\n"
+            "ENDFUNC\n"
+            "DEFINE CLASS WorkerCollection AS Collection\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS HostBox AS Custom\n"
+            "    oItems = .NULL.\n"
+            "    PROCEDURE Init\n"
+            "        THIS.oItems = CREATEOBJECT('WorkerCollection')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Collection default-item script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cbareindex", "alpha");
+        check("cmemberindex", "beta");
+        check("cmemberkey", "beta");
+        check("cexplicitkey", "beta");
+        check("carrayvalue", "array-two");
+        check("nfunctionvalue", "6");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_createobject_and_newobject_instantiate_same_prg_exception_native_class()
     {
         namespace fs = std::filesystem;
@@ -43056,6 +43125,7 @@ int main()
     test_createobject_and_newobject_instantiate_same_prg_projecthook_native_class();
     test_createobject_and_newobject_instantiate_same_prg_cursoradapter_native_class();
     test_createobject_and_newobject_instantiate_same_prg_collection_native_class();
+    test_native_collection_default_item_invocation_routes_bare_and_member_path_calls();
     test_createobject_and_newobject_instantiate_same_prg_exception_native_class();
     test_native_addobject_materializes_child_objects_and_child_methods_see_parent();
     test_native_class_body_add_object_materializes_children_before_init();
