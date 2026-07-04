@@ -857,6 +857,49 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         return default_value;
     };
 
+    const auto is_native_olecontrol_host_runtime_object = [](const RuntimeOleObjectState& runtime_object) {
+        return normalize_identifier(runtime_object.base_class_name) == "olecontrol" ||
+               normalize_identifier(runtime_object.prog_id) == "olecontrol";
+    };
+    const auto reflectable_member_exists_locally = [](const RuntimeOleObjectState& runtime_object,
+                                                      const std::string& member_name) {
+        return get_native_identity_reflection_metadata(runtime_object, member_name).has_value() ||
+               is_native_collection_member_name(runtime_object, member_name) ||
+               runtime_object.properties.contains(member_name) ||
+               object_has_accessor_property(runtime_object, member_name) ||
+               object_has_member(runtime_object.methods, member_name) ||
+               object_has_member(runtime_object.events, member_name);
+    };
+    const auto reflectable_member_readonly_locally = [](const RuntimeOleObjectState& runtime_object,
+                                                        const std::string& member_name) {
+        return get_native_identity_reflection_metadata(runtime_object, member_name).has_value() ||
+               is_native_olecontrol_creation_time_member_name(runtime_object, member_name) ||
+               is_native_olecontrol_object_member_name(runtime_object, member_name) ||
+               is_native_olecontrol_inspection_member_name(runtime_object, member_name) ||
+               is_native_olecontrol_conflict_member_name(runtime_object, member_name) ||
+               native_child_parent_member_name_matches(runtime_object, member_name) ||
+               is_native_collection_readonly_member_name(runtime_object, member_name) ||
+               (is_scripting_dictionary_object(runtime_object) && member_name == "count") ||
+               (object_has_accessor_property(runtime_object, member_name) &&
+                !object_has_assigner_property(runtime_object, member_name));
+    };
+    const auto resolve_direct_olecontrol_reflection_surface =
+        [&](RuntimeOleObjectState& runtime_object) -> RuntimeOleObjectState*
+    {
+        if (!resolve_object_callback || !is_native_olecontrol_host_runtime_object(runtime_object)) {
+            return nullptr;
+        }
+        const auto object_surface = runtime_object.properties.find("object");
+        if (object_surface == runtime_object.properties.end()) {
+            return nullptr;
+        }
+        RuntimeOleObjectState* nested_object = resolve_object_callback(object_surface->second);
+        if (nested_object == nullptr || nested_object == &runtime_object) {
+            return nullptr;
+        }
+        return nested_object;
+    };
+
     if (function == "compobj" && arguments.size() >= 2U) {
         int handle_left = 0;
         int handle_right = 0;
@@ -984,29 +1027,28 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             return make_boolean_value(false);
         }
         if (attribute == 1) {
-            const bool exists = get_native_identity_reflection_metadata(*runtime_object, member_name).has_value() ||
-                                is_native_collection_member_name(*runtime_object, member_name) ||
-                                runtime_object->properties.contains(member_name) ||
-                                object_has_accessor_property(*runtime_object, member_name) ||
-                                object_has_member(runtime_object->methods, member_name) ||
-                                object_has_member(runtime_object->events, member_name);
+            bool exists = reflectable_member_exists_locally(*runtime_object, member_name);
+            if (!exists) {
+                if (RuntimeOleObjectState* object_surface =
+                        resolve_direct_olecontrol_reflection_surface(*runtime_object);
+                    object_surface != nullptr) {
+                    exists = reflectable_member_exists_locally(*object_surface, member_name);
+                }
+            }
             return make_boolean_value(exists);
         }
         if (attribute == 3) {
             return make_boolean_value(false);
         }
         if (attribute == 5) {
-            const bool readonly =
-                get_native_identity_reflection_metadata(*runtime_object, member_name).has_value() ||
-                is_native_olecontrol_creation_time_member_name(*runtime_object, member_name) ||
-                is_native_olecontrol_object_member_name(*runtime_object, member_name) ||
-                is_native_olecontrol_inspection_member_name(*runtime_object, member_name) ||
-                is_native_olecontrol_conflict_member_name(*runtime_object, member_name) ||
-                native_child_parent_member_name_matches(*runtime_object, member_name) ||
-                is_native_collection_readonly_member_name(*runtime_object, member_name) ||
-                (is_scripting_dictionary_object(*runtime_object) && member_name == "count") ||
-                (object_has_accessor_property(*runtime_object, member_name) &&
-                 !object_has_assigner_property(*runtime_object, member_name));
+            bool readonly = reflectable_member_readonly_locally(*runtime_object, member_name);
+            if (!readonly && !reflectable_member_exists_locally(*runtime_object, member_name)) {
+                if (RuntimeOleObjectState* object_surface =
+                        resolve_direct_olecontrol_reflection_surface(*runtime_object);
+                    object_surface != nullptr) {
+                    readonly = reflectable_member_readonly_locally(*object_surface, member_name);
+                }
+            }
             return make_boolean_value(readonly);
         }
         return make_boolean_value(false);
@@ -1086,6 +1128,32 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         if (object_has_member(runtime_object->methods, member_name) ||
             object_has_member(runtime_object->events, member_name)) {
             return make_boolean_value(true);
+        }
+        if (!reflectable_member_exists_locally(*runtime_object, member_name)) {
+            if (RuntimeOleObjectState* object_surface =
+                    resolve_direct_olecontrol_reflection_surface(*runtime_object);
+                object_surface != nullptr) {
+                if (const auto metadata_value =
+                        get_native_identity_reflection_metadata(*object_surface, member_name);
+                    metadata_value.has_value()) {
+                    return *metadata_value;
+                }
+                if (const auto collection_value =
+                        read_native_collection_member(*object_surface, member_name);
+                    collection_value.has_value()) {
+                    return *collection_value;
+                }
+                const auto property = object_surface->properties.find(member_name);
+                if (property != object_surface->properties.end()) {
+                    return property->second;
+                }
+                if (object_has_accessor_property(*object_surface, member_name) ||
+                    is_native_collection_member_name(*object_surface, member_name) ||
+                    object_has_member(object_surface->methods, member_name) ||
+                    object_has_member(object_surface->events, member_name)) {
+                    return make_boolean_value(true);
+                }
+            }
         }
         return make_empty_value();
     }

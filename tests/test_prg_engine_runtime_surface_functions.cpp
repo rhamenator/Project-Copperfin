@@ -39801,6 +39801,83 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_runtime_olecontrol_direct_member_reflection_remains_coherent()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_olecontrol_direct_member_reflection";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "runtime_olecontrol_direct_member_reflection.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "lAdded = oForm.AddObject('axHost', 'OleControl', 'MSComctlLib.ListViewCtrl')\n"
+            "oForm.axHost.Left = 25\n"
+            "xHostDirectLeftGetPem = GETPEM(oForm.axHost, 'Left')\n"
+            "xHostObjectLeftGetPem = GETPEM(oForm.axHost.Object, 'Left')\n"
+            "lHostHasLeft = PEMSTATUS(oForm.axHost, 'Left', 1)\n"
+            "lHostObjectHasLeft = PEMSTATUS(oForm.axHost.Object, 'Left', 1)\n"
+            "lHostLeftReadOnly = PEMSTATUS(oForm.axHost, 'Left', 5)\n"
+            "lHostObjectLeftReadOnly = PEMSTATUS(oForm.axHost.Object, 'Left', 5)\n"
+            "oDoc = CREATEOBJECT('ExcelDoc')\n"
+            "oDoc.Visible = .T.\n"
+            "xDocDirectVisibleGetPem = GETPEM(oDoc, 'Visible')\n"
+            "xDocObjectVisibleGetPem = GETPEM(oDoc.Object, 'Visible')\n"
+            "lDocHasVisible = PEMSTATUS(oDoc, 'Visible', 1)\n"
+            "lDocObjectHasVisible = PEMSTATUS(oDoc.Object, 'Visible', 1)\n"
+            "lDocVisibleReadOnly = PEMSTATUS(oDoc, 'Visible', 5)\n"
+            "lDocObjectVisibleReadOnly = PEMSTATUS(oDoc.Object, 'Visible', 5)\n"
+            "RETURN\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ExcelDoc AS OLEControl\n"
+            "    OLEClass = 'Excel.Sheet'\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("OleControl direct-member reflection script should complete: ") + state.message);
+
+        const auto expect_same = [&](const std::string &left_name, const std::string &right_name, const std::string &message)
+        {
+            const auto left = state.globals.find(left_name);
+            const auto right = state.globals.find(right_name);
+            expect(left != state.globals.end(), left_name + " variable not found");
+            expect(right != state.globals.end(), right_name + " variable not found");
+            if (left != state.globals.end() && right != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(left->second) == copperfin::runtime::format_value(right->second),
+                       message);
+            }
+        };
+
+        expect_same("xhostdirectleftgetpem",
+                    "xhostobjectleftgetpem",
+                    "Direct host GETPEM() reflection should match the explicit .Object Left reflection");
+        expect_same("lhosthasleft",
+                    "lhostobjecthasleft",
+                    "Direct host PEMSTATUS(..., 1) should match the explicit .Object Left reflection");
+        expect_same("lhostleftreadonly",
+                    "lhostobjectleftreadonly",
+                    "Direct host PEMSTATUS(..., 5) should match the explicit .Object Left mutability reflection");
+        expect_same("xdocdirectvisiblegetpem",
+                    "xdocobjectvisiblegetpem",
+                    "Direct class-defined GETPEM() reflection should match the explicit .Object Visible reflection");
+        expect_same("ldochasvisible",
+                    "ldocobjecthasvisible",
+                    "Direct class-defined PEMSTATUS(..., 1) should match the explicit .Object Visible reflection");
+        expect_same("ldocvisiblereadonly",
+                    "ldocobjectvisiblereadonly",
+                    "Direct class-defined PEMSTATUS(..., 5) should match the explicit .Object Visible mutability reflection");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_runtime_native_visual_controls_without_hwnd_fail_deterministically()
     {
         namespace fs = std::filesystem;
@@ -41995,6 +42072,7 @@ int main()
         test_runtime_olecontrol_direct_contained_member_routing_remains_coherent();
         test_runtime_olecontrol_application_conflict_paths_require_object_remain_coherent();
         test_runtime_olecontrol_explicit_object_reference_assignment_remains_coherent();
+        test_runtime_olecontrol_direct_member_reflection_remains_coherent();
         test_runtime_native_visual_controls_without_hwnd_fail_deterministically();
         test_same_prg_native_bindevent_property_access_and_assign_dispatch_preserve_current_event_metadata();
         test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();
