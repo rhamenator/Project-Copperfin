@@ -292,6 +292,12 @@
             }
 
             if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("leftcolumn"))
+            {
+                runtime_object.properties["leftcolumn"] = make_number_value(1.0);
+            }
+
+            if (normalized_base_class == "grid" &&
                 !runtime_object.properties.contains("recordsourcetype"))
             {
                 runtime_object.properties["recordsourcetype"] = make_number_value(1.0);

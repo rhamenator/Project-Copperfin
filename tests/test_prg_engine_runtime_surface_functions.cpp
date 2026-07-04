@@ -8152,6 +8152,93 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_leftcolumn_defaults_are_runtime_readonly_and_stay_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_leftcolumn";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_leftcolumn.prg";
+        write_text(
+            main_path,
+            "oBaseGrid = CREATEOBJECT('Grid')\n"
+            "lBaseHasLeftColumn = PEMSTATUS(oBaseGrid, 'LeftColumn', 1)\n"
+            "lBaseLeftColumnReadOnly = PEMSTATUS(oBaseGrid, 'LeftColumn', 5)\n"
+            "nBaseBefore = oBaseGrid.LeftColumn\n"
+            "xBaseGetPemBefore = GETPEM(oBaseGrid, 'LeftColumn')\n"
+            "oBaseGrid.LeftColumn = 3\n"
+            "nBaseAfterDirectAssign = oBaseGrid.LeftColumn\n"
+            "lBaseSetPem = SETPEM(oBaseGrid, 'LeftColumn', 2)\n"
+            "nBaseAfterSetPem = oBaseGrid.LeftColumn\n"
+            "lBaseAddProperty = ADDPROPERTY(oBaseGrid, 'LeftColumn', 4)\n"
+            "lBaseRemoveProperty = REMOVEPROPERTY(oBaseGrid, 'LeftColumn')\n"
+            "oDerived = CREATEOBJECT('DemoGrid')\n"
+            "nDerivedBefore = oDerived.LeftColumn\n"
+            "nChildBefore = oDerived.cmdProbe.ReadLeftColumn()\n"
+            "oDerived.cmdProbe.TryScroll()\n"
+            "nDerivedAfterChild = oDerived.LeftColumn\n"
+            "xDerivedGetPem = GETPEM(oDerived, 'LeftColumn')\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oDerived, 1)\n"
+            "lPropHasLeftColumn = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'LEFTCOLUMN'\n"
+            "        lPropHasLeftColumn = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "RETURN\n"
+            "DEFINE CLASS ProbeButton AS CommandButton\n"
+            "    FUNCTION ReadLeftColumn\n"
+            "        RETURN THIS.Parent.LeftColumn\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE TryScroll\n"
+            "        THIS.Parent.LeftColumn = 5\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DemoGrid AS Grid\n"
+            "    LeftColumn = 3\n"
+            "    ADD OBJECT cmdProbe AS ProbeButton\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native LeftColumn property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lbasehasleftcolumn", "true");
+        check("lbaseleftcolumnreadonly", "true");
+        check("nbasebefore", "1");
+        check("xbasegetpembefore", "1");
+        check("nbaseafterdirectassign", "1");
+        check("lbasesetpem", "false");
+        check("nbaseaftersetpem", "1");
+        check("lbaseaddproperty", "false");
+        check("lbaseremoveproperty", "false");
+        check("nderivedbefore", "3");
+        check("nchildbefore", "3");
+        check("nderivedafterchild", "3");
+        check("xderivedgetpem", "3");
+        check("lprophasleftcolumn", "true");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_recordsourcetype_defaults_mutates_and_stays_builtin()
     {
         namespace fs = std::filesystem;
@@ -48408,6 +48495,7 @@ int main()
     test_native_currentcontrol_defaults_mutates_and_stays_builtin();
     test_native_dynamiccurrentcontrol_defaults_mutates_and_stays_builtin();
     test_native_recordsource_defaults_mutates_and_stays_builtin();
+    test_native_leftcolumn_defaults_are_runtime_readonly_and_stay_builtin();
     test_native_recordsourcetype_defaults_mutates_and_stays_builtin();
     test_native_rowsource_defaults_mutates_and_stays_builtin();
     test_native_rowsourcetype_defaults_mutates_and_stays_builtin();

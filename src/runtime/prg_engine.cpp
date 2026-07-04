@@ -3512,6 +3512,7 @@ namespace copperfin::runtime
             if (!is_native_identity_member_name(runtime_object, normalized_property_name) &&
                 !is_native_controlcount_member_name(runtime_object, normalized_property_name) &&
                 !is_native_name_member_name(runtime_object, normalized_property_name) &&
+                !is_native_leftcolumn_member_name(runtime_object, normalized_property_name) &&
                 !is_native_form_desktop_member_name(runtime_object, normalized_property_name) &&
                 !is_native_form_scrollbars_member_name(runtime_object, normalized_property_name) &&
                 !is_native_olecontrol_creation_time_member_name(runtime_object, normalized_property_name) &&
