@@ -364,6 +364,7 @@ namespace copperfin::runtime
             std::vector<TryState> tries;
             std::string native_method_class_name;
             std::string native_method_name;
+            bool requested_nodefault = false;
             bool evaluate_conditional_else = false;
         };
 
@@ -625,6 +626,7 @@ namespace copperfin::runtime
         std::deque<Frame> stack;
         std::map<std::string, PrgValue> globals;
         std::optional<PrgValue> last_return_value;
+        bool last_popped_frame_requested_nodefault = false;
         std::map<std::string, RuntimeArray> arrays;
         std::set<std::string> public_names;
         std::vector<RuntimeBreakpoint> breakpoints;
@@ -723,6 +725,7 @@ namespace copperfin::runtime
         RuntimeOleObjectState *representative_active_form_object();
         const RuntimeOleObjectState *representative_active_form_object() const;
         void note_representative_active_form(const RuntimeOleObjectState &runtime_object);
+        bool consume_last_popped_frame_requested_nodefault();
         std::optional<std::intptr_t> dispatch_windows_message(
             std::intptr_t hwnd,
             std::uint32_t message,
@@ -1252,6 +1255,20 @@ namespace copperfin::runtime
                 }
                 if (leaf == "release" && !runtime_object->source.empty())
                 {
+                    last_popped_frame_requested_nodefault = false;
+                    if (auto native_result = invoke_native_object_method_if_present(
+                            *runtime_object,
+                            leaf,
+                            frame,
+                            arguments,
+                            argument_references);
+                        native_result.has_value())
+                    {
+                        if (consume_last_popped_frame_requested_nodefault())
+                        {
+                            return *native_result;
+                        }
+                    }
                     return release_native_object(*runtime_object, effective_member_path);
                 }
                 if (auto native_result = invoke_native_object_method_if_present(
@@ -2376,6 +2393,13 @@ namespace copperfin::runtime
                 representative_active_form_handle = owner_form_handle;
             }
         }
+    }
+
+    bool PrgRuntimeSession::Impl::consume_last_popped_frame_requested_nodefault()
+    {
+        const bool requested = last_popped_frame_requested_nodefault;
+        last_popped_frame_requested_nodefault = false;
+        return requested;
     }
 
     std::optional<PrgValue> PrgRuntimeSession::Impl::invoke_expression_user_routine(

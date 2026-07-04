@@ -32,6 +32,7 @@ enum class StatementKind {
     activate_surface,
     release_surface,
     return_statement,
+    nodefault_statement,
     if_statement,
     else_statement,
     endif_statement,

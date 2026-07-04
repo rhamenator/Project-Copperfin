@@ -1542,6 +1542,8 @@ Program parse_program(const std::string& path) {
             if (starts_with_insensitive(line, "RETURN ")) {
                 statement.expression = trim_copy(line.substr(6U));
             }
+        } else if (upper == "NODEFAULT") {
+            statement.kind = StatementKind::nodefault_statement;
         } else if (upper == "CLOSE ALL" || upper == "CLOSE TABLES"
             || upper == "CLOSE DATABASES" || upper == "CLOSE DATABASE"
             || starts_with_insensitive(line, "CLOSE ALL")

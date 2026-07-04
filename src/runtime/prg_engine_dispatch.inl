@@ -1820,6 +1820,9 @@
                     : evaluate_expression(statement.expression, frame);
                 pop_frame();
                 return {.ok = true, .waiting_for_events = false, .frame_returned = true, .message = {}};
+            case StatementKind::nodefault_statement:
+                frame.requested_nodefault = true;
+                return {};
             case StatementKind::do_case_statement:
                 frame.cases.push_back({.do_case_statement_index = frame.pc - 1U,
                                        .endcase_statement_index = find_matching_endcase(frame, frame.pc - 1U).value_or(frame.pc - 1U),

@@ -48,6 +48,8 @@ const char* statement_kind_name(const StatementKind kind) {
             return "release_surface";
         case StatementKind::return_statement:
             return "return_statement";
+        case StatementKind::nodefault_statement:
+            return "nodefault_statement";
         case StatementKind::if_statement:
             return "if_statement";
         case StatementKind::else_statement:

@@ -88,6 +88,7 @@
         {
             if (!stack.empty())
             {
+                last_popped_frame_requested_nodefault = stack.back().requested_nodefault;
                 sync_byref_arguments(stack.back());
                 restore_private_declarations(stack.back());
                 stack.pop_back();
