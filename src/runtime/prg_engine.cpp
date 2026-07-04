@@ -1019,6 +1019,24 @@ namespace copperfin::runtime
                 {
                     return *native_result;
                 }
+                if (is_native_olecontrol_host_object(*runtime_object) && leaf == "doverb")
+                {
+                    RuntimeOleObjectState *object_surface = ensure_native_olecontrol_object_surface(*runtime_object);
+                    if (object_surface == nullptr)
+                    {
+                        return make_boolean_value(false);
+                    }
+
+                    const PrgValue verb = arguments.empty() ? make_number_value(0.0) : arguments.front();
+                    runtime_object->last_action = effective_member_path + "(" + format_value(verb) + ")";
+                    ++runtime_object->action_count;
+                    events.push_back({.category = "ole.invoke",
+                                      .detail = runtime_object->prog_id + "." + effective_member_path + ":" + format_value(verb),
+                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                    object_surface->last_action = "activate:" + format_value(verb);
+                    ++object_surface->action_count;
+                    return make_boolean_value(true);
+                }
 
                 runtime_object->last_action = effective_member_path + "()";
                 ++runtime_object->action_count;
@@ -2817,6 +2835,7 @@ namespace copperfin::runtime
             }
             if (!is_native_identity_member_name(runtime_object, normalized_property_name) &&
                 !is_native_olecontrol_creation_time_member_name(runtime_object, normalized_property_name) &&
+                !is_native_olecontrol_object_member_name(runtime_object, normalized_property_name) &&
                 !is_native_child_parent_member_name(runtime_object, normalized_property_name) &&
                 !is_native_collection_readonly_member_name(runtime_object, normalized_property_name))
             {

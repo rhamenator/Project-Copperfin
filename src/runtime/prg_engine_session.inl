@@ -148,6 +148,68 @@
                    normalized_class_name == "toolbar";
         }
 
+        bool is_native_olecontrol_host_object(const RuntimeOleObjectState &runtime_object) const
+        {
+            return normalize_identifier(runtime_object.base_class_name) == "olecontrol" ||
+                   normalize_identifier(runtime_object.prog_id) == "olecontrol";
+        }
+
+        void append_builtin_native_olecontrol_methods(RuntimeOleObjectState &runtime_object)
+        {
+            if (!is_native_olecontrol_host_object(runtime_object))
+            {
+                return;
+            }
+
+            if (std::find(runtime_object.methods.begin(), runtime_object.methods.end(), "doverb") ==
+                runtime_object.methods.end())
+            {
+                runtime_object.methods.push_back("doverb");
+            }
+        }
+
+        RuntimeOleObjectState *ensure_native_olecontrol_object_surface(RuntimeOleObjectState &runtime_object)
+        {
+            if (!is_native_olecontrol_host_object(runtime_object))
+            {
+                return nullptr;
+            }
+
+            const auto existing_object = runtime_object.properties.find("object");
+            if (existing_object != runtime_object.properties.end())
+            {
+                const auto nested = resolve_ole_object(existing_object->second);
+                if (nested.has_value())
+                {
+                    return *nested;
+                }
+            }
+
+            const auto oleclass = runtime_object.properties.find("oleclass");
+            if (oleclass == runtime_object.properties.end())
+            {
+                return nullptr;
+            }
+
+            const std::string automation_prog_id = trim_copy(value_as_string(oleclass->second));
+            if (automation_prog_id.empty())
+            {
+                return nullptr;
+            }
+
+            const int handle = next_ole_handle++;
+            RuntimeOleObjectState object_surface{
+                .handle = handle,
+                .prog_id = automation_prog_id,
+                .source = {},
+                .last_action = "object",
+                .action_count = 1};
+            auto [object_it, _] = ole_objects.emplace(handle, std::move(object_surface));
+            runtime_object.properties["object"] =
+                make_string_value("object:" + object_it->second.prog_id + "#" + std::to_string(object_it->second.handle));
+            return &object_it->second;
+        }
+
         std::string resolve_native_prg_program_path(
             const std::string &source_path,
             const std::string &fallback_path = {}) const
@@ -491,6 +553,16 @@
             std::vector<int> child_handles;
             for (const auto &[property_name, property_value] : runtime_object.properties)
             {
+                if (property_name == "object" && is_native_olecontrol_host_object(runtime_object))
+                {
+                    const auto child_object = resolve_ole_object(property_value);
+                    if (child_object.has_value())
+                    {
+                        child_handles.push_back((*child_object)->handle);
+                    }
+                    continue;
+                }
+
                 if (property_name == "parent")
                 {
                     continue;
@@ -569,8 +641,10 @@
                     object_state.class_hierarchy.push_back("OBJECT");
                 }
                 assign_native_window_metadata(object_state);
+                append_builtin_native_olecontrol_methods(object_state);
 
                 auto [object_it, _] = ole_objects.emplace(handle, std::move(object_state));
+                (void)ensure_native_olecontrol_object_surface(object_it->second);
                 return &object_it->second;
             }
 
@@ -665,6 +739,7 @@
             {
                 object_state.methods.push_back(method_name);
             }
+            append_builtin_native_olecontrol_methods(object_state);
 
             auto [object_it, _] = ole_objects.emplace(handle, std::move(object_state));
             RuntimeOleObjectState *runtime_object = &object_it->second;
@@ -691,6 +766,7 @@
                         evaluate_expression(property_statement.expression, frame);
                 }
             }
+            (void)ensure_native_olecontrol_object_surface(*runtime_object);
             (void)read_native_collection_member(*runtime_object, "count");
             const PrgValue runtime_object_reference = make_runtime_object_reference(*runtime_object);
             for (const NativeClassLookup &lineage_class : class_lineage)

@@ -38970,6 +38970,148 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_runtime_olecontrol_object_and_doverb_surfaces_remain_coherent()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_olecontrol_object";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "runtime_olecontrol_object.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "lAdded = oForm.AddObject('axHost', 'OleControl', 'MSComctlLib.ListViewCtrl')\n"
+            "oHostObject = oForm.axHost.Object\n"
+            "xHostObjectGetPem = GETPEM(oForm.axHost, 'Object')\n"
+            "lHostHasObject = PEMSTATUS(oForm.axHost, 'Object', 1)\n"
+            "lHostObjectReadOnly = PEMSTATUS(oForm.axHost, 'Object', 5)\n"
+            "lSetHostObject = SETPEM(oForm.axHost, 'Object', 77)\n"
+            "lRemoveHostObject = REMOVEPROPERTY(oForm.axHost, 'Object')\n"
+            "oForm.axHost.Object.Left = 25\n"
+            "nHostObjectLeft = oForm.axHost.Object.Left\n"
+            "cHostObjectCompose = oForm.axHost.Object.Compose()\n"
+            "lHostDoVerbDefault = oForm.axHost.DoVerb()\n"
+            "lHostDoVerbEdit = oForm.axHost.DoVerb(-1)\n"
+            "oDoc = CREATEOBJECT('ExcelDoc')\n"
+            "oDoc.Object.Visible = .T.\n"
+            "oDocObject = oDoc.Object\n"
+            "xDocObjectGetPem = GETPEM(oDoc, 'Object')\n"
+            "lDocHasObject = PEMSTATUS(oDoc, 'Object', 1)\n"
+            "lDocObjectReadOnly = PEMSTATUS(oDoc, 'Object', 5)\n"
+            "lSetDocObject = SETPEM(oDoc, 'Object', 99)\n"
+            "lRemoveDocObject = REMOVEPROPERTY(oDoc, 'Object')\n"
+            "lDocVisible = oDoc.Object.Visible\n"
+            "lDocDoVerbOpen = oDoc.DoVerb(-2)\n"
+            "RETURN\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ExcelDoc AS OLEControl\n"
+            "    OLEClass = 'Excel.Sheet'\n"
+            "    DocumentFile = 'C:\\EXCEL\\BOOK1.XLS'\n"
+            "    OLETypeAllowed = 1\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("OleControl Object/DoVerb script should complete: ") + state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("ladded", "true");
+        check("lhosthasobject", "true");
+        check("lhostobjectreadonly", "true");
+        check("lsethostobject", "false");
+        check("lremovehostobject", "false");
+        check("nhostobjectleft", "25");
+        check("chostobjectcompose", "ole:MSComctlLib.ListViewCtrl.compose");
+        check("lhostdoverbdefault", "true");
+        check("lhostdoverbedit", "true");
+        check("ldochasobject", "true");
+        check("ldocobjectreadonly", "true");
+        check("lsetdocobject", "false");
+        check("lremovedocobject", "false");
+        check("ldocvisible", "true");
+        check("ldocdoverbopen", "true");
+
+        const auto host_object = state.globals.find("ohostobject");
+        const auto host_object_getpem = state.globals.find("xhostobjectgetpem");
+        expect(host_object != state.globals.end(),
+               "OleControl Object slice should capture the host Object through ordinary property access");
+        expect(host_object_getpem != state.globals.end(),
+               "OleControl Object slice should capture the host Object through GETPEM()");
+        if (host_object != state.globals.end() && host_object_getpem != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(host_object->second) ==
+                       copperfin::runtime::format_value(host_object_getpem->second),
+                   "OleControl Object should read consistently through ordinary property access and GETPEM()");
+            expect(copperfin::runtime::format_value(host_object->second).find("object:MSComctlLib.ListViewCtrl#") == 0U,
+                   "OleControl Object should resolve to a representative nested Automation object reference");
+        }
+
+        const auto doc_object = state.globals.find("odocobject");
+        const auto doc_object_getpem = state.globals.find("xdocobjectgetpem");
+        expect(doc_object != state.globals.end(),
+               "Class-defined OleControl slice should capture the nested Object through ordinary property access");
+        expect(doc_object_getpem != state.globals.end(),
+               "Class-defined OleControl slice should capture the nested Object through GETPEM()");
+        if (doc_object != state.globals.end() && doc_object_getpem != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(doc_object->second) ==
+                       copperfin::runtime::format_value(doc_object_getpem->second),
+                   "Class-defined OleControl Object should read consistently through ordinary property access and GETPEM()");
+            expect(copperfin::runtime::format_value(doc_object->second).find("object:Excel.Sheet#") == 0U,
+                   "Class-defined OleControl Object should resolve to the OLEClass-based nested Automation object reference");
+        }
+
+        bool saw_host_doverb = false;
+        bool saw_doc_doverb = false;
+        for (const auto &object_state : state.ole_objects)
+        {
+            if (object_state.prog_id == "MSComctlLib.ListViewCtrl" &&
+                object_state.last_action == "activate:-1")
+            {
+                saw_host_doverb = true;
+            }
+            if (object_state.prog_id == "Excel.Sheet" &&
+                object_state.last_action == "activate:-2")
+            {
+                saw_doc_doverb = true;
+            }
+        }
+        expect(saw_host_doverb,
+               "OleControl DoVerb slice should preserve activation intent on the nested ActiveX object state");
+        expect(saw_doc_doverb,
+               "Class-defined OleControl DoVerb slice should preserve activation intent on the nested Automation object state");
+
+        expect(std::any_of(state.events.begin(), state.events.end(), [](const auto &event) {
+                   return event.category == "ole.invoke" &&
+                          event.detail == "OleControl.doverb:-1";
+               }),
+               "OleControl DoVerb slice should emit the representative activation event detail for the host edit verb");
+        expect(std::any_of(state.events.begin(), state.events.end(), [](const auto &event) {
+                   return event.category == "ole.invoke" &&
+                          event.detail == "ExcelDoc.doverb:-2";
+               }),
+               "Class-defined OleControl DoVerb slice should emit the representative activation event detail for the open verb");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_runtime_native_visual_controls_without_hwnd_fail_deterministically()
     {
         namespace fs = std::filesystem;
@@ -41156,6 +41298,7 @@ int main()
         test_runtime_hwnd_and_sys2326_sys2327_surfaces_bind_representative_window_objects();
         test_runtime_olecontrol_hwnd_and_windows_message_binding_surfaces_remain_coherent();
         test_runtime_olecontrol_documentfile_and_oletypeallowed_surfaces_remain_coherent();
+        test_runtime_olecontrol_object_and_doverb_surfaces_remain_coherent();
         test_runtime_native_visual_controls_without_hwnd_fail_deterministically();
         test_same_prg_native_bindevent_property_access_and_assign_dispatch_preserve_current_event_metadata();
         test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();
