@@ -1004,6 +1004,20 @@ bool native_listindex_member_name_matches(
            normalized_base_class == "listbox";
 }
 
+bool native_displayvalue_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "displayvalue" ||
+        !runtime_object.properties.contains("displayvalue")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "combobox" ||
+           normalized_base_class == "listbox";
+}
+
 bool native_boundcolumn_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
@@ -1617,6 +1631,11 @@ bool is_native_listindex_member_name(const RuntimeOleObjectState& runtime_object
     return native_listindex_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_displayvalue_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_displayvalue_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_boundcolumn_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_boundcolumn_member_name_matches(runtime_object, normalized_member_name);
@@ -2103,6 +2122,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_rowsource_member_name(*runtime_object, property_name) ||
             is_native_rowsourcetype_member_name(*runtime_object, property_name) ||
             is_native_listindex_member_name(*runtime_object, property_name) ||
+            is_native_displayvalue_member_name(*runtime_object, property_name) ||
             is_native_boundcolumn_member_name(*runtime_object, property_name) ||
             is_native_columncount_member_name(*runtime_object, property_name) ||
             is_native_columnwidths_member_name(*runtime_object, property_name) ||
@@ -2324,6 +2344,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_rowsource_member_name(*runtime_object, property_name) ||
             is_native_rowsourcetype_member_name(*runtime_object, property_name) ||
             is_native_listindex_member_name(*runtime_object, property_name) ||
+            is_native_displayvalue_member_name(*runtime_object, property_name) ||
             is_native_boundcolumn_member_name(*runtime_object, property_name) ||
             is_native_columncount_member_name(*runtime_object, property_name) ||
             is_native_columnwidths_member_name(*runtime_object, property_name) ||

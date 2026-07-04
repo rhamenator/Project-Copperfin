@@ -8447,6 +8447,128 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_displayvalue_defaults_mutates_and_stays_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_displayvalue";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_displayvalue.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('ComboBox')\n"
+            "lPlainHasDisplayValue = PEMSTATUS(oPlain, 'DisplayValue', 1)\n"
+            "lPlainDisplayValueReadOnly = PEMSTATUS(oPlain, 'DisplayValue', 5)\n"
+            "cPlainBefore = oPlain.DisplayValue\n"
+            "xPlainGetPemBefore = GETPEM(oPlain, 'DisplayValue')\n"
+            "oPlain.DisplayValue = 'January'\n"
+            "cPlainAfterDirectAssign = oPlain.DisplayValue\n"
+            "lPlainSetPem = SETPEM(oPlain, 'DisplayValue', 2)\n"
+            "xPlainAfterSetPem = oPlain.DisplayValue\n"
+            "lPlainAddProperty = ADDPROPERTY(oPlain, 'DisplayValue', 'shadow')\n"
+            "lPlainRemoveProperty = REMOVEPROPERTY(oPlain, 'DisplayValue')\n"
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "xComboBefore = oForm.cboMonth.DisplayValue\n"
+            "xListBefore = oForm.lstYear.DisplayValue\n"
+            "xComboRead = oForm.cmdProbe.ReadComboDisplayValue()\n"
+            "xListRead = oForm.cmdProbe.ReadListDisplayValue()\n"
+            "oForm.cmdProbe.RepaintLists()\n"
+            "xComboAfterChild = oForm.cboMonth.DisplayValue\n"
+            "xListAfterChild = oForm.lstYear.DisplayValue\n"
+            "lComboSetPem = SETPEM(oForm.cboMonth, 'DisplayValue', 5)\n"
+            "xComboAfterSetPem = oForm.cboMonth.DisplayValue\n"
+            "xComboGetPem = GETPEM(oForm.cboMonth, 'DisplayValue')\n"
+            "lComboHasDisplayValue = PEMSTATUS(oForm.cboMonth, 'DisplayValue', 1)\n"
+            "lComboDisplayValueReadOnly = PEMSTATUS(oForm.cboMonth, 'DisplayValue', 5)\n"
+            "lListSetPem = SETPEM(oForm.lstYear, 'DisplayValue', 'Fiscal')\n"
+            "xListAfterSetPem = oForm.lstYear.DisplayValue\n"
+            "xListGetPem = GETPEM(oForm.lstYear, 'DisplayValue')\n"
+            "lListHasDisplayValue = PEMSTATUS(oForm.lstYear, 'DisplayValue', 1)\n"
+            "lListDisplayValueReadOnly = PEMSTATUS(oForm.lstYear, 'DisplayValue', 5)\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oForm.lstYear, 1)\n"
+            "lPropHasDisplayValue = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'DISPLAYVALUE'\n"
+            "        lPropHasDisplayValue = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('BoundList')\n"
+            "xDerivedBefore = oDerived.DisplayValue\n"
+            "RETURN\n"
+            "DEFINE CLASS ProbeButton AS CommandButton\n"
+            "    FUNCTION ReadComboDisplayValue\n"
+            "        RETURN THISFORM.cboMonth.DisplayValue\n"
+            "    ENDFUNC\n"
+            "    FUNCTION ReadListDisplayValue\n"
+            "        RETURN THISFORM.lstYear.DisplayValue\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE RepaintLists\n"
+            "        THISFORM.cboMonth.DisplayValue = 'April'\n"
+            "        THISFORM.lstYear.DisplayValue = 1\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    ADD OBJECT cboMonth AS ComboBox WITH DisplayValue = 'March'\n"
+            "    ADD OBJECT lstYear AS ListBox WITH DisplayValue = '2024'\n"
+            "    ADD OBJECT cmdProbe AS ProbeButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS BoundList AS ListBox\n"
+            "    DisplayValue = 'DerivedText'\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native DisplayValue property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplainhasdisplayvalue", "true");
+        check("lplaindisplayvaluereadonly", "false");
+        check("cplainbefore", "");
+        check("xplaingetpembefore", "");
+        check("cplainafterdirectassign", "January");
+        check("lplainsetpem", "true");
+        check("xplainaftersetpem", "2");
+        check("lplainaddproperty", "false");
+        check("lplainremoveproperty", "false");
+        check("xcombobefore", "March");
+        check("xlistbefore", "2024");
+        check("xcomboread", "March");
+        check("xlistread", "2024");
+        check("xcomboafterchild", "April");
+        check("xlistafterchild", "1");
+        check("lcombosetpem", "true");
+        check("xcomboaftersetpem", "5");
+        check("xcombogetpem", "5");
+        check("lcombohasdisplayvalue", "true");
+        check("lcombodisplayvaluereadonly", "false");
+        check("llistsetpem", "true");
+        check("xlistaftersetpem", "Fiscal");
+        check("xlistgetpem", "Fiscal");
+        check("llisthasdisplayvalue", "true");
+        check("llistdisplayvaluereadonly", "false");
+        check("lprophasdisplayvalue", "true");
+        check("xderivedbefore", "DerivedText");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_combobox_boundcolumn_columncount_and_columnwidths_defaults_mutate_and_stay_builtin()
     {
         namespace fs = std::filesystem;
@@ -47888,6 +48010,7 @@ int main()
     test_native_rowsource_defaults_mutates_and_stays_builtin();
     test_native_rowsourcetype_defaults_mutates_and_stays_builtin();
     test_native_listindex_defaults_mutates_and_stays_builtin();
+    test_native_displayvalue_defaults_mutates_and_stays_builtin();
     test_native_combobox_boundcolumn_columncount_and_columnwidths_defaults_mutate_and_stay_builtin();
     test_native_visual_backcolor_defaults_mutate_and_stay_builtin();
     test_native_visual_forecolor_defaults_mutate_and_stay_builtin();
