@@ -761,6 +761,19 @@ Program parse_program(const std::string& path) {
             if (in_pos != std::string::npos) {
                 statement.identifier = trim_copy(body.substr(0U, in_pos));
                 statement.expression = trim_copy(body.substr(in_pos + 2U));
+                const std::string upper_expression = uppercase_copy(statement.expression);
+                static constexpr std::string_view foxobject_suffix = " FOXOBJECT";
+                if (upper_expression.size() > foxobject_suffix.size() &&
+                    upper_expression.compare(
+                        upper_expression.size() - foxobject_suffix.size(),
+                        foxobject_suffix.size(),
+                        foxobject_suffix) == 0)
+                {
+                    statement.expression = trim_copy(
+                        statement.expression.substr(
+                            0U,
+                            statement.expression.size() - foxobject_suffix.size()));
+                }
             }
         } else if (starts_with_insensitive(line, "FOR ")) {
             statement.kind = StatementKind::for_statement;
