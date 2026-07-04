@@ -2,9 +2,9 @@
 // Licensed under the Project Copperfin Source-Available License or
 // Commercial License. See LICENSE.md in the repository root.
 
+#include "test_environment_support.h"
 #include "copperfin/vfp/dbf_table.h"
 
-#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -19,57 +19,7 @@ namespace {
 
 int failures = 0;
 
-std::string getenv_value(const std::string& name) {
-#ifdef _WIN32
-    char* value = nullptr;
-    std::size_t value_size = 0;
-    if (_dupenv_s(&value, &value_size, name.c_str()) != 0 || value == nullptr) {
-        return {};
-    }
-    std::string result(value);
-    std::free(value);
-    return result;
-#else
-    const char* value = std::getenv(name.c_str());
-    if (value == nullptr) {
-        return {};
-    }
-    return value;
-#endif
-}
-
-void set_env_value(const std::string& name, const std::string& value, bool has_value) {
-#ifdef _WIN32
-    if (has_value) {
-        _putenv_s(name.c_str(), value.c_str());
-    } else {
-        _putenv_s((name + "=").c_str(), "");
-    }
-#else
-    if (has_value) {
-        setenv(name.c_str(), value.c_str(), 1);
-    } else {
-        unsetenv(name.c_str());
-    }
-#endif
-}
-
-struct ScopedEnvironmentValue {
-    std::string name;
-    std::string original;
-    bool had_original = false;
-
-    explicit ScopedEnvironmentValue(const std::string& environment_name)
-        : name(environment_name),
-          original(getenv_value(name)) {
-        had_original = !original.empty();
-        set_env_value(name, "", false);
-    }
-
-    ~ScopedEnvironmentValue() {
-        set_env_value(name, original, had_original);
-    }
-};
+using copperfin::test_support::ScopedEnvironmentValue;
 
 struct ScopedDefaultLocaleCatalogEnvironment {
     ScopedEnvironmentValue locale;
@@ -78,8 +28,8 @@ struct ScopedDefaultLocaleCatalogEnvironment {
     ScopedDefaultLocaleCatalogEnvironment()
         : locale("COPPERFIN_LOCALE"),
           locale_dir("COPPERFIN_LOCALE_DIR") {
-        set_env_value("COPPERFIN_LOCALE", "en-US", true);
-        set_env_value(
+        copperfin::test_support::set_env_value("COPPERFIN_LOCALE", "en-US", true);
+        copperfin::test_support::set_env_value(
             "COPPERFIN_LOCALE_DIR",
             [] {
                 std::filesystem::path ancestor = std::filesystem::absolute(std::filesystem::current_path());

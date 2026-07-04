@@ -8,38 +8,11 @@ namespace cf_test_studio_host_json {
 int failures = 0;
 
 std::string getenv_value(const std::string& name) {
-#ifdef _WIN32
-    char* value = nullptr;
-    std::size_t value_size = 0;
-    if (_dupenv_s(&value, &value_size, name.c_str()) != 0 || value == nullptr) {
-        return {};
-    }
-    std::string result(value);
-    std::free(value);
-    return result;
-#else
-    const char* value = std::getenv(name.c_str());
-    if (value == nullptr) {
-        return {};
-    }
-    return value;
-#endif
+    return copperfin::test_support::getenv_value(name);
 }
 
 void set_env_value(const std::string& name, const std::string& value, bool has_value) {
-#ifdef _WIN32
-    if (has_value) {
-        _putenv_s(name.c_str(), value.c_str());
-    } else {
-        _putenv_s((name + "=").c_str(), "");
-    }
-#else
-    if (has_value) {
-        setenv(name.c_str(), value.c_str(), 1);
-    } else {
-        unsetenv(name.c_str());
-    }
-#endif
+    copperfin::test_support::set_env_value(name, value, has_value);
 }
 
 void expect(bool condition, const std::string& message) {

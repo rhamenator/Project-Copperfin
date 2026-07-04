@@ -5,6 +5,7 @@
 #ifndef COPPERFIN_TEST_STUDIO_HOST_JSON_SUPPORT_H
 #define COPPERFIN_TEST_STUDIO_HOST_JSON_SUPPORT_H
 
+#include "test_environment_support.h"
 #include "copperfin/localization/localization.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "copperfin/vfp/visual_asset_editor.h"
