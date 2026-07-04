@@ -19462,7 +19462,7 @@ namespace
         };
 
         check("nmembersprops", "4");
-        check("nmembersunion", "4");
+        check("nmembersunion", "6");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop3", "CLASS");
@@ -19537,7 +19537,7 @@ namespace
         };
 
         check("nmembersprops", "5");
-        check("nmembersunion", "5");
+        check("nmembersunion", "7");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop3", "CLASS");
@@ -22213,7 +22213,7 @@ namespace
         check("lchildclasslibraryreadonly", "true");
         check("cchildclasslibraryprop", button_library_path.string());
         check("nmembersprops", "5");
-        check("nmembersunion", "5");
+        check("nmembersunion", "7");
         check("cprop1", "BASECLASS");
         check("cprop2", "CLASS");
         check("cprop3", "CLASSLIBRARY");
@@ -22320,7 +22320,7 @@ namespace
         check("lchildclasslibraryreadonly", "true");
         check("cchildclasslibraryprop", button_library_path.string());
         check("nmembersprops", "5");
-        check("nmembersunion", "5");
+        check("nmembersunion", "7");
         check("cprop1", "BASECLASS");
         check("cprop2", "CLASS");
         check("cprop3", "CLASSLIBRARY");
@@ -22780,7 +22780,7 @@ namespace
         };
 
         check("nmembersprops", "5");
-        check("nmembersunion", "5");
+        check("nmembersunion", "7");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop3", "CLASS");
@@ -22867,7 +22867,7 @@ namespace
         };
 
         check("nmembersprops", "5");
-        check("nmembersunion", "5");
+        check("nmembersunion", "7");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop3", "CLASS");
@@ -22951,7 +22951,7 @@ namespace
         };
 
         check("nmembersprops", "5");
-        check("nmembersunion", "5");
+        check("nmembersunion", "7");
         check("lchildhasparent", "true");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
@@ -23040,7 +23040,7 @@ namespace
         };
 
         check("nmembersprops", "5");
-        check("nmembersunion", "5");
+        check("nmembersunion", "7");
         check("lchildhasparent", "true");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
@@ -31895,7 +31895,7 @@ namespace
         check("lchildbaseclassreadonly", "true");
         check("lchildparentclassreadonly", "true");
         check("nmembersprops", "5");
-        check("nmembersunion", "5");
+        check("nmembersunion", "7");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop3", "CLASS");
@@ -32043,7 +32043,7 @@ namespace
         check("lchildbaseclassreadonly", "true");
         check("lchildparentclassreadonly", "true");
         check("nmembersprops", "5");
-        check("nmembersunion", "5");
+        check("nmembersunion", "7");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop3", "CLASS");
@@ -33420,7 +33420,7 @@ namespace
         check("lchildparentclassreadonly", "true");
         check("lchildclasslibraryreadonly", "true");
         check("nmembersprops", "6");
-        check("nmembersunion", "6");
+        check("nmembersunion", "8");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop3", "CLASS");
@@ -34918,7 +34918,7 @@ namespace
         check("lchildparentclassreadonly", "true");
         check("lchildclasslibraryreadonly", "true");
         check("nmembersprops", "6");
-        check("nmembersunion", "6");
+        check("nmembersunion", "8");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop3", "CLASS");
@@ -34949,7 +34949,7 @@ namespace
         check("lleafchildparentclassreadonly", "true");
         check("lleafchildclasslibraryreadonly", "true");
         check("nleafmembersprops", "6");
-        check("nleafmembersunion", "6");
+        check("nleafmembersunion", "8");
         check("cleafprop1", "BASECLASS");
         check("cleafprop2", "CAPTION");
         check("cleafprop3", "CLASS");
@@ -37960,6 +37960,99 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_builtin_methods_reflect_through_pemstatus_getpem_and_amembers()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_builtin_method_reflection";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_builtin_method_reflection.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "lHasRefresh = PEMSTATUS(oForm, 'Refresh', 1)\n"
+            "lHasShow = PEMSTATUS(oForm, 'Show', 1)\n"
+            "lHasHide = PEMSTATUS(oForm, 'Hide', 1)\n"
+            "lHasReset = PEMSTATUS(oForm, 'ResetToDefault', 1)\n"
+            "lHasTextSetFocus = PEMSTATUS(oForm.txtName, 'SetFocus', 1)\n"
+            "lShowReadOnly = PEMSTATUS(oForm, 'Show', 5)\n"
+            "lResetReadOnly = PEMSTATUS(oForm, 'ResetToDefault', 5)\n"
+            "lTextSetFocusReadOnly = PEMSTATUS(oForm.txtName, 'SetFocus', 5)\n"
+            "lGetShow = GETPEM(oForm, 'Show')\n"
+            "lGetReset = GETPEM(oForm, 'ResetToDefault')\n"
+            "lGetTextSetFocus = GETPEM(oForm.txtName, 'SetFocus')\n"
+            "nFormMethods = AMEMBERS(aFormMethods, oForm, 2)\n"
+            "nFormUnion = AMEMBERS(aFormUnion, oForm, 3)\n"
+            "nTextMethods = AMEMBERS(aTextMethods, oForm.txtName, 2)\n"
+            "nFormHasRefresh = ASCAN(aFormMethods, 'REFRESH')\n"
+            "nFormHasShow = ASCAN(aFormMethods, 'SHOW')\n"
+            "nFormHasHide = ASCAN(aFormMethods, 'HIDE')\n"
+            "nFormUnionHasReset = ASCAN(aFormUnion, 'RESETTODEFAULT')\n"
+            "nTextHasSetFocus = ASCAN(aTextMethods, 'SETFOCUS')\n"
+            "RETURN\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    ADD OBJECT txtName AS TextBox\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native builtin-method reflection script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " variable not found");
+            if (it != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(it->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(it->second) + "'");
+            }
+        };
+
+        check("lhasrefresh", "true");
+        check("lhasshow", "true");
+        check("lhashide", "true");
+        check("lhasreset", "true");
+        check("lhastextsetfocus", "true");
+        check("lshowreadonly", "false");
+        check("lresetreadonly", "false");
+        check("ltextsetfocusreadonly", "false");
+        check("lgetshow", "true");
+        check("lgetreset", "true");
+        check("lgettextsetfocus", "true");
+
+        const auto expect_positive = [&](const std::string &name, const std::string &message)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " variable not found");
+            if (it != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(it->second) != "0",
+                       message + " expected a positive ASCAN() result");
+            }
+        };
+
+        expect_positive("nformhasrefresh",
+                        "AMEMBERS(..., 2) should expose the shipped native Refresh builtin");
+        expect_positive("nformhasshow",
+                        "AMEMBERS(..., 2) should expose the shipped native Show builtin");
+        expect_positive("nformhashide",
+                        "AMEMBERS(..., 2) should expose the shipped native Hide builtin");
+        expect_positive("nformunionhasreset",
+                        "AMEMBERS(..., 3) should expose the shipped native ResetToDefault builtin");
+        expect_positive("ntexthassetfocus",
+                        "AMEMBERS(..., 2) should expose the shipped native SetFocus builtin");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_same_prg_native_bare_helper_calls_resolve_to_current_instance_before_top_level_routines()
     {
         namespace fs = std::filesystem;
@@ -38486,10 +38579,10 @@ namespace
         check("lhasdescribe", "true");
         check("lhaswho", "true");
         check("lhasping", "true");
-        check("nmembersmethods", "3");
+        check("nmembersmethods", "5");
         check("cmethod1", "DESCRIBE");
         check("cmethod2", "PING");
-        check("cmethod3", "WHO");
+        check("cmethod3", "REFRESH");
         check("cdescribe", "prefix:Child");
         check("cwho", "Parent");
         check("cping", "Child");
@@ -41190,7 +41283,7 @@ namespace
         check("lcaptionreadonly", "false");
         check("lstatusreadonly", "true");
         check("nmembersprops", "7");
-        check("nmembersunion", "10");
+        check("nmembersunion", "12");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop4", "CLASS");
@@ -41296,7 +41389,7 @@ namespace
         check("lcaptionreadonly", "false");
         check("lstatusreadonly", "true");
         check("nmembersprops", "9");
-        check("nmembersunion", "12");
+        check("nmembersunion", "14");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop4", "CLASS");
@@ -42939,6 +43032,7 @@ int main()
     test_native_setfocus_override_wins_over_builtin_activecontrol_toggle();
     test_native_resettodefault_builtin_fallback_restores_inherited_defaults();
     test_native_resettodefault_override_wins_over_builtin_default_restore();
+    test_native_builtin_methods_reflect_through_pemstatus_getpem_and_amembers();
     test_same_prg_native_bare_helper_calls_resolve_to_current_instance_before_top_level_routines();
     test_inherited_external_prg_base_methods_resolve_bare_helper_calls_against_defining_library();
     test_external_prg_base_methods_support_dodefault_dispatch();

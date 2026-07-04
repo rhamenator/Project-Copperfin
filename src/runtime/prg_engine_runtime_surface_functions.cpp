@@ -176,6 +176,83 @@ bool object_has_member(const std::vector<std::string>& members, const std::strin
            }) != members.end();
 }
 
+bool is_native_visual_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    if (runtime_object.class_hierarchy.empty()) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "checkbox" ||
+           normalized_base_class == "combobox" ||
+           normalized_base_class == "commandbutton" ||
+           normalized_base_class == "commandgroup" ||
+           normalized_base_class == "container" ||
+           normalized_base_class == "editbox" ||
+           normalized_base_class == "form" ||
+           normalized_base_class == "grid" ||
+           normalized_base_class == "image" ||
+           normalized_base_class == "label" ||
+           normalized_base_class == "line" ||
+           normalized_base_class == "listbox" ||
+           normalized_base_class == "olecontrol" ||
+           normalized_base_class == "optionbutton" ||
+           normalized_base_class == "optiongroup" ||
+           normalized_base_class == "page" ||
+           normalized_base_class == "pageframe" ||
+           normalized_base_class == "separator" ||
+           normalized_base_class == "shape" ||
+           normalized_base_class == "spinner" ||
+           normalized_base_class == "textbox" ||
+           normalized_base_class == "toolbar";
+}
+
+bool is_native_focusable_runtime_object(const RuntimeOleObjectState& runtime_object) {
+    if (runtime_object.class_hierarchy.empty()) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "checkbox" ||
+           normalized_base_class == "combobox" ||
+           normalized_base_class == "commandbutton" ||
+           normalized_base_class == "editbox" ||
+           normalized_base_class == "form" ||
+           normalized_base_class == "grid" ||
+           normalized_base_class == "listbox" ||
+           normalized_base_class == "olecontrol" ||
+           normalized_base_class == "optionbutton" ||
+           normalized_base_class == "page" ||
+           normalized_base_class == "spinner" ||
+           normalized_base_class == "textbox";
+}
+
+bool is_builtin_native_runtime_method_name(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (runtime_object.class_hierarchy.empty()) {
+        return false;
+    }
+
+    if (normalized_member_name == "refresh" ||
+        normalized_member_name == "resettodefault") {
+        return true;
+    }
+
+    if ((normalized_member_name == "show" || normalized_member_name == "hide") &&
+        is_native_visual_runtime_object(runtime_object)) {
+        return true;
+    }
+
+    if (normalized_member_name == "setfocus" &&
+        is_native_focusable_runtime_object(runtime_object)) {
+        return true;
+    }
+
+    return false;
+}
+
 bool is_scripting_dictionary_object(const RuntimeOleObjectState& runtime_object) {
     return normalize_identifier(runtime_object.prog_id) == "scripting.dictionary";
 }
@@ -608,6 +685,21 @@ std::vector<std::string> collect_object_member_names(const RuntimeOleObjectState
         for (const auto& method_name : runtime_object.methods) {
             unique_members.insert(normalize_identifier(method_name));
         }
+        if (is_builtin_native_runtime_method_name(runtime_object, "refresh")) {
+            unique_members.insert("refresh");
+        }
+        if (is_builtin_native_runtime_method_name(runtime_object, "show")) {
+            unique_members.insert("show");
+        }
+        if (is_builtin_native_runtime_method_name(runtime_object, "hide")) {
+            unique_members.insert("hide");
+        }
+        if (is_builtin_native_runtime_method_name(runtime_object, "setfocus")) {
+            unique_members.insert("setfocus");
+        }
+        if (is_builtin_native_runtime_method_name(runtime_object, "resettodefault")) {
+            unique_members.insert("resettodefault");
+        }
         if (is_native_collection_object(runtime_object)) {
             unique_members.insert("add");
             unique_members.insert("item");
@@ -867,6 +959,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                is_native_collection_member_name(runtime_object, member_name) ||
                runtime_object.properties.contains(member_name) ||
                object_has_accessor_property(runtime_object, member_name) ||
+               is_builtin_native_runtime_method_name(runtime_object, member_name) ||
                object_has_member(runtime_object.methods, member_name) ||
                object_has_member(runtime_object.events, member_name);
     };
@@ -1162,6 +1255,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             object_has_member(runtime_object->events, member_name)) {
             return make_boolean_value(true);
         }
+        if (is_builtin_native_runtime_method_name(*runtime_object, member_name)) {
+            return make_boolean_value(true);
+        }
         if (!reflectable_member_exists_locally(*runtime_object, member_name)) {
             if (RuntimeOleObjectState* object_surface =
                     resolve_direct_olecontrol_reflection_surface(*runtime_object);
@@ -1182,6 +1278,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                 }
                 if (object_has_accessor_property(*object_surface, member_name) ||
                     is_native_collection_member_name(*object_surface, member_name) ||
+                    is_builtin_native_runtime_method_name(*object_surface, member_name) ||
                     object_has_member(object_surface->methods, member_name) ||
                     object_has_member(object_surface->events, member_name)) {
                     return make_boolean_value(true);
