@@ -53,6 +53,7 @@
             const std::string &native_method_name = {},
             const std::optional<PrgValue> &parent_reference = std::nullopt,
             const std::optional<PrgValue> &owner_form_reference = std::nullopt,
+            const std::optional<PrgValue> &owner_formset_reference = std::nullopt,
             std::vector<PrgValue> call_arguments = {},
             std::vector<std::optional<std::string>> call_argument_references = {})
         {
@@ -75,6 +76,14 @@
             {
                 frame.locals["thisform"] = *owner_form_reference;
                 frame.local_names.insert("thisform");
+            }
+            if (owner_formset_reference.has_value())
+            {
+                frame.locals["thisformset"] = *owner_formset_reference;
+                frame.local_names.insert("thisformset");
+            }
+            else if (owner_form_reference.has_value())
+            {
                 frame.locals["thisformset"] = *owner_form_reference;
                 frame.local_names.insert("thisformset");
             }
@@ -683,12 +692,66 @@
         std::optional<PrgValue> native_object_owner_form_reference(
             const RuntimeOleObjectState &runtime_object) const
         {
-            auto current_reference = native_object_parent_reference(runtime_object);
-            if (!current_reference.has_value())
+            const auto make_runtime_object_reference = [](const RuntimeOleObjectState &object_state) -> PrgValue
             {
-                return std::nullopt;
+                return make_string_value("object:" + object_state.prog_id + "#" + std::to_string(object_state.handle));
+            };
+            if (normalize_identifier(runtime_object.base_class_name) == "form")
+            {
+                return make_runtime_object_reference(runtime_object);
             }
 
+            auto current_reference = native_object_parent_reference(runtime_object);
+            std::optional<PrgValue> highest_owner_reference;
+            std::set<int> visited_handles;
+            while (current_reference.has_value())
+            {
+                int handle = 0;
+                std::string prog_id;
+                if (!parse_object_handle_reference(*current_reference, handle, prog_id))
+                {
+                    return std::nullopt;
+                }
+                if (!visited_handles.insert(handle).second)
+                {
+                    return current_reference;
+                }
+
+                highest_owner_reference = current_reference;
+                const auto found = ole_objects.find(handle);
+                if (found == ole_objects.end())
+                {
+                    return highest_owner_reference;
+                }
+                if (normalize_identifier(found->second.base_class_name) == "form")
+                {
+                    return current_reference;
+                }
+
+                const auto parent_reference = native_object_parent_reference(found->second);
+                if (!parent_reference.has_value())
+                {
+                    return highest_owner_reference;
+                }
+                current_reference = parent_reference;
+            }
+
+            return highest_owner_reference;
+        }
+
+        std::optional<PrgValue> native_object_owner_formset_reference(
+            const RuntimeOleObjectState &runtime_object) const
+        {
+            const auto make_runtime_object_reference = [](const RuntimeOleObjectState &object_state) -> PrgValue
+            {
+                return make_string_value("object:" + object_state.prog_id + "#" + std::to_string(object_state.handle));
+            };
+            if (normalize_identifier(runtime_object.base_class_name) == "formset")
+            {
+                return make_runtime_object_reference(runtime_object);
+            }
+
+            auto current_reference = native_object_parent_reference(runtime_object);
             std::set<int> visited_handles;
             while (current_reference.has_value())
             {
@@ -706,18 +769,17 @@
                 const auto found = ole_objects.find(handle);
                 if (found == ole_objects.end())
                 {
-                    return current_reference;
+                    return std::nullopt;
                 }
-
-                const auto parent_reference = native_object_parent_reference(found->second);
-                if (!parent_reference.has_value())
+                if (normalize_identifier(found->second.base_class_name) == "formset")
                 {
                     return current_reference;
                 }
-                current_reference = parent_reference;
+
+                current_reference = native_object_parent_reference(found->second);
             }
 
-            return std::nullopt;
+            return native_object_owner_form_reference(runtime_object);
         }
 
         struct ResolvedRuntimeObjectMemberPath
@@ -1311,6 +1373,7 @@
                                   "init",
                                   parent_reference,
                                   native_object_owner_form_reference(*runtime_object),
+                                  native_object_owner_formset_reference(*runtime_object),
                                   effective_constructor_arguments,
                                   constructor_argument_references);
                 (void)run_expression_invoked_routine_until_return(return_depth);

@@ -7765,6 +7765,146 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_formset_child_methods_distinguish_thisform_from_thisformset()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_formset_owner_chain";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_formset_owner_chain.prg";
+        write_text(
+            main_path,
+            "oSet = CREATEOBJECT('MainFormSet')\n"
+            "cOwnerSummary = oSet.frmWork.cmdSave.DescribeOwners()\n"
+            "RETURN\n"
+            "DEFINE CLASS SaveButton AS CommandButton\n"
+            "    FUNCTION DescribeOwners\n"
+            "        cThisFormCaption = THISFORM.Caption\n"
+            "        cThisFormBaseClass = THISFORM.BaseClass\n"
+            "        cThisFormSetCaption = THISFORMSET.Caption\n"
+            "        cThisFormSetBaseClass = THISFORMSET.BaseClass\n"
+            "        cFormParentCaption = THISFORM.Parent.Caption\n"
+            "        cFormParentBaseClass = THISFORM.Parent.BaseClass\n"
+            "        cFormFromSetCaption = THISFORMSET.frmWork.Caption\n"
+            "        RETURN THISFORM.Caption + '|' + THISFORMSET.Caption\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS WorkerForm AS Form\n"
+            "    Caption = 'WorkerForm'\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainFormSet AS FormSet\n"
+            "    Caption = 'OwnerSet'\n"
+            "    ADD OBJECT frmWork AS WorkerForm\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native FormSet owner-chain script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cownersummary", "WorkerForm|OwnerSet");
+        check("cthisformcaption", "WorkerForm");
+        check("cthisformbaseclass", "Form");
+        check("cthisformsetcaption", "OwnerSet");
+        check("cthisformsetbaseclass", "FormSet");
+        check("cformparentcaption", "OwnerSet");
+        check("cformparentbaseclass", "FormSet");
+        check("cformfromsetcaption", "WorkerForm");
+
+        expect(state.ole_objects.size() == 3U,
+               "native FormSet owner-chain script should register formset, child form, and child control");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_formset_activeform_parent_and_release_thisformset_follow_owner_chain()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_formset_activeform";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_formset_activeform.prg";
+        write_text(
+            main_path,
+            "oSet = CREATEOBJECT('MainFormSet')\n"
+            "oSet.frmWork.cmdSave.SetFocus()\n"
+            "cActiveBaseClass = _SCREEN.ActiveForm.BaseClass\n"
+            "cActiveCaption = _SCREEN.ActiveForm.Caption\n"
+            "cActiveParentBaseClass = _SCREEN.ActiveForm.Parent.BaseClass\n"
+            "cActiveParentCaption = _SCREEN.ActiveForm.Parent.Caption\n"
+            "lReleased = oSet.frmWork.cmdSave.CloseOwnerSet()\n"
+            "lSetHasCaptionAfterRelease = PEMSTATUS(oSet, 'Caption', 1)\n"
+            "RETURN\n"
+            "DEFINE CLASS SaveButton AS CommandButton\n"
+            "    FUNCTION CloseOwnerSet\n"
+            "        RELEASE THISFORMSET\n"
+            "        lMethodContinued = .T.\n"
+            "        RETURN .T.\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS WorkerForm AS Form\n"
+            "    Caption = 'WorkerForm'\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainFormSet AS FormSet\n"
+            "    Caption = 'OwnerSet'\n"
+            "    ADD OBJECT frmWork AS WorkerForm\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native FormSet ActiveForm script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cactivebaseclass", "Form");
+        check("cactivecaption", "WorkerForm");
+        check("cactiveparentbaseclass", "FormSet");
+        check("cactiveparentcaption", "OwnerSet");
+        check("lreleased", "true");
+        check("lmethodcontinued", "true");
+        check("lsethascaptionafterrelease", "false");
+
+        expect(state.ole_objects.empty(),
+               "native FormSet ActiveForm script should release the whole formset hierarchy");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_inherited_external_parent_child_methods_resolve_thisform_to_live_derived_owner()
     {
         namespace fs = std::filesystem;
@@ -44488,6 +44628,8 @@ int main()
     test_declarative_children_materialize_from_external_prg_sources_before_parent_init();
     test_native_child_methods_resolve_thisform_through_parent_chain();
     test_native_child_methods_resolve_thisformset_through_owner_chain();
+    test_formset_child_methods_distinguish_thisform_from_thisformset();
+    test_formset_activeform_parent_and_release_thisformset_follow_owner_chain();
     test_inherited_external_parent_child_methods_resolve_thisform_to_live_derived_owner();
     test_inherited_external_parent_child_methods_resolve_thisformset_to_live_derived_owner();
     test_external_prg_base_child_methods_resolve_parent_thisform_and_thisformset();

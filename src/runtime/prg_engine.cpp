@@ -2517,6 +2517,7 @@ namespace copperfin::runtime
                           normalize_identifier(identifier),
                           native_object_parent_reference(runtime_object),
                           native_object_owner_form_reference(runtime_object),
+                          native_object_owner_formset_reference(runtime_object),
                           std::vector<PrgValue>(arguments.begin(), arguments.end()),
                           std::vector<std::optional<std::string>>(
                               argument_references.begin(),
@@ -2604,6 +2605,7 @@ namespace copperfin::runtime
                               normalize_identifier(binding.delegate_name),
                               native_object_parent_reference(target_object),
                               native_object_owner_form_reference(target_object),
+                              native_object_owner_formset_reference(target_object),
                               arguments,
                               argument_references);
             return run_expression_invoked_routine_until_return(return_depth);
@@ -2672,6 +2674,7 @@ namespace copperfin::runtime
                               normalize_identifier(binding.delegate_name),
                               native_object_parent_reference(target_object),
                               native_object_owner_form_reference(target_object),
+                              native_object_owner_formset_reference(target_object),
                               arguments,
                               argument_references);
             return run_expression_invoked_routine_until_return(return_depth);
@@ -3634,6 +3637,7 @@ namespace copperfin::runtime
                                   "destroy",
                                   native_object_parent_reference(object_state),
                                   native_object_owner_form_reference(object_state),
+                                  native_object_owner_formset_reference(object_state),
                                   {},
                                   {});
                 (void)run_expression_invoked_routine_until_return(return_depth);
@@ -3775,6 +3779,13 @@ namespace copperfin::runtime
                               return form_found == source_frame.locals.end()
                                   ? std::nullopt
                                   : std::optional<PrgValue>(form_found->second);
+                          }(),
+                          [&source_frame]() -> std::optional<PrgValue>
+                          {
+                              const auto formset_found = source_frame.locals.find("thisformset");
+                              return formset_found == source_frame.locals.end()
+                                  ? std::nullopt
+                                  : std::optional<PrgValue>(formset_found->second);
                           }(),
                           std::vector<PrgValue>(effective_arguments.begin(), effective_arguments.end()),
                           std::vector<std::optional<std::string>>(
