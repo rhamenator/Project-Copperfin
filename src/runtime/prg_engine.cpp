@@ -661,6 +661,7 @@ namespace copperfin::runtime
         std::map<int, std::map<int, RuntimeSqlConnectionState>> sql_connections_by_session;
         std::map<int, RuntimeOleObjectState> ole_objects;
         std::optional<int> representative_active_form_handle;
+        std::string representative_application_caption = "Microsoft Visual FoxPro";
         std::vector<NativeEventBinding> native_event_bindings;
         std::set<std::string> active_native_event_keys;
         std::vector<CurrentNativeEventContext> active_native_event_contexts;
@@ -1622,6 +1623,11 @@ namespace copperfin::runtime
                             "object:" + runtime_object->prog_id + "#" + std::to_string(runtime_object->handle));
                     }
                     return make_empty_value();
+                }
+                if (normalized_property_path == "_screen.caption" ||
+                    normalized_property_path == "_vfp.caption")
+                {
+                    return make_string_value(representative_application_caption);
                 }
                 const auto raise_ole_fault = [&](const std::string &detail,
                                                  const std::string &source,

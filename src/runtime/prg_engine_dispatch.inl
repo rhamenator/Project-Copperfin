@@ -559,6 +559,17 @@
                         assign_variable(frame, assignment_identifier, assignment_value);
                         return {};
                     }
+                    const std::string member_path = assignment_identifier.substr(separator + 1U);
+                    const std::string normalized_object_part = normalize_identifier(object_part);
+                    if ((normalized_object_part == "_screen" || normalized_object_part == "_vfp") &&
+                        normalize_identifier(member_path) == "caption")
+                    {
+                        representative_application_caption = value_as_string(assignment_value);
+                        events.push_back({.category = "ole.set",
+                                          .detail = object_part + ".Caption = " + representative_application_caption,
+                                          .location = statement.location});
+                        return {};
+                    }
                     const PrgValue object_value = lookup_variable(frame, object_part);
                     auto object = resolve_ole_object(object_value);
                     if (!object.has_value())
@@ -576,7 +587,6 @@
                         return {.ok = false, .message = last_error_message};
                     }
 
-                    const std::string member_path = assignment_identifier.substr(separator + 1U);
                     const auto resolved_path = resolve_runtime_object_member_path(frame, object_part, member_path);
                     RuntimeOleObjectState *runtime_object =
                         resolved_path.runtime_object == nullptr ? *object : resolved_path.runtime_object;

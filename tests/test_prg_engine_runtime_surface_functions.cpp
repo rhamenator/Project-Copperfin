@@ -39517,6 +39517,57 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_runtime_application_caption_aliases_track_representative_caption()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_caption_aliases";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "runtime_caption_aliases.prg";
+        write_text(
+            main_path,
+            "cScreenDefault = _SCREEN.Caption\n"
+            "cVfpDefault = _VFP.Caption\n"
+            "_SCREEN.Caption = 'Copperfin'\n"
+            "cScreenAfterScreenSet = _SCREEN.Caption\n"
+            "cVfpAfterScreenSet = _VFP.Caption\n"
+            "_VFP.Caption = 'Copperfin Runtime'\n"
+            "cScreenAfterVfpSet = _SCREEN.Caption\n"
+            "cVfpAfterVfpSet = _VFP.Caption\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("runtime caption alias script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cscreendefault", "Microsoft Visual FoxPro");
+        check("cvfpdefault", "Microsoft Visual FoxPro");
+        check("cscreenafterscreenset", "Copperfin");
+        check("cvfpafterscreenset", "Copperfin");
+        check("cscreenaftervfpset", "Copperfin Runtime");
+        check("cvfpaftervfpset", "Copperfin Runtime");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_release_thisform_command_releases_owner_form()
     {
         namespace fs = std::filesystem;
@@ -45295,6 +45346,7 @@ int main()
     test_native_setfocus_builtin_fallback_updates_owner_activecontrol();
     test_native_setfocus_override_wins_over_builtin_activecontrol_toggle();
     test_runtime_application_activeform_aliases_track_representative_native_form();
+    test_runtime_application_caption_aliases_track_representative_caption();
     test_native_release_thisform_command_releases_owner_form();
     test_native_release_thisformset_command_releases_owner_alias();
     test_native_release_override_runs_before_builtin_release_path();
