@@ -42,11 +42,7 @@ void test_authorization() {
 }
 
 void test_secret_provider() {
-#ifdef _WIN32
-    _putenv_s("COPPERFIN_TEST_SECRET", "alpha-secret");
-#else
-    setenv("COPPERFIN_TEST_SECRET", "alpha-secret", 1);
-#endif
+    ScopedEnvironmentValue secret_value("COPPERFIN_TEST_SECRET", "alpha-secret");
 
     const auto secret = copperfin::security::resolve_secret_reference("env:COPPERFIN_TEST_SECRET");
     expect(secret.ok, "secret provider should resolve env references");
@@ -213,11 +209,7 @@ void test_authorization_empty_permission_returns_false() {
 void test_secret_provider_missing_env_var_returns_not_ok() {
     // Ensure the variable is absent before testing.
     const std::string missing_var = "COPPERFIN_MISSING_SECRET_XYZ";
-#ifdef _WIN32
-    _putenv_s(missing_var.c_str(), "");
-#else
-    unsetenv(missing_var.c_str());
-#endif
+    ScopedEnvironmentValue missing_secret(missing_var);
 
     const auto result = copperfin::security::resolve_secret_reference("env:" + missing_var);
     expect(!result.ok, "resolve_secret_reference should return not-ok for a missing environment variable");

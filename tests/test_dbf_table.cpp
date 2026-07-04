@@ -4,6 +4,7 @@
 
 #include "copperfin/localization/localization.h"
 #include "copperfin/vfp/dbf_table.h"
+#include "test_environment_support.h"
 
 #include <cstdint>
 #include <cstdlib>
@@ -21,6 +22,8 @@
 #include <vector>
 
 namespace {
+
+using copperfin::test_support::ScopedEnvironmentValue;
 
 int failures = 0;
 
@@ -100,22 +103,6 @@ std::vector<std::uint8_t> read_binary_file(const std::filesystem::path& path) {
         std::istreambuf_iterator<char>(input),
         std::istreambuf_iterator<char>()
     };
-}
-
-void set_env_var(const char* name, const std::string& value) {
-#if defined(_WIN32)
-    _putenv_s(name, value.c_str());
-#else
-    setenv(name, value.c_str(), 1);
-#endif
-}
-
-void clear_env_var(const char* name) {
-#if defined(_WIN32)
-    _putenv_s(name, "");
-#else
-    unsetenv(name);
-#endif
 }
 
 void test_parse_dbf_table_with_memo_sidecar() {
@@ -1546,11 +1533,11 @@ void test_nan_inf_in_double_field_round_trip_behavior() {
 
         const auto original_bytes = read_binary_file(table_path);
 
-        set_env_var("COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS", ".dbf");
-        set_env_var("COPPERFIN_TEST_FAIL_WRITE_STAGE", "before-promote");
-        const auto replace_result = copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "NAME", "BRAVO");
-        clear_env_var("COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS");
-        clear_env_var("COPPERFIN_TEST_FAIL_WRITE_STAGE");
+        const auto replace_result = [&]() {
+            ScopedEnvironmentValue fail_path("COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS", ".dbf");
+            ScopedEnvironmentValue fail_stage("COPPERFIN_TEST_FAIL_WRITE_STAGE", "before-promote");
+            return copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "NAME", "BRAVO");
+        }();
 
         expect(!replace_result.ok,
             "GAP-03: injected DBF write failure should surface as a failed replace operation");
@@ -1588,11 +1575,11 @@ void test_nan_inf_in_double_field_round_trip_behavior() {
         expect(copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records).ok,
             "GAP-03: setup should create memo-backed DBF for rollback validation");
 
-        set_env_var("COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS", ".fpt");
-        set_env_var("COPPERFIN_TEST_FAIL_WRITE_STAGE", "temp-open");
-        const auto replace_result = copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "BODY", "Updated payload");
-        clear_env_var("COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS");
-        clear_env_var("COPPERFIN_TEST_FAIL_WRITE_STAGE");
+        const auto replace_result = [&]() {
+            ScopedEnvironmentValue fail_path("COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS", ".fpt");
+            ScopedEnvironmentValue fail_stage("COPPERFIN_TEST_FAIL_WRITE_STAGE", "temp-open");
+            return copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "BODY", "Updated payload");
+        }();
 
         expect(!replace_result.ok,
             "GAP-03: injected memo write failure should surface as a failed replace operation");
@@ -1634,11 +1621,11 @@ void test_nan_inf_in_double_field_round_trip_behavior() {
             "GAP-03: setup should create table for staged-write rollback checks");
 
         const auto before = read_binary_file(table_path);
-        set_env_var("COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS", "rollback.dbf");
-        set_env_var("COPPERFIN_TEST_FAIL_WRITE_STAGE", "before-promote");
-        const auto result = copperfin::vfp::replace_record_field_value(table_path.string(), 1U, "AGE", "21");
-        clear_env_var("COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS");
-        clear_env_var("COPPERFIN_TEST_FAIL_WRITE_STAGE");
+        const auto result = [&]() {
+            ScopedEnvironmentValue fail_path("COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS", "rollback.dbf");
+            ScopedEnvironmentValue fail_stage("COPPERFIN_TEST_FAIL_WRITE_STAGE", "before-promote");
+            return copperfin::vfp::replace_record_field_value(table_path.string(), 1U, "AGE", "21");
+        }();
 
         expect(!result.ok,
             "GAP-03: injected staged promote failure should return a failed write result");
