@@ -4,6 +4,7 @@
 
 #include "copperfin/vfp/dbf_table.h"
 #include "copperfin/vfp/visual_asset_editor.h"
+#include "test_locale_catalog_environment_support.h"
 
 #include <cstdlib>
 #include <filesystem>
@@ -19,89 +20,7 @@
 namespace {
 
 int failures = 0;
-
-std::string getenv_value(const std::string& name) {
-#ifdef _WIN32
-    char* value = nullptr;
-    std::size_t value_size = 0;
-    if (_dupenv_s(&value, &value_size, name.c_str()) != 0 || value == nullptr) {
-        return {};
-    }
-    std::string result(value);
-    std::free(value);
-    return result;
-#else
-    const char* value = std::getenv(name.c_str());
-    if (value == nullptr) {
-        return {};
-    }
-    return value;
-#endif
-}
-
-void set_env_value(const std::string& name, const std::string& value, bool has_value) {
-#ifdef _WIN32
-    if (has_value) {
-        _putenv_s(name.c_str(), value.c_str());
-    } else {
-        _putenv_s((name + "=").c_str(), "");
-    }
-#else
-    if (has_value) {
-        setenv(name.c_str(), value.c_str(), 1);
-    } else {
-        unsetenv(name.c_str());
-    }
-#endif
-}
-
-struct ScopedEnvironmentValue {
-    std::string name;
-    std::string original;
-    bool had_original = false;
-
-    explicit ScopedEnvironmentValue(const std::string& environment_name)
-        : name(environment_name),
-          original(getenv_value(name)) {
-        had_original = !original.empty();
-        set_env_value(name, "", false);
-    }
-
-    ~ScopedEnvironmentValue() {
-        set_env_value(name, original, had_original);
-    }
-};
-
-struct ScopedDefaultLocaleCatalogEnvironment {
-    ScopedEnvironmentValue locale;
-    ScopedEnvironmentValue locale_dir;
-
-    ScopedDefaultLocaleCatalogEnvironment()
-        : locale("COPPERFIN_LOCALE"),
-          locale_dir("COPPERFIN_LOCALE_DIR") {
-        set_env_value("COPPERFIN_LOCALE", "en-US", true);
-        set_env_value(
-            "COPPERFIN_LOCALE_DIR",
-            [] {
-                // COPPERFIN_LOCALE_DIR must resolve to the repo's resources/locales
-                // tree regardless of the test process's cwd (ctest runs tests from
-                // the build directory, not the repo root).
-                std::filesystem::path ancestor = std::filesystem::absolute(std::filesystem::current_path());
-                for (;;) {
-                    const auto candidate = ancestor / "resources" / "locales";
-                    if (std::filesystem::exists(candidate)) {
-                        return candidate.lexically_normal().string();
-                    }
-                    const auto parent = ancestor.parent_path();
-                    if (parent == ancestor) {
-                        return candidate.lexically_normal().string();
-                    }
-                    ancestor = parent;
-                }
-            }(),
-            true);
-    }
-};
+using copperfin::test_support::ScopedDefaultLocaleCatalogEnvironment;
 
 void expect(bool condition, const std::string& message) {
     if (!condition) {
