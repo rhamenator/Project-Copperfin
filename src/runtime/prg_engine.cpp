@@ -1696,6 +1696,7 @@ namespace copperfin::runtime
         const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
         const bool supports_runtime_window_handle =
             normalized_base_class == "form" ||
+            normalized_base_class == "olecontrol" ||
             normalized_base_class == "toolbar";
         if (!supports_runtime_window_handle)
         {

@@ -38693,6 +38693,154 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_runtime_olecontrol_hwnd_and_windows_message_binding_surfaces_remain_coherent()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_olecontrol_hwnd";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "runtime_olecontrol_hwnd.prg";
+        write_text(
+            main_path,
+            "oHandler = CREATEOBJECT('HandleSink')\n"
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "lAdded = oForm.AddObject('axHost', 'OleControl', 'MSComctlLib.ListViewCtrl')\n"
+            "nHostHwnd = oForm.axHost.hWnd\n"
+            "xHostGetPem = GETPEM(oForm.axHost, 'hWnd')\n"
+            "lHostHasHwnd = PEMSTATUS(oForm.axHost, 'hWnd', 1)\n"
+            "lHostHwndReadOnly = PEMSTATUS(oForm.axHost, 'hWnd', 5)\n"
+            "lSetHostHwnd = SETPEM(oForm.axHost, 'hWnd', 88)\n"
+            "cHostBaseClass = oForm.axHost.BaseClass\n"
+            "nHostWHandle = SYS(2326, nHostHwnd)\n"
+            "nHostRoundTrip = SYS(2327, nHostWHandle)\n"
+            "nBindHost = BINDEVENT(nHostHwnd, 516, oHandler, 'HandleHost')\n"
+            "READ EVENTS\n"
+            "RETURN\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS HandleSink AS Custom\n"
+            "    FUNCTION HandleHost\n"
+            "        LPARAMETERS tnHwnd, tnMessage, tnWParam, tnLParam\n"
+            "        nHostDispatchHwnd = tnHwnd\n"
+            "        nHostDispatchWHandle = SYS(2326, tnHwnd)\n"
+            "        nHostDispatchRoundTrip = SYS(2327, nHostDispatchWHandle)\n"
+            "        CLEAR EVENTS\n"
+            "        RETURN tnMessage + 1000\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop,
+               std::string("OleControl hWnd script should pause in READ EVENTS: ") + state.message);
+        expect(state.waiting_for_events,
+               "OleControl hWnd script should report waiting_for_events while paused");
+
+        const auto host_hwnd_it = state.globals.find("nhosthwnd");
+        expect(host_hwnd_it != state.globals.end(),
+               "OleControl hWnd script should capture the host control hWnd before dispatch");
+        const auto value_to_int64 = [](const copperfin::runtime::PrgValue &value) -> std::int64_t
+        {
+            switch (value.kind)
+            {
+            case copperfin::runtime::PrgValueKind::boolean:
+                return value.boolean_value ? 1 : 0;
+            case copperfin::runtime::PrgValueKind::number:
+                return static_cast<std::int64_t>(value.number_value);
+            case copperfin::runtime::PrgValueKind::int64:
+                return value.int64_value;
+            case copperfin::runtime::PrgValueKind::uint64:
+                return static_cast<std::int64_t>(value.uint64_value);
+            case copperfin::runtime::PrgValueKind::string:
+                try
+                {
+                    return std::stoll(value.string_value);
+                }
+                catch (...)
+                {
+                    return 0;
+                }
+            case copperfin::runtime::PrgValueKind::empty:
+                return 0;
+            }
+            return 0;
+        };
+
+        const std::intptr_t host_hwnd = host_hwnd_it == state.globals.end()
+                                            ? 0
+                                            : static_cast<std::intptr_t>(value_to_int64(host_hwnd_it->second));
+
+        const auto dispatch = session.dispatch_windows_message(host_hwnd, 516, 7, 8);
+        expect(dispatch.has_value(),
+               "OleControl hWnd slice should dispatch through the representative ActiveX/OleControl hWnd");
+        if (dispatch.has_value())
+        {
+            expect(*dispatch == 1516,
+                   "OleControl hWnd dispatch should return the delegate message result");
+        }
+
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("OleControl hWnd script should complete after CLEAR EVENTS: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+        const auto require_number = [&](const std::string &name) -> std::int64_t
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return 0;
+            }
+            return value_to_int64(it->second);
+        };
+
+        check("ladded", "true");
+        check("lhosthashwnd", "true");
+        check("lhosthwndreadonly", "true");
+        check("lsethosthwnd", "false");
+        check("chostbaseclass", "OleControl");
+        check("nbindhost", "1");
+        check("nhostdispatchhwnd", copperfin::runtime::format_value(state.globals.at("nhosthwnd")));
+
+        const std::int64_t host_whandle = require_number("nhostwhandle");
+        const std::int64_t host_hwnd_after = require_number("nhosthwnd");
+        const std::int64_t host_getpem = require_number("xhostgetpem");
+        const std::int64_t host_round_trip = require_number("nhostroundtrip");
+        const std::int64_t host_dispatch_whandle = require_number("nhostdispatchwhandle");
+        const std::int64_t host_dispatch_round_trip = require_number("nhostdispatchroundtrip");
+
+        expect(host_whandle > 0,
+               "OleControl hWnd translation should expose a positive WHANDLE");
+        expect(host_hwnd_after == host_getpem,
+               "OleControl hWnd should read consistently through ordinary property access and GETPEM()");
+        expect(host_round_trip == host_hwnd_after,
+               "SYS(2326/2327) should round-trip the OleControl hWnd");
+        expect(host_hwnd_after == 100000 + host_whandle,
+               "OleControl hWnd should follow the deterministic modeled runtime mapping");
+        expect(host_dispatch_whandle == host_whandle,
+               "Dispatched OleControl hWnd should translate back to the same WHANDLE");
+        expect(host_dispatch_round_trip == host_hwnd_after,
+               "Dispatched OleControl hWnd should round-trip through SYS(2326/2327)");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_runtime_native_visual_controls_without_hwnd_fail_deterministically()
     {
         namespace fs = std::filesystem;
@@ -40877,6 +41025,7 @@ int main()
         test_same_prg_native_aevents_zero_reports_current_event_metadata_during_delegate_dispatch();
         test_same_prg_native_windows_message_bindevent_and_aevents_dispatch_during_read_events();
         test_runtime_hwnd_and_sys2326_sys2327_surfaces_bind_representative_window_objects();
+        test_runtime_olecontrol_hwnd_and_windows_message_binding_surfaces_remain_coherent();
         test_runtime_native_visual_controls_without_hwnd_fail_deterministically();
         test_same_prg_native_bindevent_property_access_and_assign_dispatch_preserve_current_event_metadata();
         test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();

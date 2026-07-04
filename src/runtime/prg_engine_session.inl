@@ -135,6 +135,7 @@
                    normalized_class_name == "line" ||
                    normalized_class_name == "listbox" ||
                    normalized_class_name == "object" ||
+                   normalized_class_name == "olecontrol" ||
                    normalized_class_name == "optionbutton" ||
                    normalized_class_name == "optiongroup" ||
                    normalized_class_name == "page" ||
