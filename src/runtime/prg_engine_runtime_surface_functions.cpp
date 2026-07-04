@@ -4,6 +4,7 @@
 
 #include "prg_engine_runtime_surface_functions.h"
 
+#include "copperfin/platform/environment.h"
 #include "prg_engine_file_io_functions.h"
 #include "prg_engine_helpers.h"
 #include "localized_text.h"
@@ -135,16 +136,16 @@ int current_host_code_page() {
         }
     }
 
-    const char* locale_candidates[] = {
-        std::getenv("LC_ALL"),
-        std::getenv("LC_CTYPE"),
-        std::getenv("LANG"),
+    const std::optional<std::string> locale_candidates[] = {
+        platform::read_environment_variable("LC_ALL"),
+        platform::read_environment_variable("LC_CTYPE"),
+        platform::read_environment_variable("LANG"),
     };
-    for (const char* candidate : locale_candidates) {
-        if (candidate == nullptr) {
+    for (const auto& candidate : locale_candidates) {
+        if (!candidate.has_value()) {
             continue;
         }
-        if (const auto parsed = parse_codeset_to_code_page(candidate); parsed.has_value()) {
+        if (const auto parsed = parse_codeset_to_code_page(*candidate); parsed.has_value()) {
             return *parsed;
         }
     }

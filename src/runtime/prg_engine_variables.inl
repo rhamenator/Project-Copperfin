@@ -559,9 +559,10 @@
                 std::vector<fs::path> search_roots;
 
 #if defined(_WIN32)
-                if (const char *windir = std::getenv("WINDIR"))
+                if (const auto windir = platform::read_environment_variable("WINDIR");
+                    windir.has_value())
                 {
-                    search_roots.emplace_back(fs::path(windir) / "Fonts");
+                    search_roots.emplace_back(fs::path(*windir) / "Fonts");
                 }
                 if (search_roots.empty())
                 {
@@ -570,17 +571,19 @@
 #elif defined(__APPLE__)
                 search_roots.emplace_back("/System/Library/Fonts");
                 search_roots.emplace_back("/Library/Fonts");
-                if (const char *home = std::getenv("HOME"))
+                if (const auto home = platform::read_environment_variable("HOME");
+                    home.has_value())
                 {
-                    search_roots.emplace_back(fs::path(home) / "Library" / "Fonts");
+                    search_roots.emplace_back(fs::path(*home) / "Library" / "Fonts");
                 }
 #else
                 search_roots.emplace_back("/usr/share/fonts");
                 search_roots.emplace_back("/usr/local/share/fonts");
-                if (const char *home = std::getenv("HOME"))
+                if (const auto home = platform::read_environment_variable("HOME");
+                    home.has_value())
                 {
-                    search_roots.emplace_back(fs::path(home) / ".fonts");
-                    search_roots.emplace_back(fs::path(home) / ".local" / "share" / "fonts");
+                    search_roots.emplace_back(fs::path(*home) / ".fonts");
+                    search_roots.emplace_back(fs::path(*home) / ".local" / "share" / "fonts");
                 }
 #endif
 

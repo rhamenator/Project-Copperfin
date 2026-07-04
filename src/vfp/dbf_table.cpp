@@ -5,6 +5,7 @@
 #include "copperfin/vfp/dbf_table.h"
 
 #include "copperfin/localization/localization.h"
+#include "copperfin/platform/environment.h"
 
 #include <algorithm>
 #include <array>
@@ -171,29 +172,12 @@ std::vector<std::uint8_t> read_binary_file(const std::string& path) {
     };
 }
 
-std::optional<std::string> environment_variable_value(const char* name) {
-#if defined(_MSC_VER)
-    char* value = nullptr;
-    std::size_t value_size = 0;
-    if (_dupenv_s(&value, &value_size, name) != 0 || value == nullptr) {
-        return std::nullopt;
-    }
-    std::string result(value);
-    std::free(value);
-    return result;
-#else
-    const char* value = std::getenv(name);
-    if (value == nullptr) {
-        return std::nullopt;
-    }
-    return std::string(value);
-#endif
-}
-
 bool write_binary_file(const std::string& path, const std::vector<std::uint8_t>& bytes) {
     const auto should_inject_write_failure = [&path](const char* stage) {
-        const auto marker = environment_variable_value("COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS");
-        const auto stage_filter = environment_variable_value("COPPERFIN_TEST_FAIL_WRITE_STAGE");
+        const auto marker =
+            platform::read_environment_variable("COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS");
+        const auto stage_filter =
+            platform::read_environment_variable("COPPERFIN_TEST_FAIL_WRITE_STAGE");
         if (!marker || !stage_filter) {
             return false;
         }

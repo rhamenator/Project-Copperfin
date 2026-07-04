@@ -13,24 +13,7 @@
 
         std::optional<std::string> get_environment_variable_value(const std::string &name)
         {
-#if defined(_WIN32)
-            char *raw = nullptr;
-            std::size_t length = 0U;
-            if (_dupenv_s(&raw, &length, name.c_str()) != 0 || raw == nullptr)
-            {
-                return std::nullopt;
-            }
-            std::string value(raw);
-            free(raw);
-            return value;
-#else
-            const char *raw = std::getenv(name.c_str());
-            if (raw == nullptr)
-            {
-                return std::nullopt;
-            }
-            return std::string(raw);
-#endif
+            return platform::read_environment_variable(name);
         }
 
         bool set_environment_variable_value(const std::string &name, const std::string &value)
