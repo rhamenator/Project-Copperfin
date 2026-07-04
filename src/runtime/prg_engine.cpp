@@ -661,6 +661,7 @@ namespace copperfin::runtime
         std::map<int, std::map<int, RuntimeSqlConnectionState>> sql_connections_by_session;
         std::map<int, RuntimeOleObjectState> ole_objects;
         std::optional<int> representative_active_form_handle;
+        std::optional<int> representative_application_forms_collection_handle;
         std::string representative_application_caption = "Microsoft Visual FoxPro";
         int representative_application_window_state = 0;
         std::vector<NativeEventBinding> native_event_bindings;
@@ -728,6 +729,9 @@ namespace copperfin::runtime
         RuntimeOleObjectState *representative_active_form_object();
         const RuntimeOleObjectState *representative_active_form_object() const;
         void note_representative_active_form(const RuntimeOleObjectState &runtime_object);
+        std::vector<int> representative_application_window_handles() const;
+        std::size_t representative_application_form_count() const;
+        RuntimeOleObjectState *ensure_representative_application_forms_collection_object();
         bool consume_last_popped_frame_requested_nodefault();
         std::optional<std::intptr_t> dispatch_windows_message(
             std::intptr_t hwnd,
@@ -1077,6 +1081,23 @@ namespace copperfin::runtime
                     }
                     return path.substr(separator + 1U);
                 };
+                const auto application_forms_member_tail = [](const std::string &path) -> std::optional<std::string>
+                {
+                    const std::size_t separator = path.find('.');
+                    const std::string first_segment = trim_copy(
+                        separator == std::string::npos
+                            ? path
+                            : path.substr(0U, separator));
+                    if (normalize_identifier(first_segment) != "forms")
+                    {
+                        return std::nullopt;
+                    }
+                    if (separator == std::string::npos)
+                    {
+                        return std::string{};
+                    }
+                    return path.substr(separator + 1U);
+                };
                 const Statement *statement = current_statement();
                 const std::string action_text = statement == nullptr
                     ? base_name + "." + member_path + "()"
@@ -1096,8 +1117,26 @@ namespace copperfin::runtime
                 const std::string normalized_base_name = normalize_identifier(base_name);
                 if (normalized_base_name == "_vfp" || normalized_base_name == "_screen")
                 {
+                    if (const auto forms_tail = application_forms_member_tail(member_path);
+                        forms_tail.has_value())
+                    {
+                        RuntimeOleObjectState *forms_collection =
+                            ensure_representative_application_forms_collection_object();
+                        if (forms_collection != nullptr)
+                        {
+                            resolved_path = forms_tail->empty()
+                                ? ResolvedRuntimeObjectMemberPath{
+                                      .runtime_object = forms_collection,
+                                      .remaining_member_path = {}}
+                                : resolve_runtime_object_member_path(
+                                      forms_collection,
+                                      *forms_tail);
+                        }
+                    }
                     if (const auto active_form_tail = active_form_member_tail(member_path);
-                        active_form_tail.has_value() && !active_form_tail->empty())
+                        resolved_path.runtime_object == nullptr &&
+                            active_form_tail.has_value() &&
+                            !active_form_tail->empty())
                     {
                         resolved_path = resolve_runtime_object_member_path(
                             representative_active_form_object(),
@@ -1614,6 +1653,37 @@ namespace copperfin::runtime
                     }
                     return member_path.substr(member_separator + 1U);
                 };
+                const auto application_forms_member_tail = [](const std::string &path) -> std::optional<std::string>
+                {
+                    const std::size_t separator = path.find('.');
+                    if (separator == std::string::npos)
+                    {
+                        return std::nullopt;
+                    }
+
+                    const std::string base_name = trim_copy(path.substr(0U, separator));
+                    const std::string normalized_base_name = normalize_identifier(base_name);
+                    if (normalized_base_name != "_vfp" && normalized_base_name != "_screen")
+                    {
+                        return std::nullopt;
+                    }
+
+                    const std::string member_path = path.substr(separator + 1U);
+                    const std::size_t member_separator = member_path.find('.');
+                    const std::string first_segment = trim_copy(
+                        member_separator == std::string::npos
+                            ? member_path
+                            : member_path.substr(0U, member_separator));
+                    if (normalize_identifier(first_segment) != "forms")
+                    {
+                        return std::nullopt;
+                    }
+                    if (member_separator == std::string::npos)
+                    {
+                        return std::string{};
+                    }
+                    return member_path.substr(member_separator + 1U);
+                };
                 const Statement *statement = current_statement();
                 const std::string action_text = statement == nullptr ? property_path : statement->text;
                 const std::string normalized_property_path = normalize_identifier(property_path);
@@ -1645,6 +1715,12 @@ namespace copperfin::runtime
                     normalized_property_path == "_vfp.windowstate")
                 {
                     return make_int64_value(static_cast<std::int64_t>(representative_application_window_state));
+                }
+                if (normalized_property_path == "_screen.formcount" ||
+                    normalized_property_path == "_vfp.formcount")
+                {
+                    return make_int64_value(
+                        static_cast<std::int64_t>(representative_application_form_count()));
                 }
                 const auto raise_ole_fault = [&](const std::string &detail,
                                                  const std::string &source,
@@ -1711,6 +1787,55 @@ namespace copperfin::runtime
                                                    "Runtime.Prg.Core.Error.OleMemberNotFoundForPropertyRead",
                                                    {{"memberIdentifier", runtime_object->prog_id + "." + effective_property_path}}));
                     }
+                    return make_string_value("ole:" + runtime_object->prog_id + "." + effective_property_path);
+                }
+                if (const auto forms_tail = application_forms_member_tail(property_path);
+                    forms_tail.has_value())
+                {
+                    RuntimeOleObjectState *runtime_object =
+                        ensure_representative_application_forms_collection_object();
+                    if (runtime_object == nullptr)
+                    {
+                        return make_empty_value();
+                    }
+
+                    if (forms_tail->empty())
+                    {
+                        return make_string_value(
+                            "object:" + runtime_object->prog_id + "#" + std::to_string(runtime_object->handle));
+                    }
+
+                    const auto resolved_path =
+                        resolve_runtime_object_member_path(runtime_object, *forms_tail);
+                    if (resolved_path.runtime_object == nullptr)
+                    {
+                        return raise_ole_fault(property_path,
+                                               property_path.substr(0U, property_path.find('.')),
+                                               runtime_text(
+                                                   "Runtime.Prg.Core.Error.OleObjectNotFoundForPropertyRead",
+                                                   {{"propertyPath", property_path}}));
+                    }
+
+                    runtime_object = resolved_path.runtime_object;
+                    const std::string effective_property_path =
+                        resolved_path.remaining_member_path.empty()
+                            ? *forms_tail
+                            : resolved_path.remaining_member_path;
+                    runtime_object->last_action = effective_property_path;
+                    ++runtime_object->action_count;
+                    events.push_back({.category = "ole.get",
+                                      .detail = runtime_object->prog_id + "." + effective_property_path,
+                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+
+                    if (auto property_result = read_native_property_if_present(
+                            *runtime_object,
+                            effective_property_path,
+                            frame);
+                        property_result.has_value())
+                    {
+                        return *property_result;
+                    }
+
                     return make_string_value("ole:" + runtime_object->prog_id + "." + effective_property_path);
                 }
                 const auto separator = property_path.find('.');
@@ -2125,6 +2250,13 @@ namespace copperfin::runtime
             },
             [this, &frame](const std::string &identifier) -> RuntimeOleObjectState *
             {
+                const std::string normalized_identifier = normalize_identifier(identifier);
+                if (normalized_identifier == "_screen.forms" ||
+                    normalized_identifier == "_vfp.forms")
+                {
+                    return ensure_representative_application_forms_collection_object();
+                }
+
                 const auto separator = identifier.find('.');
                 if (separator == std::string::npos)
                 {
@@ -2419,6 +2551,113 @@ namespace copperfin::runtime
                 representative_active_form_handle = owner_form_handle;
             }
         }
+    }
+
+    std::vector<int> PrgRuntimeSession::Impl::representative_application_window_handles() const
+    {
+        std::vector<int> handles;
+        handles.reserve(ole_objects.size());
+
+        const auto is_application_window = [](const RuntimeOleObjectState &runtime_object)
+        {
+            if (runtime_object.hidden_runtime_surface)
+            {
+                return false;
+            }
+
+            const std::string normalized_base_class_name =
+                normalize_identifier(trim_copy(runtime_object.base_class_name));
+            return normalized_base_class_name == "form" ||
+                   normalized_base_class_name == "toolbar";
+        };
+
+        if (representative_active_form_handle.has_value())
+        {
+            const auto active_found = ole_objects.find(*representative_active_form_handle);
+            if (active_found != ole_objects.end() &&
+                is_application_window(active_found->second) &&
+                normalize_identifier(trim_copy(active_found->second.base_class_name)) == "form")
+            {
+                handles.push_back(active_found->second.handle);
+            }
+        }
+
+        for (auto it = ole_objects.rbegin(); it != ole_objects.rend(); ++it)
+        {
+            if (!is_application_window(it->second))
+            {
+                continue;
+            }
+            if (!handles.empty() && handles.front() == it->second.handle)
+            {
+                continue;
+            }
+            handles.push_back(it->second.handle);
+        }
+
+        return handles;
+    }
+
+    std::size_t PrgRuntimeSession::Impl::representative_application_form_count() const
+    {
+        return representative_application_window_handles().size();
+    }
+
+    RuntimeOleObjectState *PrgRuntimeSession::Impl::ensure_representative_application_forms_collection_object()
+    {
+        RuntimeOleObjectState *collection_object = nullptr;
+        if (representative_application_forms_collection_handle.has_value())
+        {
+            const auto found = ole_objects.find(*representative_application_forms_collection_handle);
+            if (found != ole_objects.end() &&
+                is_native_collection_object(found->second) &&
+                found->second.hidden_runtime_surface &&
+                found->second.read_only_collection_surface)
+            {
+                collection_object = &found->second;
+            }
+        }
+
+        if (collection_object == nullptr)
+        {
+            const int handle = next_ole_handle++;
+            RuntimeOleObjectState collection_state{
+                .handle = handle,
+                .prog_id = "Collection",
+                .source = {},
+                .last_action = "Forms",
+                .action_count = 1,
+                .hidden_runtime_surface = true,
+                .read_only_collection_surface = true};
+            collection_state.base_class_name = "Collection";
+            collection_state.class_hierarchy = {"COLLECTION", "OBJECT"};
+            auto [collection_it, _] = ole_objects.emplace(handle, std::move(collection_state));
+            representative_application_forms_collection_handle = handle;
+            collection_object = &collection_it->second;
+        }
+
+        collection_object->collection_items.clear();
+        collection_object->collection_item_keys.clear();
+
+        for (const int handle : representative_application_window_handles())
+        {
+            const auto found = ole_objects.find(handle);
+            if (found == ole_objects.end())
+            {
+                continue;
+            }
+
+            collection_object->collection_items.push_back(
+                make_string_value("object:" + found->second.prog_id + "#" + std::to_string(found->second.handle)));
+            const auto name = found->second.properties.find("name");
+            collection_object->collection_item_keys.push_back(
+                name != found->second.properties.end()
+                    ? value_as_string(name->second)
+                    : found->second.prog_id);
+        }
+
+        (void)read_native_collection_member(*collection_object, "count");
+        return collection_object;
     }
 
     bool PrgRuntimeSession::Impl::consume_last_popped_frame_requested_nodefault()

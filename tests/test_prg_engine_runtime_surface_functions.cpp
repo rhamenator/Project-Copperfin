@@ -43627,6 +43627,80 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_runtime_application_forms_aliases_track_representative_window_collection()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_forms_aliases";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "runtime_forms_aliases.prg";
+        write_text(
+            main_path,
+            "oFirst = CREATEOBJECT('FirstForm')\n"
+            "oToolbar = CREATEOBJECT('MainToolbar')\n"
+            "oSecond = CREATEOBJECT('SecondForm')\n"
+            "oFirst.Show()\n"
+            "oToolbar.Show()\n"
+            "oSecond.Show()\n"
+            "nScreenFormCount = _SCREEN.FormCount\n"
+            "nVfpFormCount = _VFP.FormCount\n"
+            "nScreenFormsCount = _SCREEN.Forms.Count\n"
+            "nVfpFormsCount = _VFP.Forms.Count\n"
+            "cScreenFirstCaption = _SCREEN.Forms(1).Caption\n"
+            "cScreenSecondBaseClass = _SCREEN.Forms(2).BaseClass\n"
+            "cScreenThirdCaption = _SCREEN.Forms[3].Caption\n"
+            "cVfpFirstCaption = _VFP.Forms[1].Caption\n"
+            "cForEachOrder = ''\n"
+            "FOR EACH oWindow IN _SCREEN.Forms FOXOBJECT\n"
+            "    cLabel = oWindow.BaseClass + ':' + oWindow.Caption\n"
+            "    cForEachOrder = IIF(EMPTY(cForEachOrder), cLabel, cForEachOrder + '|' + cLabel)\n"
+            "ENDFOR\n"
+            "RETURN\n"
+            "DEFINE CLASS FirstForm AS Form\n"
+            "    Caption = 'First'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainToolbar AS Toolbar\n"
+            "    Caption = 'Tools'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SecondForm AS Form\n"
+            "    Caption = 'Second'\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("runtime Forms alias script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("nscreenformcount", "3");
+        check("nvfpformcount", "3");
+        check("nscreenformscount", "3");
+        check("nvfpformscount", "3");
+        check("cscreenfirstcaption", "Second");
+        check("cscreensecondbaseclass", "Toolbar");
+        check("cscreenthirdcaption", "First");
+        check("cvfpfirstcaption", "Second");
+        check("cforeachorder", "Form:Second|Toolbar:Tools|Form:First");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_runtime_application_caption_aliases_track_representative_caption()
     {
         namespace fs = std::filesystem;
@@ -49526,6 +49600,7 @@ int main()
     test_native_setfocus_builtin_fallback_updates_owner_activecontrol();
     test_native_setfocus_override_wins_over_builtin_activecontrol_toggle();
     test_runtime_application_activeform_aliases_track_representative_native_form();
+    test_runtime_application_forms_aliases_track_representative_window_collection();
     test_runtime_application_caption_aliases_track_representative_caption();
     test_runtime_application_windowstate_aliases_track_representative_state();
     test_native_controlsource_defaults_mutates_and_stays_builtin();
