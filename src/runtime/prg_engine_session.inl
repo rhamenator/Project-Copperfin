@@ -276,6 +276,12 @@
             }
 
             if (normalized_base_class == "form" &&
+                !runtime_object.properties.contains("desktop"))
+            {
+                runtime_object.properties["desktop"] = make_boolean_value(false);
+            }
+
+            if (normalized_base_class == "form" &&
                 !runtime_object.properties.contains("scrollbars"))
             {
                 runtime_object.properties["scrollbars"] = make_number_value(0.0);
@@ -1090,6 +1096,7 @@
                 is_native_olecontrol_inspection_member_name(runtime_object, normalized_property_name) ||
                 is_native_olecontrol_conflict_member_name(runtime_object, normalized_property_name) ||
                 is_native_child_parent_member_name(runtime_object, normalized_property_name) ||
+                is_native_form_desktop_member_name(runtime_object, normalized_property_name) ||
                 is_native_form_scrollbars_member_name(runtime_object, normalized_property_name) ||
                 is_native_collection_readonly_member_name(runtime_object, normalized_property_name))
             {

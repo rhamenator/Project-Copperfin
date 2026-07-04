@@ -765,6 +765,18 @@ bool native_form_titlebar_member_name_matches(
            runtime_object.properties.contains("titlebar");
 }
 
+bool native_form_desktop_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "desktop") {
+        return false;
+    }
+
+    const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "form" &&
+           runtime_object.properties.contains("desktop");
+}
+
 bool native_form_scrollbars_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
@@ -1314,6 +1326,11 @@ bool is_native_form_titlebar_member_name(const RuntimeOleObjectState& runtime_ob
     return native_form_titlebar_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_form_desktop_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_form_desktop_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_form_scrollbars_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_form_scrollbars_member_name_matches(runtime_object, normalized_member_name);
@@ -1592,6 +1609,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                                                         const std::string& member_name) {
         return get_native_identity_reflection_metadata(runtime_object, member_name).has_value() ||
                native_controlcount_member_name_matches(runtime_object, member_name) ||
+               is_native_form_desktop_member_name(runtime_object, member_name) ||
                is_native_form_scrollbars_member_name(runtime_object, member_name) ||
                is_native_olecontrol_creation_time_member_name(runtime_object, member_name) ||
                is_native_olecontrol_object_member_name(runtime_object, member_name) ||
@@ -1823,6 +1841,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_form_windowtype_member_name(*runtime_object, property_name) ||
             is_native_form_borderstyle_member_name(*runtime_object, property_name) ||
             is_native_form_titlebar_member_name(*runtime_object, property_name) ||
+            is_native_form_desktop_member_name(*runtime_object, property_name) ||
             is_native_form_scrollbars_member_name(*runtime_object, property_name) ||
             is_native_form_lockscreen_member_name(*runtime_object, property_name) ||
             is_native_form_controlbox_member_name(*runtime_object, property_name) ||
@@ -1953,6 +1972,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         if (native_child_parent_member_name_matches(*runtime_object, member_name) ||
             is_native_controlcount_member_name(*runtime_object, member_name) ||
             is_native_name_member_name(*runtime_object, member_name) ||
+            is_native_form_desktop_member_name(*runtime_object, member_name) ||
             is_native_form_scrollbars_member_name(*runtime_object, member_name) ||
             is_native_olecontrol_creation_time_member_name(*runtime_object, member_name) ||
             is_native_olecontrol_object_member_name(*runtime_object, member_name) ||
@@ -2017,6 +2037,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_form_windowtype_member_name(*runtime_object, property_name) ||
             is_native_form_borderstyle_member_name(*runtime_object, property_name) ||
             is_native_form_titlebar_member_name(*runtime_object, property_name) ||
+            is_native_form_desktop_member_name(*runtime_object, property_name) ||
             is_native_form_scrollbars_member_name(*runtime_object, property_name) ||
             is_native_form_lockscreen_member_name(*runtime_object, property_name) ||
             is_native_form_controlbox_member_name(*runtime_object, property_name) ||
