@@ -6447,6 +6447,93 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_visual_visible_defaults_mutates_and_stays_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_visual_visible";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_visual_visible.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('CommandButton')\n"
+            "lPlainHasVisible = PEMSTATUS(oPlain, 'Visible', 1)\n"
+            "lPlainVisibleReadOnly = PEMSTATUS(oPlain, 'Visible', 5)\n"
+            "lPlainBefore = oPlain.Visible\n"
+            "xPlainGetPemBefore = GETPEM(oPlain, 'Visible')\n"
+            "oPlain.Visible = .F.\n"
+            "lPlainAfterDirectAssign = oPlain.Visible\n"
+            "lPlainSetPem = SETPEM(oPlain, 'Visible', .T.)\n"
+            "lPlainAfterSetPem = oPlain.Visible\n"
+            "lPlainAddProperty = ADDPROPERTY(oPlain, 'Visible', .F.)\n"
+            "lPlainRemoveProperty = REMOVEPROPERTY(oPlain, 'Visible')\n"
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "lChildBefore = oForm.oToolbar.cmdRed.Visible\n"
+            "oForm.oToolbar.cmdRed.Visible = .F.\n"
+            "lChildAfterDirectAssign = oForm.oToolbar.cmdRed.Visible\n"
+            "lChildSetPem = SETPEM(oForm.oToolbar.cmdRed, 'Visible', .T.)\n"
+            "lChildAfterSetPem = oForm.oToolbar.cmdRed.Visible\n"
+            "xChildGetPem = GETPEM(oForm.oToolbar.cmdRed, 'Visible')\n"
+            "lChildHasVisible = PEMSTATUS(oForm.oToolbar.cmdRed, 'Visible', 1)\n"
+            "lChildVisibleReadOnly = PEMSTATUS(oForm.oToolbar.cmdRed, 'Visible', 5)\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oForm.oToolbar.cmdRed, 1)\n"
+            "lPropHasVisible = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'VISIBLE'\n"
+            "        lPropHasVisible = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "RETURN\n"
+            "DEFINE CLASS MainToolbar AS Toolbar\n"
+            "    ADD OBJECT cmdRed AS CommandButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    ADD OBJECT oToolbar AS MainToolbar\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native visual Visible property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplainhasvisible", "true");
+        check("lplainvisiblereadonly", "false");
+        check("lplainbefore", "true");
+        check("xplaingetpembefore", "true");
+        check("lplainafterdirectassign", "false");
+        check("lplainsetpem", "true");
+        check("lplainaftersetpem", "true");
+        check("lplainaddproperty", "false");
+        check("lplainremoveproperty", "false");
+        check("lchildbefore", "true");
+        check("lchildafterdirectassign", "false");
+        check("lchildsetpem", "true");
+        check("lchildaftersetpem", "true");
+        check("xchildgetpem", "true");
+        check("lchildhasvisible", "true");
+        check("lchildvisiblereadonly", "false");
+        check("lprophasvisible", "true");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_createobject_and_newobject_instantiate_same_prg_exception_native_class()
     {
         namespace fs = std::filesystem;
@@ -44620,6 +44707,7 @@ int main()
     test_native_controlcount_reflects_controls_count_and_stays_read_only();
     test_native_form_lockscreen_defaults_mutates_and_stays_builtin();
     test_native_visual_enabled_defaults_mutates_and_stays_builtin();
+    test_native_visual_visible_defaults_mutates_and_stays_builtin();
     test_createobject_and_newobject_instantiate_same_prg_exception_native_class();
     test_native_addobject_materializes_child_objects_and_child_methods_see_parent();
     test_native_class_body_add_object_materializes_children_before_init();

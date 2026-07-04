@@ -185,6 +185,13 @@
         void seed_native_visual_properties(RuntimeOleObjectState &runtime_object)
         {
             if (is_native_visual_runtime_object(runtime_object) &&
+                !is_native_olecontrol_host_object(runtime_object) &&
+                !runtime_object.properties.contains("visible"))
+            {
+                runtime_object.properties["visible"] = make_boolean_value(true);
+            }
+
+            if (is_native_visual_runtime_object(runtime_object) &&
                 !runtime_object.properties.contains("enabled"))
             {
                 runtime_object.properties["enabled"] = make_boolean_value(true);
