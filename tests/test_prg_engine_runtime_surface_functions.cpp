@@ -8329,10 +8329,10 @@ namespace
             "        lPropHasAllowCellSelection = .T.\n"
             "    CASE UPPER(aPropMembers[i]) == 'GRIDLINES'\n"
             "        lPropHasGridLines = .T.\n"
-            "    CASE UPPER(aPropMembers[i]) == 'HIGHLIGHT'\n"
-            "        lPropHasHighlight = .T.\n"
             "    CASE UPPER(aPropMembers[i]) == 'HIGHLIGHTROW'\n"
             "        lPropHasHighlightRow = .T.\n"
+            "    CASE UPPER(aPropMembers[i]) == 'HIGHLIGHT'\n"
+            "        lPropHasHighlight = .T.\n"
             "    CASE UPPER(aPropMembers[i]) == 'RECORDMARK'\n"
             "        lPropHasRecordMark = .T.\n"
             "    ENDCASE\n"
@@ -8469,6 +8469,107 @@ namespace
         check("lderivedhighlightbefore", "false");
         check("lderivedhighlightrowbefore", "false");
         check("lderivedrecordmarkbefore", "false");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_native_deletemark_default_mutates_and_stays_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_deletemark";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_deletemark.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('Grid')\n"
+            "lPlainHasDeleteMark = PEMSTATUS(oPlain, 'DeleteMark', 1)\n"
+            "lPlainDeleteMarkReadOnly = PEMSTATUS(oPlain, 'DeleteMark', 5)\n"
+            "lPlainBefore = oPlain.DeleteMark\n"
+            "xPlainGetPemBefore = GETPEM(oPlain, 'DeleteMark')\n"
+            "oPlain.DeleteMark = .F.\n"
+            "lPlainAfterDirectAssign = oPlain.DeleteMark\n"
+            "lPlainSetPem = SETPEM(oPlain, 'DeleteMark', .T.)\n"
+            "lPlainAfterSetPem = oPlain.DeleteMark\n"
+            "lPlainAddProperty = ADDPROPERTY(oPlain, 'DeleteMark', .F.)\n"
+            "lPlainRemoveProperty = REMOVEPROPERTY(oPlain, 'DeleteMark')\n"
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "lGridBefore = oForm.grdCust.DeleteMark\n"
+            "lGridRead = oForm.cmdProbe.ReadDeleteMark()\n"
+            "oForm.cmdProbe.RestyleGrid()\n"
+            "lGridAfterChild = oForm.grdCust.DeleteMark\n"
+            "lGridSetPem = SETPEM(oForm.grdCust, 'DeleteMark', .F.)\n"
+            "lGridAfterSetPem = oForm.grdCust.DeleteMark\n"
+            "xGridGetPem = GETPEM(oForm.grdCust, 'DeleteMark')\n"
+            "lGridHasDeleteMark = PEMSTATUS(oForm.grdCust, 'DeleteMark', 1)\n"
+            "lGridDeleteMarkReadOnly = PEMSTATUS(oForm.grdCust, 'DeleteMark', 5)\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oForm.grdCust, 1)\n"
+            "lPropHasDeleteMark = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'DELETEMARK'\n"
+            "        lPropHasDeleteMark = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('StyledGrid')\n"
+            "lDerivedBefore = oDerived.DeleteMark\n"
+            "RETURN\n"
+            "DEFINE CLASS ProbeButton AS CommandButton\n"
+            "    FUNCTION ReadDeleteMark\n"
+            "        RETURN THISFORM.grdCust.DeleteMark\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE RestyleGrid\n"
+            "        THISFORM.grdCust.DeleteMark = .T.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    ADD OBJECT grdCust AS Grid WITH DeleteMark = .F.\n"
+            "    ADD OBJECT cmdProbe AS ProbeButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS StyledGrid AS Grid\n"
+            "    DeleteMark = .F.\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native DeleteMark property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplainhasdeletemark", "true");
+        check("lplaindeletemarkreadonly", "false");
+        check("lplainbefore", "true");
+        check("xplaingetpembefore", "true");
+        check("lplainafterdirectassign", "false");
+        check("lplainsetpem", "true");
+        check("lplainaftersetpem", "true");
+        check("lplainaddproperty", "false");
+        check("lplainremoveproperty", "false");
+        check("lgridbefore", "false");
+        check("lgridread", "false");
+        check("lgridafterchild", "true");
+        check("lgridsetpem", "true");
+        check("lgridaftersetpem", "false");
+        check("xgridgetpem", "false");
+        check("lgridhasdeletemark", "true");
+        check("lgriddeletemarkreadonly", "false");
+        check("lprophasdeletemark", "true");
+        check("lderivedbefore", "false");
 
         fs::remove_all(temp_root, ignored);
     }
@@ -48731,6 +48832,7 @@ int main()
     test_native_recordsource_defaults_mutates_and_stays_builtin();
     test_native_leftcolumn_defaults_are_runtime_readonly_and_stay_builtin();
     test_native_grid_display_properties_default_mutate_and_stay_builtin();
+    test_native_deletemark_default_mutates_and_stays_builtin();
     test_native_recordsourcetype_defaults_mutates_and_stays_builtin();
     test_native_rowsource_defaults_mutates_and_stays_builtin();
     test_native_rowsourcetype_defaults_mutates_and_stays_builtin();

@@ -316,6 +316,12 @@
             }
 
             if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("deletemark"))
+            {
+                runtime_object.properties["deletemark"] = make_boolean_value(true);
+            }
+
+            if (normalized_base_class == "grid" &&
                 !runtime_object.properties.contains("leftcolumn"))
             {
                 runtime_object.properties["leftcolumn"] = make_number_value(1.0);
