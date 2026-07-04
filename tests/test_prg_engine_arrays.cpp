@@ -11,6 +11,12 @@
 #include <iostream>
 #include <system_error>
 
+#if defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
+#endif
+
 #if defined(__GNUC__) || defined(__clang__)
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #endif
@@ -952,6 +958,19 @@ void test_agetfileversion_existing_and_missing_files() {
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
+    const auto quote_prg_string = [](const fs::path& path) {
+        return std::string{"'"} + path.generic_string() + "'";
+    };
+
+    const auto write_utf16le_string = [](std::vector<std::uint8_t>& bytes, const std::string& value) {
+        for (const unsigned char ch : value) {
+            bytes.push_back(ch);
+            bytes.push_back(0);
+        }
+        bytes.push_back(0);
+        bytes.push_back(0);
+    };
+
     // Create a dummy file for the "existing file" test.
     const fs::path dummy = temp_root / "dummy.exe";
     {
@@ -959,12 +978,91 @@ void test_agetfileversion_existing_and_missing_files() {
         out << "stub";
     }
 
+    const fs::path synthetic_versioned = temp_root / "versioned-resource.bin";
+    {
+        std::vector<std::uint8_t> bytes;
+        const std::vector<std::string> strings = {
+            "VS_VERSION_INFO",
+            "StringFileInfo",
+            "040904B0",
+            "CompanyName",
+            "Copperfin Fixtures",
+            "FileDescription",
+            "Synthetic Version Fixture",
+            "FileVersion",
+            "9.8.7.6",
+            "LegalCopyright",
+            "Copyright",
+            "Copperfin Test Fixture Copyright",
+            "ProductName",
+            "Copperfin Test Product",
+            "ProductVersion",
+            "9.8.7.6",
+            "VarFileInfo",
+            "Translation",
+        };
+        for (const std::string& value : strings) {
+            write_utf16le_string(bytes, value);
+        }
+        std::ofstream out(synthetic_versioned, std::ios::binary);
+        out.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+
+    fs::path versioned_fixture = synthetic_versioned;
+    std::string expected_version = "9.8.7.6";
+    std::string expected_description = "Synthetic Version Fixture";
+    std::string expected_company = "Copperfin Fixtures";
+    std::string expected_product = "Copperfin Test Product";
+    std::string expected_copyright = "Copperfin Test Fixture Copyright";
+    bool expect_nonempty_version_fields = false;
+
+#if defined(_WIN32)
+    wchar_t system_directory[MAX_PATH]{};
+    const UINT system_directory_length = GetSystemDirectoryW(system_directory, MAX_PATH);
+    if (system_directory_length > 0 && system_directory_length < MAX_PATH) {
+        const fs::path kernel32 = fs::path(system_directory) / "kernel32.dll";
+        if (fs::exists(kernel32, ignored)) {
+            versioned_fixture = kernel32;
+            expect_nonempty_version_fields = true;
+        }
+    }
+#else
+    const fs::path mounted_vfp9 =
+        "/run/media/rich/VFPPROD1/program files/microsoft visual foxpro 9/vfp9.exe";
+    if (fs::exists(mounted_vfp9, ignored)) {
+        versioned_fixture = mounted_vfp9;
+        expected_version = "9.0.00.2412";
+        expected_description = "Microsoft Visual FoxPro 9.0";
+        expected_company = "Microsoft Corporation";
+        expected_product = "Microsoft Visual FoxPro";
+        expected_copyright = "Microsoft Corporation 1992-2004. All rights reserved.";
+    }
+#endif
+
+    const fs::path missing = temp_root / "missing.exe";
     const fs::path main_path = temp_root / "agetfileversion.prg";
     write_text(
         main_path,
-        "cDummy  = '" + dummy.string() + "'\n"
-        "nExist  = AGETFILEVERSION(aVer,  cDummy)\n"
-        "nMiss   = AGETFILEVERSION(aVer2, 'C:\\nonexistent\\missing.exe')\n"
+        "cDummy      = " + quote_prg_string(dummy) + "\n"
+        "cVersioned  = " + quote_prg_string(versioned_fixture) + "\n"
+        "cMissing    = " + quote_prg_string(missing) + "\n"
+        "nExist      = AGETFILEVERSION(aVer, cDummy)\n"
+        "cExist1     = aVer(1)\n"
+        "cExist2     = aVer(2)\n"
+        "cExist3     = aVer(3)\n"
+        "cExist4     = aVer(4)\n"
+        "cExist5     = aVer(5)\n"
+        "cExist6     = aVer(6)\n"
+        "cExist7     = aVer(7)\n"
+        "nVersioned  = AGETFILEVERSION(aVer3, cVersioned)\n"
+        "cVersioned1 = aVer3(1)\n"
+        "cVersioned2 = aVer3(2)\n"
+        "cVersioned3 = aVer3(3)\n"
+        "cVersioned4 = aVer3(4)\n"
+        "cVersioned5 = aVer3(5)\n"
+        "cVersioned6 = aVer3(6)\n"
+        "cVersioned7 = aVer3(7)\n"
+        "nMiss       = AGETFILEVERSION(aVer2, cMissing)\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
@@ -974,16 +1072,134 @@ void test_agetfileversion_existing_and_missing_files() {
     expect(state.completed, "AGETFILEVERSION script should complete");
 
     const auto nexist = state.globals.find("nexist");
+    const auto nversioned = state.globals.find("nversioned");
     const auto nmiss  = state.globals.find("nmiss");
+    const auto cexist1 = state.globals.find("cexist1");
+    const auto cexist2 = state.globals.find("cexist2");
+    const auto cexist3 = state.globals.find("cexist3");
+    const auto cexist4 = state.globals.find("cexist4");
+    const auto cexist5 = state.globals.find("cexist5");
+    const auto cexist6 = state.globals.find("cexist6");
+    const auto cexist7 = state.globals.find("cexist7");
+    const auto cversioned1 = state.globals.find("cversioned1");
+    const auto cversioned2 = state.globals.find("cversioned2");
+    const auto cversioned3 = state.globals.find("cversioned3");
+    const auto cversioned4 = state.globals.find("cversioned4");
+    const auto cversioned5 = state.globals.find("cversioned5");
+    const auto cversioned6 = state.globals.find("cversioned6");
+    const auto cversioned7 = state.globals.find("cversioned7");
     expect(nexist != state.globals.end(), "AGETFILEVERSION existing-file count should be captured");
+    expect(nversioned != state.globals.end(), "AGETFILEVERSION versioned-fixture count should be captured");
     expect(nmiss  != state.globals.end(), "AGETFILEVERSION missing-file count should be captured");
+    expect(cexist1 != state.globals.end() && cexist2 != state.globals.end() &&
+           cexist3 != state.globals.end() && cexist4 != state.globals.end() &&
+           cexist5 != state.globals.end() && cexist6 != state.globals.end() &&
+           cexist7 != state.globals.end(),
+           "AGETFILEVERSION fallback rows should be captured");
+    expect(cversioned1 != state.globals.end() && cversioned2 != state.globals.end() &&
+           cversioned3 != state.globals.end() && cversioned4 != state.globals.end() &&
+           cversioned5 != state.globals.end() && cversioned6 != state.globals.end() &&
+           cversioned7 != state.globals.end(),
+           "AGETFILEVERSION versioned rows should be captured");
     if (nexist != state.globals.end()) {
         expect(copperfin::runtime::format_value(nexist->second) == "7",
             "AGETFILEVERSION should return 7 elements for an existing file");
     }
+    if (nversioned != state.globals.end()) {
+        expect(copperfin::runtime::format_value(nversioned->second) == "7",
+            "AGETFILEVERSION should return 7 elements for a versioned fixture");
+    }
     if (nmiss != state.globals.end()) {
         expect(copperfin::runtime::format_value(nmiss->second) == "0",
             "AGETFILEVERSION should return 0 for a missing file");
+    }
+    if (cexist1 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cexist1->second) == "0.0.0.0",
+            "AGETFILEVERSION should fall back to the default full version for plain files");
+    }
+    if (cexist2 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cexist2->second) == "dummy.exe",
+            "AGETFILEVERSION should fall back to the filename for plain-file descriptions");
+    }
+    if (cexist3 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cexist3->second).empty(),
+            "AGETFILEVERSION should leave company name empty when no version metadata exists");
+    }
+    if (cexist4 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cexist4->second) == "0.0.0.0",
+            "AGETFILEVERSION should fall back to the default file version for plain files");
+    }
+    if (cexist5 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cexist5->second).empty(),
+            "AGETFILEVERSION should leave product name empty when no version metadata exists");
+    }
+    if (cexist6 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cexist6->second) == "0.0.0.0",
+            "AGETFILEVERSION should fall back to the default product version for plain files");
+    }
+    if (cexist7 != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cexist7->second).empty(),
+            "AGETFILEVERSION should leave trademark/copyright empty when no version metadata exists");
+    }
+    if (expect_nonempty_version_fields) {
+        if (cversioned1 != state.globals.end()) {
+            expect(!copperfin::runtime::format_value(cversioned1->second).empty() &&
+                       copperfin::runtime::format_value(cversioned1->second) != "0.0.0.0",
+                   "AGETFILEVERSION should read a non-empty full version from real Windows versioned files");
+        }
+        if (cversioned2 != state.globals.end()) {
+            expect(!copperfin::runtime::format_value(cversioned2->second).empty(),
+                   "AGETFILEVERSION should read a non-empty file description from real Windows versioned files");
+        }
+        if (cversioned3 != state.globals.end()) {
+            expect(!copperfin::runtime::format_value(cversioned3->second).empty(),
+                   "AGETFILEVERSION should read a non-empty company name from real Windows versioned files");
+        }
+        if (cversioned4 != state.globals.end()) {
+            expect(!copperfin::runtime::format_value(cversioned4->second).empty() &&
+                       copperfin::runtime::format_value(cversioned4->second) != "0.0.0.0",
+                   "AGETFILEVERSION should read a non-empty file version from real Windows versioned files");
+        }
+        if (cversioned5 != state.globals.end()) {
+            expect(!copperfin::runtime::format_value(cversioned5->second).empty(),
+                   "AGETFILEVERSION should read a non-empty product name from real Windows versioned files");
+        }
+        if (cversioned6 != state.globals.end()) {
+            expect(!copperfin::runtime::format_value(cversioned6->second).empty() &&
+                       copperfin::runtime::format_value(cversioned6->second) != "0.0.0.0",
+                   "AGETFILEVERSION should read a non-empty product version from real Windows versioned files");
+        }
+    } else {
+        if (cversioned1 != state.globals.end()) {
+            expect(copperfin::runtime::format_value(cversioned1->second) == expected_version,
+                "AGETFILEVERSION should extract the expected full version from the versioned fallback fixture");
+        }
+        if (cversioned2 != state.globals.end()) {
+            expect(copperfin::runtime::format_value(cversioned2->second) == expected_description,
+                "AGETFILEVERSION should extract the expected description from the versioned fallback fixture");
+        }
+        if (cversioned3 != state.globals.end()) {
+            expect(copperfin::runtime::format_value(cversioned3->second) == expected_company,
+                "AGETFILEVERSION should extract the expected company from the versioned fallback fixture");
+        }
+        if (cversioned4 != state.globals.end()) {
+            expect(copperfin::runtime::format_value(cversioned4->second) == expected_version,
+                "AGETFILEVERSION should extract the expected file version from the versioned fallback fixture");
+        }
+        if (cversioned5 != state.globals.end()) {
+            expect(copperfin::runtime::format_value(cversioned5->second) == expected_product,
+                "AGETFILEVERSION should extract the expected product name from the versioned fallback fixture");
+        }
+        if (cversioned6 != state.globals.end()) {
+            expect(copperfin::runtime::format_value(cversioned6->second) == expected_version,
+                "AGETFILEVERSION should extract the expected product version from the versioned fallback fixture");
+        }
+        if (cversioned7 != state.globals.end()) {
+            const std::string legal_text = copperfin::runtime::format_value(cversioned7->second);
+            expect(!legal_text.empty() &&
+                       legal_text.find(expected_copyright) != std::string::npos,
+                   "AGETFILEVERSION should extract the expected legal text from the versioned fallback fixture");
+        }
     }
 
     fs::remove_all(temp_root, ignored);

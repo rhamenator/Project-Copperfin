@@ -22,6 +22,7 @@
 #include <atomic>
 #include <array>
 #include <cctype>
+#include <cstdint>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -50,8 +51,10 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <windows.h>
+#include <winver.h>
 #include <metahost.h>
 #pragma comment(lib, "mscoree.lib")
+#pragma comment(lib, "version.lib")
 #include <comdef.h>
 
 // Minimal COM interface declarations for .NET CLR v4 hosting.
