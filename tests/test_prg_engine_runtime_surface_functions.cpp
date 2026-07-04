@@ -6446,6 +6446,94 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_form_showwindow_defaults_mutates_and_stays_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_form_showwindow";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_form_showwindow.prg";
+        write_text(
+            main_path,
+            "oBaseForm = CREATEOBJECT('Form')\n"
+            "lBaseHasShowWindow = PEMSTATUS(oBaseForm, 'ShowWindow', 1)\n"
+            "lBaseShowWindowReadOnly = PEMSTATUS(oBaseForm, 'ShowWindow', 5)\n"
+            "nBaseBefore = oBaseForm.ShowWindow\n"
+            "xBaseGetPemBefore = GETPEM(oBaseForm, 'ShowWindow')\n"
+            "oBaseForm.ShowWindow = 2\n"
+            "nBaseAfterDirectAssign = oBaseForm.ShowWindow\n"
+            "lBaseSetPem = SETPEM(oBaseForm, 'ShowWindow', 0)\n"
+            "nBaseAfterSetPem = oBaseForm.ShowWindow\n"
+            "lBaseAddProperty = ADDPROPERTY(oBaseForm, 'ShowWindow', 2)\n"
+            "lBaseRemoveProperty = REMOVEPROPERTY(oBaseForm, 'ShowWindow')\n"
+            "oDerived = CREATEOBJECT('DemoForm')\n"
+            "nDerivedBefore = oDerived.ShowWindow\n"
+            "nChildBefore = oDerived.cmdSave.ReadShowWindow()\n"
+            "oDerived.cmdSave.MakeTopLevel()\n"
+            "nDerivedAfterChild = oDerived.ShowWindow\n"
+            "lDerivedIsTopLevel = (oDerived.ShowWindow = 2)\n"
+            "xDerivedGetPem = GETPEM(oDerived, 'ShowWindow')\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oDerived, 1)\n"
+            "lPropHasShowWindow = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'SHOWWINDOW'\n"
+            "        lPropHasShowWindow = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "RETURN\n"
+            "DEFINE CLASS SaveButton AS CommandButton\n"
+            "    FUNCTION ReadShowWindow\n"
+            "        RETURN THISFORM.ShowWindow\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE MakeTopLevel\n"
+            "        THISFORM.ShowWindow = 2\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DemoForm AS Form\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Form ShowWindow property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lbasehasshowwindow", "true");
+        check("lbaseshowwindowreadonly", "false");
+        check("nbasebefore", "0");
+        check("xbasegetpembefore", "0");
+        check("nbaseafterdirectassign", "2");
+        check("lbasesetpem", "true");
+        check("nbaseaftersetpem", "0");
+        check("lbaseaddproperty", "false");
+        check("lbaseremoveproperty", "false");
+        check("nderivedbefore", "0");
+        check("nchildbefore", "0");
+        check("nderivedafterchild", "2");
+        check("lderivedistoplevel", "true");
+        check("xderivedgetpem", "2");
+        check("lprophasshowwindow", "true");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_visual_enabled_defaults_mutates_and_stays_builtin()
     {
         namespace fs = std::filesystem;
@@ -45343,6 +45431,7 @@ int main()
     test_native_move_override_wins_over_builtin_geometry_updates();
     test_native_show_hide_builtin_fallback_updates_visible_state();
     test_native_show_override_wins_over_builtin_visible_toggle();
+    test_native_form_showwindow_defaults_mutates_and_stays_builtin();
     test_native_setfocus_builtin_fallback_updates_owner_activecontrol();
     test_native_setfocus_override_wins_over_builtin_activecontrol_toggle();
     test_runtime_application_activeform_aliases_track_representative_native_form();
