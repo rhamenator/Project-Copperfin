@@ -38901,6 +38901,119 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_visual_geometry_members_reflect_and_resist_shadowing()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_geometry_members";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_geometry_members.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('GeometryForm')\n"
+            "nFormLeftBefore = oForm.Left\n"
+            "nFormTopBefore = oForm.Top\n"
+            "nFormWidthBefore = oForm.Width\n"
+            "nFormHeightBefore = oForm.Height\n"
+            "xFormLeftGetPemBefore = GETPEM(oForm, 'Left')\n"
+            "xFormWidthGetPemBefore = GETPEM(oForm, 'Width')\n"
+            "lFormHasLeft = PEMSTATUS(oForm, 'Left', 1)\n"
+            "lFormHasTop = PEMSTATUS(oForm, 'Top', 1)\n"
+            "lFormHasWidth = PEMSTATUS(oForm, 'Width', 1)\n"
+            "lFormHasHeight = PEMSTATUS(oForm, 'Height', 1)\n"
+            "lFormLeftReadOnly = PEMSTATUS(oForm, 'Left', 5)\n"
+            "lSetFormLeft = SETPEM(oForm, 'Left', 12)\n"
+            "lSetFormHeight = SETPEM(oForm, 'Height', 34)\n"
+            "nFormLeftAfter = oForm.Left\n"
+            "nFormHeightAfter = oForm.Height\n"
+            "lAddFormLeft = ADDPROPERTY(oForm, 'Left', 99)\n"
+            "lRemoveFormWidth = REMOVEPROPERTY(oForm, 'Width')\n"
+            "nFormWidthAfterRemove = oForm.Width\n"
+            "nChildLeftBefore = oForm.cmdSave.Left\n"
+            "nChildTopBefore = oForm.cmdSave.Top\n"
+            "xChildHeightGetPemBefore = GETPEM(oForm.cmdSave, 'Height')\n"
+            "lChildHasWidth = PEMSTATUS(oForm.cmdSave, 'Width', 1)\n"
+            "lChildHeightReadOnly = PEMSTATUS(oForm.cmdSave, 'Height', 5)\n"
+            "oForm.cmdSave.Width = 45\n"
+            "lSetChildTop = SETPEM(oForm.cmdSave, 'Top', 67)\n"
+            "nChildWidthAfter = oForm.cmdSave.Width\n"
+            "nChildTopAfter = oForm.cmdSave.Top\n"
+            "lAddChildHeight = ADDPROPERTY(oForm.cmdSave, 'Height', 88)\n"
+            "lRemoveChildLeft = REMOVEPROPERTY(oForm.cmdSave, 'Left')\n"
+            "nChildLeftAfterRemove = oForm.cmdSave.Left\n"
+            "nPropCount = AMEMBERS(aProps, oForm, 1)\n"
+            "lPropHasLeft = .F.\n"
+            "lPropHasWidth = .F.\n"
+            "FOR i = 1 TO nPropCount\n"
+            "    IF UPPER(aProps[i]) == 'LEFT'\n"
+            "        lPropHasLeft = .T.\n"
+            "    ENDIF\n"
+            "    IF UPPER(aProps[i]) == 'WIDTH'\n"
+            "        lPropHasWidth = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "RETURN\n"
+            "DEFINE CLASS GeometryForm AS Form\n"
+            "    ADD OBJECT cmdSave AS CommandButton\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native geometry property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string& name, const std::string& expected)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " variable not found");
+            if (it != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(it->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(it->second) + "'");
+            }
+        };
+
+        check("nformleftbefore", "0");
+        check("nformtopbefore", "0");
+        check("nformwidthbefore", "0");
+        check("nformheightbefore", "0");
+        check("xformleftgetpembefore", "0");
+        check("xformwidthgetpembefore", "0");
+        check("lformhasleft", "true");
+        check("lformhastop", "true");
+        check("lformhaswidth", "true");
+        check("lformhasheight", "true");
+        check("lformleftreadonly", "false");
+        check("lsetformleft", "true");
+        check("lsetformheight", "true");
+        check("nformleftafter", "12");
+        check("nformheightafter", "34");
+        check("laddformleft", "false");
+        check("lremoveformwidth", "false");
+        check("nformwidthafterremove", "0");
+        check("nchildleftbefore", "0");
+        check("nchildtopbefore", "0");
+        check("xchildheightgetpembefore", "0");
+        check("lchildhaswidth", "true");
+        check("lchildheightreadonly", "false");
+        check("lsetchildtop", "true");
+        check("nchildwidthafter", "45");
+        check("nchildtopafter", "67");
+        check("laddchildheight", "false");
+        check("lremovechildleft", "false");
+        check("nchildleftafterremove", "0");
+        check("lprophasleft", "true");
+        check("lprophaswidth", "true");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_move_override_wins_over_builtin_geometry_updates()
     {
         namespace fs = std::filesystem;
@@ -45088,6 +45201,7 @@ int main()
     test_bare_dotted_native_release_statement_uses_builtin_release_path();
     test_native_refresh_builtin_fallback_succeeds_for_form_and_children();
     test_native_move_builtin_fallback_updates_visual_geometry();
+    test_native_visual_geometry_members_reflect_and_resist_shadowing();
     test_native_move_override_wins_over_builtin_geometry_updates();
     test_native_show_hide_builtin_fallback_updates_visible_state();
     test_native_show_override_wins_over_builtin_visible_toggle();

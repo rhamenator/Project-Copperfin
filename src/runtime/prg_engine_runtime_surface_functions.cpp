@@ -733,6 +733,24 @@ bool native_visual_visible_member_name_matches(
            runtime_object.properties.contains("visible");
 }
 
+bool native_visual_geometry_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "left" &&
+        normalized_member_name != "top" &&
+        normalized_member_name != "width" &&
+        normalized_member_name != "height") {
+        return false;
+    }
+
+    const bool is_olecontrol =
+        normalize_identifier(runtime_object.base_class_name) == "olecontrol" ||
+        normalize_identifier(runtime_object.prog_id) == "olecontrol";
+    return is_native_visual_runtime_object(runtime_object) &&
+           !is_olecontrol &&
+           runtime_object.properties.contains(normalized_member_name);
+}
+
 bool native_string_control_value_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
@@ -1140,6 +1158,11 @@ bool is_native_visual_visible_member_name(const RuntimeOleObjectState& runtime_o
     return native_visual_visible_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_visual_geometry_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_visual_geometry_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_string_control_value_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_string_control_value_member_name_matches(runtime_object, normalized_member_name);
@@ -1351,6 +1374,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                                                       const std::string& member_name) {
         return get_native_identity_reflection_metadata(runtime_object, member_name).has_value() ||
                native_controlcount_member_name_matches(runtime_object, member_name) ||
+               native_visual_geometry_member_name_matches(runtime_object, member_name) ||
                is_native_collection_member_name(runtime_object, member_name) ||
                runtime_object.properties.contains(member_name) ||
                object_has_accessor_property(runtime_object, member_name) ||
@@ -1590,6 +1614,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_form_lockscreen_member_name(*runtime_object, property_name) ||
             is_native_visual_enabled_member_name(*runtime_object, property_name) ||
             is_native_visual_visible_member_name(*runtime_object, property_name) ||
+            is_native_visual_geometry_member_name(*runtime_object, property_name) ||
             is_native_string_control_value_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_creation_time_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_object_member_name(*runtime_object, property_name) ||
@@ -1770,6 +1795,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_form_lockscreen_member_name(*runtime_object, property_name) ||
             is_native_visual_enabled_member_name(*runtime_object, property_name) ||
             is_native_visual_visible_member_name(*runtime_object, property_name) ||
+            is_native_visual_geometry_member_name(*runtime_object, property_name) ||
             is_native_string_control_value_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_creation_time_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_object_member_name(*runtime_object, property_name) ||

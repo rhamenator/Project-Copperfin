@@ -204,6 +204,27 @@
                 normalize_identifier(trim_copy(runtime_object.base_class_name));
 
             if (is_native_visual_runtime_object(runtime_object) &&
+                !is_native_olecontrol_host_object(runtime_object))
+            {
+                if (!runtime_object.properties.contains("left"))
+                {
+                    runtime_object.properties["left"] = make_number_value(0.0);
+                }
+                if (!runtime_object.properties.contains("top"))
+                {
+                    runtime_object.properties["top"] = make_number_value(0.0);
+                }
+                if (!runtime_object.properties.contains("width"))
+                {
+                    runtime_object.properties["width"] = make_number_value(0.0);
+                }
+                if (!runtime_object.properties.contains("height"))
+                {
+                    runtime_object.properties["height"] = make_number_value(0.0);
+                }
+            }
+
+            if (is_native_visual_runtime_object(runtime_object) &&
                 !is_native_olecontrol_host_object(runtime_object) &&
                 !runtime_object.properties.contains("visible"))
             {
