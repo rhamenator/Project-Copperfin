@@ -6,6 +6,7 @@
 
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -44,5 +45,6 @@ struct DbfParseResult {
 
 DbfParseResult parse_dbf_header(const std::vector<std::uint8_t>& bytes);
 DbfParseResult parse_dbf_header_from_file(const std::string& path);
+std::optional<int> dbf_code_page_from_mark(std::uint8_t mark);
 
 }  // namespace copperfin::vfp

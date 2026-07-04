@@ -1719,6 +1719,14 @@ namespace copperfin::runtime
 
                 RuntimeSurfaceCursorSnapshot snapshot;
                 snapshot.alias = cursor->alias;
+                if (!cursor->remote && !cursor->source_path.empty())
+                {
+                    const auto header_result = vfp::parse_dbf_header_from_file(cursor->source_path);
+                    if (header_result.ok)
+                    {
+                        snapshot.code_page = vfp::dbf_code_page_from_mark(header_result.header.code_page_mark);
+                    }
+                }
 
                 const std::vector<vfp::DbfFieldDescriptor> descriptors = cursor_field_descriptors(*cursor);
                 snapshot.fields.reserve(descriptors.size());

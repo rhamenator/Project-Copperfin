@@ -1962,10 +1962,31 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
     if (function == "cpconvert" && arguments.size() >= 3U) {
         return make_string_value(value_as_string(arguments[2]));
     }
-    // CPDBF([cAlias]) — return code page stored in DBF header of the cursor
-    // First-pass: return 1252 for all cursors (Windows Latin-1 default).
+    // VFP9 help (dv_foxhelp.chm, CPDBF() topic):
+    // - omitted => code page of the table in the current work area
+    // - nWorkArea => code page of that work area, returning 0 when no table is open
+    // - cTableAlias => code page of that alias, raising an error when no such alias exists
+    //
+    // Copperfin projects the DBF header code-page mark when the selected cursor is
+    // table-backed. Synthetic/remote cursors and missing header metadata fall back to 0.
     if (function == "cpdbf") {
-        return make_number_value(1252.0);
+        const bool explicit_alias = !arguments.empty() &&
+            arguments[0].kind == PrgValueKind::string;
+        const std::string cursor_designator = arguments.empty()
+            ? std::string{}
+            : value_as_string(arguments[0]);
+        const std::optional<RuntimeSurfaceCursorSnapshot> snapshot =
+            snapshot_cursor_callback ? snapshot_cursor_callback(cursor_designator) : std::nullopt;
+        if (!snapshot.has_value()) {
+            if (explicit_alias) {
+                throw std::runtime_error(runtime_text(
+                    "Runtime.Prg.RuntimeSurface.Error.CpDbfAliasNotFound",
+                    {{"alias", cursor_designator}}));
+            }
+            return make_number_value(0.0);
+        }
+
+        return make_number_value(static_cast<double>(snapshot->code_page.value_or(0)));
     }
     // GETPICT([cTitle [, cFileName]]) — headless contract: emit payload and preserve
     // the current selection when the host does not provide a replacement.

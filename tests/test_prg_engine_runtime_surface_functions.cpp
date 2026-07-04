@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <optional>
 #include <system_error>
@@ -127,6 +128,22 @@ namespace
 #else
         return expected_host_code_page();
 #endif
+    }
+
+    void set_dbf_code_page_mark(const std::filesystem::path &path, std::uint8_t code_page_mark)
+    {
+        std::fstream stream(path, std::ios::binary | std::ios::in | std::ios::out);
+        expect(stream.good(), "DBF fixture should open for code-page patching");
+        if (!stream.good())
+        {
+            return;
+        }
+
+        stream.seekp(29, std::ios::beg);
+        const char byte = static_cast<char>(code_page_mark);
+        stream.write(&byte, 1);
+        stream.flush();
+        expect(stream.good(), "DBF fixture code-page patch should succeed");
     }
 
     void test_expression_runtime_surface_extensions()
@@ -42713,7 +42730,7 @@ namespace
             "nCpCurrentBad   = CPCURRENT(99)\n"
             // CPCONVERT identity pass-through
             "cCpConverted    = CPCONVERT(1252, 1252, 'hello')\n"
-            // CPDBF first-pass stub
+            // CPDBF with no open work area should fall back to 0
             "nCpDbf          = CPDBF()\n"
             // GETPICT headless contract
             "cPict           = GETPICT('Select Image', 'current.bmp')\n"
@@ -42756,7 +42773,7 @@ namespace
         check("ncpcurrentuni",  expected_host_oem_code_page_text);
         check("ncpcurrentbad",  expected_host_code_page_text);
         check("ccpconverted",   "hello");
-        check("ncpdbf",         "1252");
+        check("ncpdbf",         "0");
         check("cpict",          "current.bmp");
         check("ncolor",         "255");
         check("cfont",          "Arial");
@@ -42823,6 +42840,92 @@ namespace
             expect(varread_event->detail.find("result=\"\"") != std::string::npos,
                 "VARREAD event should include the deterministic empty-string result");
         }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_cpdbf_reads_table_code_page_metadata()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_cpdbf_metadata";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path people_path = temp_root / "people.dbf";
+        const fs::path other_path = temp_root / "other.dbf";
+        write_people_dbf(people_path, {{"ALICE", 30}, {"BOB", 25}});
+        write_people_dbf(other_path, {{"CAROL", 35}});
+        set_dbf_code_page_mark(people_path, 0x03U);
+        set_dbf_code_page_mark(other_path, 0x00U);
+
+        const fs::path main_path = temp_root / "cpdbf_metadata.prg";
+        write_text(
+            main_path,
+            "USE '" + people_path.string() + "' ALIAS people IN 0\n"
+            "USE '" + other_path.string() + "' ALIAS other IN 0\n"
+            "nPeopleArea      = SELECT('people')\n"
+            "nMissingArea     = CPDBF(99)\n"
+            "SELECT people\n"
+            "nCurrentCp       = CPDBF()\n"
+            "nPeopleAliasCp   = CPDBF('people')\n"
+            "nPeopleAreaCp    = CPDBF(nPeopleArea)\n"
+            "SELECT other\n"
+            "nOtherAliasCp    = CPDBF('other')\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "CPDBF metadata script should complete");
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            const std::string actual = copperfin::runtime::format_value(it->second);
+            expect(actual == expected, name + ": expected \"" + expected + "\", got \"" + actual + "\"");
+        };
+
+        check("ncurrentcp", "1252");
+        check("npeoplealiascp", "1252");
+        check("npeopleareacp", "1252");
+        check("notheraliascp", "0");
+        check("nmissingarea", "0");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_cpdbf_missing_alias_reports_error()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_cpdbf_missing_alias";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path people_path = temp_root / "people.dbf";
+        write_people_dbf(people_path, {{"ALICE", 30}});
+        set_dbf_code_page_mark(people_path, 0x03U);
+
+        const fs::path main_path = temp_root / "cpdbf_missing_alias.prg";
+        write_text(
+            main_path,
+            "USE '" + people_path.string() + "' ALIAS people IN 0\n"
+            "nCpMissing = CPDBF('missing')\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string(), false));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+               "CPDBF missing alias should pause with an error");
+        expect(state.message == "Runtime fault: CPDBF target alias not found: missing",
+               "CPDBF missing alias should report the localized alias-missing message (got '" +
+                   state.message + "')");
 
         fs::remove_all(temp_root, ignored);
     }
@@ -43723,6 +43826,8 @@ int main()
     test_same_prg_property_bindevent_object_method_delegates_preserve_current_event_metadata();
     test_external_prg_base_property_bindevent_object_method_delegates_preserve_current_event_metadata();
     test_codepage_and_misc_runtime_surface_functions();
+    test_cpdbf_reads_table_code_page_metadata();
+    test_cpdbf_missing_alias_reports_error();
     test_lookup_expression_function();
     test_lookup_expression_function_supports_sql_cursors();
     test_lookup_supports_macro_alias_and_tag_arguments();

@@ -26,6 +26,7 @@ struct RuntimeSurfaceCursorRow {
 
 struct RuntimeSurfaceCursorSnapshot {
     std::string alias;
+    std::optional<int> code_page;
     std::vector<RuntimeSurfaceCursorField> fields;
     std::vector<RuntimeSurfaceCursorRow> rows;
 };

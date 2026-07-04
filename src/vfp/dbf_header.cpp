@@ -8,6 +8,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <optional>
 #include <sstream>
 #include <string_view>
 
@@ -132,7 +133,7 @@ DbfParseResult parse_dbf_header(const std::vector<std::uint8_t>& bytes) {
         return {.ok = false, .header = header, .error = dbf_header_text("Vfp.DbfHeader.Error.InvalidValues")};
     }
 
-    return {.ok = true, .header = header};
+    return {.ok = true, .header = header, .error = {}};
 }
 
 DbfParseResult parse_dbf_header_from_file(const std::string& path) {
@@ -149,6 +150,65 @@ DbfParseResult parse_dbf_header_from_file(const std::string& path) {
     }
 
     return parse_dbf_header(bytes);
+}
+
+std::optional<int> dbf_code_page_from_mark(std::uint8_t mark) {
+    switch (mark) {
+        case 0x01U:
+            return 437;
+        case 0x02U:
+            return 850;
+        case 0x03U:
+            return 1252;
+        case 0x04U:
+            return 10000;
+        case 0x64U:
+            return 852;
+        case 0x65U:
+            return 866;
+        case 0x66U:
+            return 865;
+        case 0x67U:
+            return 861;
+        case 0x68U:
+            return 895;
+        case 0x69U:
+            return 620;
+        case 0x6AU:
+            return 737;
+        case 0x6BU:
+            return 857;
+        case 0x78U:
+            return 950;
+        case 0x79U:
+            return 949;
+        case 0x7AU:
+            return 936;
+        case 0x7BU:
+            return 932;
+        case 0x7CU:
+            return 874;
+        case 0x7DU:
+            return 1255;
+        case 0x7EU:
+            return 1256;
+        case 0x96U:
+            return 10007;
+        case 0x97U:
+            return 10029;
+        case 0x98U:
+            return 10006;
+        case 0xC8U:
+            return 1250;
+        case 0xC9U:
+            return 1251;
+        case 0xCAU:
+            return 1254;
+        case 0xCBU:
+            return 1253;
+        default:
+            return std::nullopt;
+    }
 }
 
 }  // namespace copperfin::vfp

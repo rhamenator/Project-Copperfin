@@ -1367,6 +1367,7 @@
   "Runtime.Prg.Records.Error.RequiresCurrentRemoteRecord": "Este comando requiere un registro remoto actual",
   "Runtime.Prg.Records.Error.RequiresLocalTableBackedCursor": "Este comando requiere un cursor local respaldado por tabla",
   "Runtime.Prg.RuntimeSurface.Error.BitPositionOutOfRange": "La posicion de bit debe estar entre {minimum} y {maximum}",
+  "Runtime.Prg.RuntimeSurface.Error.CpDbfAliasNotFound": "No se encontro el alias de destino de CPDBF: {alias}",
   "Runtime.Prg.RuntimeSurface.Warning.AclassFallback": "Respaldo de {function}: no se pudo enumerar la cadena de clases",
   "Runtime.Prg.RuntimeSurface.Warning.AmembersFallback": "Respaldo de {function}: no se pudieron enumerar los miembros; se devuelve un arreglo vacio",
   "Runtime.Prg.RuntimeSurface.Warning.CursorToXmlTargetUnreadable": "{function} no encontro el cursor destino o no puede leerlo",
