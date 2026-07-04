@@ -4,8 +4,8 @@
 
 #include "copperfin/vfp/visual_asset_editor.h"
 #include "test_environment_support.h"
+#include "test_locale_catalog_environment_support.h"
 
-#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -18,7 +18,7 @@
 
 namespace {
 
-using copperfin::test_support::ScopedEnvironmentValue;
+using copperfin::test_support::ScopedDefaultLocaleCatalogEnvironment;
 
 int failures = 0;
 
@@ -105,32 +105,6 @@ ProcessResult run_process_capture(
 #endif
     return result;
 }
-
-struct ScopedDefaultLocaleCatalogEnvironment {
-    ScopedEnvironmentValue locale;
-    ScopedEnvironmentValue locale_dir;
-
-    ScopedDefaultLocaleCatalogEnvironment()
-        : locale("COPPERFIN_LOCALE"),
-          locale_dir("COPPERFIN_LOCALE_DIR") {
-        locale.set("en-US");
-        locale_dir.set(
-            [] {
-                std::filesystem::path ancestor = std::filesystem::absolute(std::filesystem::current_path());
-                for (;;) {
-                    const auto candidate = ancestor / "resources" / "locales";
-                    if (std::filesystem::exists(candidate)) {
-                        return candidate.lexically_normal().string();
-                    }
-                    const auto parent = ancestor.parent_path();
-                    if (parent == ancestor) {
-                        return candidate.lexically_normal().string();
-                    }
-                    ancestor = parent;
-                }
-            }());
-    }
-};
 
 std::filesystem::path find_vfp9_reports_root() {
     namespace fs = std::filesystem;
