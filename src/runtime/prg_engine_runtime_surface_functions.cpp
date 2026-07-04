@@ -847,6 +847,51 @@ std::optional<std::size_t> parse_native_list_control_selected_member_slot_impl(
     }
 }
 
+std::optional<NativeListControlCellReference> parse_native_list_control_list_member_cell_impl(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& member_name) {
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return std::nullopt;
+    }
+
+    const std::string normalized = normalize_identifier(trim_copy(member_name));
+    if (!starts_with_insensitive(normalized, "list(") || normalized.back() != ')') {
+        return std::nullopt;
+    }
+
+    const std::size_t open_paren = normalized.find('(');
+    if (open_paren == std::string::npos || open_paren + 1U >= normalized.size() - 1U) {
+        return std::nullopt;
+    }
+
+    const std::string selector_text =
+        trim_copy(normalized.substr(open_paren + 1U, normalized.size() - open_paren - 2U));
+    if (selector_text.empty()) {
+        return std::nullopt;
+    }
+
+    const std::size_t comma = selector_text.find(',');
+    const std::string row_text = trim_copy(selector_text.substr(0U, comma));
+    const std::string column_text =
+        comma == std::string::npos ? std::string("1") : trim_copy(selector_text.substr(comma + 1U));
+    if (row_text.empty() || column_text.empty()) {
+        return std::nullopt;
+    }
+
+    try {
+        const long long requested_row = std::stoll(row_text);
+        const long long requested_column = std::stoll(column_text);
+        if (requested_row < 1LL || requested_column < 1LL) {
+            return std::nullopt;
+        }
+        return NativeListControlCellReference{
+            .row_slot = static_cast<std::size_t>(requested_row - 1LL),
+            .column_slot = static_cast<std::size_t>(requested_column - 1LL)};
+    } catch (const std::exception&) {
+        return std::nullopt;
+    }
+}
+
 std::optional<long long> parse_native_list_control_selectedid_member_item_id_impl(
     const RuntimeOleObjectState& runtime_object,
     const std::string& member_name) {
@@ -2097,6 +2142,32 @@ bool write_native_list_control_item_id(RuntimeOleObjectState& runtime_object, co
     return true;
 }
 
+bool write_native_list_control_cell(
+    RuntimeOleObjectState& runtime_object,
+    std::size_t row_slot,
+    std::size_t column_slot,
+    const PrgValue& assigned_value)
+{
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return false;
+    }
+
+    materialize_native_list_control_rows(runtime_object);
+    if (row_slot >= runtime_object.list_rows.size()) {
+        return false;
+    }
+
+    auto& row = runtime_object.list_rows[row_slot];
+    if (row.size() <= column_slot) {
+        row.resize(column_slot + 1U, make_string_value(""));
+    }
+    row[column_slot] = make_string_value(value_as_string(assigned_value));
+    sync_native_list_control_primary_state_from_rows(runtime_object);
+    sync_native_list_control_count_impl(runtime_object);
+    sync_native_list_control_displayvalue_from_selection_impl(runtime_object);
+    return true;
+}
+
 bool write_native_list_control_selected_slot(
     RuntimeOleObjectState& runtime_object,
     std::size_t slot,
@@ -2785,6 +2856,35 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
     return make_number_value(static_cast<double>(*insert_slot + 1U));
 }
 
+std::optional<NativeListControlCellReference> parse_native_list_control_list_member_cell(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& member_name)
+{
+    return parse_native_list_control_list_member_cell_impl(runtime_object, member_name);
+}
+
+std::optional<PrgValue> read_native_list_control_cell(
+    RuntimeOleObjectState& runtime_object,
+    std::size_t row_slot,
+    std::size_t column_slot)
+{
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return std::nullopt;
+    }
+
+    materialize_native_list_control_rows(runtime_object);
+    if (row_slot >= runtime_object.list_rows.size()) {
+        return make_string_value("");
+    }
+
+    const auto& row = runtime_object.list_rows[row_slot];
+    if (column_slot >= row.size()) {
+        return make_string_value("");
+    }
+
+    return make_string_value(value_as_string(row[column_slot]));
+}
+
 std::optional<PrgValue> read_native_identity_metadata(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     // Ordinary dotted reads intentionally trail reflection parity for metadata we have not widened yet.
@@ -3138,6 +3238,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         if (property_name.empty()) {
             return make_boolean_value(false);
         }
+        if (parse_native_list_control_list_member_cell(*runtime_object, property_name).has_value()) {
+            return make_boolean_value(false);
+        }
         if (is_native_identity_member_name(*runtime_object, property_name) ||
             is_native_controlcount_member_name(*runtime_object, property_name) ||
             is_native_child_collection_member_name(*runtime_object, property_name) ||
@@ -3223,6 +3326,13 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         const std::string member_name = normalize_identifier(trim_copy(value_as_string(arguments[1])));
         if (runtime_object == nullptr || member_name.empty()) {
             return make_empty_value();
+        }
+        if (const auto list_cell = parse_native_list_control_list_member_cell(*runtime_object, member_name);
+            list_cell.has_value()) {
+            return *read_native_list_control_cell(
+                *runtime_object,
+                list_cell->row_slot,
+                list_cell->column_slot);
         }
         if (is_native_listcount_member_name(*runtime_object, member_name)) {
             sync_native_list_control_count(*runtime_object);
@@ -3315,6 +3425,15 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         if (is_scripting_dictionary_object(*runtime_object) && member_name == "count") {
             return make_boolean_value(false);
+        }
+        if (const auto list_cell = parse_native_list_control_list_member_cell(*runtime_object, member_name);
+            list_cell.has_value()) {
+            return make_boolean_value(
+                write_native_list_control_cell(
+                    *runtime_object,
+                    list_cell->row_slot,
+                    list_cell->column_slot,
+                    arguments[2]));
         }
         if (native_child_parent_member_name_matches(*runtime_object, member_name) ||
             is_native_controlcount_member_name(*runtime_object, member_name) ||
@@ -3432,6 +3551,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         const std::string property_name = normalize_identifier(trim_copy(value_as_string(arguments[1])));
         if (property_name.empty()) {
+            return make_boolean_value(false);
+        }
+        if (parse_native_list_control_list_member_cell(*runtime_object, property_name).has_value()) {
             return make_boolean_value(false);
         }
         if (is_native_identity_member_name(*runtime_object, property_name) ||

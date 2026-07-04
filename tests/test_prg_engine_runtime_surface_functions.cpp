@@ -10268,6 +10268,137 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_list_controls_writable_list_cells_stay_coherent()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_list_controls_writable_list_cells";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_list_controls_writable_list_cells.prg";
+        write_text(
+            main_path,
+            "oPlainCombo = CREATEOBJECT('ComboBox')\n"
+            "oPlainCombo.ColumnCount = 3\n"
+            "oPlainCombo.AddItem('Alpha')\n"
+            "oPlainCombo.List(oPlainCombo.NewIndex, 2) = 'A'\n"
+            "oPlainCombo.List(oPlainCombo.NewIndex, 3) = '111'\n"
+            "oPlainCombo.AddItem('Beta')\n"
+            "oPlainCombo.List(oPlainCombo.NewIndex, 2) = 'B'\n"
+            "oPlainCombo.List(oPlainCombo.NewIndex, 3) = '222'\n"
+            "oPlainCombo.ListIndex = 2\n"
+            "oPlainCombo.List(oPlainCombo.ListIndex) = 'Beta Prime'\n"
+            "lSetPemCol2 = SETPEM(oPlainCombo, 'List(2,2)', 'Bee')\n"
+            "xGetPemCol2 = GETPEM(oPlainCombo, 'List(2,2)')\n"
+            "lAddPropertyListCell = ADDPROPERTY(oPlainCombo, 'List(2,2)', 'shadow')\n"
+            "lRemovePropertyListCell = REMOVEPROPERTY(oPlainCombo, 'List(2,2)')\n"
+            "nCountAfterWrites = oPlainCombo.ListCount\n"
+            "nNewIndexAfterWrites = oPlainCombo.NewIndex\n"
+            "cDisplayAfterWrites = oPlainCombo.DisplayValue\n"
+            "cRow1Col1 = oPlainCombo.List(1)\n"
+            "cRow1Col2 = oPlainCombo.List(1, 2)\n"
+            "cRow1Col3 = oPlainCombo.List(1, 3)\n"
+            "cRow2Col1 = oPlainCombo.List(2)\n"
+            "cRow2Col2 = oPlainCombo.List(2, 2)\n"
+            "cRow2Col3 = oPlainCombo.List(2, 3)\n"
+            "oSeedList = CREATEOBJECT('SeededList')\n"
+            "nSeedNewIndex = oSeedList.NewIndex\n"
+            "cSeedRow1Col1 = oSeedList.List(1)\n"
+            "cSeedRow1Col2 = oSeedList.List(1, 2)\n"
+            "cSeedRow2Col1 = oSeedList.List(2)\n"
+            "cSeedRow2Col2 = oSeedList.List(2, 2)\n"
+            "RETURN\n"
+            "DEFINE CLASS SeededList AS ListBox\n"
+            "    ColumnCount = 2\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddItem('North')\n"
+            "        THIS.List(THIS.NewIndex, 2) = 'N'\n"
+            "        THIS.AddItem('South')\n"
+            "        THIS.List(THIS.NewIndex, 2) = 'S'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native writable List() list-control script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lsetpemcol2", "true");
+        check("xgetpemcol2", "Bee");
+        check("laddpropertylistcell", "false");
+        check("lremovepropertylistcell", "false");
+        check("ncountafterwrites", "2");
+        check("nnewindexafterwrites", "2");
+        check("cdisplayafterwrites", "Beta Prime");
+        check("crow1col1", "Alpha");
+        check("crow1col2", "A");
+        check("crow1col3", "111");
+        check("crow2col1", "Beta Prime");
+        check("crow2col2", "Bee");
+        check("crow2col3", "222");
+        check("nseednewindex", "2");
+        check("cseedrow1col1", "North");
+        check("cseedrow1col2", "N");
+        check("cseedrow2col1", "South");
+        check("cseedrow2col2", "S");
+
+        expect(state.ole_objects.size() == 2U,
+               "native writable List() coverage should register plain and derived list controls");
+        if (state.ole_objects.size() == 2U)
+        {
+            const auto &plain_combo = state.ole_objects[0];
+            const auto &seed_list = state.ole_objects[1];
+
+            const auto plain_display = plain_combo.properties.find("displayvalue");
+            const auto plain_newindex = plain_combo.properties.find("newindex");
+            const auto seed_newindex = seed_list.properties.find("newindex");
+
+            expect(plain_combo.list_rows.size() == 2U,
+                   "plain ComboBox writable List() coverage should preserve the expected row count");
+            if (plain_combo.list_rows.size() == 2U)
+            {
+                expect(plain_combo.list_rows[0].size() >= 3U &&
+                           copperfin::runtime::format_value(plain_combo.list_rows[0][1]) == "A" &&
+                           copperfin::runtime::format_value(plain_combo.list_rows[0][2]) == "111",
+                       "plain ComboBox writable List() coverage should preserve row 1 multicolumn writes");
+                expect(plain_combo.list_rows[1].size() >= 3U &&
+                           copperfin::runtime::format_value(plain_combo.list_rows[1][0]) == "Beta Prime" &&
+                           copperfin::runtime::format_value(plain_combo.list_rows[1][1]) == "Bee" &&
+                           copperfin::runtime::format_value(plain_combo.list_rows[1][2]) == "222",
+                       "plain ComboBox writable List() coverage should preserve row 2 direct and SETPEM writes");
+            }
+            expect(plain_display != plain_combo.properties.end() &&
+                       copperfin::runtime::format_value(plain_display->second) == "Beta Prime",
+                   "plain ComboBox writable List() coverage should keep DisplayValue synchronized");
+            expect(plain_newindex != plain_combo.properties.end() &&
+                       copperfin::runtime::format_value(plain_newindex->second) == "2",
+                   "plain ComboBox writable List() coverage should preserve NewIndex after cell writes");
+            expect(seed_list.list_rows.size() == 2U,
+                   "derived ListBox writable List() coverage should preserve Init-time multicolumn writes");
+            expect(seed_newindex != seed_list.properties.end() &&
+                       copperfin::runtime::format_value(seed_newindex->second) == "2",
+                   "derived ListBox writable List() coverage should preserve NewIndex during Init-time cell writes");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_list_controls_listcount_list_and_removeitem_stay_coherent()
     {
         namespace fs = std::filesystem;
@@ -51209,6 +51340,7 @@ int main()
     test_native_displayvalue_defaults_mutates_and_stays_builtin();
     test_native_list_controls_additem_builtin_populates_runtime_items();
     test_native_list_controls_multicolumn_additem_followthrough_stays_coherent();
+    test_native_list_controls_writable_list_cells_stay_coherent();
     test_native_list_controls_listcount_list_and_removeitem_stay_coherent();
     test_native_list_controls_addlistitem_newitemid_and_multicolumn_list_stay_coherent();
     test_native_list_controls_newindex_stays_coherent();

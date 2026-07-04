@@ -3760,6 +3760,15 @@ namespace copperfin::runtime
             {
                 return *collection_value;
             }
+            if (const auto list_cell =
+                    parse_native_list_control_list_member_cell(runtime_object, property_name);
+                list_cell.has_value())
+            {
+                return read_native_list_control_cell(
+                    runtime_object,
+                    list_cell->row_slot,
+                    list_cell->column_slot);
+            }
             if (is_native_listcount_member_name(runtime_object, normalized_property_name))
             {
                 sync_native_list_control_count(runtime_object);
@@ -3916,6 +3925,53 @@ namespace copperfin::runtime
             return requested_item_id;
         };
 
+        auto resolve_list_member_cell = [&]() -> std::optional<NativeListControlCellReference>
+        {
+            const auto literal_cell =
+                parse_native_list_control_list_member_cell(runtime_object, property_name);
+            if (literal_cell.has_value())
+            {
+                return literal_cell;
+            }
+
+            if (!starts_with_insensitive(normalized_property_name, "list(") ||
+                normalized_property_name.back() != ')')
+            {
+                return std::nullopt;
+            }
+
+            const std::size_t open_paren = property_name.find('(');
+            const std::size_t close_paren = property_name.rfind(')');
+            if (open_paren == std::string::npos || close_paren == std::string::npos ||
+                close_paren <= open_paren + 1U)
+            {
+                return std::nullopt;
+            }
+
+            const std::string selector_text =
+                property_name.substr(open_paren + 1U, close_paren - open_paren - 1U);
+            const std::size_t comma = selector_text.find(',');
+            const std::string row_expression = trim_copy(selector_text.substr(0U, comma));
+            const std::string column_expression =
+                comma == std::string::npos ? std::string("1") : trim_copy(selector_text.substr(comma + 1U));
+            if (row_expression.empty() || column_expression.empty())
+            {
+                return std::nullopt;
+            }
+
+            const PrgValue row_value = evaluate_expression(row_expression, source_frame);
+            const PrgValue column_value = evaluate_expression(column_expression, source_frame);
+            const long long requested_row = std::llround(value_as_number(row_value));
+            const long long requested_column = std::llround(value_as_number(column_value));
+            if (requested_row < 1LL || requested_column < 1LL)
+            {
+                return std::nullopt;
+            }
+            return NativeListControlCellReference{
+                .row_slot = static_cast<std::size_t>(requested_row - 1LL),
+                .column_slot = static_cast<std::size_t>(requested_column - 1LL)};
+        };
+
         const auto perform_property_write = [&]() -> bool
         {
             if (invoke_native_object_method_body_if_present(
@@ -3979,6 +4035,15 @@ namespace copperfin::runtime
                 if (is_native_listitemid_member_name(runtime_object, normalized_property_name))
                 {
                     return write_native_list_control_item_id(runtime_object, assigned_value);
+                }
+                if (const auto list_cell = resolve_list_member_cell();
+                    list_cell.has_value())
+                {
+                    return write_native_list_control_cell(
+                        runtime_object,
+                        list_cell->row_slot,
+                        list_cell->column_slot,
+                        assigned_value);
                 }
                 if (const auto selected_slot = resolve_selected_member_slot();
                     selected_slot.has_value())

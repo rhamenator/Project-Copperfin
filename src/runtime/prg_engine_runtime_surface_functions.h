@@ -31,6 +31,11 @@ struct RuntimeSurfaceCursorSnapshot {
     std::vector<RuntimeSurfaceCursorRow> rows;
 };
 
+struct NativeListControlCellReference {
+    std::size_t row_slot = 0U;
+    std::size_t column_slot = 0U;
+};
+
 bool is_native_identity_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_olecontrol_creation_time_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_olecontrol_object_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -75,6 +80,16 @@ std::optional<PrgValue> invoke_native_collection_method(RuntimeOleObjectState& r
 std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState& runtime_object,
                                                           const std::string& normalized_method_name,
                                                           const std::vector<PrgValue>& arguments);
+std::optional<NativeListControlCellReference> parse_native_list_control_list_member_cell(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& member_name);
+std::optional<PrgValue> read_native_list_control_cell(RuntimeOleObjectState& runtime_object,
+                                                      std::size_t row_slot,
+                                                      std::size_t column_slot);
+bool write_native_list_control_cell(RuntimeOleObjectState& runtime_object,
+                                    std::size_t row_slot,
+                                    std::size_t column_slot,
+                                    const PrgValue& assigned_value);
 std::optional<std::size_t> parse_native_list_control_selected_member_slot(const RuntimeOleObjectState& runtime_object,
                                                                           const std::string& member_name);
 std::optional<long long> parse_native_list_control_selectedid_member_item_id(const RuntimeOleObjectState& runtime_object,

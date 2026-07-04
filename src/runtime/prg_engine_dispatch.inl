@@ -555,7 +555,8 @@
                         const std::string member_path = assignment_identifier.substr(separator + 1U);
                         const std::string normalized_member_path = normalize_identifier(member_path);
                         if (starts_with_insensitive(normalized_member_path, "selected(") ||
-                            starts_with_insensitive(normalized_member_path, "selectedid("))
+                            starts_with_insensitive(normalized_member_path, "selectedid(") ||
+                            starts_with_insensitive(normalized_member_path, "list("))
                         {
                             const PrgValue object_value = lookup_variable(frame, object_part);
                             auto object = resolve_ole_object(object_value);
