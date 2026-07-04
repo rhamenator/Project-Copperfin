@@ -542,7 +542,8 @@ bool is_builtin_native_runtime_method_name(
 
     if (normalized_member_name == "additem" ||
         normalized_member_name == "addlistitem" ||
-        normalized_member_name == "removeitem") {
+        normalized_member_name == "removeitem" ||
+        normalized_member_name == "removelistitem") {
         const std::string normalized_base_class =
             normalize_identifier(trim_copy(runtime_object.base_class_name));
         return normalized_base_class == "combobox" ||
@@ -750,6 +751,56 @@ std::int64_t next_native_list_control_item_id(const RuntimeOleObjectState& runti
         }
     }
     return next_id;
+}
+
+bool remove_native_list_control_slot(
+    RuntimeOleObjectState& runtime_object,
+    std::size_t slot) {
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return false;
+    }
+
+    materialize_native_list_control_rows(runtime_object);
+    if (slot >= runtime_object.collection_items.size()) {
+        return false;
+    }
+
+    if (slot < runtime_object.list_rows.size()) {
+        runtime_object.list_rows.erase(
+            runtime_object.list_rows.begin() + static_cast<std::ptrdiff_t>(slot));
+    }
+    if (slot < runtime_object.collection_item_keys.size()) {
+        runtime_object.collection_item_keys.erase(
+            runtime_object.collection_item_keys.begin() + static_cast<std::ptrdiff_t>(slot));
+    }
+    if (slot < runtime_object.list_selected.size()) {
+        runtime_object.list_selected.erase(
+            runtime_object.list_selected.begin() + static_cast<std::ptrdiff_t>(slot));
+    }
+    sync_native_list_control_primary_state_from_rows(runtime_object);
+    sync_native_list_control_count_impl(runtime_object);
+
+    const auto listindex = runtime_object.properties.find("listindex");
+    if (listindex != runtime_object.properties.end()) {
+        long long selected_index = std::llround(value_as_number(listindex->second));
+        const long long removed_index = static_cast<long long>(slot + 1U);
+        const long long new_count = static_cast<long long>(runtime_object.collection_items.size());
+        if (selected_index == removed_index) {
+            if (new_count <= 0LL) {
+                selected_index = 0LL;
+            } else if (selected_index > new_count) {
+                selected_index = new_count;
+            }
+        } else if (selected_index > removed_index) {
+            --selected_index;
+        } else if (selected_index > new_count) {
+            selected_index = std::max(0LL, new_count);
+        }
+        listindex->second = make_number_value(static_cast<double>(selected_index));
+    }
+
+    sync_native_list_control_displayvalue_from_selection_impl(runtime_object);
+    return true;
 }
 
 std::optional<std::size_t> parse_native_list_control_selected_member_slot_impl(
@@ -1921,6 +1972,9 @@ std::vector<std::string> collect_object_member_names(const RuntimeOleObjectState
         if (is_builtin_native_runtime_method_name(runtime_object, "removeitem")) {
             unique_members.insert("removeitem");
         }
+        if (is_builtin_native_runtime_method_name(runtime_object, "removelistitem")) {
+            unique_members.insert("removelistitem");
+        }
         if (is_native_collection_object(runtime_object)) {
             unique_members.insert("item");
             if (!runtime_object.read_only_collection_surface) {
@@ -2614,41 +2668,30 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
             static_cast<std::size_t>(requested_index) > runtime_object.collection_items.size()) {
             return make_empty_value();
         }
+        if (!remove_native_list_control_slot(
+                runtime_object,
+                static_cast<std::size_t>(requested_index - 1LL))) {
+            return make_empty_value();
+        }
+        return make_empty_value();
+    }
 
-        if (!runtime_object.list_rows.empty()) {
-            runtime_object.list_rows.erase(
-                runtime_object.list_rows.begin() + static_cast<std::ptrdiff_t>(requested_index - 1LL));
-        }
-        if (static_cast<std::size_t>(requested_index) <= runtime_object.collection_item_keys.size()) {
-            runtime_object.collection_item_keys.erase(
-                runtime_object.collection_item_keys.begin() + static_cast<std::ptrdiff_t>(requested_index - 1LL));
-        }
-        if (static_cast<std::size_t>(requested_index) <= runtime_object.list_selected.size()) {
-            runtime_object.list_selected.erase(
-                runtime_object.list_selected.begin() + static_cast<std::ptrdiff_t>(requested_index - 1LL));
-        }
-        sync_native_list_control_primary_state_from_rows(runtime_object);
-        sync_native_list_control_count_impl(runtime_object);
-
-        const auto listindex = runtime_object.properties.find("listindex");
-        if (listindex != runtime_object.properties.end()) {
-            long long selected_index = std::llround(value_as_number(listindex->second));
-            const long long new_count = static_cast<long long>(runtime_object.collection_items.size());
-            if (selected_index == requested_index) {
-                if (new_count <= 0LL) {
-                    selected_index = 0LL;
-                } else if (selected_index > new_count) {
-                    selected_index = new_count;
-                }
-            } else if (selected_index > requested_index) {
-                --selected_index;
-            } else if (selected_index > new_count) {
-                selected_index = std::max(0LL, new_count);
-            }
-            listindex->second = make_number_value(static_cast<double>(selected_index));
+    if (normalized_method_name == "removelistitem") {
+        if (arguments.empty() ||
+            !native_list_control_rowsourcetype_supports_additem(runtime_object)) {
+            return make_empty_value();
         }
 
-        sync_native_list_control_displayvalue_from_selection_impl(runtime_object);
+        const long long requested_item_id = std::llround(value_as_number(arguments[0]));
+        if (requested_item_id < 1LL) {
+            return make_empty_value();
+        }
+
+        const auto slot = find_native_list_control_row_by_item_id(runtime_object, requested_item_id);
+        if (!slot.has_value() ||
+            !remove_native_list_control_slot(runtime_object, *slot)) {
+            return make_empty_value();
+        }
         return make_empty_value();
     }
 
