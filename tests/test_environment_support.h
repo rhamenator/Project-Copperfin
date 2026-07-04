@@ -64,6 +64,16 @@ struct ScopedEnvironmentValue {
         }
     }
 
+    ScopedEnvironmentValue(std::string environment_name, std::string initial_value)
+        : ScopedEnvironmentValue(std::move(environment_name), false) {
+        set(initial_value);
+    }
+
+    ScopedEnvironmentValue(std::string environment_name, const char* initial_value)
+        : ScopedEnvironmentValue(
+              std::move(environment_name),
+              initial_value == nullptr ? std::string() : std::string(initial_value)) {}
+
     void set(const std::string& value) const {
         if (name.empty()) {
             return;

@@ -24,6 +24,8 @@
 
 namespace {
 
+using copperfin::test_support::ScopedEnvironmentValue;
+
 int failures = 0;
 
 void expect(bool condition, const std::string& message) {
@@ -274,19 +276,6 @@ struct ProcessResult {
     int exit_code = -1;
     std::string stdout_text;
     std::string stderr_text;
-};
-
-class ScopedEnvironmentVariable {
-public:
-    ScopedEnvironmentVariable(const char* name, std::string value)
-        : scoped_(name == nullptr ? std::string() : std::string(name), false) {
-        if (!scoped_.name.empty()) {
-            scoped_.set(value);
-        }
-    }
-
-private:
-    copperfin::test_support::ScopedEnvironmentValue scoped_;
 };
 
 ProcessResult run_process_capture(
@@ -979,7 +968,7 @@ void test_runtime_host_rejects_extension_payload_basename_fallback(const std::st
         "dotnet_story=none\n");
 
     {
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
         const auto process = run_process_capture(
             deployed_runtime_host.string(),
             {"--manifest", manifest_path.string()},
@@ -1001,8 +990,8 @@ void test_runtime_host_rejects_extension_payload_basename_fallback(const std::st
     }
 
     {
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
-        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "pt-BR");
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "pt-BR");
         const auto process = run_process_capture(
             deployed_runtime_host.string(),
             {"--manifest", manifest_path.string()},
@@ -1069,8 +1058,8 @@ void test_runtime_host_manifest_verification_errors_localize_without_changing_co
         "dotnet_story=none\n");
 
     {
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
-        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "es-419");
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "es-419");
         const auto process = run_process_capture(
             deployed_runtime_host.string(),
             {"--manifest", manifest_path.string()},
@@ -1128,8 +1117,8 @@ void test_runtime_host_security_denial_audit_details_localize_without_changing_a
             "dotnet_story=none\n";
         write_text(manifest_path, manifest_text);
 
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
-        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "es-419");
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "es-419");
         const auto process = run_process_capture(
             runtime_host_path,
             {"--manifest", manifest_path.string()},
@@ -1200,8 +1189,8 @@ void test_runtime_host_security_denial_audit_details_localize_without_changing_a
             "dotnet_story=none\n";
         write_text(manifest_path, manifest_text);
 
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
-        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "pt-BR");
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "pt-BR");
         const auto process = run_process_capture(
             deployed_runtime_host.string(),
             {
@@ -1256,8 +1245,8 @@ void test_runtime_host_security_denial_audit_details_localize_without_changing_a
             "dotnet_story=none\n";
         write_text(manifest_path, manifest_text);
 
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
-        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "es-419");
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "es-419");
         const auto process = run_process_capture(
             runtime_host_path,
             {"--manifest", manifest_path.string()},
@@ -1325,7 +1314,7 @@ void test_runtime_host_validates_manifest_versions_without_changing_error_contra
     write_text(unsupported_manifest_path, "manifest_version=99\n" + base_manifest);
 
     {
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
         const auto process = run_process_capture(
             runtime_host_path,
             {"--manifest", supported_manifest_path.string()},
@@ -1337,7 +1326,7 @@ void test_runtime_host_validates_manifest_versions_without_changing_error_contra
     }
 
     {
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
         const auto process = run_process_capture(
             runtime_host_path,
             {"--manifest", missing_manifest_path.string()},
@@ -1351,8 +1340,8 @@ void test_runtime_host_validates_manifest_versions_without_changing_error_contra
     }
 
     {
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
-        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "es-419");
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "es-419");
         const auto process = run_process_capture(
             runtime_host_path,
             {"--manifest", unsupported_manifest_path.string()},
@@ -1405,9 +1394,9 @@ void test_runtime_host_rejects_ai_federation_planning_without_ai_permission(cons
            "runtime host should report the missing ai.mcp permission for the default developer role");
 
     {
-        ScopedEnvironmentVariable allow_ai_role("COPPERFIN_SECURITY_ROLE", "runtime-operator");
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
-        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "es-419");
+        ScopedEnvironmentValue allow_ai_role("COPPERFIN_SECURITY_ROLE", "runtime-operator");
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "es-419");
         const auto allowed_process = run_process_capture(
             runtime_host_path,
             {
@@ -1433,9 +1422,9 @@ void test_runtime_host_rejects_ai_federation_planning_without_ai_permission(cons
     }
 
     {
-        ScopedEnvironmentVariable allow_ai_role("COPPERFIN_SECURITY_ROLE", "runtime-operator");
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
-        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "qps-ploc");
+        ScopedEnvironmentValue allow_ai_role("COPPERFIN_SECURITY_ROLE", "runtime-operator");
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "qps-ploc");
         const std::string pseudo_translation_error = copperfin::localization::pseudo_localize(
             "Only first-pass SELECT...FROM SQL translation is supported.");
         const auto allowed_process = run_process_capture(
@@ -2598,7 +2587,7 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
     write_runtime_host_usage_catalogs(locale_root);
 
     {
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
         const auto process = run_process_capture(runtime_host_path, {}, temp_root);
         expect(process.exit_code == 2,
                "#2349: runtime host without manifest should keep the usage exit code");
@@ -2609,8 +2598,8 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
     }
 
     {
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
-        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "es-419");
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "es-419");
         const auto process = run_process_capture(runtime_host_path, {}, temp_root);
         expect(process.exit_code == 2,
                "#2585: es-419 runtime host usage should keep the usage exit code");
@@ -2625,8 +2614,8 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
     }
 
     {
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
-        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "qps-ploc");
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "qps-ploc");
         const auto process = run_process_capture(runtime_host_path, {}, temp_root);
         expect(process.exit_code == 2,
                "#2349: pseudo-localized runtime host usage should keep the usage exit code");
@@ -2697,8 +2686,8 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
     }
 
     {
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
-        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "es-419");
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "es-419");
 
         const fs::path bridge_manifest_path = temp_root / "bridge_es.cfmanifest";
         const fs::path bridge_source_path = temp_root / "bridge_es.prg";
@@ -2737,8 +2726,8 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
     }
 
     {
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
-        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "pt-BR");
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "pt-BR");
 
         const auto unknown_argument = run_process_capture(runtime_host_path, {"--unknown-option"}, temp_root);
         expect(unknown_argument.exit_code == 2,
@@ -2833,7 +2822,7 @@ void test_runtime_host_debug_errors_localize_without_changing_command_tokens(con
         "dotnet_story=none\n");
 
     {
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
         const auto process = run_process_capture(
             runtime_host_path,
             {
@@ -2853,8 +2842,8 @@ void test_runtime_host_debug_errors_localize_without_changing_command_tokens(con
     }
 
     {
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
-        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "es-419");
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "es-419");
         const auto process = run_process_capture(
             runtime_host_path,
             {
@@ -2875,8 +2864,8 @@ void test_runtime_host_debug_errors_localize_without_changing_command_tokens(con
     }
 
     {
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
-        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "pt-BR");
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "pt-BR");
         const auto process = run_process_capture(
             runtime_host_path,
             {
@@ -2898,8 +2887,8 @@ void test_runtime_host_debug_errors_localize_without_changing_command_tokens(con
     }
 
     {
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
-        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "pt-BR");
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "pt-BR");
         const auto process = run_process_capture(
             runtime_host_path,
             {
@@ -2921,8 +2910,8 @@ void test_runtime_host_debug_errors_localize_without_changing_command_tokens(con
     }
 
     {
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
-        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "qps-ploc");
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "qps-ploc");
         const auto process = run_process_capture(
             runtime_host_path,
             {
@@ -2977,7 +2966,7 @@ void test_runtime_host_pause_messages_localize_without_changing_pause_reasons(
 
     {
         write_text(startup_path, "RETURN\n");
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
         const auto process = run_process_capture(
             runtime_host_path,
             {
@@ -3002,8 +2991,8 @@ void test_runtime_host_pause_messages_localize_without_changing_pause_reasons(
             "LOCAL nValue\n"
             "nValue = 1\n"
             "RETURN\n");
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
-        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "es-419");
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "es-419");
         const auto process = run_process_capture(
             runtime_host_path,
             {
@@ -3027,8 +3016,8 @@ void test_runtime_host_pause_messages_localize_without_changing_pause_reasons(
             startup_path,
             "READ EVENTS\n"
             "RETURN\n");
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
-        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "pt-BR");
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "pt-BR");
         const auto process = run_process_capture(
             runtime_host_path,
             {
@@ -3054,8 +3043,8 @@ void test_runtime_host_pause_messages_localize_without_changing_pause_reasons(
             "LOCAL nValue\n"
             "nValue = 1\n"
             "RETURN\n");
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
-        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "qps-ploc");
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "qps-ploc");
         const auto process = run_process_capture(
             runtime_host_path,
             {
@@ -3109,8 +3098,8 @@ void test_runtime_host_watch_errors_localize_without_changing_watch_fields(
         "dotnet_story=none\n");
 
     {
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
-        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "pt-BR");
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "pt-BR");
         const auto process = run_process_capture(
             runtime_host_path,
             {
@@ -3138,8 +3127,8 @@ void test_runtime_host_watch_errors_localize_without_changing_watch_fields(
     }
 
     {
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
-        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "qps-ploc");
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "qps-ploc");
         const auto process = run_process_capture(
             runtime_host_path,
             {
@@ -3198,7 +3187,7 @@ void test_runtime_host_quit_prompt_localizes_without_changing_confirmation_token
         "dotnet_story=none\n");
 
     {
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
         const auto process = run_process_capture(
             runtime_host_path,
             {"--manifest", manifest_path.string()},
@@ -3211,8 +3200,8 @@ void test_runtime_host_quit_prompt_localizes_without_changing_confirmation_token
     }
 
     {
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
-        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "es-419");
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "es-419");
         const auto process = run_process_capture(
             runtime_host_path,
             {"--manifest", manifest_path.string()},
@@ -3227,8 +3216,8 @@ void test_runtime_host_quit_prompt_localizes_without_changing_confirmation_token
     }
 
     {
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
-        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "pt-BR");
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "pt-BR");
         const auto process = run_process_capture(
             runtime_host_path,
             {"--manifest", manifest_path.string()},
@@ -3241,8 +3230,8 @@ void test_runtime_host_quit_prompt_localizes_without_changing_confirmation_token
     }
 
     {
-        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
-        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "qps-ploc");
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "qps-ploc");
         const auto process = run_process_capture(
             runtime_host_path,
             {"--manifest", manifest_path.string()},
