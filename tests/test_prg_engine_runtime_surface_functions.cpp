@@ -37666,6 +37666,147 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_setfocus_builtin_fallback_updates_owner_activecontrol()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_setfocus_builtin";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_setfocus_builtin.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "oForm.txtName.SetFocus\n"
+            "lHasActiveAfterText = PEMSTATUS(oForm, 'ActiveControl', 1)\n"
+            "cActiveAfterText = oForm.ActiveControl.BaseClass\n"
+            "oForm.cmdSave.SetFocus()\n"
+            "cActiveAfterButton = oForm.ActiveControl.BaseClass\n"
+            "RETURN\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    ADD OBJECT txtName AS TextBox\n"
+            "    ADD OBJECT cmdSave AS CommandButton\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native SetFocus builtin fallback script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto has_active_after_text = state.globals.find("lhasactiveaftertext");
+        expect(has_active_after_text != state.globals.end(),
+               "native SetFocus builtin fallback script should preserve ActiveControl presence");
+        if (has_active_after_text != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(has_active_after_text->second) == "true",
+                   "native SetFocus builtin fallback should materialize ActiveControl on the owner form");
+        }
+
+        const auto active_after_text = state.globals.find("cactiveaftertext");
+        expect(active_after_text != state.globals.end(),
+               "native SetFocus builtin fallback script should preserve first focus target metadata");
+        if (active_after_text != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(active_after_text->second) == "TextBox",
+                   "native SetFocus builtin fallback should set ActiveControl to the focused text box");
+        }
+
+        const auto active_after_button = state.globals.find("cactiveafterbutton");
+        expect(active_after_button != state.globals.end(),
+               "native SetFocus builtin fallback script should preserve second focus target metadata");
+        if (active_after_button != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(active_after_button->second) == "CommandButton",
+                   "native SetFocus builtin fallback should update ActiveControl to the focused button");
+        }
+
+        const std::size_t setfocus_event_count = static_cast<std::size_t>(std::count_if(
+            state.events.begin(),
+            state.events.end(),
+            [](const auto &event)
+            {
+                return event.category == "prg.object.setfocus";
+            }));
+        expect(setfocus_event_count == 2U,
+               "native SetFocus builtin fallback should emit one setfocus event per representative focus call");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_native_setfocus_override_wins_over_builtin_activecontrol_toggle()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_setfocus_override";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_setfocus_override.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "oForm.txtName.SetFocus()\n"
+            "lSetFocusRan = oForm.txtName.lSetFocusRan\n"
+            "lHasActiveControl = PEMSTATUS(oForm, 'ActiveControl', 1)\n"
+            "RETURN\n"
+            "DEFINE CLASS FocusableBox AS TextBox\n"
+            "    lSetFocusRan = .F.\n"
+            "    PROCEDURE SetFocus\n"
+            "        THIS.lSetFocusRan = .T.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    ADD OBJECT txtName AS FocusableBox\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native SetFocus override script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto setfocus_ran = state.globals.find("lsetfocusran");
+        expect(setfocus_ran != state.globals.end(),
+               "native SetFocus override script should preserve override flag");
+        if (setfocus_ran != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(setfocus_ran->second) == "true",
+                   "native SetFocus override should still invoke the class-defined SetFocus method");
+        }
+
+        const auto has_active_control = state.globals.find("lhasactivecontrol");
+        expect(has_active_control != state.globals.end(),
+               "native SetFocus override script should preserve ActiveControl presence state");
+        if (has_active_control != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(has_active_control->second) == "false",
+                   "native SetFocus override should not fall through to the builtin ActiveControl update");
+        }
+
+        const bool has_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   event.detail == "FocusableBox.SetFocus";
+        });
+        expect(has_invoke_event,
+               "native SetFocus override should emit a prg.object.invoke event");
+
+        const bool has_builtin_setfocus_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.setfocus";
+        });
+        expect(!has_builtin_setfocus_event,
+               "native SetFocus override should not emit the builtin prg.object.setfocus event");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_same_prg_native_bare_helper_calls_resolve_to_current_instance_before_top_level_routines()
     {
         namespace fs = std::filesystem;
@@ -42641,6 +42782,8 @@ int main()
     test_native_refresh_builtin_fallback_succeeds_for_form_and_children();
     test_native_show_hide_builtin_fallback_updates_visible_state();
     test_native_show_override_wins_over_builtin_visible_toggle();
+    test_native_setfocus_builtin_fallback_updates_owner_activecontrol();
+    test_native_setfocus_override_wins_over_builtin_activecontrol_toggle();
     test_same_prg_native_bare_helper_calls_resolve_to_current_instance_before_top_level_routines();
     test_inherited_external_prg_base_methods_resolve_bare_helper_calls_against_defining_library();
     test_external_prg_base_methods_support_dodefault_dispatch();

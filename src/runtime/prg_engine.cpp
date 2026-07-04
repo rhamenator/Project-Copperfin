@@ -214,6 +214,29 @@ namespace copperfin::runtime
                    normalized_base_class == "toolbar";
         }
 
+        bool is_native_focusable_runtime_object(const RuntimeOleObjectState &runtime_object)
+        {
+            if (runtime_object.class_hierarchy.empty())
+            {
+                return false;
+            }
+
+            const std::string normalized_base_class =
+                normalize_identifier(trim_copy(runtime_object.base_class_name));
+            return normalized_base_class == "checkbox" ||
+                   normalized_base_class == "combobox" ||
+                   normalized_base_class == "commandbutton" ||
+                   normalized_base_class == "editbox" ||
+                   normalized_base_class == "form" ||
+                   normalized_base_class == "grid" ||
+                   normalized_base_class == "listbox" ||
+                   normalized_base_class == "olecontrol" ||
+                   normalized_base_class == "optionbutton" ||
+                   normalized_base_class == "page" ||
+                   normalized_base_class == "spinner" ||
+                   normalized_base_class == "textbox";
+        }
+
         bool is_builtin_native_noarg_method_name(
             const RuntimeOleObjectState &runtime_object,
             const std::string &normalized_member_name)
@@ -225,6 +248,12 @@ namespace copperfin::runtime
 
             if ((normalized_member_name == "show" || normalized_member_name == "hide") &&
                 is_native_visual_runtime_object(runtime_object))
+            {
+                return true;
+            }
+
+            if (normalized_member_name == "setfocus" &&
+                is_native_focusable_runtime_object(runtime_object))
             {
                 return true;
             }
@@ -1205,6 +1234,39 @@ namespace copperfin::runtime
                     runtime_object->last_action = effective_member_path + "()";
                     ++runtime_object->action_count;
                     events.push_back({.category = visible ? "prg.object.show" : "prg.object.hide",
+                                      .detail = runtime_object->prog_id + "." + effective_member_path,
+                                      .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+                    return make_empty_value();
+                }
+                if (leaf == "setfocus" &&
+                    is_native_focusable_runtime_object(*runtime_object))
+                {
+                    const PrgValue runtime_object_reference =
+                        make_string_value("object:" + runtime_object->prog_id + "#" + std::to_string(runtime_object->handle));
+                    if (const auto owner_form_reference = native_object_owner_form_reference(*runtime_object);
+                        owner_form_reference.has_value())
+                    {
+                        if (auto owner_form = resolve_ole_object(*owner_form_reference);
+                            owner_form.has_value())
+                        {
+                            (void)write_native_property_if_present(
+                                **owner_form,
+                                "activecontrol",
+                                runtime_object_reference,
+                                frame);
+                        }
+                    }
+                    else if (normalize_identifier(trim_copy(runtime_object->base_class_name)) == "form")
+                    {
+                        (void)write_native_property_if_present(
+                            *runtime_object,
+                            "activecontrol",
+                            runtime_object_reference,
+                            frame);
+                    }
+                    runtime_object->last_action = effective_member_path + "()";
+                    ++runtime_object->action_count;
+                    events.push_back({.category = "prg.object.setfocus",
                                       .detail = runtime_object->prog_id + "." + effective_member_path,
                                       .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
                     return make_empty_value();
