@@ -6620,6 +6620,92 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_form_closable_defaults_mutates_and_stays_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_form_closable";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_form_closable.prg";
+        write_text(
+            main_path,
+            "oBaseForm = CREATEOBJECT('Form')\n"
+            "lBaseHasClosable = PEMSTATUS(oBaseForm, 'Closable', 1)\n"
+            "lBaseClosableReadOnly = PEMSTATUS(oBaseForm, 'Closable', 5)\n"
+            "lBaseBefore = oBaseForm.Closable\n"
+            "xBaseGetPemBefore = GETPEM(oBaseForm, 'Closable')\n"
+            "oBaseForm.Closable = .F.\n"
+            "lBaseAfterDirectAssign = oBaseForm.Closable\n"
+            "lBaseSetPem = SETPEM(oBaseForm, 'Closable', .T.)\n"
+            "lBaseAfterSetPem = oBaseForm.Closable\n"
+            "lBaseAddProperty = ADDPROPERTY(oBaseForm, 'Closable', .F.)\n"
+            "lBaseRemoveProperty = REMOVEPROPERTY(oBaseForm, 'Closable')\n"
+            "oDerived = CREATEOBJECT('DemoForm')\n"
+            "lDerivedBefore = oDerived.Closable\n"
+            "cChildBefore = oDerived.cmdSave.ReadClosable()\n"
+            "oDerived.cmdSave.DisableClose()\n"
+            "lDerivedAfterChild = oDerived.Closable\n"
+            "xDerivedGetPem = GETPEM(oDerived, 'Closable')\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oDerived, 1)\n"
+            "lPropHasClosable = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'CLOSABLE'\n"
+            "        lPropHasClosable = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "RETURN\n"
+            "DEFINE CLASS SaveButton AS CommandButton\n"
+            "    FUNCTION ReadClosable\n"
+            "        RETURN IIF(THISFORM.Closable, 'T', 'F')\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE DisableClose\n"
+            "        THISFORM.Closable = .F.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DemoForm AS Form\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Form Closable property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lbasehasclosable", "true");
+        check("lbaseclosablereadonly", "false");
+        check("lbasebefore", "true");
+        check("xbasegetpembefore", "true");
+        check("lbaseafterdirectassign", "false");
+        check("lbasesetpem", "true");
+        check("lbaseaftersetpem", "true");
+        check("lbaseaddproperty", "false");
+        check("lbaseremoveproperty", "false");
+        check("lderivedbefore", "true");
+        check("cchildbefore", "T");
+        check("lderivedafterchild", "false");
+        check("xderivedgetpem", "false");
+        check("lprophasclosable", "true");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_visual_enabled_defaults_mutates_and_stays_builtin()
     {
         namespace fs = std::filesystem;
@@ -45519,6 +45605,7 @@ int main()
     test_native_show_override_wins_over_builtin_visible_toggle();
     test_native_form_showwindow_defaults_mutates_and_stays_builtin();
     test_native_form_controlbox_defaults_mutates_and_stays_builtin();
+    test_native_form_closable_defaults_mutates_and_stays_builtin();
     test_native_setfocus_builtin_fallback_updates_owner_activecontrol();
     test_native_setfocus_override_wins_over_builtin_activecontrol_toggle();
     test_runtime_application_activeform_aliases_track_representative_native_form();
