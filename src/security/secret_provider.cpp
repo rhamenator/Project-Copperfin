@@ -4,11 +4,11 @@
 
 #include "copperfin/security/secret_provider.h"
 
+#include "copperfin/platform/environment.h"
 #include "localized_text.h"
 
 #include <algorithm>
 #include <cctype>
-#include <cstdlib>
 
 namespace copperfin::security {
 
@@ -40,34 +40,20 @@ SecretResolveResult resolve_secret_reference(const std::string& reference) {
         return {.ok = false, .value = {}, .error = security_text("Security.Secret.Error.VariableNameInvalid")};
     }
 
-    std::string value;
-#ifdef _WIN32
-    char* raw = nullptr;
-    std::size_t length = 0;
-    if (_dupenv_s(&raw, &length, variable_name.c_str()) != 0 || raw == nullptr) {
+    const std::optional<std::string> value = platform::read_environment_variable(variable_name);
+    if (!value.has_value()) {
         return {.ok = false,
                 .value = {},
                 .error = security_text("Security.Secret.Error.EnvironmentVariableNotFound", {{"variableName", variable_name}})};
     }
-    value = raw;
-    std::free(raw);
-#else
-    const char* raw = std::getenv(variable_name.c_str());
-    if (raw == nullptr) {
-        return {.ok = false,
-                .value = {},
-                .error = security_text("Security.Secret.Error.EnvironmentVariableNotFound", {{"variableName", variable_name}})};
-    }
-    value = raw;
-#endif
 
-    if (value.empty()) {
+    if (value->empty()) {
         return {.ok = false,
                 .value = {},
                 .error = security_text("Security.Secret.Error.EnvironmentVariableEmpty", {{"variableName", variable_name}})};
     }
 
-    return {.ok = true, .value = value, .error = {}};
+    return {.ok = true, .value = *value, .error = {}};
 }
 
 }  // namespace copperfin::security

@@ -3,10 +3,10 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/localization/localization.h"
+#include "copperfin/platform/environment.h"
 
 #include <algorithm>
 #include <cctype>
-#include <cstdlib>
 #include <fstream>
 #include <iterator>
 #include <set>
@@ -39,24 +39,6 @@ void append_unique(std::vector<std::string>& values, const std::string& value) {
     if (!value.empty() && std::find(values.begin(), values.end(), value) == values.end()) {
         values.push_back(value);
     }
-}
-
-std::string environment_value(const char* name) {
-#ifdef _WIN32
-    char* raw = nullptr;
-    std::size_t length = 0;
-    if (_dupenv_s(&raw, &length, name) != 0 || raw == nullptr) {
-        return {};
-    }
-    std::string value(raw);
-    std::free(raw);
-    return value;
-#else
-    if (const char* raw = std::getenv(name); raw != nullptr) {
-        return raw;
-    }
-    return {};
-#endif
 }
 
 void skip_json_space(std::string_view text, std::size_t& offset) {
@@ -341,7 +323,7 @@ std::string select_locale(std::string_view explicit_locale) {
     if (!trim_copy(explicit_locale).empty()) {
         return normalize_locale(explicit_locale);
     }
-    const std::string configured = environment_value("COPPERFIN_LOCALE");
+    const std::string configured = platform::read_environment_variable_or_empty("COPPERFIN_LOCALE");
     if (!trim_copy(configured).empty()) {
         return normalize_locale(configured);
     }
@@ -445,7 +427,7 @@ LocalizedCatalog load_catalogs(const std::filesystem::path& locale_root, std::st
 }
 
 std::filesystem::path resolve_catalog_root(const std::filesystem::path& executable_path) {
-    const std::string configured = environment_value("COPPERFIN_LOCALE_DIR");
+    const std::string configured = platform::read_environment_variable_or_empty("COPPERFIN_LOCALE_DIR");
     if (!trim_copy(configured).empty()) {
         return configured;
     }

@@ -4,9 +4,9 @@
 
 #include "copperfin/licensing/license_status.h"
 #include "copperfin/licensing/ed25519_public_key.h"
+#include "copperfin/platform/environment.h"
 
 #include <array>
-#include <cstdlib>
 #include <ctime>
 #include <fstream>
 #include <sstream>
@@ -76,22 +76,8 @@ LicenseStatus load_license_status(
     std::filesystem::path resolved_path;
     bool path_was_explicit = false;
 
-    std::string env_license_path;
-    bool has_env_license_path = false;
-#ifdef _WIN32
-    char* raw_env_value = nullptr;
-    std::size_t raw_env_length = 0;
-    if (_dupenv_s(&raw_env_value, &raw_env_length, "COPPERFIN_LICENSE_PATH") == 0 && raw_env_value != nullptr) {
-        env_license_path = raw_env_value;
-        has_env_license_path = !env_license_path.empty();
-        std::free(raw_env_value);
-    }
-#else
-    if (const char* raw_env_value = std::getenv("COPPERFIN_LICENSE_PATH"); raw_env_value != nullptr && raw_env_value[0] != '\0') {
-        env_license_path = raw_env_value;
-        has_env_license_path = true;
-    }
-#endif
+    const std::string env_license_path = platform::read_environment_variable_or_empty("COPPERFIN_LICENSE_PATH");
+    const bool has_env_license_path = !env_license_path.empty();
 
     if (explicit_override.has_value() && !explicit_override->empty()) {
         resolved_path = *explicit_override;

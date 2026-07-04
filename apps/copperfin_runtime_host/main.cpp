@@ -4,6 +4,7 @@
 
 #include "copperfin/licensing/license_status.h"
 #include "copperfin/localization/localization.h"
+#include "copperfin/platform/environment.h"
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/runtime/xasset_methods.h"
 #include "copperfin/platform/federation_execution.h"
@@ -16,7 +17,6 @@
 
 #include <algorithm>
 #include <cctype>
-#include <cstdlib>
 #include <exception>
 #include <filesystem>
 #include <fstream>
@@ -46,27 +46,6 @@ std::string lowercase_copy(std::string value) {
         return static_cast<char>(std::tolower(ch));
     });
     return value;
-}
-
-std::string environment_value(const char* name) {
-    if (name == nullptr || *name == '\0') {
-        return {};
-    }
-#ifdef _WIN32
-    char* raw_value = nullptr;
-    std::size_t raw_length = 0;
-    if (_dupenv_s(&raw_value, &raw_length, name) == 0 && raw_value != nullptr) {
-        std::string result(raw_value);
-        std::free(raw_value);
-        return result;
-    }
-    return {};
-#else
-    if (const char* raw_value = std::getenv(name); raw_value != nullptr) {
-        return raw_value;
-    }
-    return {};
-#endif
 }
 
 void set_environment_value(const char* name, const std::string& value) {
@@ -986,7 +965,8 @@ bool verify_manifest_hashes(
 }
 
 std::string resolve_federation_security_role() {
-    const std::string configured_role = trim_copy(environment_value("COPPERFIN_SECURITY_ROLE"));
+    const std::string configured_role =
+        trim_copy(copperfin::platform::read_environment_variable_or_empty("COPPERFIN_SECURITY_ROLE"));
     return configured_role.empty() ? "developer" : configured_role;
 }
 
@@ -1003,7 +983,7 @@ copperfin::localization::LocalizedCatalog load_localization(
     const char* executable_path,
     const std::string& explicit_locale) {
     const std::filesystem::path locale_root = copperfin::localization::resolve_catalog_root(executable_path);
-    if (trim_copy(environment_value("COPPERFIN_LOCALE_DIR")).empty()) {
+    if (trim_copy(copperfin::platform::read_environment_variable_or_empty("COPPERFIN_LOCALE_DIR")).empty()) {
         set_environment_value("COPPERFIN_LOCALE_DIR", locale_root.string());
     }
     return copperfin::localization::load_catalogs(

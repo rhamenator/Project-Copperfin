@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "runtime_pipeline_support.h"
+#include "copperfin/platform/environment.h"
 
 namespace copperfin::runtime {
 
@@ -466,21 +467,8 @@ std::string resolve_security_role(bool security_enabled) {
         return {};
     }
 
-    std::string role;
-#ifdef _WIN32
-    char* raw = nullptr;
-    std::size_t length = 0;
-    if (_dupenv_s(&raw, &length, "COPPERFIN_SECURITY_ROLE") == 0 && raw != nullptr) {
-        role = raw;
-        std::free(raw);
-    }
-#else
-    if (const char* raw = std::getenv("COPPERFIN_SECURITY_ROLE"); raw != nullptr) {
-        role = raw;
-    }
-#endif
-
-    role = trim_copy(role);
+    std::string role =
+        trim_copy(copperfin::platform::read_environment_variable_or_empty("COPPERFIN_SECURITY_ROLE"));
     if (!role.empty()) {
         return role;
     }

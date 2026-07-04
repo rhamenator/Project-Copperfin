@@ -3,9 +3,11 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/platform/database_model.h"
+#include "copperfin/platform/environment.h"
 #include "copperfin/platform/extensibility_model.h"
 #include "copperfin/localization/localization.h"
 #include "copperfin/security/security_model.h"
+#include "test_environment_support.h"
 
 #include <algorithm>
 #include <cstdlib>
@@ -693,6 +695,26 @@ void test_document_and_vector_mapping_paths() {
     }
 }
 
+void test_platform_environment_helper_reads_and_clears_variables() {
+    using copperfin::test_support::ScopedEnvironmentValue;
+    using copperfin::test_support::set_env_value;
+
+    ScopedEnvironmentValue scoped_value("COPPERFIN_TEST_PLATFORM_ENV");
+    expect(!copperfin::platform::read_environment_variable("COPPERFIN_TEST_PLATFORM_ENV").has_value(),
+           "platform env helper should report missing variables as nullopt");
+    expect(copperfin::platform::read_environment_variable_or_empty("COPPERFIN_TEST_PLATFORM_ENV").empty(),
+           "platform env helper should return an empty string for missing variables");
+
+    set_env_value("COPPERFIN_TEST_PLATFORM_ENV", "alpha-env", true);
+    const auto value = copperfin::platform::read_environment_variable("COPPERFIN_TEST_PLATFORM_ENV");
+    expect(value.has_value(), "platform env helper should read present variables");
+    if (value.has_value()) {
+        expect(*value == "alpha-env", "platform env helper should preserve the environment value");
+    }
+    expect(copperfin::platform::read_environment_variable_or_empty("COPPERFIN_TEST_PLATFORM_ENV") == "alpha-env",
+           "platform env helper should return present values through the string helper");
+}
+
 }  // namespace
 
 int main() {
@@ -701,6 +723,7 @@ int main() {
     test_dotnet_interop_policy_gateway();
     test_default_database_profile();
     test_document_and_vector_mapping_paths();
+    test_platform_environment_helper_reads_and_clears_variables();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

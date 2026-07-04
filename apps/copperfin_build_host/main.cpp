@@ -3,8 +3,9 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/licensing/license_status.h"
-#include "copperfin/platform/extensibility_model.h"
 #include "copperfin/localization/localization.h"
+#include "copperfin/platform/environment.h"
+#include "copperfin/platform/extensibility_model.h"
 #include "copperfin/runtime/runtime_pipeline.h"
 #include "copperfin/security/audit_stream.h"
 #include "copperfin/security/authorization.h"
@@ -17,7 +18,6 @@
 
 #include <algorithm>
 #include <cerrno>
-#include <cstdlib>
 #include <filesystem>
 #include <iostream>
 #if defined(_WIN32)
@@ -138,30 +138,13 @@ void print_warning_line(
     std::cout << message(catalog, "BuildHost.Prefix.Warning") << warning << "\n";
 }
 
-std::string environment_value(const char* name) {
-#ifdef _WIN32
-    char* raw = nullptr;
-    std::size_t length = 0;
-    if (_dupenv_s(&raw, &length, name) != 0 || raw == nullptr) {
-        return {};
-    }
-    std::string value(raw);
-    std::free(raw);
-    return value;
-#else
-    if (const char* raw = std::getenv(name); raw != nullptr) {
-        return raw;
-    }
-    return {};
-#endif
-}
-
 std::string resolve_runtime_host_path(const std::string& override_path, const std::string& executable_path) {
     if (!override_path.empty()) {
         return override_path;
     }
 
-    const std::string resolved = environment_value("COPPERFIN_RUNTIME_HOST_PATH");
+    const std::string resolved =
+        copperfin::platform::read_environment_variable_or_empty("COPPERFIN_RUNTIME_HOST_PATH");
     if (!resolved.empty()) {
         return resolved;
     }
@@ -387,19 +370,8 @@ int main(int argc, char** argv) {
     const auto security_profile = copperfin::security::default_native_security_profile();
 
     if (enable_security) {
-        std::string role_env;
-#ifdef _WIN32
-        char* role_env_raw = nullptr;
-        std::size_t role_env_length = 0;
-        if (_dupenv_s(&role_env_raw, &role_env_length, "COPPERFIN_SECURITY_ROLE") == 0 && role_env_raw != nullptr) {
-            role_env = role_env_raw;
-            std::free(role_env_raw);
-        }
-#else
-        if (const char* role_env_raw = std::getenv("COPPERFIN_SECURITY_ROLE"); role_env_raw != nullptr) {
-            role_env = role_env_raw;
-        }
-#endif
+        const std::string role_env =
+            copperfin::platform::read_environment_variable_or_empty("COPPERFIN_SECURITY_ROLE");
         if (!role_env.empty()) {
             security_role = role_env;
         }
@@ -434,19 +406,8 @@ int main(int argc, char** argv) {
         }
 
         if (configuration == copperfin::runtime::BuildConfiguration::release) {
-            std::string signing_ref;
-#ifdef _WIN32
-            char* signing_ref_raw = nullptr;
-            std::size_t signing_ref_length = 0;
-            if (_dupenv_s(&signing_ref_raw, &signing_ref_length, "COPPERFIN_RELEASE_SIGNING_KEY_REF") == 0 && signing_ref_raw != nullptr) {
-                signing_ref = signing_ref_raw;
-                std::free(signing_ref_raw);
-            }
-#else
-            if (const char* signing_ref_raw = std::getenv("COPPERFIN_RELEASE_SIGNING_KEY_REF"); signing_ref_raw != nullptr) {
-                signing_ref = signing_ref_raw;
-            }
-#endif
+            const std::string signing_ref =
+                copperfin::platform::read_environment_variable_or_empty("COPPERFIN_RELEASE_SIGNING_KEY_REF");
 
             if (signing_ref.empty()) {
                 std::cout << "status: error\n";
