@@ -901,6 +901,18 @@ bool native_visual_backcolor_member_name_matches(
            runtime_object.properties.contains("backcolor");
 }
 
+bool native_visual_forecolor_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    const bool is_olecontrol =
+        normalize_identifier(runtime_object.base_class_name) == "olecontrol" ||
+        normalize_identifier(runtime_object.prog_id) == "olecontrol";
+    return normalized_member_name == "forecolor" &&
+           is_native_visual_runtime_object(runtime_object) &&
+           !is_olecontrol &&
+           runtime_object.properties.contains("forecolor");
+}
+
 bool native_visual_geometry_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
@@ -1443,6 +1455,11 @@ bool is_native_visual_backcolor_member_name(const RuntimeOleObjectState& runtime
     return native_visual_backcolor_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_visual_forecolor_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_visual_forecolor_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_visual_geometry_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_visual_geometry_member_name_matches(runtime_object, normalized_member_name);
@@ -1944,6 +1961,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_visual_enabled_member_name(*runtime_object, property_name) ||
             is_native_visual_visible_member_name(*runtime_object, property_name) ||
             is_native_visual_backcolor_member_name(*runtime_object, property_name) ||
+            is_native_visual_forecolor_member_name(*runtime_object, property_name) ||
             is_native_visual_geometry_member_name(*runtime_object, property_name) ||
             is_native_combobox_style_member_name(*runtime_object, property_name) ||
             is_native_control_readonly_member_name(*runtime_object, property_name) ||
@@ -2157,6 +2175,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_visual_enabled_member_name(*runtime_object, property_name) ||
             is_native_visual_visible_member_name(*runtime_object, property_name) ||
             is_native_visual_backcolor_member_name(*runtime_object, property_name) ||
+            is_native_visual_forecolor_member_name(*runtime_object, property_name) ||
             is_native_visual_geometry_member_name(*runtime_object, property_name) ||
             is_native_combobox_style_member_name(*runtime_object, property_name) ||
             is_native_control_readonly_member_name(*runtime_object, property_name) ||
