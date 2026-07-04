@@ -251,6 +251,12 @@
             }
 
             if (normalized_base_class == "form" &&
+                !runtime_object.properties.contains("windowtype"))
+            {
+                runtime_object.properties["windowtype"] = make_number_value(0.0);
+            }
+
+            if (normalized_base_class == "form" &&
                 !runtime_object.properties.contains("alwaysontop"))
             {
                 runtime_object.properties["alwaysontop"] = make_boolean_value(false);
