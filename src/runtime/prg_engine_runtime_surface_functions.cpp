@@ -1934,9 +1934,12 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         return make_string_value(font_name);
     }
-    // VARREAD() — name of variable currently being read/edited (interactive mode only)
-    // Returns "" in headless runtime.
+    // VARREAD() — name of variable currently being read/edited (interactive mode only).
+    // Headless contract: report that no interactive read is active and return "".
     if (function == "varread") {
+        if (record_event_callback) {
+            record_event_callback("runtime.varread", "mode=headless active=false result=\"\"");
+        }
         return make_string_value({});
     }
 

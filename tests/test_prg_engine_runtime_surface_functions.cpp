@@ -42611,7 +42611,7 @@ namespace
             "nColor          = GETCOLOR(255, 'Pick Accent')\n"
             // GETFONT headless contract
             "cFont           = GETFONT('Arial', 12, 'B')\n"
-            // VARREAD headless stub
+            // VARREAD headless contract
             "cVarRead        = VARREAD()\n"
             // NEWID unique identifiers
             "cId1            = NEWID()\n"
@@ -42662,9 +42662,11 @@ namespace
         const auto* getpict_event = find_event("runtime.getpict");
         const auto* getcolor_event = find_event("runtime.getcolor");
         const auto* getfont_event = find_event("runtime.getfont");
+        const auto* varread_event = find_event("runtime.varread");
         expect(getpict_event != nullptr, "GETPICT function should emit a runtime.getpict event");
         expect(getcolor_event != nullptr, "GETCOLOR function should emit a runtime.getcolor event");
         expect(getfont_event != nullptr, "GETFONT function should emit a runtime.getfont event");
+        expect(varread_event != nullptr, "VARREAD function should emit a runtime.varread event");
 
         if (getpict_event != nullptr) {
             expect(getpict_event->detail.find("mode=headless") != std::string::npos,
@@ -42697,6 +42699,14 @@ namespace
                 "GETFONT event should include the requested font style");
             expect(getfont_event->detail.find("result=\"Arial\"") != std::string::npos,
                 "GETFONT event should include the deterministic fallback result");
+        }
+        if (varread_event != nullptr) {
+            expect(varread_event->detail.find("mode=headless") != std::string::npos,
+                "VARREAD event should declare the headless compatibility mode");
+            expect(varread_event->detail.find("active=false") != std::string::npos,
+                "VARREAD event should report that no interactive read is active");
+            expect(varread_event->detail.find("result=\"\"") != std::string::npos,
+                "VARREAD event should include the deterministic empty-string result");
         }
 
         fs::remove_all(temp_root, ignored);
