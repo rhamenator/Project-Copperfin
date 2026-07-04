@@ -6622,6 +6622,94 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_form_borderstyle_defaults_mutates_and_stays_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_form_borderstyle";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_form_borderstyle.prg";
+        write_text(
+            main_path,
+            "oBaseForm = CREATEOBJECT('Form')\n"
+            "lBaseHasBorderStyle = PEMSTATUS(oBaseForm, 'BorderStyle', 1)\n"
+            "lBaseBorderStyleReadOnly = PEMSTATUS(oBaseForm, 'BorderStyle', 5)\n"
+            "nBaseBefore = oBaseForm.BorderStyle\n"
+            "xBaseGetPemBefore = GETPEM(oBaseForm, 'BorderStyle')\n"
+            "oBaseForm.BorderStyle = 2\n"
+            "nBaseAfterDirectAssign = oBaseForm.BorderStyle\n"
+            "lBaseSetPem = SETPEM(oBaseForm, 'BorderStyle', 0)\n"
+            "nBaseAfterSetPem = oBaseForm.BorderStyle\n"
+            "lBaseAddProperty = ADDPROPERTY(oBaseForm, 'BorderStyle', 1)\n"
+            "lBaseRemoveProperty = REMOVEPROPERTY(oBaseForm, 'BorderStyle')\n"
+            "oDerived = CREATEOBJECT('DemoForm')\n"
+            "nDerivedBefore = oDerived.BorderStyle\n"
+            "nChildBefore = oDerived.cmdSave.ReadBorderStyle()\n"
+            "oDerived.cmdSave.RemoveBorder()\n"
+            "nDerivedAfterChild = oDerived.BorderStyle\n"
+            "lDerivedHasNoBorder = (oDerived.BorderStyle = 0)\n"
+            "xDerivedGetPem = GETPEM(oDerived, 'BorderStyle')\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oDerived, 1)\n"
+            "lPropHasBorderStyle = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'BORDERSTYLE'\n"
+            "        lPropHasBorderStyle = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "RETURN\n"
+            "DEFINE CLASS SaveButton AS CommandButton\n"
+            "    FUNCTION ReadBorderStyle\n"
+            "        RETURN THISFORM.BorderStyle\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE RemoveBorder\n"
+            "        THISFORM.BorderStyle = 0\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DemoForm AS Form\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Form BorderStyle property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lbasehasborderstyle", "true");
+        check("lbaseborderstylereadonly", "false");
+        check("nbasebefore", "3");
+        check("xbasegetpembefore", "3");
+        check("nbaseafterdirectassign", "2");
+        check("lbasesetpem", "true");
+        check("nbaseaftersetpem", "0");
+        check("lbaseaddproperty", "false");
+        check("lbaseremoveproperty", "false");
+        check("nderivedbefore", "3");
+        check("nchildbefore", "3");
+        check("nderivedafterchild", "0");
+        check("lderivedhasnoborder", "true");
+        check("xderivedgetpem", "0");
+        check("lprophasborderstyle", "true");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_form_controlbox_defaults_mutates_and_stays_builtin()
     {
         namespace fs = std::filesystem;
@@ -45728,6 +45816,7 @@ int main()
     test_native_controlcount_reflects_controls_count_and_stays_read_only();
     test_native_form_lockscreen_defaults_mutates_and_stays_builtin();
     test_native_form_windowtype_defaults_mutates_and_stays_builtin();
+    test_native_form_borderstyle_defaults_mutates_and_stays_builtin();
     test_native_visual_enabled_defaults_mutates_and_stays_builtin();
     test_native_visual_visible_defaults_mutates_and_stays_builtin();
     test_native_string_control_value_defaults_mutates_and_stays_builtin();

@@ -257,6 +257,12 @@
             }
 
             if (normalized_base_class == "form" &&
+                !runtime_object.properties.contains("borderstyle"))
+            {
+                runtime_object.properties["borderstyle"] = make_number_value(3.0);
+            }
+
+            if (normalized_base_class == "form" &&
                 !runtime_object.properties.contains("alwaysontop"))
             {
                 runtime_object.properties["alwaysontop"] = make_boolean_value(false);
