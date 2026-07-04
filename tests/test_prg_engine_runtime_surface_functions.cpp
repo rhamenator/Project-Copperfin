@@ -8325,6 +8325,128 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_listindex_defaults_mutates_and_stays_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_listindex";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_listindex.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('ComboBox')\n"
+            "lPlainHasListIndex = PEMSTATUS(oPlain, 'ListIndex', 1)\n"
+            "lPlainListIndexReadOnly = PEMSTATUS(oPlain, 'ListIndex', 5)\n"
+            "nPlainBefore = oPlain.ListIndex\n"
+            "xPlainGetPemBefore = GETPEM(oPlain, 'ListIndex')\n"
+            "oPlain.ListIndex = 1\n"
+            "nPlainAfterDirectAssign = oPlain.ListIndex\n"
+            "lPlainSetPem = SETPEM(oPlain, 'ListIndex', 2)\n"
+            "nPlainAfterSetPem = oPlain.ListIndex\n"
+            "lPlainAddProperty = ADDPROPERTY(oPlain, 'ListIndex', 3)\n"
+            "lPlainRemoveProperty = REMOVEPROPERTY(oPlain, 'ListIndex')\n"
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "nComboBefore = oForm.cboMonth.ListIndex\n"
+            "nListBefore = oForm.lstYear.ListIndex\n"
+            "nComboRead = oForm.cmdProbe.ReadComboListIndex()\n"
+            "nListRead = oForm.cmdProbe.ReadListListIndex()\n"
+            "oForm.cmdProbe.ReindexLists()\n"
+            "nComboAfterChild = oForm.cboMonth.ListIndex\n"
+            "nListAfterChild = oForm.lstYear.ListIndex\n"
+            "lComboSetPem = SETPEM(oForm.cboMonth, 'ListIndex', 1)\n"
+            "nComboAfterSetPem = oForm.cboMonth.ListIndex\n"
+            "xComboGetPem = GETPEM(oForm.cboMonth, 'ListIndex')\n"
+            "lComboHasListIndex = PEMSTATUS(oForm.cboMonth, 'ListIndex', 1)\n"
+            "lComboListIndexReadOnly = PEMSTATUS(oForm.cboMonth, 'ListIndex', 5)\n"
+            "lListSetPem = SETPEM(oForm.lstYear, 'ListIndex', 3)\n"
+            "nListAfterSetPem = oForm.lstYear.ListIndex\n"
+            "xListGetPem = GETPEM(oForm.lstYear, 'ListIndex')\n"
+            "lListHasListIndex = PEMSTATUS(oForm.lstYear, 'ListIndex', 1)\n"
+            "lListListIndexReadOnly = PEMSTATUS(oForm.lstYear, 'ListIndex', 5)\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oForm.lstYear, 1)\n"
+            "lPropHasListIndex = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'LISTINDEX'\n"
+            "        lPropHasListIndex = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('BoundList')\n"
+            "nDerivedBefore = oDerived.ListIndex\n"
+            "RETURN\n"
+            "DEFINE CLASS ProbeButton AS CommandButton\n"
+            "    FUNCTION ReadComboListIndex\n"
+            "        RETURN THISFORM.cboMonth.ListIndex\n"
+            "    ENDFUNC\n"
+            "    FUNCTION ReadListListIndex\n"
+            "        RETURN THISFORM.lstYear.ListIndex\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE ReindexLists\n"
+            "        THISFORM.cboMonth.ListIndex = 2\n"
+            "        THISFORM.lstYear.ListIndex = 1\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    ADD OBJECT cboMonth AS ComboBox WITH ListIndex = 3\n"
+            "    ADD OBJECT lstYear AS ListBox WITH ListIndex = 2\n"
+            "    ADD OBJECT cmdProbe AS ProbeButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS BoundList AS ListBox\n"
+            "    ListIndex = 4\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native ListIndex property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplainhaslistindex", "true");
+        check("lplainlistindexreadonly", "false");
+        check("nplainbefore", "0");
+        check("xplaingetpembefore", "0");
+        check("nplainafterdirectassign", "1");
+        check("lplainsetpem", "true");
+        check("nplainaftersetpem", "2");
+        check("lplainaddproperty", "false");
+        check("lplainremoveproperty", "false");
+        check("ncombobefore", "3");
+        check("nlistbefore", "2");
+        check("ncomboread", "3");
+        check("nlistread", "2");
+        check("ncomboafterchild", "2");
+        check("nlistafterchild", "1");
+        check("lcombosetpem", "true");
+        check("ncomboaftersetpem", "1");
+        check("xcombogetpem", "1");
+        check("lcombohaslistindex", "true");
+        check("lcombolistindexreadonly", "false");
+        check("llistsetpem", "true");
+        check("nlistaftersetpem", "3");
+        check("xlistgetpem", "3");
+        check("llisthaslistindex", "true");
+        check("llistlistindexreadonly", "false");
+        check("lprophaslistindex", "true");
+        check("nderivedbefore", "4");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_combobox_boundcolumn_columncount_and_columnwidths_defaults_mutate_and_stay_builtin()
     {
         namespace fs = std::filesystem;
@@ -47765,6 +47887,7 @@ int main()
     test_native_controlsource_defaults_mutates_and_stays_builtin();
     test_native_rowsource_defaults_mutates_and_stays_builtin();
     test_native_rowsourcetype_defaults_mutates_and_stays_builtin();
+    test_native_listindex_defaults_mutates_and_stays_builtin();
     test_native_combobox_boundcolumn_columncount_and_columnwidths_defaults_mutate_and_stay_builtin();
     test_native_visual_backcolor_defaults_mutate_and_stay_builtin();
     test_native_visual_forecolor_defaults_mutate_and_stay_builtin();
