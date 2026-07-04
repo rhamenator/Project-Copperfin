@@ -322,6 +322,12 @@
             }
 
             if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("splitbar"))
+            {
+                runtime_object.properties["splitbar"] = make_boolean_value(true);
+            }
+
+            if (normalized_base_class == "grid" &&
                 !runtime_object.properties.contains("leftcolumn"))
             {
                 runtime_object.properties["leftcolumn"] = make_number_value(1.0);

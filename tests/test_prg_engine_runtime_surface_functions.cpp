@@ -8574,6 +8574,93 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_splitbar_defaults_are_runtime_readonly_and_stay_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_splitbar";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_splitbar.prg";
+        write_text(
+            main_path,
+            "oBaseGrid = CREATEOBJECT('Grid')\n"
+            "lBaseHasSplitBar = PEMSTATUS(oBaseGrid, 'SplitBar', 1)\n"
+            "lBaseSplitBarReadOnly = PEMSTATUS(oBaseGrid, 'SplitBar', 5)\n"
+            "lBaseBefore = oBaseGrid.SplitBar\n"
+            "xBaseGetPemBefore = GETPEM(oBaseGrid, 'SplitBar')\n"
+            "oBaseGrid.SplitBar = .F.\n"
+            "lBaseAfterDirectAssign = oBaseGrid.SplitBar\n"
+            "lBaseSetPem = SETPEM(oBaseGrid, 'SplitBar', .F.)\n"
+            "lBaseAfterSetPem = oBaseGrid.SplitBar\n"
+            "lBaseAddProperty = ADDPROPERTY(oBaseGrid, 'SplitBar', .F.)\n"
+            "lBaseRemoveProperty = REMOVEPROPERTY(oBaseGrid, 'SplitBar')\n"
+            "oDerived = CREATEOBJECT('DemoGrid')\n"
+            "lDerivedBefore = oDerived.SplitBar\n"
+            "lChildBefore = oDerived.cmdProbe.ReadSplitBar()\n"
+            "oDerived.cmdProbe.TrySplit()\n"
+            "lDerivedAfterChild = oDerived.SplitBar\n"
+            "xDerivedGetPem = GETPEM(oDerived, 'SplitBar')\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oDerived, 1)\n"
+            "lPropHasSplitBar = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'SPLITBAR'\n"
+            "        lPropHasSplitBar = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "RETURN\n"
+            "DEFINE CLASS ProbeButton AS CommandButton\n"
+            "    FUNCTION ReadSplitBar\n"
+            "        RETURN THIS.Parent.SplitBar\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE TrySplit\n"
+            "        THIS.Parent.SplitBar = .T.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DemoGrid AS Grid\n"
+            "    SplitBar = .F.\n"
+            "    ADD OBJECT cmdProbe AS ProbeButton\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native SplitBar property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lbasehassplitbar", "true");
+        check("lbasesplitbarreadonly", "true");
+        check("lbasebefore", "true");
+        check("xbasegetpembefore", "true");
+        check("lbaseafterdirectassign", "true");
+        check("lbasesetpem", "false");
+        check("lbaseaftersetpem", "true");
+        check("lbaseaddproperty", "false");
+        check("lbaseremoveproperty", "false");
+        check("lderivedbefore", "false");
+        check("lchildbefore", "false");
+        check("lderivedafterchild", "false");
+        check("xderivedgetpem", "false");
+        check("lprophassplitbar", "true");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_recordsourcetype_defaults_mutates_and_stays_builtin()
     {
         namespace fs = std::filesystem;
@@ -48833,6 +48920,7 @@ int main()
     test_native_leftcolumn_defaults_are_runtime_readonly_and_stay_builtin();
     test_native_grid_display_properties_default_mutate_and_stay_builtin();
     test_native_deletemark_default_mutates_and_stays_builtin();
+    test_native_splitbar_defaults_are_runtime_readonly_and_stay_builtin();
     test_native_recordsourcetype_defaults_mutates_and_stays_builtin();
     test_native_rowsource_defaults_mutates_and_stays_builtin();
     test_native_rowsourcetype_defaults_mutates_and_stays_builtin();

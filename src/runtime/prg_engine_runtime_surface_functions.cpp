@@ -1028,6 +1028,17 @@ bool native_deletemark_member_name_matches(
     return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "grid";
 }
 
+bool native_splitbar_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "splitbar" ||
+        !runtime_object.properties.contains("splitbar")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "grid";
+}
+
 bool native_leftcolumn_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
@@ -1767,6 +1778,11 @@ bool is_native_deletemark_member_name(const RuntimeOleObjectState& runtime_objec
     return native_deletemark_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_splitbar_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_splitbar_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_leftcolumn_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_leftcolumn_member_name_matches(runtime_object, normalized_member_name);
@@ -2045,6 +2061,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                                                         const std::string& member_name) {
         return get_native_identity_reflection_metadata(runtime_object, member_name).has_value() ||
                native_controlcount_member_name_matches(runtime_object, member_name) ||
+               is_native_splitbar_member_name(runtime_object, member_name) ||
                is_native_leftcolumn_member_name(runtime_object, member_name) ||
                is_native_form_desktop_member_name(runtime_object, member_name) ||
                is_native_form_scrollbars_member_name(runtime_object, member_name) ||
@@ -2301,6 +2318,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_highlight_member_name(*runtime_object, property_name) ||
             is_native_highlightrow_member_name(*runtime_object, property_name) ||
             is_native_deletemark_member_name(*runtime_object, property_name) ||
+            is_native_splitbar_member_name(*runtime_object, property_name) ||
             is_native_currentcontrol_member_name(*runtime_object, property_name) ||
             is_native_dynamiccurrentcontrol_member_name(*runtime_object, property_name) ||
             is_native_recordsource_member_name(*runtime_object, property_name) ||
@@ -2432,6 +2450,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         if (native_child_parent_member_name_matches(*runtime_object, member_name) ||
             is_native_controlcount_member_name(*runtime_object, member_name) ||
             is_native_name_member_name(*runtime_object, member_name) ||
+            is_native_splitbar_member_name(*runtime_object, member_name) ||
             is_native_leftcolumn_member_name(*runtime_object, member_name) ||
             is_native_form_desktop_member_name(*runtime_object, member_name) ||
             is_native_form_scrollbars_member_name(*runtime_object, member_name) ||
@@ -2535,6 +2554,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_highlight_member_name(*runtime_object, property_name) ||
             is_native_highlightrow_member_name(*runtime_object, property_name) ||
             is_native_deletemark_member_name(*runtime_object, property_name) ||
+            is_native_splitbar_member_name(*runtime_object, property_name) ||
             is_native_currentcontrol_member_name(*runtime_object, property_name) ||
             is_native_dynamiccurrentcontrol_member_name(*runtime_object, property_name) ||
             is_native_recordsource_member_name(*runtime_object, property_name) ||
