@@ -6710,6 +6710,94 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_form_titlebar_defaults_mutates_and_stays_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_form_titlebar";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_form_titlebar.prg";
+        write_text(
+            main_path,
+            "oBaseForm = CREATEOBJECT('Form')\n"
+            "lBaseHasTitleBar = PEMSTATUS(oBaseForm, 'TitleBar', 1)\n"
+            "lBaseTitleBarReadOnly = PEMSTATUS(oBaseForm, 'TitleBar', 5)\n"
+            "nBaseBefore = oBaseForm.TitleBar\n"
+            "xBaseGetPemBefore = GETPEM(oBaseForm, 'TitleBar')\n"
+            "oBaseForm.TitleBar = 0\n"
+            "nBaseAfterDirectAssign = oBaseForm.TitleBar\n"
+            "lBaseSetPem = SETPEM(oBaseForm, 'TitleBar', 1)\n"
+            "nBaseAfterSetPem = oBaseForm.TitleBar\n"
+            "lBaseAddProperty = ADDPROPERTY(oBaseForm, 'TitleBar', 0)\n"
+            "lBaseRemoveProperty = REMOVEPROPERTY(oBaseForm, 'TitleBar')\n"
+            "oDerived = CREATEOBJECT('DemoForm')\n"
+            "nDerivedBefore = oDerived.TitleBar\n"
+            "nChildBefore = oDerived.cmdSave.ReadTitleBar()\n"
+            "oDerived.cmdSave.HideTitleBar()\n"
+            "nDerivedAfterChild = oDerived.TitleBar\n"
+            "lDerivedTitleBarHidden = (oDerived.TitleBar = 0)\n"
+            "xDerivedGetPem = GETPEM(oDerived, 'TitleBar')\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oDerived, 1)\n"
+            "lPropHasTitleBar = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'TITLEBAR'\n"
+            "        lPropHasTitleBar = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "RETURN\n"
+            "DEFINE CLASS SaveButton AS CommandButton\n"
+            "    FUNCTION ReadTitleBar\n"
+            "        RETURN THISFORM.TitleBar\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE HideTitleBar\n"
+            "        THISFORM.TitleBar = 0\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DemoForm AS Form\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Form TitleBar property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lbasehastitlebar", "true");
+        check("lbasetitlebarreadonly", "false");
+        check("nbasebefore", "1");
+        check("xbasegetpembefore", "1");
+        check("nbaseafterdirectassign", "0");
+        check("lbasesetpem", "true");
+        check("nbaseaftersetpem", "1");
+        check("lbaseaddproperty", "false");
+        check("lbaseremoveproperty", "false");
+        check("nderivedbefore", "1");
+        check("nchildbefore", "1");
+        check("nderivedafterchild", "0");
+        check("lderivedtitlebarhidden", "true");
+        check("xderivedgetpem", "0");
+        check("lprophastitlebar", "true");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_form_controlbox_defaults_mutates_and_stays_builtin()
     {
         namespace fs = std::filesystem;
@@ -45817,6 +45905,7 @@ int main()
     test_native_form_lockscreen_defaults_mutates_and_stays_builtin();
     test_native_form_windowtype_defaults_mutates_and_stays_builtin();
     test_native_form_borderstyle_defaults_mutates_and_stays_builtin();
+    test_native_form_titlebar_defaults_mutates_and_stays_builtin();
     test_native_visual_enabled_defaults_mutates_and_stays_builtin();
     test_native_visual_visible_defaults_mutates_and_stays_builtin();
     test_native_string_control_value_defaults_mutates_and_stays_builtin();

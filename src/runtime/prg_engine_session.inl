@@ -263,6 +263,12 @@
             }
 
             if (normalized_base_class == "form" &&
+                !runtime_object.properties.contains("titlebar"))
+            {
+                runtime_object.properties["titlebar"] = make_number_value(1.0);
+            }
+
+            if (normalized_base_class == "form" &&
                 !runtime_object.properties.contains("alwaysontop"))
             {
                 runtime_object.properties["alwaysontop"] = make_boolean_value(false);
