@@ -93,6 +93,36 @@ namespace copperfin::runtime
             return verb;
         }
 
+        std::optional<PrgValue> read_native_olecontrol_objectverb_by_index(
+            const RuntimeOleObjectState &runtime_object,
+            const std::vector<PrgValue> &arguments)
+        {
+            const bool is_olecontrol =
+                normalize_identifier(runtime_object.base_class_name) == "olecontrol" ||
+                normalize_identifier(runtime_object.prog_id) == "olecontrol";
+            if (!is_olecontrol)
+            {
+                return std::nullopt;
+            }
+
+            if (arguments.empty())
+            {
+                return make_empty_value();
+            }
+
+            const long long index = std::llround(value_as_number(arguments.front()));
+            if (index == 0)
+            {
+                return make_string_value("edit");
+            }
+            if (index == 1)
+            {
+                return make_string_value("open");
+            }
+
+            return make_empty_value();
+        }
+
         void ensure_fault_context_defaults(
             const Statement *statement,
             SourceLocation &last_fault_location,
@@ -1056,6 +1086,10 @@ namespace copperfin::runtime
                     object_surface->last_action = "activate:" + format_value(verb);
                     ++object_surface->action_count;
                     return make_boolean_value(true);
+                }
+                if (is_native_olecontrol_host_object(*runtime_object) && leaf == "objectverbs")
+                {
+                    return read_native_olecontrol_objectverb_by_index(*runtime_object, arguments).value_or(make_empty_value());
                 }
 
                 runtime_object->last_action = effective_member_path + "()";
@@ -2856,6 +2890,7 @@ namespace copperfin::runtime
             if (!is_native_identity_member_name(runtime_object, normalized_property_name) &&
                 !is_native_olecontrol_creation_time_member_name(runtime_object, normalized_property_name) &&
                 !is_native_olecontrol_object_member_name(runtime_object, normalized_property_name) &&
+                !is_native_olecontrol_inspection_member_name(runtime_object, normalized_property_name) &&
                 !is_native_child_parent_member_name(runtime_object, normalized_property_name) &&
                 !is_native_collection_readonly_member_name(runtime_object, normalized_property_name))
             {

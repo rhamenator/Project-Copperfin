@@ -166,6 +166,11 @@
             {
                 runtime_object.methods.push_back("doverb");
             }
+            if (std::find(runtime_object.methods.begin(), runtime_object.methods.end(), "objectverbs") ==
+                runtime_object.methods.end())
+            {
+                runtime_object.methods.push_back("objectverbs");
+            }
         }
 
         void seed_native_olecontrol_timeout_policy_properties(RuntimeOleObjectState &runtime_object)
@@ -190,6 +195,16 @@
             {
                 runtime_object.properties["oleserverbusyraiseerror"] = make_boolean_value(false);
             }
+        }
+
+        void seed_native_olecontrol_verb_inspection_properties(RuntimeOleObjectState &runtime_object)
+        {
+            if (!is_native_olecontrol_host_object(runtime_object))
+            {
+                return;
+            }
+
+            runtime_object.properties["objectverbscount"] = make_int64_value(2);
         }
 
         RuntimeOleObjectState *ensure_native_olecontrol_object_surface(RuntimeOleObjectState &runtime_object)
@@ -656,6 +671,7 @@
                         object_state.properties["autoactivate"] = make_int64_value(2);
                         object_state.properties["autoverbmenu"] = make_boolean_value(true);
                         seed_native_olecontrol_timeout_policy_properties(object_state);
+                        seed_native_olecontrol_verb_inspection_properties(object_state);
                     }
                 }
                 const std::string class_token = uppercase_copy(trim_copy(object_state.prog_id));
@@ -794,6 +810,7 @@
                 }
             }
             seed_native_olecontrol_timeout_policy_properties(*runtime_object);
+            seed_native_olecontrol_verb_inspection_properties(*runtime_object);
             (void)ensure_native_olecontrol_object_surface(*runtime_object);
             (void)read_native_collection_member(*runtime_object, "count");
             const PrgValue runtime_object_reference = make_runtime_object_reference(*runtime_object);

@@ -39446,6 +39446,121 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_runtime_olecontrol_objectverbs_surfaces_remain_coherent()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_olecontrol_objectverbs";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "runtime_olecontrol_objectverbs.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "lAdded = oForm.AddObject('axHost', 'OleControl', 'MSComctlLib.ListViewCtrl')\n"
+            "nHostObjectVerbsCount = oForm.axHost.ObjectVerbsCount\n"
+            "xHostObjectVerbsCountGetPem = GETPEM(oForm.axHost, 'ObjectVerbsCount')\n"
+            "lHostHasObjectVerbs = PEMSTATUS(oForm.axHost, 'ObjectVerbs', 1)\n"
+            "lHostHasObjectVerbsCount = PEMSTATUS(oForm.axHost, 'ObjectVerbsCount', 1)\n"
+            "lHostObjectVerbsReadOnly = PEMSTATUS(oForm.axHost, 'ObjectVerbs', 5)\n"
+            "lHostObjectVerbsCountReadOnly = PEMSTATUS(oForm.axHost, 'ObjectVerbsCount', 5)\n"
+            "cHostVerb0 = oForm.axHost.ObjectVerbs(0)\n"
+            "cHostVerb1 = oForm.axHost.ObjectVerbs(1)\n"
+            "xHostVerb2 = oForm.axHost.ObjectVerbs(2)\n"
+            "lSetHostObjectVerbs = SETPEM(oForm.axHost, 'ObjectVerbs', 'play')\n"
+            "lSetHostObjectVerbsCount = SETPEM(oForm.axHost, 'ObjectVerbsCount', 3)\n"
+            "lRemoveHostObjectVerbs = REMOVEPROPERTY(oForm.axHost, 'ObjectVerbs')\n"
+            "lRemoveHostObjectVerbsCount = REMOVEPROPERTY(oForm.axHost, 'ObjectVerbsCount')\n"
+            "lHostDoVerbAfterInspect = oForm.axHost.DoVerb(cHostVerb0)\n"
+            "oDoc = CREATEOBJECT('ExcelDoc')\n"
+            "nDocObjectVerbsCount = oDoc.ObjectVerbsCount\n"
+            "xDocObjectVerbsCountGetPem = GETPEM(oDoc, 'ObjectVerbsCount')\n"
+            "lDocHasObjectVerbs = PEMSTATUS(oDoc, 'ObjectVerbs', 1)\n"
+            "lDocHasObjectVerbsCount = PEMSTATUS(oDoc, 'ObjectVerbsCount', 1)\n"
+            "lDocObjectVerbsReadOnly = PEMSTATUS(oDoc, 'ObjectVerbs', 5)\n"
+            "lDocObjectVerbsCountReadOnly = PEMSTATUS(oDoc, 'ObjectVerbsCount', 5)\n"
+            "cDocVerb0 = oDoc.ObjectVerbs(0)\n"
+            "cDocVerb1 = oDoc.ObjectVerbs(1)\n"
+            "xDocVerb2 = oDoc.ObjectVerbs(2)\n"
+            "lSetDocObjectVerbs = SETPEM(oDoc, 'ObjectVerbs', 'play')\n"
+            "lSetDocObjectVerbsCount = SETPEM(oDoc, 'ObjectVerbsCount', 3)\n"
+            "lRemoveDocObjectVerbs = REMOVEPROPERTY(oDoc, 'ObjectVerbs')\n"
+            "lRemoveDocObjectVerbsCount = REMOVEPROPERTY(oDoc, 'ObjectVerbsCount')\n"
+            "lDocDoVerbAfterInspect = oDoc.DoVerb(cDocVerb1)\n"
+            "RETURN\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ExcelDoc AS OLEControl\n"
+            "    OLEClass = 'Excel.Sheet'\n"
+            "    DocumentFile = 'C:\\EXCEL\\BOOK1.XLS'\n"
+            "    OLETypeAllowed = 1\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("OleControl ObjectVerbs script should complete: ") + state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("ladded", "true");
+        check("nhostobjectverbscount", "2");
+        check("xhostobjectverbscountgetpem", "2");
+        check("lhosthasobjectverbs", "true");
+        check("lhosthasobjectverbscount", "true");
+        check("lhostobjectverbsreadonly", "true");
+        check("lhostobjectverbscountreadonly", "true");
+        check("chostverb0", "edit");
+        check("chostverb1", "open");
+        check("xhostverb2", "");
+        check("lsethostobjectverbs", "false");
+        check("lsethostobjectverbscount", "false");
+        check("lremovehostobjectverbs", "false");
+        check("lremovehostobjectverbscount", "false");
+        check("lhostdoverbafterinspect", "true");
+
+        check("ndocobjectverbscount", "2");
+        check("xdocobjectverbscountgetpem", "2");
+        check("ldochasobjectverbs", "true");
+        check("ldochasobjectverbscount", "true");
+        check("ldocobjectverbsreadonly", "true");
+        check("ldocobjectverbscountreadonly", "true");
+        check("cdocverb0", "edit");
+        check("cdocverb1", "open");
+        check("xdocverb2", "");
+        check("lsetdocobjectverbs", "false");
+        check("lsetdocobjectverbscount", "false");
+        check("lremovedocobjectverbs", "false");
+        check("lremovedocobjectverbscount", "false");
+        check("ldocdoverbafterinspect", "true");
+
+        expect(std::any_of(state.events.begin(), state.events.end(), [](const auto &event) {
+                   return event.category == "ole.invoke" &&
+                          event.detail == "OleControl.doverb:-1";
+               }),
+               "ObjectVerbs('edit') inspection slice should keep host named-verb DoVerb activation coherent");
+        expect(std::any_of(state.events.begin(), state.events.end(), [](const auto &event) {
+                   return event.category == "ole.invoke" &&
+                          event.detail == "ExcelDoc.doverb:-2";
+               }),
+               "ObjectVerbs('open') inspection slice should keep class-defined named-verb DoVerb activation coherent");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_runtime_native_visual_controls_without_hwnd_fail_deterministically()
     {
         namespace fs = std::filesystem;
@@ -41636,6 +41751,7 @@ int main()
         test_runtime_olecontrol_autoactivate_and_autoverbmenu_surfaces_remain_coherent();
         test_runtime_olecontrol_timeout_policy_surfaces_remain_coherent();
         test_runtime_olecontrol_named_doverb_surfaces_remain_coherent();
+        test_runtime_olecontrol_objectverbs_surfaces_remain_coherent();
         test_runtime_native_visual_controls_without_hwnd_fail_deterministically();
         test_same_prg_native_bindevent_property_access_and_assign_dispatch_preserve_current_event_metadata();
         test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();
