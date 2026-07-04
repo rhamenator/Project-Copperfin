@@ -6818,6 +6818,81 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_form_windowtype_conditional_preprocessor_branches_drive_runtime_behavior()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_form_windowtype_preprocessor_conditionals";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root / "include");
+
+        const fs::path header_path = temp_root / "include" / "ui.h";
+        write_text(
+            header_path,
+            "#DEFINE WINDOWTYPE_MODELESS 0\n"
+            "#DEFINE WINDOWTYPE_MODAL 1\n"
+            "#DEFINE FEATURE_COMPILEBEFORE .T.\n"
+            "#IF 1\n"
+            "#DEFINE ACTIVE_MODAL WINDOWTYPE_MODAL\n"
+            "#ELSE\n"
+            "#DEFINE ACTIVE_MODAL 77\n"
+            "#ENDIF\n");
+
+        const fs::path main_path = temp_root / "native_form_windowtype_preprocessor_conditionals.prg";
+        write_text(
+            main_path,
+            "#INCLUDE \"include\\\\ui.h\"\n"
+            "oDerived = CREATEOBJECT('DemoForm')\n"
+            "#IFDEF FEATURE_COMPILEBEFORE\n"
+            "lFeatureEnabled = .T.\n"
+            "#ELSE\n"
+            "lFeatureEnabled = .F.\n"
+            "#ENDIF\n"
+            "lBeforeIsModeless = (oDerived.WindowType = WINDOWTYPE_MODELESS)\n"
+            "oDerived.cmdSave.MakeConditionalModal()\n"
+            "lAfterIsModal = (oDerived.WindowType = ACTIVE_MODAL)\n"
+            "RETURN\n"
+            "DEFINE CLASS SaveButton AS CommandButton\n"
+            "    PROCEDURE MakeConditionalModal\n"
+            "#IF 0\n"
+            "        THISFORM.WindowType = 99\n"
+            "#ELSE\n"
+            "        THISFORM.WindowType = ACTIVE_MODAL\n"
+            "#ENDIF\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DemoForm AS Form\n"
+            "    WindowType = WINDOWTYPE_MODELESS\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Form WindowType conditional-preprocessor script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lfeatureenabled", "true");
+        check("lbeforeismodeless", "true");
+        check("lafterismodal", "true");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_form_windowstate_defaults_mutates_and_stays_builtin()
     {
         namespace fs = std::filesystem;
@@ -49519,6 +49594,7 @@ int main()
     test_native_form_lockscreen_defaults_mutates_and_stays_builtin();
     test_native_form_windowtype_defaults_mutates_and_stays_builtin();
     test_native_form_windowtype_include_define_constants_drive_modal_checks();
+    test_native_form_windowtype_conditional_preprocessor_branches_drive_runtime_behavior();
     test_native_form_windowstate_defaults_mutates_and_stays_builtin();
     test_native_form_borderstyle_defaults_mutates_and_stays_builtin();
     test_native_form_titlebar_defaults_mutates_and_stays_builtin();

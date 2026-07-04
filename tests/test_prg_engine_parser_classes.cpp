@@ -432,6 +432,68 @@ void test_parse_include_and_define_constants_expand_before_class_body_parsing() 
     fs::remove_all(temp_root, ignored);
 }
 
+void test_parse_conditional_preprocessor_branches_and_header_guards() {
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_parser_preprocessor_conditionals";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root / "include");
+
+    const fs::path header_path = temp_root / "include" / "ui.h";
+    copperfin::test_support::write_text(
+        header_path,
+        "#DEFINE WINDOWTYPE_MODELESS 0\n"
+        "#IF 1\n"
+        "#DEFINE WINDOWTYPE_MODAL 1\n"
+        "#ELSE\n"
+        "#DEFINE WINDOWTYPE_MODAL 99\n"
+        "#ENDIF\n"
+        "#IFNDEF FORM_CAPTION\n"
+        "#DEFINE FORM_CAPTION 'GuardedCaption'\n"
+        "#ENDIF\n");
+
+    const fs::path program_path = temp_root / "conditional_demo.prg";
+    copperfin::test_support::write_text(
+        program_path,
+        "#DEFINE FORM_CAPTION 'CallerCaption'\n"
+        "#INCLUDE \"include\\\\ui.h\"\n"
+        "DEFINE CLASS DemoForm AS Form\n"
+        "    Caption = FORM_CAPTION\n"
+        "    WindowType = WINDOWTYPE_MODAL\n"
+        "ENDDEFINE\n"
+        "#IF 0\n"
+        "nBranch = 99\n"
+        "#ELSE\n"
+        "nBranch = WINDOWTYPE_MODELESS\n"
+        "#ENDIF\n");
+
+    const copperfin::runtime::Program program = copperfin::runtime::parse_program(program_path.string());
+    const auto class_found = program.classes.find("demoform");
+    copperfin::test_support::expect(class_found != program.classes.end(),
+                                    "conditional preprocessor parser test should parse the owning class definition");
+    if (class_found != program.classes.end()) {
+        const auto& class_definition = class_found->second;
+        copperfin::test_support::expect(class_definition.property_statements.size() == 2U,
+                                        "conditional preprocessor parser test should preserve both class property assignments");
+        if (class_definition.property_statements.size() == 2U) {
+            copperfin::test_support::expect(class_definition.property_statements[0].expression == "'CallerCaption'",
+                                            "conditional preprocessor parser test should respect #IFNDEF guard suppression when the caller already defined a value");
+            copperfin::test_support::expect(class_definition.property_statements[1].expression == "1",
+                                            "conditional preprocessor parser test should keep the active #IF branch constant instead of the #ELSE fallback");
+        }
+    }
+
+    copperfin::test_support::expect(program.main.statements.size() == 1U,
+                                    "conditional preprocessor parser test should skip inactive top-level branches");
+    if (program.main.statements.size() == 1U) {
+        copperfin::test_support::expect(program.main.statements[0].kind == copperfin::runtime::StatementKind::assignment,
+                                        "conditional preprocessor parser test should keep the active branch assignment");
+        copperfin::test_support::expect(program.main.statements[0].expression == "0",
+                                        "conditional preprocessor parser test should expand constants from the active branch through a Windows-style include path");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -443,6 +505,7 @@ int main() {
     test_parse_class_body_object_blocks_capture_child_properties();
     test_parse_declarative_child_external_prg_sources();
     test_parse_include_and_define_constants_expand_before_class_body_parsing();
+    test_parse_conditional_preprocessor_branches_and_header_guards();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

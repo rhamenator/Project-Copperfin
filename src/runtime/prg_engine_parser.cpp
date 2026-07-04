@@ -8,8 +8,11 @@
 #include "prg_engine_helpers.h"
 
 #include <cctype>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <optional>
+#include <sstream>
 #include <set>
 
 namespace copperfin::runtime {
@@ -30,6 +33,13 @@ using PreprocessorDefineMap = std::map<std::string, std::string>;
 struct PreprocessorState {
     PreprocessorDefineMap defines;
     std::set<std::string> include_stack;
+    struct ConditionalFrame {
+        bool parent_active = true;
+        bool current_active = true;
+        bool branch_taken = false;
+        bool else_seen = false;
+    };
+    std::vector<ConditionalFrame> conditionals;
 };
 
 std::string strip_inline_comment(const std::string& line) {
@@ -220,6 +230,8 @@ std::string substitute_preprocessor_constants(
     const PreprocessorDefineMap& defines,
     std::set<std::string>& expansion_stack);
 
+bool has_wrapping_parentheses(const std::string& text);
+
 std::string expand_preprocessor_identifier(
     const std::string& identifier,
     const PreprocessorDefineMap& defines,
@@ -318,6 +330,341 @@ std::string substitute_preprocessor_constants(const std::string& text, const Pre
     return substitute_preprocessor_constants(text, defines, expansion_stack);
 }
 
+bool is_preprocessor_active(const PreprocessorState& state) {
+    return state.conditionals.empty() || state.conditionals.back().current_active;
+}
+
+struct PreprocessorScalarValue {
+    enum class Kind {
+        unknown,
+        logical,
+        numeric,
+        string
+    };
+
+    Kind kind = Kind::unknown;
+    bool logical_value = false;
+    double numeric_value = 0.0;
+    std::string string_value{};
+};
+
+std::string decode_preprocessor_string_literal(const std::string& text) {
+    if (text.size() >= 2U &&
+        ((text.front() == '\'' && text.back() == '\'') ||
+         (text.front() == '"' && text.back() == '"'))) {
+        const char delimiter = text.front();
+        std::string decoded;
+        decoded.reserve(text.size() - 2U);
+        for (std::size_t index = 1U; index + 1U < text.size(); ++index) {
+            const char ch = text[index];
+            if (ch == delimiter && index + 2U < text.size() && text[index + 1U] == delimiter) {
+                decoded += delimiter;
+                ++index;
+                continue;
+            }
+            decoded += ch;
+        }
+        return decoded;
+    }
+    if (text.size() >= 2U && text.front() == '[' && text.back() == ']') {
+        return text.substr(1U, text.size() - 2U);
+    }
+    return text;
+}
+
+std::optional<double> try_parse_preprocessor_numeric_literal(const std::string& text) {
+    if (text.empty()) {
+        return std::nullopt;
+    }
+    char* end = nullptr;
+    const double value = std::strtod(text.c_str(), &end);
+    if (end == text.c_str() || *end != '\0') {
+        return std::nullopt;
+    }
+    return value;
+}
+
+PreprocessorScalarValue parse_preprocessor_scalar_value(const std::string& text) {
+    const std::string trimmed = trim_copy(text);
+    if (trimmed.empty()) {
+        return {};
+    }
+
+    const std::string upper = uppercase_copy(trimmed);
+    if (upper == ".T.") {
+        return {.kind = PreprocessorScalarValue::Kind::logical, .logical_value = true};
+    }
+    if (upper == ".F.") {
+        return {.kind = PreprocessorScalarValue::Kind::logical, .logical_value = false};
+    }
+    if ((trimmed.size() >= 2U &&
+         ((trimmed.front() == '\'' && trimmed.back() == '\'') ||
+          (trimmed.front() == '"' && trimmed.back() == '"'))) ||
+        (trimmed.size() >= 2U && trimmed.front() == '[' && trimmed.back() == ']')) {
+        return {
+            .kind = PreprocessorScalarValue::Kind::string,
+            .string_value = decode_preprocessor_string_literal(trimmed)
+        };
+    }
+    if (const auto numeric = try_parse_preprocessor_numeric_literal(trimmed); numeric.has_value()) {
+        return {
+            .kind = PreprocessorScalarValue::Kind::numeric,
+            .numeric_value = *numeric
+        };
+    }
+
+    return {
+        .kind = PreprocessorScalarValue::Kind::unknown,
+        .string_value = trimmed
+    };
+}
+
+std::string stringify_preprocessor_scalar_value(const PreprocessorScalarValue& value) {
+    switch (value.kind) {
+        case PreprocessorScalarValue::Kind::logical:
+            return value.logical_value ? ".T." : ".F.";
+        case PreprocessorScalarValue::Kind::numeric: {
+            std::ostringstream buffer;
+            buffer << value.numeric_value;
+            return buffer.str();
+        }
+        case PreprocessorScalarValue::Kind::string:
+        case PreprocessorScalarValue::Kind::unknown:
+            return value.string_value;
+    }
+    return {};
+}
+
+bool evaluate_preprocessor_truthiness(const PreprocessorScalarValue& value) {
+    switch (value.kind) {
+        case PreprocessorScalarValue::Kind::logical:
+            return value.logical_value;
+        case PreprocessorScalarValue::Kind::numeric:
+            return value.numeric_value != 0.0;
+        case PreprocessorScalarValue::Kind::string:
+            return !value.string_value.empty();
+        case PreprocessorScalarValue::Kind::unknown:
+            return false;
+    }
+    return false;
+}
+
+std::size_t find_preprocessor_comparison_operator(
+    const std::string& expression,
+    std::string& operator_text) {
+    char quote_delimiter = '\0';
+    std::size_t bracket_depth = 0U;
+    std::size_t brace_depth = 0U;
+    std::size_t paren_depth = 0U;
+    for (std::size_t index = 0; index < expression.size(); ++index) {
+        const char ch = expression[index];
+        if (quote_delimiter != '\0') {
+            if (ch == quote_delimiter) {
+                if ((index + 1U) < expression.size() && expression[index + 1U] == quote_delimiter) {
+                    ++index;
+                    continue;
+                }
+                quote_delimiter = '\0';
+            }
+            continue;
+        }
+        if (ch == '\'' || ch == '"') {
+            quote_delimiter = ch;
+            continue;
+        }
+        if (ch == '[') {
+            ++bracket_depth;
+            continue;
+        }
+        if (ch == ']' && bracket_depth > 0U) {
+            --bracket_depth;
+            continue;
+        }
+        if (ch == '{') {
+            ++brace_depth;
+            continue;
+        }
+        if (ch == '}' && brace_depth > 0U) {
+            --brace_depth;
+            continue;
+        }
+        if (ch == '(') {
+            ++paren_depth;
+            continue;
+        }
+        if (ch == ')' && paren_depth > 0U) {
+            --paren_depth;
+            continue;
+        }
+        if (bracket_depth > 0U || brace_depth > 0U || paren_depth > 0U) {
+            continue;
+        }
+
+        if ((index + 1U) < expression.size()) {
+            const std::string_view pair(expression.data() + index, 2U);
+            if (pair == "==" || pair == "<=" || pair == ">=" || pair == "<>") {
+                operator_text.assign(pair.begin(), pair.end());
+                return index;
+            }
+        }
+        if (ch == '=' || ch == '#' || ch == '<' || ch == '>' || ch == '$') {
+            operator_text.assign(1U, ch);
+            return index;
+        }
+    }
+    return std::string::npos;
+}
+
+bool evaluate_preprocessor_condition_expression(
+    const std::string& expression,
+    const PreprocessorDefineMap& defines) {
+    std::string expanded = trim_copy(substitute_preprocessor_constants(expression, defines));
+    while (has_wrapping_parentheses(expanded)) {
+        expanded = trim_copy(expanded.substr(1U, expanded.size() - 2U));
+    }
+    if (expanded.empty()) {
+        return false;
+    }
+
+    std::string operator_text;
+    if (const std::size_t operator_position =
+            find_preprocessor_comparison_operator(expanded, operator_text);
+        operator_position != std::string::npos) {
+        const PreprocessorScalarValue left = parse_preprocessor_scalar_value(
+            expanded.substr(0U, operator_position));
+        const PreprocessorScalarValue right = parse_preprocessor_scalar_value(
+            expanded.substr(operator_position + operator_text.size()));
+
+        if (operator_text == "$") {
+            const std::string left_text = uppercase_copy(stringify_preprocessor_scalar_value(left));
+            const std::string right_text = uppercase_copy(stringify_preprocessor_scalar_value(right));
+            return !left_text.empty() && right_text.find(left_text) != std::string::npos;
+        }
+
+        const bool numeric_comparison =
+            (left.kind == PreprocessorScalarValue::Kind::numeric ||
+             left.kind == PreprocessorScalarValue::Kind::logical) &&
+            (right.kind == PreprocessorScalarValue::Kind::numeric ||
+             right.kind == PreprocessorScalarValue::Kind::logical);
+        if (numeric_comparison) {
+            const double lhs = left.kind == PreprocessorScalarValue::Kind::logical
+                ? (left.logical_value ? 1.0 : 0.0)
+                : left.numeric_value;
+            const double rhs = right.kind == PreprocessorScalarValue::Kind::logical
+                ? (right.logical_value ? 1.0 : 0.0)
+                : right.numeric_value;
+            if (operator_text == "=" || operator_text == "==") {
+                return lhs == rhs;
+            }
+            if (operator_text == "#" || operator_text == "<>") {
+                return lhs != rhs;
+            }
+            if (operator_text == "<") {
+                return lhs < rhs;
+            }
+            if (operator_text == "<=") {
+                return lhs <= rhs;
+            }
+            if (operator_text == ">") {
+                return lhs > rhs;
+            }
+            if (operator_text == ">=") {
+                return lhs >= rhs;
+            }
+        }
+
+        const std::string lhs = uppercase_copy(stringify_preprocessor_scalar_value(left));
+        const std::string rhs = uppercase_copy(stringify_preprocessor_scalar_value(right));
+        if (operator_text == "=" || operator_text == "==") {
+            return lhs == rhs;
+        }
+        if (operator_text == "#" || operator_text == "<>") {
+            return lhs != rhs;
+        }
+        if (operator_text == "<") {
+            return lhs < rhs;
+        }
+        if (operator_text == "<=") {
+            return lhs <= rhs;
+        }
+        if (operator_text == ">") {
+            return lhs > rhs;
+        }
+        if (operator_text == ">=") {
+            return lhs >= rhs;
+        }
+        return false;
+    }
+
+    return evaluate_preprocessor_truthiness(parse_preprocessor_scalar_value(expanded));
+}
+
+bool try_parse_ifdef_directive(const std::string& line, std::string& identifier) {
+    const std::string trimmed = trim_copy(line);
+    if (!starts_with_insensitive(trimmed, "#IFDEF")) {
+        return false;
+    }
+    identifier = trim_copy(trimmed.substr(6U));
+    return !identifier.empty();
+}
+
+bool try_parse_ifndef_directive(const std::string& line, std::string& identifier) {
+    const std::string trimmed = trim_copy(line);
+    if (!starts_with_insensitive(trimmed, "#IFNDEF")) {
+        return false;
+    }
+    identifier = trim_copy(trimmed.substr(7U));
+    return !identifier.empty();
+}
+
+bool try_parse_if_directive(const std::string& line, std::string& expression) {
+    const std::string trimmed = trim_copy(line);
+    if (!starts_with_insensitive(trimmed, "#IF ")) {
+        return false;
+    }
+    expression = trim_copy(trimmed.substr(3U));
+    return !expression.empty();
+}
+
+bool is_else_directive(const std::string& line) {
+    return uppercase_copy(trim_copy(line)) == "#ELSE";
+}
+
+bool is_endif_directive(const std::string& line) {
+    return uppercase_copy(trim_copy(line)) == "#ENDIF";
+}
+
+void push_preprocessor_conditional(PreprocessorState& state, const bool condition_value) {
+    const bool parent_active = is_preprocessor_active(state);
+    state.conditionals.push_back({
+        .parent_active = parent_active,
+        .current_active = parent_active && condition_value,
+        .branch_taken = condition_value,
+        .else_seen = false
+    });
+}
+
+void handle_preprocessor_else(PreprocessorState& state) {
+    if (state.conditionals.empty()) {
+        return;
+    }
+    auto& frame = state.conditionals.back();
+    if (frame.else_seen) {
+        frame.current_active = false;
+        return;
+    }
+
+    frame.current_active = frame.parent_active && !frame.branch_taken;
+    frame.branch_taken = true;
+    frame.else_seen = true;
+}
+
+void handle_preprocessor_endif(PreprocessorState& state) {
+    if (!state.conditionals.empty()) {
+        state.conditionals.pop_back();
+    }
+}
+
 bool try_parse_include_directive(const std::string& line, std::string& include_path_text) {
     const std::string trimmed = trim_copy(line);
     if (!starts_with_insensitive(trimmed, "#INCLUDE")) {
@@ -357,7 +704,13 @@ bool try_parse_define_directive(
 }
 
 fs::path resolve_include_path(const fs::path& owning_path, const std::string& include_path_text) {
-    const fs::path candidate = owning_path.parent_path() / fs::path(include_path_text);
+    std::string normalized = include_path_text;
+    for (char& ch : normalized) {
+        if (ch == '\\') {
+            ch = '/';
+        }
+    }
+    const fs::path candidate = owning_path.parent_path() / fs::path(normalized);
     std::error_code error;
     if (fs::exists(candidate, error)) {
         return candidate.lexically_normal();
@@ -373,9 +726,42 @@ void append_preprocessed_logical_lines(
     for (const auto& logical_line : load_logical_lines(path.string())) {
         const std::string trimmed = trim_copy(logical_line.text);
         if (trimmed.empty()) {
-            if (emit_non_directive_lines) {
+            if (emit_non_directive_lines && is_preprocessor_active(state)) {
                 output_lines.push_back(logical_line);
             }
+            continue;
+        }
+
+        std::string conditional_identifier;
+        if (try_parse_ifdef_directive(trimmed, conditional_identifier)) {
+            push_preprocessor_conditional(
+                state,
+                state.defines.contains(normalize_identifier(conditional_identifier)));
+            continue;
+        }
+        if (try_parse_ifndef_directive(trimmed, conditional_identifier)) {
+            push_preprocessor_conditional(
+                state,
+                !state.defines.contains(normalize_identifier(conditional_identifier)));
+            continue;
+        }
+        std::string conditional_expression;
+        if (try_parse_if_directive(trimmed, conditional_expression)) {
+            push_preprocessor_conditional(
+                state,
+                evaluate_preprocessor_condition_expression(conditional_expression, state.defines));
+            continue;
+        }
+        if (is_else_directive(trimmed)) {
+            handle_preprocessor_else(state);
+            continue;
+        }
+        if (is_endif_directive(trimmed)) {
+            handle_preprocessor_endif(state);
+            continue;
+        }
+
+        if (!is_preprocessor_active(state)) {
             continue;
         }
 
