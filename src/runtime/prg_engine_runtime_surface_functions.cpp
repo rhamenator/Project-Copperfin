@@ -962,6 +962,28 @@ bool native_controlsource_member_name_matches(
            normalized_base_class == "spinner";
 }
 
+bool native_recordsource_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "recordsource" ||
+        !runtime_object.properties.contains("recordsource")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "grid";
+}
+
+bool native_recordsourcetype_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "recordsourcetype" ||
+        !runtime_object.properties.contains("recordsourcetype")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "grid";
+}
+
 bool native_rowsource_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
@@ -1616,6 +1638,16 @@ bool is_native_controlsource_member_name(const RuntimeOleObjectState& runtime_ob
     return native_controlsource_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_recordsource_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_recordsource_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_recordsourcetype_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_recordsourcetype_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_rowsource_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_rowsource_member_name_matches(runtime_object, normalized_member_name);
@@ -2119,6 +2151,8 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_control_readonly_member_name(*runtime_object, property_name) ||
             is_native_string_control_value_member_name(*runtime_object, property_name) ||
             is_native_controlsource_member_name(*runtime_object, property_name) ||
+            is_native_recordsource_member_name(*runtime_object, property_name) ||
+            is_native_recordsourcetype_member_name(*runtime_object, property_name) ||
             is_native_rowsource_member_name(*runtime_object, property_name) ||
             is_native_rowsourcetype_member_name(*runtime_object, property_name) ||
             is_native_listindex_member_name(*runtime_object, property_name) ||
@@ -2341,6 +2375,8 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_control_readonly_member_name(*runtime_object, property_name) ||
             is_native_string_control_value_member_name(*runtime_object, property_name) ||
             is_native_controlsource_member_name(*runtime_object, property_name) ||
+            is_native_recordsource_member_name(*runtime_object, property_name) ||
+            is_native_recordsourcetype_member_name(*runtime_object, property_name) ||
             is_native_rowsource_member_name(*runtime_object, property_name) ||
             is_native_rowsourcetype_member_name(*runtime_object, property_name) ||
             is_native_listindex_member_name(*runtime_object, property_name) ||

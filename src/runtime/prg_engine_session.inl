@@ -273,6 +273,18 @@
                 runtime_object.properties["controlsource"] = make_string_value("");
             }
 
+            if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("recordsource"))
+            {
+                runtime_object.properties["recordsource"] = make_string_value("");
+            }
+
+            if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("recordsourcetype"))
+            {
+                runtime_object.properties["recordsourcetype"] = make_number_value(1.0);
+            }
+
             if ((normalized_base_class == "combobox" ||
                  normalized_base_class == "listbox") &&
                 !runtime_object.properties.contains("rowsource"))

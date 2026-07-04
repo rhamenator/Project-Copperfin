@@ -7855,6 +7855,208 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_recordsource_defaults_mutates_and_stays_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_recordsource";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_recordsource.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('Grid')\n"
+            "lPlainHasRecordSource = PEMSTATUS(oPlain, 'RecordSource', 1)\n"
+            "lPlainRecordSourceReadOnly = PEMSTATUS(oPlain, 'RecordSource', 5)\n"
+            "cPlainBefore = oPlain.RecordSource\n"
+            "xPlainGetPemBefore = GETPEM(oPlain, 'RecordSource')\n"
+            "oPlain.RecordSource = 'customer_alias'\n"
+            "cPlainAfterDirectAssign = oPlain.RecordSource\n"
+            "lPlainSetPem = SETPEM(oPlain, 'RecordSource', 'invoice_alias')\n"
+            "cPlainAfterSetPem = oPlain.RecordSource\n"
+            "lPlainAddProperty = ADDPROPERTY(oPlain, 'RecordSource', 'shadow')\n"
+            "lPlainRemoveProperty = REMOVEPROPERTY(oPlain, 'RecordSource')\n"
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "cGridBefore = oForm.grdCust.RecordSource\n"
+            "cGridRead = oForm.cmdProbe.ReadRecordSource()\n"
+            "oForm.cmdProbe.RebindGrid()\n"
+            "cGridAfterChild = oForm.grdCust.RecordSource\n"
+            "lGridSetPem = SETPEM(oForm.grdCust, 'RecordSource', 'history_alias')\n"
+            "cGridAfterSetPem = oForm.grdCust.RecordSource\n"
+            "xGridGetPem = GETPEM(oForm.grdCust, 'RecordSource')\n"
+            "lGridHasRecordSource = PEMSTATUS(oForm.grdCust, 'RecordSource', 1)\n"
+            "lGridRecordSourceReadOnly = PEMSTATUS(oForm.grdCust, 'RecordSource', 5)\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oForm.grdCust, 1)\n"
+            "lPropHasRecordSource = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'RECORDSOURCE'\n"
+            "        lPropHasRecordSource = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('BoundGrid')\n"
+            "cDerivedBefore = oDerived.RecordSource\n"
+            "RETURN\n"
+            "DEFINE CLASS ProbeButton AS CommandButton\n"
+            "    FUNCTION ReadRecordSource\n"
+            "        RETURN THISFORM.grdCust.RecordSource\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE RebindGrid\n"
+            "        THISFORM.grdCust.RecordSource = 'report_alias'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    ADD OBJECT grdCust AS Grid WITH RecordSource = 'customer_view'\n"
+            "    ADD OBJECT cmdProbe AS ProbeButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS BoundGrid AS Grid\n"
+            "    RecordSource = 'orders_cursor'\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native RecordSource property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplainhasrecordsource", "true");
+        check("lplainrecordsourcereadonly", "false");
+        check("cplainbefore", "");
+        check("xplaingetpembefore", "");
+        check("cplainafterdirectassign", "customer_alias");
+        check("lplainsetpem", "true");
+        check("cplainaftersetpem", "invoice_alias");
+        check("lplainaddproperty", "false");
+        check("lplainremoveproperty", "false");
+        check("cgridbefore", "customer_view");
+        check("cgridread", "customer_view");
+        check("cgridafterchild", "report_alias");
+        check("lgridsetpem", "true");
+        check("cgridaftersetpem", "history_alias");
+        check("xgridgetpem", "history_alias");
+        check("lgridhasrecordsource", "true");
+        check("lgridrecordsourcereadonly", "false");
+        check("lprophasrecordsource", "true");
+        check("cderivedbefore", "orders_cursor");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_native_recordsourcetype_defaults_mutates_and_stays_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_recordsourcetype";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_recordsourcetype.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('Grid')\n"
+            "lPlainHasRecordSourceType = PEMSTATUS(oPlain, 'RecordSourceType', 1)\n"
+            "lPlainRecordSourceTypeReadOnly = PEMSTATUS(oPlain, 'RecordSourceType', 5)\n"
+            "nPlainBefore = oPlain.RecordSourceType\n"
+            "xPlainGetPemBefore = GETPEM(oPlain, 'RecordSourceType')\n"
+            "oPlain.RecordSourceType = 4\n"
+            "nPlainAfterDirectAssign = oPlain.RecordSourceType\n"
+            "lPlainSetPem = SETPEM(oPlain, 'RecordSourceType', 0)\n"
+            "nPlainAfterSetPem = oPlain.RecordSourceType\n"
+            "lPlainAddProperty = ADDPROPERTY(oPlain, 'RecordSourceType', 2)\n"
+            "lPlainRemoveProperty = REMOVEPROPERTY(oPlain, 'RecordSourceType')\n"
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "nGridBefore = oForm.grdCust.RecordSourceType\n"
+            "nGridRead = oForm.cmdProbe.ReadRecordSourceType()\n"
+            "oForm.cmdProbe.RebindGrid()\n"
+            "nGridAfterChild = oForm.grdCust.RecordSourceType\n"
+            "lGridSetPem = SETPEM(oForm.grdCust, 'RecordSourceType', 1)\n"
+            "nGridAfterSetPem = oForm.grdCust.RecordSourceType\n"
+            "xGridGetPem = GETPEM(oForm.grdCust, 'RecordSourceType')\n"
+            "lGridHasRecordSourceType = PEMSTATUS(oForm.grdCust, 'RecordSourceType', 1)\n"
+            "lGridRecordSourceTypeReadOnly = PEMSTATUS(oForm.grdCust, 'RecordSourceType', 5)\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oForm.grdCust, 1)\n"
+            "lPropHasRecordSourceType = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'RECORDSOURCETYPE'\n"
+            "        lPropHasRecordSourceType = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('BoundGrid')\n"
+            "nDerivedBefore = oDerived.RecordSourceType\n"
+            "RETURN\n"
+            "DEFINE CLASS ProbeButton AS CommandButton\n"
+            "    FUNCTION ReadRecordSourceType\n"
+            "        RETURN THISFORM.grdCust.RecordSourceType\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE RebindGrid\n"
+            "        THISFORM.grdCust.RecordSourceType = 3\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    ADD OBJECT grdCust AS Grid WITH RecordSourceType = 4\n"
+            "    ADD OBJECT cmdProbe AS ProbeButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS BoundGrid AS Grid\n"
+            "    RecordSourceType = 2\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native RecordSourceType property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplainhasrecordsourcetype", "true");
+        check("lplainrecordsourcetypereadonly", "false");
+        check("nplainbefore", "1");
+        check("xplaingetpembefore", "1");
+        check("nplainafterdirectassign", "4");
+        check("lplainsetpem", "true");
+        check("nplainaftersetpem", "0");
+        check("lplainaddproperty", "false");
+        check("lplainremoveproperty", "false");
+        check("ngridbefore", "4");
+        check("ngridread", "4");
+        check("ngridafterchild", "3");
+        check("lgridsetpem", "true");
+        check("ngridaftersetpem", "1");
+        check("xgridgetpem", "1");
+        check("lgridhasrecordsourcetype", "true");
+        check("lgridrecordsourcetypereadonly", "false");
+        check("lprophasrecordsourcetype", "true");
+        check("nderivedbefore", "2");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_rowsource_defaults_mutates_and_stays_builtin()
     {
         namespace fs = std::filesystem;
@@ -48007,6 +48209,8 @@ int main()
     test_runtime_application_caption_aliases_track_representative_caption();
     test_runtime_application_windowstate_aliases_track_representative_state();
     test_native_controlsource_defaults_mutates_and_stays_builtin();
+    test_native_recordsource_defaults_mutates_and_stays_builtin();
+    test_native_recordsourcetype_defaults_mutates_and_stays_builtin();
     test_native_rowsource_defaults_mutates_and_stays_builtin();
     test_native_rowsourcetype_defaults_mutates_and_stays_builtin();
     test_native_listindex_defaults_mutates_and_stays_builtin();
