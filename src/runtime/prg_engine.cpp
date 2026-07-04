@@ -3881,6 +3881,40 @@ namespace copperfin::runtime
             return static_cast<std::size_t>(requested_index - 1LL);
         };
 
+        auto resolve_selectedid_member_item_id = [&]() -> std::optional<long long>
+        {
+            const auto literal_item_id =
+                parse_native_list_control_selectedid_member_item_id(runtime_object, property_name);
+            if (literal_item_id.has_value())
+            {
+                return literal_item_id;
+            }
+
+            if (!starts_with_insensitive(normalized_property_name, "selectedid(") ||
+                normalized_property_name.back() != ')')
+            {
+                return std::nullopt;
+            }
+
+            const std::size_t open_paren = property_name.find('(');
+            const std::size_t close_paren = property_name.rfind(')');
+            if (open_paren == std::string::npos || close_paren == std::string::npos ||
+                close_paren <= open_paren + 1U)
+            {
+                return std::nullopt;
+            }
+
+            const PrgValue selector_value = evaluate_expression(
+                property_name.substr(open_paren + 1U, close_paren - open_paren - 1U),
+                source_frame);
+            const long long requested_item_id = std::llround(value_as_number(selector_value));
+            if (requested_item_id < 1LL)
+            {
+                return std::nullopt;
+            }
+            return requested_item_id;
+        };
+
         const auto perform_property_write = [&]() -> bool
         {
             if (invoke_native_object_method_body_if_present(
@@ -3950,6 +3984,14 @@ namespace copperfin::runtime
                     return write_native_list_control_selected_slot(
                         runtime_object,
                         *selected_slot,
+                        assigned_value);
+                }
+                if (const auto selected_item_id = resolve_selectedid_member_item_id();
+                    selected_item_id.has_value())
+                {
+                    return write_native_list_control_selected_item_id(
+                        runtime_object,
+                        *selected_item_id,
                         assigned_value);
                 }
                 if (is_native_controlsource_member_name(runtime_object, normalized_property_name) &&

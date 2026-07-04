@@ -781,6 +781,35 @@ std::optional<std::size_t> parse_native_list_control_selected_member_slot_impl(
     }
 }
 
+std::optional<long long> parse_native_list_control_selectedid_member_item_id_impl(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& member_name) {
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return std::nullopt;
+    }
+
+    const std::string normalized = normalize_identifier(trim_copy(member_name));
+    if (!starts_with_insensitive(normalized, "selectedid(") || normalized.back() != ')') {
+        return std::nullopt;
+    }
+
+    const std::size_t open_paren = normalized.find('(');
+    if (open_paren == std::string::npos || open_paren + 1U >= normalized.size() - 1U) {
+        return std::nullopt;
+    }
+
+    try {
+        const long long requested_item_id = std::stoll(
+            trim_copy(normalized.substr(open_paren + 1U, normalized.size() - open_paren - 2U)));
+        if (requested_item_id < 1LL) {
+            return std::nullopt;
+        }
+        return requested_item_id;
+    } catch (const std::exception&) {
+        return std::nullopt;
+    }
+}
+
 std::optional<std::size_t> resolve_native_list_control_insert_slot(
     const RuntimeOleObjectState& runtime_object,
     const std::vector<PrgValue>& arguments) {
@@ -1933,6 +1962,13 @@ std::optional<std::size_t> parse_native_list_control_selected_member_slot(
     return parse_native_list_control_selected_member_slot_impl(runtime_object, member_name);
 }
 
+std::optional<long long> parse_native_list_control_selectedid_member_item_id(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& member_name)
+{
+    return parse_native_list_control_selectedid_member_item_id_impl(runtime_object, member_name);
+}
+
 void sync_native_list_control_displayvalue_from_selection(RuntimeOleObjectState& runtime_object)
 {
     sync_native_list_control_displayvalue_from_selection_impl(runtime_object);
@@ -2018,6 +2054,26 @@ bool write_native_list_control_selected_slot(
 
     sync_native_list_control_displayvalue_from_selection_impl(runtime_object);
     return true;
+}
+
+bool write_native_list_control_selected_item_id(
+    RuntimeOleObjectState& runtime_object,
+    long long requested_item_id,
+    const PrgValue& assigned_value)
+{
+    if (!is_native_list_control_runtime_object(runtime_object) ||
+        requested_item_id < 1LL) {
+        return false;
+    }
+
+    materialize_native_list_control_rows(runtime_object);
+
+    const auto slot = find_native_list_control_row_by_item_id(runtime_object, requested_item_id);
+    if (!slot.has_value()) {
+        return false;
+    }
+
+    return write_native_list_control_selected_slot(runtime_object, *slot, assigned_value);
 }
 
 bool is_native_identity_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
@@ -2469,6 +2525,25 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
 
         return make_boolean_value(
             runtime_object.list_selected[static_cast<std::size_t>(requested_index - 1LL)]);
+    }
+
+    if (normalized_method_name == "selectedid") {
+        if (arguments.empty()) {
+            return make_boolean_value(false);
+        }
+
+        sync_native_list_control_selected_state_size(runtime_object);
+        const long long requested_item_id = std::llround(value_as_number(arguments[0]));
+        if (requested_item_id < 1LL) {
+            return make_boolean_value(false);
+        }
+
+        const auto slot = find_native_list_control_row_by_item_id(runtime_object, requested_item_id);
+        if (!slot.has_value()) {
+            return make_boolean_value(false);
+        }
+
+        return make_boolean_value(runtime_object.list_selected[*slot]);
     }
 
     if (normalized_method_name == "addlistitem") {
@@ -3177,6 +3252,15 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                 write_native_list_control_selected_slot(
                     *runtime_object,
                     *selected_slot,
+                    arguments[2]));
+        }
+        if (const auto selected_item_id =
+                parse_native_list_control_selectedid_member_item_id(*runtime_object, member_name);
+            selected_item_id.has_value()) {
+            return make_boolean_value(
+                write_native_list_control_selected_item_id(
+                    *runtime_object,
+                    *selected_item_id,
                     arguments[2]));
         }
         if (is_native_listitemid_member_name(*runtime_object, member_name)) {

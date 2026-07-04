@@ -10638,6 +10638,150 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_list_controls_selectedid_selection_stays_coherent()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_list_controls_selectedid";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_list_controls_selectedid.prg";
+        write_text(
+            main_path,
+            "oPlainCombo = CREATEOBJECT('ComboBox')\n"
+            "oPlainCombo.ColumnCount = 2\n"
+            "oPlainCombo.AddListItem('Alpha', 11)\n"
+            "oPlainCombo.AddListItem('A', 11, 2)\n"
+            "oPlainCombo.AddListItem('Beta', 22)\n"
+            "oPlainCombo.AddListItem('B', 22, 2)\n"
+            "oPlainCombo.AddListItem('Gamma', 33)\n"
+            "oPlainCombo.AddListItem('C', 33, 2)\n"
+            "nTargetItemId = 22\n"
+            "oPlainCombo.SelectedID(11) = .T.\n"
+            "oPlainCombo.SelectedID(m.nTargetItemId) = .T.\n"
+            "lSelected11 = oPlainCombo.SelectedID(11)\n"
+            "lSelected22 = oPlainCombo.SelectedID(22)\n"
+            "lSelected33 = oPlainCombo.SelectedID(33)\n"
+            "nListItemIdAfterSet = oPlainCombo.ListItemID\n"
+            "nListIndexAfterSet = oPlainCombo.ListIndex\n"
+            "cDisplayAfterSet = oPlainCombo.DisplayValue\n"
+            "oPlainCombo.RemoveItem(1)\n"
+            "lSelected22AfterRemove = oPlainCombo.SelectedID(22)\n"
+            "nListItemIdAfterRemove = oPlainCombo.ListItemID\n"
+            "nListIndexAfterRemove = oPlainCombo.ListIndex\n"
+            "cDisplayAfterRemove = oPlainCombo.DisplayValue\n"
+            "oPlainCombo.SelectedID(22) = .F.\n"
+            "lSelected22AfterClear = oPlainCombo.SelectedID(22)\n"
+            "nListItemIdAfterClear = oPlainCombo.ListItemID\n"
+            "nListIndexAfterClear = oPlainCombo.ListIndex\n"
+            "cDisplayAfterClear = oPlainCombo.DisplayValue\n"
+            "lSetPemSelected33 = SETPEM(oPlainCombo, 'SelectedID(33)', .T.)\n"
+            "lSelected33AfterSetPem = oPlainCombo.SelectedID(33)\n"
+            "nListItemIdAfterSetPem = oPlainCombo.ListItemID\n"
+            "nListIndexAfterSetPem = oPlainCombo.ListIndex\n"
+            "lSetPemMissing = SETPEM(oPlainCombo, 'SelectedID(99)', .T.)\n"
+            "oSeedList = CREATEOBJECT('SeededList')\n"
+            "lSeedSelected100 = oSeedList.SelectedID(100)\n"
+            "lSeedSelected200 = oSeedList.SelectedID(200)\n"
+            "nSeedListItemId = oSeedList.ListItemID\n"
+            "nSeedListIndex = oSeedList.ListIndex\n"
+            "cSeedDisplay = oSeedList.DisplayValue\n"
+            "RETURN\n"
+            "DEFINE CLASS SeededList AS ListBox\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddListItem('North', 100)\n"
+            "        THIS.AddListItem('South', 200)\n"
+            "        THIS.SelectedID(200) = .T.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native SelectedID list-control script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lselected11", "false");
+        check("lselected22", "true");
+        check("lselected33", "false");
+        check("nlistitemidafterset", "22");
+        check("nlistindexafterset", "2");
+        check("cdisplayafterset", "Beta");
+        check("lselected22afterremove", "true");
+        check("nlistitemidafterremove", "22");
+        check("nlistindexafterremove", "1");
+        check("cdisplayafterremove", "Beta");
+        check("lselected22afterclear", "false");
+        check("nlistitemidafterclear", "0");
+        check("nlistindexafterclear", "0");
+        check("cdisplayafterclear", "");
+        check("lsetpemselected33", "true");
+        check("lselected33aftersetpem", "true");
+        check("nlistitemidaftersetpem", "33");
+        check("nlistindexaftersetpem", "2");
+        check("lsetpemmissing", "false");
+        check("lseedselected100", "false");
+        check("lseedselected200", "true");
+        check("nseedlistitemid", "200");
+        check("nseedlistindex", "2");
+        check("cseeddisplay", "South");
+
+        expect(state.ole_objects.size() == 2U,
+               "native SelectedID coverage should register plain and derived list controls");
+        if (state.ole_objects.size() == 2U)
+        {
+            const auto &plain_combo = state.ole_objects[0];
+            const auto &seed_list = state.ole_objects[1];
+
+            const auto plain_listitemid = plain_combo.properties.find("listitemid");
+            const auto plain_listindex = plain_combo.properties.find("listindex");
+            const auto seed_listitemid = seed_list.properties.find("listitemid");
+            const auto seed_listindex = seed_list.properties.find("listindex");
+
+            expect(plain_combo.collection_item_keys.size() == 2U &&
+                       plain_combo.collection_item_keys[0] == "22" &&
+                       plain_combo.collection_item_keys[1] == "33",
+                   "plain ComboBox SelectedID coverage should preserve surviving item ids after removal");
+            expect(plain_combo.list_selected.size() == 2U &&
+                       !plain_combo.list_selected[0] &&
+                       plain_combo.list_selected[1],
+                   "plain ComboBox SelectedID coverage should move the active selection bit to the surviving item-id row");
+            expect(plain_listitemid != plain_combo.properties.end() &&
+                       copperfin::runtime::format_value(plain_listitemid->second) == "33",
+                   "plain ComboBox SelectedID coverage should keep ListItemID synchronized after SETPEM()");
+            expect(plain_listindex != plain_combo.properties.end() &&
+                       copperfin::runtime::format_value(plain_listindex->second) == "2",
+                   "plain ComboBox SelectedID coverage should keep ListIndex synchronized after SETPEM()");
+            expect(seed_list.list_selected.size() == 2U &&
+                       !seed_list.list_selected[0] &&
+                       seed_list.list_selected[1],
+                   "derived ListBox SelectedID coverage should preserve Init-time item-id selection bits");
+            expect(seed_listitemid != seed_list.properties.end() &&
+                       copperfin::runtime::format_value(seed_listitemid->second) == "200",
+                   "derived ListBox SelectedID coverage should keep ListItemID synchronized during Init");
+            expect(seed_listindex != seed_list.properties.end() &&
+                       copperfin::runtime::format_value(seed_listindex->second) == "2",
+                   "derived ListBox SelectedID coverage should keep ListIndex synchronized during Init");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_listbox_selected_property_stays_coherent()
     {
         namespace fs = std::filesystem;
@@ -50658,6 +50802,7 @@ int main()
     test_native_list_controls_listcount_list_and_removeitem_stay_coherent();
     test_native_list_controls_addlistitem_newitemid_and_multicolumn_list_stay_coherent();
     test_native_list_controls_listitemid_selection_stays_coherent();
+    test_native_list_controls_selectedid_selection_stays_coherent();
     test_native_listbox_selected_property_stays_coherent();
     test_native_combobox_boundcolumn_columncount_and_columnwidths_defaults_mutate_and_stay_builtin();
     test_native_grid_columncount_defaults_materialize_columns_and_stay_builtin();

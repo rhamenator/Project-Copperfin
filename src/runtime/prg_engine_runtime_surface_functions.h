@@ -76,10 +76,15 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
                                                           const std::vector<PrgValue>& arguments);
 std::optional<std::size_t> parse_native_list_control_selected_member_slot(const RuntimeOleObjectState& runtime_object,
                                                                           const std::string& member_name);
+std::optional<long long> parse_native_list_control_selectedid_member_item_id(const RuntimeOleObjectState& runtime_object,
+                                                                             const std::string& member_name);
 bool write_native_list_control_item_id(RuntimeOleObjectState& runtime_object, const PrgValue& assigned_value);
 bool write_native_list_control_selected_slot(RuntimeOleObjectState& runtime_object,
                                              std::size_t slot,
                                              const PrgValue& assigned_value);
+bool write_native_list_control_selected_item_id(RuntimeOleObjectState& runtime_object,
+                                                long long requested_item_id,
+                                                const PrgValue& assigned_value);
 void sync_native_list_control_count(RuntimeOleObjectState& runtime_object);
 void sync_native_list_control_displayvalue_from_selection(RuntimeOleObjectState& runtime_object);
 std::optional<PrgValue> read_native_identity_metadata(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
