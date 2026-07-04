@@ -697,6 +697,13 @@ bool native_child_parent_member_name_matches(const RuntimeOleObjectState& runtim
     return parse_object_handle_reference(parent->second, handle, prog_id);
 }
 
+bool native_controlcount_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "controlcount" &&
+           runtime_object.properties.contains("controlcount");
+}
+
 std::vector<std::string> collect_native_identity_member_names(const RuntimeOleObjectState& runtime_object) {
     std::vector<std::string> members;
     if (get_native_identity_reflection_metadata(runtime_object, "hwnd").has_value()) {
@@ -1059,6 +1066,11 @@ bool is_native_child_parent_member_name(const RuntimeOleObjectState& runtime_obj
     return native_child_parent_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_controlcount_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_controlcount_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_collection_object(const RuntimeOleObjectState& runtime_object)
 {
     return normalize_identifier(runtime_object.base_class_name) == "collection" ||
@@ -1259,6 +1271,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
     const auto reflectable_member_exists_locally = [](const RuntimeOleObjectState& runtime_object,
                                                       const std::string& member_name) {
         return get_native_identity_reflection_metadata(runtime_object, member_name).has_value() ||
+               native_controlcount_member_name_matches(runtime_object, member_name) ||
                is_native_collection_member_name(runtime_object, member_name) ||
                runtime_object.properties.contains(member_name) ||
                object_has_accessor_property(runtime_object, member_name) ||
@@ -1269,6 +1282,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
     const auto reflectable_member_readonly_locally = [](const RuntimeOleObjectState& runtime_object,
                                                         const std::string& member_name) {
         return get_native_identity_reflection_metadata(runtime_object, member_name).has_value() ||
+               native_controlcount_member_name_matches(runtime_object, member_name) ||
                is_native_olecontrol_creation_time_member_name(runtime_object, member_name) ||
                is_native_olecontrol_object_member_name(runtime_object, member_name) ||
                is_native_olecontrol_inspection_member_name(runtime_object, member_name) ||
@@ -1491,6 +1505,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             return make_boolean_value(false);
         }
         if (is_native_identity_member_name(*runtime_object, property_name) ||
+            is_native_controlcount_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_creation_time_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_object_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_inspection_member_name(*runtime_object, property_name) ||
@@ -1607,6 +1622,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             return make_boolean_value(false);
         }
         if (native_child_parent_member_name_matches(*runtime_object, member_name) ||
+            is_native_controlcount_member_name(*runtime_object, member_name) ||
             is_native_olecontrol_creation_time_member_name(*runtime_object, member_name) ||
             is_native_olecontrol_object_member_name(*runtime_object, member_name) ||
             is_native_olecontrol_inspection_member_name(*runtime_object, member_name) ||
@@ -1663,6 +1679,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             return make_boolean_value(false);
         }
         if (is_native_identity_member_name(*runtime_object, property_name) ||
+            is_native_controlcount_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_creation_time_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_object_member_name(*runtime_object, property_name) ||
             is_native_olecontrol_inspection_member_name(*runtime_object, property_name) ||

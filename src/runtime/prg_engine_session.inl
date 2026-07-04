@@ -431,7 +431,16 @@
             };
 
             objects_collection = sync_collection_surface("objects");
-            (void)sync_collection_surface("controls");
+            RuntimeOleObjectState *controls_collection = sync_collection_surface("controls");
+            if (controls_collection != nullptr)
+            {
+                runtime_object.properties["controlcount"] =
+                    make_number_value(static_cast<double>(controls_collection->collection_items.size()));
+            }
+            else
+            {
+                runtime_object.properties.erase("controlcount");
+            }
             return objects_collection;
         }
 
@@ -861,6 +870,7 @@
             }
 
             if (is_native_identity_member_name(runtime_object, normalized_property_name) ||
+                is_native_controlcount_member_name(runtime_object, normalized_property_name) ||
                 is_native_olecontrol_creation_time_member_name(runtime_object, normalized_property_name) ||
                 is_native_olecontrol_object_member_name(runtime_object, normalized_property_name) ||
                 is_native_olecontrol_inspection_member_name(runtime_object, normalized_property_name) ||

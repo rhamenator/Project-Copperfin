@@ -6189,6 +6189,91 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_controlcount_reflects_controls_count_and_stays_read_only()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_controlcount_property";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_controlcount_property.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('DemoForm')\n"
+            "nControlCountDirect = oForm.ControlCount\n"
+            "nControlCountCollection = oForm.Controls.Count\n"
+            "xControlCountGetPem = GETPEM(oForm, 'ControlCount')\n"
+            "lHasControlCount = PEMSTATUS(oForm, 'ControlCount', 1)\n"
+            "lControlCountReadOnly = PEMSTATUS(oForm, 'ControlCount', 5)\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oForm, 1)\n"
+            "nUnionMembers = AMEMBERS(aUnionMembers, oForm, 3)\n"
+            "lPropHasControlCount = .F.\n"
+            "lUnionHasControlCount = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'CONTROLCOUNT'\n"
+            "        lPropHasControlCount = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "FOR i = 1 TO nUnionMembers\n"
+            "    IF UPPER(aUnionMembers[i]) == 'CONTROLCOUNT'\n"
+            "        lUnionHasControlCount = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "lSetControlCount = SETPEM(oForm, 'ControlCount', 99)\n"
+            "lAddControlCount = ADDPROPERTY(oForm, 'ControlCount', 99)\n"
+            "lRemoveControlCount = REMOVEPROPERTY(oForm, 'ControlCount')\n"
+            "lRemoved = oForm.RemoveObject('cmdSave')\n"
+            "nControlCountAfterRemove = oForm.ControlCount\n"
+            "RETURN\n"
+            "DEFINE CLASS SaveButton AS CommandButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS BadgeLabel AS Label\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DemoForm AS Form\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddObject('cmdSave', 'SaveButton')\n"
+            "        THIS.AddObject('lblBadge', 'BadgeLabel')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native ControlCount property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("ncontrolcountdirect", "2");
+        check("ncontrolcountcollection", "2");
+        check("xcontrolcountgetpem", "2");
+        check("lhascontrolcount", "true");
+        check("lcontrolcountreadonly", "true");
+        check("lprophascontrolcount", "true");
+        check("lunionhascontrolcount", "true");
+        check("lsetcontrolcount", "false");
+        check("laddcontrolcount", "false");
+        check("lremovecontrolcount", "false");
+        check("lremoved", "true");
+        check("ncontrolcountafterremove", "1");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_createobject_and_newobject_instantiate_same_prg_exception_native_class()
     {
         namespace fs = std::filesystem;
@@ -43874,6 +43959,7 @@ int main()
     test_native_collection_default_item_invocation_routes_bare_and_member_path_calls();
     test_native_objects_child_collection_reflects_count_item_and_foreach_without_leaking_hidden_runtime_surfaces();
     test_native_controls_child_collection_reflects_count_item_and_foreach_without_leaking_hidden_runtime_surfaces();
+    test_native_controlcount_reflects_controls_count_and_stays_read_only();
     test_createobject_and_newobject_instantiate_same_prg_exception_native_class();
     test_native_addobject_materializes_child_objects_and_child_methods_see_parent();
     test_native_class_body_add_object_materializes_children_before_init();
