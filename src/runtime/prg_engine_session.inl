@@ -273,6 +273,12 @@
                 runtime_object.properties["controlsource"] = make_string_value("");
             }
 
+            if (normalized_base_class == "column" &&
+                !runtime_object.properties.contains("currentcontrol"))
+            {
+                runtime_object.properties["currentcontrol"] = make_string_value("Text1");
+            }
+
             if (normalized_base_class == "grid" &&
                 !runtime_object.properties.contains("recordsource"))
             {

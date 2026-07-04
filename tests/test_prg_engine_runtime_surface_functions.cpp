@@ -7855,6 +7855,104 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_currentcontrol_defaults_mutates_and_stays_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_currentcontrol";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_currentcontrol.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('Column')\n"
+            "lPlainHasCurrentControl = PEMSTATUS(oPlain, 'CurrentControl', 1)\n"
+            "lPlainCurrentControlReadOnly = PEMSTATUS(oPlain, 'CurrentControl', 5)\n"
+            "cPlainBefore = oPlain.CurrentControl\n"
+            "xPlainGetPemBefore = GETPEM(oPlain, 'CurrentControl')\n"
+            "oPlain.CurrentControl = 'chkReady'\n"
+            "cPlainAfterDirectAssign = oPlain.CurrentControl\n"
+            "lPlainSetPem = SETPEM(oPlain, 'CurrentControl', 'cmbReady')\n"
+            "cPlainAfterSetPem = oPlain.CurrentControl\n"
+            "lPlainAddProperty = ADDPROPERTY(oPlain, 'CurrentControl', 'shadow')\n"
+            "lPlainRemoveProperty = REMOVEPROPERTY(oPlain, 'CurrentControl')\n"
+            "oGrid = CREATEOBJECT('MainGrid')\n"
+            "cChildBefore = oGrid.colStatus.CurrentControl\n"
+            "cChildRead = oGrid.ReadCurrentControl()\n"
+            "oGrid.RebindControl()\n"
+            "cChildAfterChild = oGrid.colStatus.CurrentControl\n"
+            "lChildSetPem = SETPEM(oGrid.colStatus, 'CurrentControl', 'spnStatus')\n"
+            "cChildAfterSetPem = oGrid.colStatus.CurrentControl\n"
+            "xChildGetPem = GETPEM(oGrid.colStatus, 'CurrentControl')\n"
+            "lChildHasCurrentControl = PEMSTATUS(oGrid.colStatus, 'CurrentControl', 1)\n"
+            "lChildCurrentControlReadOnly = PEMSTATUS(oGrid.colStatus, 'CurrentControl', 5)\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oGrid.colStatus, 1)\n"
+            "lPropHasCurrentControl = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'CURRENTCONTROL'\n"
+            "        lPropHasCurrentControl = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('BoundColumn')\n"
+            "cDerivedBefore = oDerived.CurrentControl\n"
+            "RETURN\n"
+            "DEFINE CLASS MainGrid AS Grid\n"
+            "    ADD OBJECT colStatus AS Column WITH CurrentControl = 'chkStatus'\n"
+            "    FUNCTION ReadCurrentControl\n"
+            "        RETURN THIS.colStatus.CurrentControl\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE RebindControl\n"
+            "        THIS.colStatus.CurrentControl = 'cmbStatus'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS BoundColumn AS Column\n"
+            "    CurrentControl = 'spnHours'\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native CurrentControl property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplainhascurrentcontrol", "true");
+        check("lplaincurrentcontrolreadonly", "false");
+        check("cplainbefore", "Text1");
+        check("xplaingetpembefore", "Text1");
+        check("cplainafterdirectassign", "chkReady");
+        check("lplainsetpem", "true");
+        check("cplainaftersetpem", "cmbReady");
+        check("lplainaddproperty", "false");
+        check("lplainremoveproperty", "false");
+        check("cchildbefore", "chkStatus");
+        check("cchildread", "chkStatus");
+        check("cchildafterchild", "cmbStatus");
+        check("lchildsetpem", "true");
+        check("cchildaftersetpem", "spnStatus");
+        check("xchildgetpem", "spnStatus");
+        check("lchildhascurrentcontrol", "true");
+        check("lchildcurrentcontrolreadonly", "false");
+        check("lprophascurrentcontrol", "true");
+        check("cderivedbefore", "spnHours");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_recordsource_defaults_mutates_and_stays_builtin()
     {
         namespace fs = std::filesystem;
@@ -48209,6 +48307,7 @@ int main()
     test_runtime_application_caption_aliases_track_representative_caption();
     test_runtime_application_windowstate_aliases_track_representative_state();
     test_native_controlsource_defaults_mutates_and_stays_builtin();
+    test_native_currentcontrol_defaults_mutates_and_stays_builtin();
     test_native_recordsource_defaults_mutates_and_stays_builtin();
     test_native_recordsourcetype_defaults_mutates_and_stays_builtin();
     test_native_rowsource_defaults_mutates_and_stays_builtin();
