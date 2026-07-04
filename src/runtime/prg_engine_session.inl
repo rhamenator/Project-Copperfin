@@ -245,7 +245,9 @@
             }
 
             if ((normalized_base_class == "textbox" ||
-                 normalized_base_class == "editbox") &&
+                 normalized_base_class == "editbox" ||
+                 normalized_base_class == "grid" ||
+                 normalized_base_class == "column") &&
                 !runtime_object.properties.contains("readonly"))
             {
                 runtime_object.properties["readonly"] = make_boolean_value(false);

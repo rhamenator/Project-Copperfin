@@ -7854,6 +7854,118 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_grid_and_column_readonly_defaults_mutate_and_stay_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_grid_column_readonly";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_grid_column_readonly.prg";
+        write_text(
+            main_path,
+            "oGrid = CREATEOBJECT('Grid')\n"
+            "lGridHasReadOnly = PEMSTATUS(oGrid, 'ReadOnly', 1)\n"
+            "lGridReadOnlyReadOnly = PEMSTATUS(oGrid, 'ReadOnly', 5)\n"
+            "lGridBefore = oGrid.ReadOnly\n"
+            "xGridGetPemBefore = GETPEM(oGrid, 'ReadOnly')\n"
+            "oGrid.ReadOnly = .T.\n"
+            "lGridAfterDirectAssign = oGrid.ReadOnly\n"
+            "lGridSetPem = SETPEM(oGrid, 'ReadOnly', .F.)\n"
+            "lGridAfterSetPem = oGrid.ReadOnly\n"
+            "lGridAddProperty = ADDPROPERTY(oGrid, 'ReadOnly', .T.)\n"
+            "lGridRemoveProperty = REMOVEPROPERTY(oGrid, 'ReadOnly')\n"
+            "nGridPropMembers = AMEMBERS(aGridPropMembers, oGrid, 1)\n"
+            "lGridPropHasReadOnly = .F.\n"
+            "FOR i = 1 TO nGridPropMembers\n"
+            "    IF UPPER(aGridPropMembers[i]) == 'READONLY'\n"
+            "        lGridPropHasReadOnly = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerivedGrid = CREATEOBJECT('WorkerGrid')\n"
+            "lDerivedGridBefore = oDerivedGrid.ReadOnly\n"
+            "oDerivedGrid.ReadOnly = .F.\n"
+            "lDerivedGridAfterDirectAssign = oDerivedGrid.ReadOnly\n"
+            "oColumn = CREATEOBJECT('Column')\n"
+            "lColumnHasReadOnly = PEMSTATUS(oColumn, 'ReadOnly', 1)\n"
+            "lColumnReadOnlyReadOnly = PEMSTATUS(oColumn, 'ReadOnly', 5)\n"
+            "lColumnBefore = oColumn.ReadOnly\n"
+            "xColumnGetPemBefore = GETPEM(oColumn, 'ReadOnly')\n"
+            "oColumn.ReadOnly = .T.\n"
+            "lColumnAfterDirectAssign = oColumn.ReadOnly\n"
+            "lColumnSetPem = SETPEM(oColumn, 'ReadOnly', .F.)\n"
+            "lColumnAfterSetPem = oColumn.ReadOnly\n"
+            "lColumnAddProperty = ADDPROPERTY(oColumn, 'ReadOnly', .T.)\n"
+            "lColumnRemoveProperty = REMOVEPROPERTY(oColumn, 'ReadOnly')\n"
+            "nColumnPropMembers = AMEMBERS(aColumnPropMembers, oColumn, 1)\n"
+            "lColumnPropHasReadOnly = .F.\n"
+            "FOR j = 1 TO nColumnPropMembers\n"
+            "    IF UPPER(aColumnPropMembers[j]) == 'READONLY'\n"
+            "        lColumnPropHasReadOnly = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerivedColumn = CREATEOBJECT('WorkerColumn')\n"
+            "lDerivedColumnBefore = oDerivedColumn.ReadOnly\n"
+            "lDerivedColumnSetPem = SETPEM(oDerivedColumn, 'ReadOnly', .F.)\n"
+            "lDerivedColumnAfterSetPem = oDerivedColumn.ReadOnly\n"
+            "RETURN\n"
+            "DEFINE CLASS WorkerGrid AS Grid\n"
+            "    ReadOnly = .T.\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS WorkerColumn AS Column\n"
+            "    ReadOnly = .T.\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Grid/Column ReadOnly property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lgridhasreadonly", "true");
+        check("lgridreadonlyreadonly", "false");
+        check("lgridbefore", "false");
+        check("xgridgetpembefore", "false");
+        check("lgridafterdirectassign", "true");
+        check("lgridsetpem", "true");
+        check("lgridaftersetpem", "false");
+        check("lgridaddproperty", "false");
+        check("lgridremoveproperty", "false");
+        check("lgridprophasreadonly", "true");
+        check("lderivedgridbefore", "true");
+        check("lderivedgridafterdirectassign", "false");
+        check("lcolumnhasreadonly", "true");
+        check("lcolumnreadonlyreadonly", "false");
+        check("lcolumnbefore", "false");
+        check("xcolumngetpembefore", "false");
+        check("lcolumnafterdirectassign", "true");
+        check("lcolumnsetpem", "true");
+        check("lcolumnaftersetpem", "false");
+        check("lcolumnaddproperty", "false");
+        check("lcolumnremoveproperty", "false");
+        check("lcolumnprophasreadonly", "true");
+        check("lderivedcolumnbefore", "true");
+        check("lderivedcolumnsetpem", "true");
+        check("lderivedcolumnaftersetpem", "false");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_name_reflects_parent_chain_and_stays_builtin()
     {
         namespace fs = std::filesystem;
@@ -46331,6 +46443,7 @@ int main()
     test_native_visual_enabled_defaults_mutates_and_stays_builtin();
     test_native_visual_visible_defaults_mutates_and_stays_builtin();
     test_native_text_entry_readonly_defaults_mutate_and_stay_builtin();
+    test_native_grid_and_column_readonly_defaults_mutate_and_stay_builtin();
     test_native_string_control_value_defaults_mutates_and_stays_builtin();
     test_native_name_reflects_parent_chain_and_stays_builtin();
     test_createobject_and_newobject_instantiate_same_prg_exception_native_class();
