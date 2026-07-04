@@ -61,6 +61,8 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
     const std::function<RuntimeOleObjectState*(const PrgValue&)>& resolve_object_callback,
     const std::function<std::optional<PrgValue>(const PrgValue&, const std::string&)>& read_native_member_callback,
     const std::function<bool(const PrgValue&, const std::string&, const PrgValue&)>& write_native_member_callback,
+    const std::function<std::optional<std::int64_t>(std::int64_t)>& whandle_from_hwnd_callback,
+    const std::function<std::optional<std::int64_t>(std::int64_t)>& hwnd_from_whandle_callback,
     const std::function<void(const std::string&, std::vector<PrgValue>)>& assign_array_callback,
     const std::function<void(const std::string&, const std::string&)>& record_event_callback);
 

@@ -600,6 +600,8 @@
                 object_state.class_hierarchy.push_back("OBJECT");
             }
 
+            assign_native_window_metadata(object_state);
+
             std::map<std::string, std::string> effective_methods;
             for (const NativeClassLookup &lineage_class : class_lineage)
             {

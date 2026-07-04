@@ -230,6 +230,9 @@ std::optional<std::size_t> resolve_native_collection_slot(
 std::optional<PrgValue> get_native_identity_reflection_metadata(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
+    if (normalized_member_name == "hwnd" && runtime_object.native_hwnd.has_value()) {
+        return make_int64_value(static_cast<std::int64_t>(*runtime_object.native_hwnd));
+    }
     if (runtime_object.class_hierarchy.empty()) {
         return std::nullopt;
     }
@@ -249,6 +252,9 @@ std::optional<PrgValue> get_native_identity_reflection_metadata(
 }
 
 bool native_identity_member_name_matches(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name) {
+    if (normalized_member_name == "hwnd" && runtime_object.native_hwnd.has_value()) {
+        return true;
+    }
     if (runtime_object.class_hierarchy.empty()) {
         return false;
     }
@@ -275,6 +281,9 @@ bool native_child_parent_member_name_matches(const RuntimeOleObjectState& runtim
 
 std::vector<std::string> collect_native_identity_member_names(const RuntimeOleObjectState& runtime_object) {
     std::vector<std::string> members;
+    if (get_native_identity_reflection_metadata(runtime_object, "hwnd").has_value()) {
+        members.push_back("hwnd");
+    }
     if (get_native_identity_reflection_metadata(runtime_object, "class").has_value()) {
         members.push_back("class");
     }
@@ -680,7 +689,8 @@ std::optional<PrgValue> invoke_native_collection_method(RuntimeOleObjectState& r
 std::optional<PrgValue> read_native_identity_metadata(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     // Ordinary dotted reads intentionally trail reflection parity for metadata we have not widened yet.
-    if (normalized_member_name != "class" &&
+    if (normalized_member_name != "hwnd" &&
+        normalized_member_name != "class" &&
         normalized_member_name != "baseclass" &&
         normalized_member_name != "parentclass" &&
         normalized_member_name != "classlibrary")
@@ -710,6 +720,8 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
     const std::function<RuntimeOleObjectState*(const PrgValue&)>& resolve_object_callback,
     const std::function<std::optional<PrgValue>(const PrgValue&, const std::string&)>& read_native_member_callback,
     const std::function<bool(const PrgValue&, const std::string&, const PrgValue&)>& write_native_member_callback,
+    const std::function<std::optional<std::int64_t>(std::int64_t)>& whandle_from_hwnd_callback,
+    const std::function<std::optional<std::int64_t>(std::int64_t)>& hwnd_from_whandle_callback,
     const std::function<void(const std::string&, std::vector<PrgValue>)>& assign_array_callback,
     const std::function<void(const std::string&, const std::string&)>& record_event_callback) {
     auto record_runtime_warning = [&](const std::string& detail) {
@@ -739,6 +751,31 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             case PrgValueKind::string:
                 try {
                     return value.string_value.empty() ? default_value : static_cast<int>(std::llround(std::stod(value.string_value)));
+                } catch (...) {
+                    return default_value;
+                }
+            case PrgValueKind::empty:
+                return default_value;
+        }
+        return default_value;
+    };
+    auto safe_int64_argument = [&](std::size_t index, std::int64_t default_value) {
+        if (index >= arguments.size()) {
+            return default_value;
+        }
+        const PrgValue& value = arguments[index];
+        switch (value.kind) {
+            case PrgValueKind::boolean:
+                return value.boolean_value ? static_cast<std::int64_t>(1) : static_cast<std::int64_t>(0);
+            case PrgValueKind::number:
+                return static_cast<std::int64_t>(std::llround(value.number_value));
+            case PrgValueKind::int64:
+                return value.int64_value;
+            case PrgValueKind::uint64:
+                return static_cast<std::int64_t>(value.uint64_value);
+            case PrgValueKind::string:
+                try {
+                    return static_cast<std::int64_t>(std::stoll(trim_copy(value.string_value)));
                 } catch (...) {
                     return default_value;
                 }
@@ -1076,6 +1113,20 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             if (sys_code == 2023) {
                 std::error_code ignored;
                 return make_string_value(std::filesystem::temp_directory_path(ignored).string());
+            }
+            if (sys_code == 2326 && arguments.size() >= 2U && whandle_from_hwnd_callback) {
+                const std::int64_t hwnd = safe_int64_argument(1U, 0);
+                if (const auto whandle = whandle_from_hwnd_callback(hwnd); whandle.has_value()) {
+                    return make_int64_value(*whandle);
+                }
+                return make_number_value(0.0);
+            }
+            if (sys_code == 2327 && arguments.size() >= 2U && hwnd_from_whandle_callback) {
+                const std::int64_t whandle = safe_int64_argument(1U, 0);
+                if (const auto hwnd = hwnd_from_whandle_callback(whandle); hwnd.has_value()) {
+                    return make_int64_value(*hwnd);
+                }
+                return make_number_value(0.0);
             }
         }
         return make_string_value("0");

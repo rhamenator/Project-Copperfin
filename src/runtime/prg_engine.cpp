@@ -69,6 +69,12 @@ namespace copperfin::runtime
 
     namespace
     {
+        constexpr std::intptr_t kCopperfinVfpMainWindowHwnd = 1000;
+        constexpr std::intptr_t kCopperfinScreenClientHwnd = 1001;
+        constexpr std::intptr_t kCopperfinSyntheticWindowHwndBase = 100000;
+        constexpr std::intptr_t kCopperfinScreenWhandle = 900001;
+        constexpr std::intptr_t kCopperfinVfpWhandle = 900002;
+
         void ensure_fault_context_defaults(
             const Statement *statement,
             SourceLocation &last_fault_location,
@@ -515,6 +521,9 @@ namespace copperfin::runtime
 #include "prg_engine_flow.inl"
 #undef COPPERFIN_PRG_ENGINE_IMPL_CONTEXT
         bool dispatch_event_handler(const std::string &routine_name);
+        void assign_native_window_metadata(RuntimeOleObjectState &runtime_object);
+        [[nodiscard]] std::optional<std::intptr_t> hwnd_from_whandle(std::intptr_t whandle) const;
+        [[nodiscard]] std::optional<std::intptr_t> whandle_from_hwnd(std::intptr_t hwnd) const;
         std::optional<std::intptr_t> dispatch_windows_message(
             std::intptr_t hwnd,
             std::uint32_t message,
@@ -756,9 +765,9 @@ namespace copperfin::runtime
             {
                 return std::string("FOXTOOLS:9.0");
             },
-            []()
+            [this]()
             {
-                return 1001;
+                return static_cast<int>(kCopperfinScreenClientHwnd);
             },
             [this](const std::string &variant,
                    const std::string &function_name,
@@ -1106,6 +1115,15 @@ namespace copperfin::runtime
             {
                 const Statement *statement = current_statement();
                 const std::string action_text = statement == nullptr ? property_path : statement->text;
+                const std::string normalized_property_path = normalize_identifier(property_path);
+                if (normalized_property_path == "_screen.hwnd")
+                {
+                    return make_int64_value(static_cast<std::int64_t>(kCopperfinScreenClientHwnd));
+                }
+                if (normalized_property_path == "_vfp.hwnd")
+                {
+                    return make_int64_value(static_cast<std::int64_t>(kCopperfinVfpMainWindowHwnd));
+                }
                 const auto raise_ole_fault = [&](const std::string &detail,
                                                  const std::string &source,
                                                  const std::string &message) -> PrgValue
@@ -1527,6 +1545,22 @@ namespace copperfin::runtime
                 }
                 return write_native_property_if_present(**object, member_name, assigned_value, frame);
             },
+            [this](std::int64_t hwnd) -> std::optional<std::int64_t>
+            {
+                if (auto whandle = whandle_from_hwnd(static_cast<std::intptr_t>(hwnd)); whandle.has_value())
+                {
+                    return static_cast<std::int64_t>(*whandle);
+                }
+                return std::nullopt;
+            },
+            [this](std::int64_t whandle) -> std::optional<std::int64_t>
+            {
+                if (auto hwnd = hwnd_from_whandle(static_cast<std::intptr_t>(whandle)); hwnd.has_value())
+                {
+                    return static_cast<std::int64_t>(*hwnd);
+                }
+                return std::nullopt;
+            },
             [this](const std::string &name, std::vector<PrgValue> values)
             {
                 assign_array(name, std::move(values));
@@ -1579,6 +1613,63 @@ namespace copperfin::runtime
                 return invoke_declared_dll_function(fn_key, fn_args, fn_argument_references);
             });
         return parser.parse();
+    }
+
+    void PrgRuntimeSession::Impl::assign_native_window_metadata(RuntimeOleObjectState &runtime_object)
+    {
+        if (runtime_object.native_hwnd.has_value())
+        {
+            return;
+        }
+
+        const std::string normalized_base_class = normalize_identifier(trim_copy(runtime_object.base_class_name));
+        const bool supports_runtime_window_handle =
+            normalized_base_class == "form" ||
+            normalized_base_class == "toolbar";
+        if (!supports_runtime_window_handle)
+        {
+            return;
+        }
+
+        runtime_object.native_hwnd = kCopperfinSyntheticWindowHwndBase + runtime_object.handle;
+    }
+
+    std::optional<std::intptr_t> PrgRuntimeSession::Impl::hwnd_from_whandle(std::intptr_t whandle) const
+    {
+        if (whandle == kCopperfinScreenWhandle)
+        {
+            return kCopperfinScreenClientHwnd;
+        }
+        if (whandle == kCopperfinVfpWhandle)
+        {
+            return kCopperfinVfpMainWindowHwnd;
+        }
+        const auto found = ole_objects.find(static_cast<int>(whandle));
+        if (found == ole_objects.end() || !found->second.native_hwnd.has_value())
+        {
+            return std::nullopt;
+        }
+        return found->second.native_hwnd;
+    }
+
+    std::optional<std::intptr_t> PrgRuntimeSession::Impl::whandle_from_hwnd(std::intptr_t hwnd) const
+    {
+        if (hwnd == kCopperfinScreenClientHwnd)
+        {
+            return kCopperfinScreenWhandle;
+        }
+        if (hwnd == kCopperfinVfpMainWindowHwnd)
+        {
+            return kCopperfinVfpWhandle;
+        }
+        for (const auto &[handle, runtime_object] : ole_objects)
+        {
+            if (runtime_object.native_hwnd.has_value() && *runtime_object.native_hwnd == hwnd)
+            {
+                return static_cast<std::intptr_t>(handle);
+            }
+        }
+        return std::nullopt;
     }
 
     std::optional<PrgValue> PrgRuntimeSession::Impl::invoke_expression_user_routine(

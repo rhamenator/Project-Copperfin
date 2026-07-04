@@ -45,6 +45,8 @@
         const std::function<RuntimeOleObjectState*(const PrgValue&)>& resolve_object_callback,
         const std::function<std::optional<PrgValue>(const PrgValue&, const std::string&)>& read_native_member_callback,
         const std::function<bool(const PrgValue&, const std::string&, const PrgValue&)>& write_native_member_callback,
+        const std::function<std::optional<std::int64_t>(std::int64_t)>& whandle_from_hwnd_callback,
+        const std::function<std::optional<std::int64_t>(std::int64_t)>& hwnd_from_whandle_callback,
         const std::function<void(const std::string&, std::vector<PrgValue>)>& assign_array_callback,
         const std::function<void(const std::string&, const std::string&)>& record_event_callback);
 
@@ -123,6 +125,8 @@
                 std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback,
                 std::function<std::optional<PrgValue>(const PrgValue &, const std::string &)> read_native_member_callback,
                 std::function<bool(const PrgValue &, const std::string &, const PrgValue &)> write_native_member_callback,
+                std::function<std::optional<std::int64_t>(std::int64_t)> whandle_from_hwnd_callback,
+                std::function<std::optional<std::int64_t>(std::int64_t)> hwnd_from_whandle_callback,
                 std::function<void(const std::string &, std::vector<PrgValue>)> assign_array_callback,
                 std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> bindevent_callback,
                 std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> raiseevent_callback,
@@ -189,6 +193,8 @@
                   resolve_object_callback_(std::move(resolve_object_callback)),
                   read_native_member_callback_(std::move(read_native_member_callback)),
                   write_native_member_callback_(std::move(write_native_member_callback)),
+                  whandle_from_hwnd_callback_(std::move(whandle_from_hwnd_callback)),
+                  hwnd_from_whandle_callback_(std::move(hwnd_from_whandle_callback)),
                   assign_array_callback_(std::move(assign_array_callback)),
                   bindevent_callback_(std::move(bindevent_callback)),
                   raiseevent_callback_(std::move(raiseevent_callback)),
@@ -1388,6 +1394,8 @@
                                                           resolve_object_callback_,
                                                           read_native_member_callback_,
                                                           write_native_member_callback_,
+                                                          whandle_from_hwnd_callback_,
+                                                          hwnd_from_whandle_callback_,
                                                           assign_array_callback_,
                                                           record_event_callback_))
                 {
@@ -2060,6 +2068,8 @@
             std::function<RuntimeOleObjectState*(const PrgValue &)> resolve_object_callback_;
             std::function<std::optional<PrgValue>(const PrgValue &, const std::string &)> read_native_member_callback_;
             std::function<bool(const PrgValue &, const std::string &, const PrgValue &)> write_native_member_callback_;
+            std::function<std::optional<std::int64_t>(std::int64_t)> whandle_from_hwnd_callback_;
+            std::function<std::optional<std::int64_t>(std::int64_t)> hwnd_from_whandle_callback_;
             std::function<void(const std::string &, std::vector<PrgValue>)> assign_array_callback_;
             std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> bindevent_callback_;
             std::function<PrgValue(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> raiseevent_callback_;

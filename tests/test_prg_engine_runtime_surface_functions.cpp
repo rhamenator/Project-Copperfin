@@ -38475,6 +38475,224 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_runtime_hwnd_and_sys2326_sys2327_surfaces_bind_representative_window_objects()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_hwnd_sys2326";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "runtime_hwnd_sys2326.prg";
+        write_text(
+            main_path,
+            "oHandler = CREATEOBJECT('HandleSink')\n"
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "oToolbar = CREATEOBJECT('MainToolbar')\n"
+            "nMainHwnd = MAINHWND()\n"
+            "nScreenHwnd = _SCREEN.hWnd\n"
+            "nVfpHwnd = _VFP.hWnd\n"
+            "nFormHwnd = oForm.hWnd\n"
+            "nToolbarHwnd = oToolbar.hWnd\n"
+            "xFormGetPem = GETPEM(oForm, 'hWnd')\n"
+            "xToolbarGetPem = GETPEM(oToolbar, 'hWnd')\n"
+            "lFormHasHwnd = PEMSTATUS(oForm, 'hWnd', 1)\n"
+            "lToolbarHasHwnd = PEMSTATUS(oToolbar, 'hWnd', 1)\n"
+            "lFormHwndReadOnly = PEMSTATUS(oForm, 'hWnd', 5)\n"
+            "lToolbarHwndReadOnly = PEMSTATUS(oToolbar, 'hWnd', 5)\n"
+            "lSetFormHwnd = SETPEM(oForm, 'hWnd', 88)\n"
+            "nScreenWHandle = SYS(2326, nScreenHwnd)\n"
+            "nVfpWHandle = SYS(2326, nVfpHwnd)\n"
+            "nFormWHandle = SYS(2326, nFormHwnd)\n"
+            "nToolbarWHandle = SYS(2326, nToolbarHwnd)\n"
+            "nScreenRoundTrip = SYS(2327, nScreenWHandle)\n"
+            "nVfpRoundTrip = SYS(2327, nVfpWHandle)\n"
+            "nFormRoundTrip = SYS(2327, nFormWHandle)\n"
+            "nToolbarRoundTrip = SYS(2327, nToolbarWHandle)\n"
+            "nUnknownWHandle = SYS(2326, 999999)\n"
+            "nUnknownHwnd = SYS(2327, 999999)\n"
+            "nBindForm = BINDEVENT(nFormHwnd, 513, oHandler, 'HandleForm')\n"
+            "nBindScreen = BINDEVENT(nScreenHwnd, 514, oHandler, 'HandleScreen')\n"
+            "READ EVENTS\n"
+            "RETURN\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainToolbar AS Toolbar\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS HandleSink AS Custom\n"
+            "    FUNCTION HandleForm\n"
+            "        LPARAMETERS tnHwnd, tnMessage, tnWParam, tnLParam\n"
+            "        nFormDispatchHwnd = tnHwnd\n"
+            "        nFormDispatchWHandle = SYS(2326, tnHwnd)\n"
+            "        nFormDispatchRoundTrip = SYS(2327, nFormDispatchWHandle)\n"
+            "        RETURN tnMessage\n"
+            "    ENDFUNC\n"
+            "    FUNCTION HandleScreen\n"
+            "        LPARAMETERS tnHwnd, tnMessage, tnWParam, tnLParam\n"
+            "        nScreenDispatchHwnd = tnHwnd\n"
+            "        nScreenDispatchWHandle = SYS(2326, tnHwnd)\n"
+            "        nScreenDispatchRoundTrip = SYS(2327, nScreenDispatchWHandle)\n"
+            "        CLEAR EVENTS\n"
+            "        RETURN tnMessage\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop,
+               std::string("hWnd/SYS(2326) script should pause in READ EVENTS: ") + state.message);
+        expect(state.waiting_for_events,
+               "hWnd/SYS(2326) script should report waiting_for_events while paused");
+
+        const auto form_hack = state.globals.find("nformhwnd");
+        expect(form_hack != state.globals.end(),
+               "hWnd/SYS(2326) script should capture the form hWnd before dispatch");
+        const auto screen_hack = state.globals.find("nscreenhwnd");
+        expect(screen_hack != state.globals.end(),
+               "hWnd/SYS(2326) script should capture the _SCREEN hWnd before dispatch");
+        const auto value_to_int64 = [](const copperfin::runtime::PrgValue &value) -> std::int64_t
+        {
+            switch (value.kind)
+            {
+            case copperfin::runtime::PrgValueKind::boolean:
+                return value.boolean_value ? 1 : 0;
+            case copperfin::runtime::PrgValueKind::number:
+                return static_cast<std::int64_t>(value.number_value);
+            case copperfin::runtime::PrgValueKind::int64:
+                return value.int64_value;
+            case copperfin::runtime::PrgValueKind::uint64:
+                return static_cast<std::int64_t>(value.uint64_value);
+            case copperfin::runtime::PrgValueKind::string:
+                try
+                {
+                    return std::stoll(value.string_value);
+                }
+                catch (...)
+                {
+                    return 0;
+                }
+            case copperfin::runtime::PrgValueKind::empty:
+                return 0;
+            }
+            return 0;
+        };
+
+        const std::intptr_t form_hwnd = form_hack == state.globals.end()
+                                            ? 0
+                                            : static_cast<std::intptr_t>(value_to_int64(form_hack->second));
+        const std::intptr_t screen_hwnd = screen_hack == state.globals.end()
+                                              ? 0
+                                              : static_cast<std::intptr_t>(value_to_int64(screen_hack->second));
+
+        const auto form_dispatch = session.dispatch_windows_message(form_hwnd, 513, 1, 2);
+        expect(form_dispatch.has_value(),
+               "hWnd/SYS(2326) slice should dispatch through the form hWnd");
+        if (form_dispatch.has_value())
+        {
+            expect(*form_dispatch == 513,
+                   "Form hWnd dispatch should return the delegate message result");
+        }
+
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.reason == copperfin::runtime::DebugPauseReason::event_loop,
+               std::string("Form hWnd dispatch should restore the READ EVENTS pause: ") + state.message);
+        expect(state.waiting_for_events,
+               "Form hWnd dispatch should return the runtime to waiting_for_events");
+
+        const auto screen_dispatch = session.dispatch_windows_message(screen_hwnd, 514, 3, 4);
+        expect(screen_dispatch.has_value(),
+               "hWnd/SYS(2326) slice should dispatch through the _SCREEN hWnd");
+        if (screen_dispatch.has_value())
+        {
+            expect(*screen_dispatch == 514,
+                   "_SCREEN hWnd dispatch should return the delegate message result");
+        }
+
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("hWnd/SYS(2326) script should complete after CLEAR EVENTS: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+        const auto require_number = [&](const std::string &name) -> std::int64_t
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return 0;
+            }
+            return value_to_int64(it->second);
+        };
+
+        check("nmainhwnd", "1001");
+        check("nscreenhwnd", "1001");
+        check("nvfphwnd", "1000");
+        check("lformhashwnd", "true");
+        check("ltoolbarhashwnd", "true");
+        check("lformhwndreadonly", "true");
+        check("ltoolbarhwndreadonly", "true");
+        check("lsetformhwnd", "false");
+        check("nscreenwhandle", "900001");
+        check("nvfpwhandle", "900002");
+        check("nscreenroundtrip", "1001");
+        check("nvfproundtrip", "1000");
+        check("nunknownwhandle", "0");
+        check("nunknownhwnd", "0");
+        check("nbindform", "1");
+        check("nbindscreen", "1");
+        check("nformdispatchhwnd", copperfin::runtime::format_value(state.globals.at("nformhwnd")));
+        check("nscreendispatchhwnd", "1001");
+        check("nscreendispatchwhandle", "900001");
+        check("nscreendispatchroundtrip", "1001");
+
+        const std::int64_t form_whandle = require_number("nformwhandle");
+        const std::int64_t toolbar_whandle = require_number("ntoolbarwhandle");
+        const std::int64_t form_hwnd_after = require_number("nformhwnd");
+        const std::int64_t toolbar_hwnd_after = require_number("ntoolbarhwnd");
+        const std::int64_t form_round_trip = require_number("nformroundtrip");
+        const std::int64_t toolbar_round_trip = require_number("ntoolbarroundtrip");
+        const std::int64_t form_getpem = require_number("xformgetpem");
+        const std::int64_t toolbar_getpem = require_number("xtoolbargetpem");
+        const std::int64_t form_dispatch_whandle = require_number("nformdispatchwhandle");
+        const std::int64_t form_dispatch_round_trip = require_number("nformdispatchroundtrip");
+
+        expect(form_whandle > 0,
+               "Form hWnd translation should expose a positive WHANDLE");
+        expect(toolbar_whandle > 0,
+               "Toolbar hWnd translation should expose a positive WHANDLE");
+        expect(form_hwnd_after == form_getpem,
+               "Form hWnd should read consistently through ordinary property access and GETPEM()");
+        expect(toolbar_hwnd_after == toolbar_getpem,
+               "Toolbar hWnd should read consistently through ordinary property access and GETPEM()");
+        expect(form_round_trip == form_hwnd_after,
+               "SYS(2326/2327) should round-trip the form hWnd");
+        expect(toolbar_round_trip == toolbar_hwnd_after,
+               "SYS(2326/2327) should round-trip the toolbar hWnd");
+        expect(form_hwnd_after == 100000 + form_whandle,
+               "Form hWnd should follow the deterministic modeled runtime mapping");
+        expect(toolbar_hwnd_after == 100000 + toolbar_whandle,
+               "Toolbar hWnd should follow the deterministic modeled runtime mapping");
+        expect(form_dispatch_whandle == form_whandle,
+               "Dispatched form hWnd should translate back to the same WHANDLE");
+        expect(form_dispatch_round_trip == form_hwnd_after,
+               "Dispatched form hWnd should round-trip through SYS(2326/2327)");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_same_prg_native_bindevent_property_access_and_assign_dispatch_preserve_current_event_metadata()
     {
         namespace fs = std::filesystem;
@@ -40551,6 +40769,7 @@ int main()
         test_same_prg_native_aevents_enumerates_same_session_bindings_without_clobbering_zero_row_targets();
         test_same_prg_native_aevents_zero_reports_current_event_metadata_during_delegate_dispatch();
         test_same_prg_native_windows_message_bindevent_and_aevents_dispatch_during_read_events();
+        test_runtime_hwnd_and_sys2326_sys2327_surfaces_bind_representative_window_objects();
         test_same_prg_native_bindevent_property_access_and_assign_dispatch_preserve_current_event_metadata();
         test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();
     test_native_accessor_backed_properties_reflect_through_getpem_pemstatus_and_amembers();
