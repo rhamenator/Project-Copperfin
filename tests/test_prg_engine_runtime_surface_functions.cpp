@@ -39112,6 +39112,108 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_runtime_olecontrol_autoactivate_and_autoverbmenu_surfaces_remain_coherent()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_olecontrol_activation_policy";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "runtime_olecontrol_activation_policy.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "lAdded = oForm.AddObject('axHost', 'OleControl', 'MSComctlLib.ListViewCtrl')\n"
+            "nHostAutoActivate = oForm.axHost.AutoActivate\n"
+            "lHostAutoVerbMenu = oForm.axHost.AutoVerbMenu\n"
+            "xHostAutoActivateGetPem = GETPEM(oForm.axHost, 'AutoActivate')\n"
+            "xHostAutoVerbMenuGetPem = GETPEM(oForm.axHost, 'AutoVerbMenu')\n"
+            "lHostHasAutoActivate = PEMSTATUS(oForm.axHost, 'AutoActivate', 1)\n"
+            "lHostHasAutoVerbMenu = PEMSTATUS(oForm.axHost, 'AutoVerbMenu', 1)\n"
+            "lHostAutoActivateReadOnly = PEMSTATUS(oForm.axHost, 'AutoActivate', 5)\n"
+            "lHostAutoVerbMenuReadOnly = PEMSTATUS(oForm.axHost, 'AutoVerbMenu', 5)\n"
+            "lSetHostAutoActivate = SETPEM(oForm.axHost, 'AutoActivate', 0)\n"
+            "lSetHostAutoVerbMenu = SETPEM(oForm.axHost, 'AutoVerbMenu', .F.)\n"
+            "nHostAutoActivateAfterSet = oForm.axHost.AutoActivate\n"
+            "lHostAutoVerbMenuAfterSet = oForm.axHost.AutoVerbMenu\n"
+            "lHostDoVerbAfterPolicy = oForm.axHost.DoVerb(-1)\n"
+            "oDoc = CREATEOBJECT('ExcelDoc')\n"
+            "nDocAutoActivate = oDoc.AutoActivate\n"
+            "lDocAutoVerbMenu = oDoc.AutoVerbMenu\n"
+            "xDocAutoActivateGetPem = GETPEM(oDoc, 'AutoActivate')\n"
+            "xDocAutoVerbMenuGetPem = GETPEM(oDoc, 'AutoVerbMenu')\n"
+            "lDocHasAutoActivate = PEMSTATUS(oDoc, 'AutoActivate', 1)\n"
+            "lDocHasAutoVerbMenu = PEMSTATUS(oDoc, 'AutoVerbMenu', 1)\n"
+            "lDocAutoActivateReadOnly = PEMSTATUS(oDoc, 'AutoActivate', 5)\n"
+            "lDocAutoVerbMenuReadOnly = PEMSTATUS(oDoc, 'AutoVerbMenu', 5)\n"
+            "lSetDocAutoActivate = SETPEM(oDoc, 'AutoActivate', 3)\n"
+            "lSetDocAutoVerbMenu = SETPEM(oDoc, 'AutoVerbMenu', .T.)\n"
+            "nDocAutoActivateAfterSet = oDoc.AutoActivate\n"
+            "lDocAutoVerbMenuAfterSet = oDoc.AutoVerbMenu\n"
+            "lDocDoVerbAfterPolicy = oDoc.DoVerb(0)\n"
+            "RETURN\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ExcelDoc AS OLEControl\n"
+            "    OLEClass = 'Excel.Sheet'\n"
+            "    DocumentFile = 'C:\\EXCEL\\BOOK1.XLS'\n"
+            "    OLETypeAllowed = 1\n"
+            "    AutoActivate = 1\n"
+            "    AutoVerbMenu = .F.\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("OleControl AutoActivate/AutoVerbMenu script should complete: ") + state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("ladded", "true");
+        check("nhostautoactivate", "2");
+        check("lhostautoverbmenu", "true");
+        check("xhostautoactivategetpem", "2");
+        check("xhostautoverbmenugetpem", "true");
+        check("lhosthasautoactivate", "true");
+        check("lhosthasautoverbmenu", "true");
+        check("lhostautoactivatereadonly", "false");
+        check("lhostautoverbmenureadonly", "false");
+        check("lsethostautoactivate", "true");
+        check("lsethostautoverbmenu", "true");
+        check("nhostautoactivateafterset", "0");
+        check("lhostautoverbmenuafterset", "false");
+        check("lhostdoverbafterpolicy", "true");
+
+        check("ndocautoactivate", "1");
+        check("ldocautoverbmenu", "false");
+        check("xdocautoactivategetpem", "1");
+        check("xdocautoverbmenugetpem", "false");
+        check("ldochasautoactivate", "true");
+        check("ldochasautoverbmenu", "true");
+        check("ldocautoactivatereadonly", "false");
+        check("ldocautoverbmenureadonly", "false");
+        check("lsetdocautoactivate", "true");
+        check("lsetdocautoverbmenu", "true");
+        check("ndocautoactivateafterset", "3");
+        check("ldocautoverbmenuafterset", "true");
+        check("ldocdoverbafterpolicy", "true");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_runtime_native_visual_controls_without_hwnd_fail_deterministically()
     {
         namespace fs = std::filesystem;
@@ -41299,6 +41401,7 @@ int main()
         test_runtime_olecontrol_hwnd_and_windows_message_binding_surfaces_remain_coherent();
         test_runtime_olecontrol_documentfile_and_oletypeallowed_surfaces_remain_coherent();
         test_runtime_olecontrol_object_and_doverb_surfaces_remain_coherent();
+        test_runtime_olecontrol_autoactivate_and_autoverbmenu_surfaces_remain_coherent();
         test_runtime_native_visual_controls_without_hwnd_fail_deterministically();
         test_same_prg_native_bindevent_property_access_and_assign_dispatch_preserve_current_event_metadata();
         test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();

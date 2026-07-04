@@ -629,6 +629,8 @@
                         object_state.properties["oleclass"] = make_string_value(oleclass);
                         object_state.properties["documentfile"] = make_string_value("");
                         object_state.properties["oletypeallowed"] = make_int64_value(-2);
+                        object_state.properties["autoactivate"] = make_int64_value(2);
+                        object_state.properties["autoverbmenu"] = make_boolean_value(true);
                     }
                 }
                 const std::string class_token = uppercase_copy(trim_copy(object_state.prog_id));
