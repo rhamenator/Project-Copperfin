@@ -1061,6 +1061,15 @@ bool native_leftcolumn_member_name_matches(
     return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "grid";
 }
 
+bool native_child_collection_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return (normalized_member_name == "objects" ||
+            normalized_member_name == "controls" ||
+            normalized_member_name == "columns") &&
+           runtime_object.properties.contains(normalized_member_name);
+}
+
 bool native_columnorder_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
@@ -1195,7 +1204,9 @@ bool native_columncount_member_name_matches(
 
     const std::string normalized_base_class =
         normalize_identifier(trim_copy(runtime_object.base_class_name));
-    return normalized_base_class == "combobox";
+    return normalized_base_class == "combobox" ||
+           normalized_base_class == "listbox" ||
+           normalized_base_class == "grid";
 }
 
 bool native_columnwidths_member_name_matches(
@@ -1820,6 +1831,11 @@ bool is_native_columnorder_member_name(const RuntimeOleObjectState& runtime_obje
     return native_columnorder_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_child_collection_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_child_collection_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_recordmark_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_recordmark_member_name_matches(runtime_object, normalized_member_name);
@@ -2093,6 +2109,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                                                         const std::string& member_name) {
         return get_native_identity_reflection_metadata(runtime_object, member_name).has_value() ||
                native_controlcount_member_name_matches(runtime_object, member_name) ||
+               native_child_collection_member_name_matches(runtime_object, member_name) ||
                is_native_splitbar_member_name(runtime_object, member_name) ||
                is_native_leftcolumn_member_name(runtime_object, member_name) ||
                is_native_form_desktop_member_name(runtime_object, member_name) ||
@@ -2321,6 +2338,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         if (is_native_identity_member_name(*runtime_object, property_name) ||
             is_native_controlcount_member_name(*runtime_object, property_name) ||
+            is_native_child_collection_member_name(*runtime_object, property_name) ||
             is_native_name_member_name(*runtime_object, property_name) ||
             is_native_form_alwaysontop_member_name(*runtime_object, property_name) ||
             is_native_form_showwindow_member_name(*runtime_object, property_name) ||
@@ -2483,6 +2501,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         if (native_child_parent_member_name_matches(*runtime_object, member_name) ||
             is_native_controlcount_member_name(*runtime_object, member_name) ||
+            is_native_child_collection_member_name(*runtime_object, member_name) ||
             is_native_name_member_name(*runtime_object, member_name) ||
             is_native_splitbar_member_name(*runtime_object, member_name) ||
             is_native_leftcolumn_member_name(*runtime_object, member_name) ||
@@ -2518,7 +2537,8 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         if (object_has_member(runtime_object->methods, member_name) ||
             object_has_member(runtime_object->events, member_name)) {
-            if (member_name == "columnorder") {
+            if (member_name == "columnorder" ||
+                member_name == "columncount") {
                 return make_boolean_value(
                     write_native_member_callback &&
                     write_native_member_callback(arguments[0], member_name, arguments[2]));
@@ -2534,7 +2554,8 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             return make_boolean_value(true);
         }
         if (runtime_object->properties.contains(member_name)) {
-            if (member_name == "columnorder") {
+            if (member_name == "columnorder" ||
+                member_name == "columncount") {
                 return make_boolean_value(
                     write_native_member_callback &&
                     write_native_member_callback(arguments[0], member_name, arguments[2]));
@@ -2569,6 +2590,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         if (is_native_identity_member_name(*runtime_object, property_name) ||
             is_native_controlcount_member_name(*runtime_object, property_name) ||
+            is_native_child_collection_member_name(*runtime_object, property_name) ||
             is_native_name_member_name(*runtime_object, property_name) ||
             is_native_form_alwaysontop_member_name(*runtime_object, property_name) ||
             is_native_form_showwindow_member_name(*runtime_object, property_name) ||

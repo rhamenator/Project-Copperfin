@@ -209,6 +209,29 @@
             return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "column";
         }
 
+        int normalize_native_grid_columncount_value(const PrgValue &value) const
+        {
+            long long normalized_count = -1LL;
+            try
+            {
+                normalized_count = std::llround(value_as_number(value));
+            }
+            catch (...)
+            {
+                normalized_count = -1LL;
+            }
+
+            if (normalized_count < -1LL)
+            {
+                normalized_count = -1LL;
+            }
+            if (normalized_count > 255LL)
+            {
+                normalized_count = 255LL;
+            }
+            return static_cast<int>(normalized_count);
+        }
+
         int normalize_native_column_order_value(const PrgValue &value, int fallback = 1) const
         {
             long long normalized_order = fallback;
@@ -372,6 +395,173 @@
             return true;
         }
 
+        struct NativeGridColumnMember
+        {
+            std::string property_name;
+            PrgValue child_reference;
+            RuntimeOleObjectState *child_object = nullptr;
+            int column_order = 1;
+        };
+
+        std::vector<NativeGridColumnMember> collect_native_grid_column_members(
+            RuntimeOleObjectState &runtime_object)
+        {
+            std::vector<NativeGridColumnMember> members;
+            if (!is_native_grid_runtime_object(runtime_object))
+            {
+                return members;
+            }
+
+            for (const auto &[property_name, property_value] : runtime_object.properties)
+            {
+                if (property_name == "parent" ||
+                    property_name == "objects" ||
+                    property_name == "controls" ||
+                    property_name == "columns")
+                {
+                    continue;
+                }
+
+                const auto child_object = resolve_ole_object(property_value);
+                if (!child_object.has_value() ||
+                    (*child_object)->hidden_runtime_surface ||
+                    !is_native_column_runtime_object(**child_object))
+                {
+                    continue;
+                }
+
+                const auto child_parent = native_object_parent_reference(**child_object);
+                int parent_handle = 0;
+                std::string parent_prog_id;
+                if (!child_parent.has_value() ||
+                    !parse_object_handle_reference(*child_parent, parent_handle, parent_prog_id) ||
+                    parent_handle != runtime_object.handle)
+                {
+                    continue;
+                }
+
+                int column_order = 1;
+                const auto order = (*child_object)->properties.find("columnorder");
+                if (order != (*child_object)->properties.end())
+                {
+                    column_order = normalize_native_column_order_value(order->second, 1);
+                }
+
+                members.push_back({
+                    .property_name = property_name,
+                    .child_reference = make_string_value(
+                        "object:" + (*child_object)->prog_id + "#" + std::to_string((*child_object)->handle)),
+                    .child_object = *child_object,
+                    .column_order = column_order});
+            }
+
+            std::sort(
+                members.begin(),
+                members.end(),
+                [](const NativeGridColumnMember &left, const NativeGridColumnMember &right)
+                {
+                    if (left.column_order != right.column_order)
+                    {
+                        return left.column_order < right.column_order;
+                    }
+                    return left.property_name < right.property_name;
+                });
+            return members;
+        }
+
+        bool write_native_grid_columncount_property(
+            RuntimeOleObjectState &runtime_object,
+            const PrgValue &assigned_value,
+            const Frame &source_frame)
+        {
+            if (!is_native_grid_runtime_object(runtime_object))
+            {
+                return false;
+            }
+
+            const int target_count = normalize_native_grid_columncount_value(assigned_value);
+            if (target_count < 0)
+            {
+                runtime_object.properties["columncount"] = make_number_value(static_cast<double>(target_count));
+                (void)sync_native_owned_children_collection(runtime_object);
+                return true;
+            }
+
+            auto column_members = collect_native_grid_column_members(runtime_object);
+            while (static_cast<int>(column_members.size()) > target_count)
+            {
+                NativeGridColumnMember removed_member = column_members.back();
+                column_members.pop_back();
+                if (removed_member.child_object != nullptr)
+                {
+                    removed_member.child_object->properties.erase("parent");
+                }
+                runtime_object.properties.erase(removed_member.property_name);
+            }
+
+            const std::string owner_program_path =
+                runtime_object.source.empty()
+                    ? normalize_path(source_frame.file_path)
+                    : normalize_path(runtime_object.source);
+            if (static_cast<int>(column_members.size()) < target_count &&
+                owner_program_path.empty())
+            {
+                return false;
+            }
+
+            runtime_object.properties["columncount"] = make_number_value(static_cast<double>(target_count));
+
+            while (static_cast<int>(column_members.size()) < target_count)
+            {
+                int next_suffix = 1;
+                while (runtime_object.properties.contains("column" + std::to_string(next_suffix)))
+                {
+                    ++next_suffix;
+                }
+
+                const std::string child_name_text = "Column" + std::to_string(next_suffix);
+                const std::string child_name = normalize_identifier(child_name_text);
+                RuntimeOleObjectState *child_object = instantiate_native_class_object(
+                    source_frame,
+                    "Column",
+                    owner_program_path,
+                    "grid.columncount",
+                    {},
+                    {},
+                    make_string_value("object:" + runtime_object.prog_id + "#" + std::to_string(runtime_object.handle)));
+                if (child_object == nullptr)
+                {
+                    return false;
+                }
+
+                assign_native_runtime_object_name(*child_object, child_name_text);
+                runtime_object.properties[child_name] =
+                    make_string_value("object:" + child_object->prog_id + "#" + std::to_string(child_object->handle));
+                if (child_object->properties.contains("columnorder"))
+                {
+                    (void)write_native_columnorder_property(
+                        *child_object,
+                        child_object->properties["columnorder"]);
+                }
+                column_members = collect_native_grid_column_members(runtime_object);
+            }
+
+            for (std::size_t index = 0U; index < column_members.size(); ++index)
+            {
+                if (column_members[index].child_object != nullptr)
+                {
+                    (void)write_native_columnorder_property(
+                        *column_members[index].child_object,
+                        make_number_value(static_cast<double>(index + 1U)));
+                }
+            }
+
+            (void)sync_native_owned_children_collection(runtime_object);
+            runtime_object.properties["columncount"] =
+                make_number_value(static_cast<double>(target_count));
+            return true;
+        }
+
         void seed_native_visual_properties(RuntimeOleObjectState &runtime_object)
         {
             const std::string normalized_base_class =
@@ -463,6 +653,12 @@
             {
                 runtime_object.properties["columnorder"] =
                     make_number_value(static_cast<double>(next_native_grid_column_order(runtime_object)));
+            }
+
+            if (normalized_base_class == "grid" &&
+                !runtime_object.properties.contains("columncount"))
+            {
+                runtime_object.properties["columncount"] = make_number_value(-1.0);
             }
 
             if (normalized_base_class == "grid" &&
@@ -848,10 +1044,14 @@
         RuntimeOleObjectState *sync_native_owned_children_collection(RuntimeOleObjectState &runtime_object)
         {
             std::vector<std::pair<std::string, PrgValue>> child_members;
+            std::vector<std::pair<std::string, PrgValue>> column_members;
             child_members.reserve(runtime_object.properties.size());
             for (const auto &[property_name, property_value] : runtime_object.properties)
             {
-                if (property_name == "parent" || property_name == "objects" || property_name == "controls")
+                if (property_name == "parent" ||
+                    property_name == "objects" ||
+                    property_name == "controls" ||
+                    property_name == "columns")
                 {
                     continue;
                 }
@@ -879,10 +1079,19 @@
                 child_members.emplace_back(
                     property_name,
                     make_string_value("object:" + (*child_object)->prog_id + "#" + std::to_string((*child_object)->handle)));
+                if (is_native_grid_runtime_object(runtime_object) &&
+                    is_native_column_runtime_object(**child_object))
+                {
+                    column_members.emplace_back(
+                        property_name,
+                        make_string_value("object:" + (*child_object)->prog_id + "#" + std::to_string((*child_object)->handle)));
+                }
             }
 
             RuntimeOleObjectState *objects_collection = nullptr;
-            const auto sync_collection_surface = [&](const std::string &property_name) -> RuntimeOleObjectState *
+            const auto sync_collection_surface = [&](const std::string &property_name,
+                                                    const std::vector<std::pair<std::string, PrgValue>> &members,
+                                                    bool ensure_surface) -> RuntimeOleObjectState *
             {
                 RuntimeOleObjectState *collection_object = nullptr;
                 const auto collection_property = runtime_object.properties.find(property_name);
@@ -898,7 +1107,7 @@
                     }
                 }
 
-                if (collection_object == nullptr && child_members.empty())
+                if (collection_object == nullptr && members.empty() && !ensure_surface)
                 {
                     return nullptr;
                 }
@@ -928,9 +1137,9 @@
                     make_string_value("object:" + runtime_object.prog_id + "#" + std::to_string(runtime_object.handle));
                 collection_object->collection_items.clear();
                 collection_object->collection_item_keys.clear();
-                collection_object->collection_items.reserve(child_members.size());
-                collection_object->collection_item_keys.reserve(child_members.size());
-                for (const auto &[child_name, child_reference] : child_members)
+                collection_object->collection_items.reserve(members.size());
+                collection_object->collection_item_keys.reserve(members.size());
+                for (const auto &[child_name, child_reference] : members)
                 {
                     collection_object->collection_items.push_back(child_reference);
                     collection_object->collection_item_keys.push_back(child_name);
@@ -939,8 +1148,44 @@
                 return collection_object;
             };
 
-            objects_collection = sync_collection_surface("objects");
-            RuntimeOleObjectState *controls_collection = sync_collection_surface("controls");
+            if (!column_members.empty())
+            {
+                std::sort(
+                    column_members.begin(),
+                    column_members.end(),
+                    [&](const auto &left, const auto &right)
+                    {
+                        const auto left_child = resolve_ole_object(left.second);
+                        const auto right_child = resolve_ole_object(right.second);
+                        const int left_order =
+                            left_child.has_value() &&
+                                    (*left_child)->properties.contains("columnorder")
+                                ? normalize_native_column_order_value(
+                                      (*left_child)->properties["columnorder"],
+                                      1)
+                                : 1;
+                        const int right_order =
+                            right_child.has_value() &&
+                                    (*right_child)->properties.contains("columnorder")
+                                ? normalize_native_column_order_value(
+                                      (*right_child)->properties["columnorder"],
+                                      1)
+                                : 1;
+                        if (left_order != right_order)
+                        {
+                            return left_order < right_order;
+                        }
+                        return left.first < right.first;
+                    });
+            }
+
+            objects_collection = sync_collection_surface("objects", child_members, false);
+            RuntimeOleObjectState *controls_collection =
+                sync_collection_surface("controls", child_members, false);
+            RuntimeOleObjectState *columns_collection =
+                is_native_grid_runtime_object(runtime_object)
+                    ? sync_collection_surface("columns", column_members, true)
+                    : nullptr;
             if (controls_collection != nullptr)
             {
                 runtime_object.properties["controlcount"] =
@@ -949,6 +1194,13 @@
             else
             {
                 runtime_object.properties.erase("controlcount");
+            }
+            if (columns_collection != nullptr &&
+                runtime_object.properties.contains("columncount") &&
+                normalize_native_grid_columncount_value(runtime_object.properties["columncount"]) >= 0)
+            {
+                runtime_object.properties["columncount"] =
+                    make_number_value(static_cast<double>(columns_collection->collection_items.size()));
             }
             return objects_collection;
         }
@@ -1442,6 +1694,7 @@
 
             if (is_native_identity_member_name(runtime_object, normalized_property_name) ||
                 is_native_controlcount_member_name(runtime_object, normalized_property_name) ||
+                is_native_child_collection_member_name(runtime_object, normalized_property_name) ||
                 is_native_name_member_name(runtime_object, normalized_property_name) ||
                 is_native_splitbar_member_name(runtime_object, normalized_property_name) ||
                 is_native_leftcolumn_member_name(runtime_object, normalized_property_name) ||
@@ -1627,6 +1880,7 @@
 
                 auto [object_it, _] = ole_objects.emplace(handle, std::move(object_state));
                 (void)ensure_native_olecontrol_object_surface(object_it->second);
+                (void)sync_native_owned_children_collection(object_it->second);
                 return &object_it->second;
             }
 
@@ -1835,6 +2089,15 @@
                                       .detail = runtime_object->prog_id + "." + child_name + ":" + child_declaration.class_name,
                                       .location = current_statement() == nullptr ? child_declaration.declaration_location : current_statement()->location});
                 }
+            }
+            if (runtime_object->properties.contains("columncount") &&
+                is_native_grid_runtime_object(*runtime_object) &&
+                normalize_native_grid_columncount_value(runtime_object->properties["columncount"]) >= 0)
+            {
+                (void)write_native_grid_columncount_property(
+                    *runtime_object,
+                    runtime_object->properties["columncount"],
+                    frame);
             }
             (void)sync_native_owned_children_collection(*runtime_object);
 

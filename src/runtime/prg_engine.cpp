@@ -3517,6 +3517,7 @@ namespace copperfin::runtime
             }
             if (!is_native_identity_member_name(runtime_object, normalized_property_name) &&
                 !is_native_controlcount_member_name(runtime_object, normalized_property_name) &&
+                !is_native_child_collection_member_name(runtime_object, normalized_property_name) &&
                 !is_native_name_member_name(runtime_object, normalized_property_name) &&
                 !is_native_splitbar_member_name(runtime_object, normalized_property_name) &&
                 !is_native_leftcolumn_member_name(runtime_object, normalized_property_name) &&
@@ -3531,6 +3532,14 @@ namespace copperfin::runtime
                 if (is_native_columnorder_member_name(runtime_object, normalized_property_name))
                 {
                     return write_native_columnorder_property(runtime_object, assigned_value);
+                }
+                if (is_native_columncount_member_name(runtime_object, normalized_property_name) &&
+                    is_native_grid_runtime_object(runtime_object))
+                {
+                    return write_native_grid_columncount_property(
+                        runtime_object,
+                        assigned_value,
+                        source_frame);
                 }
                 if (normalized_property_name == "readonly" &&
                     native_combobox_readonly_assignment_blocked(runtime_object, assigned_value))

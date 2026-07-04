@@ -9883,6 +9883,141 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_grid_columncount_defaults_materialize_columns_and_stay_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_grid_columncount";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_grid_columncount.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('Grid')\n"
+            "lPlainHasColumnCount = PEMSTATUS(oPlain, 'ColumnCount', 1)\n"
+            "lPlainColumnCountReadOnly = PEMSTATUS(oPlain, 'ColumnCount', 5)\n"
+            "nPlainBefore = oPlain.ColumnCount\n"
+            "xPlainGetPemBefore = GETPEM(oPlain, 'ColumnCount')\n"
+            "lPlainHasColumns = PEMSTATUS(oPlain, 'Columns', 1)\n"
+            "lPlainColumnsReadOnly = PEMSTATUS(oPlain, 'Columns', 5)\n"
+            "nPlainColumnsCountBefore = oPlain.Columns.Count\n"
+            "oPlain.ColumnCount = 0\n"
+            "nPlainAfterDirectAssign = oPlain.ColumnCount\n"
+            "nPlainColumnsCountAfterDirectAssign = oPlain.Columns.Count\n"
+            "lPlainHasColumn1AfterDirectAssign = PEMSTATUS(oPlain, 'Column1', 1)\n"
+            "lPlainSetPem = SETPEM(oPlain, 'ColumnCount', 2)\n"
+            "nPlainAfterSetPem = oPlain.ColumnCount\n"
+            "nPlainColumnsCountAfterSetPem = oPlain.Columns.Count\n"
+            "cPlainColumn2Name = EVAL('oPlain.Column2.Name')\n"
+            "lPlainAddProperty = ADDPROPERTY(oPlain, 'ColumnCount', 3)\n"
+            "lPlainRemoveProperty = REMOVEPROPERTY(oPlain, 'ColumnCount')\n"
+            "lPlainColumnsAddProperty = ADDPROPERTY(oPlain, 'Columns', .NULL.)\n"
+            "lPlainColumnsRemoveProperty = REMOVEPROPERTY(oPlain, 'Columns')\n"
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "nGridBefore = oForm.grdLedger.ColumnCount\n"
+            "nGridColumnsBefore = oForm.grdLedger.Columns.Count\n"
+            "cGridColumn1Before = EVAL('oForm.grdLedger.Column1.Name')\n"
+            "oForm.cmdProbe.GrowGrid()\n"
+            "nGridAfterChild = oForm.grdLedger.ColumnCount\n"
+            "nGridColumnsAfterChild = oForm.grdLedger.Columns.Count\n"
+            "cGridColumn3AfterChild = EVAL('oForm.grdLedger.Column3.Name')\n"
+            "lGridSetPem = SETPEM(oForm.grdLedger, 'ColumnCount', 1)\n"
+            "nGridAfterSetPem = oForm.grdLedger.ColumnCount\n"
+            "nGridColumnsAfterSetPem = oForm.grdLedger.Columns.Count\n"
+            "lGridHasColumn2AfterSetPem = PEMSTATUS(oForm.grdLedger, 'Column2', 1)\n"
+            "xGridGetPem = GETPEM(oForm.grdLedger, 'ColumnCount')\n"
+            "lGridHasColumns = PEMSTATUS(oForm.grdLedger, 'Columns', 1)\n"
+            "lGridColumnsReadOnly = PEMSTATUS(oForm.grdLedger, 'Columns', 5)\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oForm.grdLedger, 1)\n"
+            "lPropHasColumnCount = .F.\n"
+            "lPropHasColumns = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    DO CASE\n"
+            "    CASE UPPER(aPropMembers[i]) == 'COLUMNCOUNT'\n"
+            "        lPropHasColumnCount = .T.\n"
+            "    CASE UPPER(aPropMembers[i]) == 'COLUMNS'\n"
+            "        lPropHasColumns = .T.\n"
+            "    ENDCASE\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('LedgerGrid')\n"
+            "nDerivedBefore = oDerived.ColumnCount\n"
+            "nDerivedColumnsBefore = oDerived.Columns.Count\n"
+            "cDerivedColumn1Name = EVAL('oDerived.Column1.Name')\n"
+            "RETURN\n"
+            "DEFINE CLASS ProbeButton AS CommandButton\n"
+            "    PROCEDURE GrowGrid\n"
+            "        THISFORM.grdLedger.ColumnCount = 3\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS LedgerGrid AS Grid\n"
+            "    ColumnCount = 1\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    ADD OBJECT grdLedger AS LedgerGrid\n"
+            "    ADD OBJECT cmdProbe AS ProbeButton\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Grid ColumnCount property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplainhascolumncount", "true");
+        check("lplaincolumncountreadonly", "false");
+        check("nplainbefore", "-1");
+        check("xplaingetpembefore", "-1");
+        check("lplainhascolumns", "true");
+        check("lplaincolumnsreadonly", "true");
+        check("nplaincolumnscountbefore", "0");
+        check("nplainafterdirectassign", "0");
+        check("nplaincolumnscountafterdirectassign", "0");
+        check("lplainhascolumn1afterdirectassign", "false");
+        check("lplainsetpem", "true");
+        check("nplainaftersetpem", "2");
+        check("nplaincolumnscountaftersetpem", "2");
+        check("cplaincolumn2name", "Column2");
+        check("lplainaddproperty", "false");
+        check("lplainremoveproperty", "false");
+        check("lplaincolumnsaddproperty", "false");
+        check("lplaincolumnsremoveproperty", "false");
+        check("ngridbefore", "1");
+        check("ngridcolumnsbefore", "1");
+        check("cgridcolumn1before", "Column1");
+        check("ngridafterchild", "3");
+        check("ngridcolumnsafterchild", "3");
+        check("cgridcolumn3afterchild", "Column3");
+        check("lgridsetpem", "true");
+        check("ngridaftersetpem", "1");
+        check("ngridcolumnsaftersetpem", "1");
+        check("lgridhascolumn2aftersetpem", "false");
+        check("xgridgetpem", "1");
+        check("lgridhascolumns", "true");
+        check("lgridcolumnsreadonly", "true");
+        check("lprophascolumncount", "true");
+        check("lprophascolumns", "true");
+        check("nderivedbefore", "1");
+        check("nderivedcolumnsbefore", "1");
+        check("cderivedcolumn1name", "Column1");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_visual_backcolor_defaults_mutate_and_stay_builtin()
     {
         namespace fs = std::filesystem;
@@ -49148,6 +49283,7 @@ int main()
     test_native_listindex_defaults_mutates_and_stays_builtin();
     test_native_displayvalue_defaults_mutates_and_stays_builtin();
     test_native_combobox_boundcolumn_columncount_and_columnwidths_defaults_mutate_and_stay_builtin();
+    test_native_grid_columncount_defaults_materialize_columns_and_stay_builtin();
     test_native_visual_backcolor_defaults_mutate_and_stay_builtin();
     test_native_visual_forecolor_defaults_mutate_and_stay_builtin();
     test_native_release_thisform_command_releases_owner_form();
