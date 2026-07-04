@@ -55,6 +55,7 @@ bool is_native_columnorder_member_name(const RuntimeOleObjectState& runtime_obje
 bool is_native_columncount_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_listcount_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_newitemid_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_listitemid_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_column_bound_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_child_collection_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_control_readonly_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -73,6 +74,7 @@ std::optional<PrgValue> invoke_native_collection_method(RuntimeOleObjectState& r
 std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState& runtime_object,
                                                           const std::string& normalized_method_name,
                                                           const std::vector<PrgValue>& arguments);
+bool write_native_list_control_item_id(RuntimeOleObjectState& runtime_object, const PrgValue& assigned_value);
 void sync_native_list_control_count(RuntimeOleObjectState& runtime_object);
 void sync_native_list_control_displayvalue_from_selection(RuntimeOleObjectState& runtime_object);
 std::optional<PrgValue> read_native_identity_metadata(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);

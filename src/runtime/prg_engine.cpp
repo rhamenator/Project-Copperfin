@@ -3763,6 +3763,10 @@ namespace copperfin::runtime
             {
                 sync_native_list_control_count(runtime_object);
             }
+            if (is_native_listitemid_member_name(runtime_object, normalized_property_name))
+            {
+                sync_native_list_control_displayvalue_from_selection(runtime_object);
+            }
             if (is_native_identity_member_name(runtime_object, normalized_property_name))
             {
                 return make_empty_value();
@@ -3901,6 +3905,10 @@ namespace copperfin::runtime
                         runtime_object,
                         assigned_value,
                         source_frame);
+                }
+                if (is_native_listitemid_member_name(runtime_object, normalized_property_name))
+                {
+                    return write_native_list_control_item_id(runtime_object, assigned_value);
                 }
                 if (is_native_controlsource_member_name(runtime_object, normalized_property_name) &&
                     is_native_column_runtime_object(runtime_object))
