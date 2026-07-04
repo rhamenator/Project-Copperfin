@@ -39958,6 +39958,81 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_runtime_olecontrol_direct_member_amembers_remains_coherent()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_olecontrol_direct_member_amembers";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "runtime_olecontrol_direct_member_amembers.prg";
+        write_text(
+            main_path,
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "lAdded = oForm.AddObject('axHost', 'OleControl', 'MSComctlLib.ListViewCtrl')\n"
+            "nHostProps = AMEMBERS(aHostProps, oForm.axHost, 1)\n"
+            "nHostMethods = AMEMBERS(aHostMethods, oForm.axHost, 2)\n"
+            "nHostObjectProps = AMEMBERS(aHostObjectProps, oForm.axHost.Object, 1)\n"
+            "nHostObjectMethods = AMEMBERS(aHostObjectMethods, oForm.axHost.Object, 2)\n"
+            "nHostHasLeft = ASCAN(aHostProps, 'LEFT')\n"
+            "nHostHasCompose = ASCAN(aHostMethods, 'COMPOSE')\n"
+            "nHostObjectHasLeft = ASCAN(aHostObjectProps, 'LEFT')\n"
+            "nHostObjectHasCompose = ASCAN(aHostObjectMethods, 'COMPOSE')\n"
+            "oDoc = CREATEOBJECT('ExcelDoc')\n"
+            "nDocProps = AMEMBERS(aDocProps, oDoc, 1)\n"
+            "nDocMethods = AMEMBERS(aDocMethods, oDoc, 2)\n"
+            "nDocObjectProps = AMEMBERS(aDocObjectProps, oDoc.Object, 1)\n"
+            "nDocObjectMethods = AMEMBERS(aDocObjectMethods, oDoc.Object, 2)\n"
+            "nDocHasVisible = ASCAN(aDocProps, 'VISIBLE')\n"
+            "nDocHasCompose = ASCAN(aDocMethods, 'COMPOSE')\n"
+            "nDocObjectHasVisible = ASCAN(aDocObjectProps, 'VISIBLE')\n"
+            "nDocObjectHasCompose = ASCAN(aDocObjectMethods, 'COMPOSE')\n"
+            "RETURN\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ExcelDoc AS OLEControl\n"
+            "    OLEClass = 'Excel.Sheet'\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("OleControl direct-member AMEMBERS script should complete: ") + state.message);
+
+        const auto expect_positive = [&](const std::string &name, const std::string &message)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " variable not found");
+            if (it != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(it->second) != "0",
+                       message + " expected a positive ASCAN() result");
+            }
+        };
+
+        expect_positive("nhostobjecthasleft",
+                        "Explicit .Object AMEMBERS(..., 1) should expose the representative Left property");
+        expect_positive("nhostobjecthascompose",
+                        "Explicit .Object AMEMBERS(..., 2) should expose the representative Compose method");
+        expect_positive("nhosthasleft",
+                        "Direct host AMEMBERS(..., 1) should expose the representative Left property");
+        expect_positive("nhosthascompose",
+                        "Direct host AMEMBERS(..., 2) should expose the representative Compose method");
+        expect_positive("ndocobjecthasvisible",
+                        "Explicit .Object AMEMBERS(..., 1) should expose the representative Visible property");
+        expect_positive("ndocobjecthascompose",
+                        "Explicit .Object AMEMBERS(..., 2) should expose the representative Compose method");
+        expect_positive("ndochasvisible",
+                        "Direct class-defined AMEMBERS(..., 1) should expose the representative Visible property");
+        expect_positive("ndochascompose",
+                        "Direct class-defined AMEMBERS(..., 2) should expose the representative Compose method");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_runtime_native_visual_controls_without_hwnd_fail_deterministically()
     {
         namespace fs = std::filesystem;
@@ -42154,6 +42229,7 @@ int main()
         test_runtime_olecontrol_explicit_object_reference_assignment_remains_coherent();
         test_runtime_olecontrol_direct_member_reflection_remains_coherent();
         test_runtime_olecontrol_direct_member_setpem_remains_coherent();
+        test_runtime_olecontrol_direct_member_amembers_remains_coherent();
         test_runtime_native_visual_controls_without_hwnd_fail_deterministically();
         test_same_prg_native_bindevent_property_access_and_assign_dispatch_preserve_current_event_metadata();
         test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();

@@ -324,6 +324,11 @@
                 .source = {},
                 .last_action = "object",
                 .action_count = 1};
+            object_surface.properties["left"] =
+                make_string_value("ole:" + automation_prog_id + ".left");
+            object_surface.properties["visible"] =
+                make_string_value("ole:" + automation_prog_id + ".visible");
+            object_surface.methods.push_back("compose");
             auto [object_it, _] = ole_objects.emplace(handle, std::move(object_surface));
             runtime_object.properties["object"] =
                 make_string_value("object:" + object_it->second.prog_id + "#" + std::to_string(object_it->second.handle));

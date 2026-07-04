@@ -899,6 +899,24 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         return nested_object;
     };
+    const auto merge_member_tokens = [](const std::vector<std::string>& primary,
+                                        const std::vector<std::string>& secondary) {
+        std::vector<std::string> merged = primary;
+        merged.reserve(primary.size() + secondary.size());
+        merged.insert(merged.end(), secondary.begin(), secondary.end());
+        std::sort(merged.begin(), merged.end(), [](const std::string& left, const std::string& right) {
+            const std::string normalized_left = lowercase_copy(left);
+            const std::string normalized_right = lowercase_copy(right);
+            if (normalized_left == normalized_right) {
+                return left < right;
+            }
+            return normalized_left < normalized_right;
+        });
+        merged.erase(std::unique(merged.begin(), merged.end(), [](const std::string& left, const std::string& right) {
+            return lowercase_copy(left) == lowercase_copy(right);
+        }), merged.end());
+        return merged;
+    };
 
     if (function == "compobj" && arguments.size() >= 2U) {
         int handle_left = 0;
@@ -947,7 +965,14 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             }
 
             std::vector<PrgValue> member_names;
-            const std::vector<std::string> member_tokens = collect_object_member_names(*runtime_object, flags);
+            std::vector<std::string> member_tokens = collect_object_member_names(*runtime_object, flags);
+            if (RuntimeOleObjectState* object_surface =
+                    resolve_direct_olecontrol_reflection_surface(*runtime_object);
+                object_surface != nullptr) {
+                member_tokens = merge_member_tokens(
+                    member_tokens,
+                    collect_object_member_names(*object_surface, flags));
+            }
             member_names.reserve(member_tokens.size());
             for (const std::string& member_name : member_tokens) {
                 member_names.push_back(make_string_value(member_name));
