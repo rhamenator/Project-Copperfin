@@ -3173,7 +3173,7 @@ copperfin_add_test(test_studio_host cf_design_model
     test_studio_host_selection_context.cpp
     test_studio_host_property_commands.cpp
     test_studio_host_object_lifecycle.cpp
-    test_studio_host_layout_actions.cpp
+    test_studio_host_layout_action_parse.cpp
     test_studio_host_behavior_window_chrome.cpp
     test_studio_host_behavior_grid_and_selection.cpp
     test_studio_host_behavior_data_and_control.cpp
