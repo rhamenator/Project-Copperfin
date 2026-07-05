@@ -711,6 +711,10 @@
                 if (!result.ok)
                 {
                     last_error_message = result.error;
+                    if (temporary_record_lock)
+                    {
+                        unlock_cursor_record_lock(cursor, cursor.recno);
+                    }
                     return false;
                 }
                 cursor.record_count = result.record_count;
