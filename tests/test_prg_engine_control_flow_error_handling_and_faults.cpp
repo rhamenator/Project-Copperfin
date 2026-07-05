@@ -1027,6 +1027,100 @@ void test_try_catch_finally_handles_runtime_errors() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_outer_try_does_not_catch_fault_from_unrelated_expression_invoked_routine() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_expr_invoked_try_boundary";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "expr_invoked_try_boundary.prg";
+    write_text(
+        main_path,
+        "TRY\n"
+        "  x = FaultyFunc() + 1\n"
+        "  afterExprLine = 1\n"
+        "CATCH TO err_text\n"
+        "  caught = err_text.Message\n"
+        "ENDTRY\n"
+        "afterTry = 1\n"
+        "RETURN\n"
+        "PROCEDURE FaultyFunc\n"
+        "DO missing_routine\n"
+        "RETURN 42\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "TRY/CATCH around an expression-invoked routine fault should complete: " + state.message);
+
+    expect(state.globals.find("x") == state.globals.end(),
+        "the assignment statement should abort before completing when the expression-invoked call faults, so x must stay unset");
+
+    const auto caught = state.globals.find("caught");
+    expect(caught != state.globals.end(), "CATCH should run when the expression-invoked routine faults");
+    if (caught != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(caught->second).find("Unable to resolve DO target") != std::string::npos,
+            "CATCH TO should receive the faulting routine's own error text");
+    }
+
+    const auto after_try = state.globals.find("aftertry");
+    expect(after_try != state.globals.end(), "execution should continue normally after ENDTRY");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_error_handler_still_fires_after_fault_inside_expression_invoked_routine() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_expr_invoked_error_handler_reset";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "expr_invoked_error_handler_reset.prg";
+    write_text(
+        main_path,
+        "handlercount = 0\n"
+        "ON ERROR DO handleerr\n"
+        "x = FaultyFunc() + FaultyFunc2()\n"
+        "z = 1\n"
+        "RETURN\n"
+        "PROCEDURE FaultyFunc\n"
+        "DO missing_routine_one\n"
+        "RETURN 42\n"
+        "ENDPROC\n"
+        "PROCEDURE FaultyFunc2\n"
+        "DO missing_routine_two\n"
+        "RETURN 1\n"
+        "ENDPROC\n"
+        "PROCEDURE handleerr\n"
+        "handlercount = handlercount + 1\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+        "ON ERROR should keep handling later faults after one fires from inside an expression-invoked routine: " + state.message);
+
+    const auto handler_count = state.globals.find("handlercount");
+    expect(handler_count != state.globals.end(), "handlercount variable should exist");
+    if (handler_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(handler_count->second) == "2",
+            "ON ERROR handler should fire for both the expression-invoked fault and the later unrelated fault (got '" +
+                copperfin::runtime::format_value(handler_count->second) + "')");
+    }
+
+    const auto z = state.globals.find("z");
+    expect(z != state.globals.end(), "execution should reach the final statement once both faults are handled");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_catch_to_binds_exception_object_with_error_metadata() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_catch_exception_object";

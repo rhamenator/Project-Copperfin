@@ -4382,6 +4382,21 @@ namespace copperfin::runtime
                 pop_frame();
             }
 
+            if (error_handler_return_depth.has_value() && stack.size() <= *error_handler_return_depth)
+            {
+                error_handler_return_depth.reset();
+                handling_error = false;
+                if (!error_metadata_stack.empty())
+                {
+                    current_data_session = std::max(1, error_metadata_stack.back().data_session);
+                    if (error_metadata_stack.back().session_state_snapshot.has_value())
+                    {
+                        current_session_state() = *error_metadata_stack.back().session_state_snapshot;
+                    }
+                    error_metadata_stack.pop_back();
+                }
+            }
+
             if (stack.size() < return_depth)
             {
                 waiting_for_events = false;
@@ -4426,6 +4441,13 @@ namespace copperfin::runtime
                     const std::size_t depth_at_fault = stack.size();
                     for (std::size_t index = 1U; index < depth_at_fault && !handled_by_try; ++index)
                     {
+                        // Never walk past this call's own return_depth: frames below
+                        // it belong to the caller that is suspended while this
+                        // expression-invoked routine runs, and must not be touched.
+                        if (depth_at_fault - 1U - index < return_depth)
+                        {
+                            break;
+                        }
                         Frame &parent = stack[depth_at_fault - 1U - index];
                         const bool has_open_try = std::any_of(
                             parent.tries.begin(),
