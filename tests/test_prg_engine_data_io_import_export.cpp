@@ -405,6 +405,55 @@ void test_append_from_copies_records_into_current_table() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_append_from_is_reverted_by_undo() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_undo";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_simple_dbf(temp_root / "dest.dbf", {"Alice"});
+    write_simple_dbf(temp_root / "source.dbf", {"Bob", "Carol"});
+
+    const fs::path main_path = temp_root / "append_from_undo.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "dest.dbf").string() + "'\n"
+        "APPEND FROM '" + (temp_root / "source.dbf").string() + "'\n"
+        "UNDO\n"
+        "nCount = RECCOUNT()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "APPEND FROM + UNDO script should complete: " + state.message);
+
+    const bool has_undo_event = std::any_of(state.events.begin(), state.events.end(),
+        [](const copperfin::runtime::RuntimeEvent& ev) {
+            return ev.category == "runtime.command_undo";
+        });
+    expect(has_undo_event, "UNDO after APPEND FROM should emit a runtime.command_undo event");
+
+    const auto count = state.globals.find("ncount");
+    expect(count != state.globals.end(), "nCount variable should exist after UNDO");
+    if (count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count->second) == "1",
+            "UNDO should revert APPEND FROM back to the pre-command record count (got '" +
+                copperfin::runtime::format_value(count->second) + "')");
+    }
+
+    const auto result = copperfin::vfp::parse_dbf_table_from_file(
+        (temp_root / "dest.dbf").string(), 100U);
+    expect(result.ok, "APPEND FROM + UNDO destination DBF should be readable");
+    expect(result.table.records.size() == 1U,
+        "UNDO should leave only the original destination record on disk (got " +
+            std::to_string(result.table.records.size()) + ")");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_copy_to_type_sdf_writes_fixed_width_text_rows() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_to_sdf";

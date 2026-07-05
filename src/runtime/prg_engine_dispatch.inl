@@ -5661,6 +5661,30 @@
                     return {};
                 }
 
+                if (!ensure_command_undo_backup_for_table(cursor->source_path))
+                {
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                current_command_undo_journal().command_label = "APPEND FROM";
+                struct AppendFromCommandUndoGuard
+                {
+                    PrgRuntimeSession::Impl &runtime;
+                    bool committed = false;
+                    ~AppendFromCommandUndoGuard()
+                    {
+                        if (committed)
+                        {
+                            runtime.commit_active_command_undo_journal();
+                        }
+                        else
+                        {
+                            runtime.rollback_active_command_undo_journal();
+                        }
+                    }
+                } append_from_command_undo_guard{*this};
+
                 if (append_from_sdf)
                 {
                     std::ifstream input(src_path, std::ios::binary);
@@ -5768,6 +5792,7 @@
                         ++appended_count;
                     }
 
+                    append_from_command_undo_guard.committed = true;
                     events.push_back({.category = "runtime.append_from",
                                       .detail = src_raw + " (" + std::to_string(appended_count) + " records, TYPE SDF)",
                                       .location = statement.location});
@@ -5882,6 +5907,7 @@
                         ++appended_count;
                     }
 
+                    append_from_command_undo_guard.committed = true;
                     events.push_back({.category = "runtime.append_from",
                                       .detail = src_raw + " (" + std::to_string(appended_count) + " records, TYPE JSON)",
                                       .location = statement.location});
@@ -6008,6 +6034,7 @@
                         ++appended_count;
                     }
 
+                    append_from_command_undo_guard.committed = true;
                     events.push_back({.category = "runtime.append_from",
                                       .detail = src_raw + " (" + std::to_string(appended_count) + " records, TYPE DIF)",
                                       .location = statement.location});
@@ -6134,6 +6161,7 @@
                         ++appended_count;
                     }
 
+                    append_from_command_undo_guard.committed = true;
                     events.push_back({.category = "runtime.append_from",
                                       .detail = src_raw + " (" + std::to_string(appended_count) + " records, TYPE SYLK)",
                                       .location = statement.location});
@@ -6260,6 +6288,7 @@
                         ++appended_count;
                     }
 
+                    append_from_command_undo_guard.committed = true;
                     events.push_back({.category = "runtime.append_from",
                                       .detail = src_raw + " (" + std::to_string(appended_count) + " records, TYPE XLS)",
                                       .location = statement.location});
@@ -6393,6 +6422,7 @@
                         ++appended_count;
                     }
 
+                    append_from_command_undo_guard.committed = true;
                     events.push_back({.category = "runtime.append_from",
                                       .detail = src_raw + " (" + std::to_string(appended_count) + " records, TYPE DELIMITED)",
                                       .location = statement.location});
@@ -6466,6 +6496,7 @@
                     ++appended_count;
                 }
 
+                append_from_command_undo_guard.committed = true;
                 events.push_back({.category = "runtime.append_from",
                                   .detail = src_raw + " (" + std::to_string(appended_count) + " records)",
                                   .location = statement.location});

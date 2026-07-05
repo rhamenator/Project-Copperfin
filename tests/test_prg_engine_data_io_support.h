@@ -81,6 +81,7 @@ void test_copy_to_creates_destination_dbf();
 void test_copy_structure_to_creates_empty_schema();
 void test_copy_to_from_empty_table_produces_valid_empty_dbf();
 void test_append_from_copies_records_into_current_table();
+void test_append_from_is_reverted_by_undo();
 void test_copy_to_type_sdf_writes_fixed_width_text_rows();
 void test_append_from_type_sdf_imports_fixed_width_text_rows();
 void test_copy_to_type_csv_and_delimited_text_rows();
