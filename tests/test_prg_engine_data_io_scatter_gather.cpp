@@ -1831,4 +1831,45 @@ void test_gather_memvar_round_trips_field_values() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_gather_from_array_is_reverted_by_undo() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_gather_undo";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_simple_dbf(temp_root / "table.dbf", {"Alice", "Bob"});
+
+    const fs::path main_path = temp_root / "gather_undo.prg";
+    write_text(
+        main_path,
+        "USE '" + (temp_root / "table.dbf").string() + "'\n"
+        "GO 1\n"
+        "SCATTER FIELDS NAME TO aRow\n"
+        "aRow[1] = 'Changed'\n"
+        "GATHER FROM aRow FIELDS NAME\n"
+        "UNDO\n"
+        "GO 1\n"
+        "cName = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "GATHER FROM array + UNDO script should complete: " + state.message);
+    expect(has_runtime_event(state.events, "runtime.command_undo", "LATEST"),
+        "UNDO after GATHER should emit a runtime.command_undo event");
+
+    const auto it = state.globals.find("cname");
+    expect(it != state.globals.end(), "cName variable should exist after UNDO");
+    if (it != state.globals.end()) {
+        const std::string actual = copperfin::runtime::format_value(it->second);
+        expect(actual == "Alice",
+            "UNDO should revert a GATHER FROM array write back to the pre-command NAME value (got '" + actual + "')");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace cf_test_prg_engine_data_io

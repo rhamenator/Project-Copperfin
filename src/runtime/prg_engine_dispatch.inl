@@ -6790,76 +6790,103 @@
                     }
                     use_name_value_pairs = !name_value_pairs.empty();
                 }
-                std::size_t array_index = 1U;
-                for (const auto &field : rec->values)
+                bool temporary_record_lock = false;
+                if (!cursor->remote && !acquire_record_lock(*cursor, cursor->recno, "GATHER", false, temporary_record_lock))
                 {
-                    if (!field_matches_filter(field.field_name, field_filter))
-                    {
-                        continue;
-                    }
-                    PrgValue val = make_empty_value();
-                    if (use_memvar)
-                    {
-                        val = lookup_variable(frame, "m." + field.field_name);
-                    }
-                    else if (use_name_object)
-                    {
-                        const std::string field_name = normalize_identifier(field.field_name);
-                        const auto property = source_object->properties.find(field_name);
-                        if (property == source_object->properties.end())
-                        {
-                            continue;
-                        }
-                        val = property->second;
-                    }
-                    else if (use_name_value_pairs)
-                    {
-                        const auto pair = name_value_pairs.find(normalize_identifier(field.field_name));
-                        if (pair == name_value_pairs.end())
-                        {
-                            continue;
-                        }
-                        val = pair->second;
-                    }
-                    else if (source_array != nullptr && source_array->columns > 1U)
-                    {
-                        val = array_value(array_name, 1U, array_index++);
-                    }
-                    else
-                    {
-                        val = array_value(array_name, array_index++);
-                    }
-                    if (cursor->remote)
-                    {
-                        auto it = std::find_if(
-                            cursor->remote_records[cursor->recno - 1U].values.begin(),
-                            cursor->remote_records[cursor->recno - 1U].values.end(),
-                            [&](const vfp::DbfRecordValue &rv)
-                            {
-                                return collapse_identifier(rv.field_name) == collapse_identifier(field.field_name);
-                            });
-                        if (it != cursor->remote_records[cursor->recno - 1U].values.end())
-                        {
-                            it->display_value = serialize_prg_value_for_record_field(*it, val);
-                        }
-                    }
-                    else
-                    {
-                        const auto rep_result = vfp::replace_record_field_value(
-                            cursor->source_path,
-                            cursor->recno - 1U,
-                            field.field_name,
-                            serialize_prg_value_for_record_field(field, val));
-                        if (!rep_result.ok)
-                        {
-                            last_error_message = rep_result.error;
-                            last_fault_location = statement.location;
-                            last_fault_statement = statement.text;
-                            return {.ok = false, .message = last_error_message};
-                        }
-                        cursor->record_count = rep_result.record_count;
-                    }
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
                 }
+
+                const auto perform_gather = [&]() -> bool
+                {
+                    std::size_t array_index = 1U;
+                    for (const auto &field : rec->values)
+                    {
+                        if (!field_matches_filter(field.field_name, field_filter))
+                        {
+                            continue;
+                        }
+                        PrgValue val = make_empty_value();
+                        if (use_memvar)
+                        {
+                            val = lookup_variable(frame, "m." + field.field_name);
+                        }
+                        else if (use_name_object)
+                        {
+                            const std::string field_name = normalize_identifier(field.field_name);
+                            const auto property = source_object->properties.find(field_name);
+                            if (property == source_object->properties.end())
+                            {
+                                continue;
+                            }
+                            val = property->second;
+                        }
+                        else if (use_name_value_pairs)
+                        {
+                            const auto pair = name_value_pairs.find(normalize_identifier(field.field_name));
+                            if (pair == name_value_pairs.end())
+                            {
+                                continue;
+                            }
+                            val = pair->second;
+                        }
+                        else if (source_array != nullptr && source_array->columns > 1U)
+                        {
+                            val = array_value(array_name, 1U, array_index++);
+                        }
+                        else
+                        {
+                            val = array_value(array_name, array_index++);
+                        }
+                        if (cursor->remote)
+                        {
+                            auto it = std::find_if(
+                                cursor->remote_records[cursor->recno - 1U].values.begin(),
+                                cursor->remote_records[cursor->recno - 1U].values.end(),
+                                [&](const vfp::DbfRecordValue &rv)
+                                {
+                                    return collapse_identifier(rv.field_name) == collapse_identifier(field.field_name);
+                                });
+                            if (it != cursor->remote_records[cursor->recno - 1U].values.end())
+                            {
+                                it->display_value = serialize_prg_value_for_record_field(*it, val);
+                            }
+                        }
+                        else
+                        {
+                            const auto rep_result = vfp::replace_record_field_value(
+                                cursor->source_path,
+                                cursor->recno - 1U,
+                                field.field_name,
+                                serialize_prg_value_for_record_field(field, val));
+                            if (!rep_result.ok)
+                            {
+                                last_error_message = rep_result.error;
+                                return false;
+                            }
+                            cursor->record_count = rep_result.record_count;
+                        }
+                    }
+                    return true;
+                };
+
+                const bool gather_ok = cursor->remote
+                    ? perform_gather()
+                    : execute_with_command_undo(cursor->source_path, "GATHER", perform_gather);
+
+                if (!cursor->remote && temporary_record_lock)
+                {
+                    unlock_cursor_record_lock(*cursor, cursor->recno);
+                }
+
+                if (!gather_ok)
+                {
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
                 events.push_back({.category = "runtime.gather",
                                   .detail = use_memvar ? "memvar" : (use_name_object ? trim_copy(statement.expression) : array_name),
                                   .location = statement.location});
