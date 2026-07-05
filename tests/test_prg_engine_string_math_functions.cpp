@@ -586,6 +586,41 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_numeric_coercion_of_blank_padded_string_does_not_fault()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_numeric_coercion_blank_string";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "coerce.prg";
+        write_text(
+            main_path,
+            "nBlank = ROUND(SPACE(10), 2)\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+
+        expect(state.completed,
+               "#numeric-coercion: ROUND() on a space-padded blank string should not fault: " + state.message);
+
+        const auto it = state.globals.find("nblank");
+        if (it == state.globals.end())
+        {
+            expect(false, "nblank variable not found");
+        }
+        else
+        {
+            const std::string actual = copperfin::runtime::format_value(it->second);
+            expect(actual == "0", "nblank: expected \"0\", got \"" + actual + "\"");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 } // namespace
 
 int main()
@@ -594,6 +629,7 @@ int main()
     test_financial_and_misc_expression_functions();
     test_nested_macro_eval_textmerge_execscript_semantics();
     test_numeric_domain_errors_route_through_runtime_catalog();
+    test_numeric_coercion_of_blank_padded_string_does_not_fault();
 
     if (test_failures() != 0)
     {

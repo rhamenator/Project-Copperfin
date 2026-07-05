@@ -713,8 +713,10 @@ double value_as_number(const PrgValue& value) {
             return value.boolean_value ? 1.0 : 0.0;
         case PrgValueKind::number:
             return value.number_value;
-        case PrgValueKind::string:
-            return value.string_value.empty() ? 0.0 : std::stod(value.string_value);
+        case PrgValueKind::string: {
+            const std::string trimmed = trim_copy(value.string_value);
+            return trimmed.empty() ? 0.0 : std::stod(trimmed);
+        }
         case PrgValueKind::int64:
             return static_cast<double>(value.int64_value);
         case PrgValueKind::uint64:
