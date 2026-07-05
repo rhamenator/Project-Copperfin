@@ -32,6 +32,14 @@ void test_parse_launch_arguments_for_tab_order_object() {
 }
 
 void test_parse_launch_arguments_rejects_tab_order_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--tab-order-object",
+        "--tab-order-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "launch contract should reject tab-order-object requests without --starting-tab-index");
+
     const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
         "--tab-order-object",

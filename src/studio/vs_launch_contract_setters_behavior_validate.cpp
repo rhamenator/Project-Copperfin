@@ -9,6 +9,13 @@ namespace copperfin::studio {
 std::optional<LaunchParseResult> validate_setters_behavior(
     const LaunchParseResult& result,
     const localization::LocalizedCatalog& catalog) {
+if (result.request.tab_order_object && !result.request.starting_tab_index_available) {
+        return LaunchParseResult{.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.TabOrder"),
+            "--starting-tab-index")};
+    }
+
 if (result.request.tab_order_object && result.request.tab_order_objects.empty()) {
         return LaunchParseResult{.ok = false, .error = localized_object_assignment_requires_target(
             catalog,
