@@ -448,6 +448,24 @@ void test_parse_index_probe_for_cdx() {
     }
 }
 
+void test_parse_cdx_header_root_offset_beyond_16_bits() {
+    std::vector<std::uint8_t> bytes(16U, 0U);
+    write_le_u32(bytes, 0U, 128U * 512U);
+    write_le_u32(bytes, 4U, 1U * 512U);
+    bytes[12] = 0x0AU;
+    bytes[14] = 0xE0U;
+    bytes[15] = 0x01U;
+
+    const auto result = copperfin::vfp::parse_cdx_header(bytes, 129U * 512U);
+    expect(result.ok, "parse_cdx_header should accept a root node offset beyond 16 bits");
+    expect(
+        result.header.root_node_offset == (128U * 512U),
+        "CDX root node offset should not be truncated to its low 16 bits");
+    expect(
+        result.header.next_free_node_offset == (1U * 512U),
+        "CDX free node offset should not be truncated to its low 16 bits");
+}
+
 void test_parse_index_probe_for_dcx() {
     const auto bytes = make_synthetic_cdx_family_bytes(false, true);
 
@@ -1659,6 +1677,7 @@ int main() {
     test_asset_family_detection();
     test_asset_inspector_errors_resolve_through_localization_catalog();
     test_parse_index_probe_for_cdx();
+    test_parse_cdx_header_root_offset_beyond_16_bits();
     test_parse_index_probe_for_dcx();
     test_parse_index_probe_for_cdx_prefers_tag_page_local_expressions();
     test_parse_index_probe_for_cdx_binds_descriptive_tag_names_from_tag_page_hints();

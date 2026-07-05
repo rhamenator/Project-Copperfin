@@ -666,8 +666,8 @@ CdxParseResult parse_cdx_header(const std::vector<std::uint8_t>& bytes, std::uin
         header.raw_words[index] = read_le_u16(bytes, index * 2U);
     }
 
-    header.root_node_offset = header.raw_words[0];
-    header.next_free_node_offset = header.raw_words[1];
+    header.root_node_offset = read_le_u32(bytes, 0U);
+    header.next_free_node_offset = read_le_u32(bytes, 4U);
     header.key_length_hint = header.raw_words[6];
     header.key_pool_length_hint = header.raw_words[7];
 

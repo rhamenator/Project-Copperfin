@@ -13,8 +13,8 @@ namespace copperfin::vfp {
 
 struct CdxHeader {
     std::array<std::uint16_t, 8> raw_words{};
-    std::uint16_t root_node_offset = 0;
-    std::uint16_t next_free_node_offset = 0;
+    std::uint32_t root_node_offset = 0;
+    std::uint32_t next_free_node_offset = 0;
     std::uint16_t key_length_hint = 0;
     std::uint16_t key_pool_length_hint = 0;
     std::uint16_t page_size = 512;
