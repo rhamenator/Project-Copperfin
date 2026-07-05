@@ -1601,6 +1601,9 @@ DbfWriteResult replace_record_field_value(
     if (!field.has_value()) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TargetFieldNotFoundInTable"), .record_count = header_result.header.record_count};
     }
+    if (record_index >= header_result.header.record_count) {
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordIndexOutOfRange"), .record_count = header_result.header.record_count};
+    }
 
     DbfWriteResult result;
     std::vector<std::uint8_t> memo_bytes;
