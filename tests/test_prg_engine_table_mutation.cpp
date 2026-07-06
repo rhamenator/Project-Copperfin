@@ -290,6 +290,101 @@ void test_zap_truncates_local_table_records() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_pack_is_reverted_by_undo() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_pack_undo";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+
+    const fs::path main_path = temp_root / "pack_undo.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "DELETE FOR NAME = 'BRAVO'\n"
+        "PACK\n"
+        "UNDO\n"
+        "nCount = RECCOUNT()\n"
+        "GO 2\n"
+        "cSecond = NAME\n"
+        "lDeleted = DELETED()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "PACK + UNDO script should complete: " + state.message);
+    expect(has_runtime_event(state.events, "runtime.command_undo", "LATEST"),
+        "UNDO after PACK should emit a runtime.command_undo event");
+
+    const auto count = state.globals.find("ncount");
+    expect(count != state.globals.end(), "nCount variable should exist after UNDO");
+    if (count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count->second) == "3",
+            "UNDO should restore PACK's physically-removed record (got '" + copperfin::runtime::format_value(count->second) + "')");
+    }
+
+    const auto second = state.globals.find("csecond");
+    const auto deleted = state.globals.find("ldeleted");
+    if (second != state.globals.end()) {
+        expect(copperfin::runtime::format_value(second->second) == "BRAVO",
+            "UNDO should restore the record PACK removed, in its original position");
+    }
+    if (deleted != state.globals.end()) {
+        expect(copperfin::runtime::format_value(deleted->second) == "true",
+            "UNDO should restore the deleted-record tombstone that PACK physically removed");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_zap_is_reverted_by_undo() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_zap_undo";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "zap_undo.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "ZAP\n"
+        "UNDO\n"
+        "nCount = RECCOUNT()\n"
+        "GO 1\n"
+        "cFirst = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "ZAP + UNDO script should complete: " + state.message);
+    expect(has_runtime_event(state.events, "runtime.command_undo", "LATEST"),
+        "UNDO after ZAP should emit a runtime.command_undo event");
+
+    const auto count = state.globals.find("ncount");
+    expect(count != state.globals.end(), "nCount variable should exist after UNDO");
+    if (count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count->second) == "2",
+            "UNDO should restore ZAP's truncated records (got '" + copperfin::runtime::format_value(count->second) + "')");
+    }
+
+    const auto first = state.globals.find("cfirst");
+    if (first != state.globals.end()) {
+        expect(copperfin::runtime::format_value(first->second) == "ALPHA",
+            "UNDO should restore the original first record ZAP removed");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_replace_character_field_truncates_to_field_width() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_replace_truncate_char";
@@ -2233,7 +2328,9 @@ int main() {
     test_local_table_mutation_and_scan_flow();
     test_replace_for_updates_all_matching_records();
     test_pack_compacts_deleted_local_records();
+    test_pack_is_reverted_by_undo();
     test_zap_truncates_local_table_records();
+    test_zap_is_reverted_by_undo();
     test_replace_character_field_truncates_to_field_width();
     test_character_field_at_maximum_width_round_trips();
     test_memo_field_replace_with_empty_string();

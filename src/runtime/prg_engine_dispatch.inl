@@ -2726,26 +2726,34 @@
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
-                    if (!ensure_transaction_backup_for_table(cursor->source_path))
+                    if (!execute_with_command_undo(cursor->source_path, "PACK MEMO", [&]
+                        {
+                            if (!ensure_transaction_backup_for_table(cursor->source_path))
+                            {
+                                return false;
+                            }
+                            const auto pack_result = vfp::pack_dbf_memo_file(cursor->source_path);
+                            if (!pack_result.ok)
+                            {
+                                last_error_message = pack_result.error;
+                                return false;
+                            }
+                            cursor->record_count = pack_result.record_count;
+                            move_cursor_to(*cursor, static_cast<long long>(std::min(cursor->recno, cursor->record_count)));
+                            return true;
+                        }))
                     {
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
                     }
-                    const auto pack_result = vfp::pack_dbf_memo_file(cursor->source_path);
-                    if (!pack_result.ok)
-                    {
-                        last_error_message = pack_result.error;
-                        last_fault_location = statement.location;
-                        last_fault_statement = statement.text;
-                        return {.ok = false, .message = last_error_message};
-                    }
-                    cursor->record_count = pack_result.record_count;
-                    move_cursor_to(*cursor, static_cast<long long>(std::min(cursor->recno, cursor->record_count)));
                 }
                 else
                 {
-                    if (!pack_cursor(*cursor))
+                    const bool pack_ok = cursor->remote
+                        ? pack_cursor(*cursor)
+                        : execute_with_command_undo(cursor->source_path, "PACK", [&] { return pack_cursor(*cursor); });
+                    if (!pack_ok)
                     {
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
@@ -2769,7 +2777,10 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
-                if (!zap_cursor(*cursor))
+                const bool zap_ok = cursor->remote
+                    ? zap_cursor(*cursor)
+                    : execute_with_command_undo(cursor->source_path, "ZAP", [&] { return zap_cursor(*cursor); });
+                if (!zap_ok)
                 {
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
