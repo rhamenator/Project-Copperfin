@@ -103,6 +103,7 @@ void test_aggregate_commands_on_empty_table_return_zero();
 void test_aggregate_commands_support_macro_targets_and_calculate_while();
 void test_command_level_aggregate_scope_and_while_semantics();
 void test_total_command_for_local_tables();
+void test_total_command_tolerates_non_numeric_field_text();
 void test_total_command_errors_use_default_locale_messages();
 void test_total_command_supports_currency_and_integer_fields();
 void test_total_command_for_sql_result_cursors();

@@ -821,6 +821,57 @@ void test_total_command_for_local_tables() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_total_command_tolerates_non_numeric_field_text() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_total_command_overflow";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "sales.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "REGION", .type = 'C', .length = 10U},
+        {.name = "AMOUNT", .type = 'N', .length = 6U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"EAST", "10"},
+        {"EAST", "******"},
+        {"WEST", "8"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "overflow-marker sales DBF fixture should be created");
+
+    const fs::path output_path = temp_root / "totals.dbf";
+    const fs::path main_path = temp_root / "total_overflow.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS Sales IN 0\n"
+        "TOTAL TO '" + output_path.string() + "' ON REGION FIELDS AMOUNT\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "TOTAL should tolerate a non-numeric/overflow-marker field value instead of faulting: " + state.message);
+
+    const auto totals_result = copperfin::vfp::parse_dbf_table_from_file(output_path.string(), 10U);
+    expect(totals_result.ok, "TOTAL should write a readable output DBF despite the overflow-marker row");
+    if (totals_result.ok) {
+        const auto east_record = std::find_if(
+            totals_result.table.records.begin(),
+            totals_result.table.records.end(),
+            [](const auto& record) { return record.values[0].display_value == "EAST"; });
+        expect(east_record != totals_result.table.records.end(), "TOTAL should still produce an EAST group total");
+        if (east_record != totals_result.table.records.end()) {
+            expect(east_record->values[1].display_value == "10",
+                "TOTAL should sum only the parseable field values, skipping the non-numeric overflow marker");
+        }
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_total_command_errors_use_default_locale_messages() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_total_command_errors";

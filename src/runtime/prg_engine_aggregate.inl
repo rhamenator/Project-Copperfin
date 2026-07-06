@@ -559,7 +559,16 @@
                     const std::string value_text = trim_copy(record_field_value(record, total_fields[index]->name).value_or(std::string{}));
                     if (!value_text.empty())
                     {
-                        groups.back().sums[index] += std::stod(value_text);
+                        try
+                        {
+                            groups.back().sums[index] += std::stod(value_text);
+                        }
+                        catch (...)
+                        {
+                            // Tolerate non-numeric/overflow field text (e.g. a VFP numeric
+                            // overflow marker) the same way VAL() does elsewhere, rather than
+                            // aborting the whole TOTAL command.
+                        }
                     }
                 }
             };
