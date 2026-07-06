@@ -388,7 +388,7 @@ StudioDesignerDispatchExecutionResult execute_studio_designer_dispatch(
             .execution_admitted = true,
             .executed = false,
             .dry_run = true,
-            .mutates_asset = false
+            .mutates_asset = mutates_asset
         };
     }
 

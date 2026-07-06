@@ -1446,6 +1446,44 @@ int main() {
                child_failure_execution.builder_executions.front().error == "builder failed",
            "#1324: designer dispatch execution should summarize child failures without stale aggregate metadata");
 
+    builder_execution_calls = 0U;
+    const auto partial_mutation_before_failure_execution = copperfin::studio::execute_studio_designer_dispatch({
+        .dispatch_plan = visual_dispatch.plan,
+        .admit_execution = true,
+        .editor_action_executor = [](const copperfin::studio::StudioEditorActionDispatchPlan&) {
+            return copperfin::studio::StudioEditorActionDispatchExecutionObservation{
+                .launched = true,
+                .exit_code = 0,
+                .output = {},
+                .error = {},
+                .mutates_asset = true
+            };
+        },
+        .builder_executor = [&](const copperfin::studio::StudioBuilderDispatchPlan&) {
+            ++builder_execution_calls;
+            return copperfin::studio::StudioBuilderDispatchExecutionObservation{
+                .launched = true,
+                .exit_code = 9,
+                .output = {},
+                .error = "builder failed",
+                .mutates_asset = false
+            };
+        },
+        .toolbox_executor = [](const copperfin::studio::StudioToolboxDispatchPlan&) {
+            return copperfin::studio::StudioToolboxDispatchExecutionObservation{
+                .launched = true,
+                .exit_code = 0,
+                .output = {},
+                .error = {},
+                .mutates_asset = false
+            };
+        }
+    });
+    expect(partial_mutation_before_failure_execution.ok &&
+               !partial_mutation_before_failure_execution.executed &&
+               partial_mutation_before_failure_execution.mutates_asset,
+           "designer dispatch execution should report real mutations from steps that succeeded before a later step failed");
+
     const auto invocation_catalog = copperfin::studio::plan_studio_designer_invocation_admission_catalog({
         .asset_path = "forms/customer.scx",
         .record_index = 1U,
