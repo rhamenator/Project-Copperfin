@@ -621,6 +621,52 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_ordering_comparisons_on_non_numeric_strings_do_not_fault()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_string_ordering_comparisons";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "ordering.prg";
+        write_text(
+            main_path,
+            "cA = 'BRAVO'\n"
+            "cB = 'APPLE'\n"
+            "lGreater = cA > cB\n"
+            "lLess = cA < cB\n"
+            "lGreaterOrEqual = cA >= 'BRAVO'\n"
+            "lLessOrEqual = cB <= cA\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+
+        expect(state.completed,
+               "#ordering-comparison: comparing two non-numeric strings with </>/</=/>= should not fault: " + state.message);
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            const std::string actual = copperfin::runtime::format_value(it->second);
+            expect(actual == expected, name + ": expected \"" + expected + "\", got \"" + actual + "\"");
+        };
+
+        check("lgreater", "true");
+        check("lless", "false");
+        check("lgreaterorequal", "true");
+        check("llessorequal", "true");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 } // namespace
 
 int main()
@@ -630,6 +676,7 @@ int main()
     test_nested_macro_eval_textmerge_execscript_semantics();
     test_numeric_domain_errors_route_through_runtime_catalog();
     test_numeric_coercion_of_blank_padded_string_does_not_fault();
+    test_ordering_comparisons_on_non_numeric_strings_do_not_fault();
 
     if (test_failures() != 0)
     {

@@ -244,7 +244,11 @@
                     else if (match("<="))
                     {
                         PrgValue right = parse_additive();
-                        if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
+                        if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string)
+                        {
+                            left = make_boolean_value(value_as_string(left) <= value_as_string(right));
+                        }
+                        else if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
                             (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64))
                         {
                             left = make_boolean_value(static_cast<std::int64_t>(value_as_number(left)) <=
@@ -258,7 +262,11 @@
                     else if (match(">="))
                     {
                         PrgValue right = parse_additive();
-                        if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
+                        if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string)
+                        {
+                            left = make_boolean_value(value_as_string(left) >= value_as_string(right));
+                        }
+                        else if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
                             (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64))
                         {
                             left = make_boolean_value(static_cast<std::int64_t>(value_as_number(left)) >=
@@ -276,7 +284,11 @@
                     else if (match("<"))
                     {
                         PrgValue right = parse_additive();
-                        if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
+                        if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string)
+                        {
+                            left = make_boolean_value(value_as_string(left) < value_as_string(right));
+                        }
+                        else if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
                             (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64))
                         {
                             left = make_boolean_value(static_cast<std::int64_t>(value_as_number(left)) <
@@ -290,7 +302,11 @@
                     else if (match(">"))
                     {
                         PrgValue right = parse_additive();
-                        if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
+                        if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string)
+                        {
+                            left = make_boolean_value(value_as_string(left) > value_as_string(right));
+                        }
+                        else if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
                             (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64))
                         {
                             left = make_boolean_value(static_cast<std::int64_t>(value_as_number(left)) >
@@ -2085,7 +2101,14 @@
                     resolved_expression = indirect_expression;
                 }
 
-                // Always treat macro expansion as an expression when possible.
+                // Always treat macro expansion as an expression when possible, unless the resolved
+                // text still contains "<<", which can never appear in valid VFP expression syntax
+                // (there is no such operator) and is the hallmark of an unresolved TEXTMERGE
+                // placeholder (e.g. "Template <<cName>>"). Without this check, the parser's lack of
+                // a "<<" token can split such text into two chained "<" comparisons that may
+                // successfully (if nonsensically) evaluate instead of throwing, which previously
+                // acted as this function's only signal to fall back to the literal string.
+                if (resolved_expression.find("<<") == std::string::npos)
                 try
                 {
                     const PrgValue expanded_value = eval_expression_callback_(resolved_expression);
