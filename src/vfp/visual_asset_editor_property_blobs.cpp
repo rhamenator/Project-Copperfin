@@ -99,16 +99,9 @@ std::vector<ReportSettingsExprLine> parse_report_settings_expr_lines(const std::
         } else {
             const std::string name = trim_both(line.substr(0U, equals));
             const std::string value = trim_both(line.substr(equals + 1U));
-            if (name.empty()) {
+            if (name.empty() || is_report_settings_comment_like_name(name)) {
                 lines.push_back({
                     .raw_line = line,
-                    .name = {},
-                    .value = {},
-                    .is_assignment = false
-                });
-            } else if (value.empty() && is_report_settings_comment_like_name(name)) {
-                lines.push_back({
-                    .raw_line = name,
                     .name = {},
                     .value = {},
                     .is_assignment = false
@@ -951,10 +944,7 @@ std::string serialize_visual_property_blob(const std::vector<VisualPropertyAssig
             continue;
         }
 
-        stream << property.name;
-        if (!property.value.empty()) {
-            stream << " = " << property.value;
-        }
+        stream << property.name << " = " << property.value;
         stream << "\r\n";
     }
     return stream.str();
