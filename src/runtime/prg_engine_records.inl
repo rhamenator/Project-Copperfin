@@ -414,7 +414,14 @@
 
                                 if (seek_in_cursor(cursor, search_key))
                                 {
-                                    if (while_expression.empty() || evaluate_visibility_expression(while_expression, frame, &cursor))
+                                    // The index seek only guarantees the cursor landed on a record whose
+                                    // key relates to search_key per the index's own ordering/match rules; for
+                                    // non-equality operators (and to guard against any other seek/for-expression
+                                    // mismatch) the landed record must still be re-checked against the actual
+                                    // for_expression before trusting it, otherwise e.g. a record with AGE == 30
+                                    // could be reported as matching LOCATE FOR AGE > 30.
+                                    if (current_record_matches_visibility(cursor, frame, for_expression) &&
+                                        (while_expression.empty() || evaluate_visibility_expression(while_expression, frame, &cursor)))
                                     {
                                         restore_order_metadata();
                                         cursor.found = true;

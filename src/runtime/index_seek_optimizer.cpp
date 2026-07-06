@@ -205,7 +205,7 @@ std::optional<std::tuple<std::string, std::string, std::string>> extract_compari
     const std::string& text,
     const std::vector<std::string>& available_fields)
 {
-    static const std::vector<std::string> operators = {"<>", "<=", ">=", "LIKE", "IN", "=", "<", ">"};
+    static const std::vector<std::string> operators = {"<>", "<=", ">=", "LIKE", "IN", "==", "=", "<", ">"};
 
     int parentheses_depth = 0;
     char quote_delimiter = '\0';
@@ -285,7 +285,7 @@ bool IndexExpressionAnalyzer::recognize_simple_comparison(
 
     const auto& [left, op, right] = *comparison;
     out_pattern.operator_kind = IndexOperatorKind::unsupported;
-    if (op == "=") {
+    if (op == "=" || op == "==") {
         out_pattern.operator_kind = IndexOperatorKind::equal;
     } else if (op == "<>") {
         out_pattern.operator_kind = IndexOperatorKind::not_equal;

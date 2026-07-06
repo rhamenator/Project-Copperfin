@@ -145,11 +145,105 @@ void test_scan_uses_rushmore_seek_and_restores_order() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_locate_with_double_equals_operator_uses_rushmore_seek() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_rushmore_double_equals";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+    write_synthetic_cdx(cdx_path, "NAME", "UPPER(NAME)");
+
+    const fs::path main_path = temp_root / "rushmore_double_equals.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "LOCATE FOR NAME == 'BRAVO'\n"
+        "lFound = FOUND()\n"
+        "nRecno = RECNO()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "Rushmore LOCATE with == should complete: " + state.message);
+
+    const auto found = state.globals.find("lfound");
+    const auto recno = state.globals.find("nrecno");
+    expect(found != state.globals.end() && recno != state.globals.end(),
+        "LOCATE FOR NAME == 'BRAVO' should expose FOUND()/RECNO()");
+    if (found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(found->second) == "true",
+            "LOCATE FOR NAME == 'BRAVO' should still find the matching record (== must not be split into a bare = plus a malformed operand)");
+    }
+    if (recno != state.globals.end()) {
+        expect(copperfin::runtime::format_value(recno->second) == "2",
+            "LOCATE FOR NAME == 'BRAVO' should position the cursor on the matching row");
+    }
+    expect(
+        has_rushmore_event_with_detail_fragment(state.events, "-> index_seek via NAME") &&
+        !has_rushmore_event_with_detail_fragment(state.events, "linear_scan after index_seek"),
+        "LOCATE FOR NAME == 'BRAVO' should use the index seek optimization, not silently fall back to a linear scan "
+        "(the == operator must be recognized by the index-seek pattern matcher, not garbled into a bare = plus a malformed operand)");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_locate_with_greater_than_operator_does_not_match_equal_record() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_rushmore_greater_than";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+    write_synthetic_cdx(cdx_path, "NAME", "UPPER(NAME)");
+
+    const fs::path main_path = temp_root / "rushmore_greater_than.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "LOCATE FOR NAME > 'BRAVO'\n"
+        "lFound = FOUND()\n"
+        "cName = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "Rushmore LOCATE with > should complete: " + state.message);
+
+    const auto found = state.globals.find("lfound");
+    const auto name = state.globals.find("cname");
+    expect(found != state.globals.end(), "LOCATE FOR NAME > 'BRAVO' should expose FOUND()");
+    if (found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(found->second) == "true",
+            "LOCATE FOR NAME > 'BRAVO' should find the strictly-greater record");
+    }
+    if (found != state.globals.end() && copperfin::runtime::format_value(found->second) == "true" &&
+        name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name->second) == "CHARLIE",
+            "LOCATE FOR NAME > 'BRAVO' must not land on a record whose NAME is merely equal to 'BRAVO' (got NAME=" +
+                copperfin::runtime::format_value(name->second) + ")");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
     test_locate_uses_rushmore_seek_and_restores_order();
     test_scan_uses_rushmore_seek_and_restores_order();
+    test_locate_with_double_equals_operator_uses_rushmore_seek();
+    test_locate_with_greater_than_operator_does_not_match_equal_record();
     const int failures = copperfin::test_support::test_failures();
     if (failures != 0) {
         std::cerr << failures << " test(s) failed\n";
