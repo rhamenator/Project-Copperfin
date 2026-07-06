@@ -1065,6 +1065,7 @@
   "VisualAssetEditor.Storage.TargetFieldMemoRequired": "O campo de destino nao e um campo baseado em memo.",
   "VisualAssetEditor.Undo.CreateJournalFailed": "Nao foi possivel criar o diario de desfazer do ativo visual.",
   "VisualAssetEditor.Undo.CurrentPropertyReadFailed": "Nao foi possivel ler o valor atual da propriedade para desfazer.",
+  "VisualAssetEditor.Undo.DeletedStateLabel": "Estado excluido",
   "VisualAssetEditor.Undo.HistoryUnavailable": "Nenhum historico de desfazer do ativo visual esta disponivel.",
   "VisualAssetEditor.Undo.JournalReadFailed": "Nao foi possivel ler o diario de desfazer do ativo visual.",
   "VisualAssetEditor.Undo.PersistJournalFailed": "Nao foi possivel persistir o diario de desfazer do ativo visual.",

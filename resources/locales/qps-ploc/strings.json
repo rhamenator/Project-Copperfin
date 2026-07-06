@@ -1065,6 +1065,7 @@
   "VisualAssetEditor.Storage.TargetFieldMemoRequired": "The target field is not a memo-backed field.",
   "VisualAssetEditor.Undo.CreateJournalFailed": "Unable to create the visual asset undo journal.",
   "VisualAssetEditor.Undo.CurrentPropertyReadFailed": "Unable to read the current property value for undo.",
+  "VisualAssetEditor.Undo.DeletedStateLabel": "Deleted state",
   "VisualAssetEditor.Undo.HistoryUnavailable": "No visual asset undo history is available.",
   "VisualAssetEditor.Undo.JournalReadFailed": "Unable to read the visual asset undo journal.",
   "VisualAssetEditor.Undo.PersistJournalFailed": "Unable to persist the visual asset undo journal.",

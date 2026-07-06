@@ -227,10 +227,10 @@ void run_deleted_reorder_batch_success_case(
                     issue_prefix + " should expose committed state");
     expect_contains(reorder_batch_process.stdout_text, "\"mutatesAsset\": true",
                     issue_prefix + " should expose mutation state");
-    expect_contains(reorder_batch_process.stdout_text, "\"undoAvailable\": false",
-                    issue_prefix + " should expose undo availability");
-    expect_contains(reorder_batch_process.stdout_text, "\"undoLabel\": \"\"",
-                    issue_prefix + " should expose empty undo labels");
+    expect_contains(reorder_batch_process.stdout_text, "\"undoAvailable\": true",
+                    issue_prefix + " should expose undo availability from the deleted-state fixture setup");
+    expect_contains(reorder_batch_process.stdout_text, "\"undoLabel\": \"Deleted state\"",
+                    issue_prefix + " should expose the deleted-state undo label from fixture setup");
     expect(visual_object_order(asset_path) == "right-field-guid,middle-field-guid,left-field-guid" &&
                visual_object_deleted(asset_path, "right-field-guid") &&
                visual_object_deleted(asset_path, "middle-field-guid") &&

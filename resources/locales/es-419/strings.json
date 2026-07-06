@@ -1065,6 +1065,7 @@
   "VisualAssetEditor.Storage.TargetFieldMemoRequired": "El campo de destino no es un campo con respaldo memo.",
   "VisualAssetEditor.Undo.CreateJournalFailed": "No se pudo crear el diario de deshacer del recurso visual.",
   "VisualAssetEditor.Undo.CurrentPropertyReadFailed": "No se pudo leer el valor actual de la propiedad para deshacer.",
+  "VisualAssetEditor.Undo.DeletedStateLabel": "Estado eliminado",
   "VisualAssetEditor.Undo.HistoryUnavailable": "No hay historial de deshacer del recurso visual disponible.",
   "VisualAssetEditor.Undo.JournalReadFailed": "No se pudo leer el diario de deshacer del recurso visual.",
   "VisualAssetEditor.Undo.PersistJournalFailed": "No se pudo conservar el diario de deshacer del recurso visual.",

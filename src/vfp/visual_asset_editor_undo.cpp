@@ -216,34 +216,32 @@ VisualAssetEditResult undo_visual_object_property(const std::string& path) {
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Undo.JournalReadFailed")};
     }
 
-    if (entry->grouped_changes.empty()) {
-        const auto result = apply_visual_object_property_change(
+    const auto apply_undo_entry = [&path](const VisualAssetUndoEntry& change) -> VisualAssetEditResult {
+        if (change.property_name == kVisualAssetDeletedStateUndoPropertyName) {
+            const auto result = set_record_deleted_flag(path, change.record_index, change.prior_value == "1");
+            return {.ok = result.ok, .error = result.error};
+        }
+        return apply_visual_object_property_change(
             {
                 .path = path,
-                .record_index = entry->record_index,
+                .record_index = change.record_index,
                 .object_name = {},
                 .unique_id = {},
-                .property_name = entry->property_name,
-                .property_value = entry->prior_value
+                .property_name = change.property_name,
+                .property_value = change.prior_value
             },
             false,
-            !entry->prior_value_exists);
+            !change.prior_value_exists);
+    };
+
+    if (entry->grouped_changes.empty()) {
+        const auto result = apply_undo_entry(*entry);
         if (!result.ok) {
             return result;
         }
     } else {
         for (auto it = entry->grouped_changes.rbegin(); it != entry->grouped_changes.rend(); ++it) {
-            const auto result = apply_visual_object_property_change(
-                {
-                    .path = path,
-                    .record_index = it->record_index,
-                    .object_name = {},
-                    .unique_id = {},
-                    .property_name = it->property_name,
-                    .property_value = it->prior_value
-                },
-                false,
-                !it->prior_value_exists);
+            const auto result = apply_undo_entry(*it);
             if (!result.ok) {
                 return result;
             }

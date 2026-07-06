@@ -38,6 +38,9 @@ void test_list_visual_objects_reads_selection_outline() {
         .deleted = true
     });
     expect(delete_result.ok, "#743: object outline fixtures should allow marking one row deleted");
+    const bool undo_available_after_setup = copperfin::vfp::query_visual_object_undo(table_path.string()).available;
+    expect(undo_available_after_setup,
+        "#743: marking a row deleted should itself register undo history");
 
     const auto list_result = copperfin::vfp::list_visual_objects(table_path.string());
     expect(list_result.ok, "#743: visual object outlines should list DBF-family visual assets");
@@ -60,8 +63,8 @@ void test_list_visual_objects_reads_selection_outline() {
         expect(list_result.objects[1].caption == "\"Fallback\"",
             "#745: visual object outlines should expose parsed Caption values on fallback-name rows");
     }
-    expect(!copperfin::vfp::query_visual_object_undo(table_path.string()).available,
-        "#743: visual object outlining should not create undo history");
+    expect(copperfin::vfp::query_visual_object_undo(table_path.string()).available == undo_available_after_setup,
+        "#743: read-only visual object outlining should not add to undo history");
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -413,6 +416,9 @@ void test_list_visual_object_children_filters_immediate_children() {
         .deleted = true
     });
     expect(delete_result.ok, "#756: children fixture should support deleted child setup");
+    const bool undo_available_after_setup = copperfin::vfp::query_visual_object_undo(table_path.string()).available;
+    expect(undo_available_after_setup,
+        "#756: marking a child deleted should itself register undo history");
 
     auto children_result = copperfin::vfp::list_visual_object_children({
         .path = table_path.string(),
@@ -471,8 +477,8 @@ void test_list_visual_object_children_filters_immediate_children() {
     });
     expect(!children_result.ok, "#756: child listing should fail explicitly for nameless parent rows");
 
-    expect(!copperfin::vfp::query_visual_object_undo(table_path.string()).available,
-        "#756: child listing should not create undo history");
+    expect(copperfin::vfp::query_visual_object_undo(table_path.string()).available == undo_available_after_setup,
+        "#756: read-only child listing should not add to undo history");
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -516,6 +522,9 @@ void test_list_visual_object_descendants_walks_container_tree() {
         .deleted = true
     });
     expect(delete_result.ok, "#757: descendants fixture should support deleted descendant setup");
+    const bool undo_available_after_setup = copperfin::vfp::query_visual_object_undo(table_path.string()).available;
+    expect(undo_available_after_setup,
+        "#757: marking a descendant deleted should itself register undo history");
 
     auto descendants_result = copperfin::vfp::list_visual_object_descendants({
         .path = table_path.string(),
@@ -579,8 +588,8 @@ void test_list_visual_object_descendants_walks_container_tree() {
     });
     expect(!descendants_result.ok, "#757: descendants should fail explicitly for nameless parent rows");
 
-    expect(!copperfin::vfp::query_visual_object_undo(table_path.string()).available,
-        "#757: descendant listing should not create undo history");
+    expect(copperfin::vfp::query_visual_object_undo(table_path.string()).available == undo_available_after_setup,
+        "#757: read-only descendant listing should not add to undo history");
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -693,6 +702,84 @@ void test_set_visual_object_subtree_deleted_state_updates_descendants() {
             !is_deleted("other-guid") &&
             !is_deleted("nameless-guid"),
         "#758: failed subtree deleted-state requests should not mutate existing flags");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_set_visual_object_deleted_state_is_undoable() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_deleted_state_undo_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "deleted_state_undo.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 20U},
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "UNIQUEID", .type = 'C', .length = 20U},
+        {.name = "PARENT", .type = 'C', .length = 20U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cntMain", "mainContainer", "container-guid", ""},
+        {"cmdSave", "saveButton", "save-guid", "cntMain"},
+        {"txtName", "nameBox", "name-guid", "cntMain"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "deleted-state undo fixture should be writable");
+
+    const auto is_deleted = [&](const std::string& unique_id) {
+        const auto list_result = copperfin::vfp::list_visual_objects(table_path.string());
+        expect(list_result.ok, "deleted-state undo fixture should remain listable");
+        const auto object = std::find_if(
+            list_result.objects.begin(),
+            list_result.objects.end(),
+            [&](const copperfin::vfp::VisualObjectSnapshot& candidate) {
+                return candidate.unique_id == unique_id;
+            });
+        expect(object != list_result.objects.end(), "expected deleted-state undo object should remain present");
+        return object != list_result.objects.end() && object->deleted;
+    };
+
+    expect(!copperfin::vfp::query_visual_object_undo(table_path.string()).available,
+        "a freshly created asset should have no undo history");
+
+    const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .deleted = true
+    });
+    expect(delete_result.ok, "single deleted-state change should succeed");
+    expect(is_deleted("save-guid"), "single deleted-state change should mark the record deleted");
+    expect(copperfin::vfp::query_visual_object_undo(table_path.string()).available,
+        "single deleted-state change should register undo history");
+
+    const auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(undo_result.ok, "undo after a single deleted-state change should succeed");
+    expect(!is_deleted("save-guid"), "undo should restore the record's prior (non-deleted) state");
+    expect(!copperfin::vfp::query_visual_object_undo(table_path.string()).available,
+        "undo should drain the journal once fully replayed");
+
+    const auto batch_result = copperfin::vfp::set_visual_object_deleted_states({
+        .path = table_path.string(),
+        .objects = {
+            {.record_index = 1U, .object_name = {}, .unique_id = "save-guid", .deleted = true},
+            {.record_index = 2U, .object_name = {}, .unique_id = "name-guid", .deleted = true}
+        }
+    });
+    expect(batch_result.ok, "batch deleted-state change should succeed");
+    expect(is_deleted("save-guid") && is_deleted("name-guid"),
+        "batch deleted-state change should mark all requested records deleted");
+    expect(copperfin::vfp::query_visual_object_undo(table_path.string()).available,
+        "batch deleted-state change should register undo history");
+
+    const auto batch_undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(batch_undo_result.ok, "undo after a batch deleted-state change should succeed");
+    expect(!is_deleted("save-guid") && !is_deleted("name-guid"),
+        "undo should restore every record the batch change touched");
 
     fs::remove_all(temp_dir, ignored);
 }

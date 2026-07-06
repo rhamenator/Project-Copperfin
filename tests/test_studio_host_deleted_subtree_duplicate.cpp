@@ -261,10 +261,10 @@ void run_success_case(
                     issue_prefix + " should expose committed state");
     expect_contains(duplicate_process.stdout_text, "\"mutatesAsset\": true",
                     issue_prefix + " should expose mutation state");
-    expect_contains(duplicate_process.stdout_text, "\"undoAvailable\": false",
-                    issue_prefix + " should expose undo availability");
-    expect_contains(duplicate_process.stdout_text, "\"undoLabel\": \"\"",
-                    issue_prefix + " should expose empty undo labels");
+    expect_contains(duplicate_process.stdout_text, "\"undoAvailable\": true",
+                    issue_prefix + " should expose undo availability from the deleted-state fixture setup");
+    expect_contains(duplicate_process.stdout_text, "\"undoLabel\": \"Deleted state\"",
+                    issue_prefix + " should expose the deleted-state undo label from fixture setup");
     expect(visual_object_count(asset_path) == before_count + 1U &&
                visual_object_deleted(asset_path, "middle-field-guid") &&
                visual_object_deleted(asset_path, "middle-deleted-copy-guid") &&

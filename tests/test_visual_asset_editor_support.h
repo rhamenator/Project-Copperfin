@@ -1096,6 +1096,7 @@ void test_ungroup_visual_object_reparents_children_and_marks_container_deleted()
 void test_list_visual_object_children_filters_immediate_children();
 void test_list_visual_object_descendants_walks_container_tree();
 void test_set_visual_object_subtree_deleted_state_updates_descendants();
+void test_set_visual_object_deleted_state_is_undoable();
 void test_list_visual_object_ancestors_walks_parent_chain();
 
 // ==== Property/method update and batch round-trip tests ====

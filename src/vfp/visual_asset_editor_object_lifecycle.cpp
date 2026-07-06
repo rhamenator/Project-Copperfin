@@ -2095,6 +2095,59 @@ VisualObjectUngroupResult failed_visual_object_ungroup_result(std::string error)
     };
 }
 
+namespace {
+
+// Shared by the public single-object deleted-state setter and by internal
+// callers (e.g. ungroup_visual_object) that manage their own undo contract
+// and must not have this step register an additional journal entry.
+struct DeletedStateChangeResult {
+    bool ok = false;
+    std::string error;
+    std::size_t record_index = 0;
+    bool prior_deleted = false;
+    bool changed = false;
+};
+
+DeletedStateChangeResult apply_visual_object_deleted_state_raw(
+    const std::string& path,
+    std::size_t requested_record_index,
+    const std::string& object_name,
+    const std::string& unique_id,
+    bool deleted) {
+    std::size_t record_index = 0U;
+    const auto resolution = resolve_visual_object_record_index({
+        .path = path,
+        .record_index = requested_record_index,
+        .object_name = object_name,
+        .unique_id = unique_id,
+        .property_name = {},
+        .property_value = {}
+    }, record_index);
+    if (!resolution.ok) {
+        return {.ok = false, .error = resolution.error};
+    }
+
+    const auto table_result = parse_dbf_table_from_file(path, record_index + 1U);
+    if (!table_result.ok || record_index >= table_result.table.records.size()) {
+        return {.ok = false, .error = table_result.ok
+            ? visual_asset_text("VisualAssetEditor.Object.RecordUnavailable")
+            : table_result.error};
+    }
+    const bool prior_deleted = table_result.table.records[record_index].deleted;
+    if (prior_deleted == deleted) {
+        return {.ok = true, .error = {}, .record_index = record_index, .prior_deleted = prior_deleted, .changed = false};
+    }
+
+    const auto result = set_record_deleted_flag(path, record_index, deleted);
+    if (!result.ok) {
+        return {.ok = false, .error = result.error};
+    }
+
+    return {.ok = true, .error = {}, .record_index = record_index, .prior_deleted = prior_deleted, .changed = true};
+}
+
+}  // namespace
+
 VisualObjectUngroupResult ungroup_visual_object(const VisualObjectUngroupRequest& request) {
     if (request.path.empty()) {
         return failed_visual_object_ungroup_result(visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired"));
@@ -2197,13 +2250,8 @@ VisualObjectUngroupResult ungroup_visual_object(const VisualObjectUngroupRequest
         return failed_visual_object_ungroup_result(reparent_result.error);
     }
 
-    const auto delete_result = set_visual_object_deleted_state({
-        .path = request.path,
-        .record_index = container_record_index,
-        .object_name = {},
-        .unique_id = {},
-        .deleted = true
-    });
+    const auto delete_result = apply_visual_object_deleted_state_raw(
+        request.path, container_record_index, {}, {}, true);
     if (!delete_result.ok) {
         const auto rollback_result = rollback_reparents();
         restore_original_asset();
@@ -2921,22 +2969,26 @@ VisualAssetEditResult set_visual_object_deleted_state(const VisualObjectDeletedS
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
 
-    std::size_t record_index = 0U;
-    const auto resolution = resolve_visual_object_record_index({
-        .path = request.path,
-        .record_index = request.record_index,
-        .object_name = request.object_name,
-        .unique_id = request.unique_id,
-        .property_name = {},
-        .property_value = {}
-    }, record_index);
-    if (!resolution.ok) {
-        return resolution;
+    const auto change = apply_visual_object_deleted_state_raw(
+        request.path, request.record_index, request.object_name, request.unique_id, request.deleted);
+    if (!change.ok) {
+        return {.ok = false, .error = change.error};
+    }
+    if (!change.changed) {
+        return {.ok = true, .error = {}, .affected_object_count = 1U};
     }
 
-    const auto result = set_record_deleted_flag(request.path, record_index, request.deleted);
-    if (!result.ok) {
-        return {.ok = false, .error = result.error};
+    std::string undo_error;
+    if (!record_visual_asset_undo_entry(request.path, {
+            .record_index = change.record_index,
+            .property_name = kVisualAssetDeletedStateUndoPropertyName,
+            .prior_value = change.prior_deleted ? "1" : "0",
+            .prior_value_exists = true,
+            .label = visual_asset_text("VisualAssetEditor.Undo.DeletedStateLabel"),
+            .grouped_changes = {}
+        }, undo_error)) {
+        set_record_deleted_flag(request.path, change.record_index, change.prior_deleted);
+        return {.ok = false, .error = undo_error};
     }
 
     return {.ok = true, .error = {}, .affected_object_count = 1U};
@@ -3019,6 +3071,39 @@ VisualAssetEditResult set_visual_object_deleted_states(const VisualObjectDeleted
             return {.ok = false, .error = result.error};
         }
         applied.push_back({.record_index = record_index, .prior_deleted = prior_deleted});
+    }
+
+    if (applied.empty()) {
+        return {.ok = true, .error = {}, .affected_object_count = 0U};
+    }
+
+    std::vector<VisualAssetUndoEntry> grouped_changes;
+    grouped_changes.reserve(applied.size());
+    for (const auto& item : applied) {
+        grouped_changes.push_back({
+            .record_index = item.record_index,
+            .property_name = kVisualAssetDeletedStateUndoPropertyName,
+            .prior_value = item.prior_deleted ? "1" : "0",
+            .prior_value_exists = true,
+            .label = {},
+            .grouped_changes = {}
+        });
+    }
+
+    std::string undo_error;
+    if (!record_visual_asset_undo_entry(request.path, {
+            .record_index = applied.back().record_index,
+            .property_name = kVisualAssetDeletedStateUndoPropertyName,
+            .prior_value = applied.back().prior_deleted ? "1" : "0",
+            .prior_value_exists = true,
+            .label = visual_asset_text("VisualAssetEditor.Undo.DeletedStateLabel"),
+            .grouped_changes = grouped_changes
+        }, undo_error)) {
+        const auto rollback_result = rollback_applied_states();
+        if (!rollback_result.ok) {
+            return {.ok = false, .error = visual_asset_rollback_failed_text(undo_error, rollback_result.error)};
+        }
+        return {.ok = false, .error = undo_error};
     }
 
     return {.ok = true, .error = {}, .affected_object_count = applied.size()};

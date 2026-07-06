@@ -55,6 +55,13 @@ struct VisualAssetUndoEntry {
     std::vector<VisualAssetUndoEntry> grouped_changes;
 };
 
+// Reserved property_name value marking an undo entry as a record deleted-flag
+// change rather than a property-value change. '#' can never appear in a real
+// VFP property name, so this cannot collide with a legitimate entry. The
+// prior flag is carried in prior_value as "1"/"0" (prior_value_exists is
+// always true for this entry kind).
+inline const std::string kVisualAssetDeletedStateUndoPropertyName = "#RecordDeletedState";
+
 struct VisualPropertyState {
     bool exists = false;
     bool direct_field = false;
