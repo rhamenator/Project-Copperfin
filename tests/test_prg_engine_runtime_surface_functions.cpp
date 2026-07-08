@@ -11334,6 +11334,7 @@ namespace
         write_text(
             main_path,
             "oPlain = CREATEOBJECT('ListBox')\n"
+            "oPlain.MultiSelect = .T.\n"
             "oPlain.AddItem('Alpha')\n"
             "oPlain.AddItem('Beta')\n"
             "oPlain.AddItem('Gamma')\n"
@@ -11366,6 +11367,7 @@ namespace
             "cSeedDisplay = oSeed.DisplayValue\n"
             "RETURN\n"
             "DEFINE CLASS SeededList AS ListBox\n"
+            "    MultiSelect = .T.\n"
             "    PROCEDURE Init\n"
             "        THIS.AddItem('North')\n"
             "        THIS.AddItem('South')\n"
@@ -11443,6 +11445,165 @@ namespace
             expect(seed_listindex != seed_list.properties.end() &&
                        copperfin::runtime::format_value(seed_listindex->second) == "2",
                    "derived ListBox Selected coverage should keep ListIndex synchronized during Init");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_native_listbox_multiselect_property_controls_selection_mode()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_listbox_multiselect";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_listbox_multiselect.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('ListBox')\n"
+            "lPlainHasMultiSelect = PEMSTATUS(oPlain, 'MultiSelect', 1)\n"
+            "lPlainMultiSelectReadOnly = PEMSTATUS(oPlain, 'MultiSelect', 5)\n"
+            "lPlainBefore = oPlain.MultiSelect\n"
+            "xPlainGetPemBefore = GETPEM(oPlain, 'MultiSelect')\n"
+            "oPlain.AddItem('Alpha')\n"
+            "oPlain.AddItem('Beta')\n"
+            "oPlain.AddItem('Gamma')\n"
+            "oPlain.Selected(1) = .T.\n"
+            "oPlain.Selected(2) = .T.\n"
+            "lSelected1Single = oPlain.Selected(1)\n"
+            "lSelected2Single = oPlain.Selected(2)\n"
+            "nIndexAfterSingle = oPlain.ListIndex\n"
+            "cDisplayAfterSingle = oPlain.DisplayValue\n"
+            "oPlain.Selected(2) = .F.\n"
+            "lSetPemTrue = SETPEM(oPlain, 'MultiSelect', .T.)\n"
+            "lAfterSetPemTrue = oPlain.MultiSelect\n"
+            "oPlain.Selected(1) = .T.\n"
+            "oPlain.Selected(3) = .T.\n"
+            "lSelected1Multi = oPlain.Selected(1)\n"
+            "lSelected2Multi = oPlain.Selected(2)\n"
+            "lSelected3Multi = oPlain.Selected(3)\n"
+            "nIndexAfterMulti = oPlain.ListIndex\n"
+            "cDisplayAfterMulti = oPlain.DisplayValue\n"
+            "oPlain.MultiSelect = .F.\n"
+            "lAfterDirectFalse = oPlain.MultiSelect\n"
+            "lSelected1AfterDisable = oPlain.Selected(1)\n"
+            "lSelected2AfterDisable = oPlain.Selected(2)\n"
+            "lSelected3AfterDisable = oPlain.Selected(3)\n"
+            "nIndexAfterDisable = oPlain.ListIndex\n"
+            "cDisplayAfterDisable = oPlain.DisplayValue\n"
+            "lPlainAddProperty = ADDPROPERTY(oPlain, 'MultiSelect', .T.)\n"
+            "lPlainRemoveProperty = REMOVEPROPERTY(oPlain, 'MultiSelect')\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oPlain, 1)\n"
+            "lPropHasMultiSelect = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'MULTISELECT'\n"
+            "        lPropHasMultiSelect = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oSeed = CREATEOBJECT('SeededList')\n"
+            "lSeedMultiSelect = oSeed.MultiSelect\n"
+            "lSeedRow1 = oSeed.Selected(1)\n"
+            "lSeedRow2 = oSeed.Selected(2)\n"
+            "nSeedIndex = oSeed.ListIndex\n"
+            "cSeedDisplay = oSeed.DisplayValue\n"
+            "RETURN\n"
+            "DEFINE CLASS SeededList AS ListBox\n"
+            "    MultiSelect = .T.\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddItem('North')\n"
+            "        THIS.AddItem('South')\n"
+            "        THIS.Selected(1) = .T.\n"
+            "        THIS.Selected(2) = .T.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native ListBox MultiSelect property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplainhasmultiselect", "true");
+        check("lplainmultiselectreadonly", "false");
+        check("lplainbefore", "false");
+        check("xplaingetpembefore", "false");
+        check("lselected1single", "false");
+        check("lselected2single", "true");
+        check("nindexaftersingle", "2");
+        check("cdisplayaftersingle", "Beta");
+        check("lsetpemtrue", "true");
+        check("laftersetpemtrue", "true");
+        check("lselected1multi", "true");
+        check("lselected2multi", "false");
+        check("lselected3multi", "true");
+        check("nindexaftermulti", "3");
+        check("cdisplayaftermulti", "Gamma");
+        check("lafterdirectfalse", "false");
+        check("lselected1afterdisable", "false");
+        check("lselected2afterdisable", "false");
+        check("lselected3afterdisable", "true");
+        check("nindexafterdisable", "3");
+        check("cdisplayafterdisable", "Gamma");
+        check("lplainaddproperty", "false");
+        check("lplainremoveproperty", "false");
+        check("lprophasmultiselect", "true");
+        check("lseedmultiselect", "true");
+        check("lseedrow1", "true");
+        check("lseedrow2", "true");
+        check("nseedindex", "2");
+        check("cseeddisplay", "South");
+
+        expect(state.ole_objects.size() == 2U,
+               "native ListBox MultiSelect coverage should register plain and derived list boxes");
+        if (state.ole_objects.size() == 2U)
+        {
+            const auto &plain_list = state.ole_objects[0];
+            const auto &seed_list = state.ole_objects[1];
+            const auto plain_multiselect = plain_list.properties.find("multiselect");
+            const auto plain_listindex = plain_list.properties.find("listindex");
+            const auto seed_multiselect = seed_list.properties.find("multiselect");
+            const auto seed_listindex = seed_list.properties.find("listindex");
+
+            expect(plain_multiselect != plain_list.properties.end() &&
+                       copperfin::runtime::format_value(plain_multiselect->second) == "false",
+                   "plain ListBox MultiSelect coverage should preserve the built-in property after direct disable");
+            expect(plain_list.list_selected.size() == 3U,
+                   "plain ListBox MultiSelect coverage should preserve three selection-state slots");
+            if (plain_list.list_selected.size() == 3U)
+            {
+                expect(!plain_list.list_selected[0] &&
+                           !plain_list.list_selected[1] &&
+                           plain_list.list_selected[2],
+                       "plain ListBox MultiSelect coverage should collapse selection bits back to the active row when disabled");
+            }
+            expect(plain_listindex != plain_list.properties.end() &&
+                       copperfin::runtime::format_value(plain_listindex->second) == "3",
+                   "plain ListBox MultiSelect coverage should keep ListIndex synchronized after disabling multiselect");
+            expect(seed_multiselect != seed_list.properties.end() &&
+                       copperfin::runtime::format_value(seed_multiselect->second) == "true",
+                   "derived ListBox MultiSelect coverage should preserve declarative multiselect enablement");
+            expect(seed_list.list_selected.size() == 2U &&
+                       seed_list.list_selected[0] &&
+                       seed_list.list_selected[1],
+                   "derived ListBox MultiSelect coverage should preserve Init-time multiple selection bits");
+            expect(seed_listindex != seed_list.properties.end() &&
+                       copperfin::runtime::format_value(seed_listindex->second) == "2",
+                   "derived ListBox MultiSelect coverage should keep ListIndex synchronized during Init");
         }
 
         fs::remove_all(temp_root, ignored);
@@ -51348,6 +51509,7 @@ int main()
     test_native_list_controls_selectedid_selection_stays_coherent();
     test_native_list_controls_removelistitem_stays_coherent();
     test_native_listbox_selected_property_stays_coherent();
+    test_native_listbox_multiselect_property_controls_selection_mode();
     test_native_combobox_boundcolumn_columncount_and_columnwidths_defaults_mutate_and_stay_builtin();
     test_native_grid_columncount_defaults_materialize_columns_and_stay_builtin();
     test_native_column_bound_defaults_coordinate_controlsource_and_stay_builtin();

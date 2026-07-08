@@ -870,6 +870,12 @@
                 runtime_object.properties["listcount"] = make_number_value(0.0);
             }
 
+            if (normalized_base_class == "listbox" &&
+                !runtime_object.properties.contains("multiselect"))
+            {
+                runtime_object.properties["multiselect"] = make_boolean_value(false);
+            }
+
             if ((normalized_base_class == "combobox" ||
                  normalized_base_class == "listbox") &&
                 !runtime_object.properties.contains("newindex"))
@@ -928,6 +934,7 @@
             }
 
             normalize_native_combobox_readonly_invariant(runtime_object);
+            normalize_native_listbox_multiselect_invariant(runtime_object);
 
             if (normalized_base_class == "form" &&
                 !runtime_object.properties.contains("showwindow"))

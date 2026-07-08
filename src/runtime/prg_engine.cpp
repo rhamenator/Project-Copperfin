@@ -4077,6 +4077,10 @@ namespace copperfin::runtime
                 {
                     normalize_native_combobox_readonly_invariant(runtime_object);
                 }
+                if (normalized_property_name == "multiselect")
+                {
+                    normalize_native_listbox_multiselect_invariant(runtime_object);
+                }
                 if (normalized_property_name == "listindex")
                 {
                     sync_native_list_control_displayvalue_from_selection(runtime_object);

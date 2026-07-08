@@ -569,7 +569,13 @@ bool is_native_listbox_runtime_object(const RuntimeOleObjectState& runtime_objec
 }
 
 bool native_list_control_allows_multiple_selection(const RuntimeOleObjectState& runtime_object) {
-    return is_native_listbox_runtime_object(runtime_object);
+    if (!is_native_listbox_runtime_object(runtime_object)) {
+        return false;
+    }
+
+    const auto multiselect = runtime_object.properties.find("multiselect");
+    return multiselect != runtime_object.properties.end() &&
+           value_as_bool(multiselect->second);
 }
 
 std::optional<std::size_t> native_list_control_selected_slot(const RuntimeOleObjectState& runtime_object);
@@ -1587,6 +1593,17 @@ bool native_listcount_member_name_matches(
            normalized_base_class == "listbox";
 }
 
+bool native_multiselect_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "multiselect" ||
+        !runtime_object.properties.contains("multiselect")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "listbox";
+}
+
 bool native_newindex_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
@@ -2384,6 +2401,21 @@ void normalize_native_combobox_readonly_invariant(RuntimeOleObjectState& runtime
     }
 }
 
+void normalize_native_listbox_multiselect_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!is_native_listbox_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto multiselect = runtime_object.properties.find("multiselect");
+    if (multiselect == runtime_object.properties.end()) {
+        return;
+    }
+
+    multiselect->second = make_boolean_value(value_as_bool(multiselect->second));
+    sync_native_list_control_selected_state_from_listindex(runtime_object);
+}
+
 bool is_native_combobox_style_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_combobox_style_member_name_matches(runtime_object, normalized_member_name);
@@ -2497,6 +2529,11 @@ bool is_native_displayvalue_member_name(const RuntimeOleObjectState& runtime_obj
 bool is_native_listcount_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_listcount_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_multiselect_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_multiselect_member_name_matches(runtime_object, normalized_member_name);
 }
 
 bool is_native_newindex_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
@@ -3287,6 +3324,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_listindex_member_name(*runtime_object, property_name) ||
             is_native_displayvalue_member_name(*runtime_object, property_name) ||
             is_native_listcount_member_name(*runtime_object, property_name) ||
+            is_native_multiselect_member_name(*runtime_object, property_name) ||
             is_native_newindex_member_name(*runtime_object, property_name) ||
             is_native_newitemid_member_name(*runtime_object, property_name) ||
             is_native_listitemid_member_name(*runtime_object, property_name) ||
@@ -3514,6 +3552,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             if (member_name == "style" || member_name == "readonly") {
                 normalize_native_combobox_readonly_invariant(*runtime_object);
             }
+            if (member_name == "multiselect") {
+                normalize_native_listbox_multiselect_invariant(*runtime_object);
+            }
             return make_boolean_value(true);
         }
         if (runtime_object->properties.contains(member_name)) {
@@ -3532,6 +3573,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             runtime_object->properties[member_name] = arguments[2];
             if (member_name == "style" || member_name == "readonly") {
                 normalize_native_combobox_readonly_invariant(*runtime_object);
+            }
+            if (member_name == "multiselect") {
+                normalize_native_listbox_multiselect_invariant(*runtime_object);
             }
             return make_boolean_value(true);
         }
@@ -3602,6 +3646,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_listindex_member_name(*runtime_object, property_name) ||
             is_native_displayvalue_member_name(*runtime_object, property_name) ||
             is_native_listcount_member_name(*runtime_object, property_name) ||
+            is_native_multiselect_member_name(*runtime_object, property_name) ||
             is_native_newindex_member_name(*runtime_object, property_name) ||
             is_native_newitemid_member_name(*runtime_object, property_name) ||
             is_native_listitemid_member_name(*runtime_object, property_name) ||
