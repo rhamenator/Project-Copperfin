@@ -404,6 +404,10 @@ namespace
             "cTemplateDeepHolder = 'cTemplateHolder'\n"
             "cMergedMacroSource = TEXTMERGE(&cTemplateExpr)\n"
             "cMergedMacroSourceSecondHop = TEXTMERGE(&cTemplateDeepHolder)\n"
+            "cLiteralAngleExpr = '\"A<<B\"'\n"
+            "cLiteralAngleExprHolder = 'cLiteralAngleExpr'\n"
+            "cLiteralAngleMacro = &cLiteralAngleExpr\n"
+            "cLiteralAngleMacroSecondHop = &cLiteralAngleExprHolder\n"
             "cRecursiveCustomExpr = '{|EVAL(&cNameExprDeepHolder)|}'\n"
             "cRecursiveCustomExprHolder = 'cRecursiveCustomExpr'\n"
             "cRecursiveCustomExprDeepHolder = 'cRecursiveCustomExprHolder'\n"
@@ -473,6 +477,8 @@ namespace
         check("cmergedcustom", "Value=2");
         check("cmergedmacrosource", "Template World");
         check("cmergedmacrosourcesecondhop", "Template World");
+        check("cliteralanglemacro", "A<<B");
+        check("cliteralanglemacrosecondhop", "A<<B");
         check("cmergedcustomnested", "Eval=World; Macro=World; Recursive=World");
         check("cmergedcustomsecondhop", "Eval=World; Macro=World; Recursive=World");
         check("cmergedmacrodelims", "Eval=World; Macro=World");

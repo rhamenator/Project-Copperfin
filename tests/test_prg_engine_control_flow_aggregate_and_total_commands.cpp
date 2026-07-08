@@ -872,6 +872,65 @@ void test_total_command_tolerates_non_numeric_field_text() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_aggregate_helpers_tolerate_non_numeric_field_text() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_aggregate_overflow";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "sales.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "REGION", .type = 'C', .length = 10U},
+        {.name = "AMOUNT", .type = 'N', .length = 6U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"EAST", "10"},
+        {"EAST", "******"},
+        {"WEST", "8"}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "aggregate overflow-marker sales DBF fixture should be created");
+
+    const fs::path main_path = temp_root / "aggregate_overflow.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS Sales IN 0\n"
+        "nSum = SUM(AMOUNT)\n"
+        "nAvg = AVG(AMOUNT)\n"
+        "nMin = MIN(AMOUNT)\n"
+        "nMax = MAX(AMOUNT)\n"
+        "CALCULATE SUM(AMOUNT) TO nCalcSum, AVG(AMOUNT) TO nCalcAvg, MIN(AMOUNT) TO nCalcMin, MAX(AMOUNT) TO nCalcMax\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "aggregate helpers should tolerate non-numeric/overflow-marker field text instead of faulting: " + state.message);
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto it = state.globals.find(name);
+        if (it == state.globals.end()) {
+            expect(false, name + " variable not found");
+            return;
+        }
+        expect(copperfin::runtime::format_value(it->second) == expected,
+            name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+    };
+
+    check("nsum", "18");
+    check("navg", "9");
+    check("nmin", "8");
+    check("nmax", "10");
+    check("ncalcsum", "18");
+    check("ncalcavg", "9");
+    check("ncalcmin", "8");
+    check("ncalcmax", "10");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_total_command_errors_use_default_locale_messages() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_total_command_errors";

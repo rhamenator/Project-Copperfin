@@ -1961,6 +1961,38 @@
 
                     return resolved;
                 };
+                const auto contains_unquoted_double_angle = [](const std::string &expression)
+                {
+                    char quote_delimiter = '\0';
+                    for (std::size_t index = 0U; index + 1U < expression.size(); ++index)
+                    {
+                        const char ch = expression[index];
+                        if (quote_delimiter != '\0')
+                        {
+                            if (ch == quote_delimiter)
+                            {
+                                if ((index + 1U) < expression.size() && expression[index + 1U] == quote_delimiter)
+                                {
+                                    ++index;
+                                    continue;
+                                }
+                                quote_delimiter = '\0';
+                            }
+                            continue;
+                        }
+
+                        if (ch == '\'' || ch == '"')
+                        {
+                            quote_delimiter = ch;
+                            continue;
+                        }
+                        if (ch == '<' && expression[index + 1U] == '<')
+                        {
+                            return true;
+                        }
+                    }
+                    return false;
+                };
 
                 skip_whitespace();
                 const std::size_t start = position_;
@@ -2108,7 +2140,7 @@
                 // a "<<" token can split such text into two chained "<" comparisons that may
                 // successfully (if nonsensically) evaluate instead of throwing, which previously
                 // acted as this function's only signal to fall back to the literal string.
-                if (resolved_expression.find("<<") == std::string::npos)
+                if (!contains_unquoted_double_angle(resolved_expression))
                 try
                 {
                     const PrgValue expanded_value = eval_expression_callback_(resolved_expression);

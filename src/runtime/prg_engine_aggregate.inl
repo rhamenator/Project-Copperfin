@@ -2,6 +2,27 @@
 // PrgRuntimeSession::Impl method group. Included inside Impl struct in prg_engine.cpp.
 // This file must not be compiled separately.
 
+        std::optional<double> try_parse_aggregate_numeric_value(const PrgValue &value)
+        {
+            if (value.kind == PrgValueKind::empty)
+            {
+                return std::nullopt;
+            }
+            if (value.kind == PrgValueKind::string && trim_copy(value.string_value).empty())
+            {
+                return std::nullopt;
+            }
+
+            try
+            {
+                return value_as_number(value);
+            }
+            catch (...)
+            {
+                return std::nullopt;
+            }
+        }
+
         PrgValue aggregate_function_value(
             const std::string &function,
             const std::vector<std::string> &raw_arguments,
@@ -154,28 +175,23 @@
                     continue;
                 }
 
-                const PrgValue value = evaluate_expression(value_expression, frame, cursor);
-                if (value.kind == PrgValueKind::empty)
+                const auto numeric_value = try_parse_aggregate_numeric_value(
+                    evaluate_expression(value_expression, frame, cursor));
+                if (!numeric_value.has_value())
                 {
                     continue;
                 }
-                if (value.kind == PrgValueKind::string && trim_copy(value.string_value).empty())
-                {
-                    continue;
-                }
-
-                const double numeric_value = value_as_number(value);
                 if (matched_count == 0U)
                 {
-                    min_value = numeric_value;
-                    max_value = numeric_value;
+                    min_value = *numeric_value;
+                    max_value = *numeric_value;
                 }
                 else
                 {
-                    min_value = std::min(min_value, numeric_value);
-                    max_value = std::max(max_value, numeric_value);
+                    min_value = std::min(min_value, *numeric_value);
+                    max_value = std::max(max_value, *numeric_value);
                 }
-                sum += numeric_value;
+                sum += *numeric_value;
                 ++matched_count;
             }
 
@@ -305,28 +321,23 @@
             for (const std::size_t recno : records)
             {
                 move_cursor_to(cursor, static_cast<long long>(recno));
-                const PrgValue value = evaluate_expression(value_expression, frame, &cursor);
-                if (value.kind == PrgValueKind::empty)
+                const auto numeric_value = try_parse_aggregate_numeric_value(
+                    evaluate_expression(value_expression, frame, &cursor));
+                if (!numeric_value.has_value())
                 {
                     continue;
                 }
-                if (value.kind == PrgValueKind::string && trim_copy(value.string_value).empty())
-                {
-                    continue;
-                }
-
-                const double numeric_value = value_as_number(value);
                 if (matched_count == 0U)
                 {
-                    min_value = numeric_value;
-                    max_value = numeric_value;
+                    min_value = *numeric_value;
+                    max_value = *numeric_value;
                 }
                 else
                 {
-                    min_value = std::min(min_value, numeric_value);
-                    max_value = std::max(max_value, numeric_value);
+                    min_value = std::min(min_value, *numeric_value);
+                    max_value = std::max(max_value, *numeric_value);
                 }
-                sum += numeric_value;
+                sum += *numeric_value;
                 ++matched_count;
             }
 
