@@ -578,6 +578,19 @@ bool native_list_control_allows_multiple_selection(const RuntimeOleObjectState& 
            value_as_bool(multiselect->second);
 }
 
+bool native_list_control_rowsourcetype_supports_additem(const RuntimeOleObjectState& runtime_object);
+
+bool native_list_control_sorted_enabled(const RuntimeOleObjectState& runtime_object) {
+    if (!is_native_list_control_runtime_object(runtime_object) ||
+        !native_list_control_rowsourcetype_supports_additem(runtime_object)) {
+        return false;
+    }
+
+    const auto sorted = runtime_object.properties.find("sorted");
+    return sorted != runtime_object.properties.end() &&
+           value_as_bool(sorted->second);
+}
+
 std::optional<std::size_t> native_list_control_selected_slot(const RuntimeOleObjectState& runtime_object);
 
 bool native_list_control_rowsourcetype_supports_additem(const RuntimeOleObjectState& runtime_object) {
@@ -757,6 +770,96 @@ std::int64_t next_native_list_control_item_id(const RuntimeOleObjectState& runti
         }
     }
     return next_id;
+}
+
+void sort_native_list_control_rows_if_needed(RuntimeOleObjectState& runtime_object) {
+    if (!native_list_control_sorted_enabled(runtime_object)) {
+        return;
+    }
+
+    materialize_native_list_control_rows(runtime_object);
+    sync_native_list_control_selected_state_size(runtime_object);
+
+    const auto active_slot = native_list_control_selected_slot(runtime_object);
+    std::optional<std::size_t> latest_added_slot;
+    if (const auto newindex = runtime_object.properties.find("newindex");
+        newindex != runtime_object.properties.end()) {
+        const long long requested_index = std::llround(value_as_number(newindex->second));
+        if (requested_index >= 1LL &&
+            static_cast<std::size_t>(requested_index) <= runtime_object.list_rows.size()) {
+            latest_added_slot = static_cast<std::size_t>(requested_index - 1LL);
+        }
+    }
+
+    struct NativeListControlSortEntry {
+        std::vector<PrgValue> row;
+        std::string item_key;
+        bool selected = false;
+        bool active = false;
+        bool latest_added = false;
+    };
+
+    std::vector<NativeListControlSortEntry> entries;
+    entries.reserve(runtime_object.list_rows.size());
+    for (std::size_t index = 0U; index < runtime_object.list_rows.size(); ++index) {
+        entries.push_back(NativeListControlSortEntry{
+            .row = runtime_object.list_rows[index],
+            .item_key = index < runtime_object.collection_item_keys.size()
+                            ? runtime_object.collection_item_keys[index]
+                            : std::string{},
+            .selected = index < runtime_object.list_selected.size() &&
+                        runtime_object.list_selected[index],
+            .active = active_slot.has_value() && *active_slot == index,
+            .latest_added = latest_added_slot.has_value() && *latest_added_slot == index});
+    }
+
+    std::stable_sort(
+        entries.begin(),
+        entries.end(),
+        [](const NativeListControlSortEntry& left, const NativeListControlSortEntry& right) {
+            const std::string left_key =
+                left.row.empty() ? std::string{} : value_as_string(left.row.front());
+            const std::string right_key =
+                right.row.empty() ? std::string{} : value_as_string(right.row.front());
+            return left_key < right_key;
+        });
+
+    runtime_object.list_rows.clear();
+    runtime_object.collection_item_keys.clear();
+    runtime_object.list_selected.clear();
+    runtime_object.list_rows.reserve(entries.size());
+    runtime_object.collection_item_keys.reserve(entries.size());
+    runtime_object.list_selected.reserve(entries.size());
+
+    bool active_found = false;
+    bool latest_added_found = false;
+    for (std::size_t index = 0U; index < entries.size(); ++index) {
+        auto& entry = entries[index];
+        runtime_object.list_rows.push_back(std::move(entry.row));
+        runtime_object.collection_item_keys.push_back(std::move(entry.item_key));
+        runtime_object.list_selected.push_back(entry.selected);
+        if (entry.active) {
+            runtime_object.properties["listindex"] =
+                make_number_value(static_cast<double>(index + 1U));
+            active_found = true;
+        }
+        if (entry.latest_added) {
+            runtime_object.properties["newindex"] =
+                make_number_value(static_cast<double>(index + 1U));
+            latest_added_found = true;
+        }
+    }
+
+    if (!active_found) {
+        runtime_object.properties["listindex"] = make_number_value(0.0);
+    }
+    if (!latest_added_found) {
+        runtime_object.properties["newindex"] = make_number_value(0.0);
+    }
+
+    sync_native_list_control_primary_state_from_rows(runtime_object);
+    sync_native_list_control_count_impl(runtime_object);
+    sync_native_list_control_displayvalue_from_selection_impl(runtime_object);
 }
 
 bool remove_native_list_control_slot(
@@ -1593,6 +1696,20 @@ bool native_listcount_member_name_matches(
            normalized_base_class == "listbox";
 }
 
+bool native_sorted_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "sorted" ||
+        !runtime_object.properties.contains("sorted")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "combobox" ||
+           normalized_base_class == "listbox";
+}
+
 bool native_multiselect_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
@@ -2180,6 +2297,9 @@ bool write_native_list_control_cell(
     }
     row[column_slot] = make_string_value(value_as_string(assigned_value));
     sync_native_list_control_primary_state_from_rows(runtime_object);
+    if (column_slot == 0U) {
+        sort_native_list_control_rows_if_needed(runtime_object);
+    }
     sync_native_list_control_count_impl(runtime_object);
     sync_native_list_control_displayvalue_from_selection_impl(runtime_object);
     return true;
@@ -2401,6 +2521,21 @@ void normalize_native_combobox_readonly_invariant(RuntimeOleObjectState& runtime
     }
 }
 
+void normalize_native_list_control_sorted_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto sorted = runtime_object.properties.find("sorted");
+    if (sorted == runtime_object.properties.end()) {
+        return;
+    }
+
+    sorted->second = make_boolean_value(value_as_bool(sorted->second));
+    sort_native_list_control_rows_if_needed(runtime_object);
+}
+
 void normalize_native_listbox_multiselect_invariant(RuntimeOleObjectState& runtime_object)
 {
     if (!is_native_listbox_runtime_object(runtime_object)) {
@@ -2529,6 +2664,11 @@ bool is_native_displayvalue_member_name(const RuntimeOleObjectState& runtime_obj
 bool is_native_listcount_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_listcount_member_name_matches(runtime_object, normalized_member_name);
+}
+
+bool is_native_sorted_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_sorted_member_name_matches(runtime_object, normalized_member_name);
 }
 
 bool is_native_multiselect_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
@@ -2776,6 +2916,7 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
             runtime_object.properties["newindex"] =
                 make_number_value(static_cast<double>(runtime_object.list_rows.size()));
             runtime_object.properties["newitemid"] = make_number_value(static_cast<double>(item_id));
+            sort_native_list_control_rows_if_needed(runtime_object);
             return make_number_value(static_cast<double>(item_id));
         }
 
@@ -2795,6 +2936,9 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
         }
         row[static_cast<std::size_t>(requested_column - 1LL)] = inserted_item;
         sync_native_list_control_primary_state_from_rows(runtime_object);
+        if (requested_column == 1LL) {
+            sort_native_list_control_rows_if_needed(runtime_object);
+        }
         sync_native_list_control_count_impl(runtime_object);
         runtime_object.properties["newitemid"] = make_number_value(static_cast<double>(item_id));
         sync_native_list_control_displayvalue_from_selection_impl(runtime_object);
@@ -2889,7 +3033,14 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
             listindex->second = make_number_value(static_cast<double>(selected_index + 1LL));
         }
     }
+    sort_native_list_control_rows_if_needed(runtime_object);
     sync_native_list_control_displayvalue_from_selection_impl(runtime_object);
+    if (const auto actual_slot = find_native_list_control_row_by_item_id(runtime_object, item_id);
+        actual_slot.has_value()) {
+        runtime_object.properties["newindex"] =
+            make_number_value(static_cast<double>(*actual_slot + 1U));
+        return make_number_value(static_cast<double>(*actual_slot + 1U));
+    }
     return make_number_value(static_cast<double>(*insert_slot + 1U));
 }
 
@@ -3030,6 +3181,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         return get_native_identity_reflection_metadata(runtime_object, member_name).has_value() ||
                native_controlcount_member_name_matches(runtime_object, member_name) ||
                native_listcount_member_name_matches(runtime_object, member_name) ||
+               native_sorted_member_name_matches(runtime_object, member_name) ||
                native_newindex_member_name_matches(runtime_object, member_name) ||
                native_newitemid_member_name_matches(runtime_object, member_name) ||
                native_listitemid_member_name_matches(runtime_object, member_name) ||
@@ -3324,6 +3476,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_listindex_member_name(*runtime_object, property_name) ||
             is_native_displayvalue_member_name(*runtime_object, property_name) ||
             is_native_listcount_member_name(*runtime_object, property_name) ||
+            is_native_sorted_member_name(*runtime_object, property_name) ||
             is_native_multiselect_member_name(*runtime_object, property_name) ||
             is_native_newindex_member_name(*runtime_object, property_name) ||
             is_native_newitemid_member_name(*runtime_object, property_name) ||
@@ -3555,6 +3708,10 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             if (member_name == "multiselect") {
                 normalize_native_listbox_multiselect_invariant(*runtime_object);
             }
+            if (member_name == "sorted" ||
+                member_name == "rowsourcetype") {
+                normalize_native_list_control_sorted_invariant(*runtime_object);
+            }
             return make_boolean_value(true);
         }
         if (runtime_object->properties.contains(member_name)) {
@@ -3576,6 +3733,10 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             }
             if (member_name == "multiselect") {
                 normalize_native_listbox_multiselect_invariant(*runtime_object);
+            }
+            if (member_name == "sorted" ||
+                member_name == "rowsourcetype") {
+                normalize_native_list_control_sorted_invariant(*runtime_object);
             }
             return make_boolean_value(true);
         }
@@ -3646,6 +3807,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_listindex_member_name(*runtime_object, property_name) ||
             is_native_displayvalue_member_name(*runtime_object, property_name) ||
             is_native_listcount_member_name(*runtime_object, property_name) ||
+            is_native_sorted_member_name(*runtime_object, property_name) ||
             is_native_multiselect_member_name(*runtime_object, property_name) ||
             is_native_newindex_member_name(*runtime_object, property_name) ||
             is_native_newitemid_member_name(*runtime_object, property_name) ||

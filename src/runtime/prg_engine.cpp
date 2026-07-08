@@ -4081,6 +4081,11 @@ namespace copperfin::runtime
                 {
                     normalize_native_listbox_multiselect_invariant(runtime_object);
                 }
+                if (normalized_property_name == "sorted" ||
+                    normalized_property_name == "rowsourcetype")
+                {
+                    normalize_native_list_control_sorted_invariant(runtime_object);
+                }
                 if (normalized_property_name == "listindex")
                 {
                     sync_native_list_control_displayvalue_from_selection(runtime_object);
