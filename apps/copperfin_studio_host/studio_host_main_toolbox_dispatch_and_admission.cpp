@@ -1751,8 +1751,10 @@ std::optional<int> try_handle_toolbox_execute(
         const auto result = copperfin::studio::execute_studio_toolbox_dispatch({
             .dispatch_plan = dispatch_result.plan,
             .admit_execution = toolbox_execute_parse.admit_execution,
-            .executor = [&](const copperfin::studio::StudioToolboxDispatchPlan&) {
-                const int exit_code = normalize_system_exit_code(std::system(executed_command.c_str()));
+            .executor = [&](const copperfin::studio::StudioToolboxDispatchPlan& plan) {
+                const int exit_code = execute_launch_command(
+                    toolbox_execute_parse.launch_command,
+                    plan.dispatch_arguments);
                 return copperfin::studio::StudioToolboxDispatchExecutionObservation{
                     .launched = true,
                     .exit_code = exit_code,

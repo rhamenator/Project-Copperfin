@@ -358,48 +358,6 @@ void print_json_int_array(const std::vector<int>& values) {
     std::cout << "]";
 }
 
-std::string shell_quote(const std::string& value) {
-    if (value.empty()) {
-        return "''";
-    }
-    std::string quoted = "'";
-    for (const char ch : value) {
-        if (ch == '\'') {
-            quoted += "'\\''";
-        } else {
-            quoted += ch;
-        }
-    }
-    quoted += "'";
-    return quoted;
-}
-
-std::string build_shell_command(const std::string& launch_command, const std::vector<std::string>& arguments) {
-    std::string command = shell_quote(launch_command);
-    for (const auto& argument : arguments) {
-        command += " ";
-        command += shell_quote(argument);
-    }
-    return command;
-}
-
-int normalize_system_exit_code(int system_status) {
-    if (system_status == -1) {
-        return -1;
-    }
-#if defined(_WIN32)
-    return system_status;
-#else
-    if (WIFEXITED(system_status)) {
-        return WEXITSTATUS(system_status);
-    }
-    if (WIFSIGNALED(system_status)) {
-        return 128 + WTERMSIG(system_status);
-    }
-    return system_status;
-#endif
-}
-
 bool parse_size_t_token(const std::string& token, std::size_t& value) {
     if (token.empty() || token.front() == '-' || token.front() == '+') {
         return false;

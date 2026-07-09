@@ -80,6 +80,26 @@ add_test(
     COMMAND $<TARGET_FILE:test_build_host_output> $<TARGET_FILE:copperfin_build_host>
 )
 
+add_executable(test_studio_host_shell_command
+    test_studio_host_shell_command.cpp
+    ../apps/copperfin_studio_host/studio_host_main_shell_command.cpp
+)
+target_include_directories(test_studio_host_shell_command PRIVATE
+    ${CMAKE_SOURCE_DIR}/apps/copperfin_studio_host
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+if(MSVC)
+    target_compile_options(test_studio_host_shell_command PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_shell_command PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_shell_command
+    COMMAND $<TARGET_FILE:test_studio_host_shell_command>
+)
+
 add_executable(test_licensing_status
     test_licensing_status.cpp
 )

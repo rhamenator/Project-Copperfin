@@ -193,7 +193,7 @@ void print_json_string_array(const std::vector<std::string>& values);
 void print_json_int_array(const std::vector<int>& values);
 std::string shell_quote(const std::string& value);
 std::string build_shell_command(const std::string& launch_command, const std::vector<std::string>& arguments);
-int normalize_system_exit_code(int system_status);
+int execute_launch_command(const std::string& launch_command, const std::vector<std::string>& arguments);
 bool parse_size_t_token(const std::string& token, std::size_t& value);
 std::string lowercase_copy(std::string text);
 bool parse_bool_token(std::string token, bool& value);
