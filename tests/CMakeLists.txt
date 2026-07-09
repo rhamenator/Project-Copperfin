@@ -3636,6 +3636,11 @@ copperfin_add_test(test_prg_engine_runtime_surface_functions cf_xbase_runtime
     prg_engine_test_support.cpp
 )
 
+copperfin_add_test(test_prg_engine_runtime_surface_requery cf_xbase_runtime
+    test_prg_engine_runtime_surface_requery.cpp
+    prg_engine_test_support.cpp
+)
+
 copperfin_add_test(test_prg_engine_file_io_functions cf_xbase_runtime
     test_prg_engine_file_io_functions.cpp
     prg_engine_test_support.cpp

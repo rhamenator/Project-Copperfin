@@ -744,6 +744,7 @@ namespace copperfin::runtime
             const std::string &identifier,
             const std::vector<PrgValue> &arguments,
             const std::vector<std::optional<std::string>> &argument_references);
+        bool requery_native_list_control(RuntimeOleObjectState &runtime_object);
         PrgValue bind_native_event(
             const Frame &source_frame,
             const std::vector<PrgValue> &arguments,
@@ -2400,6 +2401,15 @@ namespace copperfin::runtime
                               .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
             return make_boolean_value(true);
         }
+        if (leaf == "requery" && requery_native_list_control(*target_object))
+        {
+            target_object->last_action = effective_member_path + "()";
+            ++target_object->action_count;
+            events.push_back({.category = "prg.object.requery",
+                              .detail = target_object->prog_id + "." + effective_member_path,
+                              .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
+            return make_empty_value();
+        }
         if (is_native_olecontrol_host_object(*target_object) && leaf == "doverb")
         {
             RuntimeOleObjectState *object_surface = ensure_native_olecontrol_object_surface(*target_object);
@@ -2812,6 +2822,126 @@ namespace copperfin::runtime
         const std::size_t return_depth = stack.size();
         push_routine_frame(program.path, found->second, arguments, argument_references);
         return run_expression_invoked_routine_until_return(return_depth);
+    }
+
+    bool PrgRuntimeSession::Impl::requery_native_list_control(RuntimeOleObjectState &runtime_object)
+    {
+        const std::string normalized_base_class =
+            normalize_identifier(trim_copy(runtime_object.base_class_name));
+        if (normalized_base_class != "combobox" &&
+            normalized_base_class != "listbox")
+        {
+            return false;
+        }
+
+        const auto row_source_type_found = runtime_object.properties.find("rowsourcetype");
+        const long long row_source_type =
+            row_source_type_found == runtime_object.properties.end()
+                ? 0LL
+                : std::llround(value_as_number(row_source_type_found->second));
+        const auto row_source_found = runtime_object.properties.find("rowsource");
+        const std::string row_source =
+            row_source_found == runtime_object.properties.end()
+                ? std::string{}
+                : value_as_string(row_source_found->second);
+
+        std::vector<std::vector<PrgValue>> refreshed_rows;
+        switch (row_source_type)
+        {
+        case 1:
+        {
+            std::size_t column_count = 1U;
+            if (const auto column_count_found = runtime_object.properties.find("columncount");
+                column_count_found != runtime_object.properties.end())
+            {
+                column_count = std::max<std::size_t>(
+                    1U,
+                    static_cast<std::size_t>(std::max<double>(
+                        1.0,
+                        value_as_number(column_count_found->second))));
+            }
+
+            const std::vector<std::string> values = split_csv_like(row_source);
+            refreshed_rows.reserve((values.size() + column_count - 1U) / column_count);
+            for (std::size_t index = 0U; index < values.size(); index += column_count)
+            {
+                std::vector<PrgValue> row;
+                row.reserve(column_count);
+                for (std::size_t column = 0U; column < column_count; ++column)
+                {
+                    const std::size_t value_index = index + column;
+                    row.push_back(
+                        value_index < values.size()
+                            ? make_string_value(values[value_index])
+                            : make_string_value(""));
+                }
+                refreshed_rows.push_back(std::move(row));
+            }
+            break;
+        }
+        case 5:
+        {
+            const RuntimeArray *array = find_array(row_source);
+            if (array == nullptr)
+            {
+                break;
+            }
+
+            refreshed_rows.reserve(array->rows);
+            for (std::size_t row = 1U; row <= array->rows; ++row)
+            {
+                std::vector<PrgValue> row_values;
+                row_values.reserve(array->columns);
+                for (std::size_t column = 1U; column <= array->columns; ++column)
+                {
+                    row_values.push_back(array_value(row_source, row, column));
+                }
+                refreshed_rows.push_back(std::move(row_values));
+            }
+            break;
+        }
+        default:
+            return false;
+        }
+
+        runtime_object.list_rows = std::move(refreshed_rows);
+        runtime_object.collection_items.clear();
+        runtime_object.collection_items.reserve(runtime_object.list_rows.size());
+        for (const auto &row : runtime_object.list_rows)
+        {
+            runtime_object.collection_items.push_back(
+                row.empty()
+                    ? make_string_value("")
+                    : row.front());
+        }
+        runtime_object.collection_item_keys.clear();
+        runtime_object.list_selected.clear();
+        runtime_object.properties["newindex"] = make_number_value(0.0);
+        runtime_object.properties["newitemid"] = make_number_value(0.0);
+        sync_native_list_control_count(runtime_object);
+
+        if (const auto list_index_found = runtime_object.properties.find("listindex");
+            list_index_found != runtime_object.properties.end())
+        {
+            long long selected_index = std::llround(value_as_number(list_index_found->second));
+            const long long row_count = static_cast<long long>(runtime_object.list_rows.size());
+            if (selected_index < 0LL)
+            {
+                selected_index = 0LL;
+            }
+            if (selected_index > row_count)
+            {
+                selected_index = row_count;
+            }
+            list_index_found->second = make_number_value(static_cast<double>(selected_index));
+        }
+
+        if (row_source_type == 1)
+        {
+            normalize_native_list_control_sorted_invariant(runtime_object);
+        }
+        sync_native_list_control_displayvalue_from_selection(runtime_object);
+        return true;
     }
 
     std::optional<PrgValue> PrgRuntimeSession::Impl::invoke_native_object_method_body_if_present(
