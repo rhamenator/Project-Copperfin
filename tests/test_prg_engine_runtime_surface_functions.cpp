@@ -10868,6 +10868,192 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_list_controls_newindex_addressed_writable_list_cells_stay_coherent()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root =
+            fs::temp_directory_path() / "copperfin_native_list_controls_newindex_writable_list_cells";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_list_controls_newindex_writable_list_cells.prg";
+        write_text(
+            main_path,
+            "oPlainCombo = CREATEOBJECT('ComboBox')\n"
+            "oPlainCombo.ColumnCount = 3\n"
+            "oPlainCombo.AddItem('Alpha')\n"
+            "oPlainCombo.List(oPlainCombo.NewIndex, 2) = 'A'\n"
+            "oPlainCombo.List(oPlainCombo.NewIndex, 3) = '101'\n"
+            "oPlainCombo.AddItem('Delta')\n"
+            "oPlainCombo.List(oPlainCombo.NewIndex, 2) = 'D'\n"
+            "oPlainCombo.List(oPlainCombo.NewIndex, 3) = '404'\n"
+            "oPlainCombo.AddItem('Charlie', 2)\n"
+            "nNewIndexAfterInsert = oPlainCombo.NewIndex\n"
+            "oPlainCombo.List(oPlainCombo.NewIndex, 2) = 'C'\n"
+            "oPlainCombo.List(oPlainCombo.NewIndex, 3) = '303'\n"
+            "oPlainCombo.ListIndex = oPlainCombo.NewIndex\n"
+            "cDisplayBeforeShift = oPlainCombo.DisplayValue\n"
+            "oPlainCombo.RemoveItem(1)\n"
+            "nNewIndexAfterShift = oPlainCombo.NewIndex\n"
+            "nListIndexAfterShift = oPlainCombo.ListIndex\n"
+            "oPlainCombo.List(oPlainCombo.NewIndex, 2) = 'C-shift'\n"
+            "oPlainCombo.List(oPlainCombo.NewIndex, 3) = '313'\n"
+            "cDisplayAfterShift = oPlainCombo.DisplayValue\n"
+            "oPlainCombo.AddItem('Beta', 2)\n"
+            "nNewIndexAfterReinsert = oPlainCombo.NewIndex\n"
+            "oPlainCombo.List(oPlainCombo.NewIndex) = 'Beta Prime'\n"
+            "oPlainCombo.List(oPlainCombo.NewIndex, 2) = 'B'\n"
+            "oPlainCombo.List(oPlainCombo.NewIndex, 3) = '202'\n"
+            "oPlainCombo.ListIndex = oPlainCombo.NewIndex\n"
+            "cDisplayAfterReinsert = oPlainCombo.DisplayValue\n"
+            "oPlainCombo.RemoveItem(3)\n"
+            "nFinalCount = oPlainCombo.ListCount\n"
+            "nFinalNewIndex = oPlainCombo.NewIndex\n"
+            "nFinalListIndex = oPlainCombo.ListIndex\n"
+            "cFinalDisplay = oPlainCombo.DisplayValue\n"
+            "cRow1Col1 = oPlainCombo.List(1)\n"
+            "cRow1Col2 = oPlainCombo.List(1, 2)\n"
+            "cRow1Col3 = oPlainCombo.List(1, 3)\n"
+            "cRow2Col1 = oPlainCombo.List(2)\n"
+            "cRow2Col2 = oPlainCombo.List(2, 2)\n"
+            "cRow2Col3 = oPlainCombo.List(2, 3)\n"
+            "cRow3Col1 = oPlainCombo.List(3)\n"
+            "oSeedList = CREATEOBJECT('SeededList')\n"
+            "nSeedCount = oSeedList.ListCount\n"
+            "nSeedNewIndex = oSeedList.NewIndex\n"
+            "cSeedRow1Col1 = oSeedList.List(1)\n"
+            "cSeedRow1Col2 = oSeedList.List(1, 2)\n"
+            "cSeedRow1Col3 = oSeedList.List(1, 3)\n"
+            "cSeedRow2Col1 = oSeedList.List(2)\n"
+            "cSeedRow2Col2 = oSeedList.List(2, 2)\n"
+            "cSeedRow2Col3 = oSeedList.List(2, 3)\n"
+            "cSeedRow3Col1 = oSeedList.List(3)\n"
+            "RETURN\n"
+            "DEFINE CLASS SeededList AS ListBox\n"
+            "    ColumnCount = 3\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddItem('North')\n"
+            "        THIS.List(THIS.NewIndex, 2) = 'N'\n"
+            "        THIS.AddItem('West')\n"
+            "        THIS.List(THIS.NewIndex, 2) = 'W'\n"
+            "        THIS.AddItem('South', 2)\n"
+            "        THIS.List(THIS.NewIndex, 2) = 'S'\n"
+            "        THIS.RemoveItem(1)\n"
+            "        THIS.List(THIS.NewIndex, 3) = 'pivot'\n"
+            "        THIS.AddItem('East', 2)\n"
+            "        THIS.List(THIS.NewIndex, 2) = 'E'\n"
+            "        THIS.List(THIS.NewIndex, 3) = 'tail'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native NewIndex-addressed writable List() script should complete: ") +
+                   state.message + " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string& name, const std::string& expected) {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("nnewindexafterinsert", "2");
+        check("cdisplaybeforeshift", "Charlie");
+        check("nnewindexaftershift", "1");
+        check("nlistindexaftershift", "1");
+        check("cdisplayaftershift", "Charlie");
+        check("nnewindexafterreinsert", "2");
+        check("cdisplayafterreinsert", "Beta Prime");
+        check("nfinalcount", "2");
+        check("nfinalnewindex", "2");
+        check("nfinallistindex", "2");
+        check("cfinaldisplay", "Beta Prime");
+        check("crow1col1", "Charlie");
+        check("crow1col2", "C-shift");
+        check("crow1col3", "313");
+        check("crow2col1", "Beta Prime");
+        check("crow2col2", "B");
+        check("crow2col3", "202");
+        check("crow3col1", "");
+        check("nseedcount", "3");
+        check("nseednewindex", "2");
+        check("cseedrow1col1", "South");
+        check("cseedrow1col2", "S");
+        check("cseedrow1col3", "pivot");
+        check("cseedrow2col1", "East");
+        check("cseedrow2col2", "E");
+        check("cseedrow2col3", "tail");
+        check("cseedrow3col1", "West");
+
+        expect(state.ole_objects.size() == 2U,
+               "native NewIndex-addressed writable List() coverage should register plain and derived list controls");
+        if (state.ole_objects.size() == 2U)
+        {
+            const auto& plain_combo = state.ole_objects[0];
+            const auto& seed_list = state.ole_objects[1];
+
+            const auto plain_newindex = plain_combo.properties.find("newindex");
+            const auto plain_listindex = plain_combo.properties.find("listindex");
+            const auto plain_display = plain_combo.properties.find("displayvalue");
+            const auto seed_newindex = seed_list.properties.find("newindex");
+
+            expect(plain_combo.list_rows.size() == 2U,
+                   "plain ComboBox NewIndex-addressed writable List() coverage should preserve shifted rows");
+            if (plain_combo.list_rows.size() == 2U)
+            {
+                expect(plain_combo.list_rows[0].size() >= 3U &&
+                           copperfin::runtime::format_value(plain_combo.list_rows[0][0]) == "Charlie" &&
+                           copperfin::runtime::format_value(plain_combo.list_rows[0][1]) == "C-shift" &&
+                           copperfin::runtime::format_value(plain_combo.list_rows[0][2]) == "313",
+                       "plain ComboBox NewIndex-addressed writes should follow the shifted latest-added row");
+                expect(plain_combo.list_rows[1].size() >= 3U &&
+                           copperfin::runtime::format_value(plain_combo.list_rows[1][0]) == "Beta Prime" &&
+                           copperfin::runtime::format_value(plain_combo.list_rows[1][1]) == "B" &&
+                           copperfin::runtime::format_value(plain_combo.list_rows[1][2]) == "202",
+                       "plain ComboBox NewIndex-addressed writes should land on the reinserted latest row");
+            }
+            expect(plain_newindex != plain_combo.properties.end() &&
+                       copperfin::runtime::format_value(plain_newindex->second) == "2",
+                   "plain ComboBox NewIndex-addressed coverage should keep NewIndex synchronized after churn");
+            expect(plain_listindex != plain_combo.properties.end() &&
+                       copperfin::runtime::format_value(plain_listindex->second) == "2",
+                   "plain ComboBox NewIndex-addressed coverage should keep ListIndex synchronized after churn");
+            expect(plain_display != plain_combo.properties.end() &&
+                       copperfin::runtime::format_value(plain_display->second) == "Beta Prime",
+                   "plain ComboBox NewIndex-addressed coverage should keep DisplayValue synchronized after churn");
+            expect(seed_list.list_rows.size() == 3U,
+                   "derived ListBox NewIndex-addressed writable List() coverage should preserve churned Init rows");
+            if (seed_list.list_rows.size() == 3U)
+            {
+                expect(seed_list.list_rows[0].size() >= 3U &&
+                           copperfin::runtime::format_value(seed_list.list_rows[0][0]) == "South" &&
+                           copperfin::runtime::format_value(seed_list.list_rows[0][2]) == "pivot",
+                       "derived ListBox NewIndex-addressed writes should follow the shifted row during Init");
+                expect(seed_list.list_rows[1].size() >= 3U &&
+                           copperfin::runtime::format_value(seed_list.list_rows[1][0]) == "East" &&
+                           copperfin::runtime::format_value(seed_list.list_rows[1][1]) == "E" &&
+                           copperfin::runtime::format_value(seed_list.list_rows[1][2]) == "tail",
+                       "derived ListBox NewIndex-addressed writes should land on the latest inserted row during Init");
+            }
+            expect(seed_newindex != seed_list.properties.end() &&
+                       copperfin::runtime::format_value(seed_newindex->second) == "2",
+                   "derived ListBox NewIndex-addressed coverage should keep NewIndex synchronized during Init churn");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_list_controls_listitemid_selection_stays_coherent()
     {
         namespace fs = std::filesystem;
@@ -51734,6 +51920,7 @@ int main()
     test_native_list_controls_listcount_list_and_removeitem_stay_coherent();
     test_native_list_controls_addlistitem_newitemid_and_multicolumn_list_stay_coherent();
     test_native_list_controls_newindex_stays_coherent();
+    test_native_list_controls_newindex_addressed_writable_list_cells_stay_coherent();
     test_native_list_controls_listitemid_selection_stays_coherent();
     test_native_list_controls_selectedid_selection_stays_coherent();
     test_native_list_controls_removelistitem_stays_coherent();
