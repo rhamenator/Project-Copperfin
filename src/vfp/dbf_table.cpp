@@ -1223,8 +1223,19 @@ DbfWriteResult create_dbf_table_file(
     std::uint32_t next_offset = 1U;
     bool has_memo_fields = false;
     for (const auto& field : fields) {
-        if (trim_both(field.name).empty()) {
+        const std::string trimmed_name = trim_both(field.name);
+        if (trimmed_name.empty()) {
             return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.FieldNameRequired")};
+        }
+        const std::string normalized_name = lowercase_copy(trimmed_name);
+        const auto duplicate = std::find_if(
+            raw_fields.begin(),
+            raw_fields.end(),
+            [&](const RawFieldDescriptor& existing) {
+                return lowercase_copy(trim_both(existing.name)) == normalized_name;
+            });
+        if (duplicate != raw_fields.end()) {
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TargetFieldExists")};
         }
         if (field.length == 0U) {
             return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.FieldLengthRequired")};
@@ -1253,7 +1264,7 @@ DbfWriteResult create_dbf_table_file(
         }
 
         raw_fields.push_back({
-            .name = trim_both(field.name),
+            .name = trimmed_name,
             .type = field.type,
             .offset = next_offset,
             .length = field.length,

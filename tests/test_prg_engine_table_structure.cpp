@@ -232,6 +232,34 @@ void test_create_table_defaults_and_not_null_constraints() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_create_table_rejects_duplicate_field_names() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_table_structure_duplicates";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "duplicate_fields.dbf";
+    const fs::path main_path = temp_root / "duplicate_fields.prg";
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    write_text(
+        main_path,
+        "CREATE TABLE '" + table_path.string() + "' (NAME C(10), NAME N(3,0))\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!state.completed, "#3678: CREATE TABLE with duplicate field names should fail");
+    expect(state.message == english_catalog.translate("Vfp.DbfTable.Error.TargetFieldExists"),
+           "#3678: CREATE TABLE duplicate field names should surface the standard TargetFieldExists error");
+    expect(!fs::exists(table_path), "#3678: failed CREATE TABLE should not leave a partial DBF on disk");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_create_cursor_uses_temp_backed_local_table_flow() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_table_structure_create_cursor";
@@ -700,6 +728,7 @@ int main() {
     test_alter_table_add_column_backfills_existing_rows_with_default();
     test_alter_table_rollback_restores_schema_and_disk_readability();
     test_create_table_defaults_and_not_null_constraints();
+    test_create_table_rejects_duplicate_field_names();
     test_create_cursor_uses_temp_backed_local_table_flow();
     test_create_cursor_not_null_insert_failure_rolls_back();
     test_not_null_insert_failure_rolls_back();

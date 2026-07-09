@@ -327,6 +327,32 @@ void test_character_and_varchar_fields_preserve_leading_whitespace_on_write() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_create_dbf_table_file_rejects_duplicate_field_names() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_table_duplicate_field_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "duplicate_fields.dbf";
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = " name ", .type = 'N', .length = 3U}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, {});
+    expect(!create_result.ok, "#3678: create_dbf_table_file should reject duplicate field names");
+    expect(
+        create_result.error == english_catalog.translate("Vfp.DbfTable.Error.TargetFieldExists"),
+        "#3678: duplicate create_dbf_table_file field names should reuse the standard TargetFieldExists error");
+    expect(!fs::exists(table_path), "#3678: duplicate field-name rejection should not leave a partial DBF on disk");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_memo_field_create_replace_and_append_round_trip() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -1805,6 +1831,7 @@ int main() {
     test_mutate_and_append_dbf_table();
     test_create_dbf_table_file_round_trips();
     test_character_and_varchar_fields_preserve_leading_whitespace_on_write();
+    test_create_dbf_table_file_rejects_duplicate_field_names();
     test_memo_field_create_replace_and_append_round_trip();
     test_general_and_picture_memo_fields_round_trip();
     test_indexed_table_mutations_succeed_with_production_flags_and_companions();
