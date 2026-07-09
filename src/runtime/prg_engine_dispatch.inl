@@ -6926,13 +6926,23 @@
                             }
                             val = pair->second;
                         }
-                        else if (source_array != nullptr && source_array->columns > 1U)
-                        {
-                            val = array_value(array_name, 1U, array_index++);
-                        }
                         else
                         {
-                            val = array_value(array_name, array_index++);
+                            const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.field_type)));
+                            const bool is_memo_field = field_type == 'M' || field_type == 'G' || field_type == 'W';
+                            if (is_memo_field)
+                            {
+                                continue;
+                            }
+
+                            if (source_array != nullptr && source_array->columns > 1U)
+                            {
+                                val = array_value(array_name, 1U, array_index++);
+                            }
+                            else
+                            {
+                                val = array_value(array_name, array_index++);
+                            }
                         }
                         if (cursor->remote)
                         {

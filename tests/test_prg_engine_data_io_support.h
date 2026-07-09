@@ -66,6 +66,7 @@ void test_scatter_name_without_additive_replaces_existing_nested_target_object()
 void test_scatter_gather_predeclared_2d_array_row_one_semantics();
 void test_scatter_gather_two_column_name_value_array_semantics();
 void test_scatter_memo_clause_controls_memo_field_inclusion();
+void test_gather_from_array_skips_memo_fields_by_default();
 void test_scatter_memvar_blank_on_empty_table_succeeds();
 void test_scatter_gather_runtime_errors_localize();
 void test_gather_memvar_round_trips_field_values();

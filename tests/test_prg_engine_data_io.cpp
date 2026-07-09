@@ -27,6 +27,7 @@ int main() {
     test_scatter_gather_predeclared_2d_array_row_one_semantics();
     test_scatter_gather_two_column_name_value_array_semantics();
     test_scatter_memo_clause_controls_memo_field_inclusion();
+    test_gather_from_array_skips_memo_fields_by_default();
     test_scatter_memvar_blank_on_empty_table_succeeds();
     test_runtime_array_mutator_functions();
     test_save_to_writes_variables_to_file();

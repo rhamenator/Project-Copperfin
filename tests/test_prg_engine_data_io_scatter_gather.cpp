@@ -1630,6 +1630,67 @@ void test_scatter_memo_clause_controls_memo_field_inclusion() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_gather_from_array_skips_memo_fields_by_default() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_gather_array_skip_memo";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "notes.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "NOTES", .type = 'M', .length = 10U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Alice", "Memo payload", "42"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "GATHER array memo-skip fixture should be created");
+
+    const fs::path main_path = temp_root / "gather_array_skip_memo.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "'\n"
+        "GO 1\n"
+        "SCATTER TO aRow\n"
+        "nRowLen = ALEN(aRow)\n"
+        "cFirst = aRow[1]\n"
+        "nSecond = aRow[2]\n"
+        "aRow[1] = 'Updated'\n"
+        "aRow[2] = 99\n"
+        "GATHER FROM aRow\n"
+        "cAfterName = NAME\n"
+        "cAfterNotes = NOTES\n"
+        "nAfterAge = AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "GATHER FROM array with memo fields should complete: " + state.message);
+
+    const auto check = [&](const std::string& name, const std::string& expected, const std::string& message) {
+        const auto it = state.globals.find(name);
+        expect(it != state.globals.end(), name + " should exist in globals");
+        if (it != state.globals.end()) {
+            const std::string actual = copperfin::runtime::format_value(it->second);
+            expect(actual == expected, message + " (got '" + actual + "')");
+        }
+    };
+
+    check("nrowlen", "2", "SCATTER TO array should skip memo fields by default");
+    check("cfirst", "Alice", "SCATTER TO array should keep NAME in the first slot");
+    check("nsecond", "42", "SCATTER TO array should keep AGE in the second slot after skipping memo fields");
+    check("caftername", "Updated", "GATHER FROM array should write NAME from the first array slot");
+    check("cafternotes", "Memo payload", "GATHER FROM array should leave memo fields unchanged when no MEMO array data exists");
+    check("nafterage", "99", "GATHER FROM array should write AGE from the second array slot after skipping memo fields");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_scatter_memvar_blank_on_empty_table_succeeds() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_blank_empty";
