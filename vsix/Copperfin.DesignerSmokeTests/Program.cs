@@ -1850,6 +1850,26 @@ internal static class Program
                 expectedUpdatedRawValue: "16",
                 expectedSectionCount: 5,
                 expectLabel: true);
+            SmokeAssetEditorSettingsRoundTripWithRealAsset(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
+                propertyName: "GRIDH",
+                expectedOriginalSelectionValue: "12",
+                updatedPropertyValue: 14,
+                expectedUpdatedSelectionValue: "14",
+                expectedOriginalRawValue: "12",
+                expectedUpdatedRawValue: "14",
+                expectedSectionCount: 5,
+                expectLabel: false);
+            SmokeAssetEditorSettingsRoundTripWithRealAsset(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
+                propertyName: "GRIDH",
+                expectedOriginalSelectionValue: "12",
+                updatedPropertyValue: 16,
+                expectedUpdatedSelectionValue: "16",
+                expectedOriginalRawValue: "12",
+                expectedUpdatedRawValue: "16",
+                expectedSectionCount: 5,
+                expectLabel: true);
             SmokeRealAssetHostBackedPropertyRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 recordIndex: 7,
