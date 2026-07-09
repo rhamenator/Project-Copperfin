@@ -3011,6 +3011,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             "Project" => "AssetEditor.Summary.ArtifactKind.Project",
             "Project Header" => "AssetEditor.Summary.ArtifactKind.ProjectHeader",
+            "Project Item" => "AssetEditor.Summary.ArtifactKind.ProjectItem",
+            "Project Record" => "AssetEditor.Summary.ArtifactKind.ProjectRecord",
             "Form" => "AssetEditor.Summary.ArtifactKind.Form",
             "Class Library" => "AssetEditor.Summary.ArtifactKind.ClassLibrary",
             "Class" => "AssetEditor.Summary.ArtifactKind.Class",
@@ -3042,6 +3044,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             "classes" => string.Equals(normalizedTitle, "Class Libraries", StringComparison.Ordinal)
                 ? "AssetEditor.Summary.GroupTitle.ClassLibraries"
                 : "AssetEditor.Summary.GroupTitle.Classes",
+            "project_items" => "AssetEditor.Summary.GroupTitle.ProjectItems",
             "reports" => "AssetEditor.Summary.GroupTitle.Reports",
             "labels" => "AssetEditor.Summary.GroupTitle.Labels",
             "menus" => "AssetEditor.Summary.GroupTitle.Menus",
@@ -3049,12 +3052,14 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             "databases" => "AssetEditor.Summary.GroupTitle.Databases",
             "tables" => "AssetEditor.Summary.GroupTitle.Tables",
             "queries" => "AssetEditor.Summary.GroupTitle.Queries",
+            "other_records" => "AssetEditor.Summary.GroupTitle.OtherRecords",
             "other" or "other_assets" => "AssetEditor.Summary.GroupTitle.OtherAssets",
             _ => normalizedTitle switch
             {
                 "Forms" => "AssetEditor.Summary.GroupTitle.Forms",
                 "Classes" => "AssetEditor.Summary.GroupTitle.Classes",
                 "Class Libraries" => "AssetEditor.Summary.GroupTitle.ClassLibraries",
+                "Project Items" => "AssetEditor.Summary.GroupTitle.ProjectItems",
                 "Reports" => "AssetEditor.Summary.GroupTitle.Reports",
                 "Labels" => "AssetEditor.Summary.GroupTitle.Labels",
                 "Menus" => "AssetEditor.Summary.GroupTitle.Menus",
@@ -3062,6 +3067,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 "Databases" => "AssetEditor.Summary.GroupTitle.Databases",
                 "Tables" => "AssetEditor.Summary.GroupTitle.Tables",
                 "Queries" => "AssetEditor.Summary.GroupTitle.Queries",
+                "Other Records" => "AssetEditor.Summary.GroupTitle.OtherRecords",
                 "Other Assets" => "AssetEditor.Summary.GroupTitle.OtherAssets",
                 _ => string.Empty
             }

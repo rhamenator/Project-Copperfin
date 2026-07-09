@@ -469,6 +469,7 @@ internal static class Program
         SmokeLocalizedProjectInsightArtifactKindLabels();
         SmokeLocalizedWorkspaceGroupTitles();
         SmokeLocalizedProjectWorkspaceExplorerGroupTitles();
+        SmokeLocalizedProjectFallbackKindAndGroupLabels();
         SmokeLocalizedReportObjectKindSubtitles();
         SmokeLocalizedReportObjectFallbackTitles();
         SmokeReportSelectionPreservedAcrossExplorerRefresh();
@@ -5974,6 +5975,114 @@ internal static class Program
             pseudoLocalization.Text("AssetEditor.Summary.GroupTitle.Programs"),
             "Pseudo-localized project explorer rows and project object-list subtitles should route workspace group titles through the shared catalog instead of leaking raw English labels",
             rawLeakChecks: new[] { "Forms", "Programs", "Class Libraries" });
+    }
+
+    private static void SmokeLocalizedProjectFallbackKindAndGroupLabels()
+    {
+        var snapshot = new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "project",
+            ProjectWorkspace = new CopperfinStudioProjectWorkspace
+            {
+                ProjectTitle = "sample.pjx",
+                Groups = new List<CopperfinStudioProjectGroup>
+                {
+                    new() { Id = "project_items", Title = "Project Items", ItemCount = 1, ExcludedCount = 1 },
+                    new() { Id = "other_records", Title = "Other Records", ItemCount = 1, ExcludedCount = 0 }
+                },
+                Entries = new List<CopperfinStudioProjectEntry>
+                {
+                    new()
+                    {
+                        RecordIndex = 10,
+                        RelativePath = @"docs\README",
+                        GroupId = "project_items",
+                        GroupTitle = "Project Items"
+                    }
+                }
+            },
+            Objects = new List<CopperfinStudioSnapshotObject>
+            {
+                new()
+                {
+                    RecordIndex = 10,
+                    Title = "README",
+                    Subtitle = "Project Items"
+                }
+            }
+        };
+
+        var insights = new CopperfinProjectInsights
+        {
+            ProjectRoot = @"C:\src\sample",
+            DataAssets = new List<CopperfinProjectDataAsset>
+            {
+                new() { Kind = "Project Record", Title = "TYPE=Z", FilePath = @"C:\src\sample\sample.pjx", GroupTitle = "Other Records" }
+            },
+            ObjectNodes = new List<CopperfinProjectObjectNode>
+            {
+                new()
+                {
+                    Kind = "Project Item",
+                    Title = "README",
+                    FilePath = @"C:\src\sample\README",
+                    GroupTitle = "Project Items",
+                    Excluded = true,
+                    Detail = "Project Items [excluded]"
+                }
+            }
+        };
+
+        using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
+        ApplyProjectSnapshotForExplorerGroupTitleSmoke(spanishControl, snapshot);
+        AssertProjectWorkspaceGroupTitles(
+            spanishControl,
+            new[] { "Elementos del proyecto", "Otros registros" },
+            "Elementos del proyecto",
+            "Spanish project fallback explorer rows and project object-list subtitles should localize managed Project Items and Other Records group titles");
+        var spanishObjectSummary = InvokeAssetEditorString(spanishControl, "BuildObjectBrowserSummary", snapshot, insights, string.Empty, false);
+        var spanishDataSummary = InvokeAssetEditorString(spanishControl, "BuildDataExplorerSummary", snapshot, insights, string.Empty);
+        Expect(spanishObjectSummary.IndexOf("[Elemento del proyecto] README", StringComparison.Ordinal) >= 0 &&
+               spanishObjectSummary.IndexOf("Elementos del proyecto [excluido]", StringComparison.Ordinal) >= 0 &&
+               spanishDataSummary.IndexOf("[Registro del proyecto] TYPE=Z", StringComparison.Ordinal) >= 0,
+            "Spanish project fallback summaries should localize Project Item, Project Record, and Project Items display text");
+
+        using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
+        ApplyProjectSnapshotForExplorerGroupTitleSmoke(portugueseControl, snapshot);
+        AssertProjectWorkspaceGroupTitles(
+            portugueseControl,
+            new[] { "Itens do projeto", "Outros registros" },
+            "Itens do projeto",
+            "Portuguese project fallback explorer rows and project object-list subtitles should localize managed Project Items and Other Records group titles");
+        var portugueseObjectSummary = InvokeAssetEditorString(portugueseControl, "BuildObjectBrowserSummary", snapshot, insights, string.Empty, false);
+        var portugueseDataSummary = InvokeAssetEditorString(portugueseControl, "BuildDataExplorerSummary", snapshot, insights, string.Empty);
+        Expect(portugueseObjectSummary.IndexOf("[Item do projeto] README", StringComparison.Ordinal) >= 0 &&
+               portugueseObjectSummary.IndexOf("Itens do projeto [excluído]", StringComparison.Ordinal) >= 0 &&
+               portugueseDataSummary.IndexOf("[Registro do projeto] TYPE=Z", StringComparison.Ordinal) >= 0,
+            "Portuguese project fallback summaries should localize Project Item, Project Record, and Project Items display text");
+
+        var pseudoLocalization = new CopperfinLocalization("qps-ploc");
+        using var pseudoControl = new CopperfinAssetEditorControl(pseudoLocalization);
+        ApplyProjectSnapshotForExplorerGroupTitleSmoke(pseudoControl, snapshot);
+        AssertProjectWorkspaceGroupTitles(
+            pseudoControl,
+            new[]
+            {
+                pseudoLocalization.Text("AssetEditor.Summary.GroupTitle.ProjectItems"),
+                pseudoLocalization.Text("AssetEditor.Summary.GroupTitle.OtherRecords")
+            },
+            pseudoLocalization.Text("AssetEditor.Summary.GroupTitle.ProjectItems"),
+            "Pseudo-localized project fallback explorer rows and project object-list subtitles should route managed Project Items and Other Records group titles through the shared catalog",
+            rawLeakChecks: new[] { "Project Items", "Other Records" });
+        var pseudoObjectSummary = InvokeAssetEditorString(pseudoControl, "BuildObjectBrowserSummary", snapshot, insights, string.Empty, false);
+        var pseudoDataSummary = InvokeAssetEditorString(pseudoControl, "BuildDataExplorerSummary", snapshot, insights, string.Empty);
+        Expect(pseudoObjectSummary.IndexOf(pseudoLocalization.Text("AssetEditor.Summary.ArtifactKind.ProjectItem"), StringComparison.Ordinal) >= 0 &&
+               pseudoObjectSummary.IndexOf(pseudoLocalization.Text("AssetEditor.Summary.GroupTitle.ProjectItems"), StringComparison.Ordinal) >= 0 &&
+               pseudoDataSummary.IndexOf(pseudoLocalization.Text("AssetEditor.Summary.ArtifactKind.ProjectRecord"), StringComparison.Ordinal) >= 0 &&
+               pseudoObjectSummary.IndexOf("Project Item", StringComparison.Ordinal) < 0 &&
+               pseudoObjectSummary.IndexOf("Project Items", StringComparison.Ordinal) < 0 &&
+               pseudoDataSummary.IndexOf("Project Record", StringComparison.Ordinal) < 0,
+            "Pseudo-localized project fallback summaries should route Project Item, Project Record, and Project Items display text through the shared catalog instead of leaking raw English labels");
     }
 
     private static void SmokeReportSectionGroupingExplorerTitles()
