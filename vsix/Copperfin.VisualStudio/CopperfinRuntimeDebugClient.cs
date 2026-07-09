@@ -120,35 +120,23 @@ internal static class CopperfinRuntimeDebugClient
                 CreateNoWindow = true
             };
 
-            using var process = new Process { StartInfo = startInfo };
-            if (!process.Start())
+            var processResult = CopperfinProcessRunner.Run(startInfo, timeoutMilliseconds: 30000);
+            if (!processResult.Started)
             {
                 session.Success = false;
                 session.Error = Localization.Text("AssetEditor.Dialog.RuntimeHostCouldNotStart");
                 return session;
             }
 
-            var stdout = process.StandardOutput.ReadToEnd();
-            var stderr = process.StandardError.ReadToEnd();
-            process.WaitForExit(30000);
-
-            if (!process.HasExited)
+            if (processResult.TimedOut)
             {
-                try
-                {
-                    process.Kill();
-                }
-                catch (InvalidOperationException)
-                {
-                }
-
                 session.Success = false;
                 session.Error = Localization.Text("AssetEditor.Dialog.RuntimeHostTimedOut");
                 return session;
             }
 
-            var pauseState = ParsePauseState(stdout);
-            if (process.ExitCode != 0)
+            var pauseState = ParsePauseState(processResult.StandardOutput);
+            if (processResult.ExitCode != 0)
             {
                 if (HasDebugData(pauseState))
                 {
@@ -159,7 +147,9 @@ internal static class CopperfinRuntimeDebugClient
                 }
 
                 session.Success = false;
-                session.Error = string.IsNullOrWhiteSpace(stderr) ? stdout.Trim() : stderr.Trim();
+                session.Error = string.IsNullOrWhiteSpace(processResult.StandardError)
+                    ? processResult.StandardOutput.Trim()
+                    : processResult.StandardError.Trim();
                 return session;
             }
 

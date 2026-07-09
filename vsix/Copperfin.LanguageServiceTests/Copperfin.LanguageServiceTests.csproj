@@ -13,6 +13,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinDesignerSelection.cs" Link="Shared\CopperfinDesignerSelection.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinLocalization.cs" Link="Shared\CopperfinLocalization.cs" />
+    <Compile Include="..\Copperfin.VisualStudio\CopperfinProcessRunner.cs" Link="Shared\CopperfinProcessRunner.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinProjectInsightClient.cs" Link="Shared\CopperfinProjectInsightClient.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinProjectInsightModels.cs" Link="Shared\CopperfinProjectInsightModels.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinStudioHostBridge.cs" Link="Shared\CopperfinStudioHostBridge.cs" />

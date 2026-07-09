@@ -271,8 +271,8 @@ internal static class CopperfinProjectWorkflow
             }
         }
 
-        using var process = new System.Diagnostics.Process { StartInfo = startInfo };
-        if (!process.Start())
+        var processResult = CopperfinProcessRunner.Run(startInfo);
+        if (!processResult.Started)
         {
             return new CopperfinProcessExecutionResult
             {
@@ -281,18 +281,14 @@ internal static class CopperfinProjectWorkflow
             };
         }
 
-        var stdout = process.StandardOutput.ReadToEnd();
-        var stderr = process.StandardError.ReadToEnd();
-        process.WaitForExit();
-
         var result = new CopperfinProcessExecutionResult
         {
-            ExitCode = process.ExitCode,
-            StandardOutput = stdout.Trim(),
-            StandardError = stderr.Trim()
+            ExitCode = processResult.ExitCode,
+            StandardOutput = processResult.StandardOutput.Trim(),
+            StandardError = processResult.StandardError.Trim()
         };
 
-        foreach (var kvp in ParseKeyValueLines(stdout))
+        foreach (var kvp in ParseKeyValueLines(processResult.StandardOutput))
         {
             result.Values[kvp.Key] = kvp.Value;
         }

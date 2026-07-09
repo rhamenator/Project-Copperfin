@@ -39009,9 +39009,8 @@ internal static class Program
 
     private static void MakeExecutable(string path)
     {
-        using var process = new Process
-        {
-            StartInfo = new ProcessStartInfo
+        var processResult = CopperfinProcessRunner.Run(
+            new ProcessStartInfo
             {
                 FileName = "/bin/chmod",
                 Arguments = $"+x \"{path}\"",
@@ -39019,20 +39018,17 @@ internal static class Program
                 RedirectStandardError = true,
                 RedirectStandardOutput = true,
                 CreateNoWindow = true
-            }
-        };
-
-        if (!process.Start())
+            });
+        if (!processResult.Started)
         {
             throw new InvalidOperationException("Could not start chmod for the fake Studio host script.");
         }
-
-        var stdout = process.StandardOutput.ReadToEnd();
-        var stderr = process.StandardError.ReadToEnd();
-        process.WaitForExit();
-        if (process.ExitCode != 0)
+        if (processResult.ExitCode != 0)
         {
-            throw new InvalidOperationException(string.IsNullOrWhiteSpace(stderr) ? stdout : stderr);
+            throw new InvalidOperationException(
+                string.IsNullOrWhiteSpace(processResult.StandardError)
+                    ? processResult.StandardOutput
+                    : processResult.StandardError);
         }
     }
 

@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -28,6 +29,8 @@ internal static class Program
         TestManagedHostResolutionHonorsEnvironmentOverrides();
         TestManagedHostResolutionFindsSiblingAndRepoBuildLayouts();
         TestLocalizationCatalogDoesNotLeakMachineSpecificHostPaths();
+        TestProcessRunnerCapturesLargeConcurrentOutput();
+        TestProcessRunnerEnforcesTimeoutWithoutPipeDeadlock();
         TestDottedClassMemberResolvesToLongestProjectSymbolPrefix();
         TestDottedMemberFallsBackToTrailingProcedureName();
         TestQuickInfoUsesResolvedProjectSymbolDescriptionForDottedMemberAccess();
@@ -402,6 +405,92 @@ internal static class Program
                 $"{key} should not leak a machine-specific Windows fallback path in Spanish");
             Expect(portuguese.Text(key).IndexOf(@"E:\Project-Copperfin", StringComparison.OrdinalIgnoreCase) < 0,
                 $"{key} should not leak a machine-specific Windows fallback path in Portuguese");
+        }
+    }
+
+    private static void TestProcessRunnerCapturesLargeConcurrentOutput()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "copperfin_language_service_tests", "process_runner_large_output", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            var startInfo = CreateTestScriptStartInfo(
+                root,
+                "large_output",
+                windowsBody:
+                [
+                    "@echo off",
+                    "setlocal EnableExtensions",
+                    "for /L %%I in (1,1,4000) do (",
+                    "  echo stdout-%%I-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                    "  echo stderr-%%I-yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy 1>&2",
+                    ")",
+                    "exit /b 0"
+                ],
+                unixBody:
+                [
+                    "#!/bin/sh",
+                    "i=1",
+                    "while [ \"$i\" -le 4000 ]; do",
+                    "  echo \"stdout-$i-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"",
+                    "  echo \"stderr-$i-yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\" 1>&2",
+                    "  i=$((i + 1))",
+                    "done"
+                ]);
+
+            var result = CopperfinProcessRunner.Run(startInfo, timeoutMilliseconds: 15000);
+            Expect(result.Started, "process runner should start the large-output script");
+            Expect(!result.TimedOut, "process runner should drain large concurrent output without timing out");
+            Expect(result.ExitCode == 0, "process runner should preserve the child exit code after draining large concurrent output");
+            Expect(result.StandardOutput.Contains("stdout-1-", StringComparison.Ordinal) &&
+                   result.StandardOutput.Contains("stdout-4000-", StringComparison.Ordinal),
+                "process runner should capture the full stdout stream across a large concurrent-output run");
+            Expect(result.StandardError.Contains("stderr-1-", StringComparison.Ordinal) &&
+                   result.StandardError.Contains("stderr-4000-", StringComparison.Ordinal),
+                "process runner should capture the full stderr stream across a large concurrent-output run");
+        }
+        finally
+        {
+            TryDelete(root);
+        }
+    }
+
+    private static void TestProcessRunnerEnforcesTimeoutWithoutPipeDeadlock()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "copperfin_language_service_tests", "process_runner_timeout", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            var startInfo = CreateTestScriptStartInfo(
+                root,
+                "timeout_output",
+                windowsBody:
+                [
+                    "@echo off",
+                    "echo before-timeout-stdout",
+                    "echo before-timeout-stderr 1>&2",
+                    "timeout /t 5 /nobreak >nul",
+                    "exit /b 0"
+                ],
+                unixBody:
+                [
+                    "#!/bin/sh",
+                    "echo before-timeout-stdout",
+                    "echo before-timeout-stderr 1>&2",
+                    "sleep 5"
+                ]);
+
+            var result = CopperfinProcessRunner.Run(startInfo, timeoutMilliseconds: 200);
+            Expect(result.Started, "process runner should start the timeout script");
+            Expect(result.TimedOut, "process runner should report timeout when the child outlives the configured limit");
+            Expect(result.StandardOutput.Contains("before-timeout-stdout", StringComparison.Ordinal),
+                "process runner should retain stdout produced before the timeout cut-off");
+            Expect(result.StandardError.Contains("before-timeout-stderr", StringComparison.Ordinal),
+                "process runner should retain stderr produced before the timeout cut-off");
+        }
+        finally
+        {
+            TryDelete(root);
         }
     }
 
@@ -1077,6 +1166,44 @@ internal static class Program
         Directory.CreateDirectory(root);
         File.WriteAllText(Path.Combine(root, "testapp.pjx"), string.Empty);
         return root;
+    }
+
+    private static ProcessStartInfo CreateTestScriptStartInfo(
+        string root,
+        string name,
+        IReadOnlyList<string> windowsBody,
+        IReadOnlyList<string> unixBody)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            var scriptPath = Path.Combine(root, name + ".cmd");
+            File.WriteAllLines(scriptPath, windowsBody);
+            return new ProcessStartInfo
+            {
+                FileName = Environment.GetEnvironmentVariable("COMSPEC") ?? "cmd.exe",
+                Arguments = $"/d /c \"\"{scriptPath}\"\"",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            };
+        }
+
+        var unixScriptPath = Path.Combine(root, name + ".sh");
+        File.WriteAllLines(unixScriptPath, unixBody);
+        File.SetUnixFileMode(
+            unixScriptPath,
+            UnixFileMode.UserRead |
+            UnixFileMode.UserWrite |
+            UnixFileMode.UserExecute);
+        return new ProcessStartInfo
+        {
+            FileName = unixScriptPath,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
     }
 
     private static void TryDelete(string root)

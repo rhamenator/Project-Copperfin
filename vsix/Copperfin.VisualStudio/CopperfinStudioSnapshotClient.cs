@@ -55,8 +55,8 @@ internal static class CopperfinStudioSnapshotClient
             redirectOutput: true,
             createNoWindow: true);
 
-        using var process = new Process { StartInfo = startInfo };
-        if (!process.Start())
+        var processResult = CopperfinProcessRunner.Run(startInfo, timeoutMilliseconds: 15000);
+        if (!processResult.Started)
         {
             return new StudioHostCommandResult
             {
@@ -65,20 +65,8 @@ internal static class CopperfinStudioSnapshotClient
             };
         }
 
-        var stdout = process.StandardOutput.ReadToEnd();
-        var stderr = process.StandardError.ReadToEnd();
-        process.WaitForExit(15000);
-
-        if (!process.HasExited)
+        if (processResult.TimedOut)
         {
-            try
-            {
-                process.Kill();
-            }
-            catch (InvalidOperationException)
-            {
-            }
-
             return new StudioHostCommandResult
             {
                 Success = false,
@@ -86,19 +74,21 @@ internal static class CopperfinStudioSnapshotClient
             };
         }
 
-        if (process.ExitCode != 0)
+        if (processResult.ExitCode != 0)
         {
             return new StudioHostCommandResult
             {
                 Success = false,
-                Error = string.IsNullOrWhiteSpace(stderr) ? stdout.Trim() : stderr.Trim()
+                Error = string.IsNullOrWhiteSpace(processResult.StandardError)
+                    ? processResult.StandardOutput.Trim()
+                    : processResult.StandardError.Trim()
             };
         }
 
         return new StudioHostCommandResult
         {
             Success = true,
-            Stdout = stdout
+            Stdout = processResult.StandardOutput
         };
     }
 
