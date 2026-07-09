@@ -39,4 +39,31 @@ inline std::string read_environment_variable_or_empty(std::string_view name) {
     return value.has_value() ? *value : std::string{};
 }
 
+inline bool write_environment_variable(std::string_view name, std::string_view value) {
+    if (name.empty()) {
+        return false;
+    }
+
+    const std::string key(name);
+    const std::string assigned_value(value);
+#if defined(_WIN32)
+    return _putenv_s(key.c_str(), assigned_value.c_str()) == 0;
+#else
+    return setenv(key.c_str(), assigned_value.c_str(), 1) == 0;
+#endif
+}
+
+inline bool clear_environment_variable(std::string_view name) {
+    if (name.empty()) {
+        return false;
+    }
+
+    const std::string key(name);
+#if defined(_WIN32)
+    return _putenv_s(key.c_str(), "") == 0;
+#else
+    return unsetenv(key.c_str()) == 0;
+#endif
+}
+
 }  // namespace copperfin::platform

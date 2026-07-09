@@ -3599,6 +3599,10 @@ copperfin_add_test(test_platform_models "cf_security;cf_platform_profile"
     test_platform_models.cpp
 )
 
+copperfin_add_test(test_platform_environment cf_localization
+    test_platform_environment.cpp
+)
+
 copperfin_add_test(test_query_translator cf_platform_profile
     test_query_translator.cpp
 )

@@ -5,6 +5,8 @@
 #ifndef COPPERFIN_TEST_ENVIRONMENT_SUPPORT_H
 #define COPPERFIN_TEST_ENVIRONMENT_SUPPORT_H
 
+#include "copperfin/platform/environment.h"
+
 #include <cstdlib>
 #include <optional>
 #include <string>
@@ -13,22 +15,7 @@
 namespace copperfin::test_support {
 
 inline std::optional<std::string> getenv_optional(const std::string& name) {
-#if defined(_WIN32)
-    char* raw = nullptr;
-    std::size_t length = 0;
-    if (_dupenv_s(&raw, &length, name.c_str()) != 0 || raw == nullptr) {
-        return std::nullopt;
-    }
-    std::string value(raw);
-    std::free(raw);
-    return value;
-#else
-    const char* raw = std::getenv(name.c_str());
-    if (raw == nullptr) {
-        return std::nullopt;
-    }
-    return std::string(raw);
-#endif
+    return copperfin::platform::read_environment_variable(name);
 }
 
 inline std::string getenv_value(const std::string& name) {
@@ -37,19 +24,11 @@ inline std::string getenv_value(const std::string& name) {
 }
 
 inline void set_env_value(const std::string& name, const std::string& value, bool has_value) {
-#if defined(_WIN32)
     if (has_value) {
-        _putenv_s(name.c_str(), value.c_str());
+        (void)copperfin::platform::write_environment_variable(name, value);
     } else {
-        _putenv_s(name.c_str(), "");
+        (void)copperfin::platform::clear_environment_variable(name);
     }
-#else
-    if (has_value) {
-        setenv(name.c_str(), value.c_str(), 1);
-    } else {
-        unsetenv(name.c_str());
-    }
-#endif
 }
 
 struct ScopedEnvironmentValue {
