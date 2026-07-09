@@ -530,7 +530,7 @@ bool is_prg_path(const std::string& value) {
 }
 
 bool is_xasset_path(const std::string& value) {
-    const std::string extension = trim_copy(std::filesystem::path(value).extension().string());
+    const std::string extension = trim_copy(lowercase_copy(std::filesystem::path(value).extension().string()));
     return extension == ".scx" ||
         extension == ".vcx" ||
         extension == ".frx" ||

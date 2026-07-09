@@ -880,6 +880,85 @@ void test_startup_prg_extension_matching_is_case_insensitive() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_xasset_startup_extension_matching_is_case_insensitive() {
+    namespace fs = std::filesystem;
+
+    struct StartupCase {
+        std::string startup_name;
+        std::string startup_type_title;
+        std::string project_title;
+    };
+
+    const std::vector<StartupCase> cases{
+        {"FORM.SCX", "Form", "UppercaseFormStartup"},
+        {"widget.VcX", "Class Library", "MixedCaseClassLibraryStartup"},
+        {"REPORT.FRX", "Report", "UppercaseReportStartup"},
+        {"labels.LbX", "Label", "MixedCaseLabelStartup"},
+        {"Menu.MnX", "Menu", "MixedCaseMenuStartup"}
+    };
+
+    for (std::size_t index = 0; index < cases.size(); ++index) {
+        const auto& startup_case = cases[index];
+        const fs::path temp_root =
+            fs::temp_directory_path() / ("copperfin_runtime_pipeline_casefold_xasset_" + std::to_string(index));
+        const fs::path project_dir = temp_root / "project";
+        const fs::path output_dir = temp_root / "output";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(project_dir);
+
+        write_text(project_dir / startup_case.startup_name, "RETURN\n");
+
+        copperfin::studio::StudioDocumentModel document;
+        document.path = (project_dir / (startup_case.project_title + ".pjx")).string();
+
+        copperfin::studio::StudioProjectWorkspace workspace;
+        workspace.available = true;
+        workspace.project_title = startup_case.project_title;
+        workspace.home_directory = project_dir.string();
+        workspace.build_plan.available = true;
+        workspace.build_plan.can_build = true;
+        workspace.build_plan.project_title = startup_case.project_title;
+        workspace.build_plan.output_path = (output_dir / (startup_case.project_title + ".exe")).string();
+        workspace.build_plan.startup_item = startup_case.startup_name;
+        workspace.build_plan.startup_record_index = 1U;
+        workspace.entries = {
+            {.record_index = 1U,
+             .name = startup_case.startup_name,
+             .relative_path = startup_case.startup_name,
+             .type_title = startup_case.startup_type_title,
+             .excluded = true}
+        };
+
+        const auto plan = copperfin::runtime::create_runtime_package_plan(
+            document,
+            workspace,
+            copperfin::security::default_native_security_profile(),
+            copperfin::platform::default_extensibility_profile(),
+            output_dir.string(),
+            copperfin::runtime::BuildConfiguration::debug,
+            false,
+            false);
+
+        expect(plan.ok, startup_case.startup_type_title + " mixed-case xasset startup plan should be created");
+        expect(plan.debug_plan.supports_breakpoints,
+               startup_case.startup_type_title + " mixed-case xasset startup should enable breakpoint support");
+        expect(plan.debug_plan.supports_step_debugging,
+               startup_case.startup_type_title + " mixed-case xasset startup should enable step-debug support");
+
+        const std::string debug_manifest = copperfin::runtime::build_debug_manifest_text(
+            plan,
+            copperfin::security::default_native_security_profile(),
+            copperfin::platform::default_extensibility_profile());
+        expect(manifest_value_for_key(debug_manifest, "supports_breakpoints") == "true",
+               startup_case.startup_type_title + " mixed-case xasset debug manifest should preserve breakpoint support");
+        expect(manifest_value_for_key(debug_manifest, "supports_step_debugging") == "true",
+               startup_case.startup_type_title + " mixed-case xasset debug manifest should preserve step-debugging support");
+
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_startup_asset_is_staged_even_when_marked_excluded() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_startup_excluded_stage";

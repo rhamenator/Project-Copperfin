@@ -34,6 +34,7 @@ int main() {
     test_runtime_security_role_environment_fidelity();
     test_materialize_fails_before_asset_staging_when_runtime_host_source_is_invalid();
     test_startup_prg_extension_matching_is_case_insensitive();
+    test_xasset_startup_extension_matching_is_case_insensitive();
     test_startup_asset_is_staged_even_when_marked_excluded();
     test_missing_startup_record_surfaces_plan_warnings_and_disables_debug_startup_support();
     test_manifest_asset_lines_include_copy_state_contract();
