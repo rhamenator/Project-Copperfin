@@ -189,6 +189,22 @@ std::vector<std::uint8_t> make_synthetic_cdx_bytes_with_descriptive_tag_name() {
     return bytes;
 }
 
+std::vector<std::uint8_t> make_synthetic_cdx_bytes_with_plain_field_expression() {
+    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
+    bytes[0] = 0x00U;
+    bytes[1] = 0x04U;
+    bytes[12] = 0x0AU;
+    bytes[14] = 0xE0U;
+    bytes[15] = 0x01U;
+    bytes[1024U] = 0x03U;
+    write_le_u16(bytes, 1026U, 1U);
+    write_le_u32(bytes, 1028U, 4U * 512U);
+
+    write_ascii(bytes, (3U * 512U) - 10U, "NAME");
+    write_ascii(bytes, (4U * 512U) + 24U, "NAME");
+    return bytes;
+}
+
 std::vector<std::uint8_t> make_synthetic_mdx_bytes(bool include_decoy_text) {
     constexpr std::uint16_t block_size = 512U;
     std::vector<std::uint8_t> bytes(6U * block_size, 0U);
@@ -521,6 +537,23 @@ void test_parse_index_probe_for_cdx_binds_descriptive_tag_names_from_tag_page_hi
         expect(result.probe.tags.front().tag_page_offset_hint == (4U * 512U), "descriptive-tag CDX probe should preserve the stored tag page hint");
         expect(result.probe.tags.front().normalization_hint == "upper", "descriptive-tag CDX probe should still derive normalization hints");
         expect(result.probe.tags.front().collation_hint == "case-folded", "descriptive-tag CDX probe should still derive collation hints");
+    }
+}
+
+void test_parse_index_probe_for_cdx_preserves_plain_field_expression_tags() {
+    const auto bytes = make_synthetic_cdx_bytes_with_plain_field_expression();
+
+    const auto result = copperfin::vfp::parse_index_probe(bytes, 16U * 512U, copperfin::vfp::IndexKind::cdx);
+    expect(result.ok, "parse_index_probe should succeed for a plausible CDX with a plain field-name key expression");
+    expect(result.probe.tags.size() == 1U, "plain-field CDX probe should expose the single stored tag");
+    if (!result.probe.tags.empty()) {
+        expect(result.probe.tags.front().name_hint == "NAME", "plain-field CDX probe should preserve the stored tag name");
+        expect(
+            result.probe.tags.front().key_expression_hint == "NAME",
+            "plain-field CDX probe should keep a direct field-name key expression instead of dropping it");
+        expect(
+            result.probe.tags.front().tag_page_offset_hint == (4U * 512U),
+            "plain-field CDX probe should preserve the stored tag page hint");
     }
 }
 
@@ -1681,6 +1714,7 @@ int main() {
     test_parse_index_probe_for_dcx();
     test_parse_index_probe_for_cdx_prefers_tag_page_local_expressions();
     test_parse_index_probe_for_cdx_binds_descriptive_tag_names_from_tag_page_hints();
+    test_parse_index_probe_for_cdx_preserves_plain_field_expression_tags();
     test_parse_index_probe_for_idx();
     test_parse_index_probe_for_ndx();
     test_parse_index_probe_for_ndx_surfaces_character_domain_without_named_collation();

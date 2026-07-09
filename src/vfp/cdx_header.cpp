@@ -73,6 +73,27 @@ std::string trim_copy(std::string value) {
     return value;
 }
 
+std::string read_ascii_hint(const std::vector<std::uint8_t>& bytes, std::size_t offset, std::size_t length) {
+    std::string value;
+    value.reserve(length);
+
+    for (std::size_t index = 0; index < length && (offset + index) < bytes.size(); ++index) {
+        const auto raw = static_cast<unsigned char>(bytes[offset + index]);
+        if (raw == 0U) {
+            break;
+        }
+        if (std::isprint(raw) != 0 || std::isspace(raw) != 0) {
+            value.push_back(static_cast<char>(raw));
+        }
+    }
+
+    while (!value.empty() && std::isspace(static_cast<unsigned char>(value.back())) != 0) {
+        value.pop_back();
+    }
+
+    return value;
+}
+
 std::string lowercase_copy(std::string value) {
     std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
         return static_cast<char>(std::tolower(ch));
@@ -182,6 +203,24 @@ bool looks_like_expression_candidate(const std::string& text) {
     return has_parens || (has_lowercase && (has_underscore || has_operator));
 }
 
+bool looks_like_plain_identifier_expression_candidate(const std::string& text) {
+    if (text.empty() || text.size() > 96U) {
+        return false;
+    }
+
+    bool saw_alpha = false;
+    for (char ch : text) {
+        if (!is_identifier_char(ch)) {
+            return false;
+        }
+        if (std::isalpha(static_cast<unsigned char>(ch)) != 0) {
+            saw_alpha = true;
+        }
+    }
+
+    return saw_alpha;
+}
+
 bool looks_like_for_expression_candidate(const std::string& text) {
     if (text.empty()) {
         return false;
@@ -257,6 +296,30 @@ std::vector<PrintableRun> collect_expression_runs(
     for (const PrintableRun& run : collect_printable_runs(bytes, start, end)) {
         const std::string candidate = trim_copy(run.text);
         if (!looks_like_expression_candidate(candidate)) {
+            continue;
+        }
+
+        const std::string normalized = lowercase_copy(candidate);
+        if (!seen_expressions.insert(normalized).second) {
+            continue;
+        }
+
+        expressions.push_back({.offset = run.offset, .text = candidate});
+    }
+
+    return expressions;
+}
+
+std::vector<PrintableRun> collect_plain_identifier_expression_runs(
+    const std::vector<std::uint8_t>& bytes,
+    std::size_t start,
+    std::size_t end) {
+    std::vector<PrintableRun> expressions;
+    std::set<std::string> seen_expressions;
+
+    for (const PrintableRun& run : collect_printable_runs(bytes, start, end)) {
+        const std::string candidate = trim_copy(run.text);
+        if (!looks_like_plain_identifier_expression_candidate(candidate)) {
             continue;
         }
 
@@ -473,14 +536,18 @@ std::vector<PrintableRun> collect_local_expression_runs(
     if (tag.tag_page_offset_hint != 0U) {
         const std::size_t start = static_cast<std::size_t>(tag.tag_page_offset_hint);
         const std::size_t end = std::min(bytes.size(), start + (page_size * 2U));
-        return collect_expression_runs(bytes, start, end);
+        return merge_expression_runs(
+            collect_expression_runs(bytes, start, end),
+            collect_plain_identifier_expression_runs(bytes, start, end));
     }
 
     if (tag.name_offset_hint != 0U) {
         const std::size_t page_start =
             (static_cast<std::size_t>(tag.name_offset_hint) / page_size) * page_size;
         const std::size_t end = std::min(bytes.size(), page_start + (page_size * 2U));
-        return collect_expression_runs(bytes, page_start, end);
+        return merge_expression_runs(
+            collect_expression_runs(bytes, page_start, end),
+            collect_plain_identifier_expression_runs(bytes, page_start, end));
     }
 
     return {};
@@ -508,6 +575,24 @@ std::vector<CdxTagDescriptor> extract_tag_descriptors(
     std::set<std::size_t> used_expression_offsets;
 
     for (CdxTagDescriptor& tag : tags) {
+        if (tag.tag_page_offset_hint != 0U) {
+            const std::size_t key_expression_offset = static_cast<std::size_t>(tag.tag_page_offset_hint) + 24U;
+            if (key_expression_offset < bytes.size()) {
+                const std::string direct_expression = trim_copy(read_ascii_hint(
+                    bytes,
+                    key_expression_offset,
+                    std::min<std::size_t>(220U, bytes.size() - key_expression_offset)));
+                if (!direct_expression.empty() &&
+                    (looks_like_expression_candidate(direct_expression) ||
+                     looks_like_plain_identifier_expression_candidate(direct_expression))) {
+                    tag.key_expression_hint = direct_expression;
+                    tag.key_expression_offset_hint = static_cast<std::uint32_t>(key_expression_offset);
+                    used_expression_offsets.insert(key_expression_offset);
+                    continue;
+                }
+            }
+        }
+
         int best_score = 0;
         const std::vector<PrintableRun> local_expressions = collect_local_expression_runs(bytes, tag, page_size);
         PrintableRun best_expression;
