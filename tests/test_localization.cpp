@@ -233,6 +233,31 @@ void test_catalog_root_resolution_searches_parent_directories() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_catalog_root_resolution_finds_repo_build_output_layout_from_executable_path() {
+    namespace fs = std::filesystem;
+    ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR");
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_executable_catalog_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root / "resources" / "locales");
+    seed_test_catalogs(temp_root / "resources" / "locales");
+
+    const fs::path executable_path = temp_root / "build" / "Release" / "copperfin_runtime_host";
+    fs::create_directories(executable_path.parent_path());
+    write_text(executable_path, "");
+
+    const fs::path resolved_root = copperfin::localization::resolve_catalog_root(executable_path);
+    const auto catalog = copperfin::localization::load_catalogs(resolved_root, "en-US");
+
+    expect(
+        fs::equivalent(resolved_root, temp_root / "resources" / "locales") &&
+            catalog.translate("Command.Inspect") == "Inspect",
+        "#3645: catalog root resolution should find repo build-output resources from the executable path");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_parser_behavior_remains_locale_invariant() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_parser_invariant_tests";
@@ -3027,6 +3052,7 @@ int main(int argc, char** argv) {
     test_catalog_json_unicode_escapes_support_surrogate_pairs();
     test_machine_contract_fields_remain_invariant();
     test_catalog_root_resolution_searches_parent_directories();
+    test_catalog_root_resolution_finds_repo_build_output_layout_from_executable_path();
     test_parser_behavior_remains_locale_invariant();
     test_runtime_session_diagnostics_route_through_catalog();
     test_runtime_cursor_diagnostics_route_through_catalog();
