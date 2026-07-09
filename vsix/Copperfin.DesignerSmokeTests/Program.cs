@@ -465,6 +465,7 @@ internal static class Program
         SmokeAssetEditorDeletedLabelObjectPropertyGridHostUpdate();
         SmokeReportObjectPropertyGridLocalization();
         SmokeSharedDesignerSelectionLocalization();
+        SmokeLocalizedCodeReferenceKindLabels();
         SmokeLocalizedReportObjectKindSubtitles();
         SmokeLocalizedReportObjectFallbackTitles();
         SmokeReportSelectionPreservedAcrossExplorerRefresh();
@@ -5712,6 +5713,53 @@ internal static class Program
                InvokeAssetEditorString(portugueseControl, "BuildOpenProjectFirstMessage").IndexOf("Abra primeiro um projeto PJX", StringComparison.Ordinal) >= 0 &&
                InvokeAssetEditorString(portugueseControl, "BuildWorkflowLauncherMessage", "Compilação pronta.", @"C:\tmp\run.exe").IndexOf("Inicializador: C:\\tmp\\run.exe", StringComparison.Ordinal) >= 0,
             "Portuguese launch and workflow dialog text should localize static messages");
+    }
+
+    private static void SmokeLocalizedCodeReferenceKindLabels()
+    {
+        var insights = new CopperfinProjectInsights
+        {
+            ProjectRoot = @"C:\src\sample",
+            DefinedSymbols = new List<CopperfinProjectCodeSymbol>
+            {
+                new() { Kind = "class", Name = "app.customer.editor", FilePath = @"C:\src\sample\editor.prg", Line = 3 },
+                new() { Kind = "definition", Name = "SaveOrder", FilePath = @"C:\src\sample\editor.prg", Line = 19 }
+            },
+            RuntimeReferences = new List<CopperfinProjectCodeSymbol>
+            {
+                new() { Kind = "reference", Name = "SaveOrder", FilePath = @"C:\src\sample\main.prg", Line = 41 },
+                new() { Kind = "call.member", Name = "oToolbar.SaveOrder", FilePath = @"C:\src\sample\main.prg", Line = 42 }
+            }
+        };
+
+        using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
+        var spanishSummary = InvokeAssetEditorString(spanishControl, "BuildCodeReferenceSummary", insights);
+        Expect(spanishSummary.IndexOf("[Clase] app.customer.editor", StringComparison.Ordinal) >= 0 &&
+               spanishSummary.IndexOf("[Definición] SaveOrder", StringComparison.Ordinal) >= 0 &&
+               spanishSummary.IndexOf("[Referencia] SaveOrder", StringComparison.Ordinal) >= 0 &&
+               spanishSummary.IndexOf("[Llamada a miembro] oToolbar.SaveOrder", StringComparison.Ordinal) >= 0,
+            "Spanish code-reference summaries should localize displayed symbol kinds without changing symbol names");
+
+        using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
+        var portugueseSummary = InvokeAssetEditorString(portugueseControl, "BuildCodeReferenceSummary", insights);
+        Expect(portugueseSummary.IndexOf("[Classe] app.customer.editor", StringComparison.Ordinal) >= 0 &&
+               portugueseSummary.IndexOf("[Definição] SaveOrder", StringComparison.Ordinal) >= 0 &&
+               portugueseSummary.IndexOf("[Referência] SaveOrder", StringComparison.Ordinal) >= 0 &&
+               portugueseSummary.IndexOf("[Chamada de membro] oToolbar.SaveOrder", StringComparison.Ordinal) >= 0,
+            "Portuguese code-reference summaries should localize displayed symbol kinds without changing symbol names");
+
+        var pseudoLocalization = new CopperfinLocalization("qps-ploc");
+        using var pseudoControl = new CopperfinAssetEditorControl(pseudoLocalization);
+        var pseudoSummary = InvokeAssetEditorString(pseudoControl, "BuildCodeReferenceSummary", insights);
+        Expect(pseudoSummary.IndexOf(pseudoLocalization.Text("AssetEditor.Summary.SymbolKind.Class"), StringComparison.Ordinal) >= 0 &&
+               pseudoSummary.IndexOf(pseudoLocalization.Text("AssetEditor.Summary.SymbolKind.Definition"), StringComparison.Ordinal) >= 0 &&
+               pseudoSummary.IndexOf(pseudoLocalization.Text("AssetEditor.Summary.SymbolKind.Reference"), StringComparison.Ordinal) >= 0 &&
+               pseudoSummary.IndexOf(pseudoLocalization.Text("AssetEditor.Summary.SymbolKind.MemberCall"), StringComparison.Ordinal) >= 0 &&
+               pseudoSummary.IndexOf("[class]", StringComparison.Ordinal) < 0 &&
+               pseudoSummary.IndexOf("[definition]", StringComparison.Ordinal) < 0 &&
+               pseudoSummary.IndexOf("[reference]", StringComparison.Ordinal) < 0 &&
+               pseudoSummary.IndexOf("[call.member]", StringComparison.Ordinal) < 0,
+            "Pseudo-localized code-reference summaries should route displayed symbol kinds through the shared catalog instead of leaking raw tokens");
     }
 
     private static void SmokeReportSectionGroupingExplorerTitles()

@@ -2977,6 +2977,34 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         return objectKind.Replace('_', ' ');
     }
 
+    private string BuildCodeSymbolKindDisplayText(string symbolKind)
+    {
+        var key = symbolKind switch
+        {
+            "class" => "AssetEditor.Summary.SymbolKind.Class",
+            "procedure" => "AssetEditor.Summary.SymbolKind.Procedure",
+            "function" => "AssetEditor.Summary.SymbolKind.Function",
+            "define" => "AssetEditor.Summary.SymbolKind.Define",
+            "method" => "AssetEditor.Summary.SymbolKind.Method",
+            "do form" => "AssetEditor.Summary.SymbolKind.DoForm",
+            "report form" => "AssetEditor.Summary.SymbolKind.ReportForm",
+            "label form" => "AssetEditor.Summary.SymbolKind.LabelForm",
+            "do" => "AssetEditor.Summary.SymbolKind.Do",
+            "call" => "AssetEditor.Summary.SymbolKind.Call",
+            "call.member" => "AssetEditor.Summary.SymbolKind.MemberCall",
+            "definition" => "AssetEditor.Summary.SymbolKind.Definition",
+            "reference" => "AssetEditor.Summary.SymbolKind.Reference",
+            _ => string.Empty
+        };
+
+        if (!string.IsNullOrWhiteSpace(key))
+        {
+            return L(key);
+        }
+
+        return symbolKind;
+    }
+
     private string BuildFallbackObjectTitle(int recordIndex)
     {
         return F("AssetEditor.ObjectFallbackTitle", recordIndex);
@@ -3249,7 +3277,13 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             foreach (var symbol in insights.DefinedSymbols.Take(40))
             {
-                summary.AppendLine(F("AssetEditor.Summary.SymbolLine", symbol.Kind, symbol.Name, Path.GetFileName(symbol.FilePath), symbol.Line));
+                summary.AppendLine(
+                    F(
+                        "AssetEditor.Summary.SymbolLine",
+                        BuildCodeSymbolKindDisplayText(symbol.Kind),
+                        symbol.Name,
+                        Path.GetFileName(symbol.FilePath),
+                        symbol.Line));
             }
             if (insights.DefinedSymbols.Count > 40)
             {
@@ -3267,7 +3301,13 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             foreach (var symbol in insights.RuntimeReferences.Take(40))
             {
-                summary.AppendLine(F("AssetEditor.Summary.SymbolLine", symbol.Kind, symbol.Name, Path.GetFileName(symbol.FilePath), symbol.Line));
+                summary.AppendLine(
+                    F(
+                        "AssetEditor.Summary.SymbolLine",
+                        BuildCodeSymbolKindDisplayText(symbol.Kind),
+                        symbol.Name,
+                        Path.GetFileName(symbol.FilePath),
+                        symbol.Line));
             }
             if (insights.RuntimeReferences.Count > 40)
             {
@@ -3440,7 +3480,11 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             summary.AppendLine(L("AssetEditor.Summary.HighValueShortcuts"));
             foreach (var reference in insights.RuntimeReferences.Take(6))
             {
-                summary.AppendLine(F("AssetEditor.Summary.ShortcutLine", reference.Kind, reference.Name));
+                summary.AppendLine(
+                    F(
+                        "AssetEditor.Summary.ShortcutLine",
+                        BuildCodeSymbolKindDisplayText(reference.Kind),
+                        reference.Name));
             }
         }
 
