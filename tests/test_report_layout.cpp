@@ -1420,6 +1420,72 @@ void test_build_report_layout_preserves_live_objects_in_deleted_sections() {
     }
 }
 
+void test_build_report_layout_keeps_tall_objects_in_the_section_where_they_begin() {
+    copperfin::studio::StudioDocumentModel document;
+    document.display_name = "tall_object.frx";
+    document.kind = copperfin::studio::StudioAssetKind::report;
+    document.table_preview_available = true;
+
+    document.table_preview.records = {
+        {
+            .record_index = 0U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "1"),
+                value("OBJCODE", "53")
+            }
+        },
+        {
+            .record_index = 1U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "1"),
+                value("VPOS", "0"),
+                value("HEIGHT", "100")
+            }
+        },
+        {
+            .record_index = 2U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "4"),
+                value("VPOS", "100"),
+                value("HEIGHT", "100")
+            }
+        },
+        {
+            .record_index = 3U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "5"),
+                value("EXPR", "\"Tall object\""),
+                value("HPOS", "25"),
+                value("VPOS", "50"),
+                value("WIDTH", "75"),
+                value("HEIGHT", "200")
+            }
+        }
+    };
+
+    const auto layout = copperfin::studio::build_report_layout(document);
+    expect(layout.available, "#3671: report layout should stay available for tall-object section tests");
+    expect(layout.sections.size() == 2U, "#3671: tall-object section tests should keep both live sections");
+    expect(layout.sections[0].objects.size() == 1U,
+           "#3671: a tall object should remain attached to the section containing its top edge");
+    if (!layout.sections[0].objects.empty()) {
+        expect(layout.sections[0].objects[0].containing_section_id == "page_header_1",
+               "#3671: tall objects should keep the containing section where their top edge begins");
+        expect(layout.sections[0].objects[0].section_relative_top == 50,
+               "#3671: tall objects should keep a non-negative top relative to their starting section");
+        expect(layout.sections[0].objects[0].section_relative_bottom == 250,
+               "#3671: tall objects should measure their bottom relative to the section where they start");
+    }
+    expect(layout.sections[1].objects.empty(),
+           "#3671: later overlapping sections should not steal tall objects whose top edge begins earlier");
+}
+
 void test_build_report_layout_summarizes_nested_mixed_state_groupings() {
     copperfin::studio::StudioDocumentModel document;
     document.display_name = "nested_deleted_grouped.frx";
@@ -1806,6 +1872,7 @@ int main() {
     test_build_report_layout_preserves_group_pairing_when_group_header_moves_below_footer();
     test_build_report_layout_counts_deleted_objects_per_section();
     test_build_report_layout_preserves_live_objects_in_deleted_sections();
+    test_build_report_layout_keeps_tall_objects_in_the_section_where_they_begin();
     test_build_report_layout_summarizes_nested_mixed_state_groupings();
     test_build_report_layout_reports_missing_title_provenance_when_unavailable();
     test_build_report_layout_includes_direct_orientation_settings();

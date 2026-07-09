@@ -16,6 +16,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_report_section_heights_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_section_tops_by_record_selection(argv[1]);
     test_studio_host_json_preserves_realistic_zero_top_section_object_membership_on_top_update(argv[1]);
+    test_studio_host_json_preserves_tall_object_membership_on_section_top_update(argv[1]);
     test_studio_host_json_clears_report_section_tops_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_section_heights_and_tops_by_stable_selection(argv[1]);
     test_studio_host_json_clears_report_section_heights_and_tops_by_stable_selection(argv[1]);

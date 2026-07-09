@@ -419,6 +419,14 @@ std::size_t find_section_index(
 
             const auto& best_section = sections[best_index];
             const int best_bottom = best_section.top + std::max(best_section.height, 1);
+            const bool best_begins_inside = top >= best_section.top && top < best_bottom;
+            if (begins_inside != best_begins_inside) {
+                if (begins_inside) {
+                    best_index = index;
+                }
+                continue;
+            }
+
             if (section.top > best_section.top ||
                 (section.top == best_section.top && section_bottom > best_bottom) ||
                 (section.top == best_section.top && section_bottom == best_bottom &&

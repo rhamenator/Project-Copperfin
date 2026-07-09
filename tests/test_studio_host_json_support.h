@@ -1297,6 +1297,8 @@ void test_studio_host_json_clears_deleted_report_section_tops_by_record_selectio
 void test_studio_host_json_clears_report_section_tops_by_record_selection(const std::string& studio_host_path);
 void test_studio_host_json_preserves_realistic_zero_top_section_object_membership_on_top_update(
     const std::string& studio_host_path);
+void test_studio_host_json_preserves_tall_object_membership_on_section_top_update(
+    const std::string& studio_host_path);
 void test_studio_host_json_updates_report_section_heights_and_tops_by_stable_selection(
     const std::string& studio_host_path);
 void test_studio_host_json_clears_report_section_heights_and_tops_by_stable_selection(

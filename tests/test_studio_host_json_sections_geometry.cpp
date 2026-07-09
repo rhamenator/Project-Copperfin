@@ -5,6 +5,33 @@
 #include "test_studio_host_json_support.h"
 
 namespace cf_test_studio_host_json {
+namespace {
+
+void write_synthetic_report_table_for_tall_object_section_membership_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 24U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "", "", "", "", "", ""},
+        {"9", "1", "", "", "0", "", "100", ""},
+        {"9", "4", "", "", "100", "", "100", ""},
+        {"5", "", "\"Tall object\"", "25", "50", "75", "200", "tall-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#3671: tall-object section-membership fixture should be created");
+}
+
+}  // namespace
+
 void test_studio_host_json_updates_report_section_heights_by_record_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -294,6 +321,91 @@ void test_studio_host_json_preserves_realistic_zero_top_section_object_membershi
     run_zero_top_reflow_update(
         temp_root / "zero_top_section_reflow.lbx",
         "zero_top_section_reflow.lbx",
+        "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_preserves_tall_object_membership_on_section_top_update(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_tall_object_section_membership_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+
+    const auto run_tall_object_update = [&](const fs::path& asset_path,
+                                            const std::string& title,
+                                            const std::string& label) {
+        write_synthetic_report_table_for_tall_object_section_membership_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--record", "1",
+                "--property-name", "VPOS",
+                "--property-value", "25",
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " tall-object section update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " tall-object section update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#3671: tall-object section top update should exit successfully");
+        const auto section_top = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 1U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "VPOS"
+        });
+        expect(section_top.ok && section_top.exists && section_top.value == "25",
+               "#3671: tall-object section top update should persist the section VPOS");
+        const auto object_top = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 3U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "VPOS"
+        });
+        expect(object_top.ok && object_top.exists && object_top.value == "75",
+               "#3671: moving a section should carry tall objects whose top edge starts inside that section");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#3671: tall-object section top update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#3671: tall-object label section top update should retain label identity");
+        }
+        expect_contains(update_process.stdout_text, "\"containingSectionId\": \"page_header_1\"",
+                        "#3671: refreshed JSON should keep tall objects in the section where their top edge begins");
+        expect_contains(update_process.stdout_text, "\"sectionRelativeTop\": 50",
+                        "#3671: refreshed JSON should preserve tall-object top offsets relative to the starting section");
+        expect_contains(update_process.stdout_text, "\"sectionRelativeBottom\": 250",
+                        "#3671: refreshed JSON should preserve tall-object bottom offsets relative to the starting section");
+        expect_contains(update_process.stdout_text, "\"top\": 75",
+                        "#3671: refreshed JSON should show the moved tall-object absolute top");
+    };
+
+    run_tall_object_update(
+        temp_root / "tall_object_section_membership.frx",
+        "tall_object_section_membership.frx",
+        "report");
+    run_tall_object_update(
+        temp_root / "tall_object_section_membership.lbx",
+        "tall_object_section_membership.lbx",
         "label");
 
     if (failures == 0) {
