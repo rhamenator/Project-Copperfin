@@ -2077,6 +2077,22 @@ internal static class Program
                     MemoBlockNumber = 0
                 });
             SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
+                propertyName: "BOTMARGIN",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: 20,
+                expectedUpdatedSelectionValue: "20",
+                expectedSectionCount: 5,
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "BOTMARGIN",
+                    Value = "20",
+                    RecordIndex = 0,
+                    FieldIndex = 63,
+                    MemoBlockNumber = 0
+                });
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
                 propertyName: "TOPMARGIN",
                 expectedOriginalSelectionValue: string.Empty,
@@ -2120,6 +2136,22 @@ internal static class Program
                 {
                     Name = "BOTMARGIN",
                     Value = "9",
+                    RecordIndex = 0,
+                    FieldIndex = 63,
+                    MemoBlockNumber = 0
+                });
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
+                propertyName: "BOTMARGIN",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: 20,
+                expectedUpdatedSelectionValue: "20",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "BOTMARGIN",
+                    Value = "20",
                     RecordIndex = 0,
                     FieldIndex = 63,
                     MemoBlockNumber = 0
