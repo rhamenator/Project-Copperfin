@@ -2940,6 +2940,8 @@ namespace copperfin::runtime
         struct QueryPlan
         {
             std::string source_designator;
+            std::string joined_source_designator;
+            std::string join_on_expression;
             std::vector<std::string> projection_expressions;
             std::string where_expression;
             std::vector<QueryOrderExpression> order_expressions;
@@ -3129,9 +3131,47 @@ namespace copperfin::runtime
                 return false;
             }
 
-            if (from_clause.find_first_of(" ,") != std::string::npos)
+            const std::string upper_from_clause = uppercase_copy(from_clause);
+            std::string primary_source_designator;
+            std::string joined_source_designator;
+            std::string join_on_expression;
+            if (const std::size_t join_position =
+                    find_top_level_keyword(upper_from_clause, 0U, "JOIN");
+                join_position != std::string::npos)
             {
-                return false;
+                const std::size_t after_join = join_position + 4U;
+                const std::size_t on_position =
+                    find_top_level_keyword(upper_from_clause, after_join, "ON");
+                if (on_position == std::string::npos)
+                {
+                    return false;
+                }
+
+                primary_source_designator =
+                    trim_copy(from_clause.substr(0U, join_position));
+                joined_source_designator = trim_copy(
+                    from_clause.substr(after_join, on_position - after_join));
+                join_on_expression =
+                    trim_copy(from_clause.substr(on_position + 2U));
+                if (primary_source_designator.empty() ||
+                    joined_source_designator.empty() ||
+                    join_on_expression.empty())
+                {
+                    return false;
+                }
+                if (primary_source_designator.find_first_of(" ,") != std::string::npos ||
+                    joined_source_designator.find_first_of(" ,") != std::string::npos)
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                if (from_clause.find_first_of(" ,") != std::string::npos)
+                {
+                    return false;
+                }
+                primary_source_designator = from_clause;
             }
 
             std::vector<std::string> projection_expressions;
@@ -3205,7 +3245,9 @@ namespace copperfin::runtime
                 }
             }
 
-            plan.source_designator = from_clause;
+            plan.source_designator = std::move(primary_source_designator);
+            plan.joined_source_designator = std::move(joined_source_designator);
+            plan.join_on_expression = std::move(join_on_expression);
             plan.projection_expressions = std::move(projection_expressions);
             plan.where_expression = std::move(where_expression);
             plan.order_expressions = std::move(order_expressions);
@@ -3214,6 +3256,7 @@ namespace copperfin::runtime
 
         const auto build_rows_from_query_plan =
             [&](CursorState &cursor,
+                CursorState *joined_cursor,
                 const QueryPlan &plan,
                 std::vector<std::vector<PrgValue>> &rows)
         {
@@ -3231,6 +3274,10 @@ namespace copperfin::runtime
             };
 
             const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
+            const std::optional<CursorPositionSnapshot> joined_original =
+                joined_cursor == nullptr
+                    ? std::nullopt
+                    : std::optional<CursorPositionSnapshot>(capture_cursor_snapshot(*joined_cursor));
             std::vector<MaterializedQueryRow> materialized_rows;
             materialized_rows.reserve(cursor.record_count);
 
@@ -3242,43 +3289,80 @@ namespace copperfin::runtime
                     continue;
                 }
 
-                if (!plan.where_expression.empty() &&
-                    !value_as_bool(evaluate_expression(plan.where_expression, frame, &cursor)))
-                {
-                    continue;
-                }
-
                 const auto record = current_record(cursor);
                 if (!record.has_value())
                 {
                     continue;
                 }
 
-                MaterializedQueryRow query_row;
-                for (const std::string &projection_expression : plan.projection_expressions)
+                const auto materialize_current_row = [&]()
                 {
-                    if (projection_expression == "*")
+                    if (!plan.where_expression.empty() &&
+                        !value_as_bool(evaluate_expression(plan.where_expression, frame, &cursor)))
                     {
-                        for (const auto &field_value : record->values)
+                        return;
+                    }
+
+                    MaterializedQueryRow query_row;
+                    for (const std::string &projection_expression : plan.projection_expressions)
+                    {
+                        if (projection_expression == "*")
                         {
-                            query_row.values.push_back(record_value_to_prg_value(field_value));
+                            for (const auto &field_value : record->values)
+                            {
+                                query_row.values.push_back(record_value_to_prg_value(field_value));
+                            }
+                            continue;
                         }
+                        query_row.values.push_back(
+                            evaluate_expression(projection_expression, frame, &cursor));
+                    }
+
+                    for (const QueryOrderExpression &order_expression : plan.order_expressions)
+                    {
+                        query_row.order_keys.push_back(
+                            evaluate_expression(order_expression.expression, frame, &cursor));
+                    }
+
+                    materialized_rows.push_back(std::move(query_row));
+                };
+
+                if (joined_cursor == nullptr)
+                {
+                    materialize_current_row();
+                    continue;
+                }
+
+                for (std::size_t joined_recno = 1U;
+                     joined_recno <= joined_cursor->record_count;
+                     ++joined_recno)
+                {
+                    move_cursor_to(*joined_cursor, static_cast<long long>(joined_recno));
+                    if (!current_record_matches_visibility(*joined_cursor, frame, {}))
+                    {
                         continue;
                     }
-                    query_row.values.push_back(
-                        evaluate_expression(projection_expression, frame, &cursor));
-                }
 
-                for (const QueryOrderExpression &order_expression : plan.order_expressions)
-                {
-                    query_row.order_keys.push_back(
-                        evaluate_expression(order_expression.expression, frame, &cursor));
-                }
+                    if (!plan.join_on_expression.empty() &&
+                        !value_as_bool(evaluate_expression(plan.join_on_expression, frame, &cursor)))
+                    {
+                        continue;
+                    }
 
-                materialized_rows.push_back(std::move(query_row));
+                    if (!current_record(*joined_cursor).has_value())
+                    {
+                        continue;
+                    }
+
+                    materialize_current_row();
+                }
             }
 
             restore_cursor_snapshot(cursor, original);
+            if (joined_cursor != nullptr && joined_original.has_value())
+            {
+                restore_cursor_snapshot(*joined_cursor, *joined_original);
+            }
 
             std::stable_sort(
                 materialized_rows.begin(),
@@ -3510,7 +3594,17 @@ namespace copperfin::runtime
                 break;
             }
 
-            build_rows_from_query_plan(*cursor, plan, refreshed_rows);
+            CursorState *joined_cursor = nullptr;
+            if (!plan.joined_source_designator.empty())
+            {
+                joined_cursor = resolve_cursor_target(plan.joined_source_designator);
+                if (joined_cursor == nullptr)
+                {
+                    break;
+                }
+            }
+
+            build_rows_from_query_plan(*cursor, joined_cursor, plan, refreshed_rows);
             break;
         }
         default:
