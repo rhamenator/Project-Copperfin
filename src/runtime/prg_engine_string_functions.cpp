@@ -421,10 +421,10 @@ std::optional<PrgValue> evaluate_string_function(
         std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
         return make_string_value(std::move(s));
     }
-    if ((function == "ltrim" || function == "trim") && !arguments.empty()) {
+    if (function == "ltrim" && !arguments.empty()) {
         return make_string_value(ltrim_space_copy(value_as_string(arguments[0])));
     }
-    if (function == "rtrim" && !arguments.empty()) {
+    if ((function == "rtrim" || function == "trim") && !arguments.empty()) {
         return make_string_value(rtrim_space_copy(value_as_string(arguments[0])));
     }
     if (function == "space" && !arguments.empty()) {

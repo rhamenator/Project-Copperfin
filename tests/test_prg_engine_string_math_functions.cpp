@@ -40,6 +40,7 @@ namespace
             "repl = REPLICATE('ab', 3)\n"
             "trimmed = LTRIM('  hi  ')\n"
             "rtrimmed = RTRIM('  hi  ')\n"
+            "trim_basic = TRIM('  hi  ')\n"
             "ltrim_tab_pos = AT(CHR(9), LTRIM(' ' + CHR(9) + 'hi'))\n"
             "rtrim_lf_pos = AT(CHR(10), RTRIM('hi' + CHR(10) + ' '))\n"
             "alltrim_tab_pos = AT(CHR(9), ALLTRIM(' ' + CHR(9) + 'hi' + CHR(9) + ' '))\n"
@@ -222,6 +223,7 @@ namespace
         check("repl", "ababab");
         check("trimmed", "hi  ");
         check("rtrimmed", "  hi");
+        check("trim_basic", "  hi");
         check("ltrim_tab_pos", "1");
         check("rtrim_lf_pos", "3");
         check("alltrim_tab_pos", "1");
