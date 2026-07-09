@@ -68,6 +68,7 @@ void test_elseif_control_flow_executes_matching_branch();
 void test_with_endwith_resolves_leading_dot_member_access();
 void test_print_command_emits_event();
 void test_erase_copy_rename_file_commands();
+void test_rename_file_command_rejects_existing_destination();
 void test_for_each_iterates_array_elements();
 void test_for_each_single_element_expression();
 void test_for_each_iterates_native_collection_direct_and_member_path();

@@ -1025,6 +1025,47 @@ void test_erase_copy_rename_file_commands() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_rename_file_command_rejects_existing_destination() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_rename_existing_target";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_text(temp_root / "source.txt", "source-content");
+    write_text(temp_root / "existing.txt", "existing-content");
+
+    const fs::path main_path = temp_root / "rename_existing_target.prg";
+    write_text(
+        main_path,
+        "RENAME 'source.txt' TO 'existing.txt'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!state.completed, "#3703: RENAME should fail when the destination file already exists");
+    expect(
+        state.message.find("destination already exists") != std::string::npos,
+        "#3703: existing-destination RENAME should explain the target-exists failure");
+    expect(
+        fs::exists(temp_root / "source.txt"),
+        "#3703: failing RENAME should leave the original source file in place");
+    expect(
+        fs::exists(temp_root / "existing.txt"),
+        "#3703: failing RENAME should preserve the pre-existing destination file");
+    expect(
+        read_text(temp_root / "source.txt") == "source-content",
+        "#3703: failing RENAME should preserve the source file contents");
+    expect(
+        read_text(temp_root / "existing.txt") == "existing-content",
+        "#3703: failing RENAME should not overwrite the existing destination contents");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_for_each_iterates_array_elements() {
     namespace fs = std::filesystem;
     const fs::path tmp = fs::temp_directory_path() / "copperfin_for_each_array";

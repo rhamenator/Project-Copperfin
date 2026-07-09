@@ -2342,6 +2342,28 @@ void test_file_operation_runtime_errors_localize() {
             rename_state.message.find("RENAME failed:") == std::string::npos,
         "#2706: qps-ploc RENAME runtime error should localize the prose while preserving the OS error text");
 
+    write_text(temp_root / "source.txt", "source-content");
+    write_text(temp_root / "existing.txt", "existing-content");
+    const fs::path rename_existing_path = temp_root / "rename_existing_error.prg";
+    write_text(
+        rename_existing_path,
+        "RENAME 'source.txt' TO 'existing.txt'\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession rename_existing_session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(rename_existing_path.string(), temp_root.string(), false));
+    const auto rename_existing_state =
+        rename_existing_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!rename_existing_state.completed,
+           "#3703: qps-ploc RENAME existing-destination script should fail");
+    expect(
+        rename_existing_state.message.find("[!! ") == 0U &&
+            rename_existing_state.message.find("destination already exists") == std::string::npos &&
+            rename_existing_state.message.find("existing.txt") != std::string::npos,
+        "#3703: qps-ploc existing-destination RENAME error should localize prose while preserving the target path");
+    expect(read_text(temp_root / "existing.txt") == "existing-content",
+           "#3703: localized existing-destination RENAME failures should preserve the destination contents");
+
     fs::remove_all(temp_root, ignored);
 }
 

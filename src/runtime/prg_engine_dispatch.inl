@@ -3972,6 +3972,28 @@
                 };
                 const std::filesystem::path old_path = make_abs(old_raw);
                 const std::filesystem::path new_path = make_abs(new_raw);
+                if (old_path.lexically_normal() != new_path.lexically_normal())
+                {
+                    std::error_code exists_error;
+                    if (std::filesystem::exists(new_path, exists_error))
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.RenameFileTargetExists",
+                            {{"path", new_path.string()}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    if (exists_error)
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.RenameFileFailed",
+                            {{"errorMessage", exists_error.message()}});
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                }
                 std::error_code ec;
                 std::filesystem::rename(old_path, new_path, ec);
                 if (ec)

@@ -2029,10 +2029,12 @@ void test_runtime_file_operation_errors_route_through_catalog() {
         {"path", "fixtures/nonempty"}
     };
     const copperfin::localization::PlaceholderMap io_placeholders{{"errorMessage", "No such file or directory"}};
+    const copperfin::localization::PlaceholderMap exists_placeholders{{"path", "fixtures/existing.txt"}};
     const std::vector<std::string> keys{
         "Runtime.Prg.Dispatch.Error.EraseFailed",
         "Runtime.Prg.Dispatch.Error.CopyFileFailed",
-        "Runtime.Prg.Dispatch.Error.RenameFileFailed"
+        "Runtime.Prg.Dispatch.Error.RenameFileFailed",
+        "Runtime.Prg.Dispatch.Error.RenameFileTargetExists"
     };
 
     expect(
@@ -2047,6 +2049,10 @@ void test_runtime_file_operation_errors_route_through_catalog() {
         english.translate("Runtime.Prg.Dispatch.Error.RenameFileFailed", io_placeholders) ==
             "RENAME failed: No such file or directory",
         "#2706: RENAME failure should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.RenameFileTargetExists", exists_placeholders) ==
+            "RENAME failed: destination already exists (fixtures/existing.txt)",
+        "#3703: existing-destination RENAME failure should localize through the runtime catalog");
 
     for (const std::string& key : keys) {
         expect(
@@ -2091,6 +2097,13 @@ void test_runtime_file_operation_errors_route_through_catalog() {
             pseudo_rename.find("No such file or directory") != std::string::npos &&
             pseudo_rename.find("RENAME failed:") == std::string::npos,
         "#2706: qps-ploc RENAME failure should pseudo-localize prose while preserving the OS error text");
+    const std::string pseudo_rename_exists =
+        pseudo.translate("Runtime.Prg.Dispatch.Error.RenameFileTargetExists", exists_placeholders);
+    expect(
+        pseudo_rename_exists.find("[!! ") == 0U &&
+            pseudo_rename_exists.find("fixtures/existing.txt") != std::string::npos &&
+            pseudo_rename_exists.find("destination already exists") == std::string::npos,
+        "#3703: qps-ploc existing-destination RENAME failure should pseudo-localize prose while preserving the target path");
 }
 
 void test_runtime_copy_to_errors_route_through_catalog() {

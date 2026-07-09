@@ -1287,6 +1287,7 @@
   "Runtime.Prg.Dispatch.Error.EraseFailed": "ERASE falhou: {errorMessage} ({path})",
   "Runtime.Prg.Dispatch.Error.ObjectTargetRequired": "{command}: exige um destino de objeto",
   "Runtime.Prg.Dispatch.Error.RenameFileFailed": "RENAME falhou: {errorMessage}",
+  "Runtime.Prg.Dispatch.Error.RenameFileTargetExists": "RENAME falhou: o destino ja existe ({path})",
   "Runtime.Prg.Dispatch.Error.RestoreFromFilenameRequired": "RESTORE FROM exige um nome de arquivo",
   "Runtime.Prg.Dispatch.Error.ScatterNoCurrentRecord": "SCATTER: nao ha registro atual",
   "Runtime.Prg.Dispatch.Error.ScatterNoCurrentWorkArea": "SCATTER: nao ha area de trabalho atual",
