@@ -3005,6 +3005,33 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         return symbolKind;
     }
 
+    private string BuildProjectInsightArtifactKindDisplayText(string kind)
+    {
+        var key = kind switch
+        {
+            "Project" => "AssetEditor.Summary.ArtifactKind.Project",
+            "Project Header" => "AssetEditor.Summary.ArtifactKind.ProjectHeader",
+            "Form" => "AssetEditor.Summary.ArtifactKind.Form",
+            "Class Library" => "AssetEditor.Summary.ArtifactKind.ClassLibrary",
+            "Class" => "AssetEditor.Summary.ArtifactKind.Class",
+            "Report" => "AssetEditor.Summary.ArtifactKind.Report",
+            "Label" => "AssetEditor.Summary.ArtifactKind.Label",
+            "Menu" => "AssetEditor.Summary.ArtifactKind.Menu",
+            "Program" => "AssetEditor.Summary.ArtifactKind.Program",
+            "Database" => "AssetEditor.Summary.ArtifactKind.Database",
+            "Table" => "AssetEditor.Summary.ArtifactKind.Table",
+            "Query" => "AssetEditor.Summary.ArtifactKind.Query",
+            _ => string.Empty
+        };
+
+        if (!string.IsNullOrWhiteSpace(key))
+        {
+            return L(key);
+        }
+
+        return kind;
+    }
+
     private string BuildFallbackObjectTitle(int recordIndex)
     {
         return F("AssetEditor.ObjectFallbackTitle", recordIndex);
@@ -3340,6 +3367,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 string.IsNullOrWhiteSpace(normalizedFilter) ||
                 asset.Title.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
                 asset.Kind.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                BuildProjectInsightArtifactKindDisplayText(asset.Kind).IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
                 asset.FilePath.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0)
             .ToList();
 
@@ -3360,7 +3388,12 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             foreach (var asset in filteredAssets.Take(40))
             {
                 var excludedSuffix = asset.Excluded ? L("AssetEditor.Summary.ExcludedSuffix") : string.Empty;
-                summary.AppendLine(F("AssetEditor.Summary.DataAssetLine", asset.Kind, asset.Title, excludedSuffix));
+                summary.AppendLine(
+                    F(
+                        "AssetEditor.Summary.DataAssetLine",
+                        BuildProjectInsightArtifactKindDisplayText(asset.Kind),
+                        asset.Title,
+                        excludedSuffix));
                 if (!string.IsNullOrWhiteSpace(asset.FilePath))
                 {
                     summary.AppendLine(F("AssetEditor.Summary.IndentedLine", asset.FilePath));
@@ -3402,6 +3435,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 (string.IsNullOrWhiteSpace(normalizedFilter) ||
                  node.Title.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
                  node.Kind.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                 BuildProjectInsightArtifactKindDisplayText(node.Kind).IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
                  node.Detail.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
                  node.FilePath.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0))
             .ToList();
@@ -3425,7 +3459,11 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             foreach (var node in filteredNodes.Take(50))
             {
-                summary.AppendLine(F("AssetEditor.Summary.ObjectNodeLine", node.Kind, node.Title));
+                summary.AppendLine(
+                    F(
+                        "AssetEditor.Summary.ObjectNodeLine",
+                        BuildProjectInsightArtifactKindDisplayText(node.Kind),
+                        node.Title));
                 if (!string.IsNullOrWhiteSpace(node.Detail))
                 {
                     summary.AppendLine(F("AssetEditor.Summary.IndentedLine", node.Detail));

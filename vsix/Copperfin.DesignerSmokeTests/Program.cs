@@ -466,6 +466,7 @@ internal static class Program
         SmokeReportObjectPropertyGridLocalization();
         SmokeSharedDesignerSelectionLocalization();
         SmokeLocalizedCodeReferenceKindLabels();
+        SmokeLocalizedProjectInsightArtifactKindLabels();
         SmokeLocalizedReportObjectKindSubtitles();
         SmokeLocalizedReportObjectFallbackTitles();
         SmokeReportSelectionPreservedAcrossExplorerRefresh();
@@ -5760,6 +5761,68 @@ internal static class Program
                pseudoSummary.IndexOf("[reference]", StringComparison.Ordinal) < 0 &&
                pseudoSummary.IndexOf("[call.member]", StringComparison.Ordinal) < 0,
             "Pseudo-localized code-reference summaries should route displayed symbol kinds through the shared catalog instead of leaking raw tokens");
+    }
+
+    private static void SmokeLocalizedProjectInsightArtifactKindLabels()
+    {
+        var insights = new CopperfinProjectInsights
+        {
+            ProjectRoot = @"C:\src\sample",
+            DataAssets = new List<CopperfinProjectDataAsset>
+            {
+                new() { Kind = "Table", Title = "customer.dbf", FilePath = @"C:\src\sample\customer.dbf" },
+                new() { Kind = "Query", Title = "orders.qpr", FilePath = @"C:\src\sample\orders.qpr" }
+            },
+            ObjectNodes = new List<CopperfinProjectObjectNode>
+            {
+                new() { Kind = "Program", Title = "main.prg", FilePath = @"C:\src\sample\main.prg", Detail = "Programs" },
+                new() { Kind = "Class", Title = "app.customer.editor", FilePath = @"C:\src\sample\editor.prg", Detail = "AS custom" }
+            },
+            DefinedSymbols = new List<CopperfinProjectCodeSymbol>
+            {
+                new() { Kind = "class", Name = "app.customer.editor", FilePath = @"C:\src\sample\editor.prg", Line = 1 }
+            }
+        };
+
+        var snapshot = new CopperfinStudioSnapshotDocument
+        {
+            ProjectWorkspace = new CopperfinStudioProjectWorkspace
+            {
+                ProjectTitle = "sample.pjx"
+            }
+        };
+
+        using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
+        var spanishObjectSummary = InvokeAssetEditorString(spanishControl, "BuildObjectBrowserSummary", snapshot, insights, string.Empty, false);
+        var spanishDataSummary = InvokeAssetEditorString(spanishControl, "BuildDataExplorerSummary", snapshot, insights, string.Empty);
+        Expect(spanishObjectSummary.IndexOf("[Programa] main.prg", StringComparison.Ordinal) >= 0 &&
+               spanishObjectSummary.IndexOf("[Clase] app.customer.editor", StringComparison.Ordinal) >= 0 &&
+               spanishDataSummary.IndexOf("[Tabla] customer.dbf", StringComparison.Ordinal) >= 0 &&
+               spanishDataSummary.IndexOf("[Consulta] orders.qpr", StringComparison.Ordinal) >= 0,
+            "Spanish project summaries should localize displayed object and data kind labels");
+
+        using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
+        var portugueseObjectSummary = InvokeAssetEditorString(portugueseControl, "BuildObjectBrowserSummary", snapshot, insights, string.Empty, false);
+        var portugueseDataSummary = InvokeAssetEditorString(portugueseControl, "BuildDataExplorerSummary", snapshot, insights, string.Empty);
+        Expect(portugueseObjectSummary.IndexOf("[Programa] main.prg", StringComparison.Ordinal) >= 0 &&
+               portugueseObjectSummary.IndexOf("[Classe] app.customer.editor", StringComparison.Ordinal) >= 0 &&
+               portugueseDataSummary.IndexOf("[Tabela] customer.dbf", StringComparison.Ordinal) >= 0 &&
+               portugueseDataSummary.IndexOf("[Consulta] orders.qpr", StringComparison.Ordinal) >= 0,
+            "Portuguese project summaries should localize displayed object and data kind labels");
+
+        var pseudoLocalization = new CopperfinLocalization("qps-ploc");
+        using var pseudoControl = new CopperfinAssetEditorControl(pseudoLocalization);
+        var pseudoObjectSummary = InvokeAssetEditorString(pseudoControl, "BuildObjectBrowserSummary", snapshot, insights, string.Empty, false);
+        var pseudoDataSummary = InvokeAssetEditorString(pseudoControl, "BuildDataExplorerSummary", snapshot, insights, string.Empty);
+        Expect(pseudoObjectSummary.IndexOf(pseudoLocalization.Text("AssetEditor.Summary.ArtifactKind.Program"), StringComparison.Ordinal) >= 0 &&
+               pseudoObjectSummary.IndexOf(pseudoLocalization.Text("AssetEditor.Summary.ArtifactKind.Class"), StringComparison.Ordinal) >= 0 &&
+               pseudoDataSummary.IndexOf(pseudoLocalization.Text("AssetEditor.Summary.ArtifactKind.Table"), StringComparison.Ordinal) >= 0 &&
+               pseudoDataSummary.IndexOf(pseudoLocalization.Text("AssetEditor.Summary.ArtifactKind.Query"), StringComparison.Ordinal) >= 0 &&
+               pseudoObjectSummary.IndexOf("[Program]", StringComparison.Ordinal) < 0 &&
+               pseudoObjectSummary.IndexOf("[Class]", StringComparison.Ordinal) < 0 &&
+               pseudoDataSummary.IndexOf("[Table]", StringComparison.Ordinal) < 0 &&
+               pseudoDataSummary.IndexOf("[Query]", StringComparison.Ordinal) < 0,
+            "Pseudo-localized project summaries should route displayed object and data kind labels through the shared catalog instead of leaking raw tokens");
     }
 
     private static void SmokeReportSectionGroupingExplorerTitles()
