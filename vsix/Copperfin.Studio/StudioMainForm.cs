@@ -89,7 +89,7 @@ internal sealed class StudioMainForm : Form
             return;
         }
 
-        var editorControl = new CopperfinAssetEditorControl
+        var editorControl = new CopperfinAssetEditorControl(localization)
         {
             Dock = DockStyle.Fill,
             EmbeddedStudioShell = true

@@ -45,7 +45,6 @@ internal sealed class CopperfinProcessExecutionResult
 
 internal static class CopperfinProjectWorkflow
 {
-    private static readonly CopperfinLocalization Localization = CopperfinLocalization.FromEnvironment();
     private const string DefaultSecurityBuildRole = "build-engineer";
 
     public static bool IsCopperfinProjectPath(string? path)
@@ -70,23 +69,30 @@ internal static class CopperfinProjectWorkflow
             baseDirectory);
     }
 
-    public static Task<CopperfinProjectExecutionResult> ExecuteAsync(string projectPath, CopperfinProjectOperation operation)
+    public static Task<CopperfinProjectExecutionResult> ExecuteAsync(
+        string projectPath,
+        CopperfinProjectOperation operation,
+        CopperfinLocalization? localization = null)
     {
-        return Task.Run(() => ExecuteCore(projectPath, operation));
+        localization ??= CopperfinLocalization.FromEnvironment();
+        return Task.Run(() => ExecuteCore(projectPath, operation, localization));
     }
 
-    private static CopperfinProjectExecutionResult ExecuteCore(string projectPath, CopperfinProjectOperation operation)
+    private static CopperfinProjectExecutionResult ExecuteCore(
+        string projectPath,
+        CopperfinProjectOperation operation,
+        CopperfinLocalization localization)
     {
         var buildHostPath = ResolveBuildHostPath();
         if (buildHostPath is null)
         {
-            return Failure(projectPath, Localization.Text("AssetEditor.Project.Workflow.BuildHostMissing"));
+            return Failure(projectPath, localization.Text("AssetEditor.Project.Workflow.BuildHostMissing"));
         }
 
         var runtimeHostPath = ResolveRuntimeHostPath();
         if (runtimeHostPath is null)
         {
-            return Failure(projectPath, Localization.Text("AssetEditor.Project.Workflow.RuntimeHostMissing"));
+            return Failure(projectPath, localization.Text("AssetEditor.Project.Workflow.RuntimeHostMissing"));
         }
 
         var outputDirectory = CreateOutputDirectory(projectPath);
@@ -99,6 +105,11 @@ internal static class CopperfinProjectWorkflow
             "--enable-security",
             "--runtime-host", Quote(runtimeHostPath)
         };
+        if (!string.IsNullOrWhiteSpace(localization.Locale))
+        {
+            buildArguments.Add("--locale");
+            buildArguments.Add(Quote(localization.Locale));
+        }
         if (ShouldEmitDotNetLauncher())
         {
             buildArguments.Add("--emit-dotnet-launcher");
@@ -107,7 +118,8 @@ internal static class CopperfinProjectWorkflow
         var buildResult = RunProcess(
             buildHostPath,
             buildArguments,
-            CreateSecurityEnabledBuildEnvironment());
+            CreateSecurityEnabledBuildEnvironment(),
+            localization);
         var warningCount = ParseIntOrDefault(GetValueOrDefault(buildResult.Values, "warnings"), 0);
         var warnings = ParseWarningLines(buildResult.StandardOutput);
         if (warningCount == 0 && warnings.Count > 0)
@@ -125,7 +137,7 @@ internal static class CopperfinProjectWorkflow
         {
             return Failure(
                 projectPath,
-                Localization.Text("AssetEditor.Project.Workflow.BuildFailed"),
+                localization.Text("AssetEditor.Project.Workflow.BuildFailed"),
                 outputDirectory,
                 manifestPath,
                 string.Empty,
@@ -145,7 +157,7 @@ internal static class CopperfinProjectWorkflow
         {
             return Failure(
                 projectPath,
-                Localization.Text("AssetEditor.Project.Workflow.LauncherMissing"),
+                localization.Text("AssetEditor.Project.Workflow.LauncherMissing"),
                 outputDirectory,
                 manifestPath,
                 launcherPath ?? string.Empty,
@@ -162,7 +174,7 @@ internal static class CopperfinProjectWorkflow
             var result = new CopperfinProjectExecutionResult
             {
                 Success = true,
-                Message = Localization.Text("AssetEditor.Project.Workflow.BuildSuccess"),
+                Message = localization.Text("AssetEditor.Project.Workflow.BuildSuccess"),
                 ProjectPath = projectPath,
                 OutputDirectory = outputDirectory,
                 ManifestPath = manifestPath,
@@ -178,7 +190,7 @@ internal static class CopperfinProjectWorkflow
         }
 
         var launchArguments = operation == CopperfinProjectOperation.Debug ? new[] { "--debug" } : Array.Empty<string>();
-        var launchResult = StartProcess(launcherPath, launchArguments);
+        var launchResult = StartProcess(launcherPath, launchArguments, localization);
         if (!launchResult.Success)
         {
             return Failure(
@@ -199,8 +211,8 @@ internal static class CopperfinProjectWorkflow
         {
             Success = true,
             Message = operation == CopperfinProjectOperation.Debug
-                ? Localization.Text("AssetEditor.Project.Workflow.LaunchDebugSuccess")
-                : Localization.Text("AssetEditor.Project.Workflow.LaunchSuccess"),
+                ? localization.Text("AssetEditor.Project.Workflow.LaunchDebugSuccess")
+                : localization.Text("AssetEditor.Project.Workflow.LaunchSuccess"),
             ProjectPath = projectPath,
             OutputDirectory = outputDirectory,
             ManifestPath = manifestPath,
@@ -252,8 +264,10 @@ internal static class CopperfinProjectWorkflow
     private static CopperfinProcessExecutionResult RunProcess(
         string fileName,
         IEnumerable<string> arguments,
-        IReadOnlyDictionary<string, string>? environmentVariables = null)
+        IReadOnlyDictionary<string, string>? environmentVariables = null,
+        CopperfinLocalization? localization = null)
     {
+        localization ??= CopperfinLocalization.FromEnvironment();
         var startInfo = new ProcessStartInfo
         {
             FileName = fileName,
@@ -270,6 +284,7 @@ internal static class CopperfinProjectWorkflow
                 startInfo.EnvironmentVariables[kvp.Key] = kvp.Value;
             }
         }
+        CopperfinStudioHostBridge.ApplyLocalizationEnvironment(startInfo, localization);
 
         var processResult = CopperfinProcessRunner.Run(startInfo);
         if (!processResult.Started)
@@ -277,7 +292,7 @@ internal static class CopperfinProjectWorkflow
             return new CopperfinProcessExecutionResult
             {
                 ExitCode = -1,
-                StandardError = Localization.Text("AssetEditor.Project.Workflow.ProcessCouldNotStart")
+                StandardError = localization.Text("AssetEditor.Project.Workflow.ProcessCouldNotStart")
             };
         }
 
@@ -299,8 +314,12 @@ internal static class CopperfinProjectWorkflow
         return result;
     }
 
-    private static CopperfinProjectExecutionResult StartProcess(string fileName, IEnumerable<string> arguments)
+    private static CopperfinProjectExecutionResult StartProcess(
+        string fileName,
+        IEnumerable<string> arguments,
+        CopperfinLocalization? localization = null)
     {
+        localization ??= CopperfinLocalization.FromEnvironment();
         var startInfo = new ProcessStartInfo
         {
             FileName = fileName,
@@ -308,23 +327,24 @@ internal static class CopperfinProjectWorkflow
             UseShellExecute = false,
             CreateNoWindow = true
         };
+        CopperfinStudioHostBridge.ApplyLocalizationEnvironment(startInfo, localization);
 
         try
         {
             if (System.Diagnostics.Process.Start(startInfo) is null)
             {
-                return Failure(fileName, Localization.Text("AssetEditor.Project.Workflow.LauncherCouldNotStart"));
+                return Failure(fileName, localization.Text("AssetEditor.Project.Workflow.LauncherCouldNotStart"));
             }
         }
         catch (Exception ex)
         {
-            return Failure(fileName, Localization.Format("AssetEditor.Project.Workflow.LauncherCouldNotStartWithMessage", ex.Message));
+            return Failure(fileName, localization.Format("AssetEditor.Project.Workflow.LauncherCouldNotStartWithMessage", ex.Message));
         }
 
         return new CopperfinProjectExecutionResult
         {
             Success = true,
-            Message = Localization.Text("AssetEditor.Project.Workflow.LauncherStarted"),
+            Message = localization.Text("AssetEditor.Project.Workflow.LauncherStarted"),
             ProjectPath = fileName
         };
     }

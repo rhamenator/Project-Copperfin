@@ -77,7 +77,7 @@ internal sealed class CopperfinProjectCommands
             return;
         }
 
-        var result = await CopperfinProjectWorkflow.ExecuteAsync(projectPath!, operation);
+        var result = await CopperfinProjectWorkflow.ExecuteAsync(projectPath!, operation, Localization);
         if (!result.Success)
         {
             ShowMessage(result.Message, OLEMSGICON.OLEMSGICON_WARNING);

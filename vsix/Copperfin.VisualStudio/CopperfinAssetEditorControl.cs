@@ -404,28 +404,28 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             AutoSize = true,
             Text = this.localization.Text("AssetEditor.Debugger.ContinueButton")
         };
-        debugContinueButton.Click += (_, _) => QueueUiAction(() => AdvanceDebugSessionAsync(CopperfinRuntimeDebugClient.ContinueAsync));
+        debugContinueButton.Click += (_, _) => QueueUiAction(() => AdvanceDebugSessionAsync(session => CopperfinRuntimeDebugClient.ContinueAsync(session, this.localization)));
 
         debugStepButton = new Button
         {
             AutoSize = true,
             Text = this.localization.Text("AssetEditor.Debugger.StepButton")
         };
-        debugStepButton.Click += (_, _) => QueueUiAction(() => AdvanceDebugSessionAsync(CopperfinRuntimeDebugClient.StepIntoAsync));
+        debugStepButton.Click += (_, _) => QueueUiAction(() => AdvanceDebugSessionAsync(session => CopperfinRuntimeDebugClient.StepIntoAsync(session, this.localization)));
 
         debugNextButton = new Button
         {
             AutoSize = true,
             Text = this.localization.Text("AssetEditor.Debugger.NextButton")
         };
-        debugNextButton.Click += (_, _) => QueueUiAction(() => AdvanceDebugSessionAsync(CopperfinRuntimeDebugClient.StepOverAsync));
+        debugNextButton.Click += (_, _) => QueueUiAction(() => AdvanceDebugSessionAsync(session => CopperfinRuntimeDebugClient.StepOverAsync(session, this.localization)));
 
         debugOutButton = new Button
         {
             AutoSize = true,
             Text = this.localization.Text("AssetEditor.Debugger.OutButton")
         };
-        debugOutButton.Click += (_, _) => QueueUiAction(() => AdvanceDebugSessionAsync(CopperfinRuntimeDebugClient.StepOutAsync));
+        debugOutButton.Click += (_, _) => QueueUiAction(() => AdvanceDebugSessionAsync(session => CopperfinRuntimeDebugClient.StepOutAsync(session, this.localization)));
 
         snapshotStatusLabel = new Label
         {
@@ -848,7 +848,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             currentPath!,
             currentSnapshot.AssetFamily is "report" or "label" && selectedObjectRecordIndex >= 0
                 ? selectedObjectRecordIndex
-                : null);
+                : null,
+            localization);
         if (!undoResult.Success || undoResult.Document is null)
         {
             snapshotStatusLabel.Text = BuildUndoFailedStatus(undoResult.Error);
@@ -938,7 +939,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private async Task LoadSnapshotAsync(string path)
     {
         var expectedGeneration = loadGeneration;
-        var snapshotResult = await Task.Run(() => CopperfinStudioSnapshotClient.TryLoad(path));
+        var snapshotResult = await Task.Run(() => CopperfinStudioSnapshotClient.TryLoad(path, localization));
         if (IsDisposed || Disposing || expectedGeneration != loadGeneration || !string.Equals(currentPath, path, StringComparison.OrdinalIgnoreCase))
         {
             return;
@@ -1416,7 +1417,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         var selectedObjectRecordIndex = TryReadSelectedRecordIndex();
         var statusLabel = ResolvePropertyStatusLabels(propertyChanges.Select(change => change.Key));
         snapshotStatusLabel.Text = BuildPropertyApplyingStatusLabel(statusLabel);
-        var updateResult = CopperfinStudioSnapshotClient.TryUpdateProperties(currentPath!, recordIndex, propertyChanges);
+        var updateResult = CopperfinStudioSnapshotClient.TryUpdateProperties(currentPath!, recordIndex, propertyChanges, localization);
         if (!updateResult.Success || updateResult.Document is null)
         {
             snapshotStatusLabel.Text = BuildPropertyUpdateFailedStatus(updateResult.Error);
@@ -1458,8 +1459,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 : "AssetEditor.ObjectLifecycle.Delete.Executing");
 
         var lifecycleResult = restoring
-            ? CopperfinStudioSnapshotClient.TryRestoreObject(currentPath!, selectedObjectRecordIndex, uniqueId)
-            : CopperfinStudioSnapshotClient.TryDeleteObject(currentPath!, selectedObjectRecordIndex, uniqueId);
+            ? CopperfinStudioSnapshotClient.TryRestoreObject(currentPath!, selectedObjectRecordIndex, uniqueId, localization)
+            : CopperfinStudioSnapshotClient.TryDeleteObject(currentPath!, selectedObjectRecordIndex, uniqueId, localization);
         if (!lifecycleResult.Success || lifecycleResult.Document is null)
         {
             snapshotStatusLabel.Text = this.localization.Format(
@@ -1508,7 +1509,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             currentPath!,
             selectedObject.RecordIndex,
             sourceUniqueId,
-            duplicateUniqueId);
+            duplicateUniqueId,
+            localization);
         if (!duplicateResult.Success || duplicateResult.Document is null)
         {
             snapshotStatusLabel.Text = this.localization.Format(
@@ -1555,7 +1557,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             currentPath!,
             selectedObject.RecordIndex,
             sourceUniqueId,
-            renamedUniqueId);
+            renamedUniqueId,
+            localization);
         if (!renameResult.Success || renameResult.Document is null)
         {
             snapshotStatusLabel.Text = this.localization.Format(
@@ -1606,7 +1609,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             currentPath!,
             selectedObjectRecordIndex,
             uniqueId,
-            placement);
+            placement,
+            localization);
         if (!reorderResult.Success || reorderResult.Document is null)
         {
             snapshotStatusLabel.Text = this.localization.Format(
@@ -1676,7 +1680,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             anchorObject.RecordIndex,
             anchorUniqueId!,
             alignmentMode,
-            targetUniqueIds);
+            targetUniqueIds,
+            localization);
         if (!alignResult.Success || alignResult.Document is null)
         {
             snapshotStatusLabel.Text = this.localization.Format(
@@ -1747,7 +1752,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             currentPath!,
             focusedObject.RecordIndex,
             distributionMode,
-            targetUniqueIds);
+            targetUniqueIds,
+            localization);
         if (!distributeResult.Success || distributeResult.Document is null)
         {
             snapshotStatusLabel.Text = this.localization.Format(
@@ -1820,7 +1826,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             anchorObject.RecordIndex,
             anchorUniqueId!,
             resizeMode,
-            targetUniqueIds);
+            targetUniqueIds,
+            localization);
         if (!resizeResult.Success || resizeResult.Document is null)
         {
             snapshotStatusLabel.Text = this.localization.Format(
@@ -1895,7 +1902,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             snapMode,
             gridWidth,
             gridHeight,
-            targetUniqueIds);
+            targetUniqueIds,
+            localization);
         if (!snapResult.Success || snapResult.Document is null)
         {
             snapshotStatusLabel.Text = this.localization.Format(
@@ -1955,7 +1963,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             uniqueId,
             mode,
             deltaHpos,
-            deltaVpos);
+            deltaVpos,
+            localization);
         if (!nudgeResult.Success || nudgeResult.Document is null)
         {
             snapshotStatusLabel.Text = BuildPropertyUpdateFailedStatus(nudgeResult.Error);
@@ -2226,7 +2235,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             return;
         }
 
-        if (!CopperfinStudioHostBridge.Launch(studioHostPath, currentPath!))
+        if (!CopperfinStudioHostBridge.Launch(studioHostPath, currentPath!, localization: localization))
         {
             MessageBox.Show(this, BuildStudioLaunchFailedMessage(), DialogTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
@@ -2307,7 +2316,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
 
         currentProjectWorkflowResult = null;
-        var result = await CopperfinProjectWorkflow.ExecuteAsync(currentPath!, operation);
+        var result = await CopperfinProjectWorkflow.ExecuteAsync(currentPath!, operation, localization);
         currentProjectWorkflowResult = result;
         snapshotStatusLabel.Text = result.Message;
         if (!result.Success)
@@ -2340,7 +2349,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
         debuggerStatusLabel.Text = this.localization.Text("AssetEditor.Debugger.StartingStatus");
         SetDebuggerButtonsEnabled(false);
-        var session = await CopperfinRuntimeDebugClient.StartSessionAsync(currentPath!);
+        var session = await CopperfinRuntimeDebugClient.StartSessionAsync(currentPath!, localization);
         if (IsDisposed || Disposing || projectWorkspaceTabs.IsDisposed)
         {
             return;

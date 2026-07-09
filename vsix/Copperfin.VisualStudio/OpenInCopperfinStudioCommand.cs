@@ -74,7 +74,7 @@ internal sealed class OpenInCopperfinStudioCommand
             return;
         }
 
-        if (!CopperfinStudioHostBridge.Launch(studioHostPath, documentPath!))
+        if (!CopperfinStudioHostBridge.Launch(studioHostPath, documentPath!, localization: Localization))
         {
             VsShellUtilities.ShowMessageBox(
                 package,

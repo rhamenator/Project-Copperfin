@@ -14,13 +14,15 @@ namespace Copperfin.VisualStudio;
 
 internal static class CopperfinRuntimeDebugClient
 {
-    private static readonly CopperfinLocalization Localization = CopperfinLocalization.FromEnvironment();
     private const string DefaultInjectedBuildRole = "build-engineer";
     private const string DefaultRuntimeDebugRole = "runtime-operator";
 
-    public static async Task<CopperfinRuntimeDebugSession> StartSessionAsync(string projectPath)
+    public static async Task<CopperfinRuntimeDebugSession> StartSessionAsync(
+        string projectPath,
+        CopperfinLocalization? localization = null)
     {
-        var buildResult = await CopperfinProjectWorkflow.ExecuteAsync(projectPath, CopperfinProjectOperation.Build);
+        localization ??= CopperfinLocalization.FromEnvironment();
+        var buildResult = await CopperfinProjectWorkflow.ExecuteAsync(projectPath, CopperfinProjectOperation.Build, localization);
         if (!buildResult.Success)
         {
             return new CopperfinRuntimeDebugSession
@@ -39,7 +41,7 @@ internal static class CopperfinRuntimeDebugClient
             return new CopperfinRuntimeDebugSession
             {
                 Success = false,
-                Error = Localization.Text("AssetEditor.Dialog.DebugManifestMissing")
+                Error = localization.Text("AssetEditor.Dialog.DebugManifestMissing")
             };
         }
 
@@ -52,31 +54,43 @@ internal static class CopperfinRuntimeDebugClient
             BuildWarningCount = buildResult.WarningCount,
             BuildWarnings = buildResult.Warnings.ToList(),
             Commands = new List<string> { "continue" }
-        });
+        }, localization);
     }
 
-    public static Task<CopperfinRuntimeDebugSession> ContinueAsync(CopperfinRuntimeDebugSession session)
+    public static Task<CopperfinRuntimeDebugSession> ContinueAsync(
+        CopperfinRuntimeDebugSession session,
+        CopperfinLocalization? localization = null)
     {
-        return ReplayWithCommandAsync(session, "continue");
+        return ReplayWithCommandAsync(session, "continue", localization);
     }
 
-    public static Task<CopperfinRuntimeDebugSession> StepIntoAsync(CopperfinRuntimeDebugSession session)
+    public static Task<CopperfinRuntimeDebugSession> StepIntoAsync(
+        CopperfinRuntimeDebugSession session,
+        CopperfinLocalization? localization = null)
     {
-        return ReplayWithCommandAsync(session, "step");
+        return ReplayWithCommandAsync(session, "step", localization);
     }
 
-    public static Task<CopperfinRuntimeDebugSession> StepOverAsync(CopperfinRuntimeDebugSession session)
+    public static Task<CopperfinRuntimeDebugSession> StepOverAsync(
+        CopperfinRuntimeDebugSession session,
+        CopperfinLocalization? localization = null)
     {
-        return ReplayWithCommandAsync(session, "next");
+        return ReplayWithCommandAsync(session, "next", localization);
     }
 
-    public static Task<CopperfinRuntimeDebugSession> StepOutAsync(CopperfinRuntimeDebugSession session)
+    public static Task<CopperfinRuntimeDebugSession> StepOutAsync(
+        CopperfinRuntimeDebugSession session,
+        CopperfinLocalization? localization = null)
     {
-        return ReplayWithCommandAsync(session, "out");
+        return ReplayWithCommandAsync(session, "out", localization);
     }
 
-    private static Task<CopperfinRuntimeDebugSession> ReplayWithCommandAsync(CopperfinRuntimeDebugSession session, string command)
+    private static Task<CopperfinRuntimeDebugSession> ReplayWithCommandAsync(
+        CopperfinRuntimeDebugSession session,
+        string command,
+        CopperfinLocalization? localization = null)
     {
+        localization ??= CopperfinLocalization.FromEnvironment();
         var commands = session.Commands.ToList();
         commands.Add(command);
         return ReplayAsync(new CopperfinRuntimeDebugSession
@@ -88,23 +102,27 @@ internal static class CopperfinRuntimeDebugClient
             BuildWarningCount = session.BuildWarningCount,
             BuildWarnings = session.BuildWarnings.ToList(),
             Commands = commands
-        });
+        }, localization);
     }
 
-    private static Task<CopperfinRuntimeDebugSession> ReplayAsync(CopperfinRuntimeDebugSession session)
+    private static Task<CopperfinRuntimeDebugSession> ReplayAsync(
+        CopperfinRuntimeDebugSession session,
+        CopperfinLocalization? localization = null)
     {
+        localization ??= CopperfinLocalization.FromEnvironment();
         return Task.Run(() =>
         {
             var runtimeHostPath = CopperfinProjectWorkflow.ResolveRuntimeHostPath();
             if (string.IsNullOrWhiteSpace(runtimeHostPath) || !File.Exists(runtimeHostPath))
             {
                 session.Success = false;
-                session.Error = Localization.Text("AssetEditor.Dialog.RuntimeHostMissing");
+                session.Error = localization.Text("AssetEditor.Dialog.RuntimeHostMissing");
                 return session;
             }
 
             var arguments = new StringBuilder();
             arguments.Append("--manifest ").Append(Quote(session.DebugManifestPath)).Append(" --debug");
+            arguments.Append(" --locale ").Append(Quote(localization.Locale));
             foreach (var command in session.Commands)
             {
                 arguments.Append(" --debug-command ").Append(Quote(command));
@@ -119,19 +137,20 @@ internal static class CopperfinRuntimeDebugClient
                 RedirectStandardError = true,
                 CreateNoWindow = true
             };
+            CopperfinStudioHostBridge.ApplyLocalizationEnvironment(startInfo, localization);
 
             var processResult = CopperfinProcessRunner.Run(startInfo, timeoutMilliseconds: 30000);
             if (!processResult.Started)
             {
                 session.Success = false;
-                session.Error = Localization.Text("AssetEditor.Dialog.RuntimeHostCouldNotStart");
+                session.Error = localization.Text("AssetEditor.Dialog.RuntimeHostCouldNotStart");
                 return session;
             }
 
             if (processResult.TimedOut)
             {
                 session.Success = false;
-                session.Error = Localization.Text("AssetEditor.Dialog.RuntimeHostTimedOut");
+                session.Error = localization.Text("AssetEditor.Dialog.RuntimeHostTimedOut");
                 return session;
             }
 

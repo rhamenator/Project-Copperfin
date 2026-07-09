@@ -26,9 +26,12 @@ internal static class Program
         TestDesignerSelectionDefaultsToEnvironmentLocalization();
         TestStudioHostProcessStartInfoKeepsExecutableLaunchArguments();
         TestStudioHostProcessStartInfoWrapsWindowsBatchHosts();
+        TestStudioHostProcessStartInfoAppliesExplicitLocalizationEnvironment();
         TestManagedHostResolutionHonorsEnvironmentOverrides();
         TestManagedHostResolutionFindsSiblingAndRepoBuildLayouts();
         TestLocalizationCatalogDoesNotLeakMachineSpecificHostPaths();
+        TestProjectWorkflowThreadsExplicitLocaleToBuildHostOnPosix();
+        TestRuntimeDebugClientThreadsExplicitLocaleToRuntimeHostOnPosix();
         TestProcessRunnerCapturesLargeConcurrentOutput();
         TestProcessRunnerEnforcesTimeoutWithoutPipeDeadlock();
         TestDottedClassMemberResolvesToLongestProjectSymbolPrefix();
@@ -309,6 +312,25 @@ internal static class Program
         }
     }
 
+    private static void TestStudioHostProcessStartInfoAppliesExplicitLocalizationEnvironment()
+    {
+        var localization = new CopperfinLocalization("pt-BR");
+        var startInfo = CopperfinStudioHostBridge.CreateProcessStartInfo(
+            "/tmp/copperfin_studio_host",
+            "--from-vs --json",
+            localization: localization,
+            redirectOutput: true,
+            createNoWindow: true,
+            isWindowsOverride: false);
+
+        var uiLocale = startInfo.EnvironmentVariables["COPPERFIN_UI_LOCALE"];
+        var locale = startInfo.EnvironmentVariables["COPPERFIN_LOCALE"];
+        Expect(string.Equals(uiLocale, localization.Locale, StringComparison.Ordinal),
+            "Studio host launch info should stamp the selected UI locale into the child environment");
+        Expect(string.Equals(locale, localization.Locale, StringComparison.Ordinal),
+            "Studio host launch info should stamp the selected runtime locale into the child environment");
+    }
+
     private static void TestManagedHostResolutionHonorsEnvironmentOverrides()
     {
         var root = Path.Combine(Path.GetTempPath(), "copperfin_language_service_tests", "managed_host_override", Guid.NewGuid().ToString("N"));
@@ -405,6 +427,153 @@ internal static class Program
                 $"{key} should not leak a machine-specific Windows fallback path in Spanish");
             Expect(portuguese.Text(key).IndexOf(@"E:\Project-Copperfin", StringComparison.OrdinalIgnoreCase) < 0,
                 $"{key} should not leak a machine-specific Windows fallback path in Portuguese");
+        }
+    }
+
+    private static void TestProjectWorkflowThreadsExplicitLocaleToBuildHostOnPosix()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var root = CreateProjectRoot("workflow_locale_threading");
+        var captureArgsPath = Path.Combine(root, "build_args.txt");
+        var captureEnvPath = Path.Combine(root, "build_env.txt");
+        var manifestPath = Path.Combine(root, "app.cfmanifest");
+        var debugManifestPath = Path.Combine(root, "app.cfdebug");
+        var launcherPath = Path.Combine(root, "launcher");
+        var runtimeHostPath = Path.Combine(root, "runtime_host.sh");
+        var buildHostPath = CreateTestExecutableScriptPath(
+            root,
+            "build_host",
+            [
+                "#!/bin/sh",
+                $"printf '%s\\n' \"$@\" > \"{captureArgsPath}\"",
+                $"printf 'COPPERFIN_UI_LOCALE=%s\\n' \"${{COPPERFIN_UI_LOCALE:-}}\" > \"{captureEnvPath}\"",
+                $"printf 'COPPERFIN_LOCALE=%s\\n' \"${{COPPERFIN_LOCALE:-}}\" >> \"{captureEnvPath}\"",
+                $"printf 'status: ok\\nmanifest.path: %s\\ndebug.manifest.path: %s\\nlauncher.output: %s\\n' \"{manifestPath}\" \"{debugManifestPath}\" \"{launcherPath}\""
+            ]);
+        File.WriteAllText(runtimeHostPath, string.Empty);
+        File.WriteAllText(manifestPath, string.Empty);
+        File.WriteAllText(debugManifestPath, string.Empty);
+        File.WriteAllText(launcherPath, string.Empty);
+
+        var projectPath = Path.Combine(root, "testapp.pjx");
+        var previousBuildHostPath = Environment.GetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH");
+        var previousRuntimeHostPath = Environment.GetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH");
+        var previousUiLocale = Environment.GetEnvironmentVariable("COPPERFIN_UI_LOCALE");
+        var previousLocale = Environment.GetEnvironmentVariable("COPPERFIN_LOCALE");
+        try
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH", buildHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH", runtimeHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_UI_LOCALE", "en-US");
+            Environment.SetEnvironmentVariable("COPPERFIN_LOCALE", "en-US");
+
+            var result = CopperfinProjectWorkflow.ExecuteAsync(
+                projectPath,
+                CopperfinProjectOperation.Build,
+                new CopperfinLocalization("qps-ploc")).GetAwaiter().GetResult();
+
+            Expect(result.Success, "project workflow should succeed against the fake build host");
+
+            var capturedArgs = File.ReadAllText(captureArgsPath);
+            var capturedEnv = File.ReadAllText(captureEnvPath);
+            Expect(capturedArgs.Contains("--locale", StringComparison.Ordinal) &&
+                   capturedArgs.Contains("qps-ploc", StringComparison.Ordinal),
+                "project workflow should pass the explicit locale through the build-host command line");
+            Expect(capturedEnv.Contains("COPPERFIN_UI_LOCALE=qps-ploc", StringComparison.Ordinal),
+                "project workflow should stamp COPPERFIN_UI_LOCALE for the build host");
+            Expect(capturedEnv.Contains("COPPERFIN_LOCALE=qps-ploc", StringComparison.Ordinal),
+                "project workflow should stamp COPPERFIN_LOCALE for the build host");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH", previousBuildHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH", previousRuntimeHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_UI_LOCALE", previousUiLocale);
+            Environment.SetEnvironmentVariable("COPPERFIN_LOCALE", previousLocale);
+            TryDelete(root);
+        }
+    }
+
+    private static void TestRuntimeDebugClientThreadsExplicitLocaleToRuntimeHostOnPosix()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var root = CreateProjectRoot("runtime_debug_locale_threading");
+        var manifestPath = Path.Combine(root, "app.cfmanifest");
+        var debugManifestPath = Path.Combine(root, "app.cfdebug");
+        var launcherPath = Path.Combine(root, "launcher");
+        var buildHostPath = CreateTestExecutableScriptPath(
+            root,
+            "build_host",
+            [
+                "#!/bin/sh",
+                $"printf 'status: ok\\nmanifest.path: %s\\ndebug.manifest.path: %s\\nlauncher.output: %s\\n' \"{manifestPath}\" \"{debugManifestPath}\" \"{launcherPath}\""
+            ]);
+        var runtimeArgsPath = Path.Combine(root, "runtime_args.txt");
+        var runtimeEnvPath = Path.Combine(root, "runtime_env.txt");
+        var runtimeHostPath = CreateTestExecutableScriptPath(
+            root,
+            "runtime_host",
+            [
+                "#!/bin/sh",
+                $"printf '%s\\n' \"$@\" > \"{runtimeArgsPath}\"",
+                $"printf 'COPPERFIN_UI_LOCALE=%s\\n' \"${{COPPERFIN_UI_LOCALE:-}}\" > \"{runtimeEnvPath}\"",
+                $"printf 'COPPERFIN_LOCALE=%s\\n' \"${{COPPERFIN_LOCALE:-}}\" >> \"{runtimeEnvPath}\"",
+                "printf 'debug.command[0]: continue\\n'",
+                "printf 'debug.reason: breakpoint\\n'",
+                "printf 'debug.location: app/main.prg:12\\n'",
+                "printf 'debug.statement: WAIT WINDOW \"hello\"\\n'",
+                "printf 'debug.stack.depth: 1\\n'",
+                "printf 'debug.executed.statements: 1\\n'"
+            ]);
+        File.WriteAllText(manifestPath, string.Empty);
+        File.WriteAllText(debugManifestPath, "security_enabled=false\n");
+        File.WriteAllText(launcherPath, string.Empty);
+
+        var projectPath = Path.Combine(root, "testapp.pjx");
+        var previousBuildHostPath = Environment.GetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH");
+        var previousRuntimeHostPath = Environment.GetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH");
+        var previousUiLocale = Environment.GetEnvironmentVariable("COPPERFIN_UI_LOCALE");
+        var previousLocale = Environment.GetEnvironmentVariable("COPPERFIN_LOCALE");
+        try
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH", buildHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH", runtimeHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_UI_LOCALE", "en-US");
+            Environment.SetEnvironmentVariable("COPPERFIN_LOCALE", "en-US");
+
+            var session = CopperfinRuntimeDebugClient.StartSessionAsync(
+                projectPath,
+                new CopperfinLocalization("pt-BR")).GetAwaiter().GetResult();
+
+            Expect(session.Success, "runtime debug client should succeed against the fake runtime host");
+            Expect(string.Equals(session.State.Reason, "breakpoint", StringComparison.Ordinal),
+                "runtime debug client should preserve the fake pause reason");
+
+            var capturedArgs = File.ReadAllText(runtimeArgsPath);
+            var capturedEnv = File.ReadAllText(runtimeEnvPath);
+            Expect(capturedArgs.Contains("--locale", StringComparison.Ordinal) &&
+                   capturedArgs.Contains("pt-BR", StringComparison.Ordinal),
+                "runtime debug client should pass the explicit locale through the runtime-host command line");
+            Expect(capturedEnv.Contains("COPPERFIN_UI_LOCALE=pt-BR", StringComparison.Ordinal),
+                "runtime debug client should stamp COPPERFIN_UI_LOCALE for the runtime host");
+            Expect(capturedEnv.Contains("COPPERFIN_LOCALE=pt-BR", StringComparison.Ordinal),
+                "runtime debug client should stamp COPPERFIN_LOCALE for the runtime host");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH", previousBuildHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH", previousRuntimeHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_UI_LOCALE", previousUiLocale);
+            Environment.SetEnvironmentVariable("COPPERFIN_LOCALE", previousLocale);
+            TryDelete(root);
         }
     }
 
@@ -1204,6 +1373,26 @@ internal static class Program
             RedirectStandardError = true,
             CreateNoWindow = true
         };
+    }
+
+    private static string CreateTestExecutableScriptPath(
+        string root,
+        string name,
+        IReadOnlyList<string> unixBody)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            throw new PlatformNotSupportedException();
+        }
+
+        var scriptPath = Path.Combine(root, name + ".sh");
+        File.WriteAllLines(scriptPath, unixBody);
+        File.SetUnixFileMode(
+            scriptPath,
+            UnixFileMode.UserRead |
+            UnixFileMode.UserWrite |
+            UnixFileMode.UserExecute);
+        return scriptPath;
     }
 
     private static void TryDelete(string root)

@@ -198,9 +198,16 @@ internal static class CopperfinStudioHostBridge
         return $"{arguments} --path {Quote(documentPath)}";
     }
 
-    public static bool Launch(string studioHostPath, string documentPath, bool readOnly = false)
+    public static bool Launch(
+        string studioHostPath,
+        string documentPath,
+        bool readOnly = false,
+        CopperfinLocalization? localization = null)
     {
-        var startInfo = CreateProcessStartInfo(studioHostPath, BuildArguments(documentPath, readOnly));
+        var startInfo = CreateProcessStartInfo(
+            studioHostPath,
+            BuildArguments(documentPath, readOnly),
+            localization: localization);
 
         return DiagnosticsProcess.Start(startInfo) is not null;
     }
@@ -296,6 +303,7 @@ internal static class CopperfinStudioHostBridge
     internal static DiagnosticsStartInfo CreateProcessStartInfo(
         string studioHostPath,
         string arguments,
+        CopperfinLocalization? localization = null,
         bool redirectOutput = false,
         bool createNoWindow = false,
         bool? isWindowsOverride = null)
@@ -315,7 +323,7 @@ internal static class CopperfinStudioHostBridge
             commandArguments = $"/d /c \"{Quote(studioHostPath)}{(string.IsNullOrWhiteSpace(arguments) ? string.Empty : " " + arguments)}\"";
         }
 
-        return new DiagnosticsStartInfo
+        var startInfo = new DiagnosticsStartInfo
         {
             FileName = commandPath,
             Arguments = commandArguments,
@@ -324,6 +332,22 @@ internal static class CopperfinStudioHostBridge
             RedirectStandardError = redirectOutput,
             CreateNoWindow = createNoWindow
         };
+        ApplyLocalizationEnvironment(startInfo, localization);
+        return startInfo;
+    }
+
+    internal static void ApplyLocalizationEnvironment(
+        DiagnosticsStartInfo startInfo,
+        CopperfinLocalization? localization)
+    {
+        localization ??= CopperfinLocalization.FromEnvironment();
+        if (string.IsNullOrWhiteSpace(localization.Locale))
+        {
+            return;
+        }
+
+        startInfo.EnvironmentVariables["COPPERFIN_UI_LOCALE"] = localization.Locale;
+        startInfo.EnvironmentVariables["COPPERFIN_LOCALE"] = localization.Locale;
     }
 
     public static string DescribeAssetKind(string path, CopperfinLocalization? localization = null)

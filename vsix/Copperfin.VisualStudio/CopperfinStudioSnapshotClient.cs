@@ -34,8 +34,6 @@ internal static class CopperfinStudioSnapshotClient
         public string UndoLabel { get; set; } = string.Empty;
     }
 
-    private static readonly CopperfinLocalization Localization = CopperfinLocalization.FromEnvironment();
-
     private static bool HasDocumentContent(CopperfinStudioSnapshotDocument? document)
     {
         return document is not null &&
@@ -47,11 +45,15 @@ internal static class CopperfinStudioSnapshotClient
                 document.ProjectWorkspace is not null);
     }
 
-    private static StudioHostCommandResult RunCommand(string studioHostPath, string arguments)
+    private static StudioHostCommandResult RunCommand(
+        string studioHostPath,
+        string arguments,
+        CopperfinLocalization localization)
     {
         var startInfo = CopperfinStudioHostBridge.CreateProcessStartInfo(
             studioHostPath,
             arguments,
+            localization: localization,
             redirectOutput: true,
             createNoWindow: true);
 
@@ -61,7 +63,7 @@ internal static class CopperfinStudioSnapshotClient
             return new StudioHostCommandResult
             {
                 Success = false,
-                Error = Localization.Text("AssetEditor.Dialog.StudioHostCouldNotStart")
+                Error = localization.Text("AssetEditor.Dialog.StudioHostCouldNotStart")
             };
         }
 
@@ -70,7 +72,7 @@ internal static class CopperfinStudioSnapshotClient
             return new StudioHostCommandResult
             {
                 Success = false,
-                Error = Localization.Text("AssetEditor.Dialog.StudioHostTimedOut")
+                Error = localization.Text("AssetEditor.Dialog.StudioHostTimedOut")
             };
         }
 
@@ -92,9 +94,12 @@ internal static class CopperfinStudioSnapshotClient
         };
     }
 
-    private static CopperfinStudioSnapshotResult RunSnapshotCommand(string studioHostPath, string arguments)
+    private static CopperfinStudioSnapshotResult RunSnapshotCommand(
+        string studioHostPath,
+        string arguments,
+        CopperfinLocalization localization)
     {
-        var commandResult = RunCommand(studioHostPath, arguments);
+        var commandResult = RunCommand(studioHostPath, arguments, localization);
         if (!commandResult.Success)
         {
             return new CopperfinStudioSnapshotResult
@@ -114,7 +119,7 @@ internal static class CopperfinStudioSnapshotClient
                 return new CopperfinStudioSnapshotResult
                 {
                     Success = false,
-                    Error = Localization.Text("AssetEditor.Dialog.StudioSnapshotEmpty")
+                    Error = localization.Text("AssetEditor.Dialog.StudioSnapshotEmpty")
                 };
             }
 
@@ -129,7 +134,7 @@ internal static class CopperfinStudioSnapshotClient
             return new CopperfinStudioSnapshotResult
             {
                 Success = false,
-                Error = Localization.Format("AssetEditor.Dialog.StudioSnapshotParseFailed", ex.Message)
+                Error = localization.Format("AssetEditor.Dialog.StudioSnapshotParseFailed", ex.Message)
             };
         }
     }
@@ -138,11 +143,13 @@ internal static class CopperfinStudioSnapshotClient
         string studioHostPath,
         string assetPath,
         int recordIndex,
-        IReadOnlyList<KeyValuePair<string, string>> propertyChanges)
+        IReadOnlyList<KeyValuePair<string, string>> propertyChanges,
+        CopperfinLocalization localization)
     {
         var commandResult = RunCommand(
             studioHostPath,
-            CopperfinStudioHostBridge.BuildPropertyBatchUpdateArguments(assetPath, recordIndex, propertyChanges));
+            CopperfinStudioHostBridge.BuildPropertyBatchUpdateArguments(assetPath, recordIndex, propertyChanges),
+            localization);
         if (!commandResult.Success)
         {
             return new CopperfinStudioSnapshotResult
@@ -172,7 +179,7 @@ internal static class CopperfinStudioSnapshotClient
                 return new CopperfinStudioSnapshotResult
                 {
                     Success = false,
-                    Error = Localization.Text("AssetEditor.Dialog.StudioSnapshotEmpty")
+                    Error = localization.Text("AssetEditor.Dialog.StudioSnapshotEmpty")
                 };
             }
 
@@ -189,71 +196,83 @@ internal static class CopperfinStudioSnapshotClient
 
             return RunSnapshotCommand(
                 studioHostPath,
-                CopperfinStudioHostBridge.BuildArguments(assetPath, readOnly: true) + " --json");
+                CopperfinStudioHostBridge.BuildArguments(assetPath, readOnly: true) + " --json",
+                localization);
         }
         catch (InvalidOperationException ex)
         {
             return new CopperfinStudioSnapshotResult
             {
                 Success = false,
-                Error = Localization.Format("AssetEditor.Dialog.StudioSnapshotParseFailed", ex.Message)
+                Error = localization.Format("AssetEditor.Dialog.StudioSnapshotParseFailed", ex.Message)
             };
         }
     }
 
-    public static CopperfinStudioSnapshotResult TryLoad(string assetPath)
+    public static CopperfinStudioSnapshotResult TryLoad(
+        string assetPath,
+        CopperfinLocalization? localization = null)
     {
+        localization ??= CopperfinLocalization.FromEnvironment();
         var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
         if (string.IsNullOrWhiteSpace(studioHostPath))
         {
             return new CopperfinStudioSnapshotResult
             {
                 Success = false,
-                Error = Localization.Text("AssetEditor.Dialog.StudioHostMissing")
+                Error = localization.Text("AssetEditor.Dialog.StudioHostMissing")
             };
         }
 
-        return RunSnapshotCommand(studioHostPath!, CopperfinStudioHostBridge.BuildArguments(assetPath, readOnly: true) + " --json");
+        return RunSnapshotCommand(
+            studioHostPath!,
+            CopperfinStudioHostBridge.BuildArguments(assetPath, readOnly: true) + " --json",
+            localization);
     }
 
     public static CopperfinStudioSnapshotResult TryUpdateProperty(
         string assetPath,
         int recordIndex,
         string propertyName,
-        string propertyValue)
+        string propertyValue,
+        CopperfinLocalization? localization = null)
     {
+        localization ??= CopperfinLocalization.FromEnvironment();
         var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
         if (string.IsNullOrWhiteSpace(studioHostPath))
         {
             return new CopperfinStudioSnapshotResult
             {
                 Success = false,
-                Error = Localization.Text("AssetEditor.Dialog.StudioHostMissing")
+                Error = localization.Text("AssetEditor.Dialog.StudioHostMissing")
             };
         }
 
         return RunSnapshotCommand(
             studioHostPath!,
-            CopperfinStudioHostBridge.BuildPropertyUpdateArguments(assetPath, recordIndex, propertyName, propertyValue));
+            CopperfinStudioHostBridge.BuildPropertyUpdateArguments(assetPath, recordIndex, propertyName, propertyValue),
+            localization);
     }
 
     public static CopperfinStudioSnapshotResult TryUpdateProperties(
         string assetPath,
         int recordIndex,
-        IReadOnlyList<KeyValuePair<string, string>> propertyChanges)
+        IReadOnlyList<KeyValuePair<string, string>> propertyChanges,
+        CopperfinLocalization? localization = null)
     {
+        localization ??= CopperfinLocalization.FromEnvironment();
         if (propertyChanges.Count == 0)
         {
             return new CopperfinStudioSnapshotResult
             {
                 Success = false,
-                Error = Localization.Text("AssetEditor.Dialog.StudioSnapshotEmpty")
+                Error = localization.Text("AssetEditor.Dialog.StudioSnapshotEmpty")
             };
         }
 
         if (propertyChanges.Count == 1)
         {
-            return TryUpdateProperty(assetPath, recordIndex, propertyChanges[0].Key, propertyChanges[0].Value);
+            return TryUpdateProperty(assetPath, recordIndex, propertyChanges[0].Key, propertyChanges[0].Value, localization);
         }
 
         var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
@@ -262,7 +281,7 @@ internal static class CopperfinStudioSnapshotClient
             return new CopperfinStudioSnapshotResult
             {
                 Success = false,
-                Error = Localization.Text("AssetEditor.Dialog.StudioHostMissing")
+                Error = localization.Text("AssetEditor.Dialog.StudioHostMissing")
             };
         }
 
@@ -270,68 +289,90 @@ internal static class CopperfinStudioSnapshotClient
             studioHostPath!,
             assetPath,
             recordIndex,
-            propertyChanges);
+            propertyChanges,
+            localization);
     }
 
-    public static CopperfinStudioSnapshotResult TryUndoCommand(string assetPath, int? selectedRecordIndex = null)
+    public static CopperfinStudioSnapshotResult TryUndoCommand(
+        string assetPath,
+        int? selectedRecordIndex = null,
+        CopperfinLocalization? localization = null)
     {
+        localization ??= CopperfinLocalization.FromEnvironment();
         var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
         if (string.IsNullOrWhiteSpace(studioHostPath))
         {
             return new CopperfinStudioSnapshotResult
             {
                 Success = false,
-                Error = Localization.Text("AssetEditor.Dialog.StudioHostMissing")
-            };
-        }
-
-        return RunSnapshotCommand(studioHostPath!, CopperfinStudioHostBridge.BuildUndoArguments(assetPath, selectedRecordIndex));
-    }
-
-    public static CopperfinStudioSnapshotResult TryDeleteObject(string assetPath, int recordIndex, string? uniqueId)
-    {
-        var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
-        if (string.IsNullOrWhiteSpace(studioHostPath))
-        {
-            return new CopperfinStudioSnapshotResult
-            {
-                Success = false,
-                Error = Localization.Text("AssetEditor.Dialog.StudioHostMissing")
+                Error = localization.Text("AssetEditor.Dialog.StudioHostMissing")
             };
         }
 
         return RunSnapshotCommand(
             studioHostPath!,
-            CopperfinStudioHostBridge.BuildDeleteObjectArguments(assetPath, recordIndex, uniqueId));
+            CopperfinStudioHostBridge.BuildUndoArguments(assetPath, selectedRecordIndex),
+            localization);
     }
 
-    public static CopperfinStudioSnapshotResult TryRestoreObject(string assetPath, int recordIndex, string? uniqueId)
+    public static CopperfinStudioSnapshotResult TryDeleteObject(
+        string assetPath,
+        int recordIndex,
+        string? uniqueId,
+        CopperfinLocalization? localization = null)
     {
+        localization ??= CopperfinLocalization.FromEnvironment();
         var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
         if (string.IsNullOrWhiteSpace(studioHostPath))
         {
             return new CopperfinStudioSnapshotResult
             {
                 Success = false,
-                Error = Localization.Text("AssetEditor.Dialog.StudioHostMissing")
+                Error = localization.Text("AssetEditor.Dialog.StudioHostMissing")
             };
         }
 
         return RunSnapshotCommand(
             studioHostPath!,
-            CopperfinStudioHostBridge.BuildRestoreObjectArguments(assetPath, recordIndex, uniqueId));
+            CopperfinStudioHostBridge.BuildDeleteObjectArguments(assetPath, recordIndex, uniqueId),
+            localization);
+    }
+
+    public static CopperfinStudioSnapshotResult TryRestoreObject(
+        string assetPath,
+        int recordIndex,
+        string? uniqueId,
+        CopperfinLocalization? localization = null)
+    {
+        localization ??= CopperfinLocalization.FromEnvironment();
+        var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
+        if (string.IsNullOrWhiteSpace(studioHostPath))
+        {
+            return new CopperfinStudioSnapshotResult
+            {
+                Success = false,
+                Error = localization.Text("AssetEditor.Dialog.StudioHostMissing")
+            };
+        }
+
+        return RunSnapshotCommand(
+            studioHostPath!,
+            CopperfinStudioHostBridge.BuildRestoreObjectArguments(assetPath, recordIndex, uniqueId),
+            localization);
     }
 
     public static CopperfinStudioSnapshotResult TryUpdateDeletedStates(
         string assetPath,
-        IReadOnlyList<KeyValuePair<string, bool>> deletedStateChanges)
+        IReadOnlyList<KeyValuePair<string, bool>> deletedStateChanges,
+        CopperfinLocalization? localization = null)
     {
+        localization ??= CopperfinLocalization.FromEnvironment();
         if (deletedStateChanges.Count == 0)
         {
             return new CopperfinStudioSnapshotResult
             {
                 Success = false,
-                Error = Localization.Text("AssetEditor.Dialog.StudioSnapshotEmpty")
+                Error = localization.Text("AssetEditor.Dialog.StudioSnapshotEmpty")
             };
         }
 
@@ -341,76 +382,86 @@ internal static class CopperfinStudioSnapshotClient
             return new CopperfinStudioSnapshotResult
             {
                 Success = false,
-                Error = Localization.Text("AssetEditor.Dialog.StudioHostMissing")
+                Error = localization.Text("AssetEditor.Dialog.StudioHostMissing")
             };
         }
 
         return RunSnapshotCommand(
             studioHostPath!,
-            CopperfinStudioHostBridge.BuildDeletedStatesArguments(assetPath, deletedStateChanges));
+            CopperfinStudioHostBridge.BuildDeletedStatesArguments(assetPath, deletedStateChanges),
+            localization);
     }
 
     public static CopperfinStudioSnapshotResult TryDuplicateObject(
         string assetPath,
         int recordIndex,
         string? uniqueId,
-        string newUniqueId)
+        string newUniqueId,
+        CopperfinLocalization? localization = null)
     {
+        localization ??= CopperfinLocalization.FromEnvironment();
         var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
         if (string.IsNullOrWhiteSpace(studioHostPath))
         {
             return new CopperfinStudioSnapshotResult
             {
                 Success = false,
-                Error = Localization.Text("AssetEditor.Dialog.StudioHostMissing")
+                Error = localization.Text("AssetEditor.Dialog.StudioHostMissing")
             };
         }
 
         return RunSnapshotCommand(
             studioHostPath!,
-            CopperfinStudioHostBridge.BuildDuplicateObjectArguments(assetPath, recordIndex, uniqueId, newUniqueId));
+            CopperfinStudioHostBridge.BuildDuplicateObjectArguments(assetPath, recordIndex, uniqueId, newUniqueId),
+            localization);
     }
 
     public static CopperfinStudioSnapshotResult TryRenameObject(
         string assetPath,
         int recordIndex,
         string? uniqueId,
-        string newUniqueId)
+        string newUniqueId,
+        CopperfinLocalization? localization = null)
     {
+        localization ??= CopperfinLocalization.FromEnvironment();
         var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
         if (string.IsNullOrWhiteSpace(studioHostPath))
         {
             return new CopperfinStudioSnapshotResult
             {
                 Success = false,
-                Error = Localization.Text("AssetEditor.Dialog.StudioHostMissing")
+                Error = localization.Text("AssetEditor.Dialog.StudioHostMissing")
             };
         }
 
         return RunSnapshotCommand(
             studioHostPath!,
-            CopperfinStudioHostBridge.BuildRenameObjectArguments(assetPath, recordIndex, uniqueId, newUniqueId));
+            CopperfinStudioHostBridge.BuildRenameObjectArguments(assetPath, recordIndex, uniqueId, newUniqueId),
+            localization);
     }
 
     public static CopperfinStudioSnapshotResult TryReorderObject(
         string assetPath,
         int recordIndex,
         string? uniqueId,
-        string placement)
+        string placement,
+        CopperfinLocalization? localization = null)
     {
+        localization ??= CopperfinLocalization.FromEnvironment();
         var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
         if (string.IsNullOrWhiteSpace(studioHostPath))
         {
             return new CopperfinStudioSnapshotResult
             {
                 Success = false,
-                Error = Localization.Text("AssetEditor.Dialog.StudioHostMissing")
+                Error = localization.Text("AssetEditor.Dialog.StudioHostMissing")
             };
         }
 
         return RunSnapshotCommand(
             studioHostPath!,
-            CopperfinStudioHostBridge.BuildReorderObjectArguments(assetPath, recordIndex, uniqueId, placement));
+            CopperfinStudioHostBridge.BuildReorderObjectArguments(assetPath, recordIndex, uniqueId, placement),
+            localization);
     }
 
     public static CopperfinStudioSnapshotResult TryNudgeObject(
@@ -419,15 +470,17 @@ internal static class CopperfinStudioSnapshotClient
         string? uniqueId,
         string mode,
         double deltaHpos,
-        double deltaVpos)
+        double deltaVpos,
+        CopperfinLocalization? localization = null)
     {
+        localization ??= CopperfinLocalization.FromEnvironment();
         var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
         if (string.IsNullOrWhiteSpace(studioHostPath))
         {
             return new CopperfinStudioSnapshotResult
             {
                 Success = false,
-                Error = Localization.Text("AssetEditor.Dialog.StudioHostMissing")
+                Error = localization.Text("AssetEditor.Dialog.StudioHostMissing")
             };
         }
 
@@ -439,7 +492,8 @@ internal static class CopperfinStudioSnapshotClient
                 uniqueId,
                 mode,
                 deltaHpos,
-                deltaVpos));
+                deltaVpos),
+            localization);
     }
 
     public static CopperfinStudioSnapshotResult TryAlignObject(
@@ -447,15 +501,17 @@ internal static class CopperfinStudioSnapshotClient
         int recordIndex,
         string anchorUniqueId,
         string alignmentMode,
-        IReadOnlyList<string> targetUniqueIds)
+        IReadOnlyList<string> targetUniqueIds,
+        CopperfinLocalization? localization = null)
     {
+        localization ??= CopperfinLocalization.FromEnvironment();
         var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
         if (string.IsNullOrWhiteSpace(studioHostPath))
         {
             return new CopperfinStudioSnapshotResult
             {
                 Success = false,
-                Error = Localization.Text("AssetEditor.Dialog.StudioHostMissing")
+                Error = localization.Text("AssetEditor.Dialog.StudioHostMissing")
             };
         }
 
@@ -466,7 +522,8 @@ internal static class CopperfinStudioSnapshotClient
                 recordIndex,
                 anchorUniqueId,
                 alignmentMode,
-                targetUniqueIds));
+                targetUniqueIds),
+            localization);
     }
 
     public static CopperfinStudioSnapshotResult TryResizeObject(
@@ -474,15 +531,17 @@ internal static class CopperfinStudioSnapshotClient
         int recordIndex,
         string anchorUniqueId,
         string resizeMode,
-        IReadOnlyList<string> targetUniqueIds)
+        IReadOnlyList<string> targetUniqueIds,
+        CopperfinLocalization? localization = null)
     {
+        localization ??= CopperfinLocalization.FromEnvironment();
         var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
         if (string.IsNullOrWhiteSpace(studioHostPath))
         {
             return new CopperfinStudioSnapshotResult
             {
                 Success = false,
-                Error = Localization.Text("AssetEditor.Dialog.StudioHostMissing")
+                Error = localization.Text("AssetEditor.Dialog.StudioHostMissing")
             };
         }
 
@@ -493,22 +552,25 @@ internal static class CopperfinStudioSnapshotClient
                 recordIndex,
                 anchorUniqueId,
                 resizeMode,
-                targetUniqueIds));
+                targetUniqueIds),
+            localization);
     }
 
     public static CopperfinStudioSnapshotResult TryDistributeObject(
         string assetPath,
         int recordIndex,
         string distributionMode,
-        IReadOnlyList<string> targetUniqueIds)
+        IReadOnlyList<string> targetUniqueIds,
+        CopperfinLocalization? localization = null)
     {
+        localization ??= CopperfinLocalization.FromEnvironment();
         var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
         if (string.IsNullOrWhiteSpace(studioHostPath))
         {
             return new CopperfinStudioSnapshotResult
             {
                 Success = false,
-                Error = Localization.Text("AssetEditor.Dialog.StudioHostMissing")
+                Error = localization.Text("AssetEditor.Dialog.StudioHostMissing")
             };
         }
 
@@ -518,7 +580,8 @@ internal static class CopperfinStudioSnapshotClient
                 assetPath,
                 recordIndex,
                 distributionMode,
-                targetUniqueIds));
+                targetUniqueIds),
+            localization);
     }
 
     public static CopperfinStudioSnapshotResult TrySnapObject(
@@ -527,15 +590,17 @@ internal static class CopperfinStudioSnapshotClient
         string snapMode,
         double gridWidth,
         double gridHeight,
-        IReadOnlyList<string> targetUniqueIds)
+        IReadOnlyList<string> targetUniqueIds,
+        CopperfinLocalization? localization = null)
     {
+        localization ??= CopperfinLocalization.FromEnvironment();
         var studioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath();
         if (string.IsNullOrWhiteSpace(studioHostPath))
         {
             return new CopperfinStudioSnapshotResult
             {
                 Success = false,
-                Error = Localization.Text("AssetEditor.Dialog.StudioHostMissing")
+                Error = localization.Text("AssetEditor.Dialog.StudioHostMissing")
             };
         }
 
@@ -547,6 +612,7 @@ internal static class CopperfinStudioSnapshotClient
                 snapMode,
                 gridWidth,
                 gridHeight,
-                targetUniqueIds));
+                targetUniqueIds),
+            localization);
     }
 }
