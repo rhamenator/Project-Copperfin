@@ -487,7 +487,7 @@
                     }
                     if (match(".NULL.") || match(".null."))
                     {
-                        return make_empty_value();
+                        return make_null_value();
                     }
                 }
                 if (std::isdigit(static_cast<unsigned char>(peek())) != 0)

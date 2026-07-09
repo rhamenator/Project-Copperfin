@@ -672,6 +672,12 @@ PrgValue make_empty_value() {
     return {};
 }
 
+PrgValue make_null_value() {
+    PrgValue result;
+    result.is_null = true;
+    return result;
+}
+
 PrgValue make_boolean_value(bool value) {
     PrgValue result;
     result.kind = PrgValueKind::boolean;
@@ -690,6 +696,18 @@ PrgValue make_string_value(std::string value) {
     PrgValue result;
     result.kind = PrgValueKind::string;
     result.string_value = std::move(value);
+    return result;
+}
+
+PrgValue make_date_value(std::string value) {
+    PrgValue result = make_string_value(std::move(value));
+    result.string_flavor = PrgStringFlavor::date;
+    return result;
+}
+
+PrgValue make_datetime_value(std::string value) {
+    PrgValue result = make_string_value(std::move(value));
+    result.string_flavor = PrgStringFlavor::datetime;
     return result;
 }
 

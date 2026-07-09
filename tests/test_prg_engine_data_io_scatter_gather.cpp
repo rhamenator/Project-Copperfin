@@ -508,12 +508,12 @@ void test_scatter_gather_memvar_preserves_date_and_datetime_like_values() {
             "GATHER MEMVAR should serialize runtime datetime strings back into the datetime field");
     }
     if (blank_birth_type != state.globals.end()) {
-        expect(copperfin::runtime::format_value(blank_birth_type->second) == "C",
-            "SCATTER MEMVAR BLANK should keep date fields as blank string values, not undefined values");
+        expect(copperfin::runtime::format_value(blank_birth_type->second) == "D",
+            "SCATTER MEMVAR BLANK should preserve date type metadata while leaving the value blank");
     }
     if (blank_stamp_type != state.globals.end()) {
-        expect(copperfin::runtime::format_value(blank_stamp_type->second) == "C",
-            "SCATTER MEMVAR BLANK should keep datetime fields as blank string values, not undefined values");
+        expect(copperfin::runtime::format_value(blank_stamp_type->second) == "T",
+            "SCATTER MEMVAR BLANK should preserve datetime type metadata while leaving the value blank");
     }
     if (after_blank_birth != state.globals.end()) {
         expect(copperfin::runtime::format_value(after_blank_birth->second).empty(),
@@ -619,12 +619,12 @@ void test_scatter_gather_array_preserves_date_and_datetime_like_values() {
             "GATHER FROM array should serialize runtime datetime strings back into the datetime field (got '" + actual + "')");
     }
     if (blank_array_birth_type != state.globals.end()) {
-        expect(copperfin::runtime::format_value(blank_array_birth_type->second) == "C",
-            "SCATTER TO array BLANK should keep date values as blank strings");
+        expect(copperfin::runtime::format_value(blank_array_birth_type->second) == "D",
+            "SCATTER TO array BLANK should preserve date type metadata on blank elements");
     }
     if (blank_array_stamp_type != state.globals.end()) {
-        expect(copperfin::runtime::format_value(blank_array_stamp_type->second) == "C",
-            "SCATTER TO array BLANK should keep datetime values as blank strings");
+        expect(copperfin::runtime::format_value(blank_array_stamp_type->second) == "T",
+            "SCATTER TO array BLANK should preserve datetime type metadata on blank elements");
     }
     if (after_blank_array_birth != state.globals.end()) {
         expect(copperfin::runtime::format_value(after_blank_array_birth->second).empty(),

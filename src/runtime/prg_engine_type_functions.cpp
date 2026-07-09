@@ -56,7 +56,7 @@ std::string normalize_type_expression(std::string expression_text) {
 
 std::string vartype_code(const PrgValue& value) {
     if (value.kind == PrgValueKind::empty) {
-        return "U";
+        return value.is_null ? "X" : "U";
     }
     if (value.kind == PrgValueKind::boolean) {
         return "L";
@@ -66,6 +66,14 @@ std::string vartype_code(const PrgValue& value) {
     }
     if (value.kind == PrgValueKind::int64 || value.kind == PrgValueKind::uint64) {
         return "I";
+    }
+    if (value.kind == PrgValueKind::string) {
+        if (value.string_flavor == PrgStringFlavor::date) {
+            return "D";
+        }
+        if (value.string_flavor == PrgStringFlavor::datetime) {
+            return "T";
+        }
     }
     int object_handle = 0;
     std::string object_prog_id;
@@ -104,7 +112,10 @@ std::optional<PrgValue> evaluate_type_function(
         }
         return make_boolean_value(true);
     }
-    if ((function == "isnull" || function == "isempty") && !arguments.empty()) {
+    if (function == "isnull" && !arguments.empty()) {
+        return make_boolean_value(arguments[0].is_null);
+    }
+    if (function == "isempty" && !arguments.empty()) {
         return make_boolean_value(arguments[0].kind == PrgValueKind::empty);
     }
     if (function == "isblank" && !arguments.empty()) {

@@ -24,11 +24,19 @@ enum class PrgValueKind {
     uint64
 };
 
+enum class PrgStringFlavor {
+    none,
+    date,
+    datetime
+};
+
 struct PrgValue {
     PrgValueKind kind = PrgValueKind::empty;
+    bool is_null = false;
     bool boolean_value = false;
     double number_value = 0.0;
     std::string string_value;
+    PrgStringFlavor string_flavor = PrgStringFlavor::none;
     std::int64_t int64_value = 0;
     std::uint64_t uint64_value = 0;
 };

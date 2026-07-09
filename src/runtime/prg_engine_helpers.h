@@ -44,9 +44,12 @@ std::string evaluate_index_expression(const std::string& expression, const vfp::
 bool has_keyword(const std::string& text, const std::string& keyword);
 bool parse_object_handle_reference(const PrgValue& value, int& handle, std::string& prog_id);
 PrgValue make_empty_value();
+PrgValue make_null_value();
 PrgValue make_boolean_value(bool value);
 PrgValue make_number_value(double value);
 PrgValue make_string_value(std::string value);
+PrgValue make_date_value(std::string value);
+PrgValue make_datetime_value(std::string value);
 PrgValue make_int64_value(std::int64_t value);
 PrgValue make_uint64_value(std::uint64_t value);
 bool value_as_bool(const PrgValue& value);

@@ -1378,7 +1378,7 @@
             const std::string text = trim_copy(field.display_value);
             if (field.is_null)
             {
-                return make_empty_value();
+                return make_null_value();
             }
             if (field_type == 'L')
             {
@@ -1405,7 +1405,7 @@
             {
                 if (text.empty())
                 {
-                    return make_string_value("");
+                    return make_date_value("");
                 }
 
                 int year = 0;
@@ -1413,14 +1413,14 @@
                 int day = 0;
                 if (parse_runtime_or_storage_date_string(field.display_value, year, month, day))
                 {
-                    return make_string_value(format_runtime_date_string(year, month, day));
+                    return make_date_value(format_runtime_date_string(year, month, day));
                 }
             }
             if (field_type == 'T')
             {
                 if (text.empty())
                 {
-                    return make_string_value("");
+                    return make_datetime_value("");
                 }
 
                 int julian_day = 0;
@@ -1429,7 +1429,7 @@
                 {
                     if (julian_day == 0 && millis == 0)
                     {
-                        return make_string_value("");
+                        return make_datetime_value("");
                     }
 
                     int year = 0;
@@ -1443,7 +1443,7 @@
                         const int second = total_seconds % 60;
                         if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59 && second >= 0 && second <= 59)
                         {
-                            return make_string_value(format_runtime_datetime_string(year, month, day, hour, minute, second));
+                            return make_datetime_value(format_runtime_datetime_string(year, month, day, hour, minute, second));
                         }
                     }
                 }
@@ -1456,7 +1456,7 @@
                 int second = 0;
                 if (parse_runtime_or_storage_datetime_string(field.display_value, year, month, day, hour, minute, second))
                 {
-                    return make_string_value(format_runtime_datetime_string(year, month, day, hour, minute, second));
+                    return make_datetime_value(format_runtime_datetime_string(year, month, day, hour, minute, second));
                 }
             }
             return make_string_value(field.display_value);
@@ -1476,6 +1476,14 @@
             }
             if (field_type == 'C' || field_type == 'V' || field_type == 'D' || field_type == 'T')
             {
+                if (field_type == 'D')
+                {
+                    return make_date_value("");
+                }
+                if (field_type == 'T')
+                {
+                    return make_datetime_value("");
+                }
                 return make_string_value("");
             }
             return make_empty_value();

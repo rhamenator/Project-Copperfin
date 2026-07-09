@@ -135,6 +135,14 @@ namespace
             "t_num = VARTYPE(x)\n"
             "t_str = VARTYPE('hello')\n"
             "t_bool = VARTYPE(.T.)\n"
+            "t_date = VARTYPE(DATE(2026, 4, 18))\n"
+            "t_datetime = VARTYPE(DATETIME(2026, 4, 18, 1, 2, 3))\n"
+            "t_null = VARTYPE(.NULL.)\n"
+            "t_missing = TYPE('missingVar')\n"
+            "null_expr = ISNULL(.NULL.)\n"
+            "null_value = .NULL.\n"
+            "null_var = ISNULL(null_value)\n"
+            "null_missing = ISNULL(missingVar)\n"
             "em = EMPTY('')\n"
             "em2 = EMPTY(0)\n"
             "not_em = EMPTY('hi')\n"
@@ -178,6 +186,13 @@ namespace
         check("t_num", "N");
         check("t_str", "C");
         check("t_bool", "L");
+        check("t_date", "D");
+        check("t_datetime", "T");
+        check("t_null", "X");
+        check("t_missing", "U");
+        check("null_expr", "true");
+        check("null_var", "true");
+        check("null_missing", "false");
         check("em", "true");
         check("em2", "true");
         check("not_em", "false");
