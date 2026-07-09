@@ -298,8 +298,83 @@ void exercise_real_sample_column_setup_round_trip(
                     "\"columnSpacing\": 0",
                     "#3713: real sample COLS update should keep column spacing inert");
     expect_contains(reopen_after_cols.stdout_text,
+                    "\"columnWidthAvailable\": false",
+                    "#3720: real sample COLS update should keep column width unavailable");
+    expect_contains(reopen_after_cols.stdout_text,
+                    "\"columnWidth\": 0",
+                    "#3720: real sample COLS update should keep column width inert");
+    expect_contains(reopen_after_cols.stdout_text,
                     "\"name\": \"COLS\"",
                     "#3713: real sample COLS update should expose COLS provenance");
+
+    const auto set_width_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", copied_primary.string(),
+            "--set-property",
+            "--record", "0",
+            "--property-name", "COLWIDTH",
+            "--property-value", "4800",
+            "--json"
+        },
+        temp_root);
+    if (set_width_process.exit_code != 0) {
+        std::cerr << "studio host sample COLWIDTH update stdout:\n" << set_width_process.stdout_text << "\n";
+        std::cerr << "studio host sample COLWIDTH update stderr:\n" << set_width_process.stderr_text << "\n";
+    }
+    expect(set_width_process.exit_code == 0, "#3720: real sample COLWIDTH update should succeed");
+
+    const auto width_property = copperfin::vfp::query_visual_object_property({
+        .path = copied_primary.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "COLWIDTH"
+    });
+    expect(width_property.ok && width_property.exists && width_property.value == "4800",
+           "#3720: real sample COLWIDTH update should persist the memo-backed setting");
+
+    const std::string after_width_primary_bytes = read_binary(copied_primary);
+    const std::string after_width_sidecar_bytes = read_binary(copied_sidecar);
+    expect(after_width_primary_bytes != after_cols_primary_bytes,
+           "#3720: real sample COLWIDTH update should change the primary asset bytes again");
+    expect(after_width_sidecar_bytes != after_cols_sidecar_bytes,
+           "#3720: real sample COLWIDTH update should change the memo sidecar bytes again");
+
+    const auto reopen_after_width = run_process_capture(
+        studio_host_path,
+        {"--path", copied_primary.string(), "--record", "0", "--json"},
+        temp_root);
+    if (reopen_after_width.exit_code != 0) {
+        std::cerr << "studio host sample COLWIDTH reopen stdout:\n" << reopen_after_width.stdout_text << "\n";
+        std::cerr << "studio host sample COLWIDTH reopen stderr:\n" << reopen_after_width.stderr_text << "\n";
+    }
+    expect(reopen_after_width.exit_code == 0, "#3720: real sample reopen after COLWIDTH update should succeed");
+    expect_common_reopen_json(reopen_after_width.stdout_text, sample);
+    expect_contains(reopen_after_width.stdout_text,
+                    "\"columnCountAvailable\": true",
+                    "#3720: real sample COLWIDTH update should preserve column-count availability");
+    expect_contains(reopen_after_width.stdout_text,
+                    "\"columnCount\": 2",
+                    "#3720: real sample COLWIDTH update should preserve the updated column count");
+    expect_contains(reopen_after_width.stdout_text,
+                    "\"columnSpacingAvailable\": false",
+                    "#3720: real sample COLWIDTH update should keep column spacing unavailable");
+    expect_contains(reopen_after_width.stdout_text,
+                    "\"columnSpacing\": 0",
+                    "#3720: real sample COLWIDTH update should keep column spacing inert");
+    expect_contains(reopen_after_width.stdout_text,
+                    "\"columnWidthAvailable\": true",
+                    "#3720: real sample COLWIDTH update should expose column-width availability");
+    expect_contains(reopen_after_width.stdout_text,
+                    "\"columnWidth\": 4800",
+                    "#3720: real sample COLWIDTH update should expose the updated column width");
+    expect_contains(reopen_after_width.stdout_text,
+                    "\"name\": \"COLS\"",
+                    "#3720: real sample COLWIDTH update should preserve COLS provenance");
+    expect_contains(reopen_after_width.stdout_text,
+                    "\"name\": \"COLWIDTH\"",
+                    "#3720: real sample COLWIDTH update should expose COLWIDTH provenance");
 
     const auto set_spacing_process = run_process_capture(
         studio_host_path,
@@ -330,9 +405,9 @@ void exercise_real_sample_column_setup_round_trip(
 
     const std::string after_spacing_primary_bytes = read_binary(copied_primary);
     const std::string after_spacing_sidecar_bytes = read_binary(copied_sidecar);
-    expect(after_spacing_primary_bytes != after_cols_primary_bytes,
+    expect(after_spacing_primary_bytes != after_width_primary_bytes,
            "#3713: real sample COLSPACING update should change the primary asset bytes again");
-    expect(after_spacing_sidecar_bytes != after_cols_sidecar_bytes,
+    expect(after_spacing_sidecar_bytes != after_width_sidecar_bytes,
            "#3713: real sample COLSPACING update should change the memo sidecar bytes again");
 
     const auto reopen_after_spacing = run_process_capture(
@@ -359,11 +434,20 @@ void exercise_real_sample_column_setup_round_trip(
                     "\"columnSpacing\": 120",
                     "#3713: real sample COLSPACING update should expose the updated column spacing");
     expect_contains(reopen_after_spacing.stdout_text,
+                    "\"columnWidthAvailable\": true",
+                    "#3720: real sample COLSPACING update should preserve column-width availability");
+    expect_contains(reopen_after_spacing.stdout_text,
+                    "\"columnWidth\": 4800",
+                    "#3720: real sample COLSPACING update should preserve the updated column width");
+    expect_contains(reopen_after_spacing.stdout_text,
                     "\"name\": \"COLS\"",
                     "#3713: real sample COLSPACING update should preserve COLS provenance");
     expect_contains(reopen_after_spacing.stdout_text,
                     "\"name\": \"COLSPACING\"",
                     "#3713: real sample COLSPACING update should expose COLSPACING provenance");
+    expect_contains(reopen_after_spacing.stdout_text,
+                    "\"name\": \"COLWIDTH\"",
+                    "#3720: real sample COLSPACING update should preserve COLWIDTH provenance");
 
     const auto clear_spacing_process = run_process_capture(
         studio_host_path,
@@ -380,6 +464,22 @@ void exercise_real_sample_column_setup_round_trip(
         std::cerr << "studio host sample COLSPACING clear stderr:\n" << clear_spacing_process.stderr_text << "\n";
     }
     expect(clear_spacing_process.exit_code == 0, "#3713: real sample COLSPACING clear should succeed");
+
+    const auto clear_width_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", copied_primary.string(),
+            "--clear-property",
+            "--record", "0",
+            "--property-name", "COLWIDTH",
+            "--json"
+        },
+        temp_root);
+    if (clear_width_process.exit_code != 0) {
+        std::cerr << "studio host sample COLWIDTH clear stdout:\n" << clear_width_process.stdout_text << "\n";
+        std::cerr << "studio host sample COLWIDTH clear stderr:\n" << clear_width_process.stderr_text << "\n";
+    }
+    expect(clear_width_process.exit_code == 0, "#3720: real sample COLWIDTH clear should succeed");
 
     const auto clear_cols_process = run_process_capture(
         studio_host_path,
@@ -433,6 +533,12 @@ void exercise_real_sample_column_setup_round_trip(
     expect_contains(reopen_after_clear.stdout_text,
                     "\"columnSpacing\": 0",
                     "#3713: real sample column setup clear should clear the column spacing");
+    expect_contains(reopen_after_clear.stdout_text,
+                    "\"columnWidthAvailable\": false",
+                    "#3720: real sample column setup clear should remove column-width availability");
+    expect_contains(reopen_after_clear.stdout_text,
+                    "\"columnWidth\": 0",
+                    "#3720: real sample column setup clear should clear the column width");
     const std::string selected_settings = selected_settings_segment(reopen_after_clear.stdout_text);
     expect(!selected_settings.empty(),
            "#3713: real sample column setup clear should expose a selected-settings JSON block");
@@ -442,6 +548,9 @@ void exercise_real_sample_column_setup_round_trip(
     expect_not_contains(selected_settings,
                         "\"name\": \"COLSPACING\"",
                         "#3713: real sample column setup clear should remove COLSPACING from selected settings");
+    expect_not_contains(selected_settings,
+                        "\"name\": \"COLWIDTH\"",
+                        "#3720: real sample column setup clear should remove COLWIDTH from selected settings");
 }
 
 void test_real_vfp9_report_and_label_column_setup_round_trip(const std::string& studio_host_path) {
