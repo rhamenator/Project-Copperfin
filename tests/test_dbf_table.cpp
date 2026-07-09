@@ -280,6 +280,53 @@ void test_create_dbf_table_file_round_trips() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_character_and_varchar_fields_preserve_leading_whitespace_on_write() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_table_leading_space_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "leading_space.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "CVAL", .type = 'C', .length = 8U},
+        {.name = "VVAL", .type = 'V', .length = 9U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {" ALPHA", " V-ONE"},
+        {" BRAVO", " V-TWO"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#3676: create_dbf_table_file should preserve leading whitespace in C/V fields");
+
+    auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "#3676: DBF with leading-space C/V values should remain readable after creation");
+    if (parse_result.ok && parse_result.table.records.size() == 2U && parse_result.table.records[0].values.size() >= 2U) {
+        expect(parse_result.table.records[0].values[0].display_value == " ALPHA",
+               "#3676: created C fields should preserve leading whitespace");
+        expect(parse_result.table.records[0].values[1].display_value == " V-ONE",
+               "#3676: created V fields should preserve leading whitespace");
+    }
+
+    expect(copperfin::vfp::replace_record_field_value(table_path.string(), 1U, "CVAL", " CHARLIE").ok,
+           "#3676: replace_record_field_value should preserve leading whitespace in C fields");
+    expect(copperfin::vfp::replace_record_field_value(table_path.string(), 1U, "VVAL", " V-THREE").ok,
+           "#3676: replace_record_field_value should preserve leading whitespace in V fields");
+
+    parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "#3676: DBF with leading-space mutations should remain readable");
+    if (parse_result.ok && parse_result.table.records.size() == 2U && parse_result.table.records[1].values.size() >= 2U) {
+        expect(parse_result.table.records[1].values[0].display_value == " CHARLIE",
+               "#3676: replaced C fields should preserve leading whitespace");
+        expect(parse_result.table.records[1].values[1].display_value == " V-THREE",
+               "#3676: replaced V fields should preserve leading whitespace");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_memo_field_create_replace_and_append_round_trip() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -1757,6 +1804,7 @@ int main() {
     test_parse_dbf_table_with_memo_sidecar();
     test_mutate_and_append_dbf_table();
     test_create_dbf_table_file_round_trips();
+    test_character_and_varchar_fields_preserve_leading_whitespace_on_write();
     test_memo_field_create_replace_and_append_round_trip();
     test_general_and_picture_memo_fields_round_trip();
     test_indexed_table_mutations_succeed_with_production_flags_and_companions();

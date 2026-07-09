@@ -619,7 +619,7 @@ DbfWriteResult write_field_bytes(
             if (is_null_token) {
                 break;
             }
-            const std::string text = trim_both(value);
+            const std::string text = trim_right(value);
             if (text.size() > field.length) {
                 return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.CharacterValueTooLarge"), .record_count = header.record_count};
             }
@@ -709,7 +709,7 @@ DbfWriteResult write_field_bytes(
 
             std::string text = value;
             if (field.type == 'V') {
-                text = trim_both(std::move(text));
+                text = trim_right(std::move(text));
             }
 
             const std::size_t payload_capacity = static_cast<std::size_t>(field.length - 1U);
