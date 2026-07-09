@@ -4467,6 +4467,93 @@ void test_append_from_csv_mutates_selected_sql_result_cursor() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_append_from_delimited_fields_clause_preserves_typed_order_for_selected_sql_result_cursor() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_prg_engine_sql_append_from_delimited_fields_order";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path delimited_path = temp_root / "new_rows.txt";
+    const fs::path main_path = temp_root / "sql_append_from_delimited_fields_order.prg";
+
+    write_text(delimited_path.string(),
+        "\"HOTEL\",11.00,901\n"
+        "\"INDIA\",12.50,902\n");
+
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "SELECT sqlcust\n"
+        "nRowsBefore = RECCOUNT()\n"
+        "APPEND FROM '" + delimited_path.string() +
+            "' DELIMITED WITH CHARACTER ',' FIELDS NAME, AMOUNT, ID\n"
+        "nRowsAfter = RECCOUNT()\n"
+        "GO BOTTOM\n"
+        "nBottomId = ID\n"
+        "cBottomName = NAME\n"
+        "nBottomAmount = AMOUNT\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#3692: APPEND FROM DELIMITED with reordered explicit fields should mutate the selected SQL/result cursor: " +
+               state.message);
+
+    const auto rows_before = state.globals.find("nrowsbefore");
+    const auto rows_after = state.globals.find("nrowsafter");
+    const auto bottom_id = state.globals.find("nbottomid");
+    const auto bottom_name = state.globals.find("cbottomname");
+    const auto bottom_amount = state.globals.find("nbottomamount");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(rows_before != state.globals.end(),
+           "#3692: selected SQL/result cursor reordered-fields row count before APPEND FROM should be captured");
+    expect(rows_after != state.globals.end(),
+           "#3692: selected SQL/result cursor reordered-fields row count after APPEND FROM should be captured");
+    expect(bottom_id != state.globals.end(),
+           "#3692: selected SQL/result cursor reordered-fields bottom ID should be captured");
+    expect(bottom_name != state.globals.end(),
+           "#3692: selected SQL/result cursor reordered-fields bottom NAME should be captured");
+    expect(bottom_amount != state.globals.end(),
+           "#3692: selected SQL/result cursor reordered-fields bottom AMOUNT should be captured");
+    expect(disc != state.globals.end(),
+           "#3692: SQLDISCONNECT result should be captured after reordered-fields APPEND FROM checks");
+
+    if (rows_before != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rows_before->second) == "3",
+               "#3692: selected SQL/result cursor should start with seeded row count before reordered-fields APPEND FROM");
+    }
+    if (rows_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rows_after->second) == "5",
+               "#3692: reordered-fields APPEND FROM should add two rows to the selected SQL/result cursor");
+    }
+    if (bottom_id != state.globals.end()) {
+        expect(copperfin::runtime::format_value(bottom_id->second) == "902",
+               "#3692: reordered-fields APPEND FROM should map the third source column into ID");
+    }
+    if (bottom_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(bottom_name->second) == "INDIA",
+               "#3692: reordered-fields APPEND FROM should map the first source column into NAME");
+    }
+    if (bottom_amount != state.globals.end()) {
+        expect(copperfin::runtime::format_value(bottom_amount->second) == "12.5",
+               "#3692: reordered-fields APPEND FROM should map the second source column into AMOUNT");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1",
+               "#3692: SQLDISCONNECT should succeed after reordered-fields APPEND FROM checks");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_append_from_selected_sql_result_cursor_runtime_errors_localize() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_append_from_localization";
@@ -4717,6 +4804,7 @@ int main() {
     test_append_from_json_mutates_selected_sql_result_cursor();
     test_append_from_json_for_filters_selected_sql_result_cursor();
     test_append_from_csv_mutates_selected_sql_result_cursor();
+    test_append_from_delimited_fields_clause_preserves_typed_order_for_selected_sql_result_cursor();
     test_append_from_selected_sql_result_cursor_runtime_errors_localize();
     test_sql_result_cursor_mutation_commands();
     test_targeted_sql_result_cursor_mutations_preserve_selected_alias_and_pointer();

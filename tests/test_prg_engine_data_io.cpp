@@ -62,6 +62,7 @@ int main() {
     test_append_from_type_sdf_imports_fixed_width_text_rows();
     test_copy_to_type_csv_and_delimited_text_rows();
     test_append_from_type_csv_imports_delimited_rows();
+    test_append_from_type_sdf_and_delimited_preserve_explicit_fields_order();
     test_copy_to_type_tab_and_append_from_type_tab_round_trip();
     test_copy_to_type_xls_and_append_from_type_xls_round_trip();
     test_copy_to_type_dif_and_append_from_type_dif_round_trip();

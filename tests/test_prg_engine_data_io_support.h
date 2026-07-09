@@ -87,6 +87,7 @@ void test_copy_to_type_sdf_writes_fixed_width_text_rows();
 void test_append_from_type_sdf_imports_fixed_width_text_rows();
 void test_copy_to_type_csv_and_delimited_text_rows();
 void test_append_from_type_csv_imports_delimited_rows();
+void test_append_from_type_sdf_and_delimited_preserve_explicit_fields_order();
 void test_copy_to_type_tab_and_append_from_type_tab_round_trip();
 void test_copy_to_type_xls_and_append_from_type_xls_round_trip();
 void test_copy_to_type_dif_and_append_from_type_dif_round_trip();

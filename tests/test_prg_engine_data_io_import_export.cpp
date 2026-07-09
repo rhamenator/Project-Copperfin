@@ -627,6 +627,96 @@ void test_append_from_type_csv_imports_delimited_rows() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_append_from_type_sdf_and_delimited_preserve_explicit_fields_order() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_prg_engine_append_from_explicit_fields_order";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+        {.name = "ADDRESS", .type = 'C', .length = 12U},
+        {.name = "CITY", .type = 'C', .length = 12U},
+    };
+
+    const fs::path sdf_dest_path = temp_root / "sdf_dest.dbf";
+    const auto sdf_dest_create = copperfin::vfp::create_dbf_table_file(sdf_dest_path.string(), fields, {});
+    expect(sdf_dest_create.ok, "#3692: SDF destination fixture should be created");
+    write_text(temp_root / "people.sdf", "CityOne     NameOne     AddrOne     \r\n");
+
+    const fs::path sdf_main_path = temp_root / "append_from_sdf_fields_order.prg";
+    write_text(
+        sdf_main_path,
+        "USE '" + sdf_dest_path.string() + "'\n"
+        "APPEND FROM '" + (temp_root / "people.sdf").string() +
+            "' TYPE SDF FIELDS CITY, NAME, ADDRESS\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession sdf_session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(sdf_main_path.string(), temp_root.string(), false));
+    const auto sdf_state = sdf_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(sdf_state.completed,
+           "#3692: APPEND FROM TYPE SDF with reordered explicit fields should complete: " + sdf_state.message);
+
+    const auto sdf_result = copperfin::vfp::parse_dbf_table_from_file(sdf_dest_path.string(), 10U);
+    expect(sdf_result.ok, "#3692: SDF reordered-fields destination DBF should remain readable");
+    expect(sdf_result.table.records.size() == 1U,
+           "#3692: APPEND FROM TYPE SDF reordered-fields script should append one row");
+    if (sdf_result.ok && sdf_result.table.records.size() == 1U) {
+        expect(sdf_result.table.records[0U].values[0U].display_value == "NameOne",
+               "#3692: reordered SDF import should map explicit field column 2 into NAME");
+        expect(sdf_result.table.records[0U].values[1U].display_value == "AddrOne",
+               "#3692: reordered SDF import should map explicit field column 3 into ADDRESS");
+        expect(sdf_result.table.records[0U].values[2U].display_value == "CityOne",
+               "#3692: reordered SDF import should map explicit field column 1 into CITY");
+    }
+
+    const fs::path delimited_dest_path = temp_root / "delimited_dest.dbf";
+    const auto delimited_dest_create =
+        copperfin::vfp::create_dbf_table_file(delimited_dest_path.string(), fields, {});
+    expect(delimited_dest_create.ok, "#3692: DELIMITED destination fixture should be created");
+    write_text(temp_root / "people.txt", "\"CityTwo\",\"NameTwo\",\"AddrTwo\"\r\n");
+
+    const fs::path delimited_main_path = temp_root / "append_from_delimited_fields_order.prg";
+    write_text(
+        delimited_main_path,
+        "USE '" + delimited_dest_path.string() + "'\n"
+        "APPEND FROM '" + (temp_root / "people.txt").string() +
+            "' DELIMITED WITH CHARACTER ',' FIELDS CITY, NAME, ADDRESS\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession delimited_session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(delimited_main_path.string(), temp_root.string(), false));
+    const auto delimited_state =
+        delimited_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(delimited_state.completed,
+           "#3692: APPEND FROM DELIMITED with reordered explicit fields should complete: " +
+               delimited_state.message);
+
+    const auto delimited_result =
+        copperfin::vfp::parse_dbf_table_from_file(delimited_dest_path.string(), 10U);
+    expect(delimited_result.ok, "#3692: DELIMITED reordered-fields destination DBF should remain readable");
+    expect(delimited_result.table.records.size() == 1U,
+           "#3692: APPEND FROM DELIMITED reordered-fields script should append one row");
+    if (delimited_result.ok && delimited_result.table.records.size() == 1U) {
+        expect(delimited_result.table.records[0U].values[0U].display_value == "NameTwo",
+               "#3692: reordered DELIMITED import should map explicit field column 2 into NAME (got '" +
+                   delimited_result.table.records[0U].values[0U].display_value + "')");
+        expect(delimited_result.table.records[0U].values[1U].display_value == "AddrTwo",
+               "#3692: reordered DELIMITED import should map explicit field column 3 into ADDRESS (got '" +
+                   delimited_result.table.records[0U].values[1U].display_value + "')");
+        expect(delimited_result.table.records[0U].values[2U].display_value == "CityTwo",
+               "#3692: reordered DELIMITED import should map explicit field column 1 into CITY (got '" +
+                   delimited_result.table.records[0U].values[2U].display_value + "')");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_copy_to_type_tab_and_append_from_type_tab_round_trip() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_tab_round_trip";

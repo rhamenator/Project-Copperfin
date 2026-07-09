@@ -156,6 +156,71 @@
                        }) != field_filter.end();
         }
 
+        std::vector<vfp::DbfFieldDescriptor> filter_field_descriptors(
+            const std::vector<vfp::DbfFieldDescriptor> &fields,
+            const std::vector<std::string> &field_filter,
+            bool preserve_explicit_field_order = false)
+        {
+            if (field_filter.empty())
+            {
+                return fields;
+            }
+
+            const bool preserve_order =
+                preserve_explicit_field_order &&
+                field_filter[0] != "__LIKE__" &&
+                field_filter[0] != "__EXCEPT__";
+
+            std::vector<vfp::DbfFieldDescriptor> result;
+            if (!preserve_order)
+            {
+                result.reserve(fields.size());
+                for (const auto &field : fields)
+                {
+                    if (field_matches_filter(field.name, field_filter))
+                    {
+                        result.push_back(field);
+                    }
+                }
+                return result;
+            }
+
+            result.reserve(std::min(fields.size(), field_filter.size()));
+            for (const auto &token : field_filter)
+            {
+                const std::string normalized = collapse_identifier(token);
+                if (normalized.empty())
+                {
+                    continue;
+                }
+
+                const bool already_added = std::find_if(
+                    result.begin(),
+                    result.end(),
+                    [&](const vfp::DbfFieldDescriptor &candidate)
+                    {
+                        return collapse_identifier(candidate.name) == normalized;
+                    }) != result.end();
+                if (already_added)
+                {
+                    continue;
+                }
+
+                const auto field = std::find_if(
+                    fields.begin(),
+                    fields.end(),
+                    [&](const vfp::DbfFieldDescriptor &candidate)
+                    {
+                        return collapse_identifier(candidate.name) == normalized;
+                    });
+                if (field != fields.end())
+                {
+                    result.push_back(*field);
+                }
+            }
+            return result;
+        }
+
         std::string format_sdf_field_value(const vfp::DbfFieldDescriptor &field, std::string value)
         {
             value = trim_copy(std::move(value));

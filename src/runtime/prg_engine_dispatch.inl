@@ -5487,15 +5487,8 @@
 
                         std::vector<vfp::DbfFieldDescriptor> target_fields = cursor_field_descriptors(*cursor);
                         const std::string for_expr = statement.quaternary_expression;
-                        std::vector<vfp::DbfFieldDescriptor> filtered_target_fields;
-                        filtered_target_fields.reserve(target_fields.size());
-                        for (const auto &field : target_fields)
-                        {
-                            if (field_matches_filter(field.name, field_filter))
-                            {
-                                filtered_target_fields.push_back(field);
-                            }
-                        }
+                        std::vector<vfp::DbfFieldDescriptor> filtered_target_fields =
+                            filter_field_descriptors(target_fields, field_filter, true);
                         if (filtered_target_fields.empty())
                         {
                             last_error_message = runtime_text(
@@ -5594,15 +5587,8 @@
 
                         std::vector<vfp::DbfFieldDescriptor> target_fields = cursor_field_descriptors(*cursor);
                         const std::string for_expr = statement.quaternary_expression;
-                        std::vector<vfp::DbfFieldDescriptor> filtered_target_fields;
-                        filtered_target_fields.reserve(target_fields.size());
-                        for (const auto &field : target_fields)
-                        {
-                            if (field_matches_filter(field.name, field_filter))
-                            {
-                                filtered_target_fields.push_back(field);
-                            }
-                        }
+                        std::vector<vfp::DbfFieldDescriptor> filtered_target_fields =
+                            filter_field_descriptors(target_fields, field_filter, true);
                         if (filtered_target_fields.empty())
                         {
                             last_error_message = runtime_text(
@@ -5650,7 +5636,17 @@
                             appended_record.deleted = false;
                             appended_record.values.reserve(target_fields.size());
 
-                            std::size_t value_index = 0U;
+                            std::vector<std::pair<std::string, std::string>> imported_values;
+                            imported_values.reserve(std::min(filtered_target_fields.size(), values.size()));
+                            for (std::size_t index = 0U;
+                                 index < filtered_target_fields.size() && index < values.size();
+                                 ++index)
+                            {
+                                imported_values.emplace_back(
+                                    collapse_identifier(filtered_target_fields[index].name),
+                                    values[index]);
+                            }
+
                             for (const auto &target_field : target_fields)
                             {
                                 vfp::DbfRecordValue value{
@@ -5659,13 +5655,16 @@
                                     .is_null = false,
                                     .display_value = {}};
 
-                                if (field_matches_filter(target_field.name, field_filter))
-                                {
-                                    if (value_index < values.size())
+                                const auto imported_value = std::find_if(
+                                    imported_values.begin(),
+                                    imported_values.end(),
+                                    [&](const auto &candidate)
                                     {
-                                        value.display_value = values[value_index];
-                                    }
-                                    ++value_index;
+                                        return candidate.first == collapse_identifier(target_field.name);
+                                    });
+                                if (imported_value != imported_values.end())
+                                {
+                                    value.display_value = imported_value->second;
                                 }
 
                                 appended_record.values.push_back(std::move(value));
@@ -5875,14 +5874,8 @@
                         return {.ok = false, .message = last_error_message};
                     }
 
-                    std::vector<vfp::DbfFieldDescriptor> target_fields;
-                    for (const auto &field : dest_result.table.fields)
-                    {
-                        if (field_matches_filter(field.name, field_filter))
-                        {
-                            target_fields.push_back(field);
-                        }
-                    }
+                    std::vector<vfp::DbfFieldDescriptor> target_fields =
+                        filter_field_descriptors(dest_result.table.fields, field_filter, true);
                     if (target_fields.empty())
                     {
                         last_error_message = runtime_text(
@@ -5989,14 +5982,8 @@
                         return {.ok = false, .message = last_error_message};
                     }
 
-                    std::vector<vfp::DbfFieldDescriptor> target_fields;
-                    for (const auto &field : dest_result.table.fields)
-                    {
-                        if (field_matches_filter(field.name, field_filter))
-                        {
-                            target_fields.push_back(field);
-                        }
-                    }
+                    std::vector<vfp::DbfFieldDescriptor> target_fields =
+                        filter_field_descriptors(dest_result.table.fields, field_filter, true);
                     if (target_fields.empty())
                     {
                         last_error_message = runtime_text(
@@ -6104,14 +6091,8 @@
                         return {.ok = false, .message = last_error_message};
                     }
 
-                    std::vector<vfp::DbfFieldDescriptor> target_fields;
-                    for (const auto &field : dest_result.table.fields)
-                    {
-                        if (field_matches_filter(field.name, field_filter))
-                        {
-                            target_fields.push_back(field);
-                        }
-                    }
+                    std::vector<vfp::DbfFieldDescriptor> target_fields =
+                        filter_field_descriptors(dest_result.table.fields, field_filter, true);
                     if (target_fields.empty())
                     {
                         last_error_message = runtime_text(
@@ -6231,14 +6212,8 @@
                         return {.ok = false, .message = last_error_message};
                     }
 
-                    std::vector<vfp::DbfFieldDescriptor> target_fields;
-                    for (const auto &field : dest_result.table.fields)
-                    {
-                        if (field_matches_filter(field.name, field_filter))
-                        {
-                            target_fields.push_back(field);
-                        }
-                    }
+                    std::vector<vfp::DbfFieldDescriptor> target_fields =
+                        filter_field_descriptors(dest_result.table.fields, field_filter, true);
                     if (target_fields.empty())
                     {
                         last_error_message = runtime_text(
@@ -6358,14 +6333,8 @@
                         return {.ok = false, .message = last_error_message};
                     }
 
-                    std::vector<vfp::DbfFieldDescriptor> target_fields;
-                    for (const auto &field : dest_result.table.fields)
-                    {
-                        if (field_matches_filter(field.name, field_filter))
-                        {
-                            target_fields.push_back(field);
-                        }
-                    }
+                    std::vector<vfp::DbfFieldDescriptor> target_fields =
+                        filter_field_descriptors(dest_result.table.fields, field_filter, true);
                     if (target_fields.empty())
                     {
                         last_error_message = runtime_text(
@@ -6485,14 +6454,8 @@
                         return {.ok = false, .message = last_error_message};
                     }
 
-                    std::vector<vfp::DbfFieldDescriptor> target_fields;
-                    for (const auto &field : dest_result.table.fields)
-                    {
-                        if (field_matches_filter(field.name, field_filter))
-                        {
-                            target_fields.push_back(field);
-                        }
-                    }
+                    std::vector<vfp::DbfFieldDescriptor> target_fields =
+                        filter_field_descriptors(dest_result.table.fields, field_filter, true);
                     if (target_fields.empty())
                     {
                         last_error_message = runtime_text(
