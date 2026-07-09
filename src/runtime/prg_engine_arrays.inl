@@ -121,7 +121,7 @@
                                              : 0U;
                 const std::size_t columns = arguments.size() >= 3U
                                                 ? static_cast<std::size_t>(std::max<double>(1.0, value_as_number(arguments[2])))
-                                                : 1U;
+                                                : (array == nullptr ? 1U : array->columns);
                 return resize_array(array_name, rows, columns);
             }
 

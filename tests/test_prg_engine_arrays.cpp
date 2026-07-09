@@ -267,6 +267,78 @@ void test_array_dimension_and_element_assignment() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_asize_two_argument_form_preserves_existing_column_count() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_arrays_asize_preserves_columns";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "asize_preserves_columns.prg";
+    write_text(
+        main_path,
+        "DIMENSION aGrid[2,2]\n"
+        "aGrid[1,1] = 'A'\n"
+        "aGrid[1,2] = 'B'\n"
+        "aGrid[2,1] = 'C'\n"
+        "aGrid[2,2] = 'D'\n"
+        "nResize = ASIZE(aGrid, 3)\n"
+        "nRows = ALEN(aGrid, 1)\n"
+        "nCols = ALEN(aGrid, 2)\n"
+        "cPreservedOne = aGrid[1,2]\n"
+        "cPreservedTwo = aGrid[2,2]\n"
+        "aGrid[3,2] = 'E'\n"
+        "cNewValue = aGrid[3,2]\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "ASIZE two-argument preservation script should complete");
+
+    const auto resize = state.globals.find("nresize");
+    const auto rows = state.globals.find("nrows");
+    const auto cols = state.globals.find("ncols");
+    const auto preserved_one = state.globals.find("cpreservedone");
+    const auto preserved_two = state.globals.find("cpreservedtwo");
+    const auto new_value = state.globals.find("cnewvalue");
+
+    expect(resize != state.globals.end(), "ASIZE two-argument form should report the new element count");
+    expect(rows != state.globals.end(), "ASIZE two-argument form should preserve ALEN row metadata");
+    expect(cols != state.globals.end(), "ASIZE two-argument form should preserve ALEN column metadata");
+    expect(preserved_one != state.globals.end(), "ASIZE two-argument form should preserve existing second-column values");
+    expect(preserved_two != state.globals.end(), "ASIZE two-argument form should preserve lower-row second-column values");
+    expect(new_value != state.globals.end(), "ASIZE two-argument form should keep the second column writable after growth");
+
+    if (resize != state.globals.end()) {
+        expect(copperfin::runtime::format_value(resize->second) == "6",
+               "ASIZE(aGrid, 3) should preserve a two-column array shape and report six elements");
+    }
+    if (rows != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rows->second) == "3",
+               "ASIZE(aGrid, 3) should grow the array to three rows");
+    }
+    if (cols != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cols->second) == "2",
+               "ASIZE(aGrid, 3) should preserve the existing two-column shape");
+    }
+    if (preserved_one != state.globals.end()) {
+        expect(copperfin::runtime::format_value(preserved_one->second) == "B",
+               "ASIZE(aGrid, 3) should preserve row-one second-column values");
+    }
+    if (preserved_two != state.globals.end()) {
+        expect(copperfin::runtime::format_value(preserved_two->second) == "D",
+               "ASIZE(aGrid, 3) should preserve row-two second-column values");
+    }
+    if (new_value != state.globals.end()) {
+        expect(copperfin::runtime::format_value(new_value->second) == "E",
+               "ASIZE(aGrid, 3) should keep the preserved second column writable on new rows");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_array_metadata_and_text_functions() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_array_metadata";
@@ -1318,6 +1390,7 @@ int main() {
     test_ascan_predicate_expression_search();
     test_acopy_two_dimensional_row_and_column_workflows();
     test_array_dimension_and_element_assignment();
+    test_asize_two_argument_form_preserves_existing_column_count();
     test_array_metadata_and_text_functions();
     test_macro_expanded_array_helpers_and_access();
     test_store_uses_assignment_target_semantics();
