@@ -68,11 +68,7 @@ void set_environment_value(const char* name, const std::string& value) {
     if (name == nullptr || *name == '\0') {
         return;
     }
-#ifdef _WIN32
-    _putenv_s(name, value.c_str());
-#else
-    setenv(name, value.c_str(), 1);
-#endif
+    (void)copperfin::platform::write_environment_variable(name, value);
 }
 
 bool starts_with_insensitive(const std::string& value, const std::string& prefix) {
