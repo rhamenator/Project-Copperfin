@@ -99,7 +99,7 @@ std::optional<PrgValue> evaluate_type_function(
             return make_boolean_value(trim_copy(value.string_value).empty());
         }
         if (value.kind == PrgValueKind::number) {
-            return make_boolean_value(std::abs(value.number_value) < 0.000001);
+            return make_boolean_value(value.number_value == 0.0);
         }
         if (value.kind == PrgValueKind::boolean) {
             return make_boolean_value(!value.boolean_value);

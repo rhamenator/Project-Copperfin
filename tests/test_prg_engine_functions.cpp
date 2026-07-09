@@ -145,6 +145,7 @@ namespace
             "null_missing = ISNULL(missingVar)\n"
             "em = EMPTY('')\n"
             "em2 = EMPTY(0)\n"
+            "em_tiny_num = EMPTY(0.0000001)\n"
             "not_em = EMPTY('hi')\n"
             "blank_empty = ISBLANK('')\n"
             "blank_spaces = ISBLANK('   ')\n"
@@ -195,6 +196,7 @@ namespace
         check("null_missing", "false");
         check("em", "true");
         check("em2", "true");
+        check("em_tiny_num", "false");
         check("not_em", "false");
         check("blank_empty", "true");
         check("blank_spaces", "true");
