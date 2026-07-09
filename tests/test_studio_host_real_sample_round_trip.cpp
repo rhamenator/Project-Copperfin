@@ -273,6 +273,89 @@ void exercise_real_sample_round_trip(
     expect_contains(reopen_process.stdout_text,
                     "\"gridVertical\": 16",
                     "#3526: real sample reopen should expose the updated GRIDV value");
+
+    const std::string post_gridv_primary_bytes = read_binary(copied_primary);
+    const auto original_gridh_property = copperfin::vfp::query_visual_object_property({
+        .path = copied_primary.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "GRIDH"
+    });
+    expect(original_gridh_property.ok && original_gridh_property.exists && original_gridh_property.value == "12",
+           "#3711: mounted real samples should start with GRIDH set to 12");
+    const std::string gridh_target_value = "13";
+    const auto gridh_update_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", copied_primary.string(),
+            "--set-property",
+            "--record", "0",
+            "--property-name", "GRIDH",
+            "--property-value", gridh_target_value,
+            "--json"
+        },
+        temp_root);
+    if (gridh_update_process.exit_code != 0) {
+        std::cerr << "studio host sample GRIDH update stdout:\n" << gridh_update_process.stdout_text << "\n";
+        std::cerr << "studio host sample GRIDH update stderr:\n" << gridh_update_process.stderr_text << "\n";
+    }
+    expect(gridh_update_process.exit_code == 0, "#3711: real sample GRIDH update should succeed");
+
+    const auto gridh_property = copperfin::vfp::query_visual_object_property({
+        .path = copied_primary.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "GRIDH"
+    });
+    expect(gridh_property.ok && gridh_property.exists && gridh_property.value == gridh_target_value,
+           "#3711: real sample GRIDH update should persist the direct field");
+
+    expect(read_binary(copied_primary) != post_gridv_primary_bytes,
+           "#3711: real sample GRIDH update should change the primary asset bytes again");
+    expect(read_binary(copied_sidecar) == original_sidecar_bytes,
+           "#3711: real sample GRIDH update should preserve sidecar bytes");
+
+    const auto reopen_gridh_process = run_process_capture(
+        studio_host_path,
+        {"--path", copied_primary.string(), "--record", "0", "--json"},
+        temp_root);
+    if (reopen_gridh_process.exit_code != 0) {
+        std::cerr << "studio host sample reopen after GRIDH stdout:\n" << reopen_gridh_process.stdout_text << "\n";
+        std::cerr << "studio host sample reopen after GRIDH stderr:\n" << reopen_gridh_process.stderr_text << "\n";
+    }
+    expect(reopen_gridh_process.exit_code == 0, "#3711: real sample reopen after GRIDH update should succeed");
+    expect_contains(reopen_gridh_process.stdout_text,
+                    "\"documentTitle\": \"" + sample.title + "\"",
+                    "#3711: real sample reopen after GRIDH should preserve document title");
+    if (sample.is_label) {
+        expect_contains(reopen_gridh_process.stdout_text,
+                        "\"isLabel\": true",
+                        "#3711: label sample reopen after GRIDH should preserve label identity");
+    } else {
+        expect_contains(reopen_gridh_process.stdout_text,
+                        "\"isLabel\": false",
+                        "#3711: report sample reopen after GRIDH should preserve report identity");
+    }
+    expect_contains(reopen_gridh_process.stdout_text,
+                    "\"selectedReportSettingsAvailable\": true",
+                    "#3711: real sample reopen after GRIDH should preserve selected-settings availability");
+    expect_contains(reopen_gridh_process.stdout_text,
+                    "\"selectedReportSelectionKind\": \"settings\"",
+                    "#3711: real sample reopen after GRIDH should preserve settings selection kind");
+    expect_contains(reopen_gridh_process.stdout_text,
+                    "\"pageSetupAvailable\": true",
+                    "#3711: real sample reopen after GRIDH should preserve page-setup availability");
+    expect_contains(reopen_gridh_process.stdout_text,
+                    "\"gridHorizontalAvailable\": true",
+                    "#3711: real sample reopen should preserve grid-horizontal availability");
+    expect_contains(reopen_gridh_process.stdout_text,
+                    "\"gridHorizontal\": " + gridh_target_value,
+                    "#3711: real sample reopen should expose the updated GRIDH value");
+    expect_contains(reopen_gridh_process.stdout_text,
+                    "\"gridVertical\": 16",
+                    "#3711: real sample reopen after GRIDH should preserve the earlier GRIDV update");
 }
 
 void test_real_vfp9_report_and_label_samples_round_trip(const std::string& studio_host_path) {
