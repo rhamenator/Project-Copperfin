@@ -1467,7 +1467,7 @@ std::string resolve_startup_source(
     return startup_source;
 }
 
-std::string resolve_implicit_manifest_path(const char* argv0) {
+std::string resolve_implicit_manifest_path(const char* argv0, bool debug_mode) {
     if (argv0 == nullptr || *argv0 == '\0') {
         return {};
     }
@@ -1481,8 +1481,18 @@ std::string resolve_implicit_manifest_path(const char* argv0) {
         }
     }
 
-    const std::filesystem::path manifest_path =
-        executable_path.parent_path() / "app.cfmanifest";
+    const auto deployed_path = [&](std::string_view file_name) {
+        return executable_path.parent_path() / file_name;
+    };
+
+    if (debug_mode) {
+        const std::filesystem::path debug_manifest_path = deployed_path("app.cfdebug");
+        if (std::filesystem::exists(debug_manifest_path)) {
+            return debug_manifest_path.lexically_normal().string();
+        }
+    }
+
+    const std::filesystem::path manifest_path = deployed_path("app.cfmanifest");
     if (!std::filesystem::exists(manifest_path)) {
         return {};
     }
@@ -1667,7 +1677,7 @@ int main(int argc, char** argv) {
     }
 
     if (manifest_path.empty()) {
-        manifest_path = resolve_implicit_manifest_path(argc > 0 ? argv[0] : nullptr);
+        manifest_path = resolve_implicit_manifest_path(argc > 0 ? argv[0] : nullptr, debug_mode);
         if (manifest_path.empty()) {
             print_usage(catalog);
             return 2;

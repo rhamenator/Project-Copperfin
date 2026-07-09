@@ -58,8 +58,10 @@ void test_generated_launcher_forwards_manifest_and_debug_flag() {
         const std::string launcher_source = read_text(result.plan.launcher_source_path);
         const std::string launcher_project = read_text(result.plan.launcher_project_path);
         expect(
-            launcher_source.find("var forwarded = new List<string> { \"--manifest\", Quote(manifest) };") != std::string::npos,
-            "generated launcher should forward the manifest path to the runtime host");
+            launcher_source.find("var debugManifest = Path.Combine(baseDir, \"app.cfdebug\");") != std::string::npos &&
+            launcher_source.find("var selectedManifest = debugRequested && File.Exists(debugManifest) ? debugManifest : manifest;") != std::string::npos &&
+            launcher_source.find("forwarded.Insert(0, Quote(selectedManifest));") != std::string::npos,
+            "generated launcher should prefer the debug manifest for implicit debug launches");
         expect(
             launcher_source.find("string.Equals(arg, \"--debug\", StringComparison.OrdinalIgnoreCase)") != std::string::npos &&
             launcher_source.find("string.Equals(arg, \"/debug\", StringComparison.OrdinalIgnoreCase)") != std::string::npos,

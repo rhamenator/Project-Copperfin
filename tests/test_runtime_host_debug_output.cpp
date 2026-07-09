@@ -604,6 +604,102 @@ void test_runtime_host_supports_single_breakpoint_removal(const std::string& run
     }
 }
 
+void test_runtime_host_prefers_debug_manifest_for_implicit_debug_launches(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_implicit_debug_manifest_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path deployed_runtime_host = temp_root / fs::path(runtime_host_path).filename();
+    fs::copy_file(runtime_host_path, deployed_runtime_host, fs::copy_options::overwrite_existing);
+#if defined(__unix__) || defined(__APPLE__)
+    fs::permissions(
+        deployed_runtime_host,
+        fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec,
+        fs::perm_options::add,
+        ignored);
+#endif
+
+    const fs::path release_startup_path = temp_root / "release_main.prg";
+    const fs::path debug_startup_path = temp_root / "debug_main.prg";
+    const fs::path manifest_path = temp_root / "app.cfmanifest";
+    const fs::path debug_manifest_path = temp_root / "app.cfdebug";
+    write_text(
+        release_startup_path,
+        "LOCAL cMode\n"
+        "cMode = 'release'\n"
+        "RETURN\n");
+    write_text(
+        debug_startup_path,
+        "LOCAL cMode\n"
+        "cMode = 'debug'\n"
+        "RETURN\n");
+    write_text(
+        manifest_path,
+        "manifest_version=1\n"
+        "project_title=ImplicitReleaseManifest\n"
+        "startup_item=release_main.prg\n"
+        "startup_source=" + release_startup_path.string() + "\n"
+        "working_directory=" + temp_root.string() + "\n"
+        "security_enabled=false\n"
+        "security_role=\n"
+        "security_mode=native\n"
+        "dotnet_story=none\n");
+    write_text(
+        debug_manifest_path,
+        "manifest_version=1\n"
+        "project_title=ImplicitDebugManifest\n"
+        "startup_item=debug_main.prg\n"
+        "startup_source=" + debug_startup_path.string() + "\n"
+        "working_directory=" + temp_root.string() + "\n"
+        "security_enabled=false\n"
+        "security_role=\n"
+        "security_mode=native\n"
+        "dotnet_story=none\n");
+
+    const auto debug_process = run_process_capture(
+        deployed_runtime_host.string(),
+        {
+            "--debug",
+            "--debug-command", "break:add:2",
+            "--debug-command", "continue"
+        },
+        temp_root);
+
+    if (debug_process.exit_code != 0) {
+        std::cerr << "implicit debug manifest stdout:\n" << debug_process.stdout_text << "\n";
+        std::cerr << "implicit debug manifest stderr:\n" << debug_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(debug_process.exit_code == 0,
+           "#3669: implicit debug launches should succeed when app.cfdebug is present");
+    expect(debug_process.stdout_text.find("debug.location: " + debug_startup_path.string() + ":2") != std::string::npos,
+           "#3669: implicit debug launches should prefer app.cfdebug over app.cfmanifest");
+
+    write_text(debug_manifest_path, "manifest_version=1\nproject_title=BrokenDebugManifest\n");
+
+    const auto non_debug_process = run_process_capture(
+        deployed_runtime_host.string(),
+        {},
+        temp_root);
+
+    if (non_debug_process.exit_code != 0) {
+        std::cerr << "implicit non-debug manifest stdout:\n" << non_debug_process.stdout_text << "\n";
+        std::cerr << "implicit non-debug manifest stderr:\n" << non_debug_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(non_debug_process.exit_code == 0,
+           "#3669: implicit non-debug launches should continue to use app.cfmanifest");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_runtime_host_reports_xasset_pause_identity(const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
 
@@ -3354,6 +3450,7 @@ int main(int argc, char** argv) {
 
     test_runtime_host_supports_breakpoint_management_commands(argv[1]);
     test_runtime_host_supports_single_breakpoint_removal(argv[1]);
+    test_runtime_host_prefers_debug_manifest_for_implicit_debug_launches(argv[1]);
     test_runtime_host_reports_xasset_pause_identity(argv[1]);
     test_runtime_host_supports_xasset_action_breakpoint_commands(argv[1]);
     test_runtime_host_surfaces_xasset_breakpoint_metadata_in_pause_output(argv[1]);
