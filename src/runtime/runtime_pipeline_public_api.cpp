@@ -728,6 +728,39 @@ RuntimeMaterializeResult materialize_runtime_package(
     return {.ok = true, .plan = std::move(materialized_plan), .error = {}};
 }
 
+RuntimeBuildResult finalize_runtime_package_primary_output(
+    const RuntimePackagePlan& plan,
+    const security::NativeSecurityProfile& security_profile,
+    const platform::ExtensibilityProfile& extensibility_profile) {
+    if (!plan.ok) {
+        return {.ok = false, .error = runtime_text("Runtime.Package.Error.PlanInvalid")};
+    }
+    if (!std::filesystem::exists(plan.launcher_output_path)) {
+        return {.ok = false, .error = runtime_text("Runtime.Package.Error.PrimaryOutputMissing")};
+    }
+
+    RuntimePackagePlan finalized_plan = plan;
+    finalized_plan.primary_output_materialized = true;
+    std::erase_if(
+        finalized_plan.extension_payload_digests,
+        [&](const RuntimeArtifactDigest& digest) {
+            return digest.path == plan.launcher_output_path;
+        });
+
+    std::string error;
+    if (!append_runtime_artifact_digest(finalized_plan.extension_payload_digests, plan.launcher_output_path, error)) {
+        return {.ok = false, .error = error};
+    }
+    if (!write_text_file(plan.manifest_path, build_runtime_manifest_text(finalized_plan, security_profile, extensibility_profile), error)) {
+        return {.ok = false, .error = error};
+    }
+    if (!write_text_file(plan.debug_manifest_path, build_debug_manifest_text(finalized_plan, security_profile, extensibility_profile), error)) {
+        return {.ok = false, .error = error};
+    }
+
+    return {.ok = true, .plan = std::move(finalized_plan), .error = {}};
+}
+
 RuntimeBuildResult build_runtime_package_primary_output(
     const RuntimePackagePlan& plan,
     const security::NativeSecurityProfile& security_profile,
@@ -781,18 +814,10 @@ RuntimeBuildResult build_runtime_package_primary_output(
         return {.ok = false, .error = runtime_text("Runtime.Package.Error.NativeWrapperPrimaryOutputMissing")};
     }
 
-    built_plan.primary_output_materialized = true;
-    if (!append_runtime_artifact_digest(built_plan.extension_payload_digests, plan.launcher_output_path, error)) {
-        return {.ok = false, .error = error};
-    }
-    if (!write_text_file(plan.manifest_path, build_runtime_manifest_text(built_plan, security_profile, extensibility_profile), error)) {
-        return {.ok = false, .error = error};
-    }
-    if (!write_text_file(plan.debug_manifest_path, build_debug_manifest_text(built_plan, security_profile, extensibility_profile), error)) {
-        return {.ok = false, .error = error};
-    }
-
-    return {.ok = true, .plan = std::move(built_plan), .error = {}};
+    return finalize_runtime_package_primary_output(
+        built_plan,
+        security_profile,
+        extensibility_profile);
 }
 
 }  // namespace copperfin::runtime

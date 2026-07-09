@@ -515,6 +515,23 @@ int main(int argc, char** argv) {
             print_error_line(catalog, publish_error);
             return 6;
         }
+
+        const auto finalize_result = copperfin::runtime::finalize_runtime_package_primary_output(
+            final_plan,
+            security_profile,
+            extensibility_profile);
+        if (!finalize_result.ok) {
+            if (enable_security && !final_plan.audit_log_path.empty()) {
+                (void)copperfin::security::append_immutable_audit_event(
+                    final_plan.audit_log_path,
+                    "policy.denied",
+                    finalize_result.error);
+            }
+            std::cout << "status: error\n";
+            print_error_line(catalog, finalize_result.error);
+            return 6;
+        }
+        final_plan = finalize_result.plan;
     }
 
     std::cout << "status: ok\n";

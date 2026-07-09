@@ -133,6 +133,7 @@ void test_debug_source_roots_preserve_source_first_and_content_second_order();
 // ==== Generated-launcher, security, and localization diagnostics tests ====
 void test_generated_launcher_forwards_manifest_and_debug_flag();
 void test_dotnet_launcher_request_falls_back_to_native_host_when_unavailable();
+void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_materializes();
 void test_security_enabled_runtime_host_name_validation();
 void test_runtime_security_role_environment_fidelity();
 void test_runtime_package_diagnostics_resolve_through_localization_catalog();

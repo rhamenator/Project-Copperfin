@@ -17,6 +17,7 @@ int main() {
     test_vfp_style_parent_relative_assets_resolve_and_stage_under_content_root();
     test_vfp_source_layout_parent_relative_assets_resolve_by_tail_match();
     test_dotnet_launcher_request_falls_back_to_native_host_when_unavailable();
+    test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_materializes();
     test_library_output_package_emits_module_definition_from_prg_routines();
     test_fll_output_package_emits_api_manifest_from_prg_routines();
     test_library_output_warning_lines_are_mirrored_into_debug_manifest();

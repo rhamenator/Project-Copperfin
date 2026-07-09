@@ -44,6 +44,7 @@
   "Runtime.Package.Error.NativeWrapperPrimaryOutputMissing": "Native-wrapper primary output was not found.",
   "Runtime.Package.Error.OpenFileFailed": "Unable to open file: {path}",
   "Runtime.Package.Error.PlanInvalid": "Package plan is not valid.",
+  "Runtime.Package.Error.PrimaryOutputMissing": "[!! Þŕïmåŕÿ-øüţþüţ ƒïñåľïžåţïøñ ŕëqüïŕëš ţhë måţëŕïåľïžëd øüţþüţ þåţh ţø ëxïšţ. !!]",
   "Runtime.Package.Error.PrimaryOutputRequiresLibraryOutput": "Primary-output builds are only supported for library-output packages.",
   "Runtime.Package.Error.RuntimeHostSourcePathEmpty": "Runtime-host source path is empty.",
   "Runtime.Package.Error.RuntimeHostSourcePathNotRegularFile": "Runtime-host source path is not a regular file.",

@@ -799,6 +799,7 @@
   "Runtime.Package.Error.NativeWrapperPrimaryOutputMissing": "native wrapper primary-output build did not materialize the requested output path.",
   "Runtime.Package.Error.OpenFileFailed": "Unable to open file: {path}",
   "Runtime.Package.Error.PlanInvalid": "Package plan is not valid.",
+  "Runtime.Package.Error.PrimaryOutputMissing": "Primary-output finalization requires the materialized output path to exist.",
   "Runtime.Package.Error.PrimaryOutputRequiresLibraryOutput": "Primary-output builds are only supported for library-output packages.",
   "Runtime.Package.Error.RuntimeHostSourcePathEmpty": "Runtime host source path is empty.",
   "Runtime.Package.Error.RuntimeHostSourcePathNotRegularFile": "Runtime host source path does not point to a regular file.",

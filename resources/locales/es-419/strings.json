@@ -44,6 +44,7 @@
   "Runtime.Package.Error.NativeWrapperPrimaryOutputMissing": "No se encontro la salida primaria del wrapper nativo.",
   "Runtime.Package.Error.OpenFileFailed": "No se pudo abrir el archivo: {path}",
   "Runtime.Package.Error.PlanInvalid": "El plan del paquete no es valido.",
+  "Runtime.Package.Error.PrimaryOutputMissing": "La finalizacion de la salida primaria requiere que exista la ruta de salida materializada.",
   "Runtime.Package.Error.PrimaryOutputRequiresLibraryOutput": "Los builds de salida primaria solo son compatibles con paquetes de salida de libreria.",
   "Runtime.Package.Error.RuntimeHostSourcePathEmpty": "La ruta origen del runtime host esta vacia.",
   "Runtime.Package.Error.RuntimeHostSourcePathNotRegularFile": "La ruta origen del runtime host no es un archivo regular.",

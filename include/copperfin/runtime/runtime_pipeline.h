@@ -154,6 +154,11 @@ RuntimeMaterializeResult materialize_runtime_package(
     const platform::ExtensibilityProfile& extensibility_profile,
     const std::string& runtime_host_source_path);
 
+RuntimeBuildResult finalize_runtime_package_primary_output(
+    const RuntimePackagePlan& plan,
+    const security::NativeSecurityProfile& security_profile,
+    const platform::ExtensibilityProfile& extensibility_profile);
+
 RuntimeBuildResult build_runtime_package_primary_output(
     const RuntimePackagePlan& plan,
     const security::NativeSecurityProfile& security_profile,
