@@ -12384,6 +12384,170 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_list_control_boundto_and_listbox_boundcolumn_defaults_mutate_and_stay_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_list_control_boundto_builtin";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_list_control_boundto_builtin.prg";
+        write_text(
+            main_path,
+            "oCombo = CREATEOBJECT('ComboBox')\n"
+            "lComboHasBoundTo = PEMSTATUS(oCombo, 'BoundTo', 1)\n"
+            "lComboBoundToReadOnly = PEMSTATUS(oCombo, 'BoundTo', 5)\n"
+            "lComboBoundToBefore = oCombo.BoundTo\n"
+            "xComboBoundToGetPemBefore = GETPEM(oCombo, 'BoundTo')\n"
+            "oCombo.BoundTo = .T.\n"
+            "lComboBoundToAfterDirectAssign = oCombo.BoundTo\n"
+            "lComboBoundToSetPem = SETPEM(oCombo, 'BoundTo', .F.)\n"
+            "lComboBoundToAfterSetPem = oCombo.BoundTo\n"
+            "lComboBoundToAddProperty = ADDPROPERTY(oCombo, 'BoundTo', .T.)\n"
+            "lComboBoundToRemoveProperty = REMOVEPROPERTY(oCombo, 'BoundTo')\n"
+            "oList = CREATEOBJECT('ListBox')\n"
+            "lListHasBoundTo = PEMSTATUS(oList, 'BoundTo', 1)\n"
+            "lListBoundToReadOnly = PEMSTATUS(oList, 'BoundTo', 5)\n"
+            "lListBoundToBefore = oList.BoundTo\n"
+            "xListBoundToGetPemBefore = GETPEM(oList, 'BoundTo')\n"
+            "oList.BoundTo = .T.\n"
+            "lListBoundToAfterDirectAssign = oList.BoundTo\n"
+            "lListBoundToSetPem = SETPEM(oList, 'BoundTo', .F.)\n"
+            "lListBoundToAfterSetPem = oList.BoundTo\n"
+            "lListBoundToAddProperty = ADDPROPERTY(oList, 'BoundTo', .T.)\n"
+            "lListBoundToRemoveProperty = REMOVEPROPERTY(oList, 'BoundTo')\n"
+            "lListHasBoundColumn = PEMSTATUS(oList, 'BoundColumn', 1)\n"
+            "lListBoundColumnReadOnly = PEMSTATUS(oList, 'BoundColumn', 5)\n"
+            "nListBoundColumnBefore = oList.BoundColumn\n"
+            "xListBoundColumnGetPemBefore = GETPEM(oList, 'BoundColumn')\n"
+            "oList.BoundColumn = 2\n"
+            "nListBoundColumnAfterDirectAssign = oList.BoundColumn\n"
+            "lListBoundColumnSetPem = SETPEM(oList, 'BoundColumn', 3)\n"
+            "nListBoundColumnAfterSetPem = oList.BoundColumn\n"
+            "lListBoundColumnAddProperty = ADDPROPERTY(oList, 'BoundColumn', 4)\n"
+            "lListBoundColumnRemoveProperty = REMOVEPROPERTY(oList, 'BoundColumn')\n"
+            "oForm = CREATEOBJECT('MainForm')\n"
+            "lChildBoundToBefore = oForm.lstMonth.BoundTo\n"
+            "nChildBoundColumnBefore = oForm.lstMonth.BoundColumn\n"
+            "lChildBoundToRead = oForm.cmdProbe.ReadBoundTo()\n"
+            "nChildBoundColumnRead = oForm.cmdProbe.ReadBoundColumn()\n"
+            "oForm.cmdProbe.ConfigureList()\n"
+            "lChildBoundToAfterChild = oForm.lstMonth.BoundTo\n"
+            "nChildBoundColumnAfterChild = oForm.lstMonth.BoundColumn\n"
+            "lChildBoundToSetPem = SETPEM(oForm.lstMonth, 'BoundTo', .F.)\n"
+            "lChildBoundToAfterSetPem = oForm.lstMonth.BoundTo\n"
+            "xChildBoundToGetPem = GETPEM(oForm.lstMonth, 'BoundTo')\n"
+            "lChildBoundToReadOnly = PEMSTATUS(oForm.lstMonth, 'BoundTo', 5)\n"
+            "lChildBoundColumnSetPem = SETPEM(oForm.lstMonth, 'BoundColumn', 2)\n"
+            "nChildBoundColumnAfterSetPem = oForm.lstMonth.BoundColumn\n"
+            "xChildBoundColumnGetPem = GETPEM(oForm.lstMonth, 'BoundColumn')\n"
+            "lChildBoundColumnReadOnly = PEMSTATUS(oForm.lstMonth, 'BoundColumn', 5)\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oForm.lstMonth, 1)\n"
+            "lPropHasBoundTo = .F.\n"
+            "lPropHasBoundColumn = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    DO CASE\n"
+            "    CASE UPPER(aPropMembers[i]) == 'BOUNDTO'\n"
+            "        lPropHasBoundTo = .T.\n"
+            "    CASE UPPER(aPropMembers[i]) == 'BOUNDCOLUMN'\n"
+            "        lPropHasBoundColumn = .T.\n"
+            "    ENDCASE\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('StatusList')\n"
+            "lDerivedBoundToBefore = oDerived.BoundTo\n"
+            "nDerivedBoundColumnBefore = oDerived.BoundColumn\n"
+            "RETURN\n"
+            "DEFINE CLASS ProbeButton AS CommandButton\n"
+            "    FUNCTION ReadBoundTo\n"
+            "        RETURN THISFORM.lstMonth.BoundTo\n"
+            "    ENDFUNC\n"
+            "    FUNCTION ReadBoundColumn\n"
+            "        RETURN THISFORM.lstMonth.BoundColumn\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE ConfigureList\n"
+            "        THISFORM.lstMonth.BoundTo = .T.\n"
+            "        THISFORM.lstMonth.BoundColumn = 3\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS MainForm AS Form\n"
+            "    ADD OBJECT lstMonth AS ListBox WITH BoundTo = .T., BoundColumn = 2\n"
+            "    ADD OBJECT cmdProbe AS ProbeButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS StatusList AS ListBox\n"
+            "    BoundTo = .T.\n"
+            "    BoundColumn = 2\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native list-control BoundTo/BoundColumn built-in script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lcombohasboundto", "true");
+        check("lcomboboundtoreadonly", "false");
+        check("lcomboboundtobefore", "false");
+        check("xcomboboundtogetpembefore", "false");
+        check("lcomboboundtoafterdirectassign", "true");
+        check("lcomboboundtosetpem", "true");
+        check("lcomboboundtoaftersetpem", "false");
+        check("lcomboboundtoaddproperty", "false");
+        check("lcomboboundtoremoveproperty", "false");
+        check("llisthasboundto", "true");
+        check("llistboundtoreadonly", "false");
+        check("llistboundtobefore", "false");
+        check("xlistboundtogetpembefore", "false");
+        check("llistboundtoafterdirectassign", "true");
+        check("llistboundtosetpem", "true");
+        check("llistboundtoaftersetpem", "false");
+        check("llistboundtoaddproperty", "false");
+        check("llistboundtoremoveproperty", "false");
+        check("llisthasboundcolumn", "true");
+        check("llistboundcolumnreadonly", "false");
+        check("nlistboundcolumnbefore", "1");
+        check("xlistboundcolumngetpembefore", "1");
+        check("nlistboundcolumnafterdirectassign", "2");
+        check("llistboundcolumnsetpem", "true");
+        check("nlistboundcolumnaftersetpem", "3");
+        check("llistboundcolumnaddproperty", "false");
+        check("llistboundcolumnremoveproperty", "false");
+        check("lchildboundtobefore", "true");
+        check("nchildboundcolumnbefore", "2");
+        check("lchildboundtoread", "true");
+        check("nchildboundcolumnread", "2");
+        check("lchildboundtoafterchild", "true");
+        check("nchildboundcolumnafterchild", "3");
+        check("lchildboundtosetpem", "true");
+        check("lchildboundtoaftersetpem", "false");
+        check("xchildboundtogetpem", "false");
+        check("lchildboundtoreadonly", "false");
+        check("lchildboundcolumnsetpem", "true");
+        check("nchildboundcolumnaftersetpem", "2");
+        check("xchildboundcolumngetpem", "2");
+        check("lchildboundcolumnreadonly", "false");
+        check("lprophasboundto", "true");
+        check("lprophasboundcolumn", "true");
+        check("lderivedboundtobefore", "true");
+        check("nderivedboundcolumnbefore", "2");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_grid_columncount_defaults_materialize_columns_and_stay_builtin()
     {
         namespace fs = std::filesystem;
@@ -52102,6 +52266,7 @@ int main()
     test_native_listbox_multiselect_property_controls_selection_mode();
     test_native_list_controls_sorted_property_stays_coherent();
     test_native_combobox_boundcolumn_columncount_and_columnwidths_defaults_mutate_and_stay_builtin();
+    test_native_list_control_boundto_and_listbox_boundcolumn_defaults_mutate_and_stay_builtin();
     test_native_grid_columncount_defaults_materialize_columns_and_stay_builtin();
     test_native_column_bound_defaults_coordinate_controlsource_and_stay_builtin();
     test_native_visual_backcolor_defaults_mutate_and_stay_builtin();

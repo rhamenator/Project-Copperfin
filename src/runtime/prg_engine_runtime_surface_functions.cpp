@@ -682,8 +682,61 @@ std::size_t native_list_control_bound_column(const RuntimeOleObjectState& runtim
     return requested_column < 1LL ? 1U : static_cast<std::size_t>(requested_column);
 }
 
+bool native_list_control_boundto_enabled(const RuntimeOleObjectState& runtime_object) {
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return false;
+    }
+
+    const auto boundto = runtime_object.properties.find("boundto");
+    return boundto != runtime_object.properties.end() &&
+           value_as_bool(boundto->second);
+}
+
+bool native_list_control_prefers_index_value(const RuntimeOleObjectState& runtime_object) {
+    if (!is_native_list_control_runtime_object(runtime_object) ||
+        native_list_control_boundto_enabled(runtime_object)) {
+        return false;
+    }
+
+    const auto value = runtime_object.properties.find("value");
+    if (value == runtime_object.properties.end()) {
+        return false;
+    }
+
+    return value->second.kind == PrgValueKind::number ||
+           value->second.kind == PrgValueKind::int64 ||
+           value->second.kind == PrgValueKind::uint64;
+}
+
+PrgValue native_list_control_index_value_for_slot(const PrgValue& previous_value, std::size_t slot) {
+    const auto index = static_cast<std::int64_t>(slot + 1U);
+    if (previous_value.kind == PrgValueKind::uint64) {
+        return make_uint64_value(static_cast<std::uint64_t>(index));
+    }
+    if (previous_value.kind == PrgValueKind::int64) {
+        return make_int64_value(index);
+    }
+    return make_number_value(static_cast<double>(index));
+}
+
+PrgValue native_list_control_empty_index_value(const PrgValue& previous_value) {
+    if (previous_value.kind == PrgValueKind::uint64) {
+        return make_uint64_value(0U);
+    }
+    if (previous_value.kind == PrgValueKind::int64) {
+        return make_int64_value(0LL);
+    }
+    return make_number_value(0.0);
+}
+
 void sync_native_list_control_displayvalue_from_selection_impl(RuntimeOleObjectState& runtime_object) {
     sync_native_list_control_selected_state_from_listindex(runtime_object);
+    const auto previous_value = runtime_object.properties.find("value");
+    const PrgValue previous_value_snapshot =
+        previous_value == runtime_object.properties.end()
+            ? make_string_value("")
+            : previous_value->second;
+    const bool prefer_index_value = native_list_control_prefers_index_value(runtime_object);
 
     if (const auto selected_slot = native_list_control_selected_slot(runtime_object);
         selected_slot.has_value()) {
@@ -693,10 +746,16 @@ void sync_native_list_control_displayvalue_from_selection_impl(RuntimeOleObjectS
         if (*selected_slot < runtime_object.list_rows.size() &&
             bound_column >= 1U &&
             bound_column <= runtime_object.list_rows[*selected_slot].size()) {
-            runtime_object.properties["value"] =
-                runtime_object.list_rows[*selected_slot][bound_column - 1U];
+            runtime_object.properties["value"] = prefer_index_value
+                                                     ? native_list_control_index_value_for_slot(
+                                                           previous_value_snapshot,
+                                                           *selected_slot)
+                                                     : runtime_object.list_rows[*selected_slot][bound_column - 1U];
         } else {
-            runtime_object.properties["value"] = make_string_value("");
+            runtime_object.properties["value"] = prefer_index_value
+                                                     ? native_list_control_empty_index_value(
+                                                           previous_value_snapshot)
+                                                     : make_string_value("");
         }
         if (*selected_slot < runtime_object.collection_item_keys.size()) {
             try {
@@ -713,7 +772,10 @@ void sync_native_list_control_displayvalue_from_selection_impl(RuntimeOleObjectS
 
     runtime_object.properties["displayvalue"] = make_string_value("");
     runtime_object.properties["listitemid"] = make_number_value(0.0);
-    if (is_native_listbox_runtime_object(runtime_object)) {
+    if (prefer_index_value) {
+        runtime_object.properties["value"] =
+            native_list_control_empty_index_value(previous_value_snapshot);
+    } else if (is_native_listbox_runtime_object(runtime_object)) {
         runtime_object.properties["value"] = make_string_value("");
     }
 }
@@ -1760,6 +1822,20 @@ bool native_multiselect_member_name_matches(
     return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "listbox";
 }
 
+bool native_boundto_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "boundto" ||
+        !runtime_object.properties.contains("boundto")) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "combobox" ||
+           normalized_base_class == "listbox";
+}
+
 bool native_newindex_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
@@ -1812,7 +1888,8 @@ bool native_boundcolumn_member_name_matches(
 
     const std::string normalized_base_class =
         normalize_identifier(trim_copy(runtime_object.base_class_name));
-    return normalized_base_class == "combobox";
+    return normalized_base_class == "combobox" ||
+           normalized_base_class == "listbox";
 }
 
 bool native_columncount_member_name_matches(
@@ -2720,6 +2797,11 @@ bool is_native_multiselect_member_name(const RuntimeOleObjectState& runtime_obje
     return native_multiselect_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_boundto_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_boundto_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_newindex_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_newindex_member_name_matches(runtime_object, normalized_member_name);
@@ -3525,6 +3607,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_listcount_member_name(*runtime_object, property_name) ||
             is_native_sorted_member_name(*runtime_object, property_name) ||
             is_native_multiselect_member_name(*runtime_object, property_name) ||
+            is_native_boundto_member_name(*runtime_object, property_name) ||
             is_native_newindex_member_name(*runtime_object, property_name) ||
             is_native_newitemid_member_name(*runtime_object, property_name) ||
             is_native_listitemid_member_name(*runtime_object, property_name) ||
@@ -3786,7 +3869,8 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                 member_name == "rowsourcetype") {
                 normalize_native_list_control_sorted_invariant(*runtime_object);
             }
-            if (member_name == "boundcolumn") {
+            if (member_name == "boundcolumn" ||
+                member_name == "boundto") {
                 sync_native_list_control_displayvalue_from_selection(*runtime_object);
             }
             return make_boolean_value(true);
@@ -3861,6 +3945,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_listcount_member_name(*runtime_object, property_name) ||
             is_native_sorted_member_name(*runtime_object, property_name) ||
             is_native_multiselect_member_name(*runtime_object, property_name) ||
+            is_native_boundto_member_name(*runtime_object, property_name) ||
             is_native_newindex_member_name(*runtime_object, property_name) ||
             is_native_newitemid_member_name(*runtime_object, property_name) ||
             is_native_listitemid_member_name(*runtime_object, property_name) ||

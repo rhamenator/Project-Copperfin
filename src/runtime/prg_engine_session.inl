@@ -888,6 +888,13 @@
                 runtime_object.properties["sorted"] = make_boolean_value(false);
             }
 
+            if ((normalized_base_class == "combobox" ||
+                 normalized_base_class == "listbox") &&
+                !runtime_object.properties.contains("boundto"))
+            {
+                runtime_object.properties["boundto"] = make_boolean_value(false);
+            }
+
             if (normalized_base_class == "listbox" &&
                 !runtime_object.properties.contains("multiselect"))
             {
@@ -915,7 +922,8 @@
                 runtime_object.properties["listitemid"] = make_number_value(0.0);
             }
 
-            if (normalized_base_class == "combobox" &&
+            if ((normalized_base_class == "combobox" ||
+                 normalized_base_class == "listbox") &&
                 !runtime_object.properties.contains("boundcolumn"))
             {
                 runtime_object.properties["boundcolumn"] = make_number_value(1.0);

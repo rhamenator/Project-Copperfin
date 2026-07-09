@@ -153,11 +153,149 @@ void test_native_list_control_value_requery_tracks_bound_column_selection() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_native_list_control_boundto_switches_selected_value_semantics() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_list_control_boundto";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "native_list_control_boundto.prg";
+    write_text(
+        main_path,
+        "oCombo = CREATEOBJECT('ComboBox')\n"
+        "oCombo.Value = 0\n"
+        "oCombo.ColumnCount = 2\n"
+        "oCombo.BoundColumn = 2\n"
+        "oCombo.AddListItem('North')\n"
+        "oCombo.AddListItem('N', oCombo.NewItemID, 2)\n"
+        "oCombo.AddListItem('South')\n"
+        "oCombo.AddListItem('S', oCombo.NewItemID, 2)\n"
+        "oCombo.ListIndex = 2\n"
+        "nComboValueDefault = oCombo.Value\n"
+        "oCombo.BoundTo = .T.\n"
+        "cComboValueBoundToTrue = oCombo.Value\n"
+        "oCombo.Value = 0\n"
+        "oCombo.BoundTo = .F.\n"
+        "nComboValueBoundToFalse = oCombo.Value\n"
+        "oList = CREATEOBJECT('ListBox')\n"
+        "oList.Value = 0\n"
+        "oList.ColumnCount = 2\n"
+        "oList.BoundColumn = 2\n"
+        "oList.AddListItem('East')\n"
+        "oList.AddListItem('E', oList.NewItemID, 2)\n"
+        "oList.AddListItem('West')\n"
+        "oList.AddListItem('W', oList.NewItemID, 2)\n"
+        "oList.ListIndex = 2\n"
+        "nListValueDefault = oList.Value\n"
+        "oList.BoundTo = .T.\n"
+        "cListValueBoundToTrue = oList.Value\n"
+        "oList.Value = 0\n"
+        "oList.BoundTo = .F.\n"
+        "nListValueBoundToFalse = oList.Value\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           std::string("native list-control BoundTo script should complete: ") + state.message +
+               " @line=" + std::to_string(state.location.line));
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), name + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(found->second) + "'");
+        }
+    };
+
+    check("ncombovaluedefault", "2");
+    check("ccombovalueboundtotrue", "S");
+    check("ncombovalueboundtofalse", "2");
+    check("nlistvaluedefault", "2");
+    check("clistvalueboundtotrue", "W");
+    check("nlistvalueboundtofalse", "2");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_native_list_control_boundto_requery_keeps_numeric_value_coherent() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_list_control_boundto_requery";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "native_list_control_boundto_requery.prg";
+    write_text(
+        main_path,
+        "DIMENSION gaMonths[2,2]\n"
+        "gaMonths[1,1] = 'Jan'\n"
+        "gaMonths[1,2] = '01'\n"
+        "gaMonths[2,1] = 'Feb'\n"
+        "gaMonths[2,2] = '02'\n"
+        "oCombo = CREATEOBJECT('ComboBox')\n"
+        "oCombo.Value = 0\n"
+        "oCombo.ColumnCount = 2\n"
+        "oCombo.BoundColumn = 2\n"
+        "oCombo.RowSourceType = 5\n"
+        "oCombo.RowSource = 'gaMonths'\n"
+        "oCombo.Requery()\n"
+        "oCombo.ListIndex = 2\n"
+        "nValueBeforeSecond = oCombo.Value\n"
+        "DIMENSION gaMonths[3,2]\n"
+        "gaMonths[1,1] = 'Mar'\n"
+        "gaMonths[1,2] = '03'\n"
+        "gaMonths[2,1] = 'Apr'\n"
+        "gaMonths[2,2] = '04'\n"
+        "gaMonths[3,1] = 'May'\n"
+        "gaMonths[3,2] = '05'\n"
+        "oCombo.Requery()\n"
+        "nListIndexAfterSecond = oCombo.ListIndex\n"
+        "nValueAfterSecond = oCombo.Value\n"
+        "oCombo.BoundTo = .T.\n"
+        "cValueAfterBoundToTrue = oCombo.Value\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           std::string("native list-control BoundTo Requery script should complete: ") + state.message +
+               " @line=" + std::to_string(state.location.line));
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), name + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(found->second) + "'");
+        }
+    };
+
+    check("nvaluebeforesecond", "2");
+    check("nlistindexaftersecond", "2");
+    check("nvalueaftersecond", "2");
+    check("cvalueafterboundtotrue", "04");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
     test_native_list_control_value_tracks_selection_and_boundcolumn();
     test_native_list_control_value_requery_tracks_bound_column_selection();
+    test_native_list_control_boundto_switches_selected_value_semantics();
+    test_native_list_control_boundto_requery_keeps_numeric_value_coherent();
     if (const int failures = test_failures(); failures != 0) {
         std::cerr << failures << " test(s) failed\n";
         return 1;
