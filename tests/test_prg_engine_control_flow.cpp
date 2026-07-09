@@ -71,6 +71,7 @@ int main() {
     test_repeated_nested_faults_refresh_stack_frame_and_statement_metadata();
     test_with_endwith_resolves_leading_dot_member_access();
     test_try_catch_finally_handles_runtime_errors();
+    test_try_catch_unwinds_leaked_with_binding_before_catch();
     test_outer_try_does_not_catch_fault_from_unrelated_expression_invoked_routine();
     test_error_handler_still_fires_after_fault_inside_expression_invoked_routine();
     test_catch_to_binds_exception_object_with_error_metadata();

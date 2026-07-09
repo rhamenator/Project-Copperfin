@@ -2202,6 +2202,7 @@
                     return {.ok = false, .message = last_error_message};
                 }
                 frame.tries.push_back({.try_statement_index = frame.pc - 1U,
+                                       .with_stack_depth_at_try_entry = frame.withs.size(),
                                        .catch_statement_indices = targets.catch_statement_indices,
                                        .finally_statement_index = targets.finally_statement_index,
                                        .endtry_statement_index = *targets.endtry_statement_index,

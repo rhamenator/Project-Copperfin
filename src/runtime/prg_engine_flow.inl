@@ -19,6 +19,16 @@
             }
         }
 
+        void unwind_with_bindings(Frame &frame, std::size_t target_depth)
+        {
+            while (frame.withs.size() > target_depth)
+            {
+                frame.locals.erase(frame.withs.back().binding_name);
+                frame.local_names.erase(frame.withs.back().binding_name);
+                frame.withs.pop_back();
+            }
+        }
+
         void release_memory_binding(Frame &frame, const std::string &raw_name, bool clear_public_binding)
         {
             const std::string name = normalize_memory_variable_identifier(trim_copy(raw_name));
@@ -402,6 +412,7 @@
                         continue;
                     }
 
+                    unwind_with_bindings(frame, active_try.with_stack_depth_at_try_entry);
                     active_try.handling_error = true;
                     active_try.entered_catch = true;
                     active_try.entered_finally = false;
@@ -416,6 +427,7 @@
 
                 if (active_try.finally_statement_index.has_value())
                 {
+                    unwind_with_bindings(frame, active_try.with_stack_depth_at_try_entry);
                     active_try.handling_error = true;
                     active_try.entered_catch = false;
                     active_try.entered_finally = true;

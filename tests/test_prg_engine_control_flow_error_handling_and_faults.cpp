@@ -1053,6 +1053,64 @@ void test_try_catch_finally_handles_runtime_errors() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_try_catch_unwinds_leaked_with_binding_before_catch() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_try_with_unwind";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "try_with_unwind.prg";
+    write_text(
+        main_path,
+        "outer_obj = CREATEOBJECT('Sample.Object')\n"
+        "inner_obj = CREATEOBJECT('Sample.Object')\n"
+        "outer_obj.Caption = 'Outer'\n"
+        "inner_obj.Caption = 'Inner'\n"
+        "WITH outer_obj\n"
+        "  TRY\n"
+        "    WITH inner_obj\n"
+        "      DO missing_routine\n"
+        "    ENDWITH\n"
+        "  CATCH TO err_text\n"
+        "    caught_caption = .Caption\n"
+        "    caught_message = err_text.Message\n"
+        "  ENDTRY\n"
+        "  after_try_caption = .Caption\n"
+        "ENDWITH\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "TRY/CATCH should unwind leaked WITH bindings before entering CATCH");
+
+    const auto caught_caption = state.globals.find("caught_caption");
+    const auto after_try_caption = state.globals.find("after_try_caption");
+    const auto caught_message = state.globals.find("caught_message");
+    expect(caught_caption != state.globals.end(), "CATCH should be able to read the outer WITH target after an inner WITH fault");
+    expect(after_try_caption != state.globals.end(), "the outer WITH target should remain active after the caught inner WITH fault");
+    expect(caught_message != state.globals.end(), "CATCH TO should still receive the runtime error object");
+    if (caught_caption != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(caught_caption->second) == "Outer",
+            "CATCH should resolve leading-dot access against the lexically active outer WITH target");
+    }
+    if (after_try_caption != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(after_try_caption->second) == "Outer",
+            "execution after ENDTRY should still see the outer WITH target instead of a leaked inner binding");
+    }
+    if (caught_message != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(caught_message->second).find("Unable to resolve DO target") != std::string::npos,
+            "the original fault metadata should survive the WITH unwind");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_outer_try_does_not_catch_fault_from_unrelated_expression_invoked_routine() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_expr_invoked_try_boundary";
