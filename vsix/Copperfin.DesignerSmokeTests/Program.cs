@@ -1470,6 +1470,64 @@ internal static class Program
                     MemoBlockNumber = 18
                 },
                 expectRawSnapshotProperty: false);
+            SmokeAssetEditorSettingsRoundTripWithRealAsset(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
+                propertyName: "COLOR",
+                expectedOriginalSelectionValue: "1",
+                updatedPropertyValue: 0,
+                expectedUpdatedSelectionValue: "0",
+                expectedOriginalRawValue: "1",
+                expectedUpdatedRawValue: "0",
+                expectedSectionCount: 5,
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "COLOR",
+                    Value = "0",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 2,
+                    MemoBlockNumber = 304
+                },
+                expectedUndoneSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "COLOR",
+                    Value = "1",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 2,
+                    MemoBlockNumber = 305
+                },
+                expectRawSnapshotProperty: false);
+            SmokeAssetEditorSettingsRoundTripWithRealAsset(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
+                propertyName: "COLOR",
+                expectedOriginalSelectionValue: "1",
+                updatedPropertyValue: 0,
+                expectedUpdatedSelectionValue: "0",
+                expectedOriginalRawValue: "1",
+                expectedUpdatedRawValue: "0",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "COLOR",
+                    Value = "0",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 2,
+                    MemoBlockNumber = 78
+                },
+                expectedUndoneSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "COLOR",
+                    Value = "1",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 2,
+                    MemoBlockNumber = 79
+                },
+                expectRawSnapshotProperty: false);
             SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 propertyName: "COLS",
