@@ -2855,16 +2855,20 @@
                 const std::string destination = uppercase_copy(trim_copy(statement.expression));
                 if (destination == "TOP")
                 {
-                    if (!seek_visible_record(*cursor, frame, 1, 1, {}, {}, false) && cursor->record_count == 0U)
+                    if (!seek_visible_record(*cursor, frame, 1, 1, {}, {}, false))
                     {
-                        move_cursor_to(*cursor, 0);
+                        cursor->recno = 0U;
+                        cursor->bof = true;
+                        cursor->eof = true;
                     }
                 }
                 else if (destination == "BOTTOM")
                 {
-                    if (!seek_visible_record(*cursor, frame, static_cast<long long>(cursor->record_count), -1, {}, {}, false) && cursor->record_count == 0U)
+                    if (!seek_visible_record(*cursor, frame, static_cast<long long>(cursor->record_count), -1, {}, {}, false))
                     {
-                        move_cursor_to(*cursor, 0);
+                        cursor->recno = 0U;
+                        cursor->bof = true;
+                        cursor->eof = true;
                     }
                 }
                 else

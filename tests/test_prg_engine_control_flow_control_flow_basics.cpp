@@ -581,6 +581,65 @@ void test_go_top_bottom_on_empty_table_does_not_crash() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_go_top_bottom_with_no_visible_records_sets_bof_and_eof() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_go_topbottom_filtered_empty";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+
+    const fs::path main_path = temp_root / "go_topbottom_filtered_empty.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET FILTER TO .F.\n"
+        "GO TOP\n"
+        "lBofAfterTop = BOF()\n"
+        "lEofAfterTop = EOF()\n"
+        "GO BOTTOM\n"
+        "lBofAfterBottom = BOF()\n"
+        "lEofAfterBottom = EOF()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "GO TOP/BOTTOM with no visible records should complete");
+
+    const auto bof_after_top = state.globals.find("lbofaftertop");
+    const auto eof_after_top = state.globals.find("leofaftertop");
+    const auto bof_after_bottom = state.globals.find("lbofafterbottom");
+    const auto eof_after_bottom = state.globals.find("leofafterbottom");
+
+    expect(bof_after_top != state.globals.end(), "filtered GO TOP should expose BOF()");
+    expect(eof_after_top != state.globals.end(), "filtered GO TOP should expose EOF()");
+    expect(bof_after_bottom != state.globals.end(), "filtered GO BOTTOM should expose BOF()");
+    expect(eof_after_bottom != state.globals.end(), "filtered GO BOTTOM should expose EOF()");
+
+    if (bof_after_top != state.globals.end()) {
+        expect(copperfin::runtime::format_value(bof_after_top->second) == "true",
+               "GO TOP with no visible records should leave BOF() true");
+    }
+    if (eof_after_top != state.globals.end()) {
+        expect(copperfin::runtime::format_value(eof_after_top->second) == "true",
+               "GO TOP with no visible records should leave EOF() true");
+    }
+    if (bof_after_bottom != state.globals.end()) {
+        expect(copperfin::runtime::format_value(bof_after_bottom->second) == "true",
+               "GO BOTTOM with no visible records should leave BOF() true");
+    }
+    if (eof_after_bottom != state.globals.end()) {
+        expect(copperfin::runtime::format_value(eof_after_bottom->second) == "true",
+               "GO BOTTOM with no visible records should leave EOF() true");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_static_diagnostic_flags_likely_infinite_do_while_loop() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_static_diag";

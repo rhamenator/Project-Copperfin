@@ -61,6 +61,7 @@ void test_text_endtext_literal_blocks();
 void test_scan_on_empty_table_does_not_execute_body();
 void test_locate_on_empty_table_sets_eof();
 void test_go_top_bottom_on_empty_table_does_not_crash();
+void test_go_top_bottom_with_no_visible_records_sets_bof_and_eof();
 void test_static_diagnostic_flags_likely_infinite_do_while_loop();
 void test_elseif_control_flow_executes_matching_branch();
 void test_with_endwith_resolves_leading_dot_member_access();

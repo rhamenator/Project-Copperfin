@@ -23,6 +23,7 @@ int main() {
     test_aggregate_commands_on_empty_table_return_zero();
     test_locate_on_empty_table_sets_eof();
     test_go_top_bottom_on_empty_table_does_not_crash();
+    test_go_top_bottom_with_no_visible_records_sets_bof_and_eof();
     test_aggregate_commands_support_macro_targets_and_calculate_while();
     test_command_level_aggregate_scope_and_while_semantics();
     test_total_command_for_local_tables();

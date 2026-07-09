@@ -3984,6 +3984,77 @@ void test_sql_result_cursor_filter_in_target_parity() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_result_cursor_go_top_bottom_with_no_visible_records_sets_bof_and_eof() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_filter_hidden_go_flags";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_filter_hidden_go_flags.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "SELECT sqlcust\n"
+        "SET FILTER TO .F.\n"
+        "GO TOP\n"
+        "lBofAfterTop = BOF()\n"
+        "lEofAfterTop = EOF()\n"
+        "GO BOTTOM\n"
+        "lBofAfterBottom = BOF()\n"
+        "lEofAfterBottom = EOF()\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL GO TOP/BOTTOM with no visible records should complete");
+    expect(state.sql_connections.empty(), "SQL GO TOP/BOTTOM hidden-record script should disconnect its SQL handle");
+
+    const auto exec = state.globals.find("nexec");
+    const auto bof_after_top = state.globals.find("lbofaftertop");
+    const auto eof_after_top = state.globals.find("leofaftertop");
+    const auto bof_after_bottom = state.globals.find("lbofafterbottom");
+    const auto eof_after_bottom = state.globals.find("leofafterbottom");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(exec != state.globals.end(), "SQLEXEC result should be captured for hidden-record SQL GO TOP/BOTTOM checks");
+    expect(bof_after_top != state.globals.end(), "hidden-record SQL GO TOP should expose BOF()");
+    expect(eof_after_top != state.globals.end(), "hidden-record SQL GO TOP should expose EOF()");
+    expect(bof_after_bottom != state.globals.end(), "hidden-record SQL GO BOTTOM should expose BOF()");
+    expect(eof_after_bottom != state.globals.end(), "hidden-record SQL GO BOTTOM should expose EOF()");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured for hidden-record SQL GO TOP/BOTTOM checks");
+
+    if (exec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec->second) == "1", "SQLEXEC should succeed before hidden-record SQL GO TOP/BOTTOM checks");
+    }
+    if (bof_after_top != state.globals.end()) {
+        expect(copperfin::runtime::format_value(bof_after_top->second) == "true",
+               "SQL GO TOP with no visible records should leave BOF() true");
+    }
+    if (eof_after_top != state.globals.end()) {
+        expect(copperfin::runtime::format_value(eof_after_top->second) == "true",
+               "SQL GO TOP with no visible records should leave EOF() true");
+    }
+    if (bof_after_bottom != state.globals.end()) {
+        expect(copperfin::runtime::format_value(bof_after_bottom->second) == "true",
+               "SQL GO BOTTOM with no visible records should leave BOF() true");
+    }
+    if (eof_after_bottom != state.globals.end()) {
+        expect(copperfin::runtime::format_value(eof_after_bottom->second) == "true",
+               "SQL GO BOTTOM with no visible records should leave EOF() true");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1",
+               "SQLDISCONNECT should succeed after hidden-record SQL GO TOP/BOTTOM checks");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_sql_result_cursor_macro_fields_and_filter_parity() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_macro_fields_filter";
@@ -4556,6 +4627,7 @@ int main() {
     test_sql_result_cursor_mutation_in_target_parity();
     test_sql_result_cursor_navigation_in_target_parity();
     test_sql_result_cursor_filter_in_target_parity();
+    test_sql_result_cursor_go_top_bottom_with_no_visible_records_sets_bof_and_eof();
     test_sql_result_cursor_macro_fields_and_filter_parity();
     test_sql_result_cursor_macro_for_expression_parity();
 
