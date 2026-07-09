@@ -907,8 +907,10 @@
             }
 
             std::string target_name = trimmed;
+            bool explicit_tag = false;
             if (starts_with_insensitive(target_name, "TAG "))
             {
+                explicit_tag = true;
                 target_name = trim_copy(target_name.substr(4U));
             }
             target_name = unquote_identifier(target_name);
@@ -941,6 +943,12 @@
                                             { return collapse_identifier(order.name) == normalized_target; });
             if (found == cursor.orders.end())
             {
+                if (explicit_tag)
+                {
+                    last_error_message = runtime_text("Runtime.Prg.Cursor.Error.RequestedOrderMissing");
+                    return false;
+                }
+
                 const TemporaryOrderExpressionState parsed = parse_temporary_order_expression_state(target_name);
                 const std::string normalization_hint = derive_order_normalization_hint(parsed.expression);
                 cursor.active_order_name = uppercase_copy(parsed.expression);

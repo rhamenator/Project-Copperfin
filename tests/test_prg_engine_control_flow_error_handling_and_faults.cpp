@@ -13,7 +13,9 @@ void test_cursor_use_and_seek_errors_use_default_locale_messages() {
     fs::create_directories(temp_root);
 
     const fs::path table_path = temp_root / "people.dbf";
+    const fs::path cdx_path = temp_root / "people.cdx";
     write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+    write_synthetic_cdx(cdx_path, "NAME", "UPPER(NAME)");
 
     const auto run_error_script = [&](const std::string& file_stem, const std::string& script) {
         const fs::path main_path = temp_root / (file_stem + ".prg");
@@ -50,6 +52,21 @@ void test_cursor_use_and_seek_errors_use_default_locale_messages() {
         "SET ORDER to a missing numeric order should pause with an error");
     expect(missing_order.message == "Requested order does not exist",
         "missing order error should route through the default locale catalog");
+
+    const auto missing_tag = run_error_script(
+        "missing_tag",
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO TAG NAME\n"
+        "SET ORDER TO TAG doesnotexist\n");
+    expect(missing_tag.reason == copperfin::runtime::DebugPauseReason::error,
+        "SET ORDER TO TAG with an unknown tag should pause with an error");
+    expect(missing_tag.message == "Requested order does not exist",
+        "missing TAG order error should route through the default locale catalog");
+    expect(
+        std::count_if(missing_tag.events.begin(), missing_tag.events.end(), [](const auto& event) {
+            return event.category == "runtime.order";
+        }) == 1,
+        "unknown TAG requests should not emit a bogus fallback runtime.order event");
 
     fs::remove_all(temp_root, ignored);
 }
