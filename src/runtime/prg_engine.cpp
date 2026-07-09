@@ -3995,6 +3995,7 @@ namespace copperfin::runtime
             }
             if (!is_native_identity_member_name(runtime_object, normalized_property_name) &&
                 !is_native_controlcount_member_name(runtime_object, normalized_property_name) &&
+                !is_native_pagecount_member_name(runtime_object, normalized_property_name) &&
                 !is_native_child_collection_member_name(runtime_object, normalized_property_name) &&
                 !is_native_listcount_member_name(runtime_object, normalized_property_name) &&
                 !is_native_newindex_member_name(runtime_object, normalized_property_name) &&

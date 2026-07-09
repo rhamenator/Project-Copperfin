@@ -6319,6 +6319,178 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_pageframe_pages_child_collection_reflects_count_item_and_foreach_without_leaking_hidden_runtime_surfaces()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_pageframe_pages_collection";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_pageframe_pages_collection.prg";
+        write_text(
+            main_path,
+            "oFrame = CREATEOBJECT('DemoPageFrame')\n"
+            "lHasPages = PEMSTATUS(oFrame, 'Pages', 1)\n"
+            "nPageCount = oFrame.PageCount\n"
+            "nPagesCount = oFrame.Pages.Count\n"
+            "oFirst = oFrame.Pages(1)\n"
+            "cFirstTag = oFirst.cTag\n"
+            "cSecondTag = oFrame.Pages[2].cTag\n"
+            "cLoop = ''\n"
+            "FOR EACH oPage IN oFrame.Pages FOXOBJECT\n"
+            "    cLoop = cLoop + IIF(EMPTY(cLoop), '', ',') + oPage.cTag\n"
+            "ENDFOR\n"
+            "RETURN\n"
+            "DEFINE CLASS AlphaPage AS Page\n"
+            "    cTag = 'alpha'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS BetaPage AS Page\n"
+            "    cTag = 'beta'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DemoPageFrame AS PageFrame\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddObject('pgAlpha', 'AlphaPage')\n"
+            "        THIS.AddObject('pgBeta', 'BetaPage')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native PageFrame Pages child-collection script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lhaspages", "true");
+        check("npagecount", "2");
+        check("npagescount", "2");
+        check("cfirsttag", "alpha");
+        check("csecondtag", "beta");
+        check("cloop", "alpha,beta");
+
+        expect(state.ole_objects.size() == 3U,
+               "native PageFrame Pages child-collection surface should keep owner and page state without exporting the hidden synthetic collection");
+        if (state.ole_objects.size() == 3U)
+        {
+            expect(state.ole_objects[0].prog_id == "DemoPageFrame",
+                   "native PageFrame Pages child-collection surface should keep the owner object visible in exported runtime state");
+            const bool leaked_collection = std::any_of(state.ole_objects.begin(), state.ole_objects.end(), [](const auto &object_state)
+            {
+                return object_state.prog_id == "Collection";
+            });
+            expect(!leaked_collection,
+                   "native PageFrame Pages child-collection surface should not leak the hidden synthetic Collection object into exported runtime state");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_native_pageframe_pagecount_reflects_pages_count_and_stays_read_only()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_pagecount_property";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_pagecount_property.prg";
+        write_text(
+            main_path,
+            "oFrame = CREATEOBJECT('DemoPageFrame')\n"
+            "nPageCountDirect = oFrame.PageCount\n"
+            "nPageCountCollection = oFrame.Pages.Count\n"
+            "xPageCountGetPem = GETPEM(oFrame, 'PageCount')\n"
+            "lHasPageCount = PEMSTATUS(oFrame, 'PageCount', 1)\n"
+            "lPageCountReadOnly = PEMSTATUS(oFrame, 'PageCount', 5)\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oFrame, 1)\n"
+            "nUnionMembers = AMEMBERS(aUnionMembers, oFrame, 3)\n"
+            "lPropHasPageCount = .F.\n"
+            "lUnionHasPageCount = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'PAGECOUNT'\n"
+            "        lPropHasPageCount = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "FOR i = 1 TO nUnionMembers\n"
+            "    IF UPPER(aUnionMembers[i]) == 'PAGECOUNT'\n"
+            "        lUnionHasPageCount = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "lSetPageCount = SETPEM(oFrame, 'PageCount', 99)\n"
+            "lAddPageCount = ADDPROPERTY(oFrame, 'PageCount', 99)\n"
+            "lRemovePageCount = REMOVEPROPERTY(oFrame, 'PageCount')\n"
+            "lRemoved = oFrame.RemoveObject('pgAlpha')\n"
+            "nPageCountAfterRemove = oFrame.PageCount\n"
+            "nPagesCountAfterRemove = oFrame.Pages.Count\n"
+            "cRemainingTag = oFrame.Pages(1).cTag\n"
+            "RETURN\n"
+            "DEFINE CLASS AlphaPage AS Page\n"
+            "    cTag = 'alpha'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS BetaPage AS Page\n"
+            "    cTag = 'beta'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DemoPageFrame AS PageFrame\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddObject('pgAlpha', 'AlphaPage')\n"
+            "        THIS.AddObject('pgBeta', 'BetaPage')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native PageCount property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("npagecountdirect", "2");
+        check("npagecountcollection", "2");
+        check("xpagecountgetpem", "2");
+        check("lhaspagecount", "true");
+        check("lpagecountreadonly", "true");
+        check("lprophaspagecount", "true");
+        check("lunionhaspagecount", "true");
+        check("lsetpagecount", "false");
+        check("laddpagecount", "false");
+        check("lremovepagecount", "false");
+        check("lremoved", "true");
+        check("npagecountafterremove", "1");
+        check("npagescountafterremove", "1");
+        check("cremainingtag", "beta");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_controlcount_reflects_controls_count_and_stays_read_only()
     {
         namespace fs = std::filesystem;
@@ -51649,6 +51821,8 @@ int main()
     test_native_collection_subscript_access_routes_to_items_and_preserves_member_chains();
     test_native_objects_child_collection_reflects_count_item_and_foreach_without_leaking_hidden_runtime_surfaces();
     test_native_controls_child_collection_reflects_count_item_and_foreach_without_leaking_hidden_runtime_surfaces();
+    test_native_pageframe_pages_child_collection_reflects_count_item_and_foreach_without_leaking_hidden_runtime_surfaces();
+    test_native_pageframe_pagecount_reflects_pages_count_and_stays_read_only();
     test_native_controlcount_reflects_controls_count_and_stays_read_only();
     test_native_form_lockscreen_defaults_mutates_and_stays_builtin();
     test_native_form_windowtype_defaults_mutates_and_stays_builtin();

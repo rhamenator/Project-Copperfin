@@ -209,6 +209,16 @@
             return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "column";
         }
 
+        bool is_native_page_runtime_object(const RuntimeOleObjectState &runtime_object) const
+        {
+            return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "page";
+        }
+
+        bool is_native_pageframe_runtime_object(const RuntimeOleObjectState &runtime_object) const
+        {
+            return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "pageframe";
+        }
+
         bool native_column_bound_value(
             const RuntimeOleObjectState &runtime_object,
             bool default_value = true) const
@@ -1196,13 +1206,15 @@
         {
             std::vector<std::pair<std::string, PrgValue>> child_members;
             std::vector<std::pair<std::string, PrgValue>> column_members;
+            std::vector<std::pair<std::string, PrgValue>> page_members;
             child_members.reserve(runtime_object.properties.size());
             for (const auto &[property_name, property_value] : runtime_object.properties)
             {
                 if (property_name == "parent" ||
                     property_name == "objects" ||
                     property_name == "controls" ||
-                    property_name == "columns")
+                    property_name == "columns" ||
+                    property_name == "pages")
                 {
                     continue;
                 }
@@ -1234,6 +1246,13 @@
                     is_native_column_runtime_object(**child_object))
                 {
                     column_members.emplace_back(
+                        property_name,
+                        make_string_value("object:" + (*child_object)->prog_id + "#" + std::to_string((*child_object)->handle)));
+                }
+                if (is_native_pageframe_runtime_object(runtime_object) &&
+                    is_native_page_runtime_object(**child_object))
+                {
+                    page_members.emplace_back(
                         property_name,
                         make_string_value("object:" + (*child_object)->prog_id + "#" + std::to_string((*child_object)->handle)));
                 }
@@ -1337,6 +1356,10 @@
                 is_native_grid_runtime_object(runtime_object)
                     ? sync_collection_surface("columns", column_members, true)
                     : nullptr;
+            RuntimeOleObjectState *pages_collection =
+                is_native_pageframe_runtime_object(runtime_object)
+                    ? sync_collection_surface("pages", page_members, true)
+                    : nullptr;
             if (controls_collection != nullptr)
             {
                 runtime_object.properties["controlcount"] =
@@ -1352,6 +1375,11 @@
             {
                 runtime_object.properties["columncount"] =
                     make_number_value(static_cast<double>(columns_collection->collection_items.size()));
+            }
+            if (pages_collection != nullptr)
+            {
+                runtime_object.properties["pagecount"] =
+                    make_number_value(static_cast<double>(pages_collection->collection_items.size()));
             }
             return objects_collection;
         }
@@ -1845,6 +1873,7 @@
 
             if (is_native_identity_member_name(runtime_object, normalized_property_name) ||
                 is_native_controlcount_member_name(runtime_object, normalized_property_name) ||
+                is_native_pagecount_member_name(runtime_object, normalized_property_name) ||
                 is_native_child_collection_member_name(runtime_object, normalized_property_name) ||
                 is_native_name_member_name(runtime_object, normalized_property_name) ||
                 is_native_splitbar_member_name(runtime_object, normalized_property_name) ||

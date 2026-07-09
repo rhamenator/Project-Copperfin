@@ -1205,6 +1205,17 @@ bool native_controlcount_member_name_matches(
            runtime_object.properties.contains("controlcount");
 }
 
+bool native_pagecount_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "pagecount" ||
+        !runtime_object.properties.contains("pagecount")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "pageframe";
+}
+
 bool native_form_alwaysontop_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
@@ -1567,7 +1578,8 @@ bool native_child_collection_member_name_matches(
     const std::string& normalized_member_name) {
     return (normalized_member_name == "objects" ||
             normalized_member_name == "controls" ||
-            normalized_member_name == "columns") &&
+            normalized_member_name == "columns" ||
+            normalized_member_name == "pages") &&
            runtime_object.properties.contains(normalized_member_name);
 }
 
@@ -2402,6 +2414,11 @@ bool is_native_controlcount_member_name(const RuntimeOleObjectState& runtime_obj
     return native_controlcount_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_pagecount_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_pagecount_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_form_alwaysontop_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_form_alwaysontop_member_name_matches(runtime_object, normalized_member_name);
@@ -3180,6 +3197,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                                                       const std::string& member_name) {
         return get_native_identity_reflection_metadata(runtime_object, member_name).has_value() ||
                native_controlcount_member_name_matches(runtime_object, member_name) ||
+               native_pagecount_member_name_matches(runtime_object, member_name) ||
                native_listcount_member_name_matches(runtime_object, member_name) ||
                native_sorted_member_name_matches(runtime_object, member_name) ||
                native_newindex_member_name_matches(runtime_object, member_name) ||
@@ -3197,6 +3215,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                                                         const std::string& member_name) {
         return get_native_identity_reflection_metadata(runtime_object, member_name).has_value() ||
                native_controlcount_member_name_matches(runtime_object, member_name) ||
+               native_pagecount_member_name_matches(runtime_object, member_name) ||
                native_listcount_member_name_matches(runtime_object, member_name) ||
                native_newindex_member_name_matches(runtime_object, member_name) ||
                native_newitemid_member_name_matches(runtime_object, member_name) ||
@@ -3432,6 +3451,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         if (is_native_identity_member_name(*runtime_object, property_name) ||
             is_native_controlcount_member_name(*runtime_object, property_name) ||
+            is_native_pagecount_member_name(*runtime_object, property_name) ||
             is_native_child_collection_member_name(*runtime_object, property_name) ||
             is_native_name_member_name(*runtime_object, property_name) ||
             is_native_form_alwaysontop_member_name(*runtime_object, property_name) ||
@@ -3628,6 +3648,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         if (native_child_parent_member_name_matches(*runtime_object, member_name) ||
             is_native_controlcount_member_name(*runtime_object, member_name) ||
+            is_native_pagecount_member_name(*runtime_object, member_name) ||
             is_native_listcount_member_name(*runtime_object, member_name) ||
             is_native_newindex_member_name(*runtime_object, member_name) ||
             is_native_newitemid_member_name(*runtime_object, member_name) ||
@@ -3763,6 +3784,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         if (is_native_identity_member_name(*runtime_object, property_name) ||
             is_native_controlcount_member_name(*runtime_object, property_name) ||
+            is_native_pagecount_member_name(*runtime_object, property_name) ||
             is_native_child_collection_member_name(*runtime_object, property_name) ||
             is_native_name_member_name(*runtime_object, property_name) ||
             is_native_form_alwaysontop_member_name(*runtime_object, property_name) ||
