@@ -636,6 +636,12 @@
             const Frame &frame,
             bool truncate_character_overflow_for_local_fields = false)
         {
+            struct EvaluatedReplaceAssignment
+            {
+                std::string field_name;
+                std::string serialized_value;
+            };
+
             if (cursor.remote)
             {
                 if (cursor.recno == 0U || cursor.eof || cursor.recno > cursor.remote_records.size())
@@ -647,6 +653,8 @@
                 }
 
                 vfp::DbfRecord &record = cursor.remote_records[cursor.recno - 1U];
+                std::vector<EvaluatedReplaceAssignment> evaluated_assignments;
+                evaluated_assignments.reserve(assignments.size());
                 for (const auto &assignment : assignments)
                 {
                     const PrgValue value = evaluate_expression(assignment.expression, frame);
@@ -660,7 +668,24 @@
                             {{"fieldName", assignment.field_name}});
                         return false;
                     }
-                    field->display_value = value_as_string(value);
+                    evaluated_assignments.push_back({
+                        .field_name = assignment.field_name,
+                        .serialized_value = value_as_string(value)});
+                }
+
+                for (const auto &assignment : evaluated_assignments)
+                {
+                    const std::string normalized_field = collapse_identifier(assignment.field_name);
+                    auto field = std::find_if(record.values.begin(), record.values.end(), [&](vfp::DbfRecordValue &candidate)
+                                              { return collapse_identifier(candidate.field_name) == normalized_field; });
+                    if (field == record.values.end())
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Records.Error.RemoteSqlFieldNotFound",
+                            {{"fieldName", assignment.field_name}});
+                        return false;
+                    }
+                    field->display_value = assignment.serialized_value;
                 }
                 return true;
             }
@@ -682,6 +707,8 @@
                 return false;
             }
 
+            std::vector<EvaluatedReplaceAssignment> evaluated_assignments;
+            evaluated_assignments.reserve(assignments.size());
             for (const auto &assignment : assignments)
             {
                 const PrgValue value = evaluate_expression(assignment.expression, frame);
@@ -710,11 +737,18 @@
                         }
                     }
                 }
+                evaluated_assignments.push_back({
+                    .field_name = assignment.field_name,
+                    .serialized_value = std::move(serialized_value)});
+            }
+
+            for (const auto &assignment : evaluated_assignments)
+            {
                 const auto result = vfp::replace_record_field_value(
                     cursor.source_path,
                     cursor.recno - 1U,
                     assignment.field_name,
-                    serialized_value);
+                    assignment.serialized_value);
                 if (!result.ok)
                 {
                     last_error_message = result.error;

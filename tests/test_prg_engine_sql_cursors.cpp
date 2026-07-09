@@ -3524,6 +3524,58 @@ void test_sql_result_cursor_mutation_parity() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_result_cursor_multi_field_replace_uses_original_values_for_later_expressions() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_replace_original_values";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_replace_original_values.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "SELECT sqlcust\n"
+        "LOCATE FOR NAME = 'BRAVO'\n"
+        "REPLACE NAME WITH 'Q', AMOUNT WITH LEN(NAME)\n"
+        "cAfterName = NAME\n"
+        "nAfterAmount = AMOUNT\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL multi-field REPLACE original-value script should complete");
+    expect(state.sql_connections.empty(), "SQL multi-field REPLACE original-value script should disconnect its SQL handle");
+
+    const auto exec = state.globals.find("nexec");
+    const auto after_name = state.globals.find("caftername");
+    const auto after_amount = state.globals.find("nafteramount");
+    const auto disc = state.globals.find("ldisc");
+    expect(exec != state.globals.end(), "SQLEXEC result should be captured for SQL multi-field REPLACE original-value parity");
+    expect(after_name != state.globals.end(), "SQL multi-field REPLACE should expose the updated NAME");
+    expect(after_amount != state.globals.end(), "SQL multi-field REPLACE should expose the later AMOUNT expression result");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured for SQL multi-field REPLACE original-value parity");
+
+    if (exec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec->second) == "1", "SQLEXEC should succeed before SQL multi-field REPLACE checks");
+    }
+    if (after_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_name->second) == "Q", "SQL multi-field REPLACE should still update the first assignment");
+    }
+    if (after_amount != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_amount->second) == "5", "later SQL REPLACE expressions should read the original NAME value before any assignments are applied");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should succeed after SQL multi-field REPLACE checks");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_sql_result_cursor_sql_style_mutation_parity() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_style_mutation_parity";
@@ -4690,6 +4742,7 @@ int main() {
     test_sql_result_cursor_scan_in_target_parity();
     test_sql_result_cursor_order_direction_in_target_parity();
     test_sql_result_cursor_mutation_parity();
+    test_sql_result_cursor_multi_field_replace_uses_original_values_for_later_expressions();
     test_sql_result_cursor_sql_style_mutation_parity();
     test_sql_result_cursor_mutation_in_target_parity();
     test_sql_result_cursor_navigation_in_target_parity();

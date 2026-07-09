@@ -167,6 +167,47 @@ void test_replace_for_updates_all_matching_records() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_multi_field_replace_uses_original_values_for_later_expressions() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_replace_original_values";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+
+    const fs::path main_path = temp_root / "replace_original_values.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "LOCATE FOR NAME = 'BRAVO'\n"
+        "REPLACE NAME WITH 'X', AGE WITH LEN(NAME)\n"
+        "cAfterName = NAME\n"
+        "nAfterAge = AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "multi-field REPLACE original-value script should complete");
+
+    const auto after_name = state.globals.find("caftername");
+    const auto after_age = state.globals.find("nafterage");
+    expect(after_name != state.globals.end(), "multi-field REPLACE should expose the updated NAME");
+    expect(after_age != state.globals.end(), "multi-field REPLACE should expose the later AGE expression result");
+
+    if (after_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_name->second) == "X", "multi-field REPLACE should still update the first assignment");
+    }
+    if (after_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_age->second) == "5", "later REPLACE expressions should read the original NAME value before any assignments are applied");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_pack_compacts_deleted_local_records() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_pack";
@@ -2327,6 +2368,7 @@ void test_startup_replays_pending_transaction_journal() {
 int main() {
     test_local_table_mutation_and_scan_flow();
     test_replace_for_updates_all_matching_records();
+    test_multi_field_replace_uses_original_values_for_later_expressions();
     test_pack_compacts_deleted_local_records();
     test_pack_is_reverted_by_undo();
     test_zap_truncates_local_table_records();
