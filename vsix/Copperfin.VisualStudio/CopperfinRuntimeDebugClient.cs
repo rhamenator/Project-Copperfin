@@ -45,12 +45,11 @@ internal static class CopperfinRuntimeDebugClient
             };
         }
 
-        var effectiveDebugManifestPath = PrepareReplayManifest(buildResult.DebugManifestPath);
         return await ReplayAsync(new CopperfinRuntimeDebugSession
         {
             Success = true,
             ManifestPath = buildResult.ManifestPath,
-            DebugManifestPath = effectiveDebugManifestPath,
+            DebugManifestPath = buildResult.DebugManifestPath,
             BuildWarningCount = buildResult.WarningCount,
             BuildWarnings = buildResult.Warnings.ToList(),
             Commands = new List<string> { "continue" }
@@ -120,8 +119,9 @@ internal static class CopperfinRuntimeDebugClient
                 return session;
             }
 
+            var effectiveDebugManifestPath = PrepareReplayManifest(session.DebugManifestPath);
             var arguments = new StringBuilder();
-            arguments.Append("--manifest ").Append(Quote(session.DebugManifestPath)).Append(" --debug");
+            arguments.Append("--manifest ").Append(Quote(effectiveDebugManifestPath)).Append(" --debug");
             arguments.Append(" --locale ").Append(Quote(localization.Locale));
             foreach (var command in session.Commands)
             {
@@ -139,43 +139,50 @@ internal static class CopperfinRuntimeDebugClient
             };
             CopperfinStudioHostBridge.ApplyLocalizationEnvironment(startInfo, localization);
 
-            var processResult = CopperfinProcessRunner.Run(startInfo, timeoutMilliseconds: 30000);
-            if (!processResult.Started)
+            try
             {
-                session.Success = false;
-                session.Error = localization.Text("AssetEditor.Dialog.RuntimeHostCouldNotStart");
-                return session;
-            }
-
-            if (processResult.TimedOut)
-            {
-                session.Success = false;
-                session.Error = localization.Text("AssetEditor.Dialog.RuntimeHostTimedOut");
-                return session;
-            }
-
-            var pauseState = ParsePauseState(processResult.StandardOutput);
-            if (processResult.ExitCode != 0)
-            {
-                if (HasDebugData(pauseState))
+                var processResult = CopperfinProcessRunner.Run(startInfo, timeoutMilliseconds: 30000);
+                if (!processResult.Started)
                 {
-                    session.Success = true;
-                    session.Error = string.Empty;
-                    session.State = pauseState;
+                    session.Success = false;
+                    session.Error = localization.Text("AssetEditor.Dialog.RuntimeHostCouldNotStart");
                     return session;
                 }
 
-                session.Success = false;
-                session.Error = string.IsNullOrWhiteSpace(processResult.StandardError)
-                    ? processResult.StandardOutput.Trim()
-                    : processResult.StandardError.Trim();
+                if (processResult.TimedOut)
+                {
+                    session.Success = false;
+                    session.Error = localization.Text("AssetEditor.Dialog.RuntimeHostTimedOut");
+                    return session;
+                }
+
+                var pauseState = ParsePauseState(processResult.StandardOutput);
+                if (processResult.ExitCode != 0)
+                {
+                    if (HasDebugData(pauseState))
+                    {
+                        session.Success = true;
+                        session.Error = string.Empty;
+                        session.State = pauseState;
+                        return session;
+                    }
+
+                    session.Success = false;
+                    session.Error = string.IsNullOrWhiteSpace(processResult.StandardError)
+                        ? processResult.StandardOutput.Trim()
+                        : processResult.StandardError.Trim();
+                    return session;
+                }
+
+                session.Success = true;
+                session.Error = string.Empty;
+                session.State = pauseState;
                 return session;
             }
-
-            session.Success = true;
-            session.Error = string.Empty;
-            session.State = pauseState;
-            return session;
+            finally
+            {
+                TryDeleteReplayManifest(session.DebugManifestPath, effectiveDebugManifestPath);
+            }
         });
     }
 
@@ -471,6 +478,26 @@ internal static class CopperfinRuntimeDebugClient
         catch (UnauthorizedAccessException)
         {
             return debugManifestPath;
+        }
+    }
+
+    private static void TryDeleteReplayManifest(string originalDebugManifestPath, string effectiveDebugManifestPath)
+    {
+        if (string.IsNullOrWhiteSpace(effectiveDebugManifestPath) ||
+            string.Equals(effectiveDebugManifestPath, originalDebugManifestPath, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        try
+        {
+            File.Delete(effectiveDebugManifestPath);
+        }
+        catch (IOException)
+        {
+        }
+        catch (UnauthorizedAccessException)
+        {
         }
     }
 

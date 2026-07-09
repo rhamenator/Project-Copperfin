@@ -31,7 +31,9 @@ internal static class Program
         TestManagedHostResolutionFindsSiblingAndRepoBuildLayouts();
         TestLocalizationCatalogDoesNotLeakMachineSpecificHostPaths();
         TestProjectWorkflowThreadsExplicitLocaleToBuildHostOnPosix();
+        TestProjectWorkflowUsesDistinctOutputDirectoriesForBackToBackBuildsOnPosix();
         TestRuntimeDebugClientThreadsExplicitLocaleToRuntimeHostOnPosix();
+        TestRuntimeDebugClientCleansTransientReplayManifestOnPosix();
         TestProcessRunnerCapturesLargeConcurrentOutput();
         TestProcessRunnerEnforcesTimeoutWithoutPipeDeadlock();
         TestDottedClassMemberResolvesToLongestProjectSymbolPrefix();
@@ -573,6 +575,165 @@ internal static class Program
             Environment.SetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH", previousRuntimeHostPath);
             Environment.SetEnvironmentVariable("COPPERFIN_UI_LOCALE", previousUiLocale);
             Environment.SetEnvironmentVariable("COPPERFIN_LOCALE", previousLocale);
+            TryDelete(root);
+        }
+    }
+
+    private static void TestProjectWorkflowUsesDistinctOutputDirectoriesForBackToBackBuildsOnPosix()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var root = CreateProjectRoot("workflow_output_dir_uniqueness");
+        var captureCountPath = Path.Combine(root, "build_count.txt");
+        var outputDir1Path = Path.Combine(root, "output_dir_1.txt");
+        var outputDir2Path = Path.Combine(root, "output_dir_2.txt");
+        var manifestPath = Path.Combine(root, "app.cfmanifest");
+        var debugManifestPath = Path.Combine(root, "app.cfdebug");
+        var launcherPath = Path.Combine(root, "launcher");
+        var runtimeHostPath = Path.Combine(root, "runtime_host.sh");
+        var buildHostPath = CreateTestExecutableScriptPath(
+            root,
+            "build_host_unique_output",
+            [
+                "#!/bin/sh",
+                $"count=$(cat \"{captureCountPath}\" 2>/dev/null || printf '0')",
+                "count=$((count + 1))",
+                $"printf '%s' \"$count\" > \"{captureCountPath}\"",
+                "output_dir=''",
+                "prev=''",
+                "for arg in \"$@\"; do",
+                "  if [ \"$prev\" = '--output-dir' ]; then",
+                "    output_dir=\"$arg\"",
+                "    break",
+                "  fi",
+                "  prev=\"$arg\"",
+                "done",
+                $"if [ \"$count\" -eq 1 ]; then printf '%s' \"$output_dir\" > \"{outputDir1Path}\"; else printf '%s' \"$output_dir\" > \"{outputDir2Path}\"; fi",
+                $"printf 'status: ok\\nmanifest.path: %s\\ndebug.manifest.path: %s\\nlauncher.output: %s\\n' \"{manifestPath}\" \"{debugManifestPath}\" \"{launcherPath}\""
+            ]);
+        File.WriteAllText(runtimeHostPath, string.Empty);
+        File.WriteAllText(manifestPath, string.Empty);
+        File.WriteAllText(debugManifestPath, string.Empty);
+        File.WriteAllText(launcherPath, string.Empty);
+
+        var projectPath = Path.Combine(root, "testapp.pjx");
+        var previousBuildHostPath = Environment.GetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH");
+        var previousRuntimeHostPath = Environment.GetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH");
+        try
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH", buildHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH", runtimeHostPath);
+
+            var first = CopperfinProjectWorkflow.ExecuteAsync(
+                projectPath,
+                CopperfinProjectOperation.Build,
+                new CopperfinLocalization("en-US")).GetAwaiter().GetResult();
+            var second = CopperfinProjectWorkflow.ExecuteAsync(
+                projectPath,
+                CopperfinProjectOperation.Build,
+                new CopperfinLocalization("en-US")).GetAwaiter().GetResult();
+
+            Expect(first.Success && second.Success,
+                "project workflow should succeed twice against the fake build host");
+
+            var firstOutputDir = File.ReadAllText(outputDir1Path).Trim();
+            var secondOutputDir = File.ReadAllText(outputDir2Path).Trim();
+            Expect(!string.IsNullOrWhiteSpace(firstOutputDir) &&
+                   !string.IsNullOrWhiteSpace(secondOutputDir),
+                "project workflow should pass an explicit output directory on each build");
+            Expect(!string.Equals(firstOutputDir, secondOutputDir, StringComparison.Ordinal),
+                "project workflow should not reuse the same temp output directory for back-to-back builds");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH", previousBuildHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH", previousRuntimeHostPath);
+            TryDelete(root);
+        }
+    }
+
+    private static void TestRuntimeDebugClientCleansTransientReplayManifestOnPosix()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var root = CreateProjectRoot("runtime_debug_manifest_cleanup");
+        var manifestPath = Path.Combine(root, "app.cfmanifest");
+        var debugManifestPath = Path.Combine(root, "app.cfdebug");
+        var launcherPath = Path.Combine(root, "launcher");
+        var capturedManifestPath = Path.Combine(root, "runtime_manifest_path.txt");
+        var buildHostPath = CreateTestExecutableScriptPath(
+            root,
+            "build_host_manifest_cleanup",
+            [
+                "#!/bin/sh",
+                $"printf 'status: ok\\nmanifest.path: %s\\ndebug.manifest.path: %s\\nlauncher.output: %s\\n' \"{manifestPath}\" \"{debugManifestPath}\" \"{launcherPath}\""
+            ]);
+        var runtimeHostPath = CreateTestExecutableScriptPath(
+            root,
+            "runtime_host_manifest_cleanup",
+            [
+                "#!/bin/sh",
+                "manifest_path=''",
+                "prev=''",
+                "for arg in \"$@\"; do",
+                "  if [ \"$prev\" = '--manifest' ]; then",
+                "    manifest_path=\"$arg\"",
+                "    break",
+                "  fi",
+                "  prev=\"$arg\"",
+                "done",
+                $"printf '%s' \"$manifest_path\" > \"{capturedManifestPath}\"",
+                "printf 'debug.command[0]: continue\\n'",
+                "printf 'debug.reason: breakpoint\\n'",
+                "printf 'debug.location: app/main.prg:12\\n'",
+                "printf 'debug.statement: WAIT WINDOW \"hello\"\\n'",
+                "printf 'debug.stack.depth: 1\\n'",
+                "printf 'debug.executed.statements: 1\\n'"
+            ]);
+        File.WriteAllText(manifestPath, string.Empty);
+        File.WriteAllText(
+            debugManifestPath,
+            "security_enabled=true\nsecurity_role=build-engineer\n");
+        File.WriteAllText(launcherPath, string.Empty);
+
+        var projectPath = Path.Combine(root, "testapp.pjx");
+        var previousBuildHostPath = Environment.GetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH");
+        var previousRuntimeHostPath = Environment.GetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH");
+        var previousSecurityRole = Environment.GetEnvironmentVariable("COPPERFIN_SECURITY_ROLE");
+        try
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH", buildHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH", runtimeHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SECURITY_ROLE", null);
+
+            var session = CopperfinRuntimeDebugClient.StartSessionAsync(
+                projectPath,
+                new CopperfinLocalization("en-US")).GetAwaiter().GetResult();
+
+            Expect(session.Success, "runtime debug client should succeed against the fake runtime host");
+            var effectiveManifestPath = File.ReadAllText(capturedManifestPath).Trim();
+            Expect(!string.IsNullOrWhiteSpace(effectiveManifestPath),
+                "runtime debug client should pass a manifest path to the runtime host");
+            Expect(!string.Equals(effectiveManifestPath, debugManifestPath, StringComparison.Ordinal),
+                "runtime debug client should materialize a transient replay manifest when role remapping is needed");
+            Expect(File.Exists(debugManifestPath),
+                "runtime debug client should preserve the original debug manifest");
+            Expect(!File.Exists(effectiveManifestPath),
+                "runtime debug client should clean up the transient replay manifest after the replay completes");
+            Expect(!Directory.EnumerateFiles(root, "*.runtime-debug-*.cfdebug", SearchOption.TopDirectoryOnly).Any(),
+                "runtime debug client should not leave replay-manifest temp files behind");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH", previousBuildHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH", previousRuntimeHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SECURITY_ROLE", previousSecurityRole);
             TryDelete(root);
         }
     }

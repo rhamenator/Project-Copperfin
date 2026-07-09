@@ -358,7 +358,7 @@ internal static class CopperfinProjectWorkflow
             "Copperfin",
             "VisualStudio",
             safeProjectName,
-            DateTime.UtcNow.ToString("yyyyMMdd_HHmmss"));
+            DateTime.UtcNow.ToString("yyyyMMdd_HHmmss") + "_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(outputDirectory);
         return outputDirectory;
     }
