@@ -692,10 +692,21 @@ bool native_list_control_boundto_enabled(const RuntimeOleObjectState& runtime_ob
            value_as_bool(boundto->second);
 }
 
+bool prg_value_kind_prefers_listindex(PrgValueKind kind) {
+    return kind == PrgValueKind::number ||
+           kind == PrgValueKind::int64 ||
+           kind == PrgValueKind::uint64;
+}
+
 bool native_list_control_prefers_index_value(const RuntimeOleObjectState& runtime_object) {
     if (!is_native_list_control_runtime_object(runtime_object) ||
         native_list_control_boundto_enabled(runtime_object)) {
         return false;
+    }
+
+    if (runtime_object.controlsource_value_kind_hint.has_value()) {
+        return prg_value_kind_prefers_listindex(
+            *runtime_object.controlsource_value_kind_hint);
     }
 
     const auto value = runtime_object.properties.find("value");
@@ -703,9 +714,7 @@ bool native_list_control_prefers_index_value(const RuntimeOleObjectState& runtim
         return false;
     }
 
-    return value->second.kind == PrgValueKind::number ||
-           value->second.kind == PrgValueKind::int64 ||
-           value->second.kind == PrgValueKind::uint64;
+    return prg_value_kind_prefers_listindex(value->second.kind);
 }
 
 PrgValue native_list_control_index_value_for_slot(const PrgValue& previous_value, std::size_t slot) {
@@ -1557,6 +1566,7 @@ bool native_controlsource_member_name_matches(
         normalize_identifier(trim_copy(runtime_object.base_class_name));
     return normalized_base_class == "textbox" ||
            normalized_base_class == "combobox" ||
+           normalized_base_class == "listbox" ||
            normalized_base_class == "editbox" ||
            normalized_base_class == "column" ||
            normalized_base_class == "checkbox" ||
@@ -2345,6 +2355,33 @@ std::optional<long long> parse_native_list_control_selectedid_member_item_id(
     const std::string& member_name)
 {
     return parse_native_list_control_selectedid_member_item_id_impl(runtime_object, member_name);
+}
+
+void refresh_native_list_control_controlsource_value_kind_hint(
+    RuntimeOleObjectState& runtime_object,
+    const RuntimeControlSourceValueResolver& resolver)
+{
+    runtime_object.controlsource_value_kind_hint.reset();
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto controlsource = runtime_object.properties.find("controlsource");
+    if (controlsource == runtime_object.properties.end()) {
+        return;
+    }
+
+    const std::string controlsource_text = trim_copy(value_as_string(controlsource->second));
+    if (controlsource_text.empty() || !resolver) {
+        return;
+    }
+
+    const auto resolved_value = resolver(controlsource_text);
+    if (!resolved_value.has_value()) {
+        return;
+    }
+
+    runtime_object.controlsource_value_kind_hint = resolved_value->kind;
 }
 
 void sync_native_list_control_displayvalue_from_selection(RuntimeOleObjectState& runtime_object)

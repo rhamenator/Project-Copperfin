@@ -36,6 +36,9 @@ struct NativeListControlCellReference {
     std::size_t column_slot = 0U;
 };
 
+using RuntimeControlSourceValueResolver =
+    std::function<std::optional<PrgValue>(const std::string&)>;
+
 bool is_native_identity_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_olecontrol_creation_time_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_olecontrol_object_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -107,6 +110,9 @@ bool write_native_list_control_selected_slot(RuntimeOleObjectState& runtime_obje
 bool write_native_list_control_selected_item_id(RuntimeOleObjectState& runtime_object,
                                                 long long requested_item_id,
                                                 const PrgValue& assigned_value);
+void refresh_native_list_control_controlsource_value_kind_hint(
+    RuntimeOleObjectState& runtime_object,
+    const RuntimeControlSourceValueResolver& resolver);
 void sync_native_list_control_count(RuntimeOleObjectState& runtime_object);
 void sync_native_list_control_displayvalue_from_selection(RuntimeOleObjectState& runtime_object);
 std::optional<PrgValue> read_native_identity_metadata(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);

@@ -4359,6 +4359,29 @@ namespace copperfin::runtime
                     return false;
                 }
                 runtime_object.properties[normalized_property_name] = assigned_value;
+                if (normalized_property_name == "controlsource")
+                {
+                    refresh_native_list_control_controlsource_value_kind_hint(
+                        runtime_object,
+                        [&](const std::string& controlsource_text) -> std::optional<PrgValue>
+                        {
+                            const PrgValue variable_value =
+                                lookup_variable(source_frame, controlsource_text);
+                            if (variable_value.kind != PrgValueKind::empty)
+                            {
+                                return variable_value;
+                            }
+
+                            const auto field_value =
+                                resolve_field_value(controlsource_text, resolve_cursor_target({}));
+                            if (!field_value.has_value() ||
+                                field_value->kind == PrgValueKind::empty)
+                            {
+                                return std::nullopt;
+                            }
+                            return *field_value;
+                        });
+                }
                 if (normalized_property_name == "style" ||
                     normalized_property_name == "readonly")
                 {

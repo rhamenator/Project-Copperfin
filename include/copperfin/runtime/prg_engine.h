@@ -129,6 +129,7 @@ struct RuntimeOleObjectState {
     std::optional<std::intptr_t> native_hwnd{};
     std::map<std::string, PrgValue> properties{};
     std::map<std::string, PrgValue> default_properties{};
+    std::optional<PrgValueKind> controlsource_value_kind_hint{};
     std::vector<PrgValue> collection_items{};
     std::vector<std::string> collection_item_keys{};
     std::vector<std::vector<PrgValue>> list_rows{};

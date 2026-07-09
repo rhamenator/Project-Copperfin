@@ -740,6 +740,7 @@
 
             if ((normalized_base_class == "textbox" ||
                  normalized_base_class == "combobox" ||
+                 normalized_base_class == "listbox" ||
                  normalized_base_class == "column" ||
                  normalized_base_class == "editbox" ||
                  normalized_base_class == "checkbox" ||
@@ -2175,6 +2176,25 @@
             {
                 return make_string_value("object:" + object_state.prog_id + "#" + std::to_string(object_state.handle));
             };
+            const auto resolve_controlsource_value = [&](const std::string& controlsource_text)
+                -> std::optional<PrgValue>
+            {
+                const PrgValue variable_value = lookup_variable(frame, controlsource_text);
+                if (variable_value.kind != PrgValueKind::empty)
+                {
+                    return variable_value;
+                }
+
+                const auto field_value =
+                    resolve_field_value(controlsource_text, resolve_cursor_target({}));
+                if (!field_value.has_value() ||
+                    field_value->kind == PrgValueKind::empty)
+                {
+                    return std::nullopt;
+                }
+
+                return *field_value;
+            };
             for (const NativeClassLookup &lineage_class : class_lineage)
             {
                 for (const Statement &property_statement : lineage_class.class_definition->property_statements)
@@ -2197,6 +2217,9 @@
             seed_native_olecontrol_timeout_policy_properties(*runtime_object);
             seed_native_olecontrol_verb_inspection_properties(*runtime_object);
             seed_native_visual_properties(*runtime_object);
+            refresh_native_list_control_controlsource_value_kind_hint(
+                *runtime_object,
+                resolve_controlsource_value);
             if (RuntimeOleObjectState *object_surface = ensure_native_olecontrol_object_surface(*runtime_object);
                 object_surface != nullptr)
             {
@@ -2263,6 +2286,9 @@
                         child_object->properties[property_name] =
                             evaluate_expression(property_statement.expression, frame);
                     }
+                    refresh_native_list_control_controlsource_value_kind_hint(
+                        *child_object,
+                        resolve_controlsource_value);
                     assign_native_runtime_object_name(*child_object, child_name_text);
 
                     runtime_object->properties[child_name] = make_runtime_object_reference(*child_object);

@@ -289,6 +289,161 @@ void test_native_list_control_boundto_requery_keeps_numeric_value_coherent() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_native_list_control_controlsource_drives_boundto_value_semantics() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_native_list_control_controlsource";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "native_list_control_controlsource.prg";
+    write_text(
+        main_path,
+        "CREATE CURSOR lookupstate (nchoice N(2,0), cchoice C(8))\n"
+        "APPEND BLANK\n"
+        "REPLACE nchoice WITH 0, cchoice WITH ''\n"
+        "oComboNum = CREATEOBJECT('ComboBox')\n"
+        "oComboNum.ControlSource = 'lookupstate.nchoice'\n"
+        "oComboNum.ColumnCount = 2\n"
+        "oComboNum.BoundColumn = 2\n"
+        "oComboNum.AddListItem('Alpha')\n"
+        "oComboNum.AddListItem('A', oComboNum.NewItemID, 2)\n"
+        "oComboNum.AddListItem('Beta')\n"
+        "oComboNum.AddListItem('B', oComboNum.NewItemID, 2)\n"
+        "oComboNum.ListIndex = 2\n"
+        "nComboNumericValue = oComboNum.Value\n"
+        "oComboNum.BoundTo = .T.\n"
+        "cComboNumericBoundToTrue = oComboNum.Value\n"
+        "oListNum = CREATEOBJECT('ListBox')\n"
+        "lListHasControlSource = PEMSTATUS(oListNum, 'ControlSource', 1)\n"
+        "lListControlSourceReadOnly = PEMSTATUS(oListNum, 'ControlSource', 5)\n"
+        "cListControlSourceBefore = GETPEM(oListNum, 'ControlSource')\n"
+        "oListNum.ControlSource = 'lookupstate.nchoice'\n"
+        "cListControlSourceAfter = GETPEM(oListNum, 'ControlSource')\n"
+        "oListNum.ColumnCount = 2\n"
+        "oListNum.BoundColumn = 2\n"
+        "oListNum.AddListItem('North')\n"
+        "oListNum.AddListItem('N', oListNum.NewItemID, 2)\n"
+        "oListNum.AddListItem('South')\n"
+        "oListNum.AddListItem('S', oListNum.NewItemID, 2)\n"
+        "oListNum.ListIndex = 2\n"
+        "nListNumericValue = oListNum.Value\n"
+        "oListNum.BoundTo = .T.\n"
+        "cListNumericBoundToTrue = oListNum.Value\n"
+        "oComboChar = CREATEOBJECT('ComboBox')\n"
+        "oComboChar.ControlSource = 'lookupstate.cchoice'\n"
+        "oComboChar.ColumnCount = 2\n"
+        "oComboChar.BoundColumn = 2\n"
+        "oComboChar.AddListItem('East')\n"
+        "oComboChar.AddListItem('E', oComboChar.NewItemID, 2)\n"
+        "oComboChar.AddListItem('West')\n"
+        "oComboChar.AddListItem('W', oComboChar.NewItemID, 2)\n"
+        "oComboChar.ListIndex = 2\n"
+        "cComboCharacterValue = oComboChar.Value\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           std::string("native list-control ControlSource script should complete: ") + state.message +
+               " @line=" + std::to_string(state.location.line));
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), name + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(found->second) + "'");
+        }
+    };
+
+    check("ncombonumericvalue", "2");
+    check("ccombonumericboundtotrue", "B");
+    check("llisthascontrolsource", "true");
+    check("llistcontrolsourcereadonly", "false");
+    check("clistcontrolsourcebefore", "");
+    check("clistcontrolsourceafter", "lookupstate.nchoice");
+    check("nlistnumericvalue", "2");
+    check("clistnumericboundtotrue", "S");
+    check("ccombocharactervalue", "W");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_native_list_control_controlsource_requery_keeps_numeric_value_coherent() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_native_list_control_controlsource_requery";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "native_list_control_controlsource_requery.prg";
+    write_text(
+        main_path,
+        "CREATE CURSOR lookupstate (nchoice N(2,0))\n"
+        "APPEND BLANK\n"
+        "REPLACE nchoice WITH 0\n"
+        "DIMENSION gaMonths[2,2]\n"
+        "gaMonths[1,1] = 'Jan'\n"
+        "gaMonths[1,2] = '01'\n"
+        "gaMonths[2,1] = 'Feb'\n"
+        "gaMonths[2,2] = '02'\n"
+        "oCombo = CREATEOBJECT('ComboBox')\n"
+        "oCombo.ControlSource = 'lookupstate.nchoice'\n"
+        "oCombo.ColumnCount = 2\n"
+        "oCombo.BoundColumn = 2\n"
+        "oCombo.RowSourceType = 5\n"
+        "oCombo.RowSource = 'gaMonths'\n"
+        "oCombo.Requery()\n"
+        "oCombo.ListIndex = 2\n"
+        "nValueBeforeSecond = oCombo.Value\n"
+        "DIMENSION gaMonths[3,2]\n"
+        "gaMonths[1,1] = 'Mar'\n"
+        "gaMonths[1,2] = '03'\n"
+        "gaMonths[2,1] = 'Apr'\n"
+        "gaMonths[2,2] = '04'\n"
+        "gaMonths[3,1] = 'May'\n"
+        "gaMonths[3,2] = '05'\n"
+        "oCombo.Requery()\n"
+        "nListIndexAfterSecond = oCombo.ListIndex\n"
+        "nValueAfterSecond = oCombo.Value\n"
+        "oCombo.BoundTo = .T.\n"
+        "cValueAfterBoundToTrue = oCombo.Value\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           std::string("native list-control ControlSource requery script should complete: ") +
+               state.message + " @line=" + std::to_string(state.location.line));
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), name + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(found->second) + "'");
+        }
+    };
+
+    check("nvaluebeforesecond", "2");
+    check("nlistindexaftersecond", "2");
+    check("nvalueaftersecond", "2");
+    check("cvalueafterboundtotrue", "04");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -296,6 +451,8 @@ int main() {
     test_native_list_control_value_requery_tracks_bound_column_selection();
     test_native_list_control_boundto_switches_selected_value_semantics();
     test_native_list_control_boundto_requery_keeps_numeric_value_coherent();
+    test_native_list_control_controlsource_drives_boundto_value_semantics();
+    test_native_list_control_controlsource_requery_keeps_numeric_value_coherent();
     if (const int failures = test_failures(); failures != 0) {
         std::cerr << failures << " test(s) failed\n";
         return 1;
