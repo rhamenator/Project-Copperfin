@@ -2719,14 +2719,14 @@
 
         PrgValue materialize_catch_exception_object()
         {
-            const AErrorCompatibilitySnapshot &compatibility = current_error_compatibility();
+            const AErrorCompatibilitySnapshot &compatibility = last_error_compatibility;
             if (compatibility.preserve_fault_context &&
                 compatibility.active_exception_reference.has_value())
             {
                 remember_active_exception_reference(*compatibility.active_exception_reference);
                 return *compatibility.active_exception_reference;
             }
-            std::string detail = current_error_message();
+            std::string detail = last_error_message;
             if (!compatibility.sql_detail.empty())
             {
                 detail = compatibility.sql_detail;
@@ -2745,12 +2745,12 @@
                 .action_count = 1};
             object_state.base_class_name = "Exception";
             object_state.class_hierarchy = {"EXCEPTION", "OBJECT"};
-            object_state.properties["message"] = make_string_value(current_error_message());
-            object_state.properties["errorno"] = make_number_value(static_cast<double>(current_error_code()));
-            object_state.properties["lineno"] = make_number_value(static_cast<double>(current_fault_location().line));
-            object_state.properties["procedure"] = make_string_value(current_error_procedure());
+            object_state.properties["message"] = make_string_value(last_error_message);
+            object_state.properties["errorno"] = make_number_value(static_cast<double>(last_error_code));
+            object_state.properties["lineno"] = make_number_value(static_cast<double>(last_fault_location.line));
+            object_state.properties["procedure"] = make_string_value(last_error_procedure);
             object_state.properties["details"] = make_string_value(detail);
-            object_state.properties["linecontents"] = make_string_value(current_fault_statement());
+            object_state.properties["linecontents"] = make_string_value(last_fault_statement);
             object_state.properties["stacklevel"] = make_number_value(static_cast<double>(stack.size()));
             object_state.properties["uservalue"] = compatibility.thrown_user_value.value_or(make_empty_value());
 

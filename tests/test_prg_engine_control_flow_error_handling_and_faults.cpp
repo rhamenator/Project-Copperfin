@@ -646,6 +646,70 @@ void test_on_error_handler_preserves_original_fault_metadata_across_caught_inner
     fs::remove_all(temp_root, ignored);
 }
 
+void test_on_error_handler_catch_to_uses_inner_fault_metadata() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_on_error_catch_to_inner_fault";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "on_error_catch_to_inner_fault.prg";
+    write_text(
+        main_path,
+        "ON ERROR DO handleerr\n"
+        "DO missing_outer\n"
+        "RETURN\n"
+        "PROCEDURE handleerr\n"
+        "TRY\n"
+        "    nInner = 1 / 0\n"
+        "CATCH TO oErr\n"
+        "    cCaughtMessage = oErr.Message\n"
+        "    cCaughtProcedure = oErr.Procedure\n"
+        "    cCaughtLineContents = oErr.LineContents\n"
+        "ENDTRY\n"
+        "cFinalMessage = MESSAGE()\n"
+        "RETURN\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#3686: ON ERROR handler CATCH TO script should complete");
+
+    const auto caught_message = state.globals.find("ccaughtmessage");
+    const auto caught_procedure = state.globals.find("ccaughtprocedure");
+    const auto caught_line_contents = state.globals.find("ccaughtlinecontents");
+    const auto final_message = state.globals.find("cfinalmessage");
+
+    expect(caught_message != state.globals.end(), "#3686: CATCH TO inside ON ERROR should capture Exception.Message");
+    expect(caught_procedure != state.globals.end(), "#3686: CATCH TO inside ON ERROR should capture Exception.Procedure");
+    expect(caught_line_contents != state.globals.end(), "#3686: CATCH TO inside ON ERROR should capture Exception.LineContents");
+    expect(final_message != state.globals.end(), "#3686: ON ERROR handler should still capture the outer MESSAGE() after the inner catch");
+
+    if (caught_message != state.globals.end()) {
+        const std::string caught_message_text = copperfin::runtime::format_value(caught_message->second);
+        expect(caught_message_text.find("Division by zero") != std::string::npos,
+               "#3686: CATCH TO Exception.Message should describe the inner caught fault");
+        expect(caught_message_text.find("missing_outer") == std::string::npos,
+               "#3686: CATCH TO Exception.Message should not echo the outer ON ERROR fault text");
+    }
+    if (caught_procedure != state.globals.end()) {
+        expect(copperfin::runtime::format_value(caught_procedure->second) == "handleerr",
+               "#3686: CATCH TO Exception.Procedure should report the handler routine where the inner fault occurred");
+    }
+    if (caught_line_contents != state.globals.end()) {
+        expect(copperfin::runtime::format_value(caught_line_contents->second) == "nInner = 1 / 0",
+               "#3686: CATCH TO Exception.LineContents should capture the inner faulting statement");
+    }
+    if (final_message != state.globals.end()) {
+        expect(copperfin::runtime::format_value(final_message->second).find("missing_outer") != std::string::npos,
+               "#3686: MESSAGE() after the inner CATCH should still revert to the original ON ERROR fault");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_ole_property_fault_dispatches_on_error_and_preserves_object_state() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_ole_property_fault";

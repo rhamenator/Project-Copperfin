@@ -149,6 +149,7 @@ void test_on_error_do_with_handler_receives_error_metadata();
 void test_aerror_populates_structured_runtime_error_array();
 void test_aerror_exposes_sql_and_ole_specific_rows();
 void test_on_error_handler_preserves_original_fault_metadata_across_caught_inner_faults();
+void test_on_error_handler_catch_to_uses_inner_fault_metadata();
 void test_ole_property_fault_dispatches_on_error_and_preserves_object_state();
 void test_ole_method_fault_is_catchable_and_preserves_object_state();
 void test_thrown_expression_fault_preserves_pause_statement_and_recovery();
