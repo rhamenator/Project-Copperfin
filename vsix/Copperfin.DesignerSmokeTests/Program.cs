@@ -1239,6 +1239,64 @@ internal static class Program
                 },
                 expectRawSnapshotProperty: false);
             SmokeAssetEditorSettingsRoundTripWithRealAsset(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
+                propertyName: "ORIENTATION",
+                expectedOriginalSelectionValue: "0",
+                updatedPropertyValue: 1,
+                expectedUpdatedSelectionValue: "1",
+                expectedOriginalRawValue: "0",
+                expectedUpdatedRawValue: "1",
+                expectedSectionCount: 5,
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "ORIENTATION",
+                    Value = "1",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 0,
+                    MemoBlockNumber = 304
+                },
+                expectedUndoneSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "ORIENTATION",
+                    Value = "0",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 0,
+                    MemoBlockNumber = 305
+                },
+                expectRawSnapshotProperty: false);
+            SmokeAssetEditorSettingsRoundTripWithRealAsset(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
+                propertyName: "ORIENTATION",
+                expectedOriginalSelectionValue: "0",
+                updatedPropertyValue: 1,
+                expectedUpdatedSelectionValue: "1",
+                expectedOriginalRawValue: "0",
+                expectedUpdatedRawValue: "1",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "ORIENTATION",
+                    Value = "1",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 0,
+                    MemoBlockNumber = 78
+                },
+                expectedUndoneSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "ORIENTATION",
+                    Value = "0",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 0,
+                    MemoBlockNumber = 79
+                },
+                expectRawSnapshotProperty: false);
+            SmokeAssetEditorSettingsRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 propertyName: "PAPERSIZE",
                 expectedOriginalSelectionValue: "1",
