@@ -219,6 +219,15 @@ bool extract_json_bool_field(const std::string& text, const std::string& field_n
     return extract_json_raw_field(text, field_name) == "true";
 }
 
+struct RealSampleGroupingCase {
+    std::string issue_tag;
+    std::string sample_stem;
+    std::string primary_filename;
+    std::string sidecar_filename;
+    std::string original_grouping_expression;
+    int header_record_index = 2;
+};
+
 struct GroupingSnapshot {
     std::string id;
     std::string title;
@@ -366,18 +375,23 @@ void expect_deleted_preview_cleared(const GroupingSnapshot& snapshot, const std:
            prefix + " should clear deleted preview height");
 }
 
-void test_real_vfp9_report_sample_grouping_deleted_preview_round_trip(const std::string& studio_host_path) {
+void run_real_vfp9_report_sample_grouping_deleted_preview_round_trip(
+    const std::string& studio_host_path,
+    const RealSampleGroupingCase& sample_case,
+    const std::filesystem::path& reports_root) {
     namespace fs = std::filesystem;
 
-    const fs::path reports_root = find_vfp9_reports_root();
-    if (reports_root.empty()) {
-        std::cerr << "SKIP: #3647 real VFP9 report samples were not found\n";
+    if (!fs::exists(reports_root / sample_case.primary_filename) ||
+        !fs::exists(reports_root / sample_case.sidecar_filename)) {
+        std::cerr << "SKIP: " << sample_case.issue_tag << " real VFP9 report sample "
+                  << sample_case.primary_filename << " was not found\n";
         return;
     }
 
     const fs::path temp_root =
         fs::temp_directory_path() /
-        ("copperfin_studio_host_real_vfp9_sample_grouping_deleted_preview_round_trip_tests_" +
+        ("copperfin_studio_host_real_vfp9_" + sample_case.sample_stem +
+         "_grouping_deleted_preview_round_trip_tests_" +
          std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
@@ -385,34 +399,42 @@ void test_real_vfp9_report_sample_grouping_deleted_preview_round_trip(const std:
 
     ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
 
-    const fs::path copied_primary = temp_root / "invoice.frx";
-    const fs::path copied_sidecar = temp_root / "invoice.frt";
+    const fs::path copied_primary = temp_root / sample_case.primary_filename;
+    const fs::path copied_sidecar = temp_root / sample_case.sidecar_filename;
     std::error_code copy_error;
-    fs::copy_file(reports_root / "invoice.frx", copied_primary, fs::copy_options::overwrite_existing, copy_error);
-    expect(!copy_error, "#3647: should copy the real report asset into temp space");
+    fs::copy_file(
+        reports_root / sample_case.primary_filename,
+        copied_primary,
+        fs::copy_options::overwrite_existing,
+        copy_error);
+    expect(!copy_error, sample_case.issue_tag + ": should copy the real report asset into temp space");
     copy_error.clear();
-    fs::copy_file(reports_root / "invoice.frt", copied_sidecar, fs::copy_options::overwrite_existing, copy_error);
-    expect(!copy_error, "#3647: should copy the real report sidecar into temp space");
-    expect(make_writable(copied_primary), "#3647: copied report asset should become writable");
-    expect(make_writable(copied_sidecar), "#3647: copied report sidecar should become writable");
+    fs::copy_file(
+        reports_root / sample_case.sidecar_filename,
+        copied_sidecar,
+        fs::copy_options::overwrite_existing,
+        copy_error);
+    expect(!copy_error, sample_case.issue_tag + ": should copy the real report sidecar into temp space");
+    expect(make_writable(copied_primary), sample_case.issue_tag + ": copied report asset should become writable");
+    expect(make_writable(copied_sidecar), sample_case.issue_tag + ": copied report sidecar should become writable");
 
     const std::string original_primary_bytes = read_binary(copied_primary);
     const std::string original_sidecar_bytes = read_binary(copied_sidecar);
 
-    constexpr int header_record_index = 2;
-
     const auto initial_process = run_process_capture(
         studio_host_path,
-        {"--path", copied_primary.string(), "--record", std::to_string(header_record_index), "--json"},
+        {"--path", copied_primary.string(), "--record", std::to_string(sample_case.header_record_index), "--json"},
         temp_root);
     if (initial_process.exit_code != 0) {
-        std::cerr << "studio host real sample initial grouping deleted-preview read stdout:\n"
+        std::cerr << "studio host " << sample_case.sample_stem
+                  << " initial grouping deleted-preview read stdout:\n"
                   << initial_process.stdout_text << "\n";
-        std::cerr << "studio host real sample initial grouping deleted-preview read stderr:\n"
+        std::cerr << "studio host " << sample_case.sample_stem
+                  << " initial grouping deleted-preview read stderr:\n"
                   << initial_process.stderr_text << "\n";
     }
     expect(initial_process.exit_code == 0,
-           "#3647: real sample grouping deleted-preview read should succeed");
+           sample_case.issue_tag + ": real sample grouping deleted-preview read should succeed");
     const GroupingSnapshot initial_snapshot = capture_grouping_snapshot(initial_process.stdout_text);
     expect_identity_matches(
         initial_snapshot,
@@ -420,22 +442,27 @@ void test_real_vfp9_report_sample_grouping_deleted_preview_round_trip(const std:
         false,
         false,
         false,
-        "#3647: initial real sample grouping read");
+        sample_case.issue_tag + ": initial real sample grouping read");
     expect(initial_snapshot.group_role == "header",
-           "#3647: initial real sample grouping read should target the group header");
+           sample_case.issue_tag + ": initial real sample grouping read should target the group header");
+    expect(initial_snapshot.grouping_expression == sample_case.original_grouping_expression,
+           sample_case.issue_tag + ": initial real sample grouping read should expose the expected grouping expression");
 
     const auto delete_process = run_process_capture(
         studio_host_path,
-        {"--path", copied_primary.string(), "--record", std::to_string(header_record_index), "--delete-object", "--json"},
+        {"--path", copied_primary.string(),
+         "--record", std::to_string(sample_case.header_record_index),
+         "--delete-object",
+         "--json"},
         temp_root);
     if (delete_process.exit_code != 0) {
-        std::cerr << "studio host real sample grouping delete-preview stdout:\n"
+        std::cerr << "studio host " << sample_case.sample_stem << " grouping delete-preview stdout:\n"
                   << delete_process.stdout_text << "\n";
-        std::cerr << "studio host real sample grouping delete-preview stderr:\n"
+        std::cerr << "studio host " << sample_case.sample_stem << " grouping delete-preview stderr:\n"
                   << delete_process.stderr_text << "\n";
     }
     expect(delete_process.exit_code == 0,
-           "#3647: real sample grouping delete should succeed");
+           sample_case.issue_tag + ": real sample grouping delete should succeed");
     const GroupingSnapshot deleted_snapshot = capture_grouping_snapshot(delete_process.stdout_text);
     expect_identity_matches(
         deleted_snapshot,
@@ -443,24 +470,26 @@ void test_real_vfp9_report_sample_grouping_deleted_preview_round_trip(const std:
         true,
         true,
         true,
-        "#3647: deleted real sample grouping read");
+        sample_case.issue_tag + ": deleted real sample grouping read");
     expect(read_binary(copied_primary) != original_primary_bytes,
-           "#3647: real sample grouping delete should change primary asset bytes");
+           sample_case.issue_tag + ": real sample grouping delete should change primary asset bytes");
     expect(read_binary(copied_sidecar) == original_sidecar_bytes,
-           "#3647: real sample grouping delete should preserve sidecar bytes");
+           sample_case.issue_tag + ": real sample grouping delete should preserve sidecar bytes");
 
     const auto reopen_after_delete = run_process_capture(
         studio_host_path,
-        {"--path", copied_primary.string(), "--record", std::to_string(header_record_index), "--json"},
+        {"--path", copied_primary.string(), "--record", std::to_string(sample_case.header_record_index), "--json"},
         temp_root);
     if (reopen_after_delete.exit_code != 0) {
-        std::cerr << "studio host real sample reopen-after-delete grouping preview stdout:\n"
+        std::cerr << "studio host " << sample_case.sample_stem
+                  << " reopen-after-delete grouping preview stdout:\n"
                   << reopen_after_delete.stdout_text << "\n";
-        std::cerr << "studio host real sample reopen-after-delete grouping preview stderr:\n"
+        std::cerr << "studio host " << sample_case.sample_stem
+                  << " reopen-after-delete grouping preview stderr:\n"
                   << reopen_after_delete.stderr_text << "\n";
     }
     expect(reopen_after_delete.exit_code == 0,
-           "#3647: real sample grouping reopen after delete should succeed");
+           sample_case.issue_tag + ": real sample grouping reopen after delete should succeed");
     const GroupingSnapshot reopen_deleted_snapshot = capture_grouping_snapshot(reopen_after_delete.stdout_text);
     expect_identity_matches(
         reopen_deleted_snapshot,
@@ -468,28 +497,31 @@ void test_real_vfp9_report_sample_grouping_deleted_preview_round_trip(const std:
         true,
         true,
         true,
-        "#3647: reopen-after-delete real sample grouping read");
+        sample_case.issue_tag + ": reopen-after-delete real sample grouping read");
     expect_live_preview_matches(
         reopen_deleted_snapshot,
         deleted_snapshot,
-        "#3647: reopen-after-delete real sample grouping read");
+        sample_case.issue_tag + ": reopen-after-delete real sample grouping read");
     expect_deleted_preview_matches(
         reopen_deleted_snapshot,
         deleted_snapshot,
-        "#3647: reopen-after-delete real sample grouping read");
+        sample_case.issue_tag + ": reopen-after-delete real sample grouping read");
 
     const auto restore_process = run_process_capture(
         studio_host_path,
-        {"--path", copied_primary.string(), "--record", std::to_string(header_record_index), "--restore-object", "--json"},
+        {"--path", copied_primary.string(),
+         "--record", std::to_string(sample_case.header_record_index),
+         "--restore-object",
+         "--json"},
         temp_root);
     if (restore_process.exit_code != 0) {
-        std::cerr << "studio host real sample grouping restore-preview stdout:\n"
+        std::cerr << "studio host " << sample_case.sample_stem << " grouping restore-preview stdout:\n"
                   << restore_process.stdout_text << "\n";
-        std::cerr << "studio host real sample grouping restore-preview stderr:\n"
+        std::cerr << "studio host " << sample_case.sample_stem << " grouping restore-preview stderr:\n"
                   << restore_process.stderr_text << "\n";
     }
     expect(restore_process.exit_code == 0,
-           "#3647: real sample grouping restore should succeed");
+           sample_case.issue_tag + ": real sample grouping restore should succeed");
     const GroupingSnapshot restored_snapshot = capture_grouping_snapshot(restore_process.stdout_text);
     expect_identity_matches(
         restored_snapshot,
@@ -497,31 +529,33 @@ void test_real_vfp9_report_sample_grouping_deleted_preview_round_trip(const std:
         false,
         true,
         false,
-        "#3647: restored real sample grouping read");
+        sample_case.issue_tag + ": restored real sample grouping read");
     expect_live_preview_matches(
         restored_snapshot,
         initial_snapshot,
-        "#3647: restored real sample grouping read");
+        sample_case.issue_tag + ": restored real sample grouping read");
     expect_deleted_preview_cleared(
         restored_snapshot,
-        "#3647: restored real sample grouping read");
+        sample_case.issue_tag + ": restored real sample grouping read");
     expect(read_binary(copied_primary) == original_primary_bytes,
-           "#3647: real sample grouping restore should rewind primary asset bytes");
+           sample_case.issue_tag + ": real sample grouping restore should rewind primary asset bytes");
     expect(read_binary(copied_sidecar) == original_sidecar_bytes,
-           "#3647: real sample grouping restore should rewind sidecar bytes");
+           sample_case.issue_tag + ": real sample grouping restore should rewind sidecar bytes");
 
     const auto reopen_after_restore = run_process_capture(
         studio_host_path,
-        {"--path", copied_primary.string(), "--record", std::to_string(header_record_index), "--json"},
+        {"--path", copied_primary.string(), "--record", std::to_string(sample_case.header_record_index), "--json"},
         temp_root);
     if (reopen_after_restore.exit_code != 0) {
-        std::cerr << "studio host real sample reopen-after-restore grouping preview stdout:\n"
+        std::cerr << "studio host " << sample_case.sample_stem
+                  << " reopen-after-restore grouping preview stdout:\n"
                   << reopen_after_restore.stdout_text << "\n";
-        std::cerr << "studio host real sample reopen-after-restore grouping preview stderr:\n"
+        std::cerr << "studio host " << sample_case.sample_stem
+                  << " reopen-after-restore grouping preview stderr:\n"
                   << reopen_after_restore.stderr_text << "\n";
     }
     expect(reopen_after_restore.exit_code == 0,
-           "#3647: real sample grouping reopen after restore should succeed");
+           sample_case.issue_tag + ": real sample grouping reopen after restore should succeed");
     const GroupingSnapshot reopen_restored_snapshot = capture_grouping_snapshot(reopen_after_restore.stdout_text);
     expect_identity_matches(
         reopen_restored_snapshot,
@@ -529,17 +563,53 @@ void test_real_vfp9_report_sample_grouping_deleted_preview_round_trip(const std:
         false,
         true,
         false,
-        "#3647: reopen-after-restore real sample grouping read");
+        sample_case.issue_tag + ": reopen-after-restore real sample grouping read");
     expect_live_preview_matches(
         reopen_restored_snapshot,
         initial_snapshot,
-        "#3647: reopen-after-restore real sample grouping read");
+        sample_case.issue_tag + ": reopen-after-restore real sample grouping read");
     expect_deleted_preview_cleared(
         reopen_restored_snapshot,
-        "#3647: reopen-after-restore real sample grouping read");
+        sample_case.issue_tag + ": reopen-after-restore real sample grouping read");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_real_vfp9_report_sample_grouping_deleted_preview_round_trip(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path reports_root = find_vfp9_reports_root();
+    if (reports_root.empty()) {
+        std::cerr << "SKIP: #3647/#3649 real VFP9 report samples were not found\n";
+        return;
+    }
+
+    const std::vector<RealSampleGroupingCase> sample_cases{
+        {
+            .issue_tag = "#3647",
+            .sample_stem = "invoice",
+            .primary_filename = "invoice.frx",
+            .sidecar_filename = "invoice.frt",
+            .original_grouping_expression = "invoice.order_id_a",
+            .header_record_index = 2
+        },
+        {
+            .issue_tag = "#3649",
+            .sample_stem = "dbctofrx",
+            .primary_filename = "dbctofrx.frx",
+            .sidecar_filename = "dbctofrx.frt",
+            .original_grouping_expression = "dbctofrx.parentid",
+            .header_record_index = 2
+        }
+    };
+
+    for (const auto& sample_case : sample_cases) {
+        run_real_vfp9_report_sample_grouping_deleted_preview_round_trip(
+            studio_host_path,
+            sample_case,
+            reports_root);
     }
 }
 
