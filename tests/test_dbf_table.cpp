@@ -1666,6 +1666,58 @@ void test_memo_sidecar_version_mismatch_is_diagnosed() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_memo_sidecar_zero_block_size_fails_closed() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_zero_block_size_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "memo_zero_block_size.scx";
+    const fs::path memo_path = temp_dir / "memo_zero_block_size.sct";
+
+    std::vector<std::uint8_t> table_bytes(97U + 5U + 1U, 0U);
+    table_bytes[0] = 0x30U;
+    write_le_u32(table_bytes, 4U, 1U);
+    write_le_u16(table_bytes, 8U, 97U);
+    write_le_u16(table_bytes, 10U, 5U);
+    write_field_descriptor(table_bytes, 32U, "OBJNAME", 'M', 1U, 4U);
+    write_field_descriptor(table_bytes, 64U, "OBJTYPE", 'C', 5U, 1U);
+    table_bytes[96U] = 0x0DU;
+    table_bytes[97U] = 0x20U;
+    write_le_u32(table_bytes, 98U, 1U);
+    table_bytes[102U] = static_cast<std::uint8_t>('X');
+    table_bytes.back() = 0x1AU;
+
+    {
+        std::ofstream output(table_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(table_bytes.data()),
+                     static_cast<std::streamsize>(table_bytes.size()));
+    }
+
+    std::vector<std::uint8_t> memo_bytes(512U, 0U);
+    write_be_u32(memo_bytes, 0U, 2U);
+    write_be_u16(memo_bytes, 6U, 0U);
+    {
+        std::ofstream output(memo_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(memo_bytes.data()),
+                     static_cast<std::streamsize>(memo_bytes.size()));
+    }
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok,
+           "#3687: zero-block-size memo sidecars should fail closed without crashing DBF parsing");
+    if (parse_result.ok && !parse_result.table.records.empty() && !parse_result.table.records[0].values.empty()) {
+        expect(parse_result.table.records[0].values[0].display_value.find("<memo block 1>") != std::string::npos,
+               "#3687: zero-block-size memo sidecars should surface the stable unresolved memo placeholder");
+        expect(parse_result.table.records[0].values[0].memo_block_number == 1U,
+               "#3687: zero-block-size memo sidecars should retain structured memo provenance");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_dbf_table_locale_catalog_parity() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
@@ -2129,6 +2181,7 @@ int main() {
     test_dbf_table_record_replacement_errors_resolve_through_localization_catalog();
     test_dbf_table_row_header_errors_resolve_through_localization_catalog();
     test_memo_sidecar_version_mismatch_is_diagnosed();
+    test_memo_sidecar_zero_block_size_fails_closed();
     test_dbf_table_locale_catalog_parity();
     test_dbf_field_name_without_null_terminator_is_tolerated();
     test_currency_field_boundary_values();

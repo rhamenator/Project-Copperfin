@@ -922,7 +922,8 @@ public:
 
         block_size_ = read_be_u16(bytes_, 6U);
         if (block_size_ == 0U) {
-            block_size_ = 1U;
+            bytes_.clear();
+            return;
         }
         available_ = true;
     }
