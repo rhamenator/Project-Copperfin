@@ -1814,12 +1814,24 @@ Program parse_program(const std::string& path) {
             statement.expression = extract_command_clause(body, "FOR", {"WHILE", "IN"});
             statement.tertiary_expression = extract_command_clause(body, "WHILE", {"IN"});
             statement.secondary_expression = extract_command_clause(body, "IN");
+            const std::string first_word = normalize_identifier(split_first_word(body).first);
+            if (first_word == "all" &&
+                trim_copy(statement.expression).empty() &&
+                trim_copy(statement.tertiary_expression).empty()) {
+                statement.quaternary_expression = "all";
+            }
         } else if (upper == "RECALL" || starts_with_insensitive(line, "RECALL ")) {
             statement.kind = StatementKind::recall_command;
             const std::string body = upper == "RECALL" ? std::string{} : trim_copy(line.substr(7U));
             statement.expression = extract_command_clause(body, "FOR", {"WHILE", "IN"});
             statement.tertiary_expression = extract_command_clause(body, "WHILE", {"IN"});
             statement.secondary_expression = extract_command_clause(body, "IN");
+            const std::string first_word = normalize_identifier(split_first_word(body).first);
+            if (first_word == "all" &&
+                trim_copy(statement.expression).empty() &&
+                trim_copy(statement.tertiary_expression).empty()) {
+                statement.quaternary_expression = "all";
+            }
         } else if (upper == "PACK" || starts_with_insensitive(line, "PACK ")) {
             statement.kind = StatementKind::pack_command;
             const std::string body = upper == "PACK" ? std::string{} : trim_copy(line.substr(5U));

@@ -125,6 +125,64 @@ void test_local_table_mutation_and_scan_flow() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_delete_all_and_recall_all_affect_whole_local_table() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_delete_recall_all_local";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+
+    const fs::path main_path = temp_root / "delete_recall_all_local.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "GO 2\n"
+        "DELETE ALL\n"
+        "GO 1\n"
+        "lDeleted1 = DELETED()\n"
+        "GO 2\n"
+        "lDeleted2 = DELETED()\n"
+        "GO 3\n"
+        "lDeleted3 = DELETED()\n"
+        "RECALL ALL\n"
+        "GO 1\n"
+        "lRecalled1 = DELETED()\n"
+        "GO 2\n"
+        "lRecalled2 = DELETED()\n"
+        "GO 3\n"
+        "lRecalled3 = DELETED()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#3683: DELETE ALL / RECALL ALL local-table script should complete");
+
+    const auto check = [&](const std::string &name, const std::string &expected)
+    {
+        const auto it = state.globals.find(name);
+        expect(it != state.globals.end(), "#3683: " + name + " should be captured");
+        if (it != state.globals.end()) {
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   "#3683: " + name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(it->second) + "'");
+        }
+    };
+
+    check("ldeleted1", "true");
+    check("ldeleted2", "true");
+    check("ldeleted3", "true");
+    check("lrecalled1", "false");
+    check("lrecalled2", "false");
+    check("lrecalled3", "false");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_replace_for_updates_all_matching_records() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_replace_for";
@@ -2377,6 +2435,7 @@ void test_startup_replays_pending_transaction_journal() {
 
 int main() {
     test_local_table_mutation_and_scan_flow();
+    test_delete_all_and_recall_all_affect_whole_local_table();
     test_replace_for_updates_all_matching_records();
     test_multi_field_replace_uses_original_values_for_later_expressions();
     test_pack_compacts_deleted_local_records();

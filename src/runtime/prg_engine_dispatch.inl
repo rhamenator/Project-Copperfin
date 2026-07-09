@@ -2641,9 +2641,14 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
+                const std::string delete_for_expression =
+                    normalize_identifier(statement.quaternary_expression) == "all" &&
+                            trim_copy(statement.expression).empty()
+                        ? ".T."
+                        : statement.expression;
                 if (!execute_with_command_undo(cursor->source_path, "DELETE", [&]
                     {
-                        return set_deleted_flag(*cursor, frame, statement.expression, statement.tertiary_expression, true);
+                        return set_deleted_flag(*cursor, frame, delete_for_expression, statement.tertiary_expression, true);
                     }))
                 {
                     last_fault_location = statement.location;
@@ -2651,7 +2656,11 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
-                std::string delete_detail = statement.expression.empty() ? cursor->alias : statement.expression;
+                std::string delete_detail =
+                    normalize_identifier(statement.quaternary_expression) == "all" &&
+                            trim_copy(statement.expression).empty()
+                        ? "ALL"
+                        : (statement.expression.empty() ? cursor->alias : statement.expression);
                 if (!trim_copy(statement.tertiary_expression).empty())
                 {
                     delete_detail += " WHILE " + statement.tertiary_expression;
@@ -2706,9 +2715,14 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
+                const std::string recall_for_expression =
+                    normalize_identifier(statement.quaternary_expression) == "all" &&
+                            trim_copy(statement.expression).empty()
+                        ? ".T."
+                        : statement.expression;
                 if (!execute_with_command_undo(cursor->source_path, "RECALL", [&]
                     {
-                        return set_deleted_flag(*cursor, frame, statement.expression, statement.tertiary_expression, false);
+                        return set_deleted_flag(*cursor, frame, recall_for_expression, statement.tertiary_expression, false);
                     }))
                 {
                     last_fault_location = statement.location;
@@ -2716,7 +2730,11 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
-                std::string recall_detail = statement.expression.empty() ? cursor->alias : statement.expression;
+                std::string recall_detail =
+                    normalize_identifier(statement.quaternary_expression) == "all" &&
+                            trim_copy(statement.expression).empty()
+                        ? "ALL"
+                        : (statement.expression.empty() ? cursor->alias : statement.expression);
                 if (!trim_copy(statement.tertiary_expression).empty())
                 {
                     recall_detail += " WHILE " + statement.tertiary_expression;

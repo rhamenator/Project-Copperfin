@@ -1362,6 +1362,65 @@ void test_sql_result_cursor_mutation_commands() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_delete_all_and_recall_all_affect_whole_selected_sql_result_cursor() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_delete_recall_all";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_delete_recall_all.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "SELECT sqlcust\n"
+        "GO 2\n"
+        "DELETE ALL\n"
+        "GO 1\n"
+        "lDeleted1 = DELETED()\n"
+        "GO 2\n"
+        "lDeleted2 = DELETED()\n"
+        "GO 3\n"
+        "lDeleted3 = DELETED()\n"
+        "RECALL ALL\n"
+        "GO 1\n"
+        "lRecalled1 = DELETED()\n"
+        "GO 2\n"
+        "lRecalled2 = DELETED()\n"
+        "GO 3\n"
+        "lRecalled3 = DELETED()\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#3683: DELETE ALL / RECALL ALL selected SQL/result cursor script should complete");
+
+    const auto check = [&](const std::string &name, const std::string &expected)
+    {
+        const auto it = state.globals.find(name);
+        expect(it != state.globals.end(), "#3683: " + name + " should be captured");
+        if (it != state.globals.end()) {
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   "#3683: " + name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(it->second) + "'");
+        }
+    };
+
+    check("ldeleted1", "true");
+    check("ldeleted2", "true");
+    check("ldeleted3", "true");
+    check("lrecalled1", "false");
+    check("lrecalled2", "false");
+    check("lrecalled3", "false");
+    check("ldisc", "1");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_targeted_sql_result_cursor_mutations_preserve_selected_alias_and_pointer() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_mutations_in_target";
@@ -4806,6 +4865,7 @@ int main() {
     test_append_from_csv_mutates_selected_sql_result_cursor();
     test_append_from_delimited_fields_clause_preserves_typed_order_for_selected_sql_result_cursor();
     test_append_from_selected_sql_result_cursor_runtime_errors_localize();
+    test_delete_all_and_recall_all_affect_whole_selected_sql_result_cursor();
     test_sql_result_cursor_mutation_commands();
     test_targeted_sql_result_cursor_mutations_preserve_selected_alias_and_pointer();
     test_sql_result_cursors_are_isolated_by_data_session();
