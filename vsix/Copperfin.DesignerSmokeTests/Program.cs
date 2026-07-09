@@ -1637,6 +1637,42 @@ internal static class Program
                 },
                 expectRawSnapshotProperty: false);
             SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
+                propertyName: "COLWIDTH",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: 4800,
+                expectedUpdatedSelectionValue: "4800",
+                expectedSectionCount: 5,
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "COLWIDTH",
+                    Value = "4800",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 304
+                },
+                expectRawSnapshotProperty: false);
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
+                propertyName: "COLWIDTH",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: 2400,
+                expectedUpdatedSelectionValue: "2400",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "COLWIDTH",
+                    Value = "2400",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 78
+                },
+                expectRawSnapshotProperty: false);
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 propertyName: "COLSPACING",
                 expectedOriginalSelectionValue: string.Empty,
