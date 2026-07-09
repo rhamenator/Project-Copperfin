@@ -201,13 +201,6 @@ bool parse_runtime_date_for_set(
     int& month,
     int& day,
     const std::function<std::string(const std::string&)>& set_callback) {
-    if (parse_runtime_date_string(raw, year, month, day)) {
-        if (year >= 0 && year < 100) {
-            year += year < 50 ? 2000 : 1900;
-        }
-        return true;
-    }
-
     const std::string value = trim_copy(raw);
     const std::string mark = date_mark(set_callback);
     const auto parse_component = [](const std::string& component, int& output) -> bool {
@@ -269,7 +262,17 @@ bool parse_runtime_date_for_set(
     if (parse_with_mark(mark)) {
         return true;
     }
-    return mark != "/" && parse_with_mark("/");
+    if (mark != "/" && parse_with_mark("/")) {
+        return true;
+    }
+
+    if (parse_runtime_date_string(raw, year, month, day)) {
+        if (year >= 0 && year < 100) {
+            year += year < 50 ? 2000 : 1900;
+        }
+        return true;
+    }
+    return false;
 }
 
 bool parse_runtime_datetime_for_set(
@@ -281,13 +284,6 @@ bool parse_runtime_datetime_for_set(
     int& minute,
     int& second,
     const std::function<std::string(const std::string&)>& set_callback) {
-    if (parse_runtime_datetime_string(raw, year, month, day, hour, minute, second)) {
-        if (year >= 0 && year < 100) {
-            year += year < 50 ? 2000 : 1900;
-        }
-        return true;
-    }
-
     const std::string value = trim_copy(raw);
     const auto separator = value.find_first_of(" T");
     const std::string date_part = separator == std::string::npos ? value : value.substr(0U, separator);

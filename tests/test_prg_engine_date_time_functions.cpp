@@ -126,6 +126,13 @@ namespace
             "ctod_dmy = CTOD('18/04/2026')\n"
             "dtoc_dmy = DTOC('18/04/2026')\n"
             "ttoc_dmy = TTOC('18/04/2026 13:45:56')\n"
+            "ctod_dmy_ambiguous = DTOC(CTOD('01/02/2024'), 1)\n"
+            "dtoc_dmy_ambiguous = DTOC('01/02/2024', 1)\n"
+            "ttoc_dmy_ambiguous = TTOC('01/02/2024 13:45:56', 1)\n"
+            "ttos_dmy_ambiguous = TTOS('01/02/2024 13:45:56')\n"
+            "ctot_dmy_ambiguous = TTOC(CTOT('01/02/2024 13:45:56'), 1)\n"
+            "dtot_dmy_ambiguous = TTOC(DTOT('01/02/2024'), 1)\n"
+            "ttod_dmy_ambiguous = DTOC(TTOD('01/02/2024 13:45:56'), 1)\n"
             "SET CENTURY OFF\n"
             "century_off = SET('CENTURY')\n"
             "dtoc_century_off = DTOC('18/04/2026')\n"
@@ -286,6 +293,13 @@ namespace
         check("ctod_dmy", "18/04/2026");
         check("dtoc_dmy", "18/04/2026");
         check("ttoc_dmy", "18/04/2026 13:45:56");
+        check("ctod_dmy_ambiguous", "20240201");
+        check("dtoc_dmy_ambiguous", "20240201");
+        check("ttoc_dmy_ambiguous", "20240201134556");
+        check("ttos_dmy_ambiguous", "20240201134556");
+        check("ctot_dmy_ambiguous", "20240201134556");
+        check("dtot_dmy_ambiguous", "20240201000000");
+        check("ttod_dmy_ambiguous", "20240201");
         check("century_off", "OFF");
         check("dtoc_century_off", "18/04/26");
         check("date_set_ymd", "YMD");
