@@ -1430,8 +1430,10 @@ Program parse_program(const std::string& path) {
             statement.kind = StatementKind::enddo_statement;
         } else if (upper == "ENDCASE") {
             statement.kind = StatementKind::endcase_statement;
-        } else if (upper == "LOOP" || upper == "CONTINUE") {
+        } else if (upper == "LOOP") {
             statement.kind = StatementKind::loop_statement;
+        } else if (upper == "CONTINUE") {
+            statement.kind = StatementKind::continue_command;
         } else if (upper == "EXIT") {
             statement.kind = StatementKind::exit_statement;
         } else if (starts_with_insensitive(line, "WITH ")) {

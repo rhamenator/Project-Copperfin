@@ -62,6 +62,8 @@ const char* statement_kind_name(const StatementKind kind) {
             return "endfor_statement";
         case StatementKind::loop_statement:
             return "loop_statement";
+        case StatementKind::continue_command:
+            return "continue_command";
         case StatementKind::exit_statement:
             return "exit_statement";
         case StatementKind::enddo_statement:

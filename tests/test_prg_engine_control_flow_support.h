@@ -59,6 +59,7 @@ void test_do_case_control_flow();
 void test_push_pop_key_menu_popup_stack_commands();
 void test_text_endtext_literal_blocks();
 void test_scan_on_empty_table_does_not_execute_body();
+void test_locate_continue_advances_to_later_matches();
 void test_locate_on_empty_table_sets_eof();
 void test_go_top_bottom_on_empty_table_does_not_crash();
 void test_go_top_bottom_with_no_visible_records_sets_bof_and_eof();

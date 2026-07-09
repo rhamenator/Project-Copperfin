@@ -52,7 +52,7 @@ void test_do_while_and_loop_control_flow() {
         "DO WHILE i < 5\n"
         "    i = i + 1\n"
         "    IF i = 2\n"
-        "        CONTINUE\n"
+        "        LOOP\n"
         "    ENDIF\n"
         "    nWhile = nWhile + i\n"
         "    IF i = 4\n"
@@ -67,7 +67,7 @@ void test_do_while_and_loop_control_flow() {
         "    DO WHILE inner < 3\n"
         "        inner = inner + 1\n"
         "        IF inner = 2\n"
-        "            CONTINUE\n"
+        "            LOOP\n"
         "        ENDIF\n"
         "        nNested = nNested + 1\n"
         "    ENDDO\n"
@@ -119,7 +119,7 @@ void test_do_while_and_loop_control_flow() {
     expect(after_while_index != state.globals.end(), "DO WHILE EXIT should preserve the exiting iteration state");
 
     if (while_total != state.globals.end()) {
-        expect(copperfin::runtime::format_value(while_total->second) == "8", "DO WHILE should honor CONTINUE and EXIT");
+        expect(copperfin::runtime::format_value(while_total->second) == "8", "DO WHILE should honor LOOP and EXIT");
     }
     if (nested_total != state.globals.end()) {
         expect(copperfin::runtime::format_value(nested_total->second) == "4", "nested DO WHILE loops should reevaluate each loop independently");
@@ -518,6 +518,80 @@ void test_locate_on_empty_table_sets_eof() {
     if (eof_after_locate != state.globals.end()) {
         expect(copperfin::runtime::format_value(eof_after_locate->second) == "true",
                "LOCATE on an empty table should leave EOF() true");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_locate_continue_advances_to_later_matches() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_locate_continue";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}, {"DELTA", 40}});
+
+    const fs::path main_path = temp_root / "locate_continue.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "LOCATE FOR AGE >= 20 WHILE AGE < 40\n"
+        "nHits = 0\n"
+        "cFirst = ''\n"
+        "cSecond = ''\n"
+        "DO WHILE FOUND()\n"
+        "    nHits = nHits + 1\n"
+        "    IF nHits = 1\n"
+        "        cFirst = NAME\n"
+        "    ELSE\n"
+        "        cSecond = NAME\n"
+        "    ENDIF\n"
+        "    CONTINUE\n"
+        "ENDDO\n"
+        "lFoundAfter = FOUND()\n"
+        "lEofAfter = EOF()\n"
+        "nRecAfter = RECNO()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "LOCATE/CONTINUE script should complete: " + state.message);
+
+    const auto hits = state.globals.find("nhits");
+    const auto first = state.globals.find("cfirst");
+    const auto second = state.globals.find("csecond");
+    const auto found_after = state.globals.find("lfoundafter");
+    const auto eof_after = state.globals.find("leofafter");
+    const auto rec_after = state.globals.find("nrecafter");
+
+    expect(hits != state.globals.end(), "LOCATE/CONTINUE should expose the number of matching rows");
+    expect(first != state.globals.end(), "LOCATE/CONTINUE should expose the first matching name");
+    expect(second != state.globals.end(), "LOCATE/CONTINUE should expose the second matching name");
+    expect(found_after != state.globals.end(), "LOCATE/CONTINUE should expose FOUND() after the final CONTINUE");
+    expect(eof_after != state.globals.end(), "LOCATE/CONTINUE should expose EOF() after the final CONTINUE");
+    expect(rec_after != state.globals.end(), "LOCATE/CONTINUE should expose RECNO() after the final CONTINUE");
+
+    if (hits != state.globals.end()) {
+        expect(copperfin::runtime::format_value(hits->second) == "2", "LOCATE/CONTINUE should iterate both matches before the WHILE boundary");
+    }
+    if (first != state.globals.end()) {
+        expect(copperfin::runtime::format_value(first->second) == "BRAVO", "LOCATE/CONTINUE should start from the first matching record");
+    }
+    if (second != state.globals.end()) {
+        expect(copperfin::runtime::format_value(second->second) == "CHARLIE", "CONTINUE should advance to the next matching record");
+    }
+    if (found_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(found_after->second) == "false", "final CONTINUE should clear FOUND() after the last match");
+    }
+    if (eof_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(eof_after->second) == "true", "final CONTINUE should move to EOF after the last match");
+    }
+    if (rec_after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_after->second) == "5", "final CONTINUE should place RECNO() at record_count + 1");
     }
 
     fs::remove_all(temp_root, ignored);

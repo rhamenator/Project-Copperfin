@@ -68,6 +68,15 @@ void test_cursor_use_and_seek_errors_use_default_locale_messages() {
         }) == 1,
         "unknown TAG requests should not emit a bogus fallback runtime.order event");
 
+    const auto missing_locate = run_error_script(
+        "missing_locate",
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "CONTINUE\n");
+    expect(missing_locate.reason == copperfin::runtime::DebugPauseReason::error,
+        "CONTINUE without an active LOCATE should pause with an error");
+    expect(missing_locate.message == "CONTINUE requires an active LOCATE command",
+        "CONTINUE without an active LOCATE should route through the default locale catalog");
+
     fs::remove_all(temp_root, ignored);
 }
 

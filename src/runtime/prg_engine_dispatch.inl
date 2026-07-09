@@ -2082,6 +2082,48 @@
                 }
                 return {};
             }
+            case StatementKind::continue_command:
+            {
+                CursorState *cursor = resolve_cursor_target_expression({}, frame);
+                if (cursor == nullptr)
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                        {{"command", "CONTINUE"}});
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                if (!cursor->locate_active)
+                {
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.ContinueRequiresActiveLocate");
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                const std::size_t start_recno = cursor->eof ? (cursor->record_count + 1U) : (cursor->recno + 1U);
+                if (!locate_next_matching_record(
+                        *cursor,
+                        cursor->active_locate_for_expression,
+                        cursor->active_locate_while_expression,
+                        frame,
+                        start_recno))
+                {
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                const std::string locate_detail = cursor->active_locate_for_expression.empty()
+                    ? std::string{"ALL"}
+                    : cursor->active_locate_for_expression;
+                events.push_back({.category = "runtime.locate",
+                                  .detail = "CONTINUE " + locate_detail,
+                                  .location = statement.location});
+                return {};
+            }
             case StatementKind::exit_statement:
             {
                 const auto active_loop = find_innermost_active_loop(frame);
@@ -2404,6 +2446,9 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
+                cursor->active_locate_for_expression = statement.expression;
+                cursor->active_locate_while_expression = statement.tertiary_expression;
+                cursor->locate_active = true;
                 if (!locate_next_matching_record(*cursor, statement.expression, statement.tertiary_expression, frame, 1U))
                 {
                     last_fault_location = statement.location;

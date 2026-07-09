@@ -21,6 +21,7 @@ int main() {
     test_command_level_aggregate_commands();
     test_scan_on_empty_table_does_not_execute_body();
     test_aggregate_commands_on_empty_table_return_zero();
+    test_locate_continue_advances_to_later_matches();
     test_locate_on_empty_table_sets_eof();
     test_go_top_bottom_on_empty_table_does_not_crash();
     test_go_top_bottom_with_no_visible_records_sets_bof_and_eof();

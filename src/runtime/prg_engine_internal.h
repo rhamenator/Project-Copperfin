@@ -39,6 +39,7 @@ enum class StatementKind {
     for_statement,
     endfor_statement,
     loop_statement,
+    continue_command,
     exit_statement,
     enddo_statement,
     endcase_statement,

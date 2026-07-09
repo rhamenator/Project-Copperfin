@@ -421,6 +421,9 @@ namespace copperfin::runtime
             std::string active_order_collation_hint;
             std::string active_order_key_domain_hint;
             bool active_order_descending = false;
+            std::string active_locate_for_expression;
+            std::string active_locate_while_expression;
+            bool locate_active = false;
             std::string filter_expression;
             std::vector<vfp::DbfRecord> remote_records;
             std::vector<vfp::DbfFieldDescriptor> remote_fields;
