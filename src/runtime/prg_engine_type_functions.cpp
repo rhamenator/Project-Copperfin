@@ -134,6 +134,14 @@ std::optional<PrgValue> evaluate_type_function(
         return arguments[0].kind == PrgValueKind::empty ? arguments[1] : arguments[0];
     }
     if (function == "between" && arguments.size() >= 3U) {
+        if (arguments[0].kind == PrgValueKind::string ||
+            arguments[1].kind == PrgValueKind::string ||
+            arguments[2].kind == PrgValueKind::string) {
+            const std::string value = value_as_string(arguments[0]);
+            const std::string lower = value_as_string(arguments[1]);
+            const std::string upper = value_as_string(arguments[2]);
+            return make_boolean_value(value >= lower && value <= upper);
+        }
         const double value = value_as_number(arguments[0]);
         return make_boolean_value(value >= value_as_number(arguments[1]) && value <= value_as_number(arguments[2]));
     }
