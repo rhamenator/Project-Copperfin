@@ -587,6 +587,10 @@
                 }
 
                 DataSessionState &session = current_session_state();
+                if (session.cursors.contains(target_area))
+                {
+                    close_cursor(std::to_string(target_area));
+                }
                 session.aliases[target_area] = alias;
                 CursorState cursor;
                 cursor.work_area = target_area;
@@ -637,6 +641,10 @@
 
             DataSessionState &session = current_session_state();
             std::vector<vfp::DbfRecord> remote_records;
+            if (session.cursors.contains(target_area))
+            {
+                close_cursor(std::to_string(target_area));
+            }
             session.aliases[target_area] = alias;
             if (remote)
             {

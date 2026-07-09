@@ -805,6 +805,65 @@ void test_lock_functions_and_unlock_command_track_session_locks() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_replacing_a_used_work_area_releases_prior_table_locks() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_replace_use_unlock";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path held_path = temp_root / "held.dbf";
+    const fs::path replacement_path = temp_root / "replacement.dbf";
+    write_people_dbf(held_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+    write_people_dbf(replacement_path, {{"OTHER", 1}});
+
+    const fs::path writer_path = temp_root / "writer.prg";
+    write_text(
+        writer_path,
+        "SET MULTILOCKS ON\n"
+        "USE '" + held_path.string() + "' ALIAS Held IN 0\n"
+        "lHeldLock = FLOCK()\n"
+        "USE '" + replacement_path.string() + "' ALIAS Replacement IN Held\n"
+        "UNLOCK\n"
+        "RETURN\n");
+
+    {
+        copperfin::runtime::PrgRuntimeSession writer =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(writer_path.string(), temp_root.string()));
+        const auto writer_state = writer.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(writer_state.completed, "#3673: writer script should complete after replacing a locked work area");
+
+        const auto held_lock = writer_state.globals.find("lheldlock");
+        expect(held_lock != writer_state.globals.end(), "#3673: writer script should capture the initial table lock result");
+        if (held_lock != writer_state.globals.end()) {
+            expect(copperfin::runtime::format_value(held_lock->second) == "true",
+                   "#3673: writer should successfully hold the initial table lock before replacement");
+        }
+    }
+
+    const fs::path reader_path = temp_root / "reader.prg";
+    write_text(
+        reader_path,
+        "SET MULTILOCKS ON\n"
+        "USE '" + held_path.string() + "' ALIAS HeldAgain SHARED IN 0\n"
+        "lRelock = FLOCK()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession reader =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(reader_path.string(), temp_root.string()));
+    const auto reader_state = reader.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(reader_state.completed, "#3673: reader script should complete after the writer session exits");
+
+    const auto relock = reader_state.globals.find("lrelock");
+    expect(relock != reader_state.globals.end(), "#3673: reader script should capture the relock attempt");
+    if (relock != reader_state.globals.end()) {
+        expect(copperfin::runtime::format_value(relock->second) == "true",
+               "#3673: replacing a used work area should release the old table lock for a later runtime session");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_reprocess_contention_retries_and_mutation_lock_timeouts() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_reprocess_contention";
@@ -2447,6 +2506,7 @@ int main() {
     test_memo_field_replace_with_empty_string();
     test_set_exclusive_controls_table_maintenance_guards();
     test_lock_functions_and_unlock_command_track_session_locks();
+    test_replacing_a_used_work_area_releases_prior_table_locks();
     test_reprocess_contention_retries_and_mutation_lock_timeouts();
     test_lock_retry_blocking_is_rejected_inside_critical_section();
     test_rlock_retry_blocking_is_rejected_inside_critical_section();
