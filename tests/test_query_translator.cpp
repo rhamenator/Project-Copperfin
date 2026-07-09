@@ -4,6 +4,8 @@
 
 #include "copperfin/localization/localization.h"
 #include "copperfin/platform/query_translator.h"
+#include "test_environment_support.h"
+#include "test_locale_catalog_environment_support.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -11,6 +13,8 @@
 namespace {
 
 int failures = 0;
+using copperfin::test_support::ScopedDefaultLocaleCatalogEnvironment;
+using copperfin::test_support::ScopedEnvironmentValue;
 
 void expect(bool condition, const std::string& message) {
     if (!condition) {
@@ -74,6 +78,35 @@ void test_platform_query_diagnostics_resolve_through_localization_catalog() {
             copperfin::localization::pseudo_localize(
                 "Only first-pass SELECT...FROM SQL translation is supported."),
         "#2594: pseudo-localized query translator diagnostics should resolve through the pseudo-localization transform");
+}
+
+void test_platform_query_diagnostics_refresh_when_locale_changes() {
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+    ScopedEnvironmentValue locale_override("COPPERFIN_LOCALE", false);
+
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+
+    locale_override.set("en-US");
+    const auto english_rejected = copperfin::platform::translate_fox_sql_to_backend(
+        copperfin::platform::FederationBackend::postgresql,
+        "DELETE FROM customer");
+    expect(!english_rejected.ok, "#3712: English query rejection should fail deterministically");
+    expect(
+        english_rejected.error ==
+            english_catalog.translate("Platform.QueryTranslator.Error.SelectFromOnly"),
+        "#3712: platform query diagnostics should honor the initial locale");
+
+    locale_override.set("es-419");
+    const auto spanish_rejected = copperfin::platform::translate_fox_sql_to_backend(
+        copperfin::platform::FederationBackend::postgresql,
+        "DELETE FROM customer");
+    expect(!spanish_rejected.ok, "#3712: Spanish query rejection should fail deterministically");
+    expect(
+        spanish_rejected.error ==
+            spanish_catalog.translate("Platform.QueryTranslator.Error.SelectFromOnly"),
+        "#3712: platform query diagnostics should refresh after a locale change");
 }
 
 void test_case_variants_and_whitespace_variants() {
@@ -264,6 +297,7 @@ void test_projection_metadata_handles_wildcard() {
 int main() {
     test_basic_translation();
     test_platform_query_diagnostics_resolve_through_localization_catalog();
+    test_platform_query_diagnostics_refresh_when_locale_changes();
     test_case_variants_and_whitespace_variants();
     test_iif_is_translated_to_case_when();
     test_nested_iif_is_translated_recursively();

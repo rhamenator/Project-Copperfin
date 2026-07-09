@@ -4,6 +4,8 @@
 
 #include "copperfin/localization/localization.h"
 #include "copperfin/platform/federation_execution.h"
+#include "test_environment_support.h"
+#include "test_locale_catalog_environment_support.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -12,6 +14,8 @@
 namespace {
 
 int failures = 0;
+using copperfin::test_support::ScopedDefaultLocaleCatalogEnvironment;
+using copperfin::test_support::ScopedEnvironmentValue;
 
 void expect(bool condition, const std::string& message) {
     if (!condition) {
@@ -133,6 +137,49 @@ void test_platform_federation_diagnostics_resolve_through_localization_catalog()
         "#2389: federation diagnostics should be pseudo-localizable");
 }
 
+void test_platform_federation_diagnostics_refresh_when_locale_changes() {
+    ScopedDefaultLocaleCatalogEnvironment default_locale_environment;
+    ScopedEnvironmentValue locale_override("COPPERFIN_LOCALE", false);
+
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const copperfin::localization::PlaceholderMap english_placeholders{
+        {"planMode", "required"},
+        {"translationError", english_catalog.translate("Platform.QueryTranslator.Error.SelectFromOnly")}
+    };
+    const copperfin::localization::PlaceholderMap spanish_placeholders{
+        {"planMode", "required"},
+        {"translationError", spanish_catalog.translate("Platform.QueryTranslator.Error.SelectFromOnly")}
+    };
+
+    locale_override.set("en-US");
+    const auto english_plan = copperfin::platform::build_federation_execution_plan({
+        .backend = copperfin::platform::FederationBackend::oracle,
+        .fox_sql = "DELETE FROM customer",
+        .target = "",
+        .planning_policy = {.enable_ai_assistance = true, .require_ai_assistance = true}
+    });
+    expect(!english_plan.ok, "#3712: English federation fallback should fail while planner is unimplemented");
+    expect(
+        english_plan.error ==
+            english_catalog.translate("Platform.FederationExecution.Error.AiPlannerNotImplemented", english_placeholders),
+        "#3712: platform federation diagnostics should honor the initial locale");
+
+    locale_override.set("es-419");
+    const auto spanish_plan = copperfin::platform::build_federation_execution_plan({
+        .backend = copperfin::platform::FederationBackend::oracle,
+        .fox_sql = "DELETE FROM customer",
+        .target = "",
+        .planning_policy = {.enable_ai_assistance = true, .require_ai_assistance = true}
+    });
+    expect(!spanish_plan.ok, "#3712: Spanish federation fallback should fail while planner is unimplemented");
+    expect(
+        spanish_plan.error ==
+            spanish_catalog.translate("Platform.FederationExecution.Error.AiPlannerNotImplemented", spanish_placeholders),
+        "#3712: platform federation diagnostics should refresh after a locale change");
+}
+
 void test_plan_tracks_policy_audit_toggle() {
     const auto plan = copperfin::platform::build_federation_execution_plan({
         .backend = copperfin::platform::FederationBackend::sqlite,
@@ -170,6 +217,7 @@ int main() {
     test_plan_allows_ai_fallback_metadata();
     test_plan_requires_ai_fallback_metadata();
     test_platform_federation_diagnostics_resolve_through_localization_catalog();
+    test_platform_federation_diagnostics_refresh_when_locale_changes();
     test_plan_tracks_policy_audit_toggle();
     test_plan_exposes_projection_fields();
 
