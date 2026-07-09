@@ -2777,6 +2777,72 @@ void test_sql_result_cursor_command_derived_temporary_order_parity() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_result_cursor_command_padl_truncation_temporary_order_parity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_command_padl_truncation";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "sql_command_padl_truncation.prg";
+    write_text(
+        main_path,
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
+        "SELECT sqlcust\n"
+        "SET ORDER TO UPPER(PADL(NAME, 3))\n"
+        "SEEK 'LIE'\n"
+        "lFoundCmd = FOUND()\n"
+        "nRecCmd = RECNO()\n"
+        "GO TOP\n"
+        "lFoundFn = SEEK('AVO', 'sqlcust', 'UPPER(PADL(NAME, 3))')\n"
+        "nRecFn = RECNO()\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SQL command-path truncating PADL() temporary-order parity script should complete");
+    expect(state.sql_connections.empty(), "SQL command-path truncating PADL() temporary-order parity script should disconnect its SQL handle");
+
+    const auto exec = state.globals.find("nexec");
+    const auto found_cmd = state.globals.find("lfoundcmd");
+    const auto rec_cmd = state.globals.find("nreccmd");
+    const auto found_fn = state.globals.find("lfoundfn");
+    const auto rec_fn = state.globals.find("nrecfn");
+    const auto disc = state.globals.find("ldisc");
+
+    expect(exec != state.globals.end(), "SQLEXEC result should be captured for SQL truncating PADL() temporary-order parity");
+    expect(found_cmd != state.globals.end(), "command SEEK on a truncating PADL() SQL temporary order should be captured");
+    expect(rec_cmd != state.globals.end(), "command truncating PADL() SQL RECNO() should be captured");
+    expect(found_fn != state.globals.end(), "SEEK() on a truncating PADL() SQL temporary order should be captured");
+    expect(rec_fn != state.globals.end(), "SEEK() truncating PADL() SQL RECNO() should be captured");
+    expect(disc != state.globals.end(), "SQLDISCONNECT result should be captured for SQL truncating PADL() temporary-order parity");
+
+    if (exec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec->second) == "1", "SQLEXEC should succeed before SQL truncating PADL() temporary-order checks");
+    }
+    if (found_cmd != state.globals.end()) {
+        expect(copperfin::runtime::format_value(found_cmd->second) == "true", "command SEEK should match truncating PADL()-derived SQL right-edge keys");
+    }
+    if (rec_cmd != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_cmd->second) == "3", "command SEEK should land on the truncating PADL()-derived CHARLIE SQL match");
+    }
+    if (found_fn != state.globals.end()) {
+        expect(copperfin::runtime::format_value(found_fn->second) == "true", "SEEK() should match truncating PADL()-derived SQL right-edge keys");
+    }
+    if (rec_fn != state.globals.end()) {
+        expect(copperfin::runtime::format_value(rec_fn->second) == "2", "SEEK() should land on the truncating PADL()-derived BRAVO SQL match");
+    }
+    if (disc != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disc->second) == "1", "SQLDISCONNECT should succeed after SQL truncating PADL() temporary-order checks");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_sql_result_cursor_set_exact_seek_parity() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_sql_set_exact";
@@ -4616,6 +4682,7 @@ int main() {
     test_sql_result_cursor_temporary_order_direction_suffix_parity();
     test_sql_result_cursor_command_seek_parity();
     test_sql_result_cursor_command_derived_temporary_order_parity();
+    test_sql_result_cursor_command_padl_truncation_temporary_order_parity();
     test_sql_result_cursor_set_exact_seek_parity();
     test_sql_result_cursor_set_near_is_scoped_per_data_session();
     test_sql_result_cursor_command_seek_in_target_parity();

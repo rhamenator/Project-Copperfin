@@ -536,7 +536,11 @@ std::string evaluate_index_expression(const std::string& expression, const vfp::
 
         const std::size_t target_length = static_cast<std::size_t>(requested);
         if (value.size() > target_length) {
-            value.resize(target_length);
+            if (left_pad) {
+                value = value.substr(value.size() - target_length);
+            } else {
+                value.resize(target_length);
+            }
             return value;
         }
 

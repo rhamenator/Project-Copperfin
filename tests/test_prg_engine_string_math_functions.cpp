@@ -387,6 +387,22 @@ namespace
             "index-expression RTRIM() should trim only trailing spaces and preserve tabs");
     }
 
+    void test_index_expression_padl_truncation_matches_runtime_padl()
+    {
+        copperfin::vfp::DbfRecord bravo_record;
+        bravo_record.values.push_back({"NAME", 'C', false, "BRAVO", 0});
+
+        copperfin::vfp::DbfRecord charlie_record;
+        charlie_record.values.push_back({"NAME", 'C', false, "CHARLIE", 0});
+
+        expect(
+            copperfin::runtime::evaluate_index_expression("UPPER(PADL(NAME, 3))", bravo_record) == "AVO",
+            "index-expression PADL() should keep the rightmost characters when truncating BRAVO to width 3");
+        expect(
+            copperfin::runtime::evaluate_index_expression("UPPER(PADL(NAME, 3))", charlie_record) == "LIE",
+            "index-expression PADL() should keep the rightmost characters when truncating CHARLIE to width 3");
+    }
+
     void test_financial_and_misc_expression_functions()
     {
         namespace fs = std::filesystem;
@@ -703,6 +719,7 @@ int main()
 {
     test_string_and_math_expression_functions();
     test_index_expression_trim_functions_preserve_non_space_whitespace();
+    test_index_expression_padl_truncation_matches_runtime_padl();
     test_financial_and_misc_expression_functions();
     test_nested_macro_eval_textmerge_execscript_semantics();
     test_numeric_domain_errors_route_through_runtime_catalog();
