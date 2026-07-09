@@ -626,14 +626,12 @@ DbfWriteResult write_field_bytes(
 
     std::fill_n(table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset), field.length, static_cast<std::uint8_t>(' '));
 
-    const std::string normalized_value = lowercase_copy(trim_both(value));
+    const bool is_string_field = field.type == 'C' || field.type == 'V' || field.type == 'Q';
+    const std::string normalized_value = is_string_field ? std::string{} : lowercase_copy(trim_both(value));
     const bool is_null_token = normalized_value == "null";
 
     switch (field.type) {
         case 'C': {
-            if (is_null_token) {
-                break;
-            }
             const std::string text = trim_right(value);
             if (text.size() > field.length) {
                 return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.CharacterValueTooLarge"), .record_count = header.record_count};

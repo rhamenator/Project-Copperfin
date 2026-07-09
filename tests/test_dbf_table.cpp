@@ -327,6 +327,59 @@ void test_character_and_varchar_fields_preserve_leading_whitespace_on_write() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_string_fields_store_literal_null_text() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_table_literal_null_text_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "literal_null_text.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "CVAL", .type = 'C', .length = 8U},
+        {.name = "VVAL", .type = 'V', .length = 8U},
+        {.name = "QVAL", .type = 'Q', .length = 8U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"null", "NULL", " null "}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "#3675: create_dbf_table_file should store literal null text in string-bearing fields");
+
+    auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "#3675: DBF with literal null text should remain readable after creation");
+    if (parse_result.ok && parse_result.table.records.size() == 1U && parse_result.table.records[0].values.size() >= 3U) {
+        expect(parse_result.table.records[0].values[0].display_value == "null",
+               "#3675: C fields should keep literal null text");
+        expect(parse_result.table.records[0].values[1].display_value == "NULL",
+               "#3675: V fields should keep literal null text");
+        expect(parse_result.table.records[0].values[2].display_value == " null ",
+               "#3675: Q fields should keep literal null text");
+    }
+
+    expect(copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "CVAL", "NULL").ok,
+           "#3675: replace_record_field_value should preserve literal NULL in C fields");
+    expect(copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "VVAL", "null").ok,
+           "#3675: replace_record_field_value should preserve literal null in V fields");
+    expect(copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "QVAL", "NULL").ok,
+           "#3675: replace_record_field_value should preserve literal NULL in Q fields");
+
+    parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "#3675: DBF with literal null text should remain readable after replacement");
+    if (parse_result.ok && parse_result.table.records.size() == 1U && parse_result.table.records[0].values.size() >= 3U) {
+        expect(parse_result.table.records[0].values[0].display_value == "NULL",
+               "#3675: replaced C fields should keep literal NULL text");
+        expect(parse_result.table.records[0].values[1].display_value == "null",
+               "#3675: replaced V fields should keep literal null text");
+        expect(parse_result.table.records[0].values[2].display_value == "NULL",
+               "#3675: replaced Q fields should keep literal NULL text");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_create_dbf_table_file_rejects_duplicate_field_names() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -1111,7 +1164,7 @@ void test_memo_replace_recovers_directory_sidecar_path() {
     fs::remove_all(temp_dir, ignored);
 }
 
-void test_replace_field_value_accepts_null_token_for_supported_types() {
+void test_replace_field_value_accepts_null_token_for_nonstring_types() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
         ("copperfin_dbf_table_null_token_tests_" + std::to_string(_getpid()));
@@ -1121,7 +1174,6 @@ void test_replace_field_value_accepts_null_token_for_supported_types() {
 
     const fs::path table_path = temp_dir / "nullable.dbf";
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
-        {.name = "CVAL", .type = 'C', .length = 8U},
         {.name = "NVAL", .type = 'N', .length = 6U},
         {.name = "LVAL", .type = 'L', .length = 1U},
         {.name = "DVAL", .type = 'D', .length = 8U},
@@ -1131,13 +1183,12 @@ void test_replace_field_value_accepts_null_token_for_supported_types() {
         {.name = "TVAL", .type = 'T', .length = 8U}
     };
     const std::vector<std::vector<std::string>> records{
-        {"HELLO", "123", "true", "2026-04-12", "3.5", "7", "8.1250", "julian:2460412 millis:777"}
+        {"123", "true", "2026-04-12", "3.5", "7", "8.1250", "julian:2460412 millis:777"}
     };
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
-    expect(create_result.ok, "setup should create a mixed-type table for NULL-token mutation tests");
+    expect(create_result.ok, "setup should create a non-string table for NULL-token mutation tests");
 
-    expect(copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "CVAL", "NULL").ok, "NULL token should be accepted for C fields");
     expect(copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "NVAL", "NULL").ok, "NULL token should be accepted for N fields");
     expect(copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "LVAL", "NULL").ok, "NULL token should be accepted for L fields");
     expect(copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "DVAL", "NULL").ok, "NULL token should be accepted for D fields");
@@ -1148,15 +1199,14 @@ void test_replace_field_value_accepts_null_token_for_supported_types() {
 
     const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
     expect(parse_result.ok, "NULL-token mutated table should remain readable");
-    if (parse_result.ok && parse_result.table.records.size() == 1U && parse_result.table.records[0].values.size() >= 8U) {
-        expect(parse_result.table.records[0].values[0].display_value.empty(), "C NULL token should clear character storage");
-        expect(parse_result.table.records[0].values[1].display_value.empty(), "N NULL token should clear numeric storage");
-        expect(parse_result.table.records[0].values[2].display_value == "?", "L NULL token should set unknown logical marker");
-        expect(parse_result.table.records[0].values[3].display_value.empty(), "D NULL token should clear date storage");
-        expect(parse_result.table.records[0].values[4].display_value == "0", "B NULL token should zero double storage");
-        expect(parse_result.table.records[0].values[5].display_value == "0", "I NULL token should zero integer storage");
-        expect(parse_result.table.records[0].values[6].display_value == "0.0000", "Y NULL token should zero currency storage");
-        expect(parse_result.table.records[0].values[7].display_value == "julian:0 millis:0", "T NULL token should zero datetime storage");
+    if (parse_result.ok && parse_result.table.records.size() == 1U && parse_result.table.records[0].values.size() >= 7U) {
+        expect(parse_result.table.records[0].values[0].display_value.empty(), "N NULL token should clear numeric storage");
+        expect(parse_result.table.records[0].values[1].display_value == "?", "L NULL token should set unknown logical marker");
+        expect(parse_result.table.records[0].values[2].display_value.empty(), "D NULL token should clear date storage");
+        expect(parse_result.table.records[0].values[3].display_value == "0", "B NULL token should zero double storage");
+        expect(parse_result.table.records[0].values[4].display_value == "0", "I NULL token should zero integer storage");
+        expect(parse_result.table.records[0].values[5].display_value == "0.0000", "Y NULL token should zero currency storage");
+        expect(parse_result.table.records[0].values[6].display_value == "julian:0 millis:0", "T NULL token should zero datetime storage");
     }
 
     fs::remove_all(temp_dir, ignored);
@@ -2051,6 +2101,7 @@ int main() {
     test_mutate_and_append_dbf_table();
     test_create_dbf_table_file_round_trips();
     test_character_and_varchar_fields_preserve_leading_whitespace_on_write();
+    test_string_fields_store_literal_null_text();
     test_create_dbf_table_file_rejects_duplicate_field_names();
     test_memo_field_create_replace_and_append_round_trip();
     test_general_and_picture_memo_fields_round_trip();
@@ -2067,7 +2118,7 @@ int main() {
     test_parse_dbf_table_rejects_truncated_visual_asset();
     test_visual_asset_memo_sidecar_repair_round_trip();
     test_memo_replace_recovers_directory_sidecar_path();
-    test_replace_field_value_accepts_null_token_for_supported_types();
+    test_replace_field_value_accepts_null_token_for_nonstring_types();
     test_varchar_and_varbinary_field_round_trip();
     test_dbf_header_record_count_exceeds_file_size_is_rejected();
     test_dbf_field_descriptor_count_exceeds_header_size_is_rejected();
