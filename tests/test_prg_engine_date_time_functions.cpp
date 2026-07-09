@@ -127,6 +127,19 @@ namespace
             "ctod_dmy = CTOD('18/04/2026')\n"
             "dtoc_dmy = DTOC('18/04/2026')\n"
             "ttoc_dmy = TTOC('18/04/2026 13:45:56')\n"
+            "year_dmy = YEAR(ctod_dmy)\n"
+            "month_dmy = MONTH(ctod_dmy)\n"
+            "day_dmy = DAY(ctod_dmy)\n"
+            "quarter_dmy = QUARTER(ctod_dmy)\n"
+            "gomonth_dmy = GOMONTH(ctod_dmy, 1)\n"
+            "eomonth_dmy = EOMONTH(ctod_dmy)\n"
+            "dtos_dmy = DTOS(ctod_dmy)\n"
+            "dtoj_dmy = DTOJ(ctod_dmy)\n"
+            "ctot_dmy = CTOT('18/04/2026 13:45:56')\n"
+            "hour_dmy = HOUR(ctot_dmy)\n"
+            "minute_dmy = MINUTE(ctot_dmy)\n"
+            "sec_dmy = SEC(ctot_dmy)\n"
+            "ttoj_dmy = TTOJ(ctot_dmy)\n"
             "ctod_dmy_ambiguous = DTOC(CTOD('01/02/2024'), 1)\n"
             "dtoc_dmy_ambiguous = DTOC('01/02/2024', 1)\n"
             "ttoc_dmy_ambiguous = TTOC('01/02/2024 13:45:56', 1)\n"
@@ -165,6 +178,9 @@ namespace
             "mark_dot = SET('MARK')\n"
             "dtoc_mark_dot_dmy = DTOC('18.04.2026')\n"
             "ttoc_mark_dot_dmy = TTOC('18.04.2026 13:45:56')\n"
+            "ctod_mark_dot_dmy = CTOD('18.04.2026')\n"
+            "year_mark_dot_dmy = YEAR(ctod_mark_dot_dmy)\n"
+            "gomonth_mark_dot_dmy = GOMONTH(ctod_mark_dot_dmy, 1)\n"
             "SET DATE TO MDY\n"
             "SET MARK TO '/'\n"
             "SET HOURS TO 12\n"
@@ -309,6 +325,18 @@ namespace
         check("ctod_dmy", "18/04/2026");
         check("dtoc_dmy", "18/04/2026");
         check("ttoc_dmy", "18/04/2026 13:45:56");
+        check("year_dmy", "2026");
+        check("month_dmy", "4");
+        check("day_dmy", "18");
+        check("quarter_dmy", "2");
+        check("gomonth_dmy", "18/05/2026");
+        check("eomonth_dmy", "30/04/2026");
+        check("dtos_dmy", "20260418");
+        check("dtoj_dmy", "2460447");
+        check("hour_dmy", "13");
+        check("minute_dmy", "45");
+        check("sec_dmy", "56");
+        check("ttoj_dmy", "2460447");
         check("ctod_dmy_ambiguous", "20240201");
         check("dtoc_dmy_ambiguous", "20240201");
         check("ttoc_dmy_ambiguous", "20240201134556");
@@ -340,6 +368,8 @@ namespace
         check("mark_dot", ".");
         check("dtoc_mark_dot_dmy", "18.04.2026");
         check("ttoc_mark_dot_dmy", "18.04.2026 13:45:56");
+        check("year_mark_dot_dmy", "2026");
+        check("gomonth_mark_dot_dmy", "18.05.2026");
         check("hours_12", "12");
         check("ttoc_hours_12", "04/18/2026 01:45:56 PM");
         check("seconds_off", "OFF");
