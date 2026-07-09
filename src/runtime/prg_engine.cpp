@@ -4373,6 +4373,10 @@ namespace copperfin::runtime
                 {
                     normalize_native_list_control_sorted_invariant(runtime_object);
                 }
+                if (normalized_property_name == "boundcolumn")
+                {
+                    sync_native_list_control_displayvalue_from_selection(runtime_object);
+                }
                 if (normalized_property_name == "listindex")
                 {
                     sync_native_list_control_displayvalue_from_selection(runtime_object);

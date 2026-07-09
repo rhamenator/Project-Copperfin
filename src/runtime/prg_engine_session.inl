@@ -731,7 +731,8 @@
             }
 
             if ((normalized_base_class == "textbox" ||
-                 normalized_base_class == "combobox") &&
+                 normalized_base_class == "combobox" ||
+                 normalized_base_class == "listbox") &&
                 !runtime_object.properties.contains("value"))
             {
                 runtime_object.properties["value"] = make_string_value("");

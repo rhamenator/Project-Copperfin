@@ -668,6 +668,20 @@ std::optional<std::size_t> native_list_control_selected_slot(const RuntimeOleObj
     return static_cast<std::size_t>(selected_index - 1LL);
 }
 
+std::size_t native_list_control_bound_column(const RuntimeOleObjectState& runtime_object) {
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return 1U;
+    }
+
+    const auto boundcolumn = runtime_object.properties.find("boundcolumn");
+    if (boundcolumn == runtime_object.properties.end()) {
+        return 1U;
+    }
+
+    const long long requested_column = std::llround(value_as_number(boundcolumn->second));
+    return requested_column < 1LL ? 1U : static_cast<std::size_t>(requested_column);
+}
+
 void sync_native_list_control_displayvalue_from_selection_impl(RuntimeOleObjectState& runtime_object) {
     sync_native_list_control_selected_state_from_listindex(runtime_object);
 
@@ -675,6 +689,15 @@ void sync_native_list_control_displayvalue_from_selection_impl(RuntimeOleObjectS
         selected_slot.has_value()) {
         runtime_object.properties["displayvalue"] =
             make_string_value(value_as_string(runtime_object.collection_items[*selected_slot]));
+        const std::size_t bound_column = native_list_control_bound_column(runtime_object);
+        if (*selected_slot < runtime_object.list_rows.size() &&
+            bound_column >= 1U &&
+            bound_column <= runtime_object.list_rows[*selected_slot].size()) {
+            runtime_object.properties["value"] =
+                runtime_object.list_rows[*selected_slot][bound_column - 1U];
+        } else {
+            runtime_object.properties["value"] = make_string_value("");
+        }
         if (*selected_slot < runtime_object.collection_item_keys.size()) {
             try {
                 runtime_object.properties["listitemid"] = make_number_value(
@@ -690,6 +713,9 @@ void sync_native_list_control_displayvalue_from_selection_impl(RuntimeOleObjectS
 
     runtime_object.properties["displayvalue"] = make_string_value("");
     runtime_object.properties["listitemid"] = make_number_value(0.0);
+    if (is_native_listbox_runtime_object(runtime_object)) {
+        runtime_object.properties["value"] = make_string_value("");
+    }
 }
 
 void sync_native_list_control_count_impl(RuntimeOleObjectState& runtime_object) {
@@ -1453,7 +1479,8 @@ bool native_string_control_value_member_name_matches(
     const std::string normalized_base_class =
         normalize_identifier(trim_copy(runtime_object.base_class_name));
     return normalized_base_class == "textbox" ||
-           normalized_base_class == "combobox";
+           normalized_base_class == "combobox" ||
+           normalized_base_class == "listbox";
 }
 
 bool native_controlsource_member_name_matches(
@@ -3758,6 +3785,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             if (member_name == "sorted" ||
                 member_name == "rowsourcetype") {
                 normalize_native_list_control_sorted_invariant(*runtime_object);
+            }
+            if (member_name == "boundcolumn") {
+                sync_native_list_control_displayvalue_from_selection(*runtime_object);
             }
             return make_boolean_value(true);
         }
