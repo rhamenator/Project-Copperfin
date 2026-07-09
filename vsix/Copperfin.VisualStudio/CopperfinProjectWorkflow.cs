@@ -48,45 +48,26 @@ internal static class CopperfinProjectWorkflow
     private static readonly CopperfinLocalization Localization = CopperfinLocalization.FromEnvironment();
     private const string DefaultSecurityBuildRole = "build-engineer";
 
-    private const string RepoBuildHostPath = @"E:\Project-Copperfin\build\Release\copperfin_build_host.exe";
-    private const string RepoRuntimeHostPath = @"E:\Project-Copperfin\build\Release\copperfin_runtime_host.exe";
-
     public static bool IsCopperfinProjectPath(string? path)
     {
         return !string.IsNullOrWhiteSpace(path) &&
                string.Equals(Path.GetExtension(path), ".pjx", StringComparison.OrdinalIgnoreCase);
     }
 
-    public static string? ResolveBuildHostPath()
+    public static string? ResolveBuildHostPath(string? baseDirectory = null)
     {
-        var configured = Environment.GetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH");
-        if (!string.IsNullOrWhiteSpace(configured) && File.Exists(configured))
-        {
-            return configured;
-        }
-
-        if (File.Exists(RepoBuildHostPath))
-        {
-            return RepoBuildHostPath;
-        }
-
-        return null;
+        return CopperfinStudioHostBridge.ResolveHostPath(
+            "COPPERFIN_BUILD_HOST_PATH",
+            "copperfin_build_host",
+            baseDirectory);
     }
 
-    public static string? ResolveRuntimeHostPath()
+    public static string? ResolveRuntimeHostPath(string? baseDirectory = null)
     {
-        var configured = Environment.GetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH");
-        if (!string.IsNullOrWhiteSpace(configured) && File.Exists(configured))
-        {
-            return configured;
-        }
-
-        if (File.Exists(RepoRuntimeHostPath))
-        {
-            return RepoRuntimeHostPath;
-        }
-
-        return null;
+        return CopperfinStudioHostBridge.ResolveHostPath(
+            "COPPERFIN_RUNTIME_HOST_PATH",
+            "copperfin_runtime_host",
+            baseDirectory);
     }
 
     public static Task<CopperfinProjectExecutionResult> ExecuteAsync(string projectPath, CopperfinProjectOperation operation)

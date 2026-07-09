@@ -56,8 +56,8 @@ Why VS 2022 as the baseline:
 
 Build note:
 
-- the extension currently looks for `copperfin_studio_host.exe` at `COPPERFIN_STUDIO_HOST_PATH`
-- if that variable is not set, it falls back to `E:\Project-Copperfin\build\Release\copperfin_studio_host.exe`
+- the shared managed shells honor `COPPERFIN_STUDIO_HOST_PATH`, `COPPERFIN_BUILD_HOST_PATH`, and `COPPERFIN_RUNTIME_HOST_PATH` first
+- if those variables are unset, they probe for native hosts beside the managed shell and then under repo-style `build/Release`, `build/RelWithDebInfo`, and `build/Debug` output directories discovered from the shell location
 
 Suggested first-use flow:
 
@@ -76,5 +76,5 @@ Suggested UI regression flow:
 Repeatable Windows validation:
 
 ```powershell
-E:\Project-Copperfin\scripts\validate-windows.ps1
+.\scripts\validate-windows.ps1
 ```

@@ -13,22 +13,11 @@ namespace Copperfin.VisualStudio;
 
 internal static class CopperfinStudioHostBridge
 {
-    private const string RepoDevelopmentPath = @"E:\Project-Copperfin\build\Release\copperfin_studio_host.exe";
+    private static readonly string[] HostBuildConfigurations = { "Release", "RelWithDebInfo", "Debug" };
 
-    public static string? ResolveStudioHostPath()
+    public static string? ResolveStudioHostPath(string? baseDirectory = null)
     {
-        var configured = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
-        if (!string.IsNullOrWhiteSpace(configured) && File.Exists(configured))
-        {
-            return configured;
-        }
-
-        if (File.Exists(RepoDevelopmentPath))
-        {
-            return RepoDevelopmentPath;
-        }
-
-        return null;
+        return ResolveHostPath("COPPERFIN_STUDIO_HOST_PATH", "copperfin_studio_host", baseDirectory);
     }
 
     public static string BuildArguments(string documentPath, bool readOnly = false)
@@ -214,6 +203,94 @@ internal static class CopperfinStudioHostBridge
         var startInfo = CreateProcessStartInfo(studioHostPath, BuildArguments(documentPath, readOnly));
 
         return DiagnosticsProcess.Start(startInfo) is not null;
+    }
+
+    internal static string? ResolveHostPath(
+        string environmentVariableName,
+        string executableStem,
+        string? baseDirectory = null,
+        Func<string, bool>? fileExists = null)
+    {
+        var configured = Environment.GetEnvironmentVariable(environmentVariableName);
+        if (!string.IsNullOrWhiteSpace(configured) && File.Exists(configured))
+        {
+            return configured;
+        }
+
+        fileExists ??= File.Exists;
+        foreach (var candidate in EnumerateHostCandidatePaths(executableStem, baseDirectory))
+        {
+            if (fileExists(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        return null;
+    }
+
+    internal static IEnumerable<string> EnumerateHostCandidatePaths(string executableStem, string? baseDirectory = null)
+    {
+        var seen = new HashSet<string>(Path.DirectorySeparatorChar == '\\'
+            ? StringComparer.OrdinalIgnoreCase
+            : StringComparer.Ordinal);
+
+        foreach (var searchRoot in EnumerateHostSearchRoots(baseDirectory))
+        {
+            foreach (var fileName in EnumerateHostFileNames(executableStem))
+            {
+                if (TryAddCandidatePath(seen, Path.Combine(searchRoot, fileName), out var sameDirectoryCandidate))
+                {
+                    yield return sameDirectoryCandidate;
+                }
+
+                foreach (var configuration in HostBuildConfigurations)
+                {
+                    if (TryAddCandidatePath(
+                            seen,
+                            Path.Combine(searchRoot, "build", configuration, fileName),
+                            out var buildCandidate))
+                    {
+                        yield return buildCandidate;
+                    }
+                }
+            }
+        }
+    }
+
+    private static IEnumerable<string> EnumerateHostSearchRoots(string? baseDirectory)
+    {
+        var current = Path.GetFullPath(string.IsNullOrWhiteSpace(baseDirectory) ? AppContext.BaseDirectory : baseDirectory);
+        while (!string.IsNullOrWhiteSpace(current))
+        {
+            yield return current;
+
+            var parent = Directory.GetParent(current);
+            if (parent is null)
+            {
+                break;
+            }
+
+            current = parent.FullName;
+        }
+    }
+
+    private static IEnumerable<string> EnumerateHostFileNames(string executableStem)
+    {
+        if (Path.HasExtension(executableStem))
+        {
+            yield return executableStem;
+            yield break;
+        }
+
+        yield return executableStem + ".exe";
+        yield return executableStem;
+    }
+
+    private static bool TryAddCandidatePath(HashSet<string> seen, string candidate, out string normalizedPath)
+    {
+        normalizedPath = Path.GetFullPath(candidate);
+        return seen.Add(normalizedPath);
     }
 
     internal static DiagnosticsStartInfo CreateProcessStartInfo(

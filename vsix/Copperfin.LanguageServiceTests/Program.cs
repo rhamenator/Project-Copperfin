@@ -25,6 +25,9 @@ internal static class Program
         TestDesignerSelectionDefaultsToEnvironmentLocalization();
         TestStudioHostProcessStartInfoKeepsExecutableLaunchArguments();
         TestStudioHostProcessStartInfoWrapsWindowsBatchHosts();
+        TestManagedHostResolutionHonorsEnvironmentOverrides();
+        TestManagedHostResolutionFindsSiblingAndRepoBuildLayouts();
+        TestLocalizationCatalogDoesNotLeakMachineSpecificHostPaths();
         TestDottedClassMemberResolvesToLongestProjectSymbolPrefix();
         TestDottedMemberFallsBackToTrailingProcedureName();
         TestQuickInfoUsesResolvedProjectSymbolDescriptionForDottedMemberAccess();
@@ -300,6 +303,105 @@ internal static class Program
         finally
         {
             Environment.SetEnvironmentVariable("COMSPEC", previousComSpec);
+        }
+    }
+
+    private static void TestManagedHostResolutionHonorsEnvironmentOverrides()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "copperfin_language_service_tests", "managed_host_override", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+
+        var configuredHostPath = Path.Combine(root, "configured", "copperfin_studio_host.cmd");
+        Directory.CreateDirectory(Path.GetDirectoryName(configuredHostPath)!);
+        File.WriteAllText(configuredHostPath, "@echo off");
+
+        var previousStudioHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        try
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", configuredHostPath);
+            var resolved = CopperfinStudioHostBridge.ResolveStudioHostPath(Path.Combine(root, "managed", "bin"));
+            Expect(string.Equals(resolved, configuredHostPath, StringComparison.Ordinal),
+                "explicit COPPERFIN_STUDIO_HOST_PATH should win over probed host layouts");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousStudioHostPath);
+            TryDelete(root);
+        }
+    }
+
+    private static void TestManagedHostResolutionFindsSiblingAndRepoBuildLayouts()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "copperfin_language_service_tests", "managed_host_layouts", Guid.NewGuid().ToString("N"));
+        var managedOutput = Path.Combine(root, "vsix", "Copperfin.Studio", "bin", "Release", "net472");
+        Directory.CreateDirectory(managedOutput);
+
+        var siblingStudioHostPath = Path.Combine(managedOutput, "copperfin_studio_host.exe");
+        File.WriteAllText(siblingStudioHostPath, string.Empty);
+
+        var buildOutputDirectory = Path.Combine(root, "build", "Release");
+        Directory.CreateDirectory(buildOutputDirectory);
+        var buildHostPath = Path.Combine(buildOutputDirectory, "copperfin_build_host.exe");
+        var runtimeHostPath = Path.Combine(buildOutputDirectory, "copperfin_runtime_host.exe");
+        File.WriteAllText(buildHostPath, string.Empty);
+        File.WriteAllText(runtimeHostPath, string.Empty);
+
+        var previousStudioHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        var previousBuildHostPath = Environment.GetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH");
+        var previousRuntimeHostPath = Environment.GetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH");
+        try
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", null);
+            Environment.SetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH", null);
+            Environment.SetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH", null);
+
+            var resolvedStudioHostPath = CopperfinStudioHostBridge.ResolveStudioHostPath(managedOutput);
+            var resolvedBuildHostPath = CopperfinStudioHostBridge.ResolveHostPath(
+                "COPPERFIN_BUILD_HOST_PATH",
+                "copperfin_build_host",
+                managedOutput);
+            var resolvedRuntimeHostPath = CopperfinStudioHostBridge.ResolveHostPath(
+                "COPPERFIN_RUNTIME_HOST_PATH",
+                "copperfin_runtime_host",
+                managedOutput);
+
+            Expect(string.Equals(resolvedStudioHostPath, siblingStudioHostPath, StringComparison.Ordinal),
+                "managed Studio shell should find a sibling Studio host before walking repo-style build layouts");
+            Expect(string.Equals(resolvedBuildHostPath, buildHostPath, StringComparison.Ordinal),
+                "managed project workflow should find the repo-style build host from the shell output directory");
+            Expect(string.Equals(resolvedRuntimeHostPath, runtimeHostPath, StringComparison.Ordinal),
+                "managed project workflow should find the repo-style runtime host from the shell output directory");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousStudioHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH", previousBuildHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_RUNTIME_HOST_PATH", previousRuntimeHostPath);
+            TryDelete(root);
+        }
+    }
+
+    private static void TestLocalizationCatalogDoesNotLeakMachineSpecificHostPaths()
+    {
+        var english = new CopperfinLocalization("en-US");
+        var spanish = new CopperfinLocalization("es-419");
+        var portuguese = new CopperfinLocalization("pt-BR");
+
+        var keys = new[]
+        {
+            "AssetEditor.Project.Workflow.BuildHostMissing",
+            "AssetEditor.Project.Workflow.RuntimeHostMissing",
+            "AssetEditor.Dialog.StudioHostMissing"
+        };
+
+        foreach (var key in keys)
+        {
+            Expect(english.Text(key).IndexOf(@"E:\Project-Copperfin", StringComparison.OrdinalIgnoreCase) < 0,
+                $"{key} should not leak a machine-specific Windows fallback path in English");
+            Expect(spanish.Text(key).IndexOf(@"E:\Project-Copperfin", StringComparison.OrdinalIgnoreCase) < 0,
+                $"{key} should not leak a machine-specific Windows fallback path in Spanish");
+            Expect(portuguese.Text(key).IndexOf(@"E:\Project-Copperfin", StringComparison.OrdinalIgnoreCase) < 0,
+                $"{key} should not leak a machine-specific Windows fallback path in Portuguese");
         }
     }
 
