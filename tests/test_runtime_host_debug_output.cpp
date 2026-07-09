@@ -258,6 +258,14 @@ std::string output_line_value(const std::string& output, const std::string& pref
         value_end == std::string::npos ? std::string::npos : value_end - value_start);
 }
 
+std::string breakpoint_entry_path(const std::string& breakpoint_entry) {
+    const std::size_t separator = breakpoint_entry.rfind(':');
+    if (separator == std::string::npos) {
+        return {};
+    }
+    return breakpoint_entry.substr(0, separator);
+}
+
 std::string quote_command_argument(const std::string& value) {
     std::string quoted = "\"";
     quoted.reserve(value.size() + 2U);
@@ -769,7 +777,8 @@ void test_runtime_host_supports_xasset_action_breakpoint_commands(const std::str
            "runtime host should report xAsset add-action commands");
     expect(add_process.stdout_text.find("debug.breakpoint.count: 1") != std::string::npos,
            "runtime host should report one active xAsset action breakpoint");
-    expect(add_process.stdout_text.find("demo_copperfin_host_bootstrap.prg:" + std::to_string(first_breakpoint_line)) != std::string::npos,
+    expect(add_process.stdout_text.find("_copperfin_host_bootstrap_") != std::string::npos &&
+               add_process.stdout_text.find(".prg:" + std::to_string(first_breakpoint_line)) != std::string::npos,
            "runtime host should list the resolved bootstrap breakpoint for the xAsset action");
     expect(add_process.stdout_text.find("debug.breakpoint[0].xasset.action_id: " + page_activate->action_id) != std::string::npos,
            "runtime host should surface xAsset action ids in breakpoint inventory");
@@ -893,7 +902,8 @@ void test_runtime_host_surfaces_xasset_breakpoint_metadata_in_pause_output(const
            "runtime host should report the dispatched xAsset action in pause-breakpoint smoke");
     expect(process.stdout_text.find("debug.breakpoint.count: 1") != std::string::npos,
            "runtime host pause output should report one active xAsset action breakpoint");
-    expect(process.stdout_text.find("demo_copperfin_host_bootstrap.prg:" + std::to_string(first_breakpoint_line)) != std::string::npos,
+    expect(process.stdout_text.find("_copperfin_host_bootstrap_") != std::string::npos &&
+               process.stdout_text.find(".prg:" + std::to_string(first_breakpoint_line)) != std::string::npos,
            "runtime host pause output should still report the resolved bootstrap breakpoint");
     expect(process.stdout_text.find("debug.breakpoint[0].xasset.action_id: " + page_activate->action_id) != std::string::npos,
            "runtime host pause output should surface xAsset action ids for active breakpoints");
@@ -901,6 +911,92 @@ void test_runtime_host_surfaces_xasset_breakpoint_metadata_in_pause_output(const
            "runtime host pause output should surface xAsset action titles for active breakpoints");
     expect(process.stdout_text.find("debug.reason: breakpoint") != std::string::npos,
            "runtime host should pause on the xAsset action breakpoint in pause-breakpoint smoke");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_runtime_host_removes_xasset_bootstrap_after_execution(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_xasset_bootstrap_cleanup_tests";
+    const fs::path table_path = temp_root / "demo.scx";
+    const fs::path manifest_path = temp_root / "app.cfmanifest";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    write_synthetic_form_asset(table_path);
+
+    copperfin::studio::StudioOpenRequest request{};
+    request.path = table_path.string();
+    request.read_only = true;
+    request.load_full_table = true;
+    const auto open_result = copperfin::studio::open_document(request);
+    expect(open_result.ok, "xAsset bootstrap cleanup fixture should reopen as a full SCX document");
+    if (!open_result.ok) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const auto model = copperfin::runtime::build_xasset_executable_model(open_result.document);
+    expect(model.ok, "xAsset bootstrap cleanup fixture should yield an executable xAsset model");
+    const auto page_activate = find_action(model, "frmdemo.pgfmain.page2.activate");
+    expect(page_activate.has_value(), "xAsset bootstrap cleanup fixture should expose the nested page action");
+    if (!model.ok || !page_activate.has_value()) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    write_text(
+        manifest_path,
+        "manifest_version=1\n"
+        "project_title=DemoFormCleanup\n"
+        "startup_item=demo.scx\n"
+        "startup_source=" + table_path.string() + "\n"
+        "working_directory=" + temp_root.string() + "\n"
+        "security_enabled=false\n"
+        "security_role=\n"
+        "security_mode=native\n"
+        "dotnet_story=none\n");
+
+    const auto run_debug_inventory = [&](const std::string& label) {
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {
+                "--manifest", manifest_path.string(),
+                "--debug",
+                "--debug-command", "break:add-action:frmdemo.pgfmain.page2.activate",
+                "--debug-command", "break:list"
+            },
+            temp_root);
+
+        if (process.exit_code != 0) {
+            std::cerr << label << " stdout:\n" << process.stdout_text << "\n";
+            std::cerr << label << " stderr:\n" << process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(process.exit_code == 0, "runtime host xAsset bootstrap cleanup smoke should exit successfully");
+        const std::string breakpoint_entry = output_line_value(process.stdout_text, "debug.breakpoint[0]: ");
+        expect(!breakpoint_entry.empty(), "runtime host should report the generated xAsset bootstrap breakpoint entry");
+        const std::string bootstrap_path = breakpoint_entry_path(breakpoint_entry);
+        expect(!bootstrap_path.empty(), "runtime host should report a parseable xAsset bootstrap breakpoint path");
+        if (!bootstrap_path.empty()) {
+            expect(bootstrap_path.find("demo_copperfin_host_bootstrap_") != std::string::npos,
+                   "runtime host should use a per-run xAsset bootstrap file name");
+            expect(!fs::exists(bootstrap_path),
+                   "runtime host should remove the xAsset bootstrap file after execution completes");
+        }
+        return breakpoint_entry;
+    };
+
+    const std::string first_breakpoint_entry = run_debug_inventory("xasset-bootstrap-cleanup first run");
+    const std::string second_breakpoint_entry = run_debug_inventory("xasset-bootstrap-cleanup second run");
+    if (!first_breakpoint_entry.empty() && !second_breakpoint_entry.empty()) {
+        expect(first_breakpoint_entry != second_breakpoint_entry,
+               "runtime host should not reuse one deterministic xAsset bootstrap path across repeated launches");
+    }
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -3261,6 +3357,7 @@ int main(int argc, char** argv) {
     test_runtime_host_reports_xasset_pause_identity(argv[1]);
     test_runtime_host_supports_xasset_action_breakpoint_commands(argv[1]);
     test_runtime_host_surfaces_xasset_breakpoint_metadata_in_pause_output(argv[1]);
+    test_runtime_host_removes_xasset_bootstrap_after_execution(argv[1]);
     test_runtime_host_rejects_extension_payload_basename_fallback(argv[1]);
     test_runtime_host_validates_manifest_versions_without_changing_error_contracts(argv[1]);
     test_runtime_host_manifest_verification_errors_localize_without_changing_contracts(argv[1]);

@@ -16,7 +16,9 @@
 #include "copperfin/studio/document_model.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cctype>
+#include <chrono>
 #include <exception>
 #include <filesystem>
 #include <fstream>
@@ -29,7 +31,21 @@
 #include <system_error>
 #include <vector>
 
+#if defined(_WIN32)
+#include <process.h>
+#else
+#include <unistd.h>
+#endif
+
 namespace {
+
+unsigned long long current_process_id() {
+#if defined(_WIN32)
+    return static_cast<unsigned long long>(::_getpid());
+#else
+    return static_cast<unsigned long long>(::getpid());
+#endif
+}
 
 std::string trim_copy(std::string value) {
     value.erase(value.begin(), std::find_if(value.begin(), value.end(), [](unsigned char ch) {
@@ -1235,6 +1251,32 @@ struct XAssetBootstrapResult {
     std::string error;
 };
 
+std::filesystem::path make_runtime_host_xasset_bootstrap_path(const std::filesystem::path& startup_path) {
+    static std::atomic<unsigned long long> bootstrap_nonce_counter{0ULL};
+    const auto now_ticks = static_cast<unsigned long long>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now().time_since_epoch())
+            .count());
+    const unsigned long long nonce_counter = bootstrap_nonce_counter.fetch_add(1ULL, std::memory_order_relaxed);
+    std::string startup_stem = startup_path.stem().string();
+    if (startup_stem.empty()) {
+        startup_stem = "startup";
+    }
+    return std::filesystem::temp_directory_path() /
+           (startup_stem + "_copperfin_host_bootstrap_" +
+            std::to_string(now_ticks) + "_" +
+            std::to_string(current_process_id()) + "_" +
+            std::to_string(nonce_counter) + ".prg");
+}
+
+void remove_xasset_bootstrap(const std::optional<std::string>& bootstrap_path) {
+    if (!bootstrap_path.has_value()) {
+        return;
+    }
+    std::error_code ignored;
+    std::filesystem::remove(*bootstrap_path, ignored);
+}
+
 XAssetBootstrapResult materialize_xasset_bootstrap(
     const std::string& startup_source,
     bool include_read_events,
@@ -1259,13 +1301,11 @@ XAssetBootstrapResult materialize_xasset_bootstrap(
     }
 
     const std::filesystem::path startup_path(startup_source);
-    const std::filesystem::path bootstrap_path =
-        std::filesystem::temp_directory_path() /
-        (startup_path.stem().string() + "_copperfin_host_bootstrap.prg");
+    const std::filesystem::path bootstrap_path = make_runtime_host_xasset_bootstrap_path(startup_path);
     result.bootstrap_source =
         copperfin::runtime::build_xasset_bootstrap_source(result.model, include_read_events);
 
-    std::ofstream output(bootstrap_path, std::ios::binary);
+    std::ofstream output(bootstrap_path, std::ios::binary | std::ios::trunc);
     output << result.bootstrap_source;
     output.close();
     if (!output.good()) {
@@ -1740,6 +1780,16 @@ int main(int argc, char** argv) {
     std::string effective_startup_source = startup_source;
     std::string runtime_mode = "prg-engine";
     std::string xasset_bootstrap_source;
+    std::optional<std::string> xasset_bootstrap_path;
+    struct ScopedXAssetBootstrapCleanup {
+        std::optional<std::string>* bootstrap_path = nullptr;
+
+        ~ScopedXAssetBootstrapCleanup() {
+            if (bootstrap_path != nullptr) {
+                remove_xasset_bootstrap(*bootstrap_path);
+            }
+        }
+    } xasset_bootstrap_cleanup{&xasset_bootstrap_path};
     if (!prg_startup) {
         const auto bootstrap = materialize_xasset_bootstrap(startup_source, true, catalog);
         xasset_model = bootstrap.model;
@@ -1752,6 +1802,7 @@ int main(int argc, char** argv) {
             return 0;
         }
         effective_startup_source = *bootstrap.bootstrap_path;
+        xasset_bootstrap_path = bootstrap.bootstrap_path;
         xasset_bootstrap_source = bootstrap.bootstrap_source;
         runtime_mode = "xasset-bootstrap";
     }
