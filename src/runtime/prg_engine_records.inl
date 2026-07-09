@@ -83,14 +83,18 @@
             return result;
         }
 
-        bool current_record_matches_visibility(const CursorState &cursor, const Frame &frame, const std::string &extra_expression)
+        bool current_record_matches_visibility(
+            const CursorState &cursor,
+            const Frame &frame,
+            const std::string &extra_expression,
+            bool honor_set_deleted = true)
         {
             const auto record = current_record(cursor);
             if (!record.has_value())
             {
                 return false;
             }
-            if (is_set_enabled("deleted") && record->deleted)
+            if (honor_set_deleted && is_set_enabled("deleted") && record->deleted)
             {
                 return false;
             }
@@ -1298,7 +1302,7 @@
                         {
                             break;
                         }
-                        if (current_record_matches_visibility(cursor, frame, for_expression))
+                        if (current_record_matches_visibility(cursor, frame, for_expression, deleted))
                         {
                             target_records.push_back(index + 1U);
                         }
@@ -1349,7 +1353,7 @@
                     {
                         break;
                     }
-                    if (current_record_matches_visibility(cursor, frame, for_expression))
+                    if (current_record_matches_visibility(cursor, frame, for_expression, deleted))
                     {
                         target_records.push_back(record.record_index + 1U);
                     }

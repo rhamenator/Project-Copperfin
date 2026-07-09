@@ -58,6 +58,11 @@ void test_local_table_mutation_and_scan_flow() {
         "DELETE FOR AGE = 40\n"
         "LOCATE FOR DELETED()\n"
         "cDeletedName = NAME\n"
+        "SET DELETED ON\n"
+        "RECALL FOR AGE = 40\n"
+        "SET DELETED OFF\n"
+        "LOCATE FOR NAME = 'DELTA'\n"
+        "lRecalledDeletedFor = DELETED()\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
@@ -72,6 +77,7 @@ void test_local_table_mutation_and_scan_flow() {
     const auto deleted = state.globals.find("ldeleted");
     const auto recalled = state.globals.find("lrecalled");
     const auto deleted_name = state.globals.find("cdeletedname");
+    const auto recalled_deleted_for = state.globals.find("lrecalleddeletedfor");
 
     expect(found != state.globals.end(), "LOCATE should expose the found NAME field");
     expect(found_age != state.globals.end(), "LOCATE should expose the found AGE field");
@@ -80,6 +86,7 @@ void test_local_table_mutation_and_scan_flow() {
     expect(deleted != state.globals.end(), "DELETE state should be captured");
     expect(recalled != state.globals.end(), "RECALL state should be captured");
     expect(deleted_name != state.globals.end(), "LOCATE FOR DELETED() should identify the tombstoned record");
+    expect(recalled_deleted_for != state.globals.end(), "RECALL FOR with SET DELETED ON should expose the recalled record state");
 
     if (found != state.globals.end()) {
         expect(copperfin::runtime::format_value(found->second) == "BRAVO", "LOCATE should position the matching record before REPLACE");
@@ -101,6 +108,9 @@ void test_local_table_mutation_and_scan_flow() {
     }
     if (deleted_name != state.globals.end()) {
         expect(copperfin::runtime::format_value(deleted_name->second) == "DELTA", "DELETE FOR should tombstone the matching appended record");
+    }
+    if (recalled_deleted_for != state.globals.end()) {
+        expect(copperfin::runtime::format_value(recalled_deleted_for->second) == "false", "RECALL FOR should clear a deleted row even when SET DELETED is ON");
     }
 
     expect(
