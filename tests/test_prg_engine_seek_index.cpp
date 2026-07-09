@@ -2053,7 +2053,12 @@ void test_local_numeric_temporary_order_domain_guides_seek_near_ordering() {
         main_path,
         "USE '" + table_path.string() + "' ALIAS People IN 0\n"
         "SET ORDER TO AGE\n"
+        "SEEK '1'\n"
+        "lPrefixFound = FOUND()\n"
+        "lPrefixEof = EOF()\n"
+        "nPrefixRec = RECNO()\n"
         "SET NEAR ON\n"
+        "GO TOP\n"
         "SEEK '9'\n"
         "lFound = FOUND()\n"
         "nRec = RECNO()\n"
@@ -2066,14 +2071,29 @@ void test_local_numeric_temporary_order_domain_guides_seek_near_ordering() {
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "local numeric temporary-order key-domain seek script should complete");
 
+    const auto prefix_found = state.globals.find("lprefixfound");
+    const auto prefix_eof = state.globals.find("lprefixeof");
+    const auto prefix_rec = state.globals.find("nprefixrec");
     const auto found = state.globals.find("lfound");
     const auto rec = state.globals.find("nrec");
     const auto age = state.globals.find("nage");
 
+    expect(prefix_found != state.globals.end(), "local numeric temporary-order exact-seek miss should expose FOUND()");
+    expect(prefix_eof != state.globals.end(), "local numeric temporary-order exact-seek miss should expose EOF()");
+    expect(prefix_rec != state.globals.end(), "local numeric temporary-order exact-seek miss should expose RECNO()");
     expect(found != state.globals.end(), "local numeric temporary-order seek should expose FOUND()");
     expect(rec != state.globals.end(), "local numeric temporary-order seek should expose RECNO()");
     expect(age != state.globals.end(), "local numeric temporary-order seek should expose AGE");
 
+    if (prefix_found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(prefix_found->second) == "false", "local numeric temporary-order SEEK() should not treat a numeric prefix as an exact hit when SET EXACT is OFF");
+    }
+    if (prefix_eof != state.globals.end()) {
+        expect(copperfin::runtime::format_value(prefix_eof->second) == "true", "local numeric temporary-order exact miss without SET NEAR should still land at EOF");
+    }
+    if (prefix_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(prefix_rec->second) == "4", "local numeric temporary-order exact miss without SET NEAR should place RECNO() at record_count + 1");
+    }
     if (found != state.globals.end()) {
         expect(copperfin::runtime::format_value(found->second) == "false", "local numeric temporary-order SEEK() should still report a miss for a non-existent key");
     }

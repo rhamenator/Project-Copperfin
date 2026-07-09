@@ -2488,7 +2488,12 @@ void test_sql_result_cursor_numeric_temporary_order_domain_parity() {
         "nExec = SQLEXEC(nConn, 'select * from customers', 'sqlcust')\n"
         "SELECT sqlcust\n"
         "SET ORDER TO AMOUNT\n"
+        "SEEK '1'\n"
+        "lPrefixFound = FOUND()\n"
+        "lPrefixEof = EOF()\n"
+        "nPrefixRec = RECNO()\n"
         "SET NEAR ON\n"
+        "GO TOP IN sqlcust\n"
         "SEEK '9'\n"
         "lFound = FOUND()\n"
         "nRec = RECNO()\n"
@@ -2503,12 +2508,18 @@ void test_sql_result_cursor_numeric_temporary_order_domain_parity() {
     expect(state.sql_connections.empty(), "SQL numeric temporary-order key-domain parity script should disconnect its SQL handle");
 
     const auto exec = state.globals.find("nexec");
+    const auto prefix_found = state.globals.find("lprefixfound");
+    const auto prefix_eof = state.globals.find("lprefixeof");
+    const auto prefix_rec = state.globals.find("nprefixrec");
     const auto found = state.globals.find("lfound");
     const auto rec = state.globals.find("nrec");
     const auto amount = state.globals.find("namount");
     const auto disc = state.globals.find("ldisc");
 
     expect(exec != state.globals.end(), "SQLEXEC result should be captured for SQL numeric temporary-order parity");
+    expect(prefix_found != state.globals.end(), "FOUND() after numeric SQL exact-seek miss should be captured");
+    expect(prefix_eof != state.globals.end(), "EOF() after numeric SQL exact-seek miss should be captured");
+    expect(prefix_rec != state.globals.end(), "RECNO() after numeric SQL exact-seek miss should be captured");
     expect(found != state.globals.end(), "FOUND() after numeric SQL temporary-order SEEK() should be captured");
     expect(rec != state.globals.end(), "RECNO() after numeric SQL temporary-order SEEK() should be captured");
     expect(amount != state.globals.end(), "field value after numeric SQL temporary-order SEEK() should be captured");
@@ -2516,6 +2527,15 @@ void test_sql_result_cursor_numeric_temporary_order_domain_parity() {
 
     if (exec != state.globals.end()) {
         expect(copperfin::runtime::format_value(exec->second) == "1", "SQLEXEC should succeed before numeric SQL temporary-order checks");
+    }
+    if (prefix_found != state.globals.end()) {
+        expect(copperfin::runtime::format_value(prefix_found->second) == "false", "numeric SQL temporary-order SEEK() should not treat a numeric prefix as an exact hit when SET EXACT is OFF");
+    }
+    if (prefix_eof != state.globals.end()) {
+        expect(copperfin::runtime::format_value(prefix_eof->second) == "true", "numeric SQL temporary-order exact miss without SET NEAR should still land at EOF");
+    }
+    if (prefix_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(prefix_rec->second) == "4", "numeric SQL temporary-order exact miss without SET NEAR should place RECNO() at record_count + 1");
     }
     if (found != state.globals.end()) {
         expect(copperfin::runtime::format_value(found->second) == "false", "numeric SQL temporary-order SEEK() should still report a miss for a non-existent key");

@@ -1071,9 +1071,14 @@
             const bool exact_match_required = is_set_enabled("exact");
             const auto is_match = [&](const std::string &candidate)
             {
-                if (exact_match_required)
+                if (candidate == normalized_target)
                 {
-                    return candidate == normalized_target;
+                    return true;
+                }
+                if (exact_match_required ||
+                    cursor.active_order_key_domain_hint == "numeric_or_date")
+                {
+                    return false;
                 }
                 return candidate.rfind(normalized_target, 0U) == 0U;
             };
