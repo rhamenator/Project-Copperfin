@@ -404,6 +404,238 @@ void test_fields_requery_refreshes_alias_qualified_field_list() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_statement_requery_refreshes_single_cursor_query_rows() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_requery_sql_statement";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "employee.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "LAST_NAME", .type = 'C', .length = 24U},
+        {.name = "FIRST_NAME", .type = 'C', .length = 24U},
+        {.name = "REGION", .type = 'C', .length = 12U}};
+    const std::vector<std::vector<std::string>> records{
+        {"Zulu", "Anne", ""},
+        {"Baker", "Ben", "NE"},
+        {"Alpha", "Ada", ""}};
+    const auto create_result =
+        copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "sql-statement Requery() fixture should create a DBF table");
+    if (!create_result.ok) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const fs::path main_path = temp_root / "requery_sql_statement.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS employee IN 0\n"
+        "oList = CREATEOBJECT('ListBox')\n"
+        "oList.ColumnCount = 2\n"
+        "oList.RowSourceType = 3\n"
+        "oList.RowSource = \"SELECT last_name, first_name FROM employee WHERE EMPTY(region) ORDER BY last_name INTO CURSOR temp2\"\n"
+        "nBefore = oList.ListCount\n"
+        "oList.Requery()\n"
+        "nAfterFirst = oList.ListCount\n"
+        "cFirst11 = oList.List(1, 1)\n"
+        "cFirst12 = oList.List(1, 2)\n"
+        "cFirst21 = oList.List(2, 1)\n"
+        "cFirst22 = oList.List(2, 2)\n"
+        "oList.ListIndex = 2\n"
+        "cDisplayBeforeSecond = oList.DisplayValue\n"
+        "GO 2 IN employee\n"
+        "REPLACE REGION WITH '' IN employee\n"
+        "REPLACE LAST_NAME WITH 'Marlow' IN employee\n"
+        "APPEND BLANK IN employee\n"
+        "REPLACE LAST_NAME WITH 'Delta' IN employee\n"
+        "REPLACE FIRST_NAME WITH 'Dia' IN employee\n"
+        "REPLACE REGION WITH '' IN employee\n"
+        "nRecnoBeforeSecond = RECNO('employee')\n"
+        "oList.Requery()\n"
+        "nAfterSecond = oList.ListCount\n"
+        "nListIndexAfterSecond = oList.ListIndex\n"
+        "cDisplayAfterSecond = oList.DisplayValue\n"
+        "cSecond11 = oList.List(1, 1)\n"
+        "cSecond12 = oList.List(1, 2)\n"
+        "cSecond21 = oList.List(2, 1)\n"
+        "cSecond22 = oList.List(2, 2)\n"
+        "cSecond31 = oList.List(3, 1)\n"
+        "cSecond41 = oList.List(4, 1)\n"
+        "nRecnoAfterSecond = RECNO('employee')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           std::string("sql-statement Requery() script should complete: ") + state.message +
+               " @line=" + std::to_string(state.location.line));
+
+    const auto check = [&](const std::string &name, const std::string &expected) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), name + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(found->second) + "'");
+        }
+    };
+
+    check("nbefore", "0");
+    check("nafterfirst", "2");
+    check("cfirst11", "Alpha");
+    check("cfirst12", "Ada");
+    check("cfirst21", "Zulu");
+    check("cfirst22", "Anne");
+    check("cdisplaybeforesecond", "Zulu");
+    check("nrecnobeforesecond", "4");
+    check("naftersecond", "4");
+    check("nlistindexaftersecond", "2");
+    check("cdisplayaftersecond", "Delta");
+    check("csecond11", "Alpha");
+    check("csecond12", "Ada");
+    check("csecond21", "Delta");
+    check("csecond22", "Dia");
+    check("csecond31", "Marlow");
+    check("csecond41", "Zulu");
+    check("nrecnoaftersecond", "4");
+
+    const bool has_sql_requery_event = std::any_of(
+        state.events.begin(),
+        state.events.end(),
+        [](const copperfin::runtime::RuntimeEvent &event) {
+            return event.category == "prg.object.requery";
+        });
+    expect(has_sql_requery_event,
+           "sql-statement Requery() should emit a native requery event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_query_file_requery_refreshes_single_cursor_query_rows() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_requery_query_file";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "employee.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "LAST_NAME", .type = 'C', .length = 24U},
+        {.name = "FIRST_NAME", .type = 'C', .length = 24U},
+        {.name = "REGION", .type = 'C', .length = 12U}};
+    const std::vector<std::vector<std::string>> records{
+        {"Zulu", "Anne", ""},
+        {"Baker", "Ben", "NE"},
+        {"Alpha", "Ada", ""}};
+    const auto create_result =
+        copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "query-file Requery() fixture should create a DBF table");
+    if (!create_result.ok) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const fs::path query_path = temp_root / "region.qpr";
+    write_text(
+        query_path,
+        "SELECT last_name, first_name ;\n"
+        " FROM employee ;\n"
+        " WHERE EMPTY(region) ;\n"
+        " ORDER BY last_name INTO CURSOR temp2\n");
+
+    const fs::path main_path = temp_root / "requery_query_file.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS employee IN 0\n"
+        "oList = CREATEOBJECT('ListBox')\n"
+        "oList.ColumnCount = 2\n"
+        "oList.RowSourceType = 4\n"
+        "oList.RowSource = 'region.qpr'\n"
+        "nBefore = oList.ListCount\n"
+        "oList.Requery()\n"
+        "nAfterFirst = oList.ListCount\n"
+        "cFirst11 = oList.List(1, 1)\n"
+        "cFirst12 = oList.List(1, 2)\n"
+        "cFirst21 = oList.List(2, 1)\n"
+        "cFirst22 = oList.List(2, 2)\n"
+        "oList.ListIndex = 2\n"
+        "cDisplayBeforeSecond = oList.DisplayValue\n"
+        "GO 2 IN employee\n"
+        "REPLACE REGION WITH '' IN employee\n"
+        "REPLACE LAST_NAME WITH 'Marlow' IN employee\n"
+        "APPEND BLANK IN employee\n"
+        "REPLACE LAST_NAME WITH 'Delta' IN employee\n"
+        "REPLACE FIRST_NAME WITH 'Dia' IN employee\n"
+        "REPLACE REGION WITH '' IN employee\n"
+        "nRecnoBeforeSecond = RECNO('employee')\n"
+        "oList.Requery()\n"
+        "nAfterSecond = oList.ListCount\n"
+        "nListIndexAfterSecond = oList.ListIndex\n"
+        "cDisplayAfterSecond = oList.DisplayValue\n"
+        "cSecond11 = oList.List(1, 1)\n"
+        "cSecond12 = oList.List(1, 2)\n"
+        "cSecond21 = oList.List(2, 1)\n"
+        "cSecond22 = oList.List(2, 2)\n"
+        "cSecond31 = oList.List(3, 1)\n"
+        "cSecond41 = oList.List(4, 1)\n"
+        "nRecnoAfterSecond = RECNO('employee')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           std::string("query-file Requery() script should complete: ") + state.message +
+               " @line=" + std::to_string(state.location.line));
+
+    const auto check = [&](const std::string &name, const std::string &expected) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), name + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(found->second) + "'");
+        }
+    };
+
+    check("nbefore", "0");
+    check("nafterfirst", "2");
+    check("cfirst11", "Alpha");
+    check("cfirst12", "Ada");
+    check("cfirst21", "Zulu");
+    check("cfirst22", "Anne");
+    check("cdisplaybeforesecond", "Zulu");
+    check("nrecnobeforesecond", "4");
+    check("naftersecond", "4");
+    check("nlistindexaftersecond", "2");
+    check("cdisplayaftersecond", "Delta");
+    check("csecond11", "Alpha");
+    check("csecond12", "Ada");
+    check("csecond21", "Delta");
+    check("csecond22", "Dia");
+    check("csecond31", "Marlow");
+    check("csecond41", "Zulu");
+    check("nrecnoaftersecond", "4");
+
+    const bool has_query_file_requery_event = std::any_of(
+        state.events.begin(),
+        state.events.end(),
+        [](const copperfin::runtime::RuntimeEvent &event) {
+            return event.category == "prg.object.requery";
+        });
+    expect(has_query_file_requery_event,
+           "query-file Requery() should emit a native requery event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -411,6 +643,8 @@ int main() {
     test_array_requery_refreshes_rows_and_growth();
     test_alias_requery_refreshes_open_cursor_rows_and_preserves_cursor_position();
     test_fields_requery_refreshes_alias_qualified_field_list();
+    test_sql_statement_requery_refreshes_single_cursor_query_rows();
+    test_query_file_requery_refreshes_single_cursor_query_rows();
     if (const int failures = test_failures(); failures != 0) {
         std::cerr << failures << " test(s) failed\n";
         return 1;

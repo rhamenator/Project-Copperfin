@@ -2931,6 +2931,426 @@ namespace copperfin::runtime
             restore_cursor_snapshot(cursor, original);
         };
 
+        struct QueryOrderExpression
+        {
+            std::string expression;
+            bool descending = false;
+        };
+
+        struct QueryPlan
+        {
+            std::string source_designator;
+            std::vector<std::string> projection_expressions;
+            std::string where_expression;
+            std::vector<QueryOrderExpression> order_expressions;
+        };
+
+        const auto normalize_query_text = [](std::string text) -> std::string
+        {
+            for (char &ch : text)
+            {
+                if (ch == ';' || ch == '\r' || ch == '\n' || ch == '\t')
+                {
+                    ch = ' ';
+                }
+            }
+            std::string normalized;
+            normalized.reserve(text.size());
+            bool previous_was_space = false;
+            for (const char ch : text)
+            {
+                if (std::isspace(static_cast<unsigned char>(ch)) != 0)
+                {
+                    if (!previous_was_space)
+                    {
+                        normalized.push_back(' ');
+                        previous_was_space = true;
+                    }
+                    continue;
+                }
+                normalized.push_back(ch);
+                previous_was_space = false;
+            }
+            return trim_copy(normalized);
+        };
+
+        const auto find_top_level_keyword =
+            [](const std::string &upper_text,
+               std::size_t start_pos,
+               const std::string &keyword) -> std::size_t
+        {
+            bool in_single_quote = false;
+            bool in_double_quote = false;
+            int parentheses_depth = 0;
+
+            for (std::size_t index = start_pos; index < upper_text.size(); ++index)
+            {
+                const char ch = upper_text[index];
+                if (in_single_quote)
+                {
+                    if (ch == '\'' && (index + 1U) < upper_text.size() && upper_text[index + 1U] == '\'')
+                    {
+                        ++index;
+                        continue;
+                    }
+                    if (ch == '\'')
+                    {
+                        in_single_quote = false;
+                    }
+                    continue;
+                }
+                if (in_double_quote)
+                {
+                    if (ch == '"')
+                    {
+                        in_double_quote = false;
+                    }
+                    continue;
+                }
+                if (ch == '\'')
+                {
+                    in_single_quote = true;
+                    continue;
+                }
+                if (ch == '"')
+                {
+                    in_double_quote = true;
+                    continue;
+                }
+                if (ch == '(')
+                {
+                    ++parentheses_depth;
+                    continue;
+                }
+                if (ch == ')')
+                {
+                    if (parentheses_depth > 0)
+                    {
+                        --parentheses_depth;
+                    }
+                    continue;
+                }
+                if (parentheses_depth != 0)
+                {
+                    continue;
+                }
+                if (index + keyword.size() > upper_text.size() ||
+                    upper_text.compare(index, keyword.size(), keyword) != 0)
+                {
+                    continue;
+                }
+
+                const auto is_word_char = [](char current) -> bool
+                {
+                    return std::isalnum(static_cast<unsigned char>(current)) != 0 || current == '_';
+                };
+                const std::size_t keyword_end = index + keyword.size();
+                const bool before_ok = index == 0U || !is_word_char(upper_text[index - 1U]);
+                const bool after_ok = keyword_end >= upper_text.size() || !is_word_char(upper_text[keyword_end]);
+                if (before_ok && after_ok)
+                {
+                    return index;
+                }
+            }
+
+            return std::string::npos;
+        };
+
+        const auto strip_projection_alias =
+            [&](std::string expression) -> std::string
+        {
+            expression = trim_copy(expression);
+            if (expression.empty() || expression == "*")
+            {
+                return expression;
+            }
+
+            const std::string upper_expression = uppercase_copy(expression);
+            const std::size_t as_position =
+                find_top_level_keyword(upper_expression, 0U, "AS");
+            if (as_position != std::string::npos)
+            {
+                return trim_copy(expression.substr(0U, as_position));
+            }
+            return expression;
+        };
+
+        const auto parse_query_plan =
+            [&](const std::string &raw_query_text,
+                QueryPlan &plan) -> bool
+        {
+            const std::string query_text = normalize_query_text(raw_query_text);
+            if (query_text.empty())
+            {
+                return false;
+            }
+
+            const std::string upper_query = uppercase_copy(query_text);
+            if (upper_query.rfind("SELECT ", 0U) != 0U)
+            {
+                return false;
+            }
+
+            const std::size_t projection_start = 6U;
+            const std::size_t from_position =
+                find_top_level_keyword(upper_query, projection_start, "FROM");
+            if (from_position == std::string::npos)
+            {
+                return false;
+            }
+
+            const std::size_t after_from = from_position + 4U;
+            const std::size_t where_position =
+                find_top_level_keyword(upper_query, after_from, "WHERE");
+            const std::size_t order_position =
+                find_top_level_keyword(upper_query, after_from, "ORDER BY");
+            const std::size_t into_position =
+                find_top_level_keyword(upper_query, after_from, "INTO CURSOR");
+
+            const auto clause_end = [&](std::size_t start) -> std::size_t
+            {
+                std::size_t end = query_text.size();
+                for (const std::size_t candidate : {where_position, order_position, into_position})
+                {
+                    if (candidate != std::string::npos && candidate > start)
+                    {
+                        end = std::min(end, candidate);
+                    }
+                }
+                return end;
+            };
+
+            const std::string projection_clause =
+                trim_copy(query_text.substr(projection_start, from_position - projection_start));
+            const std::string from_clause =
+                trim_copy(query_text.substr(after_from, clause_end(after_from) - after_from));
+            if (projection_clause.empty() || from_clause.empty())
+            {
+                return false;
+            }
+
+            if (from_clause.find_first_of(" ,") != std::string::npos)
+            {
+                return false;
+            }
+
+            std::vector<std::string> projection_expressions;
+            for (std::string projection : split_csv_like(projection_clause))
+            {
+                projection = strip_projection_alias(std::move(projection));
+                if (projection.empty())
+                {
+                    return false;
+                }
+                projection_expressions.push_back(std::move(projection));
+            }
+            if (projection_expressions.empty())
+            {
+                return false;
+            }
+
+            std::vector<QueryOrderExpression> order_expressions;
+            if (order_position != std::string::npos)
+            {
+                const std::size_t order_clause_start = order_position + 8U;
+                const std::size_t order_clause_end =
+                    into_position != std::string::npos && into_position > order_clause_start
+                        ? into_position
+                        : query_text.size();
+                const std::string order_clause =
+                    trim_copy(query_text.substr(order_clause_start, order_clause_end - order_clause_start));
+                for (std::string order_expression : split_csv_like(order_clause))
+                {
+                    order_expression = trim_copy(order_expression);
+                    if (order_expression.empty())
+                    {
+                        return false;
+                    }
+
+                    bool descending = false;
+                    const std::string upper_order_expression = uppercase_copy(order_expression);
+                    if (upper_order_expression.size() > 5U &&
+                        upper_order_expression.compare(upper_order_expression.size() - 5U, 5U, " DESC") == 0)
+                    {
+                        descending = true;
+                        order_expression = trim_copy(
+                            order_expression.substr(0U, order_expression.size() - 5U));
+                    }
+                    else if (upper_order_expression.size() > 4U &&
+                             upper_order_expression.compare(upper_order_expression.size() - 4U, 4U, " ASC") == 0)
+                    {
+                        order_expression = trim_copy(
+                            order_expression.substr(0U, order_expression.size() - 4U));
+                    }
+
+                    if (order_expression.empty())
+                    {
+                        return false;
+                    }
+                    order_expressions.push_back({.expression = std::move(order_expression),
+                                                 .descending = descending});
+                }
+            }
+
+            std::string where_expression;
+            if (where_position != std::string::npos)
+            {
+                const std::size_t where_clause_start = where_position + 5U;
+                where_expression = trim_copy(
+                    query_text.substr(where_clause_start,
+                                      clause_end(where_clause_start) - where_clause_start));
+                if (where_expression.empty())
+                {
+                    return false;
+                }
+            }
+
+            plan.source_designator = from_clause;
+            plan.projection_expressions = std::move(projection_expressions);
+            plan.where_expression = std::move(where_expression);
+            plan.order_expressions = std::move(order_expressions);
+            return true;
+        };
+
+        const auto build_rows_from_query_plan =
+            [&](CursorState &cursor,
+                const QueryPlan &plan,
+                std::vector<std::vector<PrgValue>> &rows)
+        {
+            const auto is_numeric_sort_value = [](const PrgValue &value) -> bool
+            {
+                return value.kind == PrgValueKind::number ||
+                       value.kind == PrgValueKind::int64 ||
+                       value.kind == PrgValueKind::uint64;
+            };
+
+            struct MaterializedQueryRow
+            {
+                std::vector<PrgValue> values;
+                std::vector<PrgValue> order_keys;
+            };
+
+            const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
+            std::vector<MaterializedQueryRow> materialized_rows;
+            materialized_rows.reserve(cursor.record_count);
+
+            for (std::size_t recno = 1U; recno <= cursor.record_count; ++recno)
+            {
+                move_cursor_to(cursor, static_cast<long long>(recno));
+                if (!current_record_matches_visibility(cursor, frame, {}))
+                {
+                    continue;
+                }
+
+                if (!plan.where_expression.empty() &&
+                    !value_as_bool(evaluate_expression(plan.where_expression, frame, &cursor)))
+                {
+                    continue;
+                }
+
+                const auto record = current_record(cursor);
+                if (!record.has_value())
+                {
+                    continue;
+                }
+
+                MaterializedQueryRow query_row;
+                for (const std::string &projection_expression : plan.projection_expressions)
+                {
+                    if (projection_expression == "*")
+                    {
+                        for (const auto &field_value : record->values)
+                        {
+                            query_row.values.push_back(record_value_to_prg_value(field_value));
+                        }
+                        continue;
+                    }
+                    query_row.values.push_back(
+                        evaluate_expression(projection_expression, frame, &cursor));
+                }
+
+                for (const QueryOrderExpression &order_expression : plan.order_expressions)
+                {
+                    query_row.order_keys.push_back(
+                        evaluate_expression(order_expression.expression, frame, &cursor));
+                }
+
+                materialized_rows.push_back(std::move(query_row));
+            }
+
+            restore_cursor_snapshot(cursor, original);
+
+            std::stable_sort(
+                materialized_rows.begin(),
+                materialized_rows.end(),
+                [&](const MaterializedQueryRow &left, const MaterializedQueryRow &right)
+                {
+                    const std::size_t comparison_count =
+                        std::min(left.order_keys.size(), right.order_keys.size());
+                    for (std::size_t index = 0U; index < comparison_count; ++index)
+                    {
+                        const PrgValue &left_key = left.order_keys[index];
+                        const PrgValue &right_key = right.order_keys[index];
+                        const bool descending = index < plan.order_expressions.size() &&
+                                                plan.order_expressions[index].descending;
+
+                        if (is_numeric_sort_value(left_key) && is_numeric_sort_value(right_key))
+                        {
+                            const double left_number = value_as_number(left_key);
+                            const double right_number = value_as_number(right_key);
+                            if (left_number == right_number)
+                            {
+                                continue;
+                            }
+                            return descending ? right_number < left_number : left_number < right_number;
+                        }
+
+                        const std::string left_text = value_as_string(left_key);
+                        const std::string right_text = value_as_string(right_key);
+                        if (left_text == right_text)
+                        {
+                            continue;
+                        }
+                        return descending ? right_text < left_text : left_text < right_text;
+                    }
+                    return false;
+                });
+
+            rows.clear();
+            rows.reserve(materialized_rows.size());
+            for (auto &query_row : materialized_rows)
+            {
+                rows.push_back(std::move(query_row.values));
+            }
+        };
+
+        const auto load_query_file_text =
+            [&](const std::string &query_file,
+                const std::string &fallback_path) -> std::string
+        {
+            std::string resolved_query_path =
+                resolve_native_prg_program_path(unquote_string(query_file), fallback_path);
+            std::error_code ignored;
+            std::filesystem::path query_path(resolved_query_path);
+            if (!std::filesystem::exists(query_path, ignored) &&
+                query_path.extension().empty())
+            {
+                query_path.replace_extension(".qpr");
+                resolved_query_path =
+                    resolve_native_prg_program_path(query_path.string(), fallback_path);
+            }
+
+            std::ifstream input(resolved_query_path, std::ios::binary);
+            if (!input)
+            {
+                return {};
+            }
+
+            std::ostringstream buffer;
+            buffer << input.rdbuf();
+            return buffer.str();
+        };
+
         std::vector<std::vector<PrgValue>> refreshed_rows;
         switch (row_source_type)
         {
@@ -3069,6 +3489,28 @@ namespace copperfin::runtime
             }
 
             build_rows_from_cursor_fields(*cursor, requested_fields, refreshed_rows);
+            break;
+        }
+        case 3:
+        case 4:
+        {
+            const std::string query_text =
+                row_source_type == 3
+                    ? row_source
+                    : load_query_file_text(row_source, frame.file_path);
+            QueryPlan plan;
+            if (!parse_query_plan(query_text, plan))
+            {
+                break;
+            }
+
+            CursorState *cursor = resolve_cursor_target(plan.source_designator);
+            if (cursor == nullptr)
+            {
+                break;
+            }
+
+            build_rows_from_query_plan(*cursor, plan, refreshed_rows);
             break;
         }
         default:
