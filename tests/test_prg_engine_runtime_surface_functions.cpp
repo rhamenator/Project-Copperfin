@@ -47710,9 +47710,9 @@ namespace
             "oPlain.Extra = 'plain'\n"
             "lDictSet = SETPEM(oDict, 'comparemode', 29)\n"
             "nDictCompare = GETPEM(oDict, 'comparemode')\n"
-            "nBind1 = BINDEVENT(oSource, 'Ping', oHandler, 'HandleBefore')\n"
+            "nBind1 = BINDEVENT(oSource, 'Ping', oHandler, 'HandleBefore', 1)\n"
             "nBind2 = BINDEVENT(oSource, 'Ping', 'HandlePing')\n"
-            "nBind3 = BINDEVENT(oSource, 'AfterPing', oHandler, 'HandleAfter', 1)\n"
+            "nBind3 = BINDEVENT(oSource, 'AfterPing', oHandler, 'HandleAfter')\n"
             "nBind4 = BINDEVENT(oSource, 'NoSimple', oHandler, 'HandleNoSimple', 2)\n"
             "cDirectPing = oSource.Ping(41)\n"
             "lRaisedAfter = RAISEEVENT(oSource, 'AfterPing', 7)\n"
@@ -47811,7 +47811,7 @@ namespace
         check("nnosimplecalls", "1");
         check("nnosimplesourcecalls", "2");
         check("csequence",
-              "[before:41][routine:41][source:41][aftersource:7][after:7][nosimple:5][nosimplehandler:6][nosimple:6][routine:9][source:9][aftersource:8]");
+              "[before:41][source:41][routine:41][aftersource:7][after:7][nosimple:5][nosimple:6][nosimplehandler:6][source:9][routine:9][aftersource:8]");
         check("cplain", "plain");
         check("ldictset", "true");
         check("ndictcompare", "29");
