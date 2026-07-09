@@ -1882,8 +1882,12 @@
                 last_return_value = trim_copy(statement.expression).empty()
                     ? make_empty_value()
                     : evaluate_expression(statement.expression, frame);
-                pop_frame();
-                return {.ok = true, .waiting_for_events = false, .frame_returned = true, .message = {}};
+                frame.return_pending = true;
+                if (const auto outcome = continue_pending_return(frame); outcome.has_value())
+                {
+                    return *outcome;
+                }
+                return {};
             case StatementKind::nodefault_statement:
                 frame.requested_nodefault = true;
                 return {};
@@ -2209,7 +2213,8 @@
                                        .handling_error = false,
                                        .entered_catch = false,
                                        .entered_finally = false,
-                                       .propagate_after_finally = false});
+                                       .propagate_after_finally = false,
+                                       .return_after_finally = false});
                 return {};
             }
             case StatementKind::catch_statement:
@@ -2241,7 +2246,16 @@
                 if (!frame.tries.empty() && frame.tries.back().endtry_statement_index == (frame.pc - 1U))
                 {
                     const bool propagate_after_finally = frame.tries.back().propagate_after_finally;
+                    const bool return_after_finally = frame.tries.back().return_after_finally;
                     frame.tries.pop_back();
+                    if (frame.return_pending && return_after_finally)
+                    {
+                        if (const auto outcome = continue_pending_return(frame); outcome.has_value())
+                        {
+                            return *outcome;
+                        }
+                        return {};
+                    }
                     if (propagate_after_finally)
                     {
                         return {.ok = false, .message = last_error_message};

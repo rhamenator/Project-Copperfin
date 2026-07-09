@@ -84,6 +84,8 @@ int main() {
     test_catch_when_false_with_finally_reaches_outer_catch_with_original_metadata();
     test_catch_when_false_with_finally_reaches_on_error_with_original_metadata();
     test_try_finally_runs_without_catch_on_success();
+    test_return_inside_try_runs_finally_before_return();
+    test_return_inside_catch_runs_all_enclosing_finally_before_return();
     test_do_with_by_reference_updates_caller_variable();
     test_print_command_emits_event();
     test_close_command_closes_all_work_areas();

@@ -29,6 +29,34 @@
             }
         }
 
+        std::optional<ExecutionOutcome> continue_pending_return(Frame &frame)
+        {
+            while (!frame.tries.empty())
+            {
+                TryState &active_try = frame.tries.back();
+                if (active_try.entered_finally || !active_try.finally_statement_index.has_value())
+                {
+                    frame.tries.pop_back();
+                    continue;
+                }
+
+                unwind_with_bindings(frame, active_try.with_stack_depth_at_try_entry);
+                active_try.handling_error = false;
+                active_try.entered_catch = false;
+                active_try.entered_finally = true;
+                active_try.propagate_after_finally = false;
+                active_try.return_after_finally = true;
+                frame.pc = *active_try.finally_statement_index + 1U;
+                return std::nullopt;
+            }
+
+            pop_frame();
+            return ExecutionOutcome{.ok = true,
+                                    .waiting_for_events = false,
+                                    .frame_returned = true,
+                                    .message = {}};
+        }
+
         void release_memory_binding(Frame &frame, const std::string &raw_name, bool clear_public_binding)
         {
             const std::string name = normalize_memory_variable_identifier(trim_copy(raw_name));
@@ -417,6 +445,7 @@
                     active_try.entered_catch = true;
                     active_try.entered_finally = false;
                     active_try.propagate_after_finally = false;
+                    active_try.return_after_finally = false;
                     frame.pc = catch_statement_index + 1U;
 
                     events.push_back({.category = "runtime.try_handler",
@@ -432,6 +461,7 @@
                     active_try.entered_catch = false;
                     active_try.entered_finally = true;
                     active_try.propagate_after_finally = true;
+                    active_try.return_after_finally = false;
                     last_error_compatibility.explicit_error_code = last_error_code;
                     last_error_compatibility.preserve_fault_context = true;
                     frame.pc = *active_try.finally_statement_index + 1U;

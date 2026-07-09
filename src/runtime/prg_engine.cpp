@@ -344,6 +344,7 @@ namespace copperfin::runtime
             bool entered_catch = false;
             bool entered_finally = false;
             bool propagate_after_finally = false;
+            bool return_after_finally = false;
         };
 
         struct Frame
@@ -367,6 +368,7 @@ namespace copperfin::runtime
             std::string native_method_class_name;
             std::string native_method_name;
             bool requested_nodefault = false;
+            bool return_pending = false;
             bool evaluate_conditional_else = false;
         };
 

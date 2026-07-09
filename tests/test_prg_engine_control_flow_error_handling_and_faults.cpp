@@ -2179,6 +2179,112 @@ void test_try_finally_runs_without_catch_on_success() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_return_inside_try_runs_finally_before_return() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_try_return_finally";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "try_return_finally.prg";
+    write_text(
+        main_path,
+        "cleanup = 0\n"
+        "nested = 0\n"
+        "result = Dotest()\n"
+        "RETURN\n"
+        "PROCEDURE Dotest\n"
+        "TRY\n"
+        "  RETURN 'x'\n"
+        "FINALLY\n"
+        "  TRY\n"
+        "    DO missing_routine\n"
+        "  CATCH TO err_text\n"
+        "    nested = 1\n"
+        "  ENDTRY\n"
+        "  cleanup = cleanup + 1\n"
+        "ENDTRY\n"
+        "RETURN 'y'\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "RETURN inside TRY should still run the pending FINALLY block");
+
+    const auto result = state.globals.find("result");
+    const auto cleanup = state.globals.find("cleanup");
+    const auto nested = state.globals.find("nested");
+    expect(result != state.globals.end(), "the routine return value should still reach the caller");
+    expect(cleanup != state.globals.end(), "FINALLY should execute cleanup after a RETURN inside TRY");
+    expect(nested != state.globals.end(), "nested TRY/CATCH inside a RETURN-driven FINALLY block should still complete");
+    if (result != state.globals.end()) {
+        expect(copperfin::runtime::format_value(result->second) == "x",
+               "RETURN inside TRY should preserve the original return value");
+    }
+    if (cleanup != state.globals.end()) {
+        expect(copperfin::runtime::format_value(cleanup->second) == "1",
+               "RETURN should not skip later cleanup statements inside the FINALLY block");
+    }
+    if (nested != state.globals.end()) {
+        expect(copperfin::runtime::format_value(nested->second) == "1",
+               "nested TRY/CATCH inside the FINALLY block should finish before the pending RETURN resumes");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_return_inside_catch_runs_all_enclosing_finally_before_return() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_catch_return_finally";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "catch_return_finally.prg";
+    write_text(
+        main_path,
+        "trace = ''\n"
+        "result = Dotest()\n"
+        "RETURN\n"
+        "PROCEDURE Dotest\n"
+        "TRY\n"
+        "  TRY\n"
+        "    DO missing_routine\n"
+        "  CATCH TO err_text\n"
+        "    RETURN 'caught'\n"
+        "  FINALLY\n"
+        "    trace = trace + 'I'\n"
+        "  ENDTRY\n"
+        "FINALLY\n"
+        "  trace = trace + 'O'\n"
+        "ENDTRY\n"
+        "RETURN 'fallthrough'\n"
+        "ENDPROC\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "RETURN inside CATCH should still run all pending enclosing FINALLY blocks");
+
+    const auto result = state.globals.find("result");
+    const auto trace = state.globals.find("trace");
+    expect(result != state.globals.end(), "the CATCH return value should still reach the caller");
+    expect(trace != state.globals.end(), "enclosing FINALLY blocks should still execute after a RETURN inside CATCH");
+    if (result != state.globals.end()) {
+        expect(copperfin::runtime::format_value(result->second) == "caught",
+               "RETURN inside CATCH should preserve the caught-path return value");
+    }
+    if (trace != state.globals.end()) {
+        expect(copperfin::runtime::format_value(trace->second) == "IO",
+               "RETURN inside CATCH should run enclosing FINALLY blocks from inner to outer");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_file_operation_runtime_errors_localize() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_file_ops_localization";
