@@ -1355,6 +1355,64 @@ internal static class Program
                 },
                 expectRawSnapshotProperty: false);
             SmokeAssetEditorSettingsRoundTripWithRealAsset(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
+                propertyName: "PAPERSIZE",
+                expectedOriginalSelectionValue: "1",
+                updatedPropertyValue: 5,
+                expectedUpdatedSelectionValue: "5",
+                expectedOriginalRawValue: "1",
+                expectedUpdatedRawValue: "5",
+                expectedSectionCount: 5,
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "PAPERSIZE",
+                    Value = "5",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 1,
+                    MemoBlockNumber = 304
+                },
+                expectedUndoneSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "PAPERSIZE",
+                    Value = "1",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 1,
+                    MemoBlockNumber = 305
+                },
+                expectRawSnapshotProperty: false);
+            SmokeAssetEditorSettingsRoundTripWithRealAsset(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
+                propertyName: "PAPERSIZE",
+                expectedOriginalSelectionValue: "1",
+                updatedPropertyValue: 9,
+                expectedUpdatedSelectionValue: "9",
+                expectedOriginalRawValue: "1",
+                expectedUpdatedRawValue: "9",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "PAPERSIZE",
+                    Value = "9",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 1,
+                    MemoBlockNumber = 78
+                },
+                expectedUndoneSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "PAPERSIZE",
+                    Value = "1",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 1,
+                    MemoBlockNumber = 79
+                },
+                expectRawSnapshotProperty: false);
+            SmokeAssetEditorSettingsRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 propertyName: "COLOR",
                 expectedOriginalSelectionValue: "1",
