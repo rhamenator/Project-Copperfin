@@ -468,6 +468,7 @@ internal static class Program
         SmokeLocalizedCodeReferenceKindLabels();
         SmokeLocalizedProjectInsightArtifactKindLabels();
         SmokeLocalizedWorkspaceGroupTitles();
+        SmokeLocalizedProjectWorkspaceExplorerGroupTitles();
         SmokeLocalizedReportObjectKindSubtitles();
         SmokeLocalizedReportObjectFallbackTitles();
         SmokeReportSelectionPreservedAcrossExplorerRefresh();
@@ -5906,6 +5907,73 @@ internal static class Program
                pseudoWorkspaceSummary.IndexOf("Class Libraries", StringComparison.Ordinal) < 0 &&
                pseudoToolboxSummary.IndexOf("Programs", StringComparison.Ordinal) < 0,
             "Pseudo-localized project summaries should route workspace group titles through the shared catalog instead of leaking raw English labels");
+    }
+
+    private static void SmokeLocalizedProjectWorkspaceExplorerGroupTitles()
+    {
+        var snapshot = new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "project",
+            ProjectWorkspace = new CopperfinStudioProjectWorkspace
+            {
+                Groups = new List<CopperfinStudioProjectGroup>
+                {
+                    new() { Id = "forms", Title = "Forms", ItemCount = 2, ExcludedCount = 0 },
+                    new() { Id = "programs", Title = "Programs", ItemCount = 1, ExcludedCount = 0 },
+                    new() { Id = "classes", Title = "Class Libraries", ItemCount = 3, ExcludedCount = 1 }
+                },
+                Entries = new List<CopperfinStudioProjectEntry>
+                {
+                    new()
+                    {
+                        RecordIndex = 10,
+                        RelativePath = @"src\main.prg",
+                        GroupId = "programs",
+                        GroupTitle = "Programs"
+                    }
+                }
+            },
+            Objects = new List<CopperfinStudioSnapshotObject>
+            {
+                new()
+                {
+                    RecordIndex = 10,
+                    Title = "main.prg",
+                    Subtitle = "Programs"
+                }
+            }
+        };
+
+        using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
+        ApplyProjectSnapshotForExplorerGroupTitleSmoke(spanishControl, snapshot);
+        AssertProjectWorkspaceGroupTitles(
+            spanishControl,
+            new[] { "Formularios", "Programas", "Bibliotecas de clases" },
+            "Programas",
+            "Spanish project explorer rows and project object-list subtitles should localize workspace group titles");
+
+        using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
+        ApplyProjectSnapshotForExplorerGroupTitleSmoke(portugueseControl, snapshot);
+        AssertProjectWorkspaceGroupTitles(
+            portugueseControl,
+            new[] { "Formulários", "Programas", "Bibliotecas de classes" },
+            "Programas",
+            "Portuguese project explorer rows and project object-list subtitles should localize workspace group titles");
+
+        var pseudoLocalization = new CopperfinLocalization("qps-ploc");
+        using var pseudoControl = new CopperfinAssetEditorControl(pseudoLocalization);
+        ApplyProjectSnapshotForExplorerGroupTitleSmoke(pseudoControl, snapshot);
+        AssertProjectWorkspaceGroupTitles(
+            pseudoControl,
+            new[]
+            {
+                pseudoLocalization.Text("AssetEditor.Summary.GroupTitle.Forms"),
+                pseudoLocalization.Text("AssetEditor.Summary.GroupTitle.Programs"),
+                pseudoLocalization.Text("AssetEditor.Summary.GroupTitle.ClassLibraries")
+            },
+            pseudoLocalization.Text("AssetEditor.Summary.GroupTitle.Programs"),
+            "Pseudo-localized project explorer rows and project object-list subtitles should route workspace group titles through the shared catalog instead of leaking raw English labels",
+            rawLeakChecks: new[] { "Forms", "Programs", "Class Libraries" });
     }
 
     private static void SmokeReportSectionGroupingExplorerTitles()
@@ -34582,6 +34650,43 @@ internal static class Program
         currentSnapshotField?.SetValue(control, snapshot);
         populateSectionListMethod.Invoke(control, new object?[] { null });
         configureObjectColumnsMethod.Invoke(control, Array.Empty<object>());
+    }
+
+    private static void ApplyProjectSnapshotForExplorerGroupTitleSmoke(CopperfinAssetEditorControl control, CopperfinStudioSnapshotDocument snapshot)
+    {
+        var controlType = typeof(CopperfinAssetEditorControl);
+        var currentSnapshotField = controlType.GetField("currentSnapshot", BindingFlags.Instance | BindingFlags.NonPublic);
+        var populateSectionListMethod = ResolveNonPublicInstanceMethod(controlType, "PopulateSectionList", new object?[] { null });
+        var populateObjectListMethod = ResolveNonPublicInstanceMethod(controlType, "PopulateObjectList", new object[] { true });
+        if (currentSnapshotField is null)
+        {
+            throw new InvalidOperationException("Could not find CopperfinAssetEditorControl project-group smoke hooks.");
+        }
+
+        currentSnapshotField.SetValue(control, snapshot);
+        populateSectionListMethod.Invoke(control, new object?[] { null });
+        populateObjectListMethod.Invoke(control, new object[] { true });
+    }
+
+    private static void AssertProjectWorkspaceGroupTitles(
+        CopperfinAssetEditorControl control,
+        string[] expectedSectionTitles,
+        string expectedObjectSubtitle,
+        string message,
+        string[]? rawLeakChecks = null)
+    {
+        var sectionListView = GetPrivateListView(control, "sectionListView");
+        var objectListView = GetPrivateListView(control, "objectListView");
+        var actualSectionTitles = sectionListView.Items.Cast<ListViewItem>().Select(item => item.Text).ToArray();
+        var actualObjectSubtitle = objectListView.Items.Cast<ListViewItem>().FirstOrDefault()?.SubItems[1].Text ?? string.Empty;
+        var noRawLeaks = rawLeakChecks is null ||
+                         !actualSectionTitles.Concat(new[] { actualObjectSubtitle })
+                             .Any(text => rawLeakChecks.Any(raw => string.Equals(text, raw, StringComparison.Ordinal)));
+
+        Expect(actualSectionTitles.SequenceEqual(expectedSectionTitles) &&
+               string.Equals(actualObjectSubtitle, expectedObjectSubtitle, StringComparison.Ordinal) &&
+               noRawLeaks,
+            message);
     }
 
     private static void ApplyReportSnapshotForExplorerSmoke(CopperfinAssetEditorControl control, CopperfinStudioSnapshotDocument snapshot)

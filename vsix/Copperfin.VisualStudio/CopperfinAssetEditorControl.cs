@@ -1111,7 +1111,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             sectionListView.Columns[2].Text = this.localization.Text("AssetEditor.Column.Excluded");
             foreach (var group in currentSnapshot.ProjectWorkspace.Groups)
             {
-                var item = new ListViewItem(group.Title);
+                var item = new ListViewItem(BuildProjectWorkspaceGroupTitleDisplayText(group.Title, group.Id));
                 item.SubItems.Add(group.ItemCount.ToString());
                 item.SubItems.Add(group.ExcludedCount.ToString());
                 item.Tag = group;
@@ -1151,7 +1151,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             }
 
             var subtitle = currentSnapshot.AssetFamily == "project"
-                ? projectEntry?.GroupTitle ?? item.Subtitle
+                ? BuildProjectWorkspaceGroupTitleDisplayText(projectEntry?.GroupTitle ?? item.Subtitle, projectEntry?.GroupId)
                 : BuildObjectListSubtitle(currentSnapshot.AssetFamily, item.Subtitle);
 
             var listItem = new ListViewItem(title);
