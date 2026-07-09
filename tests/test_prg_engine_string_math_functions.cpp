@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/runtime/prg_engine.h"
+#include "../src/runtime/prg_engine_helpers.h"
 #include "prg_engine_test_support.h"
 
 #include <cstdlib>
@@ -39,6 +40,10 @@ namespace
             "repl = REPLICATE('ab', 3)\n"
             "trimmed = LTRIM('  hi  ')\n"
             "rtrimmed = RTRIM('  hi  ')\n"
+            "ltrim_tab_pos = AT(CHR(9), LTRIM(' ' + CHR(9) + 'hi'))\n"
+            "rtrim_lf_pos = AT(CHR(10), RTRIM('hi' + CHR(10) + ' '))\n"
+            "alltrim_tab_pos = AT(CHR(9), ALLTRIM(' ' + CHR(9) + 'hi' + CHR(9) + ' '))\n"
+            "alltrim_tab_len = LEN(ALLTRIM(' ' + CHR(9) + 'hi' + CHR(9) + ' '))\n"
             "a = ABS(-7)\n"
             "b = INT(3.9)\n"
             "c = MOD(10, 3)\n"
@@ -210,6 +215,10 @@ namespace
         check("repl", "ababab");
         check("trimmed", "hi  ");
         check("rtrimmed", "  hi");
+        check("ltrim_tab_pos", "1");
+        check("rtrim_lf_pos", "3");
+        check("alltrim_tab_pos", "1");
+        check("alltrim_tab_len", "4");
         check("a", "7");
         check("b", "3");
         check("c", "1");
@@ -361,6 +370,21 @@ namespace
         }
 
         fs::remove_all(temp_root, ignored);
+    }
+
+    void test_index_expression_trim_functions_preserve_non_space_whitespace()
+    {
+        copperfin::vfp::DbfRecord record;
+
+        expect(
+            copperfin::runtime::evaluate_index_expression("ALLTRIM(' \tALPHA\t ')", record) == "\tALPHA\t",
+            "index-expression ALLTRIM() should trim only outer spaces and preserve tabs");
+        expect(
+            copperfin::runtime::evaluate_index_expression("LTRIM(' \tALPHA\t ')", record) == "\tALPHA\t ",
+            "index-expression LTRIM() should trim only leading spaces and preserve tabs");
+        expect(
+            copperfin::runtime::evaluate_index_expression("RTRIM(' \tALPHA\t ')", record) == " \tALPHA\t",
+            "index-expression RTRIM() should trim only trailing spaces and preserve tabs");
     }
 
     void test_financial_and_misc_expression_functions()
@@ -678,6 +702,7 @@ namespace
 int main()
 {
     test_string_and_math_expression_functions();
+    test_index_expression_trim_functions_preserve_non_space_whitespace();
     test_financial_and_misc_expression_functions();
     test_nested_macro_eval_textmerge_execscript_semantics();
     test_numeric_domain_errors_route_through_runtime_catalog();

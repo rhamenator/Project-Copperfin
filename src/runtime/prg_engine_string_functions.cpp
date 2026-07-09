@@ -376,14 +376,10 @@ std::optional<PrgValue> evaluate_string_function(
         return make_string_value(std::move(s));
     }
     if ((function == "ltrim" || function == "trim") && !arguments.empty()) {
-        const std::string src = value_as_string(arguments[0]);
-        const std::size_t start = src.find_first_not_of(' ');
-        return make_string_value(start == std::string::npos ? std::string{} : src.substr(start));
+        return make_string_value(ltrim_space_copy(value_as_string(arguments[0])));
     }
     if (function == "rtrim" && !arguments.empty()) {
-        const std::string src = value_as_string(arguments[0]);
-        const std::size_t end = src.find_last_not_of(' ');
-        return make_string_value(end == std::string::npos ? std::string{} : src.substr(0U, end + 1U));
+        return make_string_value(rtrim_space_copy(value_as_string(arguments[0])));
     }
     if (function == "space" && !arguments.empty()) {
         const std::size_t n = static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[0])));
@@ -747,7 +743,7 @@ std::optional<PrgValue> evaluate_string_function(
         return make_string_value(start >= source.size() ? std::string{} : source.substr(start, length));
     }
     if (function == "alltrim" && !arguments.empty()) {
-        return make_string_value(trim_copy(value_as_string(arguments[0])));
+        return make_string_value(trim_space_copy(value_as_string(arguments[0])));
     }
     if (function == "chr" && !arguments.empty()) {
         return make_string_value(std::string(1U, static_cast<char>(std::llround(value_as_number(arguments[0])))));

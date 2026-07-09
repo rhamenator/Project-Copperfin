@@ -28,6 +28,25 @@ std::string trim_copy(std::string value) {
     return value;
 }
 
+std::string ltrim_space_copy(std::string value) {
+    const std::size_t start = value.find_first_not_of(' ');
+    return start == std::string::npos ? std::string{} : value.substr(start);
+}
+
+std::string rtrim_space_copy(std::string value) {
+    const std::size_t end = value.find_last_not_of(' ');
+    return end == std::string::npos ? std::string{} : value.substr(0U, end + 1U);
+}
+
+std::string trim_space_copy(std::string value) {
+    const std::size_t start = value.find_first_not_of(' ');
+    if (start == std::string::npos) {
+        return {};
+    }
+    const std::size_t end = value.find_last_not_of(' ');
+    return value.substr(start, end - start + 1U);
+}
+
 std::string lowercase_copy(std::string value) {
     std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
         return static_cast<char>(std::tolower(ch));
@@ -423,22 +442,17 @@ std::string evaluate_index_expression(const std::string& expression, const vfp::
         return *lower_value;
     }
     if (const auto trim_value = apply_unary("ALLTRIM", [](std::string& value) {
-            value = trim_copy(std::move(value));
+            value = trim_space_copy(std::move(value));
         })) {
         return *trim_value;
     }
     if (const auto ltrim_value = apply_unary("LTRIM", [](std::string& value) {
-            const auto first = std::find_if(value.begin(), value.end(), [](unsigned char ch) {
-                return std::isspace(ch) == 0;
-            });
-            value.erase(value.begin(), first);
+            value = ltrim_space_copy(std::move(value));
         })) {
         return *ltrim_value;
     }
     if (const auto rtrim_value = apply_unary("RTRIM", [](std::string& value) {
-            while (!value.empty() && std::isspace(static_cast<unsigned char>(value.back())) != 0) {
-                value.pop_back();
-            }
+            value = rtrim_space_copy(std::move(value));
         })) {
         return *rtrim_value;
     }

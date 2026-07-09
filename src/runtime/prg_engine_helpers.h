@@ -15,6 +15,9 @@
 namespace copperfin::runtime {
 
 std::string trim_copy(std::string value);
+std::string ltrim_space_copy(std::string value);
+std::string rtrim_space_copy(std::string value);
+std::string trim_space_copy(std::string value);
 std::string lowercase_copy(std::string value);
 bool starts_with_insensitive(const std::string& value, const std::string& prefix);
 std::string normalize_identifier(std::string value);
