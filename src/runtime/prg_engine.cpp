@@ -3107,7 +3107,7 @@ namespace copperfin::runtime
     std::optional<PrgValue> PrgRuntimeSession::Impl::invoke_native_object_method_body_if_present(
         RuntimeOleObjectState &runtime_object,
         const std::string &identifier,
-        const Frame &source_frame,
+        const Frame &,
         const std::vector<PrgValue> &arguments,
         const std::vector<std::optional<std::string>> &argument_references)
     {
@@ -3116,33 +3116,13 @@ namespace copperfin::runtime
             return std::nullopt;
         }
 
-        bool use_source_frame_method_context = false;
-        if (!source_frame.native_method_class_name.empty())
-        {
-            const auto this_found = source_frame.locals.find("this");
-            if (this_found != source_frame.locals.end())
-            {
-                if (auto current_this_object = resolve_ole_object(this_found->second);
-                    current_this_object.has_value() &&
-                    (*current_this_object)->handle == runtime_object.handle)
-                {
-                    use_source_frame_method_context = true;
-                }
-            }
-        }
-
-        Program &program = load_program(
-            use_source_frame_method_context
-                ? source_frame.file_path
-                : runtime_object.source);
+        Program &program = load_program(runtime_object.source);
         std::string native_method_name;
         std::string native_defining_class_name;
         const auto native_method =
             find_native_class_method_lookup(
                 program,
-                use_source_frame_method_context
-                    ? source_frame.native_method_class_name
-                    : runtime_object.prog_id,
+                runtime_object.prog_id,
                 identifier,
                 true,
                 native_method_name,

@@ -47271,6 +47271,140 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_same_prg_inherited_methods_dispatch_self_calls_to_most_derived_overrides()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_inherited_self_dispatch";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "inherited_self_dispatch.prg";
+        write_text(
+            main_path,
+            "oChild = CREATEOBJECT('ChildWidget')\n"
+            "cLog = oChild.cLog\n"
+            "RETURN\n"
+            "DEFINE CLASS ParentWidget AS Custom\n"
+            "    cLog = ''\n"
+            "    PROCEDURE Init\n"
+            "        THIS.RunViaThis()\n"
+            "        RunBare()\n"
+            "    ENDPROC\n"
+            "    PROCEDURE RunViaThis\n"
+            "        THIS.cLog = THIS.cLog + '[ParentThis]'\n"
+            "    ENDPROC\n"
+            "    PROCEDURE RunBare\n"
+            "        THIS.cLog = THIS.cLog + '[ParentBare]'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ChildWidget AS ParentWidget\n"
+            "    PROCEDURE RunViaThis\n"
+            "        THIS.cLog = THIS.cLog + '[ChildThis]'\n"
+            "    ENDPROC\n"
+            "    PROCEDURE RunBare\n"
+            "        THIS.cLog = THIS.cLog + '[ChildBare]'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("same-PRG inherited self-dispatch script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto log_found = state.globals.find("clog");
+        expect(log_found != state.globals.end(),
+               "same-PRG inherited self-dispatch should materialize the log result");
+        if (log_found != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(log_found->second) == "[ChildThis][ChildBare]",
+                   "same-PRG inherited self-dispatch should route THIS.Method() and bare self-calls to the child override");
+        }
+
+        const bool has_child_invoke_events = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   (event.detail == "ChildWidget.RunViaThis" ||
+                    event.detail == "ChildWidget.RunBare");
+        });
+        expect(has_child_invoke_events,
+               "same-PRG inherited self-dispatch should emit invoke events for the most-derived overrides");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_external_base_inherited_methods_dispatch_self_calls_to_most_derived_overrides()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_external_inherited_self_dispatch";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path library_path = temp_root / "widgetlib.prg";
+        write_text(
+            library_path,
+            "DEFINE CLASS ParentWidget AS Custom\n"
+            "    cLog = ''\n"
+            "    PROCEDURE Init\n"
+            "        THIS.RunViaThis()\n"
+            "        RunBare()\n"
+            "    ENDPROC\n"
+            "    PROCEDURE RunViaThis\n"
+            "        THIS.cLog = THIS.cLog + '[ParentThis]'\n"
+            "    ENDPROC\n"
+            "    PROCEDURE RunBare\n"
+            "        THIS.cLog = THIS.cLog + '[ParentBare]'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "external_inherited_self_dispatch.prg";
+        write_text(
+            main_path,
+            "oChild = CREATEOBJECT('ChildWidget')\n"
+            "cLog = oChild.cLog\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildWidget AS ParentWidget OF widgetlib.prg\n"
+            "    PROCEDURE RunViaThis\n"
+            "        THIS.cLog = THIS.cLog + '[ChildThis]'\n"
+            "    ENDPROC\n"
+            "    PROCEDURE RunBare\n"
+            "        THIS.cLog = THIS.cLog + '[ChildBare]'\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("external-base inherited self-dispatch script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto log_found = state.globals.find("clog");
+        expect(log_found != state.globals.end(),
+               "external-base inherited self-dispatch should materialize the log result");
+        if (log_found != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(log_found->second) == "[ChildThis][ChildBare]",
+                   "external-base inherited self-dispatch should route THIS.Method() and bare self-calls to the child override");
+        }
+
+        const bool has_child_invoke_events = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   (event.detail == "ChildWidget.RunViaThis" ||
+                    event.detail == "ChildWidget.RunBare");
+        });
+        expect(has_child_invoke_events,
+               "external-base inherited self-dispatch should emit invoke events for the most-derived overrides");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_external_prg_base_methods_support_dodefault_dispatch()
     {
         namespace fs = std::filesystem;
@@ -52280,6 +52414,8 @@ int main()
     test_native_builtin_methods_reflect_through_pemstatus_getpem_and_amembers();
     test_same_prg_native_bare_helper_calls_resolve_to_current_instance_before_top_level_routines();
     test_inherited_external_prg_base_methods_resolve_bare_helper_calls_against_defining_library();
+    test_same_prg_inherited_methods_dispatch_self_calls_to_most_derived_overrides();
+    test_external_base_inherited_methods_dispatch_self_calls_to_most_derived_overrides();
     test_external_prg_base_methods_support_dodefault_dispatch();
     test_external_prg_base_methods_reflect_through_getpem_pemstatus_and_amembers();
         test_same_prg_native_bindevent_raiseevent_and_unbindevents_dispatch_same_session_handlers();
