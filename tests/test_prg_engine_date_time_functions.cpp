@@ -38,6 +38,7 @@ namespace
             "datetime_ctor_invalid = DATETIME(2026, 4, 18, 24, 0, 0)\n"
             "date_default = SET('DATE')\n"
             "century_default = SET('CENTURY')\n"
+            "epoch_default = SET('EPOCH')\n"
             "mark_default = SET('MARK')\n"
             "hours_default = SET('HOURS')\n"
             "seconds_set_default = SET('SECONDS')\n"
@@ -133,6 +134,18 @@ namespace
             "ctot_dmy_ambiguous = TTOC(CTOT('01/02/2024 13:45:56'), 1)\n"
             "dtot_dmy_ambiguous = TTOC(DTOT('01/02/2024'), 1)\n"
             "ttod_dmy_ambiguous = DTOC(TTOD('01/02/2024 13:45:56'), 1)\n"
+            "ctod_epoch_default_49 = DTOC(CTOD('01/02/49'), 1)\n"
+            "ctod_epoch_default_50 = DTOC(CTOD('01/02/50'), 1)\n"
+            "SET EPOCH TO 1975\n"
+            "epoch_1975 = SET('EPOCH')\n"
+            "ctod_epoch_1975_74 = DTOC(CTOD('01/02/74'), 1)\n"
+            "ctod_epoch_1975_75 = DTOC(CTOD('01/02/75'), 1)\n"
+            "ctot_epoch_1975_74 = TTOC(CTOT('01/02/74 13:45:56'), 1)\n"
+            "dtoc_epoch_1975_74 = DTOC('01/02/74', 1)\n"
+            "ttoc_epoch_1975_74 = TTOC('01/02/74 13:45:56', 1)\n"
+            "ttos_epoch_1975_74 = TTOS('01/02/74 13:45:56')\n"
+            "dtot_epoch_1975_74 = TTOC(DTOT('01/02/74'), 1)\n"
+            "ttod_epoch_1975_74 = DTOC(TTOD('01/02/74 13:45:56'), 1)\n"
             "SET CENTURY OFF\n"
             "century_off = SET('CENTURY')\n"
             "dtoc_century_off = DTOC('18/04/2026')\n"
@@ -169,6 +182,7 @@ namespace
             "SET DATASESSION TO 2\n"
             "date_session2 = SET('DATE')\n"
             "century_session2 = SET('CENTURY')\n"
+            "epoch_session2 = SET('EPOCH')\n"
             "mark_session2 = SET('MARK')\n"
             "hours_session2 = SET('HOURS')\n"
             "seconds_session2 = SET('SECONDS')\n"
@@ -177,6 +191,7 @@ namespace
             "SET DATASESSION TO 1\n"
             "date_restored = SET('DATE')\n"
             "century_restored = SET('CENTURY')\n"
+            "epoch_restored = SET('EPOCH')\n"
             "mark_restored = SET('MARK')\n"
             "hours_restored = SET('HOURS')\n"
             "seconds_restored = SET('SECONDS')\n"
@@ -210,6 +225,7 @@ namespace
         check("datetime_ctor_invalid", "");
         check("date_default", "MDY");
         check("century_default", "ON");
+        check("epoch_default", "1950");
         check("mark_default", "/");
         check("hours_default", "24");
         check("seconds_set_default", "ON");
@@ -300,6 +316,17 @@ namespace
         check("ctot_dmy_ambiguous", "20240201134556");
         check("dtot_dmy_ambiguous", "20240201000000");
         check("ttod_dmy_ambiguous", "20240201");
+        check("ctod_epoch_default_49", "20490201");
+        check("ctod_epoch_default_50", "19500201");
+        check("epoch_1975", "1975");
+        check("ctod_epoch_1975_74", "20740201");
+        check("ctod_epoch_1975_75", "19750201");
+        check("ctot_epoch_1975_74", "20740201134556");
+        check("dtoc_epoch_1975_74", "20740201");
+        check("ttoc_epoch_1975_74", "20740201134556");
+        check("ttos_epoch_1975_74", "20740201134556");
+        check("dtot_epoch_1975_74", "20740201000000");
+        check("ttod_epoch_1975_74", "20740201");
         check("century_off", "OFF");
         check("dtoc_century_off", "18/04/26");
         check("date_set_ymd", "YMD");
@@ -323,6 +350,7 @@ namespace
         check("ttoc_hours_24_seconds_on", "04/18/2026 13:45:56");
         check("date_session2", "MDY");
         check("century_session2", "ON");
+        check("epoch_session2", "1950");
         check("mark_session2", "/");
         check("hours_session2", "24");
         check("seconds_session2", "ON");
@@ -330,6 +358,7 @@ namespace
         check("fweek_session2", "1");
         check("date_restored", "MDY");
         check("century_restored", "ON");
+        check("epoch_restored", "1975");
         check("mark_restored", "/");
         check("hours_restored", "24");
         check("seconds_restored", "ON");

@@ -1543,6 +1543,10 @@ namespace copperfin::runtime
                     {
                         return std::string("2");
                     }
+                    if (normalized_name == "epoch")
+                    {
+                        return std::string("1950");
+                    }
                     if (normalized_name == "collate")
                     {
                         return std::string("MACHINE");

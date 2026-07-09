@@ -122,6 +122,23 @@ int set_int_value(
     return value < min_value || value > max_value ? default_value : value;
 }
 
+int epoch_year(const std::function<std::string(const std::string&)>& set_callback) {
+    return set_int_value(set_callback, "EPOCH", 1950, 1, 9999);
+}
+
+int expand_two_digit_year_for_set(int year, const std::function<std::string(const std::string&)>& set_callback) {
+    if (year < 0 || year >= 100) {
+        return year;
+    }
+
+    const int epoch = epoch_year(set_callback);
+    int expanded_year = (epoch / 100) * 100 + year;
+    if (expanded_year < epoch) {
+        expanded_year += 100;
+    }
+    return expanded_year;
+}
+
 std::string format_runtime_time_for_set(
     int hour,
     int minute,
@@ -253,9 +270,7 @@ bool parse_runtime_date_for_set(
             year = third;
         }
 
-        if (year >= 0 && year < 100) {
-            year += year < 50 ? 2000 : 1900;
-        }
+        year = expand_two_digit_year_for_set(year, set_callback);
         return valid_runtime_date(year, month, day);
     };
 
@@ -267,9 +282,7 @@ bool parse_runtime_date_for_set(
     }
 
     if (parse_runtime_date_string(raw, year, month, day)) {
-        if (year >= 0 && year < 100) {
-            year += year < 50 ? 2000 : 1900;
-        }
+        year = expand_two_digit_year_for_set(year, set_callback);
         return true;
     }
     return false;

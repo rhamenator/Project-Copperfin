@@ -3382,6 +3382,10 @@
                     {
                         current_set_state()[normalized_name] = std::to_string(evaluate_set_integer_value(option_value, 2, 0, 18));
                     }
+                    else if (normalized_name == "epoch")
+                    {
+                        current_set_state()[normalized_name] = std::to_string(evaluate_set_integer_value(option_value, 1950, 1, 9999));
+                    }
                     else if (normalized_name == "date")
                     {
                         const std::string date_value = evaluate_set_string_value(option_value, "MDY");
