@@ -103,6 +103,70 @@
             const Routine *routine = nullptr;
         };
 
+        struct RoutineLookup
+        {
+            const Program *program = nullptr;
+            const Routine *routine = nullptr;
+        };
+
+        std::string resolve_procedure_program_path(
+            const std::string &target_text,
+            const std::string &fallback_path = {}) const
+        {
+            std::string resolved_target = unquote_string(trim_copy(target_text));
+            if (resolved_target.empty())
+            {
+                return {};
+            }
+
+            std::filesystem::path program_path(resolved_target);
+            if (program_path.extension().empty())
+            {
+                program_path += ".prg";
+            }
+
+            return resolve_native_prg_program_path(program_path.string(), fallback_path);
+        }
+
+        std::optional<RoutineLookup> find_loaded_procedure_routine_lookup(
+            const std::string &identifier,
+            const std::string &exclude_program_path = {})
+        {
+            const std::string normalized_identifier = normalize_identifier(identifier);
+            const std::string normalized_exclude_program_path = normalize_path(exclude_program_path);
+            for (const std::string &procedure_program_path : procedure_program_paths)
+            {
+                if (!normalized_exclude_program_path.empty() &&
+                    procedure_program_path == normalized_exclude_program_path)
+                {
+                    continue;
+                }
+
+                Program &program = load_program(procedure_program_path);
+                const auto found = program.routines.find(normalized_identifier);
+                if (found != program.routines.end())
+                {
+                    return RoutineLookup{.program = &program, .routine = &found->second};
+                }
+            }
+
+            return std::nullopt;
+        }
+
+        std::optional<RoutineLookup> find_unqualified_routine_lookup(
+            const std::string &source_file_path,
+            const std::string &identifier)
+        {
+            Program &program = load_program(source_file_path);
+            const auto found = program.routines.find(normalize_identifier(identifier));
+            if (found != program.routines.end())
+            {
+                return RoutineLookup{.program = &program, .routine = &found->second};
+            }
+
+            return find_loaded_procedure_routine_lookup(identifier, program.path);
+        }
+
         std::string native_same_prg_base_class_name(const std::string &base_class_name) const
         {
             const std::string trimmed = trim_copy(base_class_name);
@@ -3950,6 +4014,7 @@
 #endif
             declared_dll_functions.clear();
             loaded_libraries.clear();
+            procedure_program_paths.clear();
         }
 
         void close_runtime_scope(const std::string &scope, const SourceLocation &location)

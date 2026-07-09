@@ -1106,7 +1106,7 @@
                     }
                 }
                 Program &program = load_program(frame.file_path);
-                if (const auto routine = program.routines.find(normalize_identifier(target)); routine != program.routines.end())
+                if (const auto routine = find_unqualified_routine_lookup(program.path, target); routine.has_value())
                 {
                     if (!can_push_frame())
                     {
@@ -1116,8 +1116,8 @@
                         return {.ok = false, .message = last_error_message};
                     }
                     push_routine_frame(
-                        program.path,
-                        routine->second,
+                        routine->program->path,
+                        *routine->routine,
                         std::move(call_arguments),
                         std::move(call_argument_references));
                     return {};
@@ -1291,7 +1291,7 @@
                 child->runtime_instance_id = spawned_runtime_instance_counter.fetch_add(1ULL, std::memory_order_relaxed);
                 child->current_data_session = current_data_session;
                 std::string task_source_path = program.path;
-                if (const auto routine = program.routines.find(normalize_identifier(target)); routine != program.routines.end())
+                if (const auto routine = find_unqualified_routine_lookup(program.path, target); routine.has_value())
                 {
                     if (!can_push_frame())
                     {
@@ -1301,8 +1301,8 @@
                         return {.ok = false, .message = last_error_message};
                     }
                     child->push_routine_frame(
-                        program.path,
-                        routine->second,
+                        routine->program->path,
+                        *routine->routine,
                         std::move(call_arguments),
                         std::move(call_argument_references));
                 }
@@ -1473,7 +1473,7 @@
                         }
                     }
                     Program &program = load_program(frame.file_path);
-                    if (const auto routine = program.routines.find(normalize_identifier(target)); routine != program.routines.end())
+                    if (const auto routine = find_unqualified_routine_lookup(program.path, target); routine.has_value())
                     {
                         if (!can_push_frame())
                         {
@@ -1483,8 +1483,8 @@
                             return {.ok = false, .message = last_error_message};
                         }
                         push_routine_frame(
-                            program.path,
-                            routine->second,
+                            routine->program->path,
+                            *routine->routine,
                             std::move(call_arguments),
                             std::move(call_argument_references));
                         return {};
@@ -3473,6 +3473,63 @@
                 }
                 events.push_back({.category = "runtime.library",
                                   .detail = statement.expression,
+                                  .location = statement.location});
+                return {};
+            }
+            case StatementKind::set_procedure:
+            {
+                std::string target = trim_copy(statement.expression);
+                if (!target.empty() && target.front() == '&')
+                {
+                    const std::string expanded_target = trim_copy(value_as_string(evaluate_expression(target, frame)));
+                    if (!expanded_target.empty())
+                    {
+                        target = expanded_target;
+                    }
+                }
+
+                if (target.empty())
+                {
+                    procedure_program_paths.clear();
+                    events.push_back({.category = "runtime.procedure",
+                                      .detail = "clear",
+                                      .location = statement.location});
+                    return {};
+                }
+
+                const std::string resolved_program_path =
+                    normalize_path(resolve_procedure_program_path(target, frame.file_path));
+                std::error_code exists_error;
+                if (resolved_program_path.empty() ||
+                    !std::filesystem::exists(resolved_program_path, exists_error))
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed",
+                        {
+                            {"command", "SET PROCEDURE TO"},
+                            {"target", unquote_string(trim_copy(target))}
+                        });
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                const bool additive = normalize_identifier(statement.secondary_expression) == "additive";
+                if (!additive)
+                {
+                    procedure_program_paths.clear();
+                }
+
+                load_program(resolved_program_path);
+                if (std::find(procedure_program_paths.begin(),
+                              procedure_program_paths.end(),
+                              resolved_program_path) == procedure_program_paths.end())
+                {
+                    procedure_program_paths.push_back(resolved_program_path);
+                }
+
+                events.push_back({.category = "runtime.procedure",
+                                  .detail = additive ? "add:" + resolved_program_path : "set:" + resolved_program_path,
                                   .location = statement.location});
                 return {};
             }

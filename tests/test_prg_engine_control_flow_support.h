@@ -223,6 +223,9 @@ void test_expression_level_procedure_call_assigns_return_value();
 void test_expression_level_function_call_supports_by_reference_arguments();
 void test_expression_level_function_call_works_in_if_predicates();
 void test_expression_level_function_call_can_chain_nested_user_routines();
+void test_set_procedure_registers_external_function_for_expression_calls();
+void test_set_procedure_registers_external_procedure_for_do_calls();
+void test_set_procedure_additive_uses_first_opened_precedence_and_replace_resets_lookup();
 
 }  // namespace cf_test_prg_engine_control_flow
 

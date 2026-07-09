@@ -2116,6 +2116,12 @@ Program parse_program(const std::string& path) {
         } else if (starts_with_insensitive(line, "SET DATASESSION TO ")) {
             statement.kind = StatementKind::set_datasession;
             statement.expression = trim_copy(line.substr(19U));
+        } else if (upper == "SET PROCEDURE TO" || starts_with_insensitive(line, "SET PROCEDURE TO ")) {
+            statement.kind = StatementKind::set_procedure;
+            const std::string body = upper == "SET PROCEDURE TO" ? std::string{} : trim_copy(line.substr(16U));
+            const std::size_t additive_position = find_keyword_top_level(body, "ADDITIVE");
+            statement.expression = additive_position == std::string::npos ? body : trim_copy(body.substr(0U, additive_position));
+            statement.secondary_expression = has_keyword(body, "ADDITIVE") ? "additive" : std::string{};
         } else if (starts_with_insensitive(line, "SET LIBRARY TO ")) {
             statement.kind = StatementKind::set_library;
             statement.expression = trim_copy(line.substr(15U));

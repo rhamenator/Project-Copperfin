@@ -317,4 +317,121 @@ void test_expression_level_function_call_can_chain_nested_user_routines() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_set_procedure_registers_external_function_for_expression_calls() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_procedure_function";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_text(
+        temp_root / "helpers.prg",
+        "FUNCTION addvals\n"
+        "LPARAMETERS a, b\n"
+        "RETURN a + b\n");
+    write_text(
+        temp_root / "main.prg",
+        "SET PROCEDURE TO helpers\n"
+        "result = addvals(6, 7)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options((temp_root / "main.prg").string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SET PROCEDURE expression-level helper script should complete");
+
+    const auto result = state.globals.find("result");
+    expect(result != state.globals.end(), "SET PROCEDURE function script should assign result");
+    if (result != state.globals.end()) {
+        expect(copperfin::runtime::format_value(result->second) == "13",
+               "SET PROCEDURE should expose helper functions to expression-level calls");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_set_procedure_registers_external_procedure_for_do_calls() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_procedure_do";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_text(
+        temp_root / "helpers.prg",
+        "PROCEDURE bump\n"
+        "LPARAMETERS pcount\n"
+        "pcount = pcount + 4\n"
+        "RETURN\n");
+    write_text(
+        temp_root / "main.prg",
+        "SET PROCEDURE TO helpers\n"
+        "counter = 3\n"
+        "DO bump WITH @counter\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options((temp_root / "main.prg").string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SET PROCEDURE DO helper script should complete");
+
+    const auto counter = state.globals.find("counter");
+    expect(counter != state.globals.end(), "SET PROCEDURE DO helper should preserve caller variable");
+    if (counter != state.globals.end()) {
+        expect(copperfin::runtime::format_value(counter->second) == "7",
+               "SET PROCEDURE should expose helper procedures to unqualified DO calls");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_set_procedure_additive_uses_first_opened_precedence_and_replace_resets_lookup() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_set_procedure_additive";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    write_text(
+        temp_root / "first.prg",
+        "FUNCTION sharedvalue\n"
+        "RETURN 'first'\n");
+    write_text(
+        temp_root / "second.prg",
+        "FUNCTION sharedvalue\n"
+        "RETURN 'second'\n");
+    write_text(
+        temp_root / "main.prg",
+        "SET PROCEDURE TO first\n"
+        "SET PROCEDURE TO second ADDITIVE\n"
+        "result_first = sharedvalue()\n"
+        "SET PROCEDURE TO second\n"
+        "result_second = sharedvalue()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options((temp_root / "main.prg").string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SET PROCEDURE ADDITIVE precedence script should complete");
+
+    const auto first = state.globals.find("result_first");
+    expect(first != state.globals.end(), "SET PROCEDURE ADDITIVE script should assign first result");
+    if (first != state.globals.end()) {
+        expect(copperfin::runtime::format_value(first->second) == "first",
+               "SET PROCEDURE ADDITIVE should keep first-opened duplicate routine precedence");
+    }
+
+    const auto second = state.globals.find("result_second");
+    expect(second != state.globals.end(), "SET PROCEDURE replace script should assign second result");
+    if (second != state.globals.end()) {
+        expect(copperfin::runtime::format_value(second->second) == "second",
+               "non-additive SET PROCEDURE should replace the helper lookup list");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace cf_test_prg_engine_control_flow

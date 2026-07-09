@@ -58,6 +58,9 @@ int main() {
     test_expression_level_function_call_supports_by_reference_arguments();
     test_expression_level_function_call_works_in_if_predicates();
     test_expression_level_function_call_can_chain_nested_user_routines();
+    test_set_procedure_registers_external_function_for_expression_calls();
+    test_set_procedure_registers_external_procedure_for_do_calls();
+    test_set_procedure_additive_uses_first_opened_precedence_and_replace_resets_lookup();
     test_on_error_do_handler_dispatches_routine();
     test_on_error_do_with_handler_receives_error_metadata();
     test_aerror_populates_structured_runtime_error_array();

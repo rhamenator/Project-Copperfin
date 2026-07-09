@@ -677,6 +677,7 @@ namespace copperfin::runtime
         std::vector<CurrentWindowMessageContext> active_window_message_contexts;
         std::size_t next_native_event_binding_ordinal = 1U;
         std::set<std::string> loaded_libraries;
+        std::vector<std::string> procedure_program_paths;
         std::map<int, std::map<int, RegisteredApiFunction>> registered_api_functions_by_session;
         std::map<std::string, DeclaredDllFunction> declared_dll_functions; // keyed by normalized alias
         bool entry_pause_pending = false;
@@ -2824,8 +2825,8 @@ namespace copperfin::runtime
             }
         }
 
-        const auto found = program.routines.find(normalize_identifier(identifier));
-        if (found == program.routines.end())
+        const auto found = find_unqualified_routine_lookup(program.path, identifier);
+        if (!found.has_value())
         {
             return std::nullopt;
         }
@@ -2836,7 +2837,7 @@ namespace copperfin::runtime
         }
 
         const std::size_t return_depth = stack.size();
-        push_routine_frame(program.path, found->second, arguments, argument_references);
+        push_routine_frame(found->program->path, *found->routine, arguments, argument_references);
         return run_expression_invoked_routine_until_return(return_depth);
     }
 
@@ -3535,16 +3536,15 @@ namespace copperfin::runtime
                 return make_number_value(0.0);
             }
 
-            Program &program = load_program(source_frame.file_path);
-            const auto found = program.routines.find(normalize_identifier(routine_name));
-            if (found == program.routines.end())
+            const auto found = find_unqualified_routine_lookup(source_frame.file_path, routine_name);
+            if (!found.has_value())
             {
                 return make_number_value(0.0);
             }
 
             binding.target_is_routine = true;
-            binding.target_program_path = program.path;
-            binding.delegate_name = found->second.name;
+            binding.target_program_path = found->program->path;
+            binding.delegate_name = found->routine->name;
             binding.flags = arguments.size() >= 4U
                                 ? static_cast<int>(std::llround(value_as_number(arguments[3]))) & 3
                                 : 0;

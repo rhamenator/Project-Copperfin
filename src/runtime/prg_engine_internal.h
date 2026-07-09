@@ -69,6 +69,7 @@ enum class StatementKind {
     use_command,
     set_order,
     set_command,
+    set_procedure,
     set_library,
     set_datasession,
     set_default,

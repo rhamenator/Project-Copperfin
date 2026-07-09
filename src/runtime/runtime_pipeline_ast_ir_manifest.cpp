@@ -122,6 +122,8 @@ const char* statement_kind_name(const StatementKind kind) {
             return "set_order";
         case StatementKind::set_command:
             return "set_command";
+        case StatementKind::set_procedure:
+            return "set_procedure";
         case StatementKind::set_library:
             return "set_library";
         case StatementKind::set_datasession:
