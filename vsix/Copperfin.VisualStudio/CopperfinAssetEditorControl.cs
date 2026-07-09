@@ -3032,6 +3032,60 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         return kind;
     }
 
+    private string BuildProjectWorkspaceGroupTitleDisplayText(string title, string? groupId = null)
+    {
+        var normalizedId = (groupId ?? string.Empty).Trim().Replace('-', '_').Replace(' ', '_').ToLowerInvariant();
+        var normalizedTitle = title.Trim();
+        var key = normalizedId switch
+        {
+            "forms" => "AssetEditor.Summary.GroupTitle.Forms",
+            "classes" => string.Equals(normalizedTitle, "Class Libraries", StringComparison.Ordinal)
+                ? "AssetEditor.Summary.GroupTitle.ClassLibraries"
+                : "AssetEditor.Summary.GroupTitle.Classes",
+            "reports" => "AssetEditor.Summary.GroupTitle.Reports",
+            "labels" => "AssetEditor.Summary.GroupTitle.Labels",
+            "menus" => "AssetEditor.Summary.GroupTitle.Menus",
+            "programs" => "AssetEditor.Summary.GroupTitle.Programs",
+            "databases" => "AssetEditor.Summary.GroupTitle.Databases",
+            "tables" => "AssetEditor.Summary.GroupTitle.Tables",
+            "queries" => "AssetEditor.Summary.GroupTitle.Queries",
+            "other" or "other_assets" => "AssetEditor.Summary.GroupTitle.OtherAssets",
+            _ => normalizedTitle switch
+            {
+                "Forms" => "AssetEditor.Summary.GroupTitle.Forms",
+                "Classes" => "AssetEditor.Summary.GroupTitle.Classes",
+                "Class Libraries" => "AssetEditor.Summary.GroupTitle.ClassLibraries",
+                "Reports" => "AssetEditor.Summary.GroupTitle.Reports",
+                "Labels" => "AssetEditor.Summary.GroupTitle.Labels",
+                "Menus" => "AssetEditor.Summary.GroupTitle.Menus",
+                "Programs" => "AssetEditor.Summary.GroupTitle.Programs",
+                "Databases" => "AssetEditor.Summary.GroupTitle.Databases",
+                "Tables" => "AssetEditor.Summary.GroupTitle.Tables",
+                "Queries" => "AssetEditor.Summary.GroupTitle.Queries",
+                "Other Assets" => "AssetEditor.Summary.GroupTitle.OtherAssets",
+                _ => string.Empty
+            }
+        };
+
+        if (!string.IsNullOrWhiteSpace(key))
+        {
+            return L(key);
+        }
+
+        return title;
+    }
+
+    private string BuildObjectBrowserNodeDetailDisplayText(CopperfinProjectObjectNode node)
+    {
+        if (!string.IsNullOrWhiteSpace(node.GroupTitle))
+        {
+            return BuildProjectWorkspaceGroupTitleDisplayText(node.GroupTitle) +
+                   (node.Excluded ? L("AssetEditor.Summary.ExcludedSuffix") : string.Empty);
+        }
+
+        return node.Detail;
+    }
+
     private string BuildFallbackObjectTitle(int recordIndex)
     {
         return F("AssetEditor.ObjectFallbackTitle", recordIndex);
@@ -3076,7 +3130,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             summary.AppendLine(
                 F(
                     "AssetEditor.Summary.GroupLine",
-                    group.Title,
+                    BuildProjectWorkspaceGroupTitleDisplayText(group.Title, group.Id),
                     group.ItemCount,
                     group.ExcludedCount));
         }
@@ -3436,6 +3490,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                  node.Title.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
                  node.Kind.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
                  BuildProjectInsightArtifactKindDisplayText(node.Kind).IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                 BuildObjectBrowserNodeDetailDisplayText(node).IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
                  node.Detail.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0 ||
                  node.FilePath.IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0))
             .ToList();
@@ -3459,14 +3514,15 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             foreach (var node in filteredNodes.Take(50))
             {
+                var detailText = BuildObjectBrowserNodeDetailDisplayText(node);
                 summary.AppendLine(
                     F(
                         "AssetEditor.Summary.ObjectNodeLine",
                         BuildProjectInsightArtifactKindDisplayText(node.Kind),
                         node.Title));
-                if (!string.IsNullOrWhiteSpace(node.Detail))
+                if (!string.IsNullOrWhiteSpace(detailText))
                 {
-                    summary.AppendLine(F("AssetEditor.Summary.IndentedLine", node.Detail));
+                    summary.AppendLine(F("AssetEditor.Summary.IndentedLine", detailText));
                 }
                 if (!string.IsNullOrWhiteSpace(node.FilePath))
                 {
@@ -3502,7 +3558,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         summary.AppendLine(L("AssetEditor.Summary.SuggestedToolboxSeeds"));
         foreach (var group in snapshot.ProjectWorkspace?.Groups.Take(8) ?? Enumerable.Empty<CopperfinStudioProjectGroup>())
         {
-            summary.AppendLine(F("AssetEditor.Summary.ToolboxGroupLine", group.Title, group.ItemCount));
+            summary.AppendLine(F("AssetEditor.Summary.ToolboxGroupLine", BuildProjectWorkspaceGroupTitleDisplayText(group.Title, group.Id), group.ItemCount));
         }
 
         summary.AppendLine();

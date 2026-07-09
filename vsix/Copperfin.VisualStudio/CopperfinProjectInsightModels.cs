@@ -63,5 +63,7 @@ internal sealed class CopperfinProjectObjectNode
     public string Kind { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string FilePath { get; set; } = string.Empty;
+    public string GroupTitle { get; set; } = string.Empty;
+    public bool Excluded { get; set; }
     public string Detail { get; set; } = string.Empty;
 }

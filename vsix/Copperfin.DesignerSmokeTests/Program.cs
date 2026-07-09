@@ -467,6 +467,7 @@ internal static class Program
         SmokeSharedDesignerSelectionLocalization();
         SmokeLocalizedCodeReferenceKindLabels();
         SmokeLocalizedProjectInsightArtifactKindLabels();
+        SmokeLocalizedWorkspaceGroupTitles();
         SmokeLocalizedReportObjectKindSubtitles();
         SmokeLocalizedReportObjectFallbackTitles();
         SmokeReportSelectionPreservedAcrossExplorerRefresh();
@@ -5823,6 +5824,88 @@ internal static class Program
                pseudoDataSummary.IndexOf("[Table]", StringComparison.Ordinal) < 0 &&
                pseudoDataSummary.IndexOf("[Query]", StringComparison.Ordinal) < 0,
             "Pseudo-localized project summaries should route displayed object and data kind labels through the shared catalog instead of leaking raw tokens");
+    }
+
+    private static void SmokeLocalizedWorkspaceGroupTitles()
+    {
+        var snapshot = new CopperfinStudioSnapshotDocument
+        {
+            ProjectWorkspace = new CopperfinStudioProjectWorkspace
+            {
+                ProjectTitle = "sample.pjx",
+                Groups = new List<CopperfinStudioProjectGroup>
+                {
+                    new() { Id = "forms", Title = "Forms", ItemCount = 2, ExcludedCount = 0 },
+                    new() { Id = "programs", Title = "Programs", ItemCount = 1, ExcludedCount = 0 },
+                    new() { Id = "classes", Title = "Class Libraries", ItemCount = 3, ExcludedCount = 1 }
+                }
+            }
+        };
+
+        var insights = new CopperfinProjectInsights
+        {
+            ProjectRoot = @"C:\src\sample",
+            ObjectNodes = new List<CopperfinProjectObjectNode>
+            {
+                new()
+                {
+                    Kind = "Program",
+                    Title = "main.prg",
+                    FilePath = @"C:\src\sample\main.prg",
+                    GroupTitle = "Programs",
+                    Excluded = true,
+                    Detail = "Programs [excluded]"
+                }
+            },
+            DefinedSymbols = new List<CopperfinProjectCodeSymbol>
+            {
+                new() { Kind = "class", Name = "app.customer.editor", FilePath = @"C:\src\sample\editor.prg", Line = 1 }
+            }
+        };
+
+        using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
+        var spanishWorkspaceSummary = InvokeAssetEditorString(spanishControl, "BuildProjectWorkspaceSummary", snapshot);
+        var spanishToolboxSummary = InvokeAssetEditorString(spanishControl, "BuildToolboxSummary", snapshot, insights);
+        var spanishObjectSummary = InvokeAssetEditorString(spanishControl, "BuildObjectBrowserSummary", snapshot, insights, string.Empty, false);
+        Expect(spanishWorkspaceSummary.IndexOf("Formularios", StringComparison.Ordinal) >= 0 &&
+               spanishWorkspaceSummary.IndexOf("Programas", StringComparison.Ordinal) >= 0 &&
+               spanishWorkspaceSummary.IndexOf("Bibliotecas de clases", StringComparison.Ordinal) >= 0 &&
+               spanishToolboxSummary.IndexOf("Formularios", StringComparison.Ordinal) >= 0 &&
+               spanishToolboxSummary.IndexOf("Programas", StringComparison.Ordinal) >= 0 &&
+               spanishToolboxSummary.IndexOf("Bibliotecas de clases", StringComparison.Ordinal) >= 0 &&
+               spanishObjectSummary.IndexOf("Programas [excluido]", StringComparison.Ordinal) >= 0,
+            "Spanish project summaries should localize workspace group titles and excluded suffixes without changing machine-readable project metadata");
+
+        using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
+        var portugueseWorkspaceSummary = InvokeAssetEditorString(portugueseControl, "BuildProjectWorkspaceSummary", snapshot);
+        var portugueseToolboxSummary = InvokeAssetEditorString(portugueseControl, "BuildToolboxSummary", snapshot, insights);
+        var portugueseObjectSummary = InvokeAssetEditorString(portugueseControl, "BuildObjectBrowserSummary", snapshot, insights, string.Empty, false);
+        Expect(portugueseWorkspaceSummary.IndexOf("Formulários", StringComparison.Ordinal) >= 0 &&
+               portugueseWorkspaceSummary.IndexOf("Programas", StringComparison.Ordinal) >= 0 &&
+               portugueseWorkspaceSummary.IndexOf("Bibliotecas de classes", StringComparison.Ordinal) >= 0 &&
+               portugueseToolboxSummary.IndexOf("Formulários", StringComparison.Ordinal) >= 0 &&
+               portugueseToolboxSummary.IndexOf("Programas", StringComparison.Ordinal) >= 0 &&
+               portugueseToolboxSummary.IndexOf("Bibliotecas de classes", StringComparison.Ordinal) >= 0 &&
+               portugueseObjectSummary.IndexOf("Programas [excluído]", StringComparison.Ordinal) >= 0,
+            "Portuguese project summaries should localize workspace group titles and excluded suffixes without changing machine-readable project metadata");
+
+        var pseudoLocalization = new CopperfinLocalization("qps-ploc");
+        using var pseudoControl = new CopperfinAssetEditorControl(pseudoLocalization);
+        var pseudoWorkspaceSummary = InvokeAssetEditorString(pseudoControl, "BuildProjectWorkspaceSummary", snapshot);
+        var pseudoToolboxSummary = InvokeAssetEditorString(pseudoControl, "BuildToolboxSummary", snapshot, insights);
+        var pseudoObjectSummary = InvokeAssetEditorString(pseudoControl, "BuildObjectBrowserSummary", snapshot, insights, string.Empty, false);
+        Expect(pseudoWorkspaceSummary.IndexOf(pseudoLocalization.Text("AssetEditor.Summary.GroupTitle.Forms"), StringComparison.Ordinal) >= 0 &&
+               pseudoWorkspaceSummary.IndexOf(pseudoLocalization.Text("AssetEditor.Summary.GroupTitle.Programs"), StringComparison.Ordinal) >= 0 &&
+               pseudoWorkspaceSummary.IndexOf(pseudoLocalization.Text("AssetEditor.Summary.GroupTitle.ClassLibraries"), StringComparison.Ordinal) >= 0 &&
+               pseudoToolboxSummary.IndexOf(pseudoLocalization.Text("AssetEditor.Summary.GroupTitle.Forms"), StringComparison.Ordinal) >= 0 &&
+               pseudoToolboxSummary.IndexOf(pseudoLocalization.Text("AssetEditor.Summary.GroupTitle.Programs"), StringComparison.Ordinal) >= 0 &&
+               pseudoToolboxSummary.IndexOf(pseudoLocalization.Text("AssetEditor.Summary.GroupTitle.ClassLibraries"), StringComparison.Ordinal) >= 0 &&
+               pseudoObjectSummary.IndexOf(pseudoLocalization.Text("AssetEditor.Summary.GroupTitle.Programs"), StringComparison.Ordinal) >= 0 &&
+               pseudoObjectSummary.IndexOf("Forms", StringComparison.Ordinal) < 0 &&
+               pseudoObjectSummary.IndexOf("Programs [excluded]", StringComparison.Ordinal) < 0 &&
+               pseudoWorkspaceSummary.IndexOf("Class Libraries", StringComparison.Ordinal) < 0 &&
+               pseudoToolboxSummary.IndexOf("Programs", StringComparison.Ordinal) < 0,
+            "Pseudo-localized project summaries should route workspace group titles through the shared catalog instead of leaking raw English labels");
     }
 
     private static void SmokeReportSectionGroupingExplorerTitles()
@@ -39172,35 +39255,65 @@ internal static class Program
 
     private static string InvokeAssetEditorString(CopperfinAssetEditorControl control, string methodName, params object[] args)
     {
-        var method = typeof(CopperfinAssetEditorControl).GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic);
-        if (method is null)
-        {
-            throw new InvalidOperationException($"Could not find CopperfinAssetEditorControl smoke hook {methodName}.");
-        }
-
+        var method = ResolveNonPublicInstanceMethod(typeof(CopperfinAssetEditorControl), methodName, args);
         return (string)(method.Invoke(control, args) ?? string.Empty);
     }
 
     private static void InvokeAssetEditorVoid(CopperfinAssetEditorControl control, string methodName, params object?[] args)
     {
-        var method = typeof(CopperfinAssetEditorControl).GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic);
-        if (method is null)
-        {
-            throw new InvalidOperationException($"Could not find CopperfinAssetEditorControl smoke hook {methodName}.");
-        }
-
+        var method = ResolveNonPublicInstanceMethod(typeof(CopperfinAssetEditorControl), methodName, args);
         method.Invoke(control, args);
     }
 
     private static object? InvokeAssetEditorObject(CopperfinAssetEditorControl control, string methodName, params object?[] args)
     {
-        var method = typeof(CopperfinAssetEditorControl).GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic);
-        if (method is null)
+        var method = ResolveNonPublicInstanceMethod(typeof(CopperfinAssetEditorControl), methodName, args);
+        return method.Invoke(control, args);
+    }
+
+    private static MethodInfo ResolveNonPublicInstanceMethod(Type targetType, string methodName, object?[] args)
+    {
+        var candidates = targetType
+            .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic)
+            .Where(method => string.Equals(method.Name, methodName, StringComparison.Ordinal))
+            .Where(method => method.GetParameters().Length == args.Length)
+            .Where(method => MethodParametersMatch(method.GetParameters(), args))
+            .ToList();
+
+        if (candidates.Count == 1)
         {
-            throw new InvalidOperationException($"Could not find CopperfinAssetEditorControl smoke hook {methodName}.");
+            return candidates[0];
         }
 
-        return method.Invoke(control, args);
+        if (candidates.Count == 0)
+        {
+            throw new InvalidOperationException($"Could not find {targetType.Name} smoke hook {methodName} for the supplied argument shape.");
+        }
+
+        throw new InvalidOperationException($"Ambiguous {targetType.Name} smoke hook {methodName} for the supplied argument shape.");
+    }
+
+    private static bool MethodParametersMatch(ParameterInfo[] parameters, object?[] args)
+    {
+        for (var index = 0; index < parameters.Length; index++)
+        {
+            if (!MethodParameterMatches(parameters[index].ParameterType, args[index]))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool MethodParameterMatches(Type parameterType, object? argument)
+    {
+        if (argument is null)
+        {
+            return !parameterType.IsValueType || Nullable.GetUnderlyingType(parameterType) is not null;
+        }
+
+        return parameterType.IsInstanceOfType(argument);
     }
 
     private static string InvokeDesignSurfaceString(CopperfinDesignSurfaceControl surface, string methodName, params object[] args)

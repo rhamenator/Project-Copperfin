@@ -170,6 +170,8 @@ internal static class CopperfinProjectInsightClient
                 Kind = entry.TypeTitle,
                 Title = Path.GetFileName(string.IsNullOrWhiteSpace(entry.Name) ? resolvedPath : entry.Name),
                 FilePath = resolvedPath,
+                GroupTitle = entry.GroupTitle,
+                Excluded = entry.Excluded,
                 Detail = entry.GroupTitle + (entry.Excluded ? Localization.Text("AssetEditor.Summary.ExcludedSuffix") : string.Empty)
             });
         }
