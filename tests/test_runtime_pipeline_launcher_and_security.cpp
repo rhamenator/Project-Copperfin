@@ -65,6 +65,10 @@ void test_generated_launcher_forwards_manifest_and_debug_flag() {
             launcher_source.find("string.Equals(arg, \"/debug\", StringComparison.OrdinalIgnoreCase)") != std::string::npos,
             "generated launcher should preserve debug command-line forwarding");
         expect(
+            launcher_source.find("string.Equals(arg, \"/locale\", StringComparison.OrdinalIgnoreCase)") != std::string::npos &&
+            launcher_source.find("forwarded.Add(\"--locale\");") != std::string::npos,
+            "generated launcher should normalize /locale before forwarding arguments to the runtime host");
+        expect(
             launcher_source.find("string.Equals(args[index], \"--locale\", StringComparison.OrdinalIgnoreCase)") != std::string::npos &&
             launcher_source.find("Environment.GetEnvironmentVariable(\"COPPERFIN_LOCALE\")") != std::string::npos,
             "generated launcher should resolve locale from forwarded arguments and COPPERFIN_LOCALE");
