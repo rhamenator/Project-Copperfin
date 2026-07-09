@@ -478,8 +478,11 @@ std::optional<PrgValue> evaluate_string_function(
     }
     if (function == "stuff" && arguments.size() >= 4U) {
         std::string src = value_as_string(arguments[0]);
-        const std::size_t start = static_cast<std::size_t>(std::max(1.0, value_as_number(arguments[1]))) - 1U;
-        const std::size_t length = static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[2])));
+        const double raw_start = value_as_number(arguments[1]);
+        const std::size_t start = static_cast<std::size_t>(std::max(1.0, raw_start)) - 1U;
+        const std::size_t length = raw_start <= 0.0
+                                       ? 0U
+                                       : static_cast<std::size_t>(std::max(0.0, value_as_number(arguments[2])));
         const std::string replacement = value_as_string(arguments[3]);
         if (start <= src.size()) {
             src.replace(start, std::min(length, src.size() - start), replacement);

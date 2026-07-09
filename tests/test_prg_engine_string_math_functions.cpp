@@ -157,6 +157,10 @@ namespace
             "strextract_missing_end_default = STREXTRACT('a=one;b=two', 'b=', ';')\n"
             "strextract_missing_end_allowed = STREXTRACT('a=one;b=two', 'b=', ';', 1, 2)\n"
             "strextract_include_delims = STREXTRACT('<id>42</id>', '<id>', '</id>', 1, 4)\n"
+            "stuff_zero_start = STUFF('abcdef', 0, 2, 'XY')\n"
+            "stuff_negative_start = STUFF('abcdef', -3, 4, 'XY')\n"
+            "stuff_insert_only = STUFF('abcdef', 3, 0, 'XY')\n"
+            "stuff_clamped_length = STUFF('abcdef', 5, 99, 'XY')\n"
             "substr_basic = SUBSTR('hello', 2, 3)\n"
             "substr_no_len = SUBSTR('hello', 3)\n"
             "alltrim_basic = ALLTRIM('  hi  ')\n"
@@ -328,6 +332,10 @@ namespace
         check("strextract_missing_end_default", "");
         check("strextract_missing_end_allowed", "two");
         check("strextract_include_delims", "<id>42</id>");
+        check("stuff_zero_start", "XYabcdef");
+        check("stuff_negative_start", "XYabcdef");
+        check("stuff_insert_only", "abXYcdef");
+        check("stuff_clamped_length", "abcdXY");
         check("substr_basic", "ell");
         check("substr_no_len", "llo");
         check("alltrim_basic", "hi");
