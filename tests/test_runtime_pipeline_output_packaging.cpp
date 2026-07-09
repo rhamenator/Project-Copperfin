@@ -3331,6 +3331,10 @@ void test_app_output_package_emits_archive_manifest_for_staged_assets() {
     write_text(project_dir / "main.prg", "DO helper\nRETURN\n");
     write_text(project_dir / "helper.prg", "WAIT WINDOW 'archived'\nRETURN\n");
     write_text(project_dir / "config.txt", "mode=demo");
+    write_text(project_dir / "sample.scx", "screen-bytes");
+    write_text(project_dir / "sample.sct", "screen-sidecar-bytes");
+    write_text(project_dir / "sample.frx", "report-bytes");
+    write_text(project_dir / "sample.frt", "report-sidecar-bytes");
     write_text(runtime_host, "runtime-host");
 
     copperfin::studio::StudioDocumentModel document;
@@ -3351,7 +3355,9 @@ void test_app_output_package_emits_archive_manifest_for_staged_assets() {
     workspace.entries = {
         {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"},
         {.record_index = 2U, .name = "helper.prg", .relative_path = "helper.prg", .type_title = "Program"},
-        {.record_index = 3U, .name = "config.txt", .relative_path = "config.txt", .type_title = "Text"}
+        {.record_index = 3U, .name = "config.txt", .relative_path = "config.txt", .type_title = "Text"},
+        {.record_index = 4U, .name = "sample.scx", .relative_path = "sample.scx", .type_title = "Form"},
+        {.record_index = 5U, .name = "sample.frx", .relative_path = "sample.frx", .type_title = "Report"}
     };
 
     const auto plan = copperfin::runtime::create_runtime_package_plan(
@@ -3400,6 +3406,14 @@ void test_app_output_package_emits_archive_manifest_for_staged_assets() {
                "app-output package should still stage supporting program assets");
         expect(fs::exists(fs::path(result.plan.content_root) / "config.txt"),
                "app-output package should still stage non-program assets");
+        expect(fs::exists(fs::path(result.plan.content_root) / "sample.scx"),
+               "app-output package should still stage declared xAsset files");
+        expect(fs::exists(fs::path(result.plan.content_root) / "sample.sct"),
+               "app-output package should stage inferred form sidecars");
+        expect(fs::exists(fs::path(result.plan.content_root) / "sample.frx"),
+               "app-output package should still stage declared report assets");
+        expect(fs::exists(fs::path(result.plan.content_root) / "sample.frt"),
+               "app-output package should stage inferred report sidecars");
 
         const std::string archive_manifest = read_text(result.plan.app_archive_manifest_path);
         expect(archive_manifest.find("output_kind=app") != std::string::npos,
@@ -3416,6 +3430,18 @@ void test_app_output_package_emits_archive_manifest_for_staged_assets() {
                "app-output archive manifest should record staged supporting program assets");
         expect(archive_manifest.find("asset=config.txt|Text|false|true") != std::string::npos,
                "app-output archive manifest should record staged non-program assets");
+        expect(archive_manifest.find("asset=sample.scx|Form|false|true") != std::string::npos,
+               "app-output archive manifest should record declared xAsset files");
+        expect(archive_manifest.find("asset=sample.frx|Report|false|true") != std::string::npos,
+               "app-output archive manifest should record declared report assets");
+        expect(archive_manifest.find("content_file=sample.scx|declared_asset") != std::string::npos,
+               "app-output archive manifest should list staged declared xAsset files");
+        expect(archive_manifest.find("content_file=sample.sct|companion") != std::string::npos,
+               "app-output archive manifest should list inferred form sidecars");
+        expect(archive_manifest.find("content_file=sample.frx|declared_asset") != std::string::npos,
+               "app-output archive manifest should list staged declared report assets");
+        expect(archive_manifest.find("content_file=sample.frt|companion") != std::string::npos,
+               "app-output archive manifest should list inferred report sidecars");
 
         const std::string app_archive = read_text(result.plan.launcher_output_path);
         expect(app_archive.find("copperfin_app_archive_version=1") != std::string::npos,
@@ -3431,6 +3457,14 @@ void test_app_output_package_emits_archive_manifest_for_staged_assets() {
                "app-output primary archive should carry supporting program payloads");
         expect(archive_payloads.contains("config.txt"),
                "app-output primary archive should carry non-program payloads");
+        expect(archive_payloads.contains("sample.scx"),
+               "app-output primary archive should carry declared xAsset payloads");
+        expect(archive_payloads.contains("sample.sct"),
+               "app-output primary archive should carry inferred form sidecar payloads");
+        expect(archive_payloads.contains("sample.frx"),
+               "app-output primary archive should carry declared report payloads");
+        expect(archive_payloads.contains("sample.frt"),
+               "app-output primary archive should carry inferred report sidecar payloads");
         if (archive_payloads.contains("main.prg")) {
             expect(archive_payloads.at("main.prg") == "DO helper\nRETURN\n",
                    "app-output primary archive should preserve startup program bytes");
@@ -3442,6 +3476,22 @@ void test_app_output_package_emits_archive_manifest_for_staged_assets() {
         if (archive_payloads.contains("config.txt")) {
             expect(archive_payloads.at("config.txt") == "mode=demo",
                    "app-output primary archive should preserve non-program asset bytes");
+        }
+        if (archive_payloads.contains("sample.scx")) {
+            expect(archive_payloads.at("sample.scx") == "screen-bytes",
+                   "app-output primary archive should preserve declared xAsset bytes");
+        }
+        if (archive_payloads.contains("sample.sct")) {
+            expect(archive_payloads.at("sample.sct") == "screen-sidecar-bytes",
+                   "app-output primary archive should preserve inferred form sidecar bytes");
+        }
+        if (archive_payloads.contains("sample.frx")) {
+            expect(archive_payloads.at("sample.frx") == "report-bytes",
+                   "app-output primary archive should preserve declared report bytes");
+        }
+        if (archive_payloads.contains("sample.frt")) {
+            expect(archive_payloads.at("sample.frt") == "report-sidecar-bytes",
+                   "app-output primary archive should preserve inferred report sidecar bytes");
         }
 
         const std::string runtime_manifest = read_text(result.plan.manifest_path);

@@ -8,6 +8,68 @@ namespace copperfin::runtime {
 
 namespace runtime_pipeline_detail {
 
+namespace {
+
+struct StagedContentFile {
+    std::string relative_path;
+    std::string absolute_path;
+    bool declared_asset = false;
+};
+
+std::string staged_content_relative_path(
+    const std::filesystem::path& content_root,
+    const std::filesystem::path& content_path) {
+    return content_path.lexically_relative(content_root).generic_string();
+}
+
+std::map<std::string, StagedContentFile> collect_staged_content_files(const RuntimePackagePlan& plan) {
+    std::map<std::string, StagedContentFile> files;
+    const std::filesystem::path content_root = plan.content_root;
+
+    for (const auto& asset : plan.assets) {
+        if (!asset.copied || trim_copy(asset.staged_path).empty()) {
+            continue;
+        }
+
+        files[asset.relative_path] = {
+            .relative_path = asset.relative_path,
+            .absolute_path = asset.staged_path,
+            .declared_asset = true
+        };
+    }
+
+    std::error_code error;
+    if (content_root.empty() || !std::filesystem::exists(content_root, error)) {
+        return files;
+    }
+
+    for (std::filesystem::recursive_directory_iterator it(content_root, error), end;
+         it != end && !error;
+         it.increment(error)) {
+        if (error || !it->is_regular_file(error)) {
+            continue;
+        }
+
+        const std::string relative_path = staged_content_relative_path(content_root, it->path());
+        if (relative_path.empty()) {
+            continue;
+        }
+
+        auto [found, inserted] = files.emplace(relative_path, StagedContentFile{
+            .relative_path = relative_path,
+            .absolute_path = it->path().string(),
+            .declared_asset = false
+        });
+        if (!inserted) {
+            found->second.absolute_path = it->path().string();
+        }
+    }
+
+    return files;
+}
+
+}  // namespace
+
 void append_fxp_statement_lines(
     std::ostringstream& stream,
     const std::string& scope_name,
@@ -70,6 +132,11 @@ std::string build_app_archive_manifest_source(const RuntimePackagePlan& plan) {
                << (asset.required_for_runtime ? "true" : "false") << "|"
                << (asset.copied ? "true" : "false") << "\n";
     }
+    for (const auto& [relative_path, file] : collect_staged_content_files(plan)) {
+        stream << "content_file="
+               << quote_manifest_value(relative_path) << "|"
+               << (file.declared_asset ? "declared_asset" : "companion") << "\n";
+    }
     return stream.str();
 }
 
@@ -81,25 +148,27 @@ bool write_app_archive_primary_output(const RuntimePackagePlan& plan, std::strin
     stream << "startup_item=" << quote_manifest_value(plan.startup_item) << "\n";
     stream << "content_manifest=" << quote_manifest_value(plan.app_archive_manifest_path) << "\n";
 
-    for (const auto& asset : plan.assets) {
-        if (!asset.copied || trim_copy(asset.staged_path).empty() || !std::filesystem::exists(asset.staged_path)) {
-            continue;
-        }
-
+    for (const auto& [relative_path, file] : collect_staged_content_files(plan)) {
         error.clear();
-        const std::string bytes = read_binary_file(asset.staged_path, error);
+        const std::string bytes = read_binary_file(file.absolute_path, error);
         if (!error.empty()) {
             return false;
         }
 
-        stream << "asset="
-               << quote_manifest_value(asset.relative_path) << "|"
-               << quote_manifest_value(asset.type_title) << "|"
-               << (asset.required_for_runtime ? "true" : "false") << "|"
+        const auto digest = security::sha256_hex_for_file(file.absolute_path);
+        if (!digest.ok) {
+            error = digest.error;
+            return false;
+        }
+
+        stream << "content="
+               << quote_manifest_value(relative_path) << "|"
+               << quote_manifest_value(file.declared_asset ? "DeclaredAsset" : "Companion") << "|"
+               << (file.declared_asset ? "true" : "false") << "|"
                << bytes.size() << "|"
-               << quote_manifest_value(asset.sha256) << "\n";
+               << quote_manifest_value(digest.hex_digest) << "\n";
         stream << "payload="
-               << quote_manifest_value(asset.relative_path) << "|"
+               << quote_manifest_value(relative_path) << "|"
                << hex_encode_bytes(bytes) << "\n";
     }
 
