@@ -744,7 +744,9 @@ namespace copperfin::runtime
             const std::string &identifier,
             const std::vector<PrgValue> &arguments,
             const std::vector<std::optional<std::string>> &argument_references);
-        bool requery_native_list_control(RuntimeOleObjectState &runtime_object);
+        bool requery_native_list_control(
+            RuntimeOleObjectState &runtime_object,
+            const Frame &frame);
         PrgValue bind_native_event(
             const Frame &source_frame,
             const std::vector<PrgValue> &arguments,
@@ -2401,7 +2403,7 @@ namespace copperfin::runtime
                               .location = current_statement() == nullptr ? SourceLocation{} : current_statement()->location});
             return make_boolean_value(true);
         }
-        if (leaf == "requery" && requery_native_list_control(*target_object))
+        if (leaf == "requery" && requery_native_list_control(*target_object, frame))
         {
             target_object->last_action = effective_member_path + "()";
             ++target_object->action_count;
@@ -2824,7 +2826,9 @@ namespace copperfin::runtime
         return run_expression_invoked_routine_until_return(return_depth);
     }
 
-    bool PrgRuntimeSession::Impl::requery_native_list_control(RuntimeOleObjectState &runtime_object)
+    bool PrgRuntimeSession::Impl::requery_native_list_control(
+        RuntimeOleObjectState &runtime_object,
+        const Frame &frame)
     {
         const std::string normalized_base_class =
             normalize_identifier(trim_copy(runtime_object.base_class_name));
@@ -2845,10 +2849,7 @@ namespace copperfin::runtime
                 ? std::string{}
                 : value_as_string(row_source_found->second);
 
-        std::vector<std::vector<PrgValue>> refreshed_rows;
-        switch (row_source_type)
-        {
-        case 1:
+        const auto resolved_column_count = [&]() -> std::size_t
         {
             std::size_t column_count = 1U;
             if (const auto column_count_found = runtime_object.properties.find("columncount");
@@ -2860,6 +2861,67 @@ namespace copperfin::runtime
                         1.0,
                         value_as_number(column_count_found->second))));
             }
+            return column_count;
+        };
+
+        const auto build_rows_from_cursor_fields =
+            [&](CursorState &cursor,
+                const std::vector<std::string> &field_names,
+                std::vector<std::vector<PrgValue>> &rows)
+        {
+            if (field_names.empty())
+            {
+                rows.clear();
+                return;
+            }
+
+            const CursorPositionSnapshot original = capture_cursor_snapshot(cursor);
+            rows.clear();
+            rows.reserve(cursor.record_count);
+
+            for (std::size_t recno = 1U; recno <= cursor.record_count; ++recno)
+            {
+                move_cursor_to(cursor, static_cast<long long>(recno));
+                if (!current_record_matches_visibility(cursor, frame, {}))
+                {
+                    continue;
+                }
+
+                const auto record = current_record(cursor);
+                if (!record.has_value())
+                {
+                    continue;
+                }
+
+                std::vector<PrgValue> row_values;
+                row_values.reserve(field_names.size());
+                for (const std::string &field_name : field_names)
+                {
+                    const auto raw_field = std::find_if(
+                        record->values.begin(),
+                        record->values.end(),
+                        [&](const vfp::DbfRecordValue &value)
+                        {
+                            return collapse_identifier(value.field_name) ==
+                                   collapse_identifier(field_name);
+                        });
+                    row_values.push_back(
+                        raw_field == record->values.end()
+                            ? make_string_value("")
+                            : record_value_to_prg_value(*raw_field));
+                }
+                rows.push_back(std::move(row_values));
+            }
+
+            restore_cursor_snapshot(cursor, original);
+        };
+
+        std::vector<std::vector<PrgValue>> refreshed_rows;
+        switch (row_source_type)
+        {
+        case 1:
+        {
+            const std::size_t column_count = resolved_column_count();
 
             const std::vector<std::string> values = split_csv_like(row_source);
             refreshed_rows.reserve((values.size() + column_count - 1U) / column_count);
@@ -2877,6 +2939,31 @@ namespace copperfin::runtime
                 }
                 refreshed_rows.push_back(std::move(row));
             }
+            break;
+        }
+        case 2:
+        {
+            CursorState *cursor = resolve_cursor_target(row_source);
+            if (cursor == nullptr)
+            {
+                break;
+            }
+
+            const std::vector<vfp::DbfFieldDescriptor> fields = cursor_field_descriptors(*cursor);
+            if (fields.empty())
+            {
+                break;
+            }
+
+            const std::size_t column_count =
+                std::min<std::size_t>(resolved_column_count(), fields.size());
+            std::vector<std::string> projected_fields;
+            projected_fields.reserve(column_count);
+            for (std::size_t index = 0U; index < column_count; ++index)
+            {
+                projected_fields.push_back(fields[index].name);
+            }
+            build_rows_from_cursor_fields(*cursor, projected_fields, refreshed_rows);
             break;
         }
         case 5:
@@ -2898,6 +2985,75 @@ namespace copperfin::runtime
                 }
                 refreshed_rows.push_back(std::move(row_values));
             }
+            break;
+        }
+        case 6:
+        {
+            std::vector<std::string> requested_fields;
+            requested_fields.reserve(4U);
+            CursorState *cursor = nullptr;
+            std::string carried_designator;
+            bool invalid_fields_source = false;
+            for (std::string field_spec : split_csv_like(row_source))
+            {
+                field_spec = trim_copy(field_spec);
+                if (field_spec.empty())
+                {
+                    invalid_fields_source = true;
+                    break;
+                }
+
+                std::string designator;
+                std::string field_name = field_spec;
+                if (const std::size_t separator = field_spec.find('.');
+                    separator != std::string::npos)
+                {
+                    designator = trim_copy(field_spec.substr(0U, separator));
+                    field_name = trim_copy(field_spec.substr(separator + 1U));
+                }
+
+                if (field_name.empty())
+                {
+                    invalid_fields_source = true;
+                    break;
+                }
+
+                if (designator.empty() && !carried_designator.empty())
+                {
+                    designator = carried_designator;
+                }
+
+                CursorState *field_cursor = designator.empty()
+                    ? resolve_cursor_target({})
+                    : resolve_cursor_target(designator);
+                if (field_cursor == nullptr)
+                {
+                    invalid_fields_source = true;
+                    break;
+                }
+                if (cursor == nullptr)
+                {
+                    cursor = field_cursor;
+                }
+                else if (cursor != field_cursor)
+                {
+                    invalid_fields_source = true;
+                    break;
+                }
+
+                if (!designator.empty())
+                {
+                    carried_designator = designator;
+                }
+                requested_fields.push_back(field_name);
+            }
+
+            if (invalid_fields_source || cursor == nullptr || requested_fields.empty())
+            {
+                break;
+            }
+
+            build_rows_from_cursor_fields(*cursor, requested_fields, refreshed_rows);
             break;
         }
         default:

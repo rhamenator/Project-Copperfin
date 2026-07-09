@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/runtime/prg_engine.h"
+#include "copperfin/vfp/dbf_table.h"
 #include "prg_engine_test_support.h"
 
 #include <algorithm>
@@ -184,11 +185,232 @@ void test_array_requery_refreshes_rows_and_growth() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_alias_requery_refreshes_open_cursor_rows_and_preserves_cursor_position() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_requery_alias";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 20U},
+        {.name = "CITY", .type = 'C', .length = 20U}};
+    const std::vector<std::vector<std::string>> records{
+        {"Ada", "London"},
+        {"Babbage", "Paris"}};
+    const auto create_result =
+        copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "alias Requery() fixture should create a DBF table");
+    if (!create_result.ok) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const fs::path main_path = temp_root / "requery_alias.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS customers IN 0\n"
+        "oList = CREATEOBJECT('ListBox')\n"
+        "oList.ColumnCount = 2\n"
+        "oList.RowSourceType = 2\n"
+        "oList.RowSource = 'customers'\n"
+        "nBefore = oList.ListCount\n"
+        "oList.Requery()\n"
+        "nAfterFirst = oList.ListCount\n"
+        "cFirst11 = oList.List(1, 1)\n"
+        "cFirst12 = oList.List(1, 2)\n"
+        "cFirst21 = oList.List(2, 1)\n"
+        "cFirst22 = oList.List(2, 2)\n"
+        "oList.ListIndex = 2\n"
+        "cDisplayBeforeSecond = oList.DisplayValue\n"
+        "GO 1 IN customers\n"
+        "REPLACE CITY WITH 'Oxford' IN customers\n"
+        "APPEND BLANK IN customers\n"
+        "REPLACE NAME WITH 'Grace' IN customers\n"
+        "REPLACE CITY WITH 'Arlington' IN customers\n"
+        "nRecnoBeforeSecond = RECNO('customers')\n"
+        "oList.Requery()\n"
+        "nAfterSecond = oList.ListCount\n"
+        "nListIndexAfterSecond = oList.ListIndex\n"
+        "cDisplayAfterSecond = oList.DisplayValue\n"
+        "cSecond12 = oList.List(1, 2)\n"
+        "cSecond31 = oList.List(3, 1)\n"
+        "cSecond32 = oList.List(3, 2)\n"
+        "nRecnoAfterSecond = RECNO('customers')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           std::string("alias-backed Requery() script should complete: ") + state.message +
+               " @line=" + std::to_string(state.location.line));
+
+    const auto check = [&](const std::string &name, const std::string &expected) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), name + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(found->second) + "'");
+        }
+    };
+
+    check("nbefore", "0");
+    check("nafterfirst", "2");
+    check("cfirst11", "Ada");
+    check("cfirst12", "London");
+    check("cfirst21", "Babbage");
+    check("cfirst22", "Paris");
+    check("cdisplaybeforesecond", "Babbage");
+    check("nrecnobeforesecond", "3");
+    check("naftersecond", "3");
+    check("nlistindexaftersecond", "2");
+    check("cdisplayaftersecond", "Babbage");
+    check("csecond12", "Oxford");
+    check("csecond31", "Grace");
+    check("csecond32", "Arlington");
+    check("nrecnoaftersecond", "3");
+
+    const bool has_alias_requery_event = std::any_of(
+        state.events.begin(),
+        state.events.end(),
+        [](const copperfin::runtime::RuntimeEvent &event) {
+            return event.category == "prg.object.requery";
+        });
+    expect(has_alias_requery_event,
+           "alias-backed Requery() should emit a native requery event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_fields_requery_refreshes_alias_qualified_field_list() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_requery_fields";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "products.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "PRODUCT", .type = 'C', .length = 24U},
+        {.name = "SKU", .type = 'C', .length = 12U}};
+    const std::vector<std::vector<std::string>> records{
+        {"Desk Lamp", "A100"},
+        {"Keyboard", "B200"}};
+    const auto create_result =
+        copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "fields Requery() fixture should create a DBF table");
+    if (!create_result.ok) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const fs::path other_path = temp_root / "shadow.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> other_fields{
+        {.name = "FLAG", .type = 'C', .length = 8U}};
+    const std::vector<std::vector<std::string>> other_records{{"shadow"}};
+    const auto other_create_result =
+        copperfin::vfp::create_dbf_table_file(other_path.string(), other_fields, other_records);
+    expect(other_create_result.ok, "fields Requery() fixture should create a shadow DBF table");
+    if (!other_create_result.ok) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const fs::path main_path = temp_root / "requery_fields.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS inventory IN 0\n"
+        "USE '" + other_path.string() + "' ALIAS shadow IN 0\n"
+        "oCombo = CREATEOBJECT('ComboBox')\n"
+        "oCombo.ColumnCount = 2\n"
+        "oCombo.RowSourceType = 6\n"
+        "oCombo.RowSource = 'inventory.sku, product'\n"
+        "nBefore = oCombo.ListCount\n"
+        "SELECT shadow\n"
+        "oCombo.Requery()\n"
+        "nAfterFirst = oCombo.ListCount\n"
+        "cFirst11 = oCombo.List(1, 1)\n"
+        "cFirst12 = oCombo.List(1, 2)\n"
+        "cFirst21 = oCombo.List(2, 1)\n"
+        "cFirst22 = oCombo.List(2, 2)\n"
+        "oCombo.ListIndex = 1\n"
+        "cDisplayBeforeSecond = oCombo.DisplayValue\n"
+        "GO 2 IN inventory\n"
+        "REPLACE PRODUCT WITH 'Keyboard Pro' IN inventory\n"
+        "APPEND BLANK IN inventory\n"
+        "REPLACE PRODUCT WITH 'Monitor Arm' IN inventory\n"
+        "REPLACE SKU WITH 'C300' IN inventory\n"
+        "nRecnoBeforeSecond = RECNO('inventory')\n"
+        "SELECT shadow\n"
+        "oCombo.Requery()\n"
+        "nAfterSecond = oCombo.ListCount\n"
+        "nListIndexAfterSecond = oCombo.ListIndex\n"
+        "cDisplayAfterSecond = oCombo.DisplayValue\n"
+        "cSecond22 = oCombo.List(2, 2)\n"
+        "cSecond31 = oCombo.List(3, 1)\n"
+        "cSecond32 = oCombo.List(3, 2)\n"
+        "nRecnoAfterSecond = RECNO('inventory')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           std::string("fields-backed Requery() script should complete: ") + state.message +
+               " @line=" + std::to_string(state.location.line));
+
+    const auto check = [&](const std::string &name, const std::string &expected) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), name + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(found->second) + "'");
+        }
+    };
+
+    check("nbefore", "0");
+    check("nafterfirst", "2");
+    check("cfirst11", "A100");
+    check("cfirst12", "Desk Lamp");
+    check("cfirst21", "B200");
+    check("cfirst22", "Keyboard");
+    check("cdisplaybeforesecond", "A100");
+    check("nrecnobeforesecond", "3");
+    check("naftersecond", "3");
+    check("nlistindexaftersecond", "1");
+    check("cdisplayaftersecond", "A100");
+    check("csecond22", "Keyboard Pro");
+    check("csecond31", "C300");
+    check("csecond32", "Monitor Arm");
+    check("nrecnoaftersecond", "3");
+
+    const bool has_fields_requery_event = std::any_of(
+        state.events.begin(),
+        state.events.end(),
+        [](const copperfin::runtime::RuntimeEvent &event) {
+            return event.category == "prg.object.requery";
+        });
+    expect(has_fields_requery_event,
+           "fields-backed Requery() should emit a native requery event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
     test_value_list_requery_refreshes_rows_and_preserves_selection();
     test_array_requery_refreshes_rows_and_growth();
+    test_alias_requery_refreshes_open_cursor_rows_and_preserves_cursor_position();
+    test_fields_requery_refreshes_alias_qualified_field_list();
     if (const int failures = test_failures(); failures != 0) {
         std::cerr << failures << " test(s) failed\n";
         return 1;
