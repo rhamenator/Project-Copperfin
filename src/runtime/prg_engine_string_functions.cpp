@@ -318,8 +318,54 @@ std::string apply_numeric_picture_symbols(
     return currency_picture ? currency + formatted : formatted;
 }
 
+bool picture_has_numeric_placeholders(const std::string& picture) {
+    return picture.find_first_of("9#0") != std::string::npos;
+}
+
 bool picture_has_flag(const std::string& picture, const std::string& flag) {
     return picture.find(flag) != std::string::npos;
+}
+
+std::string picture_payload_after_flag(
+    const std::string& picture,
+    const std::string& uppercase_picture,
+    const std::string& flag) {
+    const std::size_t flag_pos = uppercase_picture.find(flag);
+    if (flag_pos == std::string::npos) {
+        return picture;
+    }
+
+    std::size_t payload_pos = flag_pos + flag.size();
+    if (payload_pos < picture.size() && picture[payload_pos] == ' ') {
+        ++payload_pos;
+    }
+    return picture.substr(payload_pos);
+}
+
+std::string apply_literal_picture_template(const std::string& source, const std::string& picture) {
+    std::string transformed;
+    transformed.reserve(picture.size());
+
+    std::size_t source_index = 0U;
+    for (const char picture_ch : picture) {
+        if (picture_ch == '9' || picture_ch == '#' || picture_ch == '0') {
+            while (source_index < source.size() &&
+                   std::isdigit(static_cast<unsigned char>(source[source_index])) == 0) {
+                ++source_index;
+            }
+            if (source_index < source.size()) {
+                transformed.push_back(source[source_index]);
+                ++source_index;
+            } else {
+                transformed.push_back(' ');
+            }
+            continue;
+        }
+
+        transformed.push_back(picture_ch);
+    }
+
+    return transformed;
 }
 
 bool is_zeroish_transform_value(const PrgValue& value) {
@@ -769,7 +815,8 @@ std::optional<PrgValue> evaluate_string_function(
         return make_string_value(std::move(result));
     }
     if (function == "transform" && !arguments.empty()) {
-        const std::string picture = arguments.size() >= 2U ? uppercase_copy(value_as_string(arguments[1])) : std::string{};
+        const std::string raw_picture = arguments.size() >= 2U ? value_as_string(arguments[1]) : std::string{};
+        const std::string picture = uppercase_copy(raw_picture);
         if (picture_has_flag(picture, "@Z") && is_zeroish_transform_value(arguments[0])) {
             return make_string_value("");
         }
@@ -783,13 +830,20 @@ std::optional<PrgValue> evaluate_string_function(
                 std::transform(transformed.begin(), transformed.end(), transformed.begin(), [](unsigned char ch) {
                     return static_cast<char>(std::tolower(ch));
                 });
+            } else if (picture_has_flag(picture, "@R")) {
+                transformed = apply_literal_picture_template(
+                    value_as_string(arguments[0]),
+                    picture_payload_after_flag(raw_picture, picture, "@R"));
             } else {
                 const std::size_t decimal_pos = picture.find('.');
-                if (decimal_pos != std::string::npos) {
+                if (decimal_pos != std::string::npos ||
+                    (picture.find(',') != std::string::npos && picture_has_numeric_placeholders(picture))) {
                     std::size_t decimals = 0U;
-                    for (std::size_t index = decimal_pos + 1U; index < picture.size(); ++index) {
-                        if (picture[index] == '9' || picture[index] == '#' || picture[index] == '0') {
-                            ++decimals;
+                    if (decimal_pos != std::string::npos) {
+                        for (std::size_t index = decimal_pos + 1U; index < picture.size(); ++index) {
+                            if (picture[index] == '9' || picture[index] == '#' || picture[index] == '0') {
+                                ++decimals;
+                            }
                         }
                     }
                     std::ostringstream stream;

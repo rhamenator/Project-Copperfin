@@ -185,6 +185,9 @@ namespace
             "transform_group_euro = TRANSFORM(1234.5, '999,999.99')\n"
             "transform_currency_custom = TRANSFORM(1234.5, '$999,999.99')\n"
             "transform_decimal_euro = TRANSFORM(3.14159, '9.9')\n"
+            "transform_literal_phone = TRANSFORM(5551234567, '@R (999) 999-9999')\n"
+            "transform_literal_id = TRANSFORM('12-34-5678', '@R 99/99/9999')\n"
+            "transform_group_integer = TRANSFORM(1234567, '999,999')\n"
             "transform_upper = TRANSFORM('hello', '@!')\n"
             "RETURN\n");
 
@@ -346,6 +349,9 @@ namespace
         check("transform_group_euro", "1.234,50");
         check("transform_currency_custom", "USD 1.234,50");
         check("transform_decimal_euro", "3,1");
+        check("transform_literal_phone", "(555) 123-4567");
+        check("transform_literal_id", "12/34/5678");
+        check("transform_group_integer", "1.234.567");
         check("transform_upper", "HELLO");
 
         for (const char *name : {"rand_seeded", "rand_next"})
