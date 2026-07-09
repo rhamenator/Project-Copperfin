@@ -1471,6 +1471,7 @@
   "Vfp.DbfTable.Error.LogicalValueInvalid": "Los campos Logical solo aceptan valores true/false.",
   "Vfp.DbfTable.Error.MemoSidecarPathMissing": "No se pudo inferir una ruta de archivo complementario de memo para la tabla.",
   "Vfp.DbfTable.Error.MemoFieldWidthTooSmall": "Los campos Memo requieren un ancho de al menos 4 bytes.",
+  "Vfp.DbfTable.Error.ReadMemoPayloadFailed": "No se pudo recuperar la carga util de memo del archivo complementario.",
   "Vfp.DbfTable.Error.NumericValueTooLarge": "El valor numerico es demasiado grande para el campo destino.",
   "Vfp.DbfTable.Error.OpaqueValueInvalid": "Los campos opacos/binarios requieren texto sin procesar que quepa en el ancho del campo o una carga hexadecimal con prefijo 0x.",
   "Vfp.DbfTable.Error.OpenTableFailed": "No se pudo abrir el archivo de tabla.",

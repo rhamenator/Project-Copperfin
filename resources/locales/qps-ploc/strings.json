@@ -1471,6 +1471,7 @@
   "Vfp.DbfTable.Error.LogicalValueInvalid": "Logical fields only accept true/false values.",
   "Vfp.DbfTable.Error.MemoSidecarPathMissing": "No memo sidecar path could be inferred for the table.",
   "Vfp.DbfTable.Error.MemoFieldWidthTooSmall": "Memo fields require a width of at least 4 bytes.",
+  "Vfp.DbfTable.Error.ReadMemoPayloadFailed": "Ûñåbľë ţø ŕëçøṽëŕ mëmø þåÿľøåď ƒŕøm ţhë šïďëçåŕ.",
   "Vfp.DbfTable.Error.NumericValueTooLarge": "Numeric value is too large for the target field.",
   "Vfp.DbfTable.Error.OpaqueValueInvalid": "Opaque/binary fields require either raw text that fits the field width or a 0x-prefixed hex payload.",
   "Vfp.DbfTable.Error.OpenTableFailed": "Unable to open table file.",

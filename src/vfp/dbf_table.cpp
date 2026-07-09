@@ -535,14 +535,14 @@ DbfWriteResult write_memo_field_bytes(
     std::vector<std::uint8_t>& table_bytes,
     std::size_t field_offset,
     std::vector<std::uint8_t>& memo_bytes,
-    const std::string& value,
-    std::size_t record_count) {
+    const std::vector<std::uint8_t>& value,
+    std::size_t record_count,
+    bool preserve_empty_payload_block) {
     if ((field_offset + 4U) > table_bytes.size()) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordDataTruncated"), .record_count = record_count};
     }
 
-    const std::string memo_value = value;
-    if (memo_value.empty()) {
+    if (value.empty() && !preserve_empty_payload_block) {
         write_le_u32(table_bytes, field_offset, 0U);
         return {.ok = true, .error = {}, .record_count = record_count};
     }
@@ -566,7 +566,7 @@ DbfWriteResult write_memo_field_bytes(
         write_be_u32(memo_bytes, 0U, next_free_block);
     }
 
-    const auto required_bytes = static_cast<std::size_t>(8U + memo_value.size());
+    const auto required_bytes = static_cast<std::size_t>(8U + value.size());
     const auto required_blocks = static_cast<std::uint32_t>((required_bytes + block_size - 1U) / block_size);
     const std::size_t block_offset = static_cast<std::size_t>(next_free_block) * block_size;
     const std::size_t new_total_size = block_offset + (static_cast<std::size_t>(required_blocks) * block_size);
@@ -578,19 +578,34 @@ DbfWriteResult write_memo_field_bytes(
         memo_bytes[block_offset + index] = 0U;
     }
     memo_bytes[block_offset + 3U] = 1U;
-    write_be_u32(memo_bytes, block_offset + 4U, static_cast<std::uint32_t>(memo_value.size()));
+    write_be_u32(memo_bytes, block_offset + 4U, static_cast<std::uint32_t>(value.size()));
     std::fill(
         memo_bytes.begin() + static_cast<std::ptrdiff_t>(block_offset + 8U),
         memo_bytes.begin() + static_cast<std::ptrdiff_t>(new_total_size),
         static_cast<std::uint8_t>(0U));
     std::copy(
-        memo_value.begin(),
-        memo_value.end(),
+        value.begin(),
+        value.end(),
         memo_bytes.begin() + static_cast<std::ptrdiff_t>(block_offset + 8U));
 
     write_be_u32(memo_bytes, 0U, next_free_block + required_blocks);
     write_le_u32(table_bytes, field_offset, next_free_block);
     return {.ok = true, .error = {}, .record_count = record_count};
+}
+
+DbfWriteResult write_memo_field_bytes(
+    std::vector<std::uint8_t>& table_bytes,
+    std::size_t field_offset,
+    std::vector<std::uint8_t>& memo_bytes,
+    const std::string& value,
+    std::size_t record_count) {
+    return write_memo_field_bytes(
+        table_bytes,
+        field_offset,
+        memo_bytes,
+        std::vector<std::uint8_t>(value.begin(), value.end()),
+        record_count,
+        false);
 }
 
 DbfWriteResult write_field_bytes(
@@ -918,27 +933,39 @@ public:
         return available_;
     }
 
-    [[nodiscard]] std::string read_block(std::uint32_t block_number) const {
+    [[nodiscard]] std::optional<std::vector<std::uint8_t>> read_block_raw(std::uint32_t block_number) const {
         if (!available_ || block_number == 0U) {
-            return {};
+            return std::nullopt;
         }
 
         const std::uint64_t offset = static_cast<std::uint64_t>(block_number) * block_size_;
         if ((offset + 8U) > bytes_.size()) {
-            return {};
+            return std::nullopt;
         }
 
         const std::uint32_t length = read_be_u32(bytes_, static_cast<std::size_t>(offset + 4U));
         const std::uint64_t payload_offset = offset + 8U;
         const std::uint64_t payload_end = payload_offset + length;
         if (payload_end > bytes_.size()) {
-            return {};
+            return std::nullopt;
+        }
+
+        return std::vector<std::uint8_t>{
+            bytes_.begin() + static_cast<std::ptrdiff_t>(payload_offset),
+            bytes_.begin() + static_cast<std::ptrdiff_t>(payload_end)
+        };
+    }
+
+    [[nodiscard]] std::optional<std::string> read_block(std::uint32_t block_number) const {
+        const auto payload = read_block_raw(block_number);
+        if (!payload.has_value()) {
+            return std::nullopt;
         }
 
         std::string text;
-        text.reserve(length);
-        for (std::uint64_t index = payload_offset; index < payload_end; ++index) {
-            const auto raw = static_cast<unsigned char>(bytes_[static_cast<std::size_t>(index)]);
+        text.reserve(payload->size());
+        for (const auto byte : *payload) {
+            const auto raw = static_cast<unsigned char>(byte);
             if (raw == 0U) {
                 text.push_back(' ');
             } else if (std::isprint(raw) != 0 || std::isspace(raw) != 0) {
@@ -1063,9 +1090,9 @@ std::string decode_value(
             if (block_number == 0U) {
                 return {};
             }
-            const std::string memo_text = memo_reader.read_block(block_number);
-            if (!memo_text.empty()) {
-                return memo_text;
+            const auto memo_text = memo_reader.read_block(block_number);
+            if (memo_text.has_value()) {
+                return *memo_text;
             }
             std::ostringstream stream;
             stream << "<memo block " << block_number << ">";
@@ -1210,10 +1237,11 @@ DbfTableParseResult parse_dbf_table_from_file(const std::string& path, std::size
     return {.ok = true, .table = std::move(table), .error = {}};
 }
 
-DbfWriteResult create_dbf_table_file(
+static DbfWriteResult create_dbf_table_file_with_memo_payloads(
     const std::string& path,
     const std::vector<DbfFieldDescriptor>& fields,
-    const std::vector<std::vector<std::string>>& records) {
+    const std::vector<std::vector<std::string>>& records,
+    const std::vector<std::vector<std::optional<std::vector<std::uint8_t>>>>* memo_payloads) {
     if (fields.empty()) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.CreateFieldRequired")};
     }
@@ -1315,18 +1343,34 @@ DbfWriteResult create_dbf_table_file(
         if (records[record_index].size() != raw_fields.size()) {
             return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordFieldCountMismatch"), .record_count = records.size()};
         }
+        if (memo_payloads != nullptr &&
+            (record_index >= memo_payloads->size() || (*memo_payloads)[record_index].size() != raw_fields.size())) {
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordFieldCountMismatch"), .record_count = records.size()};
+        }
 
         const std::size_t record_offset = header.header_length + (record_index * header.record_length);
         bytes[record_offset] = 0x20U;
         for (std::size_t field_index = 0; field_index < raw_fields.size(); ++field_index) {
             DbfWriteResult write_result;
             if (is_memo_pointer_field(raw_fields[field_index].type)) {
-                write_result = write_memo_field_bytes(
-                    bytes,
-                    record_offset + raw_fields[field_index].offset,
-                    memo_bytes,
-                    records[record_index][field_index],
-                    records.size());
+                const bool has_raw_payload_override =
+                    memo_payloads != nullptr && (*memo_payloads)[record_index][field_index].has_value();
+                if (has_raw_payload_override) {
+                    write_result = write_memo_field_bytes(
+                        bytes,
+                        record_offset + raw_fields[field_index].offset,
+                        memo_bytes,
+                        *(*memo_payloads)[record_index][field_index],
+                        records.size(),
+                        true);
+                } else {
+                    write_result = write_memo_field_bytes(
+                        bytes,
+                        record_offset + raw_fields[field_index].offset,
+                        memo_bytes,
+                        records[record_index][field_index],
+                        records.size());
+                }
             } else {
                 write_result = write_field_bytes(
                     bytes,
@@ -1370,6 +1414,13 @@ DbfWriteResult create_dbf_table_file(
     }
 
     return {.ok = true, .error = {}, .record_count = records.size()};
+}
+
+DbfWriteResult create_dbf_table_file(
+    const std::string& path,
+    const std::vector<DbfFieldDescriptor>& fields,
+    const std::vector<std::vector<std::string>>& records) {
+    return create_dbf_table_file_with_memo_payloads(path, fields, records, nullptr);
 }
 
 DbfWriteResult add_dbf_table_field(const std::string& path, const DbfFieldDescriptor& field) {
@@ -1796,21 +1847,38 @@ DbfWriteResult pack_dbf_memo_file(const std::string& path) {
         return {.ok = true, .error = {}, .record_count = table_result.table.records.size()};
     }
 
+    const std::string memo_path = infer_memo_sidecar_path(path);
+    const MemoReader memo_reader(memo_path);
     std::vector<std::vector<std::string>> records;
     records.reserve(table_result.table.records.size());
+    std::vector<std::vector<std::optional<std::vector<std::uint8_t>>>> memo_payloads;
+    memo_payloads.reserve(table_result.table.records.size());
     std::vector<bool> deleted_flags;
     deleted_flags.reserve(table_result.table.records.size());
     for (const auto& record : table_result.table.records) {
         std::vector<std::string> output_record;
         output_record.reserve(record.values.size());
+        std::vector<std::optional<std::vector<std::uint8_t>>> output_payloads;
+        output_payloads.reserve(record.values.size());
         for (const auto& value : record.values) {
             output_record.push_back(value.display_value);
+            if (is_memo_pointer_field(value.field_type) && value.memo_block_number != 0U) {
+                const auto payload = memo_reader.read_block_raw(value.memo_block_number);
+                if (!payload.has_value()) {
+                    return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.ReadMemoPayloadFailed"), .record_count = table_result.table.records.size()};
+                }
+                output_payloads.push_back(*payload);
+            } else {
+                output_payloads.push_back(std::nullopt);
+            }
         }
         deleted_flags.push_back(record.deleted);
         records.push_back(std::move(output_record));
+        memo_payloads.push_back(std::move(output_payloads));
     }
 
-    const DbfWriteResult create_result = create_dbf_table_file(path, table_result.table.fields, records);
+    const DbfWriteResult create_result =
+        create_dbf_table_file_with_memo_payloads(path, table_result.table.fields, records, &memo_payloads);
     if (!create_result.ok) {
         return create_result;
     }
