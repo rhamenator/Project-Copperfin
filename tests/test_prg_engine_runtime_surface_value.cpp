@@ -300,9 +300,9 @@ void test_native_list_control_controlsource_drives_boundto_value_semantics() {
     const fs::path main_path = temp_root / "native_list_control_controlsource.prg";
     write_text(
         main_path,
-        "CREATE CURSOR lookupstate (nchoice N(2,0), cchoice C(8))\n"
+        "CREATE CURSOR lookupstate (nchoice N(2,0), nchoice2 N(2,0), cchoice C(8))\n"
         "APPEND BLANK\n"
-        "REPLACE nchoice WITH 0, cchoice WITH ''\n"
+        "REPLACE nchoice WITH 0, nchoice2 WITH 0, cchoice WITH ''\n"
         "oComboNum = CREATEOBJECT('ComboBox')\n"
         "oComboNum.ControlSource = 'lookupstate.nchoice'\n"
         "oComboNum.ColumnCount = 2\n"
@@ -313,13 +313,14 @@ void test_native_list_control_controlsource_drives_boundto_value_semantics() {
         "oComboNum.AddListItem('B', oComboNum.NewItemID, 2)\n"
         "oComboNum.ListIndex = 2\n"
         "nComboNumericValue = oComboNum.Value\n"
+        "nNumericFieldAfterSelect = lookupstate.nchoice\n"
         "oComboNum.BoundTo = .T.\n"
         "cComboNumericBoundToTrue = oComboNum.Value\n"
         "oListNum = CREATEOBJECT('ListBox')\n"
         "lListHasControlSource = PEMSTATUS(oListNum, 'ControlSource', 1)\n"
         "lListControlSourceReadOnly = PEMSTATUS(oListNum, 'ControlSource', 5)\n"
         "cListControlSourceBefore = GETPEM(oListNum, 'ControlSource')\n"
-        "oListNum.ControlSource = 'lookupstate.nchoice'\n"
+        "oListNum.ControlSource = 'lookupstate.nchoice2'\n"
         "cListControlSourceAfter = GETPEM(oListNum, 'ControlSource')\n"
         "oListNum.ColumnCount = 2\n"
         "oListNum.BoundColumn = 2\n"
@@ -329,10 +330,12 @@ void test_native_list_control_controlsource_drives_boundto_value_semantics() {
         "oListNum.AddListItem('S', oListNum.NewItemID, 2)\n"
         "oListNum.ListIndex = 2\n"
         "nListNumericValue = oListNum.Value\n"
+        "nListNumericFieldAfterSelect = lookupstate.nchoice2\n"
         "oListNum.BoundTo = .T.\n"
         "cListNumericBoundToTrue = oListNum.Value\n"
+        "cBoundMem = ''\n"
         "oComboChar = CREATEOBJECT('ComboBox')\n"
-        "oComboChar.ControlSource = 'lookupstate.cchoice'\n"
+        "oComboChar.ControlSource = 'cBoundMem'\n"
         "oComboChar.ColumnCount = 2\n"
         "oComboChar.BoundColumn = 2\n"
         "oComboChar.AddListItem('East')\n"
@@ -341,6 +344,7 @@ void test_native_list_control_controlsource_drives_boundto_value_semantics() {
         "oComboChar.AddListItem('W', oComboChar.NewItemID, 2)\n"
         "oComboChar.ListIndex = 2\n"
         "cComboCharacterValue = oComboChar.Value\n"
+        "cCharVariableAfterSelect = cBoundMem\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session =
@@ -363,14 +367,17 @@ void test_native_list_control_controlsource_drives_boundto_value_semantics() {
     };
 
     check("ncombonumericvalue", "2");
+    check("nnumericfieldafterselect", "2");
     check("ccombonumericboundtotrue", "B");
     check("llisthascontrolsource", "true");
     check("llistcontrolsourcereadonly", "false");
     check("clistcontrolsourcebefore", "");
-    check("clistcontrolsourceafter", "lookupstate.nchoice");
+    check("clistcontrolsourceafter", "lookupstate.nchoice2");
     check("nlistnumericvalue", "2");
+    check("nlistnumericfieldafterselect", "2");
     check("clistnumericboundtotrue", "S");
     check("ccombocharactervalue", "W");
+    check("ccharvariableafterselect", "W");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -386,23 +393,24 @@ void test_native_list_control_controlsource_requery_keeps_numeric_value_coherent
     const fs::path main_path = temp_root / "native_list_control_controlsource_requery.prg";
     write_text(
         main_path,
-        "CREATE CURSOR lookupstate (nchoice N(2,0))\n"
+        "CREATE CURSOR lookupstate (cchoice C(8))\n"
         "APPEND BLANK\n"
-        "REPLACE nchoice WITH 0\n"
+        "REPLACE cchoice WITH ''\n"
         "DIMENSION gaMonths[2,2]\n"
         "gaMonths[1,1] = 'Jan'\n"
         "gaMonths[1,2] = '01'\n"
         "gaMonths[2,1] = 'Feb'\n"
         "gaMonths[2,2] = '02'\n"
         "oCombo = CREATEOBJECT('ComboBox')\n"
-        "oCombo.ControlSource = 'lookupstate.nchoice'\n"
+        "oCombo.ControlSource = 'lookupstate.cchoice'\n"
         "oCombo.ColumnCount = 2\n"
         "oCombo.BoundColumn = 2\n"
         "oCombo.RowSourceType = 5\n"
         "oCombo.RowSource = 'gaMonths'\n"
         "oCombo.Requery()\n"
         "oCombo.ListIndex = 2\n"
-        "nValueBeforeSecond = oCombo.Value\n"
+        "cValueBeforeSecond = oCombo.Value\n"
+        "cFieldBeforeSecond = lookupstate.cchoice\n"
         "DIMENSION gaMonths[3,2]\n"
         "gaMonths[1,1] = 'Mar'\n"
         "gaMonths[1,2] = '03'\n"
@@ -412,9 +420,8 @@ void test_native_list_control_controlsource_requery_keeps_numeric_value_coherent
         "gaMonths[3,2] = '05'\n"
         "oCombo.Requery()\n"
         "nListIndexAfterSecond = oCombo.ListIndex\n"
-        "nValueAfterSecond = oCombo.Value\n"
-        "oCombo.BoundTo = .T.\n"
-        "cValueAfterBoundToTrue = oCombo.Value\n"
+        "cValueAfterSecond = oCombo.Value\n"
+        "cFieldAfterSecond = lookupstate.cchoice\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session =
@@ -436,10 +443,11 @@ void test_native_list_control_controlsource_requery_keeps_numeric_value_coherent
         }
     };
 
-    check("nvaluebeforesecond", "2");
+    check("cvaluebeforesecond", "02");
+    check("cfieldbeforesecond", "02");
     check("nlistindexaftersecond", "2");
-    check("nvalueaftersecond", "2");
-    check("cvalueafterboundtotrue", "04");
+    check("cvalueaftersecond", "04");
+    check("cfieldaftersecond", "04");
 
     fs::remove_all(temp_root, ignored);
 }

@@ -2405,6 +2405,10 @@ namespace copperfin::runtime
         }
         if (leaf == "requery" && requery_native_list_control(*target_object, frame))
         {
+            if (!write_native_list_control_controlsource_target(*target_object, frame))
+            {
+                return make_boolean_value(false);
+            }
             target_object->last_action = effective_member_path + "()";
             ++target_object->action_count;
             events.push_back({.category = "prg.object.requery",
@@ -4321,7 +4325,8 @@ namespace copperfin::runtime
                 }
                 if (is_native_listitemid_member_name(runtime_object, normalized_property_name))
                 {
-                    return write_native_list_control_item_id(runtime_object, assigned_value);
+                    return write_native_list_control_item_id(runtime_object, assigned_value) &&
+                           write_native_list_control_controlsource_target(runtime_object, source_frame);
                 }
                 if (const auto list_cell = resolve_list_member_cell();
                     list_cell.has_value())
@@ -4336,17 +4341,19 @@ namespace copperfin::runtime
                     selected_slot.has_value())
                 {
                     return write_native_list_control_selected_slot(
-                        runtime_object,
-                        *selected_slot,
-                        assigned_value);
+                               runtime_object,
+                               *selected_slot,
+                               assigned_value) &&
+                           write_native_list_control_controlsource_target(runtime_object, source_frame);
                 }
                 if (const auto selected_item_id = resolve_selectedid_member_item_id();
                     selected_item_id.has_value())
                 {
                     return write_native_list_control_selected_item_id(
-                        runtime_object,
-                        *selected_item_id,
-                        assigned_value);
+                               runtime_object,
+                               *selected_item_id,
+                               assigned_value) &&
+                           write_native_list_control_controlsource_target(runtime_object, source_frame);
                 }
                 if (is_native_controlsource_member_name(runtime_object, normalized_property_name) &&
                     is_native_column_runtime_object(runtime_object))
@@ -4400,10 +4407,18 @@ namespace copperfin::runtime
                     normalized_property_name == "boundto")
                 {
                     sync_native_list_control_displayvalue_from_selection(runtime_object);
+                    if (!write_native_list_control_controlsource_target(runtime_object, source_frame))
+                    {
+                        return false;
+                    }
                 }
                 if (normalized_property_name == "listindex")
                 {
                     sync_native_list_control_displayvalue_from_selection(runtime_object);
+                    if (!write_native_list_control_controlsource_target(runtime_object, source_frame))
+                    {
+                        return false;
+                    }
                 }
                 return true;
             }

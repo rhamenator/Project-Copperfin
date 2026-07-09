@@ -320,6 +320,149 @@
                    native_column_bound_value(*parent_column);
         }
 
+        bool write_native_list_control_controlsource_target(
+            RuntimeOleObjectState& runtime_object,
+            const Frame& frame)
+        {
+            const std::string normalized_base_class =
+                normalize_identifier(trim_copy(runtime_object.base_class_name));
+            if (normalized_base_class != "combobox" &&
+                normalized_base_class != "listbox") {
+                return true;
+            }
+
+            const auto controlsource = runtime_object.properties.find("controlsource");
+            if (controlsource == runtime_object.properties.end()) {
+                return true;
+            }
+
+            const std::string controlsource_text =
+                trim_copy(value_as_string(controlsource->second));
+            if (controlsource_text.empty()) {
+                return true;
+            }
+
+            const auto value = runtime_object.properties.find("value");
+            const PrgValue assigned_value =
+                value == runtime_object.properties.end()
+                    ? make_empty_value()
+                    : value->second;
+
+            auto resolve_target_field = [&](std::string& field_name) -> CursorState* {
+                std::string designator;
+                field_name = controlsource_text;
+                if (const std::size_t separator = controlsource_text.find('.');
+                    separator != std::string::npos) {
+                    designator = trim_copy(controlsource_text.substr(0U, separator));
+                    field_name = trim_copy(controlsource_text.substr(separator + 1U));
+                    if (!designator.empty()) {
+                        return resolve_cursor_target(designator);
+                    }
+                }
+
+                CursorState* current_cursor = resolve_cursor_target({});
+                if (current_cursor == nullptr || field_name.empty()) {
+                    return nullptr;
+                }
+
+                const auto descriptors = cursor_field_descriptors(*current_cursor);
+                const auto descriptor = std::find_if(
+                    descriptors.begin(),
+                    descriptors.end(),
+                    [&](const vfp::DbfFieldDescriptor& candidate) {
+                        return collapse_identifier(candidate.name) ==
+                               collapse_identifier(field_name);
+                    });
+                return descriptor == descriptors.end() ? nullptr : current_cursor;
+            };
+
+            std::string field_name;
+            if (CursorState* target_cursor = resolve_target_field(field_name);
+                target_cursor != nullptr && !field_name.empty()) {
+                if (target_cursor->remote) {
+                    if (target_cursor->recno == 0U || target_cursor->eof ||
+                        target_cursor->recno > target_cursor->remote_records.size()) {
+                        return false;
+                    }
+
+                    vfp::DbfRecord& record =
+                        target_cursor->remote_records[target_cursor->recno - 1U];
+                    const std::string normalized_field = collapse_identifier(field_name);
+                    auto field = std::find_if(
+                        record.values.begin(),
+                        record.values.end(),
+                        [&](vfp::DbfRecordValue& candidate) {
+                            return collapse_identifier(candidate.field_name) ==
+                                   normalized_field;
+                        });
+                    if (field == record.values.end()) {
+                        return false;
+                    }
+
+                    field->display_value =
+                        serialize_prg_value_for_record_field(*field, assigned_value);
+                } else {
+                    if (target_cursor->source_path.empty() ||
+                        target_cursor->recno == 0U ||
+                        target_cursor->eof) {
+                        return false;
+                    }
+                    if (!ensure_transaction_backup_for_table(target_cursor->source_path)) {
+                        return false;
+                    }
+
+                    bool temporary_record_lock = false;
+                    if (!acquire_record_lock(
+                            *target_cursor,
+                            target_cursor->recno,
+                            "REPLACE",
+                            false,
+                            temporary_record_lock)) {
+                        return false;
+                    }
+
+                    std::string serialized_value = value_as_string(assigned_value);
+                    const auto descriptors = cursor_field_descriptors(*target_cursor);
+                    const auto descriptor = std::find_if(
+                        descriptors.begin(),
+                        descriptors.end(),
+                        [&](const vfp::DbfFieldDescriptor& candidate) {
+                            return collapse_identifier(candidate.name) ==
+                                   collapse_identifier(field_name);
+                        });
+                    if (descriptor != descriptors.end() && descriptor->type == 'C') {
+                        const std::string trimmed = trim_copy(serialized_value);
+                        serialized_value =
+                            trimmed.size() > descriptor->length
+                                ? trimmed.substr(0U, descriptor->length)
+                                : trimmed;
+                    }
+
+                    const auto result = vfp::replace_record_field_value(
+                        target_cursor->source_path,
+                        target_cursor->recno - 1U,
+                        field_name,
+                        serialized_value);
+                    if (temporary_record_lock) {
+                        unlock_cursor_record_lock(*target_cursor, target_cursor->recno);
+                    }
+                    if (!result.ok) {
+                        last_error_message = result.error;
+                        return false;
+                    }
+                    target_cursor->record_count = result.record_count;
+                }
+
+                runtime_object.controlsource_value_kind_hint = assigned_value.kind;
+                return true;
+            }
+
+            Frame& mutable_frame = const_cast<Frame&>(frame);
+            assign_variable(mutable_frame, controlsource_text, assigned_value);
+            runtime_object.controlsource_value_kind_hint = assigned_value.kind;
+            return true;
+        }
+
         int normalize_native_grid_columncount_value(const PrgValue &value) const
         {
             long long normalized_count = -1LL;
