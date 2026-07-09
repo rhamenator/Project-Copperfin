@@ -1390,6 +1390,18 @@ void test_build_report_layout_preserves_live_objects_in_deleted_sections() {
            "#2690: live objects inside deleted sections should remain placed");
     expect(layout.unplaced_objects.size() == 1U,
            "#2690: only true strays should remain unplaced when a section is deleted");
+    expect(layout.preview_bounds_available &&
+               layout.preview_bounds_left == 0 &&
+               layout.preview_bounds_top == 100 &&
+               layout.preview_bounds_right == 5200 &&
+               layout.preview_bounds_bottom == 8100,
+           "#3684: live objects inside deleted sections should still expand live preview bounds");
+    expect(layout.deleted_preview_bounds_available &&
+               layout.deleted_preview_bounds_left == 0 &&
+               layout.deleted_preview_bounds_top == 0 &&
+               layout.deleted_preview_bounds_right == 0 &&
+               layout.deleted_preview_bounds_bottom == 2000,
+           "#3684: live objects inside deleted sections should not contaminate deleted preview bounds");
     if (layout.deleted_sections.size() == 1U) {
         expect(layout.deleted_sections[0].objects.size() == 1U,
                "#2690: deleted sections should preserve live object membership when geometry still belongs to the band");
