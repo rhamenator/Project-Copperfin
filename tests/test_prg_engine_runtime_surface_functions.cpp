@@ -923,15 +923,15 @@ namespace
         check("lpemexistsafterremove", "false");
         check("lremovemissing", "false");
 
-        check("nmembersall", "11");
+        check("nmembersall", "12");
         check("nmembersproperties", "2");
-        check("nmembersmethods", "9");
+        check("nmembersmethods", "10");
         check("nmembersevents", "0");
-        check("nmembersunion", "11");
+        check("nmembersunion", "12");
         check("cmemberallfirst", "ADD");
-        check("cmemberalllast", "REMOVEALL");
+        check("cmemberalllast", "WRITEEXPRESSION");
         check("cmembermethodsfirst", "ADD");
-        check("cmembermethodslast", "REMOVEALL");
+        check("cmembermethodslast", "WRITEEXPRESSION");
         check("cmemberpropsfirst", "COMPAREMODE");
         check("cmemberpropslast", "COUNT");
         check("nmembersafteraddproperties", "3");
@@ -28158,7 +28158,7 @@ namespace
         };
 
         check("nmembersprops", "4");
-        check("nmembersunion", "9");
+        check("nmembersunion", "10");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop3", "CLASS");
@@ -28233,7 +28233,7 @@ namespace
         };
 
         check("nmembersprops", "5");
-        check("nmembersunion", "10");
+        check("nmembersunion", "11");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop3", "CLASS");
@@ -30909,7 +30909,7 @@ namespace
         check("lchildclasslibraryreadonly", "true");
         check("cchildclasslibraryprop", button_library_path.string());
         check("nmembersprops", "5");
-        check("nmembersunion", "10");
+        check("nmembersunion", "11");
         check("cprop1", "BASECLASS");
         check("cprop2", "CLASS");
         check("cprop3", "CLASSLIBRARY");
@@ -31016,7 +31016,7 @@ namespace
         check("lchildclasslibraryreadonly", "true");
         check("cchildclasslibraryprop", button_library_path.string());
         check("nmembersprops", "5");
-        check("nmembersunion", "10");
+        check("nmembersunion", "11");
         check("cprop1", "BASECLASS");
         check("cprop2", "CLASS");
         check("cprop3", "CLASSLIBRARY");
@@ -31476,7 +31476,7 @@ namespace
         };
 
         check("nmembersprops", "5");
-        check("nmembersunion", "10");
+        check("nmembersunion", "11");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop3", "CLASS");
@@ -31563,7 +31563,7 @@ namespace
         };
 
         check("nmembersprops", "5");
-        check("nmembersunion", "10");
+        check("nmembersunion", "11");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop3", "CLASS");
@@ -31647,7 +31647,7 @@ namespace
         };
 
         check("nmembersprops", "5");
-        check("nmembersunion", "10");
+        check("nmembersunion", "11");
         check("lchildhasparent", "true");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
@@ -31736,7 +31736,7 @@ namespace
         };
 
         check("nmembersprops", "5");
-        check("nmembersunion", "10");
+        check("nmembersunion", "11");
         check("lchildhasparent", "true");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
@@ -40591,7 +40591,7 @@ namespace
         check("lchildbaseclassreadonly", "true");
         check("lchildparentclassreadonly", "true");
         check("nmembersprops", "5");
-        check("nmembersunion", "10");
+        check("nmembersunion", "11");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop3", "CLASS");
@@ -40739,7 +40739,7 @@ namespace
         check("lchildbaseclassreadonly", "true");
         check("lchildparentclassreadonly", "true");
         check("nmembersprops", "5");
-        check("nmembersunion", "10");
+        check("nmembersunion", "11");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop3", "CLASS");
@@ -42116,7 +42116,7 @@ namespace
         check("lchildparentclassreadonly", "true");
         check("lchildclasslibraryreadonly", "true");
         check("nmembersprops", "6");
-        check("nmembersunion", "11");
+        check("nmembersunion", "12");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop3", "CLASS");
@@ -43614,7 +43614,7 @@ namespace
         check("lchildparentclassreadonly", "true");
         check("lchildclasslibraryreadonly", "true");
         check("nmembersprops", "6");
-        check("nmembersunion", "11");
+        check("nmembersunion", "12");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop3", "CLASS");
@@ -43645,7 +43645,7 @@ namespace
         check("lleafchildparentclassreadonly", "true");
         check("lleafchildclasslibraryreadonly", "true");
         check("nleafmembersprops", "6");
-        check("nleafmembersunion", "11");
+        check("nleafmembersunion", "12");
         check("cleafprop1", "BASECLASS");
         check("cleafprop2", "CAPTION");
         check("cleafprop3", "CLASS");
@@ -47751,6 +47751,99 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_writeexpression_updates_live_property_values_and_preserves_expression_text()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_writeexpression";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_writeexpression.prg";
+        write_text(
+            main_path,
+            "oWidget = CREATEOBJECT('ProbeWidget')\n"
+            "lHasWriteExpression = PEMSTATUS(oWidget, 'WriteExpression', 1)\n"
+            "lWriteExpressionReadOnly = PEMSTATUS(oWidget, 'WriteExpression', 5)\n"
+            "lGetWriteExpression = GETPEM(oWidget, 'WriteExpression')\n"
+            "nMethods = AMEMBERS(aMethods, oWidget, 2)\n"
+            "nHasWriteExpression = ASCAN(aMethods, 'WRITEEXPRESSION')\n"
+            "oWidget.WriteExpression('cText', 'LOWER(\"BETA\")')\n"
+            "oWidget.WriteExpression('Caption', 'UPPER(\"delta\")')\n"
+            "cTextAfter = oWidget.cText\n"
+            "cCaptionAfter = oWidget.Caption\n"
+            "cTextExpr = oWidget.ReadExpression('cText')\n"
+            "cCaptionExpr = oWidget.ReadExpression('Caption')\n"
+            "cBackingAfter = oWidget.cBacking\n"
+            "cMissingExpr = oWidget.ReadExpression('MissingProperty')\n"
+            "RETURN\n"
+            "DEFINE CLASS ParentWidget AS Custom\n"
+            "    cBacking = 'seed'\n"
+            "    Caption = 'parent'\n"
+            "    FUNCTION Caption_Access\n"
+            "        RETURN THIS.cBacking + ':A'\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE Caption_Assign\n"
+            "        LPARAMETERS tcValue\n"
+            "        THIS.cBacking = tcValue + ':S'\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ProbeWidget AS ParentWidget\n"
+            "    cText = UPPER(\"alpha\")\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native WriteExpression script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " variable not found");
+            if (it != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(it->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(it->second) + "'");
+            }
+        };
+
+        check("lhaswriteexpression", "true");
+        check("lwriteexpressionreadonly", "false");
+        check("lgetwriteexpression", "true");
+        check("ctextafter", "beta");
+        check("ccaptionafter", "DELTA:S:A");
+        check("ctextexpr", "LOWER(\"BETA\")");
+        check("ccaptionexpr", "UPPER(\"delta\")");
+        check("cbackingafter", "DELTA:S");
+        check("cmissingexpr", "");
+
+        const auto has_writeexpression = state.globals.find("nhaswriteexpression");
+        expect(has_writeexpression != state.globals.end(),
+               "native WriteExpression reflection script should preserve AMEMBERS() presence");
+        if (has_writeexpression != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(has_writeexpression->second) != "0",
+                   "AMEMBERS(..., 2) should expose the shipped native WriteExpression builtin");
+        }
+
+        const bool has_assign_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   event.detail == "ParentWidget.Caption_Assign";
+        });
+        expect(has_assign_invoke_event,
+               "native WriteExpression should route accessor-backed writes through the existing assigner path");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_builtin_methods_reflect_through_pemstatus_getpem_and_amembers()
     {
         namespace fs = std::filesystem;
@@ -48522,7 +48615,7 @@ namespace
         check("lhasdescribe", "true");
         check("lhaswho", "true");
         check("lhasping", "true");
-        check("nmembersmethods", "8");
+        check("nmembersmethods", "9");
         check("cmethod1", "DESCRIBE");
         check("cmethod2", "PING");
         check("cmethod3", "READEXPRESSION");
@@ -51226,7 +51319,7 @@ namespace
         check("lcaptionreadonly", "false");
         check("lstatusreadonly", "true");
         check("nmembersprops", "7");
-        check("nmembersunion", "15");
+        check("nmembersunion", "16");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop4", "CLASS");
@@ -51332,7 +51425,7 @@ namespace
         check("lcaptionreadonly", "false");
         check("lstatusreadonly", "true");
         check("nmembersprops", "9");
-        check("nmembersunion", "17");
+        check("nmembersunion", "18");
         check("cprop1", "BASECLASS");
         check("cprop2", "CAPTION");
         check("cprop4", "CLASS");
@@ -53301,6 +53394,7 @@ int main()
     test_native_resettodefault_override_wins_over_builtin_default_restore();
     test_native_readexpression_returns_live_property_expression_text();
     test_native_readmethod_returns_class_method_source_text();
+    test_native_writeexpression_updates_live_property_values_and_preserves_expression_text();
     test_native_builtin_methods_reflect_through_pemstatus_getpem_and_amembers();
     test_same_prg_native_bare_helper_calls_resolve_to_current_instance_before_top_level_routines();
     test_inherited_external_prg_base_methods_resolve_bare_helper_calls_against_defining_library();

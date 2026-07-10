@@ -594,6 +594,7 @@ bool is_builtin_native_runtime_method_name(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
     if ((normalized_member_name == "readexpression" ||
+         normalized_member_name == "writeexpression" ||
          normalized_member_name == "readmethod") &&
         (!runtime_object.class_hierarchy.empty() || !runtime_object.source.empty())) {
         return true;
@@ -2437,6 +2438,9 @@ std::vector<std::string> collect_object_member_names(const RuntimeOleObjectState
         }
         if (is_builtin_native_runtime_method_name(runtime_object, "readexpression")) {
             unique_members.insert("readexpression");
+        }
+        if (is_builtin_native_runtime_method_name(runtime_object, "writeexpression")) {
+            unique_members.insert("writeexpression");
         }
         if (is_builtin_native_runtime_method_name(runtime_object, "readmethod")) {
             unique_members.insert("readmethod");

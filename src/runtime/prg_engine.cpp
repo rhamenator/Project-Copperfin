@@ -2364,6 +2364,31 @@ namespace copperfin::runtime
             ++target_object->action_count;
             return make_string_value(source_text.value_or(std::string{}));
         }
+        if (leaf == "writeexpression" &&
+            (!target_object->class_hierarchy.empty() || !target_object->source.empty()))
+        {
+            if (arguments.size() < 2U)
+            {
+                return make_empty_value();
+            }
+
+            const std::string property_name = trim_copy(value_as_string(arguments[0]));
+            const std::string expression_text = value_as_string(arguments[1]);
+            const PrgValue assigned_value = evaluate_expression(expression_text, frame);
+            if (!write_native_property_if_present(
+                    *target_object,
+                    property_name,
+                    assigned_value,
+                    frame,
+                    expression_text))
+            {
+                return make_empty_value();
+            }
+
+            target_object->last_action = effective_member_path + "(" + property_name + ")";
+            ++target_object->action_count;
+            return make_empty_value();
+        }
         if (leaf == "move" &&
             is_native_visual_runtime_object(*target_object))
         {
