@@ -32,6 +32,44 @@ namespace {
 
 using namespace copperfin::test_support;
 
+void write_synthetic_report_surface(const std::filesystem::path& asset_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"9", "9", "detail header expression", "", "0", "", "200", "detail-header-guid"},
+        {"8", "", "NAME", "100", "20", "700", "100", "name-field-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(asset_path.string(), fields, records);
+    expect(create_result.ok, "synthetic report surface fixture should be created");
+}
+
+void write_named_age_dbf(
+    const std::filesystem::path& path,
+    const std::vector<std::pair<std::string, int>>& records) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "AGE", .type = 'N', .length = 3U}
+    };
+
+    std::vector<std::vector<std::string>> serialized_records;
+    serialized_records.reserve(records.size());
+    for (const auto& [name, age] : records) {
+        serialized_records.push_back({name, std::to_string(age)});
+    }
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(path.string(), fields, serialized_records);
+    expect(create_result.ok, "named-age DBF fixture should be created");
+}
+
 void test_use_and_data_session_isolation() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_tables";
@@ -236,6 +274,71 @@ void test_label_form_to_file_renders_without_event_loop_pause() {
     expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
         return event.category == "label.render";
     }), "LABEL FORM TO FILE should emit a label.render event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_report_and_label_to_file_emit_filtered_data_rows() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_report_filtered_rows";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_named_age_dbf(table_path, {{"Alice", 20}, {"Bob", 30}, {"Cara", 32}, {"Dana", 40}});
+
+    const auto run_case = [&](const std::string& command, const fs::path& asset_path, const fs::path& output_path) {
+        write_synthetic_report_surface(asset_path);
+
+        const fs::path main_path = temp_root / (asset_path.stem().string() + ".prg");
+        write_text(
+            main_path,
+            "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+            "SET FILTER TO AGE >= 20\n"
+            + command + " '" + asset_path.string() + "' TO FILE '" + output_path.string() + "' FOR AGE <> 30 WHILE AGE < 35\n"
+            "x = 2\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, command + " TO FILE with FOR/WHILE should complete");
+        expect(fs::exists(output_path), command + " TO FILE with FOR/WHILE should materialize an output artifact");
+
+        const std::string output_text = read_text(output_path);
+        expect(output_text.find("sections=1") != std::string::npos,
+               command + " TO FILE should preserve shared layout section metadata");
+        expect(output_text.find("cursor=People") != std::string::npos,
+               command + " TO FILE should identify the active work area");
+        expect(output_text.find("set_filter=AGE >= 20") != std::string::npos,
+               command + " TO FILE should surface the active cursor filter");
+        expect(output_text.find("for=AGE <> 30") != std::string::npos,
+               command + " TO FILE should surface the parsed FOR clause");
+        expect(output_text.find("while=AGE < 35") != std::string::npos,
+               command + " TO FILE should surface the parsed WHILE clause");
+        expect(output_text.find("rows=2") != std::string::npos,
+               command + " TO FILE should render only the qualifying rows");
+        expect(output_text.find("row[1]=NAME=Alice|AGE=20") != std::string::npos,
+               command + " TO FILE should render the first qualifying record");
+        expect(output_text.find("row[3]=NAME=Cara|AGE=32") != std::string::npos,
+               command + " TO FILE should render later qualifying records before the WHILE boundary");
+        expect(output_text.find("Bob") == std::string::npos,
+               command + " TO FILE should exclude rows filtered by FOR");
+        expect(output_text.find("Dana") == std::string::npos,
+               command + " TO FILE should stop before rows outside the WHILE boundary");
+
+        const auto x_value = state.globals.find("x");
+        expect(x_value != state.globals.end(), command + " TO FILE should continue executing follow-on statements");
+        if (x_value != state.globals.end()) {
+            expect(copperfin::runtime::format_value(x_value->second) == "2",
+                   command + " TO FILE should not block follow-on statements");
+        }
+    };
+
+    run_case("REPORT FORM", temp_root / "filtered_report.frx", temp_root / "filtered_report.txt");
+    run_case("LABEL FORM", temp_root / "filtered_label.lbx", temp_root / "filtered_label.txt");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -1408,6 +1511,7 @@ int main() {
     test_use_missing_target_uses_localized_error();
     test_report_form_to_file_renders_without_event_loop_pause();
     test_label_form_to_file_renders_without_event_loop_pause();
+    test_report_and_label_to_file_emit_filtered_data_rows();
     test_report_form_missing_asset_uses_localized_error();
     test_cross_session_alias_and_work_area_isolation();
     test_use_in_existing_alias_reuses_target_work_area();

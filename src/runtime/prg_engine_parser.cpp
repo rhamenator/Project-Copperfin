@@ -1503,13 +1503,29 @@ Program parse_program(const std::string& path) {
             const std::string body = trim_copy(line.substr(12U));
             statement.identifier = take_first_token(body);
             statement.secondary_expression = has_keyword(body, "PREVIEW") ? "preview" : std::string{};
-            statement.tertiary_expression = extract_command_clause(body, "TO", {"PREVIEW", "NOCONSOLE", "PLAIN", "NOWAIT"});
+            statement.tertiary_expression =
+                extract_command_clause(body, "TO", {"PREVIEW", "NOCONSOLE", "PLAIN", "NOWAIT", "FOR", "WHILE"});
+            statement.quaternary_expression =
+                extract_command_clause(body, "FOR", {"WHILE", "TO", "PREVIEW", "NOCONSOLE", "PLAIN", "NOWAIT"});
+            const std::string while_clause =
+                extract_command_clause(body, "WHILE", {"FOR", "TO", "PREVIEW", "NOCONSOLE", "PLAIN", "NOWAIT"});
+            if (!while_clause.empty()) {
+                statement.names.push_back(while_clause);
+            }
         } else if (starts_with_insensitive(line, "LABEL FORM ")) {
             statement.kind = StatementKind::label_form;
             const std::string body = trim_copy(line.substr(11U));
             statement.identifier = take_first_token(body);
             statement.secondary_expression = has_keyword(body, "PREVIEW") ? "preview" : std::string{};
-            statement.tertiary_expression = extract_command_clause(body, "TO", {"PREVIEW", "NOCONSOLE", "PLAIN", "NOWAIT"});
+            statement.tertiary_expression =
+                extract_command_clause(body, "TO", {"PREVIEW", "NOCONSOLE", "PLAIN", "NOWAIT", "FOR", "WHILE"});
+            statement.quaternary_expression =
+                extract_command_clause(body, "FOR", {"WHILE", "TO", "PREVIEW", "NOCONSOLE", "PLAIN", "NOWAIT"});
+            const std::string while_clause =
+                extract_command_clause(body, "WHILE", {"FOR", "TO", "PREVIEW", "NOCONSOLE", "PLAIN", "NOWAIT"});
+            if (!while_clause.empty()) {
+                statement.names.push_back(while_clause);
+            }
         } else if (starts_with_insensitive(line, "ACTIVATE POPUP ")) {
             statement.kind = StatementKind::activate_surface;
             statement.identifier = "popup";

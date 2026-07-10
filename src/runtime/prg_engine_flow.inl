@@ -743,6 +743,51 @@
             return runtime_text("Runtime.Prg.ReportAsset.Error.ResolveFailed", {{"path", path.string()}});
         }
 
+        std::vector<std::string> render_report_output_rows(
+            CursorState &cursor,
+            const Frame &frame,
+            const std::vector<vfp::DbfFieldDescriptor> &fields,
+            const std::string &for_expression,
+            const std::string &while_expression)
+        {
+            std::vector<std::string> rows;
+            const CursorPositionSnapshot saved = capture_cursor_snapshot(cursor);
+            for (std::size_t recno = 1U; recno <= cursor.record_count; ++recno)
+            {
+                move_cursor_to(cursor, static_cast<long long>(recno));
+                if (!while_expression.empty() &&
+                    !evaluate_visibility_expression(while_expression, frame, &cursor))
+                {
+                    break;
+                }
+                if (!current_record_matches_visibility(cursor, frame, for_expression))
+                {
+                    continue;
+                }
+
+                const auto record = current_record(cursor);
+                if (!record.has_value())
+                {
+                    continue;
+                }
+
+                std::string row = "row[" + std::to_string(cursor.recno) + "]=";
+                for (std::size_t index = 0U; index < fields.size(); ++index)
+                {
+                    if (index > 0U)
+                    {
+                        row += "|";
+                    }
+                    row += fields[index].name;
+                    row += "=";
+                    row += record_field_value(*record, fields[index].name).value_or(std::string{});
+                }
+                rows.push_back(std::move(row));
+            }
+            restore_cursor_snapshot(cursor, saved);
+            return rows;
+        }
+
         ExecutionOutcome open_report_surface(const Statement &statement, const Frame &frame, const char *extension, const char *category_prefix)
         {
             const std::filesystem::path asset_path = resolve_asset_path(statement.identifier, extension);
@@ -815,6 +860,61 @@
             if (layout.available)
             {
                 output << "sections=" << layout.sections.size() << "\n";
+                for (std::size_t index = 0U; index < layout.sections.size(); ++index)
+                {
+                    const auto &section = layout.sections[index];
+                    output << "section[" << index << "]=" << section.band_kind
+                           << " title=" << section.title
+                           << " objects=" << section.objects.size() << "\n";
+                }
+            }
+
+            CursorState *cursor = resolve_cursor_target(std::to_string(current_selected_work_area()));
+            std::size_t rendered_row_count = 0U;
+            if (cursor != nullptr)
+            {
+                const std::vector<vfp::DbfFieldDescriptor> fields = cursor_field_descriptors(*cursor);
+                const std::string while_expression =
+                    statement.names.empty() ? std::string{} : trim_copy(statement.names.front());
+                output << "cursor=" << (cursor->alias.empty() ? std::to_string(cursor->work_area) : cursor->alias) << "\n";
+                if (!fields.empty())
+                {
+                    output << "fields=";
+                    for (std::size_t index = 0U; index < fields.size(); ++index)
+                    {
+                        if (index > 0U)
+                        {
+                            output << ",";
+                        }
+                        output << fields[index].name;
+                    }
+                    output << "\n";
+                }
+                if (!trim_copy(cursor->filter_expression).empty())
+                {
+                    output << "set_filter=" << trim_copy(cursor->filter_expression) << "\n";
+                }
+                if (!trim_copy(statement.quaternary_expression).empty())
+                {
+                    output << "for=" << trim_copy(statement.quaternary_expression) << "\n";
+                }
+                if (!while_expression.empty())
+                {
+                    output << "while=" << while_expression << "\n";
+                }
+
+                const std::vector<std::string> rendered_rows = render_report_output_rows(
+                    *cursor,
+                    frame,
+                    fields,
+                    trim_copy(statement.quaternary_expression),
+                    while_expression);
+                rendered_row_count = rendered_rows.size();
+                output << "rows=" << rendered_row_count << "\n";
+                for (const auto &row : rendered_rows)
+                {
+                    output << row << "\n";
+                }
             }
             output.close();
             if (!output.good())
@@ -826,7 +926,7 @@
             }
 
             events.push_back({.category = std::string(category_prefix) + ".render",
-                              .detail = output_path.string(),
+                              .detail = output_path.string() + " rows=" + std::to_string(rendered_row_count),
                               .location = statement.location});
             return {};
         }
