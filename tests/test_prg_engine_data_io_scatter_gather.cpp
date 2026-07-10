@@ -1691,6 +1691,63 @@ void test_gather_from_array_skips_memo_fields_by_default() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_gather_memvar_skips_memo_fields_by_default() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_gather_memvar_skip_memo";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "notes.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "NOTES", .type = 'M', .length = 10U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Alice", "Memo payload", "42"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "GATHER MEMVAR memo-skip fixture should be created");
+
+    const fs::path main_path = temp_root / "gather_memvar_skip_memo.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "'\n"
+        "GO 1\n"
+        "SCATTER MEMVAR\n"
+        "cMemoType = VARTYPE(m.NOTES)\n"
+        "m.NAME = 'Updated'\n"
+        "m.AGE = 99\n"
+        "GATHER MEMVAR\n"
+        "cAfterName = NAME\n"
+        "cAfterNotes = NOTES\n"
+        "nAfterAge = AGE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "GATHER MEMVAR with memo fields should complete: " + state.message);
+
+    const auto check = [&](const std::string& name, const std::string& expected, const std::string& message) {
+        const auto it = state.globals.find(name);
+        expect(it != state.globals.end(), name + " should exist in globals");
+        if (it != state.globals.end()) {
+            const std::string actual = copperfin::runtime::format_value(it->second);
+            expect(actual == expected, message + " (got '" + actual + "')");
+        }
+    };
+
+    check("cmemotype", "U", "SCATTER MEMVAR without MEMO should leave memo memvars undefined");
+    check("caftername", "Updated", "GATHER MEMVAR should write NAME from m.NAME");
+    check("cafternotes", "Memo payload", "GATHER MEMVAR should leave memo fields unchanged when no memo memvar exists");
+    check("nafterage", "99", "GATHER MEMVAR should write AGE from m.AGE");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_scatter_memvar_blank_on_empty_table_succeeds() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_blank_empty";

@@ -7106,9 +7106,15 @@
                         {
                             continue;
                         }
+                        const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.field_type)));
+                        const bool is_memo_field = field_type == 'M' || field_type == 'G' || field_type == 'W';
                         PrgValue val = make_empty_value();
                         if (use_memvar)
                         {
+                            if (is_memo_field)
+                            {
+                                continue;
+                            }
                             val = lookup_variable(frame, "m." + field.field_name);
                         }
                         else if (use_name_object)
@@ -7132,8 +7138,6 @@
                         }
                         else
                         {
-                            const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.field_type)));
-                            const bool is_memo_field = field_type == 'M' || field_type == 'G' || field_type == 'W';
                             if (is_memo_field)
                             {
                                 continue;
