@@ -6,20 +6,51 @@
 
 #include "prg_engine_helpers.h"
 
+#include <algorithm>
+#include <cctype>
 #include <filesystem>
 
 namespace copperfin::runtime {
+
+namespace {
+
+bool is_windows_drive_absolute_path(const std::string& value) {
+    return value.size() >= 3U &&
+        std::isalpha(static_cast<unsigned char>(value[0])) != 0 &&
+        value[1] == ':' &&
+        (value[2] == '\\' || value[2] == '/');
+}
+
+bool is_unc_path(const std::string& value) {
+    return value.size() >= 2U &&
+        ((value[0] == '\\' && value[1] == '\\') || (value[0] == '/' && value[1] == '/'));
+}
+
+std::string normalize_relative_path_separators(std::string value) {
+    std::replace(value.begin(), value.end(), '\\', std::filesystem::path::preferred_separator);
+    return value;
+}
+
+std::string portable_full_path(const std::string& raw_path, const std::string& default_directory) {
+    if (is_windows_drive_absolute_path(raw_path) || is_unc_path(raw_path)) {
+        return raw_path;
+    }
+
+    std::filesystem::path path(normalize_relative_path_separators(raw_path));
+    if (path.is_relative()) {
+        path = std::filesystem::path(default_directory) / path;
+    }
+    return std::filesystem::absolute(path).lexically_normal().string();
+}
+
+}  // namespace
 
 std::optional<PrgValue> evaluate_path_function(
     const std::string& function,
     const std::vector<PrgValue>& arguments,
     const std::string& default_directory) {
     if (function == "fullpath" && !arguments.empty()) {
-        std::filesystem::path path(value_as_string(arguments[0]));
-        if (path.is_relative()) {
-            path = std::filesystem::path(default_directory) / path;
-        }
-        return make_string_value(std::filesystem::absolute(path).string());
+        return make_string_value(portable_full_path(value_as_string(arguments[0]), default_directory));
     }
     if (function == "curdir") {
         return make_string_value(default_directory);

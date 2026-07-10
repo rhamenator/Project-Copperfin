@@ -31,6 +31,7 @@ namespace
         write_text(
             main_path,
             "cWinPath = 'E:\\Project-Copperfin\\src\\runtime\\prg_engine.cpp'\n"
+            "cUncPath = '\\\\server\\share\\reports\\invoice.frx'\n"
             "cPosixPath = '/home/rich/dev/Project-Copperfin/src/runtime/prg_engine.cpp'\n"
             "cDrive = JUSTDRIVE(cWinPath)\n"
             "cWinDir = JUSTPATH(cWinPath)\n"
@@ -41,6 +42,11 @@ namespace
             "cPosixName = JUSTFNAME(cPosixPath)\n"
             "cPosixStem = JUSTSTEM(cPosixPath)\n"
             "cPosixExt = JUSTEXT(cPosixPath)\n"
+            "cWinFullPath = FULLPATH(cWinPath)\n"
+            "cUncFullPath = FULLPATH(cUncPath)\n"
+            "cPosixFullPath = FULLPATH(cPosixPath)\n"
+            "cRelativeWinFullPath = FULLPATH('forms\\main.prg')\n"
+            "cRelativePosixFullPath = FULLPATH('forms/report.prg')\n"
             "cForcedExt = FORCEEXT(cWinPath, 'h')\n"
             "cForcedExtWithDot = FORCEEXT(cWinPath, '.hpp')\n"
             "cDefaultExtAdded = DEFAULTEXT('D:\\generated\\report', 'frx')\n"
@@ -65,6 +71,11 @@ namespace
         const auto posix_name = state.globals.find("cposixname");
         const auto posix_stem = state.globals.find("cposixstem");
         const auto posix_ext = state.globals.find("cposixext");
+        const auto win_full_path = state.globals.find("cwinfullpath");
+        const auto unc_full_path = state.globals.find("cuncfullpath");
+        const auto posix_full_path = state.globals.find("cposixfullpath");
+        const auto relative_win_full_path = state.globals.find("crelativewinfullpath");
+        const auto relative_posix_full_path = state.globals.find("crelativeposixfullpath");
         const auto forced_ext = state.globals.find("cforcedext");
         const auto forced_ext_with_dot = state.globals.find("cforcedextwithdot");
         const auto default_ext_added = state.globals.find("cdefaultextadded");
@@ -82,6 +93,11 @@ namespace
         expect(posix_name != state.globals.end(), "POSIX JUSTFNAME result should be captured");
         expect(posix_stem != state.globals.end(), "POSIX JUSTSTEM result should be captured");
         expect(posix_ext != state.globals.end(), "POSIX JUSTEXT result should be captured");
+        expect(win_full_path != state.globals.end(), "Windows FULLPATH result should be captured");
+        expect(unc_full_path != state.globals.end(), "UNC FULLPATH result should be captured");
+        expect(posix_full_path != state.globals.end(), "POSIX FULLPATH result should be captured");
+        expect(relative_win_full_path != state.globals.end(), "relative Windows-style FULLPATH result should be captured");
+        expect(relative_posix_full_path != state.globals.end(), "relative POSIX FULLPATH result should be captured");
         expect(forced_ext != state.globals.end(), "FORCEEXT result should be captured");
         expect(forced_ext_with_dot != state.globals.end(), "FORCEEXT dotted-extension result should be captured");
         expect(default_ext_added != state.globals.end(), "DEFAULTEXT add result should be captured");
@@ -133,6 +149,31 @@ namespace
         {
             expect(copperfin::runtime::format_value(posix_ext->second) == "cpp",
                    "JUSTEXT should continue parsing POSIX-style extensions");
+        }
+        if (win_full_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(win_full_path->second) == "E:\\Project-Copperfin\\src\\runtime\\prg_engine.cpp",
+                   "FULLPATH should preserve Windows drive-rooted absolute paths on every host");
+        }
+        if (unc_full_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(unc_full_path->second) == "\\\\server\\share\\reports\\invoice.frx",
+                   "FULLPATH should preserve UNC absolute paths on every host");
+        }
+        if (posix_full_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(posix_full_path->second) == "/home/rich/dev/Project-Copperfin/src/runtime/prg_engine.cpp",
+                   "FULLPATH should preserve POSIX absolute paths");
+        }
+        if (relative_win_full_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(relative_win_full_path->second) == (temp_root / "forms" / "main.prg").string(),
+                   "FULLPATH should treat backslashes as separators for relative VFP paths");
+        }
+        if (relative_posix_full_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(relative_posix_full_path->second) == (temp_root / "forms" / "report.prg").string(),
+                   "FULLPATH should continue resolving relative POSIX-style paths against CURDIR");
         }
         if (forced_ext != state.globals.end())
         {
