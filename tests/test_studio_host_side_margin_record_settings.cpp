@@ -199,20 +199,26 @@ void write_synthetic_report_table_for_deleted_side_margin_settings_json(
     expect(delete_result.ok, issue_prefix + " deleted fixture should mark report settings deleted");
 }
 
-void expect_side_margin_summary_absent(
+void expect_side_margin_summary_state(
     const std::string& text,
     const std::string& property_name,
+    bool expected_available,
+    const std::string& expected_value,
     const std::string& issue_prefix) {
     if (property_name == "LEFTMARGIN") {
-        expect_not_contains(text, "\"leftMarginAvailable\":",
-                            issue_prefix + " should not add left-margin summary keys");
-        expect_not_contains(text, "\"leftMargin\":",
-                            issue_prefix + " should not add left-margin summary values");
+        expect_contains(text,
+                        std::string("\"leftMarginAvailable\": ") + (expected_available ? "true" : "false"),
+                        issue_prefix + " should preserve left-margin summary availability");
+        expect_contains(text,
+                        "\"leftMargin\": " + expected_value,
+                        issue_prefix + " should preserve left-margin summary values");
     } else {
-        expect_not_contains(text, "\"rightMarginAvailable\":",
-                            issue_prefix + " should not add right-margin summary keys");
-        expect_not_contains(text, "\"rightMargin\":",
-                            issue_prefix + " should not add right-margin summary values");
+        expect_contains(text,
+                        std::string("\"rightMarginAvailable\": ") + (expected_available ? "true" : "false"),
+                        issue_prefix + " should preserve right-margin summary availability");
+        expect_contains(text,
+                        "\"rightMargin\": " + expected_value,
+                        issue_prefix + " should preserve right-margin summary values");
     }
 }
 
@@ -273,7 +279,12 @@ void run_side_margin_update_case(
                         issue_prefix + " update should retain label identity");
     }
     expect_full_report_layout_preview_bounds(update_process.stdout_text, issue_prefix + " update");
-    expect_side_margin_summary_absent(update_process.stdout_text, property_name, issue_prefix + " update");
+    expect_side_margin_summary_state(
+        update_process.stdout_text,
+        property_name,
+        !deleted,
+        deleted ? "0" : updated_margin,
+        issue_prefix + " update");
 
     if (!deleted) {
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
@@ -419,7 +430,12 @@ void run_side_margin_clear_case(
                         issue_prefix + " clear should retain label identity");
     }
     expect_full_report_layout_preview_bounds(clear_process.stdout_text, issue_prefix + " clear");
-    expect_side_margin_summary_absent(clear_process.stdout_text, property_name, issue_prefix + " clear");
+    expect_side_margin_summary_state(
+        clear_process.stdout_text,
+        property_name,
+        false,
+        "0",
+        issue_prefix + " clear");
 
     if (!deleted) {
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
