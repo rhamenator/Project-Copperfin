@@ -144,6 +144,26 @@ std::optional<PrgValue> evaluate_type_function(
     if (function == "nvl" && arguments.size() >= 2U) {
         return arguments[0].kind == PrgValueKind::empty ? arguments[1] : arguments[0];
     }
+    if (function == "evl" && arguments.size() >= 2U) {
+        const PrgValue& value = arguments[0];
+        bool is_empty = false;
+        if (value.kind == PrgValueKind::empty) {
+            is_empty = true;
+        } else if (value.kind == PrgValueKind::string) {
+            is_empty = trim_copy(value.string_value).empty();
+        } else if (value.kind == PrgValueKind::number) {
+            is_empty = value.number_value == 0.0;
+        } else if (value.kind == PrgValueKind::boolean) {
+            is_empty = !value.boolean_value;
+        } else if (value.kind == PrgValueKind::int64) {
+            is_empty = value.int64_value == 0;
+        } else if (value.kind == PrgValueKind::uint64) {
+            is_empty = value.uint64_value == 0U;
+        } else {
+            is_empty = true;
+        }
+        return is_empty ? arguments[1] : arguments[0];
+    }
     if (function == "between" && arguments.size() >= 3U) {
         if (arguments[0].kind == PrgValueKind::string ||
             arguments[1].kind == PrgValueKind::string ||

@@ -154,6 +154,11 @@ namespace
             "blank_false = ISBLANK(.F.)\n"
             "nvl_result = NVL('', 'fallback')\n"
             "nvl_ok = NVL('value', 'fallback')\n"
+            "evl_empty_text = EVL('', 'fallback')\n"
+            "evl_zero = EVL(0, 17)\n"
+            "evl_false = EVL(.F., .T.)\n"
+            "evl_null = EVL(.NULL., 'fallback-null')\n"
+            "evl_text = EVL('value', 'fallback')\n"
             "isdigit_yes = ISDIGIT('5abc')\n"
             "isdigit_no = ISDIGIT('abc')\n"
             "isalpha_yes = ISALPHA('abc')\n"
@@ -205,6 +210,11 @@ namespace
         check("blank_false", "false");
         check("nvl_result", "");
         check("nvl_ok", "value");
+        check("evl_empty_text", "fallback");
+        check("evl_zero", "17");
+        check("evl_false", "true");
+        check("evl_null", "fallback-null");
+        check("evl_text", "value");
         check("isdigit_yes", "true");
         check("isdigit_no", "false");
         check("isalpha_yes", "true");
