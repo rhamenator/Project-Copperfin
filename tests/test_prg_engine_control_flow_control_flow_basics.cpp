@@ -151,12 +151,19 @@ void test_logical_operators_drive_control_flow() {
     write_text(
         main_path,
         "cIfBranch = ''\n"
+        "cNotBranch = ''\n"
         "nLoopCount = 0\n"
         "nOrCount = 0\n"
         "IF (1 = 1) AND (2 = 3)\n"
         "    cIfBranch = 'wrong-true'\n"
         "ELSE\n"
         "    cIfBranch = 'correct-false'\n"
+        "ENDIF\n"
+        "IF NOT (1 = 2)\n"
+        "    cNotBranch = 'keyword-not'\n"
+        "ENDIF\n"
+        "IF .NOT. (2 = 2)\n"
+        "    cNotBranch = 'wrong-dotted-not'\n"
         "ENDIF\n"
         "DO WHILE nLoopCount < 3 AND .F.\n"
         "    nLoopCount = nLoopCount + 1\n"
@@ -175,12 +182,14 @@ void test_logical_operators_drive_control_flow() {
     expect(state.completed, "logical operator control-flow script should complete");
 
     const auto if_branch = state.globals.find("cifbranch");
+    const auto not_branch = state.globals.find("cnotbranch");
     const auto loop_count = state.globals.find("nloopcount");
     const auto or_count = state.globals.find("norcount");
     const auto and_guard = state.globals.find("landguard");
     const auto or_guard = state.globals.find("lorguard");
 
     expect(if_branch != state.globals.end(), "compound IF should assign a branch marker");
+    expect(not_branch != state.globals.end(), "keyword NOT should assign a branch marker");
     expect(loop_count != state.globals.end(), "compound AND in DO WHILE should leave its loop counter");
     expect(or_count != state.globals.end(), "compound OR in DO WHILE should leave its loop counter");
     expect(and_guard != state.globals.end(), "short-circuited AND assignment should complete");
@@ -189,6 +198,10 @@ void test_logical_operators_drive_control_flow() {
     if (if_branch != state.globals.end()) {
         expect(copperfin::runtime::format_value(if_branch->second) == "correct-false",
                "compound IF should evaluate the full AND expression");
+    }
+    if (not_branch != state.globals.end()) {
+        expect(copperfin::runtime::format_value(not_branch->second) == "keyword-not",
+               "NOT/.NOT. should behave as unary logical negation in IF predicates");
     }
     if (loop_count != state.globals.end()) {
         expect(copperfin::runtime::format_value(loop_count->second) == "0",

@@ -78,6 +78,8 @@ namespace
             "or_false = (1 = 2) OR (2 = 3)\n"
             "and_dotted = .T. .AND. .F.\n"
             "or_dotted = .F. .OR. .T.\n"
+            "not_keyword = NOT (1 = 2)\n"
+            "not_dotted = .NOT. (1 = 2)\n"
             "logic_precedence = .T. OR .F. AND .F.\n"
             "and_short_guard = .F. AND (1 / 0)\n"
             "or_short_guard = .T. OR (1 / 0)\n"
@@ -272,6 +274,8 @@ namespace
         check("or_false", "false");
         check("and_dotted", "false");
         check("or_dotted", "true");
+        check("not_keyword", "true");
+        check("not_dotted", "true");
         check("logic_precedence", "true");
         check("and_short_guard", "false");
         check("or_short_guard", "true");

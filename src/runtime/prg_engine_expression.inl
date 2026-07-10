@@ -554,7 +554,7 @@
             PrgValue parse_unary()
             {
                 skip_whitespace();
-                if (match("!"))
+                if (match("!") || match_dotted_keyword(".NOT.") || match_identifier_keyword("NOT"))
                 {
                     if (suppress_evaluation_)
                     {
@@ -2594,15 +2594,15 @@
 
             bool match_logical_and_operator()
             {
-                return match_dotted_logical_operator(".AND.") || match_identifier_keyword("AND");
+                return match_dotted_keyword(".AND.") || match_identifier_keyword("AND");
             }
 
             bool match_logical_or_operator()
             {
-                return match_dotted_logical_operator(".OR.") || match_identifier_keyword("OR");
+                return match_dotted_keyword(".OR.") || match_identifier_keyword("OR");
             }
 
-            bool match_dotted_logical_operator(const std::string& dotted_keyword)
+            bool match_dotted_keyword(const std::string& dotted_keyword)
             {
                 skip_whitespace();
                 if (position_ + dotted_keyword.size() > text_.size())
