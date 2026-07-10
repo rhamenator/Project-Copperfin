@@ -262,28 +262,7 @@ std::string build_runtime_manifest_text(
     stream << "security_mode=" << quote_manifest_value(security_profile.mode) << "\n";
     stream << "audit_log_path=" << quote_manifest_value(plan.audit_log_path) << "\n";
     stream << "runtime_host_sha256=" << quote_manifest_value(plan.runtime_host_sha256) << "\n";
-    stream << "dotnet_enabled=" << (extensibility_profile.dotnet_output.available ? "true" : "false") << "\n";
     stream << "dotnet_story=" << quote_manifest_value(extensibility_profile.dotnet_output.primary_story) << "\n";
-    stream << "dotnet_policy_allowlist=" << extensibility_profile.dotnet_output.policy.allowlist.size() << "\n";
-    stream << "dotnet_policy_denylist=" << extensibility_profile.dotnet_output.policy.denylist.size() << "\n";
-    stream << "dotnet_parity_matrix_entries=" << extensibility_profile.dotnet_output.parity_matrix.size() << "\n";
-    stream << "dotnet_policy_allowlist_items=" << extensibility_profile.dotnet_output.policy.allowlist.size() << "\n";
-    for (const auto& capability_id : extensibility_profile.dotnet_output.policy.allowlist) {
-        stream << "dotnet_policy_allowlist_item=" << quote_manifest_value(capability_id) << "\n";
-    }
-    stream << "dotnet_policy_denylist_items=" << extensibility_profile.dotnet_output.policy.denylist.size() << "\n";
-    for (const auto& capability_id : extensibility_profile.dotnet_output.policy.denylist) {
-        stream << "dotnet_policy_denylist_item=" << quote_manifest_value(capability_id) << "\n";
-    }
-    stream << "dotnet_parity_matrix_count=" << extensibility_profile.dotnet_output.parity_matrix.size() << "\n";
-    for (const auto& capability : extensibility_profile.dotnet_output.parity_matrix) {
-        stream << "dotnet_parity_matrix_item="
-               << quote_manifest_value(capability.id) << "|"
-               << quote_manifest_value(capability.title) << "|"
-               << dotnet_parity_tier_name(capability.tier) << "|"
-               << quote_manifest_value(capability.rationale) << "|"
-               << quote_manifest_value(capability.verification_reference) << "\n";
-    }
 
     stream << "language_integration_count=" << extensibility_profile.languages.size() << "\n";
     for (const auto& language : extensibility_profile.languages) {
@@ -308,26 +287,6 @@ std::string build_runtime_manifest_text(
     for (const auto& guardrail : extensibility_profile.guardrails) {
         stream << "extensibility_guardrail=" << quote_manifest_value(guardrail) << "\n";
     }
-
-    const platform::DotNetInteropCallDecision launcher_decision = platform::evaluate_dotnet_interop_call(
-        extensibility_profile,
-        platform::DotNetInteropCallRequest{
-            .capability_id = "task-primitives",
-            .estimated_latency_ms = 10U,
-            .requires_reflection = false,
-            .untrusted_input = false,
-            .security_sensitive = false});
-    stream << "dotnet_gateway_task_primitives=" << quote_manifest_value(launcher_decision.execution_path + ":" + launcher_decision.reason) << "\n";
-
-    const platform::DotNetInteropCallDecision denied_decision = platform::evaluate_dotnet_interop_call(
-        extensibility_profile,
-        platform::DotNetInteropCallRequest{
-            .capability_id = "unsafe-reflection-load",
-            .estimated_latency_ms = 2U,
-            .requires_reflection = true,
-            .untrusted_input = true,
-            .security_sensitive = true});
-    stream << "dotnet_gateway_unsafe_reflection=" << quote_manifest_value(denied_decision.execution_path + ":" + denied_decision.reason) << "\n";
 
     stream << "language_integrations=" << extensibility_profile.languages.size() << "\n";
     stream << "ai_features=" << extensibility_profile.ai_features.size() << "\n";

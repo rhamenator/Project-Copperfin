@@ -1343,16 +1343,7 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
         expect(debug_manifest.find("security_roles=" + std::to_string(copperfin::security::default_native_security_profile().roles.size())) != std::string::npos,
                "library-output debug manifest should record the security-role count");
         const std::vector<std::string> dotnet_summary_keys{
-            "dotnet_enabled",
-            "dotnet_story",
-            "dotnet_policy_allowlist",
-            "dotnet_policy_denylist",
-            "dotnet_parity_matrix_entries",
-            "dotnet_policy_allowlist_items",
-            "dotnet_policy_denylist_items",
-            "dotnet_parity_matrix_count",
-            "dotnet_gateway_task_primitives",
-            "dotnet_gateway_unsafe_reflection"};
+            "dotnet_story"};
         for (const auto& key : dotnet_summary_keys) {
             const std::string value = manifest_value_for_key(runtime_manifest, key);
             expect(!value.empty(),
@@ -1360,12 +1351,48 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
             expect(debug_manifest.find(key + "=" + value) != std::string::npos,
                    "library-output debug manifest should mirror " + key);
         }
-        expect(lines_with_prefix(debug_manifest, "dotnet_policy_allowlist_item=") == lines_with_prefix(runtime_manifest, "dotnet_policy_allowlist_item="),
-               "library-output debug manifest should mirror the .NET allowlist items");
-        expect(lines_with_prefix(debug_manifest, "dotnet_policy_denylist_item=") == lines_with_prefix(runtime_manifest, "dotnet_policy_denylist_item="),
-               "library-output debug manifest should mirror the .NET denylist items");
-        expect(lines_with_prefix(debug_manifest, "dotnet_parity_matrix_item=") == lines_with_prefix(runtime_manifest, "dotnet_parity_matrix_item="),
-               "library-output debug manifest should mirror the .NET parity entries");
+        expect(manifest_value_for_key(runtime_manifest, "dotnet_enabled").empty(),
+               "library-output runtime manifest should omit the .NET availability summary");
+        expect(manifest_value_for_key(runtime_manifest, "dotnet_policy_allowlist").empty(),
+               "library-output runtime manifest should omit the .NET allowlist summary");
+        expect(manifest_value_for_key(runtime_manifest, "dotnet_policy_denylist").empty(),
+               "library-output runtime manifest should omit the .NET denylist summary");
+        expect(manifest_value_for_key(runtime_manifest, "dotnet_parity_matrix_entries").empty(),
+               "library-output runtime manifest should omit the .NET parity summary");
+        expect(manifest_value_for_key(runtime_manifest, "dotnet_policy_allowlist_items").empty(),
+               "library-output runtime manifest should omit the .NET allowlist item count");
+        expect(manifest_value_for_key(runtime_manifest, "dotnet_policy_denylist_items").empty(),
+               "library-output runtime manifest should omit the .NET denylist item count");
+        expect(manifest_value_for_key(runtime_manifest, "dotnet_parity_matrix_count").empty(),
+               "library-output runtime manifest should omit the .NET parity item count");
+        expect(manifest_value_for_key(runtime_manifest, "dotnet_gateway_task_primitives").empty(),
+               "library-output runtime manifest should omit the .NET gateway allow decision");
+        expect(manifest_value_for_key(runtime_manifest, "dotnet_gateway_unsafe_reflection").empty(),
+               "library-output runtime manifest should omit the .NET gateway deny decision");
+        expect(lines_with_prefix(runtime_manifest, "dotnet_policy_allowlist_item=").empty(),
+               "library-output runtime manifest should omit the .NET allowlist items");
+        expect(lines_with_prefix(runtime_manifest, "dotnet_policy_denylist_item=").empty(),
+               "library-output runtime manifest should omit the .NET denylist items");
+        expect(lines_with_prefix(runtime_manifest, "dotnet_parity_matrix_item=").empty(),
+               "library-output runtime manifest should omit the .NET parity entries");
+        expect(!lines_with_prefix(debug_manifest, "dotnet_policy_allowlist_item=").empty(),
+               "library-output debug manifest should preserve the .NET allowlist items");
+        expect(!lines_with_prefix(debug_manifest, "dotnet_policy_denylist_item=").empty(),
+               "library-output debug manifest should preserve the .NET denylist items");
+        expect(!lines_with_prefix(debug_manifest, "dotnet_parity_matrix_item=").empty(),
+               "library-output debug manifest should preserve the .NET parity entries");
+        expect(debug_manifest.find("dotnet_enabled=") != std::string::npos,
+               "library-output debug manifest should preserve the .NET availability summary");
+        expect(debug_manifest.find("dotnet_policy_allowlist=") != std::string::npos,
+               "library-output debug manifest should preserve the .NET allowlist summary");
+        expect(debug_manifest.find("dotnet_policy_denylist=") != std::string::npos,
+               "library-output debug manifest should preserve the .NET denylist summary");
+        expect(debug_manifest.find("dotnet_parity_matrix_entries=") != std::string::npos,
+               "library-output debug manifest should preserve the .NET parity summary");
+        expect(debug_manifest.find("dotnet_gateway_task_primitives=") != std::string::npos,
+               "library-output debug manifest should preserve the .NET gateway allow decision");
+        expect(debug_manifest.find("dotnet_gateway_unsafe_reflection=") != std::string::npos,
+               "library-output debug manifest should preserve the .NET gateway deny decision");
         const std::vector<std::string> extensibility_summary_keys{
             "language_integration_count",
             "ai_feature_count",
@@ -1500,12 +1527,36 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                     expect(built_debug_manifest.find(key + "=" + value) != std::string::npos,
                            "library-output runtime pipeline should preserve " + key + " in the rewritten debug manifest");
                 }
-                expect(lines_with_prefix(built_debug_manifest, "dotnet_policy_allowlist_item=") == lines_with_prefix(built_runtime_manifest, "dotnet_policy_allowlist_item="),
-                       "library-output runtime pipeline should preserve the .NET allowlist items in the rewritten debug manifest");
-                expect(lines_with_prefix(built_debug_manifest, "dotnet_policy_denylist_item=") == lines_with_prefix(built_runtime_manifest, "dotnet_policy_denylist_item="),
-                       "library-output runtime pipeline should preserve the .NET denylist items in the rewritten debug manifest");
-                expect(lines_with_prefix(built_debug_manifest, "dotnet_parity_matrix_item=") == lines_with_prefix(built_runtime_manifest, "dotnet_parity_matrix_item="),
-                       "library-output runtime pipeline should preserve the .NET parity entries in the rewritten debug manifest");
+                expect(manifest_value_for_key(built_runtime_manifest, "dotnet_enabled").empty(),
+                       "library-output rewritten runtime manifest should omit the .NET availability summary");
+                expect(manifest_value_for_key(built_runtime_manifest, "dotnet_gateway_task_primitives").empty(),
+                       "library-output rewritten runtime manifest should omit the .NET gateway allow decision");
+                expect(manifest_value_for_key(built_runtime_manifest, "dotnet_gateway_unsafe_reflection").empty(),
+                       "library-output rewritten runtime manifest should omit the .NET gateway deny decision");
+                expect(lines_with_prefix(built_runtime_manifest, "dotnet_policy_allowlist_item=").empty(),
+                       "library-output rewritten runtime manifest should omit the .NET allowlist items");
+                expect(lines_with_prefix(built_runtime_manifest, "dotnet_policy_denylist_item=").empty(),
+                       "library-output rewritten runtime manifest should omit the .NET denylist items");
+                expect(lines_with_prefix(built_runtime_manifest, "dotnet_parity_matrix_item=").empty(),
+                       "library-output rewritten runtime manifest should omit the .NET parity entries");
+                expect(!lines_with_prefix(built_debug_manifest, "dotnet_policy_allowlist_item=").empty(),
+                       "library-output rewritten debug manifest should preserve the .NET allowlist items");
+                expect(!lines_with_prefix(built_debug_manifest, "dotnet_policy_denylist_item=").empty(),
+                       "library-output rewritten debug manifest should preserve the .NET denylist items");
+                expect(!lines_with_prefix(built_debug_manifest, "dotnet_parity_matrix_item=").empty(),
+                       "library-output rewritten debug manifest should preserve the .NET parity entries");
+                expect(built_debug_manifest.find("dotnet_enabled=") != std::string::npos,
+                       "library-output rewritten debug manifest should preserve the .NET availability summary");
+                expect(built_debug_manifest.find("dotnet_policy_allowlist=") != std::string::npos,
+                       "library-output rewritten debug manifest should preserve the .NET allowlist summary");
+                expect(built_debug_manifest.find("dotnet_policy_denylist=") != std::string::npos,
+                       "library-output rewritten debug manifest should preserve the .NET denylist summary");
+                expect(built_debug_manifest.find("dotnet_parity_matrix_entries=") != std::string::npos,
+                       "library-output rewritten debug manifest should preserve the .NET parity summary");
+                expect(built_debug_manifest.find("dotnet_gateway_task_primitives=") != std::string::npos,
+                       "library-output rewritten debug manifest should preserve the .NET gateway allow decision");
+                expect(built_debug_manifest.find("dotnet_gateway_unsafe_reflection=") != std::string::npos,
+                       "library-output rewritten debug manifest should preserve the .NET gateway deny decision");
                 for (const auto& key : extensibility_summary_keys) {
                     const std::string value = manifest_value_for_key(built_runtime_manifest, key);
                     expect(!value.empty(),
@@ -2934,16 +2985,7 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
         expect(debug_manifest.find("security_roles=" + std::to_string(copperfin::security::default_native_security_profile().roles.size())) != std::string::npos,
                "fll-output debug manifest should record the security-role count");
         const std::vector<std::string> fll_dotnet_summary_keys{
-            "dotnet_enabled",
-            "dotnet_story",
-            "dotnet_policy_allowlist",
-            "dotnet_policy_denylist",
-            "dotnet_parity_matrix_entries",
-            "dotnet_policy_allowlist_items",
-            "dotnet_policy_denylist_items",
-            "dotnet_parity_matrix_count",
-            "dotnet_gateway_task_primitives",
-            "dotnet_gateway_unsafe_reflection"};
+            "dotnet_story"};
         for (const auto& key : fll_dotnet_summary_keys) {
             const std::string value = manifest_value_for_key(runtime_manifest, key);
             expect(!value.empty(),
@@ -2951,12 +2993,42 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
             expect(debug_manifest.find(key + "=" + value) != std::string::npos,
                    "fll-output debug manifest should mirror " + key);
         }
-        expect(lines_with_prefix(debug_manifest, "dotnet_policy_allowlist_item=") == lines_with_prefix(runtime_manifest, "dotnet_policy_allowlist_item="),
-               "fll-output debug manifest should mirror the .NET allowlist items");
-        expect(lines_with_prefix(debug_manifest, "dotnet_policy_denylist_item=") == lines_with_prefix(runtime_manifest, "dotnet_policy_denylist_item="),
-               "fll-output debug manifest should mirror the .NET denylist items");
-        expect(lines_with_prefix(debug_manifest, "dotnet_parity_matrix_item=") == lines_with_prefix(runtime_manifest, "dotnet_parity_matrix_item="),
-               "fll-output debug manifest should mirror the .NET parity entries");
+        expect(manifest_value_for_key(runtime_manifest, "dotnet_enabled").empty(),
+               "fll-output runtime manifest should omit the .NET availability summary");
+        expect(manifest_value_for_key(runtime_manifest, "dotnet_policy_allowlist").empty(),
+               "fll-output runtime manifest should omit the .NET allowlist summary");
+        expect(manifest_value_for_key(runtime_manifest, "dotnet_policy_denylist").empty(),
+               "fll-output runtime manifest should omit the .NET denylist summary");
+        expect(manifest_value_for_key(runtime_manifest, "dotnet_parity_matrix_entries").empty(),
+               "fll-output runtime manifest should omit the .NET parity summary");
+        expect(manifest_value_for_key(runtime_manifest, "dotnet_gateway_task_primitives").empty(),
+               "fll-output runtime manifest should omit the .NET gateway allow decision");
+        expect(manifest_value_for_key(runtime_manifest, "dotnet_gateway_unsafe_reflection").empty(),
+               "fll-output runtime manifest should omit the .NET gateway deny decision");
+        expect(lines_with_prefix(runtime_manifest, "dotnet_policy_allowlist_item=").empty(),
+               "fll-output runtime manifest should omit the .NET allowlist items");
+        expect(lines_with_prefix(runtime_manifest, "dotnet_policy_denylist_item=").empty(),
+               "fll-output runtime manifest should omit the .NET denylist items");
+        expect(lines_with_prefix(runtime_manifest, "dotnet_parity_matrix_item=").empty(),
+               "fll-output runtime manifest should omit the .NET parity entries");
+        expect(!lines_with_prefix(debug_manifest, "dotnet_policy_allowlist_item=").empty(),
+               "fll-output debug manifest should preserve the .NET allowlist items");
+        expect(!lines_with_prefix(debug_manifest, "dotnet_policy_denylist_item=").empty(),
+               "fll-output debug manifest should preserve the .NET denylist items");
+        expect(!lines_with_prefix(debug_manifest, "dotnet_parity_matrix_item=").empty(),
+               "fll-output debug manifest should preserve the .NET parity entries");
+        expect(debug_manifest.find("dotnet_enabled=") != std::string::npos,
+               "fll-output debug manifest should preserve the .NET availability summary");
+        expect(debug_manifest.find("dotnet_policy_allowlist=") != std::string::npos,
+               "fll-output debug manifest should preserve the .NET allowlist summary");
+        expect(debug_manifest.find("dotnet_policy_denylist=") != std::string::npos,
+               "fll-output debug manifest should preserve the .NET denylist summary");
+        expect(debug_manifest.find("dotnet_parity_matrix_entries=") != std::string::npos,
+               "fll-output debug manifest should preserve the .NET parity summary");
+        expect(debug_manifest.find("dotnet_gateway_task_primitives=") != std::string::npos,
+               "fll-output debug manifest should preserve the .NET gateway allow decision");
+        expect(debug_manifest.find("dotnet_gateway_unsafe_reflection=") != std::string::npos,
+               "fll-output debug manifest should preserve the .NET gateway deny decision");
         const std::vector<std::string> fll_extensibility_summary_keys{
             "language_integration_count",
             "ai_feature_count",
@@ -3099,12 +3171,36 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                     expect(built_debug_manifest.find(key + "=" + value) != std::string::npos,
                            "fll-output runtime pipeline should preserve " + key + " in the rewritten debug manifest");
                 }
-                expect(lines_with_prefix(built_debug_manifest, "dotnet_policy_allowlist_item=") == lines_with_prefix(built_runtime_manifest, "dotnet_policy_allowlist_item="),
-                       "fll-output runtime pipeline should preserve the .NET allowlist items in the rewritten debug manifest");
-                expect(lines_with_prefix(built_debug_manifest, "dotnet_policy_denylist_item=") == lines_with_prefix(built_runtime_manifest, "dotnet_policy_denylist_item="),
-                       "fll-output runtime pipeline should preserve the .NET denylist items in the rewritten debug manifest");
-                expect(lines_with_prefix(built_debug_manifest, "dotnet_parity_matrix_item=") == lines_with_prefix(built_runtime_manifest, "dotnet_parity_matrix_item="),
-                       "fll-output runtime pipeline should preserve the .NET parity entries in the rewritten debug manifest");
+                expect(manifest_value_for_key(built_runtime_manifest, "dotnet_enabled").empty(),
+                       "fll-output rewritten runtime manifest should omit the .NET availability summary");
+                expect(manifest_value_for_key(built_runtime_manifest, "dotnet_gateway_task_primitives").empty(),
+                       "fll-output rewritten runtime manifest should omit the .NET gateway allow decision");
+                expect(manifest_value_for_key(built_runtime_manifest, "dotnet_gateway_unsafe_reflection").empty(),
+                       "fll-output rewritten runtime manifest should omit the .NET gateway deny decision");
+                expect(lines_with_prefix(built_runtime_manifest, "dotnet_policy_allowlist_item=").empty(),
+                       "fll-output rewritten runtime manifest should omit the .NET allowlist items");
+                expect(lines_with_prefix(built_runtime_manifest, "dotnet_policy_denylist_item=").empty(),
+                       "fll-output rewritten runtime manifest should omit the .NET denylist items");
+                expect(lines_with_prefix(built_runtime_manifest, "dotnet_parity_matrix_item=").empty(),
+                       "fll-output rewritten runtime manifest should omit the .NET parity entries");
+                expect(!lines_with_prefix(built_debug_manifest, "dotnet_policy_allowlist_item=").empty(),
+                       "fll-output rewritten debug manifest should preserve the .NET allowlist items");
+                expect(!lines_with_prefix(built_debug_manifest, "dotnet_policy_denylist_item=").empty(),
+                       "fll-output rewritten debug manifest should preserve the .NET denylist items");
+                expect(!lines_with_prefix(built_debug_manifest, "dotnet_parity_matrix_item=").empty(),
+                       "fll-output rewritten debug manifest should preserve the .NET parity entries");
+                expect(built_debug_manifest.find("dotnet_enabled=") != std::string::npos,
+                       "fll-output rewritten debug manifest should preserve the .NET availability summary");
+                expect(built_debug_manifest.find("dotnet_policy_allowlist=") != std::string::npos,
+                       "fll-output rewritten debug manifest should preserve the .NET allowlist summary");
+                expect(built_debug_manifest.find("dotnet_policy_denylist=") != std::string::npos,
+                       "fll-output rewritten debug manifest should preserve the .NET denylist summary");
+                expect(built_debug_manifest.find("dotnet_parity_matrix_entries=") != std::string::npos,
+                       "fll-output rewritten debug manifest should preserve the .NET parity summary");
+                expect(built_debug_manifest.find("dotnet_gateway_task_primitives=") != std::string::npos,
+                       "fll-output rewritten debug manifest should preserve the .NET gateway allow decision");
+                expect(built_debug_manifest.find("dotnet_gateway_unsafe_reflection=") != std::string::npos,
+                       "fll-output rewritten debug manifest should preserve the .NET gateway deny decision");
                 for (const auto& key : fll_extensibility_summary_keys) {
                     const std::string value = manifest_value_for_key(built_runtime_manifest, key);
                     expect(!value.empty(),

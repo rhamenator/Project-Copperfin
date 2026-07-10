@@ -188,20 +188,20 @@ void test_materialize_runtime_package() {
         expect(runtime_manifest.find("audit_log_path=") != std::string::npos, "runtime manifest should include the audit log path");
         expect(runtime_manifest.find("launcher_mode=") == std::string::npos, "runtime manifest should omit launcher mode from the execution contract");
         expect(runtime_manifest.find("launcher_fallback=") == std::string::npos, "runtime manifest should omit launcher fallback from the execution contract");
-        expect(runtime_manifest.find("dotnet_policy_allowlist=") != std::string::npos, "runtime manifest should include .NET policy allowlist metadata");
-        expect(runtime_manifest.find("dotnet_policy_denylist=") != std::string::npos, "runtime manifest should include .NET policy denylist metadata");
-        expect(runtime_manifest.find("dotnet_parity_matrix_entries=") != std::string::npos, "runtime manifest should include .NET parity matrix metadata");
-        expect(runtime_manifest.find("dotnet_policy_allowlist_items=") != std::string::npos, "runtime manifest should include .NET policy allowlist item count");
-        expect(runtime_manifest.find("dotnet_policy_denylist_items=") != std::string::npos, "runtime manifest should include .NET policy denylist item count");
-        expect(runtime_manifest.find("dotnet_policy_allowlist_item=task-primitives") != std::string::npos,
-               "runtime manifest should emit task-primitives allowlist entry");
-        expect(runtime_manifest.find("dotnet_policy_denylist_item=unsafe-reflection-load") != std::string::npos,
-               "runtime manifest should emit unsafe-reflection-load denylist entry");
-        expect(runtime_manifest.find("dotnet_parity_matrix_count=") != std::string::npos, "runtime manifest should include .NET parity matrix count");
-        expect(runtime_manifest.find("dotnet_parity_matrix_item=task-primitives") != std::string::npos,
-               "runtime manifest should emit task-primitives parity matrix entry");
-        expect(runtime_manifest.find("dotnet_parity_matrix_item=unsafe-reflection-load") != std::string::npos,
-               "runtime manifest should emit unsafe-reflection-load parity matrix entry");
+        expect(runtime_manifest.find("dotnet_story=") != std::string::npos, "runtime manifest should keep the .NET story field used by runtime host output");
+        expect(runtime_manifest.find("dotnet_enabled=") == std::string::npos, "runtime manifest should omit .NET availability summary metadata");
+        expect(runtime_manifest.find("dotnet_policy_allowlist=") == std::string::npos, "runtime manifest should omit .NET policy allowlist metadata");
+        expect(runtime_manifest.find("dotnet_policy_denylist=") == std::string::npos, "runtime manifest should omit .NET policy denylist metadata");
+        expect(runtime_manifest.find("dotnet_parity_matrix_entries=") == std::string::npos, "runtime manifest should omit .NET parity matrix metadata");
+        expect(runtime_manifest.find("dotnet_policy_allowlist_items=") == std::string::npos, "runtime manifest should omit .NET policy allowlist item counts");
+        expect(runtime_manifest.find("dotnet_policy_denylist_items=") == std::string::npos, "runtime manifest should omit .NET policy denylist item counts");
+        expect(runtime_manifest.find("dotnet_parity_matrix_count=") == std::string::npos, "runtime manifest should omit .NET parity matrix counts");
+        expect(lines_with_prefix(runtime_manifest, "dotnet_policy_allowlist_item=").empty(),
+               "runtime manifest should omit task-primitives allowlist entries");
+        expect(lines_with_prefix(runtime_manifest, "dotnet_policy_denylist_item=").empty(),
+               "runtime manifest should omit unsafe-reflection-load denylist entries");
+        expect(lines_with_prefix(runtime_manifest, "dotnet_parity_matrix_item=").empty(),
+               "runtime manifest should omit .NET parity matrix entries");
         expect(runtime_manifest.find("language_integration_count=") != std::string::npos, "runtime manifest should include language integration count");
         expect(runtime_manifest.find("language_integration=python|") != std::string::npos,
                "runtime manifest should emit python sidecar language integration");
@@ -216,10 +216,28 @@ void test_materialize_runtime_package() {
                "runtime manifest should include extensibility guardrail count");
         expect(runtime_manifest.find("The trusted execution core stays native-first and security-first.") != std::string::npos,
                "runtime manifest should include explicit extensibility guardrails");
-        expect(runtime_manifest.find("dotnet_gateway_task_primitives=") != std::string::npos, "runtime manifest should include .NET gateway allow decision diagnostics");
-        expect(runtime_manifest.find("dotnet_gateway_unsafe_reflection=") != std::string::npos, "runtime manifest should include .NET gateway deny decision diagnostics");
+        expect(runtime_manifest.find("dotnet_gateway_task_primitives=") == std::string::npos, "runtime manifest should omit .NET gateway allow decision diagnostics");
+        expect(runtime_manifest.find("dotnet_gateway_unsafe_reflection=") == std::string::npos, "runtime manifest should omit .NET gateway deny decision diagnostics");
         expect(lines_with_prefix(runtime_manifest, "feature_flag=").empty(),
                "runtime manifest should omit feature-flag inventory from the execution contract");
+        expect(debug_manifest.find("dotnet_enabled=") != std::string::npos,
+               "debug manifest should preserve the .NET availability summary");
+        expect(debug_manifest.find("dotnet_policy_allowlist=") != std::string::npos,
+               "debug manifest should preserve the .NET policy allowlist summary");
+        expect(debug_manifest.find("dotnet_policy_denylist=") != std::string::npos,
+               "debug manifest should preserve the .NET policy denylist summary");
+        expect(debug_manifest.find("dotnet_parity_matrix_entries=") != std::string::npos,
+               "debug manifest should preserve the .NET parity matrix summary");
+        expect(debug_manifest.find("dotnet_policy_allowlist_item=task-primitives") != std::string::npos,
+               "debug manifest should preserve task-primitives allowlist entries");
+        expect(debug_manifest.find("dotnet_policy_denylist_item=unsafe-reflection-load") != std::string::npos,
+               "debug manifest should preserve unsafe-reflection-load denylist entries");
+        expect(debug_manifest.find("dotnet_parity_matrix_item=task-primitives") != std::string::npos,
+               "debug manifest should preserve task-primitives parity matrix entries");
+        expect(debug_manifest.find("dotnet_gateway_task_primitives=") != std::string::npos,
+               "debug manifest should preserve .NET gateway allow decision diagnostics");
+        expect(debug_manifest.find("dotnet_gateway_unsafe_reflection=") != std::string::npos,
+               "debug manifest should preserve .NET gateway deny decision diagnostics");
         expect(debug_manifest.find("launcher_mode=dotnet_launcher") != std::string::npos,
                "debug manifest should record the effective launcher mode");
         expect(debug_manifest.find("launcher_fallback=none") != std::string::npos,
