@@ -2157,16 +2157,42 @@ internal static class Program
                     FieldIndex = 63,
                     MemoBlockNumber = 0
                 });
-            SmokeAssetEditorRealAssetSettingShouldRemainUnavailable(
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
                 propertyName: "PAPERLENGTH",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: 4318,
+                expectedUpdatedSelectionValue: "4318",
                 expectedSectionCount: 5,
-                expectLabel: false);
-            SmokeAssetEditorRealAssetSettingShouldRemainUnavailable(
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "PAPERLENGTH",
+                    Value = "4318",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 304
+                },
+                expectRawSnapshotProperty: false);
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
                 propertyName: "PAPERWIDTH",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: 2794,
+                expectedUpdatedSelectionValue: "2794",
                 expectedSectionCount: 5,
-                expectLabel: false);
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "PAPERWIDTH",
+                    Value = "2794",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 304
+                },
+                expectRawSnapshotProperty: false);
             SmokeAssetEditorRealAssetSettingShouldRemainUnavailable(
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
                 propertyName: "LEFTMARGIN",
@@ -2177,16 +2203,42 @@ internal static class Program
                 propertyName: "RIGHTMARGIN",
                 expectedSectionCount: 5,
                 expectLabel: false);
-            SmokeAssetEditorRealAssetSettingShouldRemainUnavailable(
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
                 propertyName: "PAPERLENGTH",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: 4318,
+                expectedUpdatedSelectionValue: "4318",
                 expectedSectionCount: 5,
-                expectLabel: true);
-            SmokeAssetEditorRealAssetSettingShouldRemainUnavailable(
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "PAPERLENGTH",
+                    Value = "4318",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 78
+                },
+                expectRawSnapshotProperty: false);
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
                 propertyName: "PAPERWIDTH",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: 2794,
+                expectedUpdatedSelectionValue: "2794",
                 expectedSectionCount: 5,
-                expectLabel: true);
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "PAPERWIDTH",
+                    Value = "2794",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 78
+                },
+                expectRawSnapshotProperty: false);
             SmokeAssetEditorRealAssetSettingShouldRemainUnavailable(
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
                 propertyName: "LEFTMARGIN",
