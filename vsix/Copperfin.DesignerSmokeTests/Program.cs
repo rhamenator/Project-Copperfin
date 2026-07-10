@@ -387,6 +387,7 @@ internal static class Program
         SmokeReportGroupingExplorerSelection();
         SmokeReportSettingsExplorerSelection();
         SmokeDeletedReportSettingsExplorerSelection();
+        SmokeAssetEditorReportGroupingPropertyGridHostUpdate();
         SmokeAssetEditorReportSectionPropertyGridHostUpdate();
         SmokeAssetEditorReportSettingsPropertyGridHostUpdate();
         SmokeAssetEditorDeletedReportSettingsPropertyGridHostUpdate();
@@ -6930,6 +6931,15 @@ internal static class Program
                SelectionMatchesExpectedReportGrouping(groupingSelection, expectedGrouping),
             "Report grouping explorer selection should produce a grouping-rooted property-grid selection and clear object rows");
 
+        if (propertyGrid.SelectedObject is CopperfinDesignerSelection editableSelection)
+        {
+            TypeDescriptor.GetProperties(editableSelection)["GROUPINGEXPRESSION"]?.SetValue(editableSelection, "customer.region");
+            Expect(editableSelection.TryGetUpdate("GROUPINGEXPRESSION", out var exprTarget, out var exprValue) &&
+                   string.Equals(exprTarget, "EXPR", StringComparison.Ordinal) &&
+                   string.Equals(exprValue, "customer.region", StringComparison.Ordinal),
+                "Report grouping property-grid selection should serialize grouping-expression edits through the invariant EXPR update path");
+        }
+
         using var labelControl = new CopperfinAssetEditorControl();
         var labelSnapshot = new CopperfinStudioSnapshotDocument
         {
@@ -6950,6 +6960,15 @@ internal static class Program
                labelSelection.RecordIndex == 41 &&
                SelectionMatchesExpectedReportGrouping(labelSelection, expectedGrouping),
             "Label grouping explorer selection should expose the same shared grouping-rooted property-grid selection");
+
+        if (labelPropertyGrid.SelectedObject is CopperfinDesignerSelection editableLabelSelection)
+        {
+            TypeDescriptor.GetProperties(editableLabelSelection)["GROUPINGEXPRESSION"]?.SetValue(editableLabelSelection, "customer.region");
+            Expect(editableLabelSelection.TryGetUpdate("GROUPINGEXPRESSION", out var exprTarget, out var exprValue) &&
+                   string.Equals(exprTarget, "EXPR", StringComparison.Ordinal) &&
+                   string.Equals(exprValue, "customer.region", StringComparison.Ordinal),
+                "Label grouping property-grid selection should preserve the shared invariant EXPR update path");
+        }
 
         var spanishSelection = CopperfinDesignerSelection.FromReportGrouping(grouping, new CopperfinLocalization("es-419"));
         var spanishProperties = TypeDescriptor.GetProperties(spanishSelection).Cast<PropertyDescriptor>().ToList();
@@ -7733,6 +7752,126 @@ internal static class Program
             {
             }
             catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
+    private static void SmokeAssetEditorReportGroupingPropertyGridHostUpdate()
+    {
+        var snapshot = BuildAssetEditorGroupingUpdateSmokeSnapshot();
+        var expectedGrouping = new ExpectedReportGroupingMetadata
+        {
+            GroupingIndex = 1,
+            GroupingNestingDepth = 2,
+            GroupingExpression = "customer.region",
+            GroupingExpressionFieldIndex = 2,
+            GroupingExpressionMemoBlockNumber = 7,
+            HeaderSectionId = "group_header_7",
+            HeaderRecordIndex = 41,
+            HeaderDeleted = false,
+            FooterSectionId = "group_footer_7",
+            FooterRecordIndex = 47,
+            FooterDeleted = true,
+            HeaderStateDisplay = "Live",
+            FooterStateDisplay = "Deleted"
+        };
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmoke-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateSmokeAssetFile(tempRoot, "invoice.frx");
+        var scriptPath = CreateFakeStudioHostScriptPath(tempRoot);
+        var logPath = Path.Combine(tempRoot, "studio-host.log");
+        var previousHostPath = Environment.GetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH");
+        var previousLogPath = Environment.GetEnvironmentVariable("COPPERFIN_SMOKE_LOG");
+
+        try
+        {
+            File.WriteAllText(logPath, string.Empty);
+            CreateFakeStudioHostScript(scriptPath, BuildGroupingUpdateHostResponseJson());
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", scriptPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", logPath);
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+
+            ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+            SetPrivateField(control, "currentPath", assetPath);
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            sectionListView.Items.Cast<ListViewItem>()
+                .First(item => string.Equals(item.Text, "Grouping 1 - customer.country", StringComparison.Ordinal))
+                .Selected = true;
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            InvokeAssetEditorVoid(control, "LoadSurface");
+            Application.DoEvents();
+
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared report design surface.");
+
+            Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == 41 &&
+                   string.Equals(ReadSelectionPropertyValue(initialSelection, "GROUPINGEXPRESSION"), "customer.country", StringComparison.Ordinal),
+                "A report grouping host-update smoke should start from a grouping-rooted property-grid selection");
+
+            if (propertyGrid.SelectedObject is not CopperfinDesignerSelection groupingSelection)
+            {
+                throw new InvalidOperationException("Could not read the selected report grouping from the shared asset editor.");
+            }
+
+            TypeDescriptor.GetProperties(groupingSelection)["GROUPINGEXPRESSION"]?.SetValue(groupingSelection, "customer.region");
+            InvokeAssetEditorVoid(control, "ApplyPropertyGridChange", "GROUPINGEXPRESSION", "customer.country");
+            Application.DoEvents();
+
+            var logLines = File.ReadAllLines(logPath);
+            var invocationStartCount = logLines.Count(line => string.Equals(line, "BEGIN", StringComparison.Ordinal));
+            Expect(invocationStartCount == 1,
+                "Editing a report grouping through the shared asset editor should invoke the Studio host exactly once");
+
+            var invocationArguments = logLines.Skip(1).ToList();
+            Expect(invocationArguments.Contains("--from-vs") &&
+                   invocationArguments.Contains("--json") &&
+                   invocationArguments.Contains("--set-property") &&
+                   invocationArguments.Contains("--record") &&
+                   invocationArguments.Contains("41") &&
+                   invocationArguments.Contains("--property-name") &&
+                   invocationArguments.Contains("EXPR") &&
+                   invocationArguments.Contains("--property-value") &&
+                   invocationArguments.Contains("customer.region"),
+                "Editing a report grouping through the shared asset editor should send one invariant EXPR update through the host property contract");
+
+            Expect(string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, "Grouping 1 - customer.region", StringComparison.Ordinal) &&
+                   propertyGrid.SelectedObject is CopperfinDesignerSelection refreshedSelection &&
+                   refreshedSelection.RecordIndex == 41 &&
+                   SelectionMatchesExpectedReportGrouping(refreshedSelection, expectedGrouping) &&
+                   ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") is null &&
+                   ReadPrivateNullableInt(surface, "selectedRecordIndex") is null &&
+                   !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+                "Editing a report grouping through the shared asset editor should preserve grouping-rooted selection continuity after the host-backed refresh");
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_STUDIO_HOST_PATH", previousHostPath);
+            Environment.SetEnvironmentVariable("COPPERFIN_SMOKE_LOG", previousLogPath);
+
+            try
+            {
+                Directory.Delete(tempRoot, recursive: true);
+            }
+            catch
             {
             }
         }
@@ -35467,6 +35606,46 @@ internal static class Program
         };
     }
 
+    private static CopperfinStudioSnapshotDocument BuildAssetEditorGroupingUpdateSmokeSnapshot()
+    {
+        return new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "report",
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                Groupings = new List<CopperfinStudioReportGrouping>
+                {
+                    new()
+                    {
+                        GroupingIndex = 1,
+                        NestingDepth = 2,
+                        Expression = "customer.country",
+                        ExpressionFieldIndex = 2,
+                        ExpressionMemoBlockNumber = 7,
+                        HeaderSectionId = "group_header_7",
+                        HeaderRecordIndex = 41,
+                        HeaderDeleted = false,
+                        FooterSectionId = "group_footer_7",
+                        FooterRecordIndex = 47,
+                        FooterDeleted = true
+                    }
+                },
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail_1",
+                        Title = "Detail",
+                        BandKind = "detail",
+                        RecordIndex = 42,
+                        Top = 2000,
+                        Height = 5000
+                    }
+                }
+            }
+        };
+    }
+
     private static CopperfinStudioSnapshotDocument BuildAssetEditorSettingsUpdateSmokeSnapshot()
     {
         return new CopperfinStudioSnapshotDocument
@@ -39341,6 +39520,13 @@ internal static class Program
     {
         return """
 {"Status":"ok","Document":{"AssetFamily":"report","FieldCount":5,"Objects":[{"RecordIndex":6,"Title":"customer.company","Subtitle":"field","Properties":[{"Name":"HPOS","Value":"1200"},{"Name":"VPOS","Value":"3800"},{"Name":"WIDTH","Value":"4000"},{"Name":"HEIGHT","Value":"500"},{"Name":"EXPR","Value":"customer.company"}]}],"ReportLayout":{"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":3200,"Height":5000,"Objects":[{"RecordIndex":6,"ObjectKind":"field","Title":"customer.company","Expression":"customer.company","Left":1200,"Top":3800,"Width":4000,"Height":500}]}],"DeletedSections":[],"UnplacedObjects":[]}}}
+""";
+    }
+
+    private static string BuildGroupingUpdateHostResponseJson()
+    {
+        return """
+{"Status":"ok","Document":{"AssetFamily":"report","ReportLayout":{"Groupings":[{"GroupingIndex":1,"NestingDepth":2,"Expression":"customer.region","ExpressionFieldIndex":2,"ExpressionMemoBlockNumber":7,"HeaderSectionId":"group_header_7","HeaderRecordIndex":41,"HeaderDeleted":false,"FooterSectionId":"group_footer_7","FooterRecordIndex":47,"FooterDeleted":true}],"Sections":[{"Id":"detail_1","Title":"Detail","BandKind":"detail","RecordIndex":42,"Top":2000,"Height":5000}],"DeletedSections":[],"UnplacedObjects":[]}}}
 """;
     }
 

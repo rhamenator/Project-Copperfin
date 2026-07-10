@@ -452,10 +452,11 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
             "GROUPINGNESTINGDEPTH",
             localization.Text("AssetEditor.Property.GroupingNestingDepth"),
             grouping.NestingDepth.ToString(CultureInfo.InvariantCulture));
-        selection.AddReadOnlyString(
+        selection.AddEditableString(
             "GROUPINGEXPRESSION",
             localization.Text("AssetEditor.Property.GroupingExpression"),
-            grouping.Expression);
+            grouping.Expression,
+            targetName: "EXPR");
 
         if (grouping.ExpressionFieldIndex.HasValue)
         {
@@ -679,11 +680,17 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         });
     }
 
-    private void AddEditableString(string name, string displayName, string value, bool requiresFoxStringLiteral = false)
+    private void AddEditableString(
+        string name,
+        string displayName,
+        string value,
+        bool requiresFoxStringLiteral = false,
+        string? targetName = null)
     {
         AddField(new SelectionField
         {
             Name = name,
+            TargetName = string.IsNullOrWhiteSpace(targetName) ? name : targetName!,
             DisplayName = displayName,
             ValueType = typeof(string),
             IsReadOnly = false,
