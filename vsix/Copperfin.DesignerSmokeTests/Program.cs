@@ -373,6 +373,7 @@ internal static class Program
         SmokeLocalizedAssetEditorChrome();
         SmokePseudoLocalizedAssetEditorChrome();
         SmokeLocalizedHostModeSubtitles();
+        SmokeProjectWorkflowWarningParsingLocalization();
         SmokeLocalizedProjectWorkspaceChrome();
         SmokeLocalizedProjectCommandDebuggerChrome();
         SmokeLocalizedProjectWorkspacePlaceholders();
@@ -34262,6 +34263,62 @@ internal static class Program
             Expect(manifestText.IndexOf("asset=6|wzcommon/registry.vcx|", StringComparison.Ordinal) >= 0,
                 $"project build workflow manifest should stage the shared class dependency for {path}");
         }
+    }
+
+    private static void SmokeProjectWorkflowWarningParsingLocalization()
+    {
+        var parseWarningLinesMethod = typeof(CopperfinProjectWorkflow).GetMethod(
+            "ParseWarningLines",
+            BindingFlags.Static | BindingFlags.NonPublic);
+        Expect(parseWarningLinesMethod is not null,
+            "project workflow warning parsing smoke should locate the private warning parser");
+        if (parseWarningLinesMethod is null)
+        {
+            return;
+        }
+
+        List<string> ParseWarnings(string locale, string text)
+        {
+            var result = parseWarningLinesMethod.Invoke(
+                null,
+                new object?[] { text, new CopperfinLocalization(locale) });
+            return result as List<string> ?? new List<string>();
+        }
+
+        var englishWarnings = ParseWarnings(
+            "en-US",
+            "warning: English warning\nstatus: ok\n");
+        Expect(englishWarnings.Count == 1 &&
+               string.Equals(englishWarnings[0], "English warning", StringComparison.Ordinal),
+            "project workflow warning parsing smoke should preserve the English warning body");
+
+        var spanishWarnings = ParseWarnings(
+            "es-419",
+            "advertencia: Advertencia localizada\n");
+        Expect(spanishWarnings.Count == 1 &&
+               string.Equals(spanishWarnings[0], "Advertencia localizada", StringComparison.Ordinal),
+            "project workflow warning parsing smoke should recognize the Spanish warning prefix");
+
+        var spanishFallbackWarnings = ParseWarnings(
+            "es-419",
+            "warning: English fallback warning\n");
+        Expect(spanishFallbackWarnings.Count == 1 &&
+               string.Equals(spanishFallbackWarnings[0], "English fallback warning", StringComparison.Ordinal),
+            "project workflow warning parsing smoke should keep the English warning fallback under Spanish locale");
+
+        var portugueseWarnings = ParseWarnings(
+            "pt-BR",
+            "aviso: Aviso localizado\n");
+        Expect(portugueseWarnings.Count == 1 &&
+               string.Equals(portugueseWarnings[0], "Aviso localizado", StringComparison.Ordinal),
+            "project workflow warning parsing smoke should recognize the Portuguese warning prefix");
+
+        var pseudoWarnings = ParseWarnings(
+            "qps-ploc",
+            "warning: Pseudo invariant warning\n");
+        Expect(pseudoWarnings.Count == 1 &&
+               string.Equals(pseudoWarnings[0], "Pseudo invariant warning", StringComparison.Ordinal),
+            "project workflow warning parsing smoke should keep the invariant native warning prefix under qps-ploc");
     }
 
     private static void SmokeProjectRunWorkflowWithRealAsset(string? path)

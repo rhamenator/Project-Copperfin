@@ -121,14 +121,14 @@ internal static class CopperfinProjectWorkflow
             CreateSecurityEnabledBuildEnvironment(),
             localization);
         var warningCount = ParseIntOrDefault(GetValueOrDefault(buildResult.Values, "warnings"), 0);
-        var warnings = ParseWarningLines(buildResult.StandardOutput);
+        var warnings = ParseWarningLines(buildResult.StandardOutput, localization);
         if (warningCount == 0 && warnings.Count > 0)
         {
             warningCount = warnings.Count;
         }
         else if (warningCount > 0 && warnings.Count == 0)
         {
-            warnings = ParseWarningLines(buildResult.StandardError);
+            warnings = ParseWarningLines(buildResult.StandardError, localization);
         }
 
         var manifestPath = GetValueOrDefault(buildResult.Values, "manifest.path");
@@ -387,22 +387,64 @@ internal static class CopperfinProjectWorkflow
         return values;
     }
 
-    private static List<string> ParseWarningLines(string text)
+    private static List<string> ParseWarningLines(string text, CopperfinLocalization localization)
     {
         var warnings = new List<string>();
+        var warningPrefixes = BuildWarningPrefixes(localization);
         using var reader = new StringReader(text);
         string? line;
         while ((line = reader.ReadLine()) is not null)
         {
-            if (!line.StartsWith("warning: ", StringComparison.OrdinalIgnoreCase))
+            string? matchedPrefix = null;
+            foreach (var warningPrefix in warningPrefixes)
+            {
+                if (line.StartsWith(warningPrefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    matchedPrefix = warningPrefix;
+                    break;
+                }
+            }
+
+            if (matchedPrefix is null)
             {
                 continue;
             }
 
-            warnings.Add(line.Substring("warning: ".Length).Trim());
+            warnings.Add(line.Substring(matchedPrefix.Length).Trim());
         }
 
         return warnings;
+    }
+
+    private static IReadOnlyList<string> BuildWarningPrefixes(CopperfinLocalization localization)
+    {
+        var prefixes = new List<string>();
+        var localizedPrefix = ResolveBuildWarningPrefix(localization);
+        if (!string.IsNullOrWhiteSpace(localizedPrefix))
+        {
+            prefixes.Add(localizedPrefix);
+        }
+
+        var defaultPrefix = new CopperfinLocalization(CopperfinLocalization.DefaultLocale)
+            .Text("BuildHost.Prefix.Warning");
+        if (!string.IsNullOrWhiteSpace(defaultPrefix) &&
+            !prefixes.Any(prefix => string.Equals(prefix, defaultPrefix, StringComparison.OrdinalIgnoreCase)))
+        {
+            prefixes.Add(defaultPrefix);
+        }
+
+        return prefixes;
+    }
+
+    private static string ResolveBuildWarningPrefix(CopperfinLocalization localization)
+    {
+        if (string.Equals(localization.Locale, CopperfinLocalization.PseudoLocale, StringComparison.OrdinalIgnoreCase))
+        {
+            return new CopperfinLocalization(CopperfinLocalization.DefaultLocale)
+                .Text("BuildHost.Prefix.Warning");
+        }
+
+        return localization.Text("BuildHost.Prefix.Warning");
     }
 
     private static int ParseIntOrDefault(string value, int fallback)
