@@ -365,6 +365,74 @@ void test_scatter_to_array_and_gather_from_array_round_trip() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_scatter_and_gather_array_preserve_explicit_fields_order() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_gather_array_field_order";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"Alice", "42"},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok, "scatter/gather array field-order DBF fixture should be created");
+
+    const fs::path main_path = temp_root / "scatter_gather_array_field_order.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "'\n"
+        "GO 1\n"
+        "SCATTER FIELDS AGE, NAME TO aRow\n"
+        "nFirstPlus = aRow(1) + 1\n"
+        "cSecond = aRow[2]\n"
+        "REPLACE NAME WITH 'Changed', AGE WITH 7\n"
+        "GATHER FROM aRow FIELDS AGE, NAME\n"
+        "nAfterAge = AGE\n"
+        "cAfterName = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "SCATTER/GATHER array explicit field-order script should complete: " + state.message);
+
+    const auto first_plus = state.globals.find("nfirstplus");
+    const auto second = state.globals.find("csecond");
+    const auto after_age = state.globals.find("nafterage");
+    const auto after_name = state.globals.find("caftername");
+
+    expect(first_plus != state.globals.end(), "reordered SCATTER should expose AGE in the first array slot");
+    expect(second != state.globals.end(), "reordered SCATTER should expose NAME in the second array slot");
+    expect(after_age != state.globals.end(), "reordered GATHER should restore AGE from the first array slot");
+    expect(after_name != state.globals.end(), "reordered GATHER should restore NAME from the second array slot");
+
+    if (first_plus != state.globals.end()) {
+        expect(copperfin::runtime::format_value(first_plus->second) == "43",
+            "SCATTER FIELDS AGE, NAME should preserve the explicit first-slot numeric AGE field");
+    }
+    if (second != state.globals.end()) {
+        expect(copperfin::runtime::format_value(second->second) == "Alice",
+            "SCATTER FIELDS AGE, NAME should preserve the explicit second-slot NAME field");
+    }
+    if (after_age != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_age->second) == "42",
+            "GATHER FROM array FIELDS AGE, NAME should restore AGE from the first array element");
+    }
+    if (after_name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_name->second) == "Alice",
+            "GATHER FROM array FIELDS AGE, NAME should restore NAME from the second array element");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_scatter_gather_array_like_and_except_field_filters() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_gather_array_like_except";

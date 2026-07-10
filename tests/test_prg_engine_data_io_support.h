@@ -50,6 +50,7 @@ void test_scatter_memvar_from_current_record();
 void test_scatter_gather_memvar_fields_blank_and_for_semantics();
 void test_scatter_gather_memvar_single_name_field_filter_semantics();
 void test_scatter_to_array_and_gather_from_array_round_trip();
+void test_scatter_and_gather_array_preserve_explicit_fields_order();
 void test_scatter_gather_array_like_and_except_field_filters();
 void test_scatter_gather_memvar_preserves_date_and_datetime_like_values();
 void test_scatter_gather_array_preserves_date_and_datetime_like_values();

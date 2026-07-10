@@ -6802,18 +6802,36 @@
                 }
                 const std::vector<vfp::DbfRecordValue> &field_source =
                     rec.has_value() ? rec->values : blank_field_list;
+                const std::vector<vfp::DbfFieldDescriptor> selected_fields =
+                    filter_field_descriptors(cursor_field_descriptors(*cursor), field_filter, true);
 
                 std::vector<PrgValue> scattered_values;
                 std::vector<std::string> scattered_field_names;
                 std::string array_name;
                 std::size_t matched_field_count = 0U;
-                for (const auto &field : field_source)
+                for (const auto &selected_field : selected_fields)
                 {
-                    if (!field_matches_filter(field.field_name, field_filter))
+                    const auto field = std::find_if(
+                        field_source.begin(),
+                        field_source.end(),
+                        [&](const vfp::DbfRecordValue &candidate)
+                        {
+                            return collapse_identifier(candidate.field_name) ==
+                                   collapse_identifier(selected_field.name);
+                        });
+
+                    vfp::DbfRecordValue resolved_field;
+                    if (field != field_source.end())
                     {
-                        continue;
+                        resolved_field = *field;
                     }
-                    const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.field_type)));
+                    else
+                    {
+                        resolved_field.field_name = selected_field.name;
+                        resolved_field.field_type = selected_field.type;
+                    }
+
+                    const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(resolved_field.field_type)));
                     const bool is_memo_field = field_type == 'M' || field_type == 'G' || field_type == 'W';
                     if (!include_memo && is_memo_field)
                     {
@@ -6821,19 +6839,20 @@
                     }
 
                     ++matched_field_count;
-                    const PrgValue val = blank ? blank_value_for_field(field) : record_value_to_prg_value(field);
+                    const PrgValue val = blank ? blank_value_for_field(resolved_field)
+                                               : record_value_to_prg_value(resolved_field);
                     if (use_memvar)
                     {
-                        assign_variable(frame, "m." + field.field_name, val);
+                        assign_variable(frame, "m." + resolved_field.field_name, val);
                     }
                     else if (use_name_object)
                     {
-                        scattered_field_names.push_back(normalize_identifier(field.field_name));
+                        scattered_field_names.push_back(normalize_identifier(resolved_field.field_name));
                         scattered_values.push_back(val);
                     }
                     else
                     {
-                        scattered_field_names.push_back(field.field_name);
+                        scattered_field_names.push_back(resolved_field.field_name);
                         scattered_values.push_back(val);
                     }
                 }
@@ -7070,14 +7089,24 @@
 
                 const auto perform_gather = [&]() -> bool
                 {
+                    const std::vector<vfp::DbfFieldDescriptor> selected_fields =
+                        filter_field_descriptors(cursor_field_descriptors(*cursor), field_filter, true);
                     std::size_t array_index = 1U;
-                    for (const auto &field : rec->values)
+                    for (const auto &selected_field : selected_fields)
                     {
-                        if (!field_matches_filter(field.field_name, field_filter))
+                        const auto field = std::find_if(
+                            rec->values.begin(),
+                            rec->values.end(),
+                            [&](const vfp::DbfRecordValue &candidate)
+                            {
+                                return collapse_identifier(candidate.field_name) ==
+                                       collapse_identifier(selected_field.name);
+                            });
+                        if (field == rec->values.end())
                         {
                             continue;
                         }
-                        const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field.field_type)));
+                        const char field_type = static_cast<char>(std::toupper(static_cast<unsigned char>(field->field_type)));
                         const bool is_memo_field = field_type == 'M' || field_type == 'G' || field_type == 'W';
                         PrgValue val = make_empty_value();
                         if (use_memvar)
@@ -7086,11 +7115,11 @@
                             {
                                 continue;
                             }
-                            val = lookup_variable(frame, "m." + field.field_name);
+                            val = lookup_variable(frame, "m." + field->field_name);
                         }
                         else if (use_name_object)
                         {
-                            const std::string field_name = normalize_identifier(field.field_name);
+                            const std::string field_name = normalize_identifier(field->field_name);
                             const auto property = source_object->properties.find(field_name);
                             if (property == source_object->properties.end())
                             {
@@ -7100,7 +7129,7 @@
                         }
                         else if (use_name_value_pairs)
                         {
-                            const auto pair = name_value_pairs.find(normalize_identifier(field.field_name));
+                            const auto pair = name_value_pairs.find(normalize_identifier(field->field_name));
                             if (pair == name_value_pairs.end())
                             {
                                 continue;
@@ -7130,7 +7159,7 @@
                                 cursor->remote_records[cursor->recno - 1U].values.end(),
                                 [&](const vfp::DbfRecordValue &rv)
                                 {
-                                    return collapse_identifier(rv.field_name) == collapse_identifier(field.field_name);
+                                    return collapse_identifier(rv.field_name) == collapse_identifier(field->field_name);
                                 });
                             if (it != cursor->remote_records[cursor->recno - 1U].values.end())
                             {
@@ -7142,8 +7171,8 @@
                             const auto rep_result = vfp::replace_record_field_value(
                                 cursor->source_path,
                                 cursor->recno - 1U,
-                                field.field_name,
-                                serialize_prg_value_for_record_field(field, val));
+                                field->field_name,
+                                serialize_prg_value_for_record_field(*field, val));
                             if (!rep_result.ok)
                             {
                                 last_error_message = rep_result.error;

@@ -11,6 +11,7 @@ int main() {
     test_scatter_gather_memvar_fields_blank_and_for_semantics();
     test_scatter_gather_memvar_single_name_field_filter_semantics();
     test_scatter_to_array_and_gather_from_array_round_trip();
+    test_scatter_and_gather_array_preserve_explicit_fields_order();
     test_scatter_gather_array_like_and_except_field_filters();
     test_scatter_gather_memvar_preserves_date_and_datetime_like_values();
     test_scatter_gather_array_preserves_date_and_datetime_like_values();
