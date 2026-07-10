@@ -2034,6 +2034,44 @@ internal static class Program
                 },
                 expectRawSnapshotProperty: false);
             SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
+                propertyName: "OUTPUT",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: "report.out",
+                expectedUpdatedSelectionValue: "report.out",
+                expectedSectionCount: 5,
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "OUTPUT",
+                    Value = "report.out",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 304
+                },
+                expectRawSnapshotProperty: false,
+                verifyExplicitClearAfterUpdate: true);
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
+                propertyName: "OUTPUT",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: "label.out",
+                expectedUpdatedSelectionValue: "label.out",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "OUTPUT",
+                    Value = "label.out",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 78
+                },
+                expectRawSnapshotProperty: false,
+                verifyExplicitClearAfterUpdate: true);
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 propertyName: "DEVICE",
                 expectedOriginalSelectionValue: string.Empty,
