@@ -1272,6 +1272,338 @@ void test_query_file_requery_refreshes_left_outer_join_query_rows() {
     run_joined_query_requery_test(4, kLeftOuterJoined);
 }
 
+void run_right_joined_query_requery_test(int row_source_type) {
+    namespace fs = std::filesystem;
+    const std::string row_source_label =
+        row_source_type == 3 ? "sql-statement" : "query-file";
+    const fs::path temp_root =
+        fs::temp_directory_path() / ("copperfin_native_requery_" +
+                                     std::string(row_source_type == 3 ? "sql" : "query") +
+                                     "_right_join");
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path employee_path = temp_root / "employee.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> employee_fields{
+        {.name = "LAST_NAME", .type = 'C', .length = 24U},
+        {.name = "FIRST_NAME", .type = 'C', .length = 24U},
+        {.name = "REGION_ID", .type = 'N', .length = 3U}};
+    const std::vector<std::vector<std::string>> employee_records{
+        {"Zulu", "Anne", "2"},
+        {"Alpha", "Ada", "1"},
+        {"Marlow", "Mia", "3"}};
+    const auto create_employee_result =
+        copperfin::vfp::create_dbf_table_file(
+            employee_path.string(),
+            employee_fields,
+            employee_records);
+    expect(create_employee_result.ok,
+           "right-joined " + row_source_label +
+               " Requery() fixture should create the employee DBF");
+    if (!create_employee_result.ok) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const fs::path regions_path = temp_root / "regions.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> region_fields{
+        {.name = "REGION_ID", .type = 'N', .length = 3U},
+        {.name = "REGION_NAME", .type = 'C', .length = 24U}};
+    const std::vector<std::vector<std::string>> region_records{
+        {"1", "West"},
+        {"2", "East"},
+        {"4", "North"}};
+    const auto create_region_result =
+        copperfin::vfp::create_dbf_table_file(
+            regions_path.string(),
+            region_fields,
+            region_records);
+    expect(create_region_result.ok,
+           "right-joined " + row_source_label +
+               " Requery() fixture should create the regions DBF");
+    if (!create_region_result.ok) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    std::string row_source_assignment;
+    if (row_source_type == 4) {
+        const fs::path query_path = temp_root / "region_right_join.qpr";
+        write_text(
+            query_path,
+            "SELECT employee.last_name, regions.region_name ;\n"
+            " FROM employee RIGHT JOIN regions ON employee.region_id = regions.region_id ;\n"
+            " ORDER BY employee.last_name INTO CURSOR temp2\n");
+        row_source_assignment = "oList.RowSource = 'region_right_join.qpr'\n";
+    } else {
+        row_source_assignment =
+            "oList.RowSource = \"SELECT employee.last_name, regions.region_name "
+            "FROM employee RIGHT JOIN regions ON employee.region_id = regions.region_id ORDER BY "
+            "employee.last_name INTO CURSOR temp2\"\n";
+    }
+
+    const fs::path main_path =
+        temp_root / ("requery_" + std::string(row_source_type == 3 ? "sql" : "query") + "_right_join.prg");
+    write_text(
+        main_path,
+        "USE '" + employee_path.string() + "' ALIAS employee IN 0\n"
+        "USE '" + regions_path.string() + "' ALIAS regions IN 0\n"
+        "oList = CREATEOBJECT('ListBox')\n"
+        "oList.ColumnCount = 2\n"
+        "oList.RowSourceType = " + std::to_string(row_source_type) + "\n" +
+            row_source_assignment +
+        "oList.Requery()\n"
+        "nAfterFirst = oList.ListCount\n"
+        "cFirst11 = oList.List(1, 1)\n"
+        "cFirst12 = oList.List(1, 2)\n"
+        "cFirst21 = oList.List(2, 1)\n"
+        "cFirst22 = oList.List(2, 2)\n"
+        "cFirst31 = oList.List(3, 1)\n"
+        "cFirst32 = oList.List(3, 2)\n"
+        "GO 1 IN employee\n"
+        "REPLACE LAST_NAME WITH 'Delta' IN employee\n"
+        "GO 2 IN regions\n"
+        "REPLACE REGION_NAME WITH 'South' IN regions\n"
+        "APPEND BLANK IN regions\n"
+        "REPLACE REGION_ID WITH 3 IN regions\n"
+        "REPLACE REGION_NAME WITH 'Central' IN regions\n"
+        "oList.Requery()\n"
+        "nAfterSecond = oList.ListCount\n"
+        "cSecond11 = oList.List(1, 1)\n"
+        "cSecond12 = oList.List(1, 2)\n"
+        "cSecond21 = oList.List(2, 1)\n"
+        "cSecond22 = oList.List(2, 2)\n"
+        "cSecond31 = oList.List(3, 1)\n"
+        "cSecond32 = oList.List(3, 2)\n"
+        "cSecond41 = oList.List(4, 1)\n"
+        "cSecond42 = oList.List(4, 2)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "right-joined " + row_source_label +
+               " Requery() script should complete: " + state.message +
+               " @line=" + std::to_string(state.location.line));
+
+    const auto check = [&](const std::string &name, const std::string &expected) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), name + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(found->second) + "'");
+        }
+    };
+
+    check("nafterfirst", "3");
+    check("cfirst11", "");
+    check("cfirst12", "North");
+    check("cfirst21", "Alpha");
+    check("cfirst22", "West");
+    check("cfirst31", "Zulu");
+    check("cfirst32", "East");
+    check("naftersecond", "4");
+    check("csecond11", "");
+    check("csecond12", "North");
+    check("csecond21", "Alpha");
+    check("csecond22", "West");
+    check("csecond31", "Delta");
+    check("csecond32", "South");
+    check("csecond41", "Marlow");
+    check("csecond42", "Central");
+
+    const bool has_joined_query_requery_event = std::any_of(
+        state.events.begin(),
+        state.events.end(),
+        [](const copperfin::runtime::RuntimeEvent &event) {
+            return event.category == "prg.object.requery";
+        });
+    expect(has_joined_query_requery_event,
+           "right-joined " + row_source_label +
+               " Requery() should emit a native requery event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_sql_statement_requery_refreshes_right_join_query_rows() {
+    run_right_joined_query_requery_test(3);
+}
+
+void test_query_file_requery_refreshes_right_join_query_rows() {
+    run_right_joined_query_requery_test(4);
+}
+
+void run_right_joined_query_requery_test_with_aliases(int row_source_type) {
+    namespace fs = std::filesystem;
+    const std::string row_source_label =
+        row_source_type == 3 ? "sql-statement" : "query-file";
+    const fs::path temp_root =
+        fs::temp_directory_path() / ("copperfin_native_requery_" +
+                                     std::string(row_source_type == 3 ? "sql" : "query") +
+                                     "_alias_right_join");
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path employee_path = temp_root / "employee.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> employee_fields{
+        {.name = "LAST_NAME", .type = 'C', .length = 24U},
+        {.name = "FIRST_NAME", .type = 'C', .length = 24U},
+        {.name = "REGION_ID", .type = 'N', .length = 3U}};
+    const std::vector<std::vector<std::string>> employee_records{
+        {"Zulu", "Anne", "2"},
+        {"Alpha", "Ada", "1"},
+        {"Marlow", "Mia", "3"}};
+    const auto create_employee_result =
+        copperfin::vfp::create_dbf_table_file(
+            employee_path.string(),
+            employee_fields,
+            employee_records);
+    expect(create_employee_result.ok,
+           "aliased right-joined " + row_source_label +
+               " Requery() fixture should create the employee DBF");
+    if (!create_employee_result.ok) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    const fs::path regions_path = temp_root / "regions.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> region_fields{
+        {.name = "REGION_ID", .type = 'N', .length = 3U},
+        {.name = "REGION_NAME", .type = 'C', .length = 24U}};
+    const std::vector<std::vector<std::string>> region_records{
+        {"1", "West"},
+        {"2", "East"},
+        {"4", "North"}};
+    const auto create_region_result =
+        copperfin::vfp::create_dbf_table_file(
+            regions_path.string(),
+            region_fields,
+            region_records);
+    expect(create_region_result.ok,
+           "aliased right-joined " + row_source_label +
+               " Requery() fixture should create the regions DBF");
+    if (!create_region_result.ok) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    std::string row_source_assignment;
+    if (row_source_type == 4) {
+        const fs::path query_path = temp_root / "region_alias_right_join.qpr";
+        write_text(
+            query_path,
+            "SELECT e.last_name, r.region_name ;\n"
+            " FROM employee e RIGHT JOIN regions r ON e.region_id = r.region_id ;\n"
+            " ORDER BY e.last_name INTO CURSOR temp2\n");
+        row_source_assignment = "oList.RowSource = 'region_alias_right_join.qpr'\n";
+    } else {
+        row_source_assignment =
+            "oList.RowSource = \"SELECT e.last_name, r.region_name "
+            "FROM employee e RIGHT JOIN regions r ON e.region_id = r.region_id ORDER BY "
+            "e.last_name INTO CURSOR temp2\"\n";
+    }
+
+    const fs::path main_path =
+        temp_root / ("requery_" + std::string(row_source_type == 3 ? "sql" : "query") + "_alias_right_join.prg");
+    write_text(
+        main_path,
+        "USE '" + employee_path.string() + "' ALIAS employee IN 0\n"
+        "USE '" + regions_path.string() + "' ALIAS regions IN 0\n"
+        "oList = CREATEOBJECT('ListBox')\n"
+        "oList.ColumnCount = 2\n"
+        "oList.RowSourceType = " + std::to_string(row_source_type) + "\n" +
+            row_source_assignment +
+        "oList.Requery()\n"
+        "nAfterFirst = oList.ListCount\n"
+        "cFirst11 = oList.List(1, 1)\n"
+        "cFirst12 = oList.List(1, 2)\n"
+        "cFirst21 = oList.List(2, 1)\n"
+        "cFirst22 = oList.List(2, 2)\n"
+        "cFirst31 = oList.List(3, 1)\n"
+        "cFirst32 = oList.List(3, 2)\n"
+        "GO 1 IN employee\n"
+        "REPLACE LAST_NAME WITH 'Delta' IN employee\n"
+        "GO 2 IN regions\n"
+        "REPLACE REGION_NAME WITH 'South' IN regions\n"
+        "APPEND BLANK IN regions\n"
+        "REPLACE REGION_ID WITH 3 IN regions\n"
+        "REPLACE REGION_NAME WITH 'Central' IN regions\n"
+        "oList.Requery()\n"
+        "nAfterSecond = oList.ListCount\n"
+        "cSecond11 = oList.List(1, 1)\n"
+        "cSecond12 = oList.List(1, 2)\n"
+        "cSecond21 = oList.List(2, 1)\n"
+        "cSecond22 = oList.List(2, 2)\n"
+        "cSecond31 = oList.List(3, 1)\n"
+        "cSecond32 = oList.List(3, 2)\n"
+        "cSecond41 = oList.List(4, 1)\n"
+        "cSecond42 = oList.List(4, 2)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "aliased right-joined " + row_source_label +
+               " Requery() script should complete: " + state.message +
+               " @line=" + std::to_string(state.location.line));
+
+    const auto check = [&](const std::string &name, const std::string &expected) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), name + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(found->second) + "'");
+        }
+    };
+
+    check("nafterfirst", "3");
+    check("cfirst11", "");
+    check("cfirst12", "North");
+    check("cfirst21", "Alpha");
+    check("cfirst22", "West");
+    check("cfirst31", "Zulu");
+    check("cfirst32", "East");
+    check("naftersecond", "4");
+    check("csecond11", "");
+    check("csecond12", "North");
+    check("csecond21", "Alpha");
+    check("csecond22", "West");
+    check("csecond31", "Delta");
+    check("csecond32", "South");
+    check("csecond41", "Marlow");
+    check("csecond42", "Central");
+
+    const bool has_joined_query_requery_event = std::any_of(
+        state.events.begin(),
+        state.events.end(),
+        [](const copperfin::runtime::RuntimeEvent &event) {
+            return event.category == "prg.object.requery";
+        });
+    expect(has_joined_query_requery_event,
+           "aliased right-joined " + row_source_label +
+               " Requery() should emit a native requery event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_sql_statement_requery_refreshes_right_join_query_rows_with_aliases() {
+    run_right_joined_query_requery_test_with_aliases(3);
+}
+
+void test_query_file_requery_refreshes_right_join_query_rows_with_aliases() {
+    run_right_joined_query_requery_test_with_aliases(4);
+}
+
 void run_joined_query_requery_test_with_aliases(int row_source_type) {
     namespace fs = std::filesystem;
     const std::string row_source_label =
@@ -1470,12 +1802,16 @@ int main() {
     test_sql_statement_requery_refreshes_explicit_inner_join_query_rows();
     test_sql_statement_requery_refreshes_left_join_query_rows();
     test_sql_statement_requery_refreshes_left_outer_join_query_rows();
+    test_sql_statement_requery_refreshes_right_join_query_rows();
     test_query_file_requery_refreshes_joined_query_rows();
     test_query_file_requery_refreshes_explicit_inner_join_query_rows();
     test_query_file_requery_refreshes_left_join_query_rows();
     test_query_file_requery_refreshes_left_outer_join_query_rows();
+    test_query_file_requery_refreshes_right_join_query_rows();
     test_sql_statement_requery_refreshes_joined_query_rows_with_aliases();
     test_query_file_requery_refreshes_joined_query_rows_with_aliases();
+    test_sql_statement_requery_refreshes_right_join_query_rows_with_aliases();
+    test_query_file_requery_refreshes_right_join_query_rows_with_aliases();
     if (const int failures = test_failures(); failures != 0) {
         std::cerr << failures << " test(s) failed\n";
         return 1;

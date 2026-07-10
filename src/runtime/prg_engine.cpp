@@ -3418,6 +3418,7 @@ namespace copperfin::runtime
             std::string joined_source_alias;
             std::string join_on_expression;
             QueryPlan::JoinKind join_kind = QueryPlan::JoinKind::none;
+            bool normalize_right_join = false;
             if (const std::size_t join_position =
                     find_top_level_keyword(upper_from_clause, 0U, "JOIN");
                 join_position != std::string::npos)
@@ -3442,6 +3443,17 @@ namespace copperfin::runtime
                         primary_source_designator = without_left;
                         join_kind = QueryPlan::JoinKind::left;
                     }
+                    else
+                    {
+                        const std::string without_right =
+                            strip_trailing_join_modifier(without_outer, "RIGHT");
+                        if (without_right != without_outer)
+                        {
+                            primary_source_designator = without_right;
+                            join_kind = QueryPlan::JoinKind::left;
+                            normalize_right_join = true;
+                        }
+                    }
                 }
                 if (join_kind == QueryPlan::JoinKind::none)
                 {
@@ -3451,6 +3463,17 @@ namespace copperfin::runtime
                     {
                         primary_source_designator = without_left;
                         join_kind = QueryPlan::JoinKind::left;
+                    }
+                }
+                if (join_kind == QueryPlan::JoinKind::none)
+                {
+                    const std::string without_right =
+                        strip_trailing_join_modifier(primary_source_designator, "RIGHT");
+                    if (without_right != primary_source_designator)
+                    {
+                        primary_source_designator = without_right;
+                        join_kind = QueryPlan::JoinKind::left;
+                        normalize_right_join = true;
                     }
                 }
                 if (join_kind == QueryPlan::JoinKind::none)
@@ -3475,6 +3498,12 @@ namespace copperfin::runtime
                     join_on_expression.empty())
                 {
                     return false;
+                }
+
+                if (normalize_right_join)
+                {
+                    std::swap(primary_source_designator, joined_source_designator);
+                    std::swap(primary_source_alias, joined_source_alias);
                 }
             }
             else
