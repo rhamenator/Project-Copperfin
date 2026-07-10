@@ -321,7 +321,7 @@
                 while (true)
                 {
                     skip_whitespace();
-                    if (match("<>"))
+                    if (match("<>") || match("!=") || match("#"))
                     {
                         PrgValue right = parse_additive();
                         if (suppress_evaluation_)
