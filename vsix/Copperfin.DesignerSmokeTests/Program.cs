@@ -7546,6 +7546,7 @@ internal static class Program
             new() { Name = "PAPERLENGTH", Value = "2794", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 4, MemoBlockNumber = 8 },
             new() { Name = "PAPERWIDTH", Value = "2159", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 5, MemoBlockNumber = 8 },
             new() { Name = "TOPMARGIN", Value = "20", RecordIndex = 0, FieldIndex = 3, MemoBlockNumber = 0 },
+            new() { Name = "BOTMARGIN", Value = "30", RecordIndex = 0, FieldIndex = 63, MemoBlockNumber = 0 },
             new() { Name = "LEFTMARGIN", Value = "15", RecordIndex = 0, FieldIndex = 10, MemoBlockNumber = 0 },
             new() { Name = "RIGHTMARGIN", Value = "25", RecordIndex = 0, FieldIndex = 11, MemoBlockNumber = 0 },
             new() { Name = "TAG", Value = "customer.country", RecordIndex = 0, FieldIndex = 9, MemoBlockNumber = 11 },
@@ -7624,7 +7625,8 @@ internal static class Program
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["SORTEXPRESSIONFIELD"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "9", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["SORTEXPRESSIONMEMO"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "11", StringComparison.Ordinal),
             "Report settings explorer selection should expose explicit sort metadata from the shared settings model");
-        Expect(string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["LEFTMARGIN"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "15", StringComparison.Ordinal) &&
+        Expect(string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["BOTMARGIN"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "30", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["LEFTMARGIN"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "15", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["COLS"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "2", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["COLWIDTH"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "3600", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["COLSPACING"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "120", StringComparison.Ordinal) &&
@@ -7651,6 +7653,8 @@ internal static class Program
         {
             ExpectSelectionUpdate(editableSelection, "TOPMARGIN", 30, "30",
                 "Report settings property-grid selection should serialize numeric root-setting edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "BOTMARGIN", 40, "40",
+                "Report settings property-grid selection should serialize bottom-margin edits through the shared update path");
             ExpectSelectionUpdate(editableSelection, "COLS", 3, "3",
                 "Report settings property-grid selection should serialize column-count edits through the shared update path");
             ExpectSelectionUpdate(editableSelection, "COLWIDTH", 4200, "4200",
@@ -7735,6 +7739,7 @@ internal static class Program
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Intercalar", StringComparison.Ordinal)) &&
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Copias", StringComparison.Ordinal)) &&
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Margen superior", StringComparison.Ordinal)) &&
+               spanishProperties.Any(property => string.Equals(property.DisplayName, "Margen inferior", StringComparison.Ordinal)) &&
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Margen izquierdo", StringComparison.Ordinal)) &&
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Margen derecho", StringComparison.Ordinal)) &&
                spanishProperties.Any(property => string.Equals(property.DisplayName, "Expresión de orden", StringComparison.Ordinal)),
@@ -7772,6 +7777,7 @@ internal static class Program
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Intercalar", StringComparison.Ordinal)) &&
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Cópias", StringComparison.Ordinal)) &&
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Margem superior", StringComparison.Ordinal)) &&
+               portugueseProperties.Any(property => string.Equals(property.DisplayName, "Margem inferior", StringComparison.Ordinal)) &&
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Margem esquerda", StringComparison.Ordinal)) &&
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Margem direita", StringComparison.Ordinal)) &&
                portugueseProperties.Any(property => string.Equals(property.DisplayName, "Expressão de ordenação", StringComparison.Ordinal)),
@@ -7809,6 +7815,7 @@ internal static class Program
                pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Ascii"), StringComparison.Ordinal)) &&
                pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Collate"), StringComparison.Ordinal)) &&
                pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.Copies"), StringComparison.Ordinal)) &&
+               pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.BottomMargin"), StringComparison.Ordinal)) &&
                pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.LeftMargin"), StringComparison.Ordinal)) &&
                pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.RightMargin"), StringComparison.Ordinal)),
             "Pseudo-localized report settings property-grid selection should route new root-setting labels through the shared catalog");
@@ -7855,35 +7862,37 @@ internal static class Program
                string.Equals(settings[5].Name, "PAPERWIDTH", StringComparison.Ordinal) &&
                settings[5].FieldIndex == 6 &&
                string.Equals(settings[6].Value, "20", StringComparison.Ordinal) &&
-               string.Equals(settings[7].Name, "LEFTMARGIN", StringComparison.Ordinal) &&
-               settings[7].FieldIndex == 10 &&
-               string.Equals(settings[8].Name, "RIGHTMARGIN", StringComparison.Ordinal) &&
-               settings[8].FieldIndex == 11 &&
-               string.Equals(settings[9].Name, "TAG", StringComparison.Ordinal) &&
-               settings[9].FieldIndex == 9 &&
-               settings[9].MemoBlockNumber == 11 &&
-               string.Equals(settings[10].Name, "DRIVER", StringComparison.Ordinal) &&
-               settings[10].FieldIndex == 6 &&
-               string.Equals(settings[11].Name, "DEVICE", StringComparison.Ordinal) &&
+               string.Equals(settings[7].Name, "BOTMARGIN", StringComparison.Ordinal) &&
+               settings[7].FieldIndex == 63 &&
+               string.Equals(settings[8].Name, "LEFTMARGIN", StringComparison.Ordinal) &&
+               settings[8].FieldIndex == 10 &&
+               string.Equals(settings[9].Name, "RIGHTMARGIN", StringComparison.Ordinal) &&
+               settings[9].FieldIndex == 11 &&
+               string.Equals(settings[10].Name, "TAG", StringComparison.Ordinal) &&
+               settings[10].FieldIndex == 9 &&
+               settings[10].MemoBlockNumber == 11 &&
+               string.Equals(settings[11].Name, "DRIVER", StringComparison.Ordinal) &&
                settings[11].FieldIndex == 6 &&
-               string.Equals(settings[12].Name, "OUTPUT", StringComparison.Ordinal) &&
+               string.Equals(settings[12].Name, "DEVICE", StringComparison.Ordinal) &&
                settings[12].FieldIndex == 6 &&
-               string.Equals(settings[13].Name, "DEFAULTSOURCE", StringComparison.Ordinal) &&
+               string.Equals(settings[13].Name, "OUTPUT", StringComparison.Ordinal) &&
                settings[13].FieldIndex == 6 &&
-               string.Equals(settings[14].Name, "PRINTQUALITY", StringComparison.Ordinal) &&
+               string.Equals(settings[14].Name, "DEFAULTSOURCE", StringComparison.Ordinal) &&
                settings[14].FieldIndex == 6 &&
-               string.Equals(settings[15].Name, "YRESOLUTION", StringComparison.Ordinal) &&
+               string.Equals(settings[15].Name, "PRINTQUALITY", StringComparison.Ordinal) &&
                settings[15].FieldIndex == 6 &&
-               string.Equals(settings[16].Name, "TTOPTION", StringComparison.Ordinal) &&
+               string.Equals(settings[16].Name, "YRESOLUTION", StringComparison.Ordinal) &&
                settings[16].FieldIndex == 6 &&
-               string.Equals(settings[17].Name, "COLOR", StringComparison.Ordinal) &&
+               string.Equals(settings[17].Name, "TTOPTION", StringComparison.Ordinal) &&
                settings[17].FieldIndex == 6 &&
-               string.Equals(settings[18].Name, "ASCII", StringComparison.Ordinal) &&
+               string.Equals(settings[18].Name, "COLOR", StringComparison.Ordinal) &&
                settings[18].FieldIndex == 6 &&
-               string.Equals(settings[19].Name, "COLLATE", StringComparison.Ordinal) &&
+               string.Equals(settings[19].Name, "ASCII", StringComparison.Ordinal) &&
                settings[19].FieldIndex == 6 &&
-               string.Equals(settings[20].Name, "COPIES", StringComparison.Ordinal) &&
-               settings[20].FieldIndex == 6,
+               string.Equals(settings[20].Name, "COLLATE", StringComparison.Ordinal) &&
+               settings[20].FieldIndex == 6 &&
+               string.Equals(settings[21].Name, "COPIES", StringComparison.Ordinal) &&
+               settings[21].FieldIndex == 6,
             "Localized report settings property-grid selection should preserve root-setting machine contracts");
     }
 
