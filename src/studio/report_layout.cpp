@@ -982,6 +982,7 @@ StudioReportLayoutSnapshot build_report_layout(
                 object.containing_section_record_index = snapshot.deleted_sections[deleted_section_index].record_index;
                 object.section_relative_top = object.top - snapshot.deleted_sections[deleted_section_index].top;
                 object.section_relative_bottom = object.bottom - snapshot.deleted_sections[deleted_section_index].top;
+                expand_deleted_preview_bounds(snapshot, object.left, object.top, object.right, object.bottom);
                 expand_preview_bounds(snapshot, object.left, object.top, object.right, object.bottom);
                 ++snapshot.live_object_count;
                 ++snapshot.placed_object_count;
