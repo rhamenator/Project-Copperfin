@@ -3733,7 +3733,7 @@ internal static class Program
                 recordIndex: 7,
                 expectedSectionTitle: "Title",
                 expectedSectionRecordIndex: 1,
-                expectedObjectTitle: "_RC60MC40R",
+                expectedObjectTitle: "\"Titles By Author\"",
                 expectedSectionCount: 6,
                 expectLabel: false,
                 expectedUniqueId: "_RC60MC40R",
@@ -3744,7 +3744,7 @@ internal static class Program
                 recordIndex: 6,
                 expectedSectionTitle: "Detail",
                 expectedSectionRecordIndex: 3,
-                expectedObjectTitle: "_QV30QY1DL",
+                expectedObjectTitle: "wiz_field",
                 expectedSectionCount: 5,
                 expectLabel: true,
                 expectedUniqueId: "_QV30QY1DL",
@@ -5997,14 +5997,17 @@ internal static class Program
         runner.Run(nameof(SmokeDeletedReportSectionExplorerSelection), SmokeDeletedReportSectionExplorerSelection);
         runner.Run(nameof(SmokeReportSurfaceScopeSelection), SmokeReportSurfaceScopeSelection);
         runner.Run(nameof(SmokeReportSurfaceObjectScopeAlignment), SmokeReportSurfaceObjectScopeAlignment);
+        runner.Run(nameof(SmokeReportSurfaceDeletedLiveSectionObjectScopeAlignment), SmokeReportSurfaceDeletedLiveSectionObjectScopeAlignment);
         runner.Run(nameof(SmokeLabelSurfaceScopeSelection), SmokeLabelSurfaceScopeSelection);
         runner.Run(nameof(SmokeLabelSurfaceObjectScopeAlignment), SmokeLabelSurfaceObjectScopeAlignment);
+        runner.Run(nameof(SmokeLabelSurfaceDeletedLiveSectionObjectScopeAlignment), SmokeLabelSurfaceDeletedLiveSectionObjectScopeAlignment);
         runner.Run(nameof(SmokeReportSurfaceObjectDragging), SmokeReportSurfaceObjectDragging);
         runner.Run(nameof(SmokeLabelSurfaceObjectDragging), SmokeLabelSurfaceObjectDragging);
         runner.Run(nameof(SmokeAssetEditorReportDragUsesBatchStudioHostUpdate), SmokeAssetEditorReportDragUsesBatchStudioHostUpdate);
         runner.Run(nameof(SmokeAssetEditorReportDragRefreshesShellSummary), SmokeAssetEditorReportDragRefreshesShellSummary);
         runner.Run(nameof(SmokeAssetEditorLabelDragRefreshesShellSummary), SmokeAssetEditorLabelDragRefreshesShellSummary);
         runner.Run(nameof(SmokeDeletedReportSectionDesignSurfaceRendering), SmokeDeletedReportSectionDesignSurfaceRendering);
+        runner.Run(nameof(SmokeFocusedRealAssetEditorDeleteRestoreRoundTrip), SmokeFocusedRealAssetEditorDeleteRestoreRoundTrip);
         runner.Run(nameof(SmokeResolvedRealAssetCoverageCluster), SmokeResolvedRealAssetCoverageCluster);
 
         return runner.Finish();
@@ -19690,6 +19693,15 @@ internal static class Program
             "Clicking an unplaced report object on the shared surface should keep the unplaced-object tray highlighted");
     }
 
+    private static void SmokeReportSurfaceDeletedLiveSectionObjectScopeAlignment()
+    {
+        SmokeSurfaceDeletedLiveSectionObjectScopeAlignment(
+            assetFamily: "report",
+            expectedSectionTitle: "Detail",
+            expectedDeletedObjectTitle: "detail.deleted.total",
+            expectedDeletedObjectKind: "field");
+    }
+
     private static void SmokeLabelSurfaceScopeSelection()
     {
         var snapshot = BuildLabelSurfaceInteractionSmokeSnapshot();
@@ -19846,6 +19858,204 @@ internal static class Program
                ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") is null &&
                ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
             "Clicking an unplaced label object on the shared surface should keep the unplaced-object tray highlighted");
+    }
+
+    private static void SmokeLabelSurfaceDeletedLiveSectionObjectScopeAlignment()
+    {
+        SmokeSurfaceDeletedLiveSectionObjectScopeAlignment(
+            assetFamily: "label",
+            expectedSectionTitle: "Detail",
+            expectedDeletedObjectTitle: "detail.deleted.total",
+            expectedDeletedObjectKind: "label");
+    }
+
+    private static void SmokeSurfaceDeletedLiveSectionObjectScopeAlignment(
+        string assetFamily,
+        string expectedSectionTitle,
+        string expectedDeletedObjectTitle,
+        string expectedDeletedObjectKind)
+    {
+        var snapshot = BuildDeletedLiveSectionSurfaceSmokeSnapshot(assetFamily, expectedDeletedObjectTitle, expectedDeletedObjectKind);
+        var reportLayout = snapshot.ReportLayout ?? throw new InvalidOperationException("Could not build deleted live-section surface smoke snapshot.");
+
+        using var hostForm = new Form
+        {
+            Width = 1400,
+            Height = 1000,
+            ShowInTaskbar = false,
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-32000, -32000)
+        };
+
+        using var control = new CopperfinAssetEditorControl
+        {
+            Dock = DockStyle.Fill
+        };
+
+        hostForm.Controls.Add(control);
+        hostForm.Show();
+        Application.DoEvents();
+
+        ApplyReportSnapshotForExplorerSmoke(control, snapshot);
+        var sectionListView = GetPrivateListView(control, "sectionListView");
+        sectionListView.Items[0].Selected = false;
+        sectionListView.Items[1].Selected = true;
+        InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+        InvokeAssetEditorVoid(control, "LoadSurface");
+        Application.DoEvents();
+
+        var surface = FindDesignSurface(control) ?? throw new InvalidOperationException("Could not find shared deleted live-section design surface.");
+        using (var bitmap = new Bitmap(surface.Width, surface.Height))
+        {
+            surface.DrawToBitmap(bitmap, new Rectangle(0, 0, bitmap.Width, bitmap.Height));
+        }
+
+        var objectListView = GetPrivateListView(control, "objectListView");
+        var propertyGrid = GetPrivatePropertyGrid(control);
+
+        ClickDesignSurface(surface, GetCenter(ReadSurfaceObjectRectangle(surface, 1)));
+        Application.DoEvents();
+
+        Expect(string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, expectedSectionTitle, StringComparison.Ordinal),
+            $"Clicking a deleted {assetFamily} object inside a live section should select the containing live section row");
+        Expect(string.Equals(objectListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, expectedDeletedObjectTitle, StringComparison.Ordinal),
+            $"Clicking a deleted {assetFamily} object inside a live section should select the matching deleted object row");
+        Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection deletedObjectSelection &&
+               deletedObjectSelection.RecordIndex == 13,
+            $"Clicking a deleted {assetFamily} object inside a live section should keep object-rooted property-grid selection");
+        if (propertyGrid.SelectedObject is CopperfinDesignerSelection deletedObjectMetadataSelection)
+        {
+            Expect(string.Equals(TypeDescriptor.GetProperties(deletedObjectMetadataSelection)["OBJECTSTATE"]?.GetValue(deletedObjectMetadataSelection)?.ToString(), "Deleted", StringComparison.Ordinal) &&
+                   string.Equals(TypeDescriptor.GetProperties(deletedObjectMetadataSelection)["RECORDINDEX"]?.GetValue(deletedObjectMetadataSelection)?.ToString(), "13", StringComparison.Ordinal),
+                $"Clicking a deleted {assetFamily} object inside a live section should expose deleted object state metadata");
+        }
+        Expect(ReadPrivateNullableInt(surface, "selectedRecordIndex") == 13 &&
+               ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") == 42 &&
+               !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"),
+            $"Clicking a deleted {assetFamily} object inside a live section should keep the containing live section highlighted");
+        Expect(reportLayout.Sections[0].DeletedObjectCount == 1 &&
+               reportLayout.DeletedObjects.Count == 1 &&
+               string.Equals(reportLayout.DeletedObjects[0].Title, expectedDeletedObjectTitle, StringComparison.Ordinal),
+            $"Deleted live-section {assetFamily} smoke snapshot should preserve deleted layout object membership and title contracts");
+    }
+
+    private static CopperfinStudioSnapshotDocument BuildDeletedLiveSectionSurfaceSmokeSnapshot(
+        string assetFamily,
+        string deletedObjectTitle,
+        string deletedObjectKind)
+    {
+        return new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = assetFamily,
+            Objects = new List<CopperfinStudioSnapshotObject>
+            {
+                new()
+                {
+                    RecordIndex = 6,
+                    Title = "customer.company",
+                    Subtitle = deletedObjectKind,
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "HPOS", Value = "1200" },
+                        new() { Name = "VPOS", Value = "2600" },
+                        new() { Name = "WIDTH", Value = "4000" },
+                        new() { Name = "HEIGHT", Value = "500" }
+                    }
+                },
+                new()
+                {
+                    RecordIndex = 13,
+                    Title = deletedObjectTitle,
+                    Subtitle = deletedObjectKind,
+                    Deleted = true,
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "HPOS", Value = "1400" },
+                        new() { Name = "VPOS", Value = "3200" },
+                        new() { Name = "WIDTH", Value = "3600" },
+                        new() { Name = "HEIGHT", Value = "600" },
+                        new() { Name = "EXPR", Value = deletedObjectTitle }
+                    }
+                },
+                new()
+                {
+                    RecordIndex = 9,
+                    Title = "orphan.note",
+                    Subtitle = deletedObjectKind,
+                    Properties = new List<CopperfinStudioSnapshotProperty>
+                    {
+                        new() { Name = "HPOS", Value = "800" },
+                        new() { Name = "VPOS", Value = "700" },
+                        new() { Name = "WIDTH", Value = "2400" },
+                        new() { Name = "HEIGHT", Value = "450" }
+                    }
+                }
+            },
+            ReportLayout = new CopperfinStudioReportLayout
+            {
+                IsLabel = string.Equals(assetFamily, "label", StringComparison.Ordinal),
+                Sections = new List<CopperfinStudioReportSection>
+                {
+                    new()
+                    {
+                        Id = "detail_1",
+                        Title = "Detail",
+                        BandKind = "detail",
+                        RecordIndex = 42,
+                        Top = 2000,
+                        Height = 5000,
+                        DeletedObjectCount = 1,
+                        Objects = new List<CopperfinStudioReportLayoutObject>
+                        {
+                            new()
+                            {
+                                RecordIndex = 6,
+                                ObjectKind = deletedObjectKind,
+                                Title = "customer.company",
+                                Left = 1200,
+                                Top = 2600,
+                                Width = 4000,
+                                Height = 500
+                            }
+                        }
+                    }
+                },
+                DeletedObjects = new List<CopperfinStudioReportLayoutObject>
+                {
+                    new()
+                    {
+                        RecordIndex = 13,
+                        Deleted = true,
+                        ContainingSectionId = "detail_1",
+                        ContainingSectionRecordIndex = 42,
+                        SectionRelativeTop = 1200,
+                        SectionRelativeBottom = 1800,
+                        SectionObjectIndex = 1,
+                        SectionObjectCount = 2,
+                        ObjectKind = deletedObjectKind,
+                        Title = deletedObjectTitle,
+                        Expression = deletedObjectTitle,
+                        Left = 1400,
+                        Top = 3200,
+                        Width = 3600,
+                        Height = 600
+                    }
+                },
+                UnplacedObjects = new List<CopperfinStudioReportLayoutObject>
+                {
+                    new()
+                    {
+                        RecordIndex = 9,
+                        ObjectKind = deletedObjectKind,
+                        Title = "orphan.note",
+                        Left = 800,
+                        Top = 700,
+                        Width = 2400,
+                        Height = 450
+                    }
+                }
+            }
+        };
     }
 
     private static void SmokeDeletedReportSectionDesignSurfaceRendering()
@@ -26636,6 +26846,35 @@ internal static class Program
             {
             }
         }
+    }
+
+    private static void SmokeFocusedRealAssetEditorDeleteRestoreRoundTrip()
+    {
+        WithResolvedRealAssetToolchain(() =>
+        {
+            SmokeAssetEditorDeleteRestoreRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
+                recordIndex: 7,
+                expectedSectionTitle: "Title",
+                expectedSectionRecordIndex: 1,
+                expectedObjectTitle: "\"Titles By Author\"",
+                expectedSectionCount: 6,
+                expectLabel: false,
+                expectedUniqueId: "_RC60MC40R",
+                expectedOriginalSectionObjectCount: 1,
+                expectedDeletedSectionVisibleObjectCount: 1);
+            SmokeAssetEditorDeleteRestoreRoundTripWithRealAsset(
+                TryResolveVfpSourceAsset("VFPSource/Wizards/wzreport/STYLES/STYLELBL.LBX"),
+                recordIndex: 6,
+                expectedSectionTitle: "Detail",
+                expectedSectionRecordIndex: 3,
+                expectedObjectTitle: "wiz_field",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUniqueId: "_QV30QY1DL",
+                expectedOriginalSectionObjectCount: 1,
+                expectedDeletedSectionVisibleObjectCount: 1);
+        });
     }
 
     private static void SmokeAssetEditorDeletedPropertyRoundTripWithRealAsset(

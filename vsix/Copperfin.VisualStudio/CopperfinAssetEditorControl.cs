@@ -1380,10 +1380,22 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         var selectedItem = sectionListView.Items
             .Cast<ListViewItem>()
             .FirstOrDefault(item =>
-                item.Tag is CopperfinStudioReportSection section
-                    ? section.Objects.Any(layoutObject => layoutObject.RecordIndex == recordIndex)
-                    : item.Tag is ReportUnplacedObjectScope unplacedScope &&
-                      unplacedScope.RecordIndexes.Contains(recordIndex));
+            {
+                if (item.Tag is CopperfinStudioReportSection section)
+                {
+                    if (section.Objects.Any(layoutObject => layoutObject.RecordIndex == recordIndex))
+                    {
+                        return true;
+                    }
+
+                    return currentSnapshot.ReportLayout.DeletedObjects.Any(layoutObject =>
+                        layoutObject.RecordIndex == recordIndex &&
+                        layoutObject.ContainingSectionRecordIndex == section.RecordIndex);
+                }
+
+                return item.Tag is ReportUnplacedObjectScope unplacedScope &&
+                       unplacedScope.RecordIndexes.Contains(recordIndex);
+            });
         if (selectedItem is null)
         {
             return false;
