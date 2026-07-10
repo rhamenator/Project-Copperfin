@@ -476,6 +476,8 @@ void run_library_build_host_smoke(
                "build host runtime manifest should omit the IR manifest path for " + extension + " outputs");
         expect(manifest_text.find("transpiled_csharp_path=" + expected_transpiled_csharp.string()) == std::string::npos,
                "build host runtime manifest should omit the transpiled C# path for " + extension + " outputs");
+        expect(manifest_text.find("primary_output_path=") == std::string::npos,
+               "build host runtime manifest should omit the primary output path for " + extension + " outputs");
         expect(manifest_text.find("module_definition_path=") == std::string::npos,
                "build host runtime manifest should omit the module-definition path for " + extension + " outputs");
         expect(manifest_text.find("library_api_manifest_path=") == std::string::npos,

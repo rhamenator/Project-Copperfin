@@ -1291,6 +1291,7 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                 "ast_manifest_path",
                 "ir_manifest_path",
                 "transpiled_csharp_path",
+                "primary_output_path",
                 "module_definition_path",
                 "library_api_manifest_path",
                 "fll_api_manifest_path",
@@ -2954,6 +2955,7 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                 "ast_manifest_path",
                 "ir_manifest_path",
                 "transpiled_csharp_path",
+                "primary_output_path",
                 "module_definition_path",
                 "library_api_manifest_path",
                 "fll_api_manifest_path",
@@ -3408,6 +3410,8 @@ void test_fxp_output_package_emits_token_manifest_from_prg_statements() {
         const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
         expect(runtime_manifest.find("output_kind=fxp") != std::string::npos,
                "fxp-output manifest should record FXP output kind");
+        expect(runtime_manifest.find("primary_output_path=") == std::string::npos,
+               "fxp-output runtime manifest should omit the primary output path from the execution contract");
         expect(runtime_manifest.find("primary_output_materialized=true") != std::string::npos,
                "fxp-output manifest should record the materialized FXP contract file");
         expect(runtime_manifest.find("extension_payload=" + quote_manifest_value(result.plan.launcher_output_path) + "|") != std::string::npos,
@@ -3612,6 +3616,8 @@ void test_app_output_package_emits_archive_manifest_for_staged_assets() {
         const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
         expect(runtime_manifest.find("output_kind=app") != std::string::npos,
                "app-output manifest should record APP output kind");
+        expect(runtime_manifest.find("primary_output_path=") == std::string::npos,
+               "app-output runtime manifest should omit the primary output path from the execution contract");
         expect(runtime_manifest.find("primary_output_materialized=true") != std::string::npos,
                "app-output manifest should record the materialized primary archive");
         expect(runtime_manifest.find("extension_payload=" + quote_manifest_value(result.plan.launcher_output_path) + "|") != std::string::npos,

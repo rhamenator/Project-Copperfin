@@ -392,6 +392,10 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
         const std::string pre_debug_manifest = read_text(result.plan.debug_manifest_path);
         expect(!result.plan.primary_output_materialized,
                "dotnet-finalize plan should remain non-materialized before publish output exists");
+        expect(pre_runtime_manifest.find("primary_output_path=") == std::string::npos,
+               "dotnet-finalize runtime manifest should omit the primary output path before publish");
+        expect(pre_debug_manifest.find("primary_output_path=" + quote_manifest_value(result.plan.launcher_output_path)) != std::string::npos,
+               "dotnet-finalize debug manifest should preserve the primary output path before publish");
         expect(pre_runtime_manifest.find("primary_output_materialized=false") != std::string::npos,
                "dotnet-finalize runtime manifest should start non-materialized");
         expect(pre_debug_manifest.find("primary_output_materialized=false") != std::string::npos,
@@ -413,6 +417,10 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
                    "dotnet-finalize helper should mark the primary output as materialized");
             const std::string runtime_manifest = read_text(finalize_result.plan.manifest_path);
             const std::string debug_manifest = read_text(finalize_result.plan.debug_manifest_path);
+            expect(runtime_manifest.find("primary_output_path=") == std::string::npos,
+                   "dotnet-finalize runtime manifest should omit the primary output path after publish");
+            expect(debug_manifest.find("primary_output_path=" + quote_manifest_value(finalize_result.plan.launcher_output_path)) != std::string::npos,
+                   "dotnet-finalize debug manifest should preserve the primary output path after publish");
             expect(runtime_manifest.find("primary_output_materialized=true") != std::string::npos,
                    "dotnet-finalize runtime manifest should report the materialized launcher output");
             expect(debug_manifest.find("primary_output_materialized=true") != std::string::npos,
