@@ -876,6 +876,11 @@ namespace copperfin::runtime
             const Frame &source_frame,
             const std::vector<PrgValue> &arguments,
             const std::vector<std::optional<std::string>> &argument_references);
+        bool handle_async_runtime_cancellation(
+            SourceLocation location,
+            std::string statement_text,
+            std::string message,
+            bool emit_task_cancelled_event = true);
         PrgValue run_expression_invoked_routine_until_return(std::size_t return_depth);
         RuntimeWatchResult evaluate_watch_expression(const std::string &expression);
         ExecutionOutcome execute_current_statement();
@@ -6835,6 +6840,55 @@ namespace copperfin::runtime
         return result;
     }
 
+    bool PrgRuntimeSession::Impl::handle_async_runtime_cancellation(
+        SourceLocation location,
+        std::string statement_text,
+        std::string message,
+        bool emit_task_cancelled_event)
+    {
+        if (location.file_path.empty())
+        {
+            if (const Statement *statement = current_statement(); statement != nullptr)
+            {
+                location = statement->location;
+                if (statement_text.empty())
+                {
+                    statement_text = statement->text;
+                }
+            }
+        }
+        if (last_fault_location.file_path.empty())
+        {
+            last_fault_location = location;
+        }
+        if (last_fault_statement.empty())
+        {
+            last_fault_statement = statement_text;
+        }
+
+        last_error_message = std::move(message);
+        int &level = current_transaction_level();
+        if (level > 0)
+        {
+            if (!rollback_active_transaction_journal())
+            {
+                return false;
+            }
+            level = 0;
+            events.push_back({.category = "runtime.transaction.rollback",
+                              .detail = "0",
+                              .location = location});
+        }
+        rollback_active_command_undo_journal();
+        if (emit_task_cancelled_event)
+        {
+            events.push_back({.category = "runtime.task.cancelled",
+                              .detail = "cancelled",
+                              .location = location});
+        }
+        return true;
+    }
+
     std::optional<std::string> PrgRuntimeSession::Impl::materialize_xasset_bootstrap(
         const std::string &asset_path,
         bool include_read_events)
@@ -7188,12 +7242,13 @@ namespace copperfin::runtime
                 if (task_cancel_requested != nullptr && task_cancel_requested->load(std::memory_order_relaxed))
                 {
                     ensure_fault_context_defaults(current_statement(), last_fault_location, last_fault_statement);
-                    last_error_message = runtime_text("Runtime.Prg.Core.Error.AsyncTaskCancelled");
-                    events.push_back({.category = "runtime.task.cancelled",
-                                      .detail = "cancelled",
-                                      .location = last_fault_location});
-                    rollback_active_transaction_journal();
-                    rollback_active_command_undo_journal();
+                    if (!handle_async_runtime_cancellation(
+                            last_fault_location,
+                            last_fault_statement,
+                            runtime_text("Runtime.Prg.Core.Error.AsyncTaskCancelled")))
+                    {
+                        return finalize_pause_state(DebugPauseReason::error, last_error_message);
+                    }
                     return finalize_pause_state(DebugPauseReason::error, last_error_message);
                 }
                 while (!stack.empty() &&
@@ -7589,6 +7644,14 @@ namespace copperfin::runtime
     RuntimeWatchResult PrgRuntimeSession::evaluate_watch_expression(const std::string &expression)
     {
         return impl_->evaluate_watch_expression(expression);
+    }
+
+    void PrgRuntimeSession::request_cancel()
+    {
+        if (impl_ != nullptr && impl_->task_cancel_requested != nullptr)
+        {
+            impl_->task_cancel_requested->store(true, std::memory_order_relaxed);
+        }
     }
 
     RuntimePauseState PrgRuntimeSession::run(DebugResumeAction action)

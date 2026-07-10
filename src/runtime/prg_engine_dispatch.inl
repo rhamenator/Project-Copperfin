@@ -7608,7 +7608,15 @@
                     {
                         if (task_cancel_requested != nullptr && task_cancel_requested->load(std::memory_order_relaxed))
                         {
-                            last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.SleepCancelled");
+                            if (!handle_async_runtime_cancellation(
+                                    statement.location,
+                                    statement.text,
+                                    runtime_text("Runtime.Prg.Dispatch.Error.SleepCancelled")))
+                            {
+                                last_fault_location = statement.location;
+                                last_fault_statement = statement.text;
+                                return {.ok = false, .message = last_error_message};
+                            }
                             last_fault_location = statement.location;
                             last_fault_statement = statement.text;
                             return {.ok = false, .message = last_error_message};

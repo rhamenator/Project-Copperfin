@@ -492,7 +492,10 @@
             {
                 if (task_cancel_requested != nullptr && task_cancel_requested->load(std::memory_order_relaxed))
                 {
-                    last_error_message = runtime_text("Runtime.Prg.Records.Error.LockRetryCancelled");
+                    (void)handle_async_runtime_cancellation(
+                        location,
+                        current_statement() == nullptr ? std::string{} : current_statement()->text,
+                        runtime_text("Runtime.Prg.Records.Error.LockRetryCancelled"));
                     return false;
                 }
                 std::this_thread::sleep_for(std::chrono::milliseconds(1U));

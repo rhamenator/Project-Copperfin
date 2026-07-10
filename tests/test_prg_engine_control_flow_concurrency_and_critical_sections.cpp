@@ -223,6 +223,118 @@ void test_spawn_cancellation_propagates_to_sibling_tasks() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_request_cancel_rolls_back_active_transaction_and_resets_txnlevel() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_request_cancel_txn";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const fs::path main_path = temp_root / "request_cancel_txn.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "BEGIN TRANSACTION\n"
+        "APPEND BLANK\n"
+        "REPLACE NAME WITH 'TEMP'\n"
+        "REPLACE AGE WITH 99\n"
+        "SLEEP 5000\n"
+        "cShouldNotRun = 'yes'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    std::promise<copperfin::runtime::RuntimePauseState> run_promise;
+    auto run_future = run_promise.get_future();
+    std::thread run_thread([&session, run_promise = std::move(run_promise)]() mutable {
+        try
+        {
+            run_promise.set_value(session.run(copperfin::runtime::DebugResumeAction::continue_run));
+        }
+        catch (...)
+        {
+            run_promise.set_exception(std::current_exception());
+        }
+    });
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    session.request_cancel();
+
+    const bool finished = run_future.wait_for(std::chrono::seconds(3)) == std::future_status::ready;
+    if (!finished)
+    {
+        run_thread.detach();
+        expect(false, "request_cancel should stop a sleeping transaction without hanging");
+        return;
+    }
+
+    run_thread.join();
+    const auto state = run_future.get();
+    expect(!state.completed, "request_cancel during an active transaction should stop the run with an error pause");
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+           "request_cancel during an active transaction should return an error pause");
+    expect(state.message == "SLEEP cancelled.",
+           "request_cancel during SLEEP should preserve the existing localized sleep-cancel message");
+
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.task.cancelled";
+    }), "request_cancel should emit runtime.task.cancelled");
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.transaction.rollback" && event.detail == "0";
+    }), "request_cancel inside an active transaction should emit runtime.transaction.rollback detail=0");
+
+    const auto blocked_marker = state.globals.find("cshouldnotrun");
+    expect(blocked_marker == state.globals.end(),
+           "request_cancel should prevent statements after the cancelled SLEEP from executing");
+
+    const auto txnlevel_watch = session.evaluate_watch_expression("TXNLEVEL()");
+    expect(txnlevel_watch.ok, "request_cancel error pause should still allow TXNLEVEL() watch evaluation");
+    if (txnlevel_watch.ok)
+    {
+        expect(copperfin::runtime::format_value(txnlevel_watch.value) == "0",
+               "request_cancel should reset TXNLEVEL() to 0 after rolling back the active transaction");
+    }
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 2U);
+    expect(parse_result.ok, "request_cancel should leave the DBF readable after rollback");
+    expect(parse_result.table.records.size() == 2U,
+           "request_cancel should remove the appended transactional row from disk");
+    if (parse_result.ok && parse_result.table.records.size() == 2U)
+    {
+        expect(parse_result.table.records[0].values[0].display_value == "ALPHA",
+               "request_cancel should preserve original text values after rollback");
+        expect(parse_result.table.records[0].values[1].display_value == "10",
+               "request_cancel should preserve original numeric values after rollback");
+    }
+
+    const fs::path transaction_root = temp_root / "runtime-temp" / "transactions";
+    if (std::filesystem::exists(transaction_root, ignored))
+    {
+        bool found_pending_journal = false;
+        for (const auto &entry : std::filesystem::directory_iterator(transaction_root, ignored))
+        {
+            if (!entry.is_directory(ignored))
+            {
+                continue;
+            }
+            const auto name = entry.path().filename().string();
+            if (name.rfind("txn_", 0U) == 0U)
+            {
+                found_pending_journal = true;
+                break;
+            }
+        }
+        expect(!found_pending_journal,
+               "request_cancel should clean up staged transaction journals after rollback");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_spawn_critical_section_serializes_workers() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_spawn_critical_cmd";

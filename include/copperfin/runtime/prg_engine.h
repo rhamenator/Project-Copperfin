@@ -211,6 +211,7 @@ public:
     [[nodiscard]] bool can_undo_command() const;
     [[nodiscard]] std::string command_undo_label() const;
     [[nodiscard]] RuntimeWatchResult evaluate_watch_expression(const std::string& expression);
+    void request_cancel();
 
     [[nodiscard]] RuntimePauseState run(DebugResumeAction action);
     [[nodiscard]] const RuntimePauseState& state() const noexcept;

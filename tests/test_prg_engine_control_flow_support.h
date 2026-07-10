@@ -121,6 +121,7 @@ void test_doevents_in_responsive_loop();
 void test_sleep_command_emits_runtime_sleep_event();
 void test_spawn_and_await_command_runs_task_to_completion();
 void test_spawn_cancellation_propagates_to_sibling_tasks();
+void test_request_cancel_rolls_back_active_transaction_and_resets_txnlevel();
 void test_spawn_critical_section_serializes_workers();
 void test_critical_section_order_policy_rejects_descending_nested_acquire();
 void test_critical_section_exit_order_is_enforced();
