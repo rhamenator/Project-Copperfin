@@ -1329,10 +1329,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output manifest should record all discovered export symbols");
         expect(runtime_manifest.find("primary_output_materialized=false") != std::string::npos,
                "library-output manifest should record the honest non-materialized DLL state");
-        expect(runtime_manifest.find("feature_flag=build.output.library_contract|true|build_output") != std::string::npos,
-               "library-output manifest should expose the library-contract feature flag");
-        expect(runtime_manifest.find("feature_flag=build.output.native_library_wrapper|true|build_output") != std::string::npos,
-               "library-output manifest should expose the native-wrapper feature flag");
+        expect(lines_with_prefix(runtime_manifest, "feature_flag=").empty(),
+               "library-output runtime manifest should omit feature-flag inventory from the execution contract");
         const std::vector<std::string> runtime_asset_lines = lines_with_prefix(runtime_manifest, "asset=");
         expect(!runtime_asset_lines.empty(),
                "library-output manifest should record staged asset inventory");
@@ -1409,8 +1407,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output debug manifest should mirror AI feature entries");
         expect(lines_with_prefix(debug_manifest, "extensibility_guardrail=") == lines_with_prefix(runtime_manifest, "extensibility_guardrail="),
                "library-output debug manifest should mirror extensibility guardrails");
-        expect(lines_with_prefix(debug_manifest, "feature_flag=") == lines_with_prefix(runtime_manifest, "feature_flag="),
-               "library-output debug manifest should mirror runtime feature-flag lines");
+        expect(!lines_with_prefix(debug_manifest, "feature_flag=").empty(),
+               "library-output debug manifest should preserve feature-flag inventory");
         expect(debug_manifest.find("primary_output_path=" + quote_manifest_value(result.plan.launcher_output_path)) != std::string::npos,
                "library-output debug manifest should record the requested DLL output path");
         expect(debug_manifest.find("primary_output_materialized=false") != std::string::npos,
@@ -1523,8 +1521,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                        "library-output runtime pipeline should preserve AI feature entries in the rewritten debug manifest");
                 expect(lines_with_prefix(built_debug_manifest, "extensibility_guardrail=") == lines_with_prefix(built_runtime_manifest, "extensibility_guardrail="),
                        "library-output runtime pipeline should preserve extensibility guardrails in the rewritten debug manifest");
-                expect(lines_with_prefix(built_debug_manifest, "feature_flag=") == lines_with_prefix(built_runtime_manifest, "feature_flag="),
-                       "library-output runtime pipeline should preserve runtime feature-flag lines in the rewritten debug manifest");
+                expect(lines_with_prefix(built_runtime_manifest, "feature_flag=").empty(),
+                       "library-output rewritten runtime manifest should omit feature-flag inventory");
+                expect(!lines_with_prefix(built_debug_manifest, "feature_flag=").empty(),
+                       "library-output rewritten debug manifest should preserve feature-flag inventory");
                 expect(built_debug_manifest.find("primary_output_materialized=true") != std::string::npos,
                        "library-output runtime pipeline should rewrite the debug manifest with a materialized primary output state");
                 expect(built_debug_manifest.find("extension_payload=" + quote_manifest_value(build_result.plan.launcher_output_path) + "|") != std::string::npos,
@@ -2879,12 +2879,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output manifest should mirror InitLibrary callable surface");
         expect(runtime_manifest.find("library_function_call_surface=AddNumbers|ParamBlk*|_RetInt") != std::string::npos,
                "fll-output manifest should mirror AddNumbers callable surface");
-        expect(runtime_manifest.find("feature_flag=build.output.library_contract|true|build_output") != std::string::npos,
-               "fll-output manifest should expose the library-contract feature flag");
-        expect(runtime_manifest.find("feature_flag=build.output.native_library_wrapper|true|build_output") != std::string::npos,
-               "fll-output manifest should expose the native-wrapper feature flag");
-        expect(runtime_manifest.find("feature_flag=build.output.fll_api_contract|true|build_output") != std::string::npos,
-               "fll-output manifest should expose the FLL API-contract feature flag");
+        expect(lines_with_prefix(runtime_manifest, "feature_flag=").empty(),
+               "fll-output runtime manifest should omit feature-flag inventory from the execution contract");
         expect(runtime_manifest.find("project_title=LibraryDemo") != std::string::npos,
                "fll-output manifest should record the project title");
         expect(runtime_manifest.find("package_root=" + quote_manifest_value(result.plan.package_root)) != std::string::npos,
@@ -2994,8 +2990,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output debug manifest should mirror AI feature entries");
         expect(lines_with_prefix(debug_manifest, "extensibility_guardrail=") == lines_with_prefix(runtime_manifest, "extensibility_guardrail="),
                "fll-output debug manifest should mirror extensibility guardrails");
-        expect(lines_with_prefix(debug_manifest, "feature_flag=") == lines_with_prefix(runtime_manifest, "feature_flag="),
-               "fll-output debug manifest should mirror runtime feature-flag lines");
+        expect(!lines_with_prefix(debug_manifest, "feature_flag=").empty(),
+               "fll-output debug manifest should preserve feature-flag inventory");
         expect(debug_manifest.find("primary_output_path=" + quote_manifest_value(result.plan.launcher_output_path)) != std::string::npos,
                "fll-output debug manifest should record the requested FLL output path");
         expect(debug_manifest.find("primary_output_materialized=false") != std::string::npos,
@@ -3136,8 +3132,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                        "fll-output runtime pipeline should preserve AI feature entries in the rewritten debug manifest");
                 expect(lines_with_prefix(built_debug_manifest, "extensibility_guardrail=") == lines_with_prefix(built_runtime_manifest, "extensibility_guardrail="),
                        "fll-output runtime pipeline should preserve extensibility guardrails in the rewritten debug manifest");
-                expect(lines_with_prefix(built_debug_manifest, "feature_flag=") == lines_with_prefix(built_runtime_manifest, "feature_flag="),
-                       "fll-output runtime pipeline should preserve runtime feature-flag lines in the rewritten debug manifest");
+                expect(lines_with_prefix(built_runtime_manifest, "feature_flag=").empty(),
+                       "fll-output rewritten runtime manifest should omit feature-flag inventory");
+                expect(!lines_with_prefix(built_debug_manifest, "feature_flag=").empty(),
+                       "fll-output rewritten debug manifest should preserve feature-flag inventory");
                 expect(built_debug_manifest.find("primary_output_materialized=true") != std::string::npos,
                        "fll-output runtime pipeline should rewrite the debug manifest with a materialized primary output state");
                 expect(built_debug_manifest.find("extension_payload=" + quote_manifest_value(build_result.plan.launcher_output_path) + "|") != std::string::npos,
@@ -3306,8 +3304,10 @@ void test_fxp_output_package_emits_token_manifest_from_prg_statements() {
                "fxp-output manifest should record the materialized FXP contract file");
         expect(runtime_manifest.find("extension_payload=" + quote_manifest_value(result.plan.launcher_output_path) + "|") != std::string::npos,
                "fxp-output manifest should record the emitted FXP contract as an extension payload");
-        expect(runtime_manifest.find("feature_flag=build.output.fxp_token_contract|true|build_output") != std::string::npos,
-               "fxp-output manifest should expose the FXP token-contract feature flag");
+        expect(lines_with_prefix(runtime_manifest, "feature_flag=").empty(),
+               "fxp-output runtime manifest should omit feature-flag inventory from the execution contract");
+        expect(debug_manifest.find("feature_flag=build.output.fxp_token_contract|true|build_output") != std::string::npos,
+               "fxp-output debug manifest should preserve the FXP token-contract feature flag");
         expect(debug_manifest.find("output_kind=fxp") != std::string::npos,
                "fxp-output debug manifest should record FXP output kind");
         expect(debug_manifest.find("launcher_mode=foxpro_tokenized_contract") != std::string::npos,
@@ -3508,8 +3508,10 @@ void test_app_output_package_emits_archive_manifest_for_staged_assets() {
                "app-output manifest should record the materialized primary archive");
         expect(runtime_manifest.find("extension_payload=" + quote_manifest_value(result.plan.launcher_output_path) + "|") != std::string::npos,
                "app-output manifest should record the emitted APP archive as an extension payload");
-        expect(runtime_manifest.find("feature_flag=build.output.app_archive_contract|true|build_output") != std::string::npos,
-               "app-output manifest should expose the APP archive-contract feature flag");
+        expect(lines_with_prefix(runtime_manifest, "feature_flag=").empty(),
+               "app-output runtime manifest should omit feature-flag inventory from the execution contract");
+        expect(debug_manifest.find("feature_flag=build.output.app_archive_contract|true|build_output") != std::string::npos,
+               "app-output debug manifest should preserve the APP archive-contract feature flag");
         expect(debug_manifest.find("output_kind=app") != std::string::npos,
                "app-output debug manifest should record APP output kind");
         expect(debug_manifest.find("launcher_mode=foxpro_application_archive_contract") != std::string::npos,
@@ -3608,8 +3610,8 @@ void test_runtime_package_emits_ast_manifest_for_prg_sources() {
                "debug manifest should record the AST-manifest path");
         expect(runtime_manifest.find("ast_manifest_path=") == std::string::npos,
                "runtime manifest should omit the AST-manifest path");
-        expect(runtime_manifest.find("feature_flag=build.output.ast_contract|true|build_output") != std::string::npos,
-               "runtime manifest should expose the AST-contract feature flag");
+        expect(lines_with_prefix(runtime_manifest, "feature_flag=").empty(),
+               "runtime manifest should omit feature-flag inventory while trimming AST build metadata");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -3708,8 +3710,8 @@ void test_runtime_package_emits_ir_manifest_with_instruction_mapping() {
                "debug manifest should record the IR-manifest path");
         expect(runtime_manifest.find("ir_manifest_path=") == std::string::npos,
                "runtime manifest should omit the IR-manifest path");
-        expect(runtime_manifest.find("feature_flag=build.output.ir_contract|true|build_output") != std::string::npos,
-               "runtime manifest should expose the IR-contract feature flag");
+        expect(lines_with_prefix(runtime_manifest, "feature_flag=").empty(),
+               "runtime manifest should omit feature-flag inventory while trimming IR build metadata");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -3820,8 +3822,8 @@ void test_runtime_package_emits_csharp_transpilation_for_procedural_prg_code() {
                "debug manifest should record the transpiled C# artifact path");
         expect(runtime_manifest.find("transpiled_csharp_path=") == std::string::npos,
                "runtime manifest should omit the transpiled C# artifact path");
-        expect(runtime_manifest.find("feature_flag=build.output.csharp_transpilation|true|build_output") != std::string::npos,
-               "runtime manifest should expose the C# transpilation feature flag");
+        expect(lines_with_prefix(runtime_manifest, "feature_flag=").empty(),
+               "runtime manifest should omit feature-flag inventory while trimming C# transpilation metadata");
     }
 
     fs::remove_all(temp_root, ignored);

@@ -176,14 +176,16 @@ void test_dotnet_launcher_request_falls_back_to_native_host_when_unavailable() {
                "dotnet-fallback manifest should record the native runtime host mode");
         expect(runtime_manifest.find("launcher_fallback=dotnet_output_unavailable") != std::string::npos,
                "dotnet-fallback manifest should record the .NET-unavailable fallback reason");
-        expect(runtime_manifest.find("feature_flag=launcher.dotnet.requested|true|rollout") != std::string::npos,
-               "dotnet-fallback manifest should preserve the requested .NET launcher feature flag");
-        expect(runtime_manifest.find("feature_flag=launcher.dotnet.active|false|host_compatibility") != std::string::npos,
-               "dotnet-fallback manifest should record the inactive .NET launcher feature flag");
+        expect(lines_with_prefix(runtime_manifest, "feature_flag=").empty(),
+               "dotnet-fallback runtime manifest should omit feature-flag inventory from the execution contract");
         expect(debug_manifest.find("launcher_mode=native_runtime_host") != std::string::npos,
                "dotnet-fallback debug manifest should record the native runtime host mode");
         expect(debug_manifest.find("launcher_fallback=dotnet_output_unavailable") != std::string::npos,
                "dotnet-fallback debug manifest should record the fallback reason");
+        expect(debug_manifest.find("feature_flag=launcher.dotnet.requested|true|rollout") != std::string::npos,
+               "dotnet-fallback debug manifest should preserve the requested .NET launcher feature flag");
+        expect(debug_manifest.find("feature_flag=launcher.dotnet.active|false|host_compatibility") != std::string::npos,
+               "dotnet-fallback debug manifest should record the inactive .NET launcher feature flag");
         expect(runtime_manifest.find("extension_payload=" + quote_manifest_value(result.plan.launcher_output_path) + "|") != std::string::npos,
                "dotnet-fallback manifest should include the native entrypoint payload digest");
     }

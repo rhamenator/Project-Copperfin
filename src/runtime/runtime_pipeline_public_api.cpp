@@ -334,8 +334,6 @@ std::string build_runtime_manifest_text(
 
     stream << "language_integrations=" << extensibility_profile.languages.size() << "\n";
     stream << "ai_features=" << extensibility_profile.ai_features.size() << "\n";
-    append_runtime_feature_flag_manifest_lines(stream, plan, security_profile);
-
     append_runtime_asset_manifest_lines(stream, plan);
 
     for (const auto& digest : plan.extension_payload_digests) {

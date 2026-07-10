@@ -218,14 +218,16 @@ void test_materialize_runtime_package() {
                "runtime manifest should include explicit extensibility guardrails");
         expect(runtime_manifest.find("dotnet_gateway_task_primitives=") != std::string::npos, "runtime manifest should include .NET gateway allow decision diagnostics");
         expect(runtime_manifest.find("dotnet_gateway_unsafe_reflection=") != std::string::npos, "runtime manifest should include .NET gateway deny decision diagnostics");
-        expect(runtime_manifest.find("feature_flag=launcher.dotnet.requested|true|rollout") != std::string::npos,
-               "runtime manifest should expose the requested .NET launcher feature flag");
-        expect(runtime_manifest.find("feature_flag=launcher.dotnet.active|true|host_compatibility") != std::string::npos,
-               "runtime manifest should expose the active .NET launcher feature flag");
+        expect(lines_with_prefix(runtime_manifest, "feature_flag=").empty(),
+               "runtime manifest should omit feature-flag inventory from the execution contract");
         expect(debug_manifest.find("launcher_mode=dotnet_launcher") != std::string::npos,
                "debug manifest should record the effective launcher mode");
         expect(debug_manifest.find("launcher_fallback=none") != std::string::npos,
                "debug manifest should record the launcher fallback state");
+        expect(debug_manifest.find("feature_flag=launcher.dotnet.requested|true|rollout") != std::string::npos,
+               "debug manifest should preserve the requested .NET launcher feature flag");
+        expect(debug_manifest.find("feature_flag=launcher.dotnet.active|true|host_compatibility") != std::string::npos,
+               "debug manifest should preserve the active .NET launcher feature flag");
     }
 
     fs::remove_all(temp_root, ignored);
