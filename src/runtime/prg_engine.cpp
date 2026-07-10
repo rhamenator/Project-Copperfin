@@ -2338,6 +2338,10 @@ namespace copperfin::runtime
         if (auto list_control_result = invoke_native_list_control_method(*target_object, leaf, arguments);
             list_control_result.has_value())
         {
+            if (leaf == "clear" || leaf == "removeitem" || leaf == "removelistitem")
+            {
+                write_native_list_control_controlsource_target(*target_object, frame);
+            }
             target_object->last_action = effective_member_path + "()";
             ++target_object->action_count;
             if (leaf == "additem" || leaf == "addlistitem" || leaf == "clear" || leaf == "removeitem" ||

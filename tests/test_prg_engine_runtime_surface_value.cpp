@@ -452,6 +452,80 @@ void test_native_list_control_controlsource_requery_keeps_numeric_value_coherent
     fs::remove_all(temp_root, ignored);
 }
 
+void test_native_list_control_controlsource_stays_synchronized_after_row_mutation_methods() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_native_list_control_controlsource_row_mutation";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "native_list_control_controlsource_row_mutation.prg";
+    write_text(
+        main_path,
+        "CREATE CURSOR lookupstate (nchoice N(2,0))\n"
+        "APPEND BLANK\n"
+        "REPLACE nchoice WITH 0\n"
+        "oCombo = CREATEOBJECT('ComboBox')\n"
+        "oCombo.ControlSource = 'lookupstate.nchoice'\n"
+        "oCombo.AddItem('Alpha')\n"
+        "oCombo.AddItem('Beta')\n"
+        "oCombo.ListIndex = 2\n"
+        "nFieldBeforeRemoveItem = lookupstate.nchoice\n"
+        "oCombo.RemoveItem(1)\n"
+        "nComboIndexAfterRemoveItem = oCombo.ListIndex\n"
+        "nFieldAfterRemoveItem = lookupstate.nchoice\n"
+        "cBoundMem = ''\n"
+        "oList = CREATEOBJECT('ListBox')\n"
+        "oList.ControlSource = 'cBoundMem'\n"
+        "oList.ColumnCount = 2\n"
+        "oList.BoundColumn = 2\n"
+        "oList.BoundTo = .T.\n"
+        "oList.AddListItem('North', 10)\n"
+        "oList.AddListItem('N', 10, 2)\n"
+        "oList.AddListItem('South', 20)\n"
+        "oList.AddListItem('S', 20, 2)\n"
+        "oList.ListItemID = 20\n"
+        "cMemBeforeRemoveListItem = cBoundMem\n"
+        "oList.RemoveListItem(20)\n"
+        "nListIndexAfterRemoveListItem = oList.ListIndex\n"
+        "cMemAfterRemoveListItem = cBoundMem\n"
+        "oList.Clear()\n"
+        "nListIndexAfterClear = oList.ListIndex\n"
+        "cMemAfterClear = cBoundMem\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           std::string("native list-control ControlSource row-mutation script should complete: ") +
+               state.message + " @line=" + std::to_string(state.location.line));
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), name + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(found->second) + "'");
+        }
+    };
+
+    check("nfieldbeforeremoveitem", "2");
+    check("ncomboindexafterremoveitem", "1");
+    check("nfieldafterremoveitem", "1");
+    check("cmembeforeremovelistitem", "S");
+    check("nlistindexafterremovelistitem", "1");
+    check("cmemafterremovelistitem", "N");
+    check("nlistindexafterclear", "0");
+    check("cmemafterclear", "");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -461,6 +535,7 @@ int main() {
     test_native_list_control_boundto_requery_keeps_numeric_value_coherent();
     test_native_list_control_controlsource_drives_boundto_value_semantics();
     test_native_list_control_controlsource_requery_keeps_numeric_value_coherent();
+    test_native_list_control_controlsource_stays_synchronized_after_row_mutation_methods();
     if (const int failures = test_failures(); failures != 0) {
         std::cerr << failures << " test(s) failed\n";
         return 1;
