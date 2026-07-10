@@ -938,6 +938,12 @@
                 members.end(),
                 [](const NativePageFramePageMember &left, const NativePageFramePageMember &right)
                 {
+                    const int left_handle = left.child_object != nullptr ? left.child_object->handle : 0;
+                    const int right_handle = right.child_object != nullptr ? right.child_object->handle : 0;
+                    if (left_handle != right_handle)
+                    {
+                        return left_handle < right_handle;
+                    }
                     if (left.has_numeric_page_slot != right.has_numeric_page_slot)
                     {
                         return left.has_numeric_page_slot < right.has_numeric_page_slot;
@@ -1843,13 +1849,6 @@
                         property_name,
                         make_string_value("object:" + (*child_object)->prog_id + "#" + std::to_string((*child_object)->handle)));
                 }
-                if (is_native_pageframe_runtime_object(runtime_object) &&
-                    is_native_page_runtime_object(**child_object))
-                {
-                    page_members.emplace_back(
-                        property_name,
-                        make_string_value("object:" + (*child_object)->prog_id + "#" + std::to_string((*child_object)->handle)));
-                }
             }
 
             RuntimeOleObjectState *objects_collection = nullptr;
@@ -1942,54 +1941,13 @@
                         return left.first < right.first;
                     });
             }
-            if (!page_members.empty())
+            if (is_native_pageframe_runtime_object(runtime_object))
             {
-                std::sort(
-                    page_members.begin(),
-                    page_members.end(),
-                    [](const auto &left, const auto &right)
-                    {
-                        const auto parse_page_slot = [](const std::string &property_name)
-                            -> std::optional<int>
-                        {
-                            if (!starts_with_insensitive(property_name, "page"))
-                            {
-                                return std::nullopt;
-                            }
-
-                            const std::string suffix = property_name.substr(4U);
-                            if (suffix.empty() ||
-                                !std::all_of(suffix.begin(), suffix.end(), [](unsigned char ch)
-                                             { return std::isdigit(ch) != 0; }))
-                            {
-                                return std::nullopt;
-                            }
-
-                            try
-                            {
-                                const int value = std::stoi(suffix);
-                                return value > 0 ? std::optional<int>(value) : std::nullopt;
-                            }
-                            catch (...)
-                            {
-                                return std::nullopt;
-                            }
-                        };
-
-                        const auto left_slot = parse_page_slot(left.first);
-                        const auto right_slot = parse_page_slot(right.first);
-                        if (left_slot.has_value() != right_slot.has_value())
-                        {
-                            return left_slot.has_value() < right_slot.has_value();
-                        }
-                        if (left_slot.has_value() &&
-                            right_slot.has_value() &&
-                            *left_slot != *right_slot)
-                        {
-                            return *left_slot < *right_slot;
-                        }
-                        return left.first < right.first;
-                    });
+                for (const NativePageFramePageMember &page_member :
+                     collect_native_pageframe_page_members(runtime_object))
+                {
+                    page_members.emplace_back(page_member.property_name, page_member.child_reference);
+                }
             }
 
             objects_collection = sync_collection_surface("objects", child_members, false);

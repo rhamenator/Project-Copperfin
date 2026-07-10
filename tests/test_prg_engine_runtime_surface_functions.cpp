@@ -6731,6 +6731,82 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_pageframe_pages_follow_live_addobject_order_instead_of_member_names()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_pageframe_live_page_order";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_pageframe_live_page_order.prg";
+        write_text(
+            main_path,
+            "oFrame = CREATEOBJECT('DemoPageFrame')\n"
+            "cFirstTag = oFrame.Pages(1).cTag\n"
+            "cSecondTag = oFrame.Pages(2).cTag\n"
+            "cThirdTag = oFrame.Pages(3).cTag\n"
+            "cLoop = ''\n"
+            "FOR EACH oPage IN oFrame.Pages FOXOBJECT\n"
+            "    cLoop = cLoop + IIF(EMPTY(cLoop), '', ',') + oPage.cTag\n"
+            "ENDFOR\n"
+            "oFrame.ActivePage = 3\n"
+            "cActiveTag = oFrame.Pages(oFrame.ActivePage).cTag\n"
+            "oFrame.PageCount = 2\n"
+            "cRemainingSecondTag = oFrame.Pages(2).cTag\n"
+            "lSecondNamedPageStillExists = PEMSTATUS(oFrame, 'aaSecond', 1)\n"
+            "lThirdNamedPageStillExists = PEMSTATUS(oFrame, 'mmThird', 1)\n"
+            "RETURN\n"
+            "DEFINE CLASS FirstPage AS Page\n"
+            "    cTag = 'first'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SecondPage AS Page\n"
+            "    cTag = 'second'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ThirdPage AS Page\n"
+            "    cTag = 'third'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DemoPageFrame AS PageFrame\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddObject('zzFirst', 'FirstPage')\n"
+            "        THIS.AddObject('aaSecond', 'SecondPage')\n"
+            "        THIS.AddObject('mmThird', 'ThirdPage')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native PageFrame live page order script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("cfirsttag", "first");
+        check("csecondtag", "second");
+        check("cthirdtag", "third");
+        check("cloop", "first,second,third");
+        check("cactivetag", "third");
+        check("cremainingsecondtag", "second");
+        check("lsecondnamedpagestillexists", "true");
+        check("lthirdnamedpagestillexists", "false");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_controlcount_reflects_controls_count_and_stays_read_only()
     {
         namespace fs = std::filesystem;
@@ -53514,6 +53590,7 @@ int main()
     test_native_pageframe_pages_child_collection_reflects_count_item_and_foreach_without_leaking_hidden_runtime_surfaces();
     test_native_pageframe_pagecount_grows_shrinks_and_preserves_builtin_reflection();
     test_native_pageframe_activepage_reflects_runtime_selection_and_bounded_reflection();
+    test_native_pageframe_pages_follow_live_addobject_order_instead_of_member_names();
     test_native_controlcount_reflects_controls_count_and_stays_read_only();
     test_native_form_lockscreen_defaults_mutates_and_stays_builtin();
     test_native_form_windowtype_defaults_mutates_and_stays_builtin();
