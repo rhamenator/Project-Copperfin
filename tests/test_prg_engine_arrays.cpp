@@ -168,6 +168,65 @@ void test_acopy_two_dimensional_row_and_column_workflows() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_acopy_clamps_to_existing_target_capacity() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_arrays_acopy_clamp";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "acopy_clamp.prg";
+    write_text(
+        main_path,
+        "DIMENSION aSource[5]\n"
+        "DIMENSION aTarget[2]\n"
+        "aSource[1] = 'A'\n"
+        "aSource[2] = 'B'\n"
+        "aSource[3] = 'C'\n"
+        "aSource[4] = 'D'\n"
+        "aSource[5] = 'E'\n"
+        "nCopied = ACOPY(aSource, aTarget)\n"
+        "nTargetSize = ALEN(aTarget)\n"
+        "cTargetOne = aTarget[1]\n"
+        "cTargetTwo = aTarget[2]\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "ACOPY clamp script should complete");
+
+    const auto copied = state.globals.find("ncopied");
+    const auto target_size = state.globals.find("ntargetsize");
+    const auto target_one = state.globals.find("ctargetone");
+    const auto target_two = state.globals.find("ctargettwo");
+
+    expect(copied != state.globals.end(), "ACOPY clamp copy count should be captured");
+    expect(target_size != state.globals.end(), "ACOPY clamp target size should be captured");
+    expect(target_one != state.globals.end(), "ACOPY clamp first copied value should be captured");
+    expect(target_two != state.globals.end(), "ACOPY clamp second copied value should be captured");
+
+    if (copied != state.globals.end()) {
+        expect(copperfin::runtime::format_value(copied->second) == "2",
+            "ACOPY should report only the number of elements that fit in an existing target array");
+    }
+    if (target_size != state.globals.end()) {
+        expect(copperfin::runtime::format_value(target_size->second) == "2",
+            "ACOPY should not resize an existing target array as a side effect");
+    }
+    if (target_one != state.globals.end()) {
+        expect(copperfin::runtime::format_value(target_one->second) == "A",
+            "ACOPY clamp behavior should preserve the first copied element");
+    }
+    if (target_two != state.globals.end()) {
+        expect(copperfin::runtime::format_value(target_two->second) == "B",
+            "ACOPY clamp behavior should preserve the second copied element");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_array_dimension_and_element_assignment() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_array_assignment";
@@ -1389,6 +1448,7 @@ void test_agetfileversion_existing_and_missing_files() {
 int main() {
     test_ascan_predicate_expression_search();
     test_acopy_two_dimensional_row_and_column_workflows();
+    test_acopy_clamps_to_existing_target_capacity();
     test_array_dimension_and_element_assignment();
     test_asize_two_argument_form_preserves_existing_column_count();
     test_array_metadata_and_text_functions();

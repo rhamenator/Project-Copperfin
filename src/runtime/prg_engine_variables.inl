@@ -254,20 +254,26 @@
             RuntimeArray *target = find_array(target_name);
             const std::size_t target_columns = target == nullptr ? 1U : std::max<std::size_t>(1U, target->columns);
             const std::size_t required_elements = target_start + copy_count - 1U;
-            if (target == nullptr || required_elements > target->values.size())
+            if (target == nullptr)
             {
                 const std::size_t required_rows = (required_elements + target_columns - 1U) / target_columns;
                 resize_array(target_name, required_rows, target_columns);
                 target = find_array(target_name);
             }
-            if (target == nullptr || required_elements > target->values.size())
+            if (target == nullptr || target_start > target->values.size())
+            {
+                return make_number_value(0.0);
+            }
+            const std::size_t target_capacity = target->values.size() - target_start + 1U;
+            const std::size_t actual_copy_count = std::min(copy_count, target_capacity);
+            if (actual_copy_count == 0U)
             {
                 return make_number_value(0.0);
             }
 
             std::vector<PrgValue> snapshot;
-            snapshot.reserve(copy_count);
-            for (std::size_t offset = 0U; offset < copy_count; ++offset)
+            snapshot.reserve(actual_copy_count);
+            for (std::size_t offset = 0U; offset < actual_copy_count; ++offset)
             {
                 snapshot.push_back(source->values[source_start - 1U + offset]);
             }
