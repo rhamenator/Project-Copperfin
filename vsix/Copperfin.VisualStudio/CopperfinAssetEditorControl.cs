@@ -2894,6 +2894,29 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             snapshot.ReportLayout.UnplacedObjects.Count,
             snapshot.ReportLayout.DeletedObjects.Count);
 
+        var sortSetting = FindReportSetting(snapshot.ReportLayout, "TAG");
+        if (!string.IsNullOrWhiteSpace(sortSetting?.Value))
+        {
+            details += Environment.NewLine +
+                       L("AssetEditor.Property.ActiveSortExpression") +
+                       ": " +
+                       sortSetting!.Value;
+        }
+
+        var pageSetupParts = new List<string>();
+        AppendReportSettingSummaryPart(pageSetupParts, snapshot.ReportLayout, "ORIENTATION", "AssetEditor.Property.Orientation");
+        AppendReportSettingSummaryPart(pageSetupParts, snapshot.ReportLayout, "PAPERSIZE", "AssetEditor.Property.PaperSize");
+        AppendReportSettingSummaryPart(pageSetupParts, snapshot.ReportLayout, "PAPERLENGTH", "AssetEditor.Property.PaperLength");
+        AppendReportSettingSummaryPart(pageSetupParts, snapshot.ReportLayout, "PAPERWIDTH", "AssetEditor.Property.PaperWidth");
+        AppendReportSettingSummaryPart(pageSetupParts, snapshot.ReportLayout, "TOPMARGIN", "AssetEditor.Property.TopMargin");
+        AppendReportSettingSummaryPart(pageSetupParts, snapshot.ReportLayout, "BOTMARGIN", "AssetEditor.Property.BottomMargin");
+        AppendReportSettingSummaryPart(pageSetupParts, snapshot.ReportLayout, "LEFTMARGIN", "AssetEditor.Property.LeftMargin");
+        AppendReportSettingSummaryPart(pageSetupParts, snapshot.ReportLayout, "RIGHTMARGIN", "AssetEditor.Property.RightMargin");
+        if (pageSetupParts.Count > 0)
+        {
+            details += Environment.NewLine + string.Join("   ", pageSetupParts);
+        }
+
         if (snapshot.ReportLayout.PreviewBoundsAvailable)
         {
             details += Environment.NewLine + F(
@@ -2919,6 +2942,27 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
 
         return details;
+    }
+
+    private CopperfinStudioNamedValue? FindReportSetting(CopperfinStudioReportLayout reportLayout, string name)
+    {
+        return reportLayout.Settings.FirstOrDefault(setting =>
+            string.Equals(setting.Name, name, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void AppendReportSettingSummaryPart(
+        List<string> parts,
+        CopperfinStudioReportLayout reportLayout,
+        string settingName,
+        string localizationKey)
+    {
+        var setting = FindReportSetting(reportLayout, settingName);
+        if (setting is null || string.IsNullOrWhiteSpace(setting.Value))
+        {
+            return;
+        }
+
+        parts.Add(L(localizationKey) + ": " + setting.Value);
     }
 
     private string BuildReportSectionListTitle(CopperfinStudioReportSection section)

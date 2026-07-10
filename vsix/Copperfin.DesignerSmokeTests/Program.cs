@@ -5982,7 +5982,17 @@ internal static class Program
                     Sections = new List<CopperfinStudioReportSection> { new(), new(), new() },
                     DeletedSections = new List<CopperfinStudioReportSection> { new(), new() },
                     Groupings = new List<CopperfinStudioReportGrouping> { new() },
-                    Settings = new List<CopperfinStudioNamedValue> { new(), new() },
+                    Settings = new List<CopperfinStudioNamedValue>
+                    {
+                        new() { Name = "TAG", Value = "customer.country" },
+                        new() { Name = "ORIENTATION", Value = "0" },
+                        new() { Name = "PAPERSIZE", Value = "1" },
+                        new() { Name = "PAPERLENGTH", Value = "2794" },
+                        new() { Name = "PAPERWIDTH", Value = "2159" },
+                        new() { Name = "TOPMARGIN", Value = "20" },
+                        new() { Name = "LEFTMARGIN", Value = "15" },
+                        new() { Name = "RIGHTMARGIN", Value = "25" }
+                    },
                     DeletedSettings = new List<CopperfinStudioNamedValue> { new() },
                     UnplacedObjects = new List<CopperfinStudioReportLayoutObject> { new() },
                     DeletedObjects = new List<CopperfinStudioReportLayoutObject> { new(), new(), new(), new() }
@@ -5994,13 +6004,22 @@ internal static class Program
             Expect(englishDetails.IndexOf("Sections: 3", StringComparison.Ordinal) >= 0 &&
                    englishDetails.IndexOf("Deleted sections: 2", StringComparison.Ordinal) >= 0 &&
                    englishDetails.IndexOf("Groupings: 1", StringComparison.Ordinal) >= 0 &&
-                   englishDetails.IndexOf("Settings: 2", StringComparison.Ordinal) >= 0 &&
+                   englishDetails.IndexOf("Settings: 8", StringComparison.Ordinal) >= 0 &&
                    englishDetails.IndexOf("Deleted settings: 1", StringComparison.Ordinal) >= 0 &&
                    englishDetails.IndexOf("Unplaced objects: 1", StringComparison.Ordinal) >= 0 &&
                    englishDetails.IndexOf("Deleted objects: 4", StringComparison.Ordinal) >= 0 &&
+                   englishDetails.IndexOf("Active Sort Expression: customer.country", StringComparison.Ordinal) >= 0 &&
+                   englishDetails.IndexOf("Orientation: 0", StringComparison.Ordinal) >= 0 &&
+                   englishDetails.IndexOf("Paper Size: 1", StringComparison.Ordinal) >= 0 &&
+                   englishDetails.IndexOf("Paper Length: 2794", StringComparison.Ordinal) >= 0 &&
+                   englishDetails.IndexOf("Paper Width: 2159", StringComparison.Ordinal) >= 0 &&
+                   englishDetails.IndexOf("Top Margin: 20", StringComparison.Ordinal) >= 0 &&
+                   englishDetails.IndexOf("Left Margin: 15", StringComparison.Ordinal) >= 0 &&
+                   englishDetails.IndexOf("Right Margin: 25", StringComparison.Ordinal) >= 0 &&
+                   englishDetails.IndexOf("Bottom Margin:", StringComparison.Ordinal) < 0 &&
                    englishDetails.IndexOf("Preview bounds:", StringComparison.Ordinal) >= 0 &&
                    englishDetails.IndexOf("Deleted preview bounds:", StringComparison.Ordinal) >= 0,
-                "English report layout shell summary should include live and deleted report counts");
+                "English report layout shell summary should include live report counts plus root sort and page-setup metadata without fabricating missing optional fields");
 
             using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
             var spanishDetails = InvokeAssetEditorString(spanishControl, "BuildSnapshotDetailsText", info, snapshot);
@@ -6008,13 +6027,21 @@ internal static class Program
                    spanishDetails.IndexOf("Secciones: 3", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Secciones eliminadas: 2", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Agrupaciones: 1", StringComparison.Ordinal) >= 0 &&
-                   spanishDetails.IndexOf("Configuraciones: 2", StringComparison.Ordinal) >= 0 &&
+                   spanishDetails.IndexOf("Configuraciones: 8", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Configuraciones eliminadas: 1", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Objetos sin sección: 1", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Objetos eliminados: 4", StringComparison.Ordinal) >= 0 &&
+                   spanishDetails.IndexOf("Expresión de orden activa: customer.country", StringComparison.Ordinal) >= 0 &&
+                   spanishDetails.IndexOf("Orientación: 0", StringComparison.Ordinal) >= 0 &&
+                   spanishDetails.IndexOf("Tamaño de papel: 1", StringComparison.Ordinal) >= 0 &&
+                   spanishDetails.IndexOf("Largo del papel: 2794", StringComparison.Ordinal) >= 0 &&
+                   spanishDetails.IndexOf("Ancho del papel: 2159", StringComparison.Ordinal) >= 0 &&
+                   spanishDetails.IndexOf("Margen superior: 20", StringComparison.Ordinal) >= 0 &&
+                   spanishDetails.IndexOf("Margen izquierdo: 15", StringComparison.Ordinal) >= 0 &&
+                   spanishDetails.IndexOf("Margen derecho: 25", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Limites de vista previa:", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Limites de vista previa eliminada:", StringComparison.Ordinal) >= 0,
-                "Spanish report layout shell summary should localize file details and report counts");
+                "Spanish report layout shell summary should localize file details, report counts, and root sort/page-setup metadata");
 
             using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
             var portugueseDetails = InvokeAssetEditorString(portugueseControl, "BuildSnapshotDetailsText", info, snapshot);
@@ -6022,13 +6049,21 @@ internal static class Program
                    portugueseDetails.IndexOf("Seções: 3", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Seções excluídas: 2", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Agrupamentos: 1", StringComparison.Ordinal) >= 0 &&
-                   portugueseDetails.IndexOf("Configurações: 2", StringComparison.Ordinal) >= 0 &&
+                   portugueseDetails.IndexOf("Configurações: 8", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Configurações excluídas: 1", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Objetos sem seção: 1", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Objetos excluídos: 4", StringComparison.Ordinal) >= 0 &&
+                   portugueseDetails.IndexOf("Expressão de ordenação ativa: customer.country", StringComparison.Ordinal) >= 0 &&
+                   portugueseDetails.IndexOf("Orientação: 0", StringComparison.Ordinal) >= 0 &&
+                   portugueseDetails.IndexOf("Tamanho do papel: 1", StringComparison.Ordinal) >= 0 &&
+                   portugueseDetails.IndexOf("Comprimento do papel: 2794", StringComparison.Ordinal) >= 0 &&
+                   portugueseDetails.IndexOf("Largura do papel: 2159", StringComparison.Ordinal) >= 0 &&
+                   portugueseDetails.IndexOf("Margem superior: 20", StringComparison.Ordinal) >= 0 &&
+                   portugueseDetails.IndexOf("Margem esquerda: 15", StringComparison.Ordinal) >= 0 &&
+                   portugueseDetails.IndexOf("Margem direita: 25", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Limites da visualização:", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Limites da visualização excluída:", StringComparison.Ordinal) >= 0,
-                "Portuguese report layout shell summary should localize file details and report counts");
+                "Portuguese report layout shell summary should localize file details, report counts, and root sort/page-setup metadata");
 
             var pseudoLocalization = new CopperfinLocalization("qps-ploc");
             using var pseudoControl = new CopperfinAssetEditorControl(pseudoLocalization);
@@ -6037,9 +6072,13 @@ internal static class Program
                    pseudoDetails.IndexOf("3", StringComparison.Ordinal) >= 0 &&
                    pseudoDetails.IndexOf("2", StringComparison.Ordinal) >= 0 &&
                    pseudoDetails.IndexOf("4", StringComparison.Ordinal) >= 0 &&
+                   pseudoDetails.IndexOf(pseudoLocalization.Text("AssetEditor.Property.ActiveSortExpression").Substring(0, 6), StringComparison.Ordinal) >= 0 &&
+                   pseudoDetails.IndexOf(pseudoLocalization.Text("AssetEditor.Property.Orientation").Substring(0, 6), StringComparison.Ordinal) >= 0 &&
+                   pseudoDetails.IndexOf(pseudoLocalization.Text("AssetEditor.Property.PaperLength").Substring(0, 6), StringComparison.Ordinal) >= 0 &&
+                   pseudoDetails.IndexOf(pseudoLocalization.Text("AssetEditor.Property.LeftMargin").Substring(0, 6), StringComparison.Ordinal) >= 0 &&
                    pseudoDetails.IndexOf(pseudoLocalization.Text("AssetEditor.Details.ReportPreviewBoundsSummary").Substring(0, 6), StringComparison.Ordinal) >= 0 &&
                    pseudoDetails.IndexOf(pseudoLocalization.Text("AssetEditor.Details.DeletedReportPreviewBoundsSummary").Substring(0, 6), StringComparison.Ordinal) >= 0,
-                "Pseudo-localized report layout shell summary should route live and deleted report counts through the shared catalog");
+                "Pseudo-localized report layout shell summary should route root sort/page-setup metadata through the shared catalog");
         }
         finally
         {
