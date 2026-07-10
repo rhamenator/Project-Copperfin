@@ -23,6 +23,14 @@ int main(int argc, char** argv) {
     test_studio_host_json_reorders_label_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_duplicates_label_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_renames_label_layout_object_identity_by_stable_selectors(argv[1]);
+    test_studio_host_json_updates_label_layout_object_expressions_by_record_selection(argv[1]);
+    test_studio_host_json_updates_label_layout_object_expression_by_stable_selection(argv[1]);
+    test_studio_host_json_updates_deleted_label_layout_object_expressions_by_record_selection(argv[1]);
+    test_studio_host_json_clears_label_layout_object_expressions_by_record_selection(argv[1]);
+    test_studio_host_json_clears_label_layout_object_expression_by_stable_selection(argv[1]);
+    test_studio_host_json_clears_deleted_label_layout_object_expressions_by_record_selection(argv[1]);
+    test_studio_host_json_restores_edited_deleted_label_layout_object_as_unplaced_by_record_selection(argv[1]);
+    test_studio_host_json_restores_edited_deleted_label_layout_object_as_unplaced_by_stable_selection(argv[1]);
 
     return failures == 0 ? 0 : 1;
 }

@@ -765,4 +765,46 @@ void test_studio_host_json_renames_label_layout_object_identity_by_stable_select
     }
 }
 
+void test_studio_host_json_updates_label_layout_object_expressions_by_record_selection(
+    const std::string& studio_host_path) {
+    test_studio_host_json_updates_report_layout_object_expressions_by_record_selection(studio_host_path);
+}
+
+void test_studio_host_json_updates_label_layout_object_expression_by_stable_selection(
+    const std::string& studio_host_path) {
+    test_studio_host_json_updates_report_layout_object_expression_by_stable_selection(studio_host_path);
+}
+
+void test_studio_host_json_updates_deleted_label_layout_object_expressions_by_record_selection(
+    const std::string& studio_host_path) {
+    test_studio_host_json_updates_deleted_report_layout_object_expressions_by_record_selection(studio_host_path);
+}
+
+void test_studio_host_json_clears_label_layout_object_expressions_by_record_selection(
+    const std::string& studio_host_path) {
+    test_studio_host_json_clears_report_layout_object_expressions_by_record_selection(studio_host_path);
+}
+
+void test_studio_host_json_clears_label_layout_object_expression_by_stable_selection(
+    const std::string& studio_host_path) {
+    test_studio_host_json_clears_report_layout_object_expression_by_stable_selection(studio_host_path);
+}
+
+void test_studio_host_json_clears_deleted_label_layout_object_expressions_by_record_selection(
+    const std::string& studio_host_path) {
+    test_studio_host_json_clears_deleted_report_layout_object_expressions_by_record_selection(studio_host_path);
+}
+
+void test_studio_host_json_restores_edited_deleted_label_layout_object_as_unplaced_by_record_selection(
+    const std::string& studio_host_path) {
+    test_studio_host_json_restores_edited_deleted_report_layout_object_as_unplaced_by_record_selection(
+        studio_host_path);
+}
+
+void test_studio_host_json_restores_edited_deleted_label_layout_object_as_unplaced_by_stable_selection(
+    const std::string& studio_host_path) {
+    test_studio_host_json_restores_edited_deleted_report_layout_object_as_unplaced_by_stable_selection(
+        studio_host_path);
+}
+
 }  // namespace cf_test_studio_host_json

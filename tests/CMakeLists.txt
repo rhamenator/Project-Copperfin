@@ -547,6 +547,7 @@ add_test(
 
 add_executable(test_studio_host_label_layout_actions
     test_studio_host_label_layout_actions.cpp
+    test_studio_host_json_objects_layout_and_expressions.cpp
     test_studio_host_json_report_labels.cpp
     test_studio_host_json_geometry_preview_helpers.cpp
     test_studio_host_json_report_shared_fixtures.cpp
