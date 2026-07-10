@@ -2234,7 +2234,8 @@ internal static class Program
                     SourceLineIndex = 3,
                     MemoBlockNumber = 304
                 },
-                expectRawSnapshotProperty: false);
+                expectRawSnapshotProperty: false,
+                verifyExplicitClearAfterUpdate: true);
             SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
                 propertyName: "PAPERWIDTH",
@@ -2252,7 +2253,8 @@ internal static class Program
                     SourceLineIndex = 3,
                     MemoBlockNumber = 304
                 },
-                expectRawSnapshotProperty: false);
+                expectRawSnapshotProperty: false,
+                verifyExplicitClearAfterUpdate: true);
             SmokeAssetEditorRealAssetSettingShouldRemainUnavailable(
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
                 propertyName: "LEFTMARGIN",
@@ -2280,7 +2282,8 @@ internal static class Program
                     SourceLineIndex = 3,
                     MemoBlockNumber = 78
                 },
-                expectRawSnapshotProperty: false);
+                expectRawSnapshotProperty: false,
+                verifyExplicitClearAfterUpdate: true);
             SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
                 propertyName: "PAPERWIDTH",
@@ -2298,7 +2301,8 @@ internal static class Program
                     SourceLineIndex = 3,
                     MemoBlockNumber = 78
                 },
-                expectRawSnapshotProperty: false);
+                expectRawSnapshotProperty: false,
+                verifyExplicitClearAfterUpdate: true);
             SmokeAssetEditorRealAssetSettingShouldRemainUnavailable(
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
                 propertyName: "LEFTMARGIN",
@@ -25360,7 +25364,8 @@ internal static class Program
         int expectedSectionCount,
         bool expectLabel,
         CopperfinStudioNamedValue expectedUpdatedSetting,
-        bool expectRawSnapshotProperty = true)
+        bool expectRawSnapshotProperty = true,
+        bool verifyExplicitClearAfterUpdate = false)
     {
         if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
         {
@@ -25497,45 +25502,105 @@ internal static class Program
                     $"reloaded edited real asset settings snapshot should preserve {propertyName}");
             }
 
-            var undoHandled = control.TryHandleUndoCommand();
-            Expect(undoHandled,
-                $"real asset editor settings add smoke should execute undo after editing {propertyName} for {sourcePath}");
-            Application.DoEvents();
-
-            var undoneSelection = WaitUntil(
-                TimeSpan.FromSeconds(8),
-                () =>
-                {
-                    if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
-                        refreshedSelection.RecordIndex != settingsRecordIndex)
-                    {
-                        return false;
-                    }
-
-                    return string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, settingsScopeTitle, StringComparison.Ordinal) &&
-                           objectListView.Items.Count == 0 &&
-                           string.Equals(ReadSelectionPropertyValue(refreshedSelection, propertyName) ?? string.Empty, expectedOriginalSelectionValue, StringComparison.Ordinal) &&
-                           (surface is null ||
-                            (ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") is null &&
-                             ReadPrivateNullableInt(surface, "selectedRecordIndex") is null &&
-                             !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected")));
-                });
-            Expect(undoneSelection,
-                $"real asset editor settings add smoke should preserve settings-rooted continuity after undoing {propertyName} for {sourcePath}");
-            Expect(!control.CanHandleUndoCommand(),
-                $"real asset editor settings add smoke should clear undo after restoring {propertyName} for {sourcePath}");
-
-            var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
-            Expect(reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null,
-                $"real asset editor settings add smoke should reload restored on-disk state for {sourcePath}");
-            if (reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null)
+            if (verifyExplicitClearAfterUpdate)
             {
-                AssertRealAssetSettingMissingSnapshot(
-                    reloadedAfterUndo.Document,
-                    propertyName,
-                    expectedSectionCount,
-                    expectLabel,
-                    $"reloaded undone editor real asset settings snapshot should keep {propertyName} absent");
+                if (propertyGrid.SelectedObject is not CopperfinDesignerSelection selectionWithProperty)
+                {
+                    TearDownForm(hostForm);
+                    return;
+                }
+
+                var clearDescriptor = TypeDescriptor.GetProperties(selectionWithProperty)[propertyName];
+                Expect(clearDescriptor is not null,
+                    $"real asset editor settings clear smoke should keep editable property {propertyName} available before clearing for {sourcePath}");
+                if (clearDescriptor is null)
+                {
+                    TearDownForm(hostForm);
+                    return;
+                }
+
+                clearDescriptor.SetValue(selectionWithProperty, string.Empty);
+                Expect(selectionWithProperty.TryGetUpdate(propertyName, out _, out _),
+                    $"real asset editor settings clear smoke should prepare a clear for {propertyName} for {sourcePath}");
+                InvokeAssetEditorVoid(control, "ApplyPropertyGridChange", propertyName, expectedUpdatedSelectionValue);
+                Application.DoEvents();
+
+                var clearedSelection = WaitUntil(
+                    TimeSpan.FromSeconds(8),
+                    () =>
+                    {
+                        if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                            refreshedSelection.RecordIndex != settingsRecordIndex)
+                        {
+                            return false;
+                        }
+
+                        return string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, settingsScopeTitle, StringComparison.Ordinal) &&
+                               objectListView.Items.Count == 0 &&
+                               string.Equals(ReadSelectionPropertyValue(refreshedSelection, propertyName) ?? string.Empty, expectedOriginalSelectionValue, StringComparison.Ordinal) &&
+                               (surface is null ||
+                                (ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") is null &&
+                                 ReadPrivateNullableInt(surface, "selectedRecordIndex") is null &&
+                                 !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected")));
+                    });
+                Expect(clearedSelection,
+                    $"real asset editor settings clear smoke should preserve settings-rooted continuity after clearing {propertyName} for {sourcePath}");
+
+                var reloadedAfterClear = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+                Expect(reloadedAfterClear.Success && reloadedAfterClear.Document is not null,
+                    $"real asset editor settings clear smoke should reload cleared on-disk state for {sourcePath}");
+                if (reloadedAfterClear.Success && reloadedAfterClear.Document is not null)
+                {
+                    AssertRealAssetSettingMissingSnapshot(
+                        reloadedAfterClear.Document,
+                        propertyName,
+                        expectedSectionCount,
+                        expectLabel,
+                        $"reloaded cleared editor real asset settings snapshot should keep {propertyName} absent");
+                }
+            }
+            else
+            {
+                var undoHandled = control.TryHandleUndoCommand();
+                Expect(undoHandled,
+                    $"real asset editor settings add smoke should execute undo after editing {propertyName} for {sourcePath}");
+                Application.DoEvents();
+
+                var undoneSelection = WaitUntil(
+                    TimeSpan.FromSeconds(8),
+                    () =>
+                    {
+                        if (propertyGrid.SelectedObject is not CopperfinDesignerSelection refreshedSelection ||
+                            refreshedSelection.RecordIndex != settingsRecordIndex)
+                        {
+                            return false;
+                        }
+
+                        return string.Equals(sectionListView.SelectedItems.Cast<ListViewItem>().FirstOrDefault()?.Text, settingsScopeTitle, StringComparison.Ordinal) &&
+                               objectListView.Items.Count == 0 &&
+                               string.Equals(ReadSelectionPropertyValue(refreshedSelection, propertyName) ?? string.Empty, expectedOriginalSelectionValue, StringComparison.Ordinal) &&
+                               (surface is null ||
+                                (ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") is null &&
+                                 ReadPrivateNullableInt(surface, "selectedRecordIndex") is null &&
+                                 !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected")));
+                    });
+                Expect(undoneSelection,
+                    $"real asset editor settings add smoke should preserve settings-rooted continuity after undoing {propertyName} for {sourcePath}");
+                Expect(!control.CanHandleUndoCommand(),
+                    $"real asset editor settings add smoke should clear undo after restoring {propertyName} for {sourcePath}");
+
+                var reloadedAfterUndo = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+                Expect(reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null,
+                    $"real asset editor settings add smoke should reload restored on-disk state for {sourcePath}");
+                if (reloadedAfterUndo.Success && reloadedAfterUndo.Document is not null)
+                {
+                    AssertRealAssetSettingMissingSnapshot(
+                        reloadedAfterUndo.Document,
+                        propertyName,
+                        expectedSectionCount,
+                        expectLabel,
+                        $"reloaded undone editor real asset settings snapshot should keep {propertyName} absent");
+                }
             }
 
             TearDownForm(hostForm);
