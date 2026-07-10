@@ -2072,7 +2072,8 @@ internal static class Program
                     RecordIndex = 0,
                     FieldIndex = 19,
                     MemoBlockNumber = 304
-                });
+                },
+                verifyExplicitClearAfterUpdate: true);
             SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
                 propertyName: "TAG",
@@ -2088,7 +2089,8 @@ internal static class Program
                     RecordIndex = 0,
                     FieldIndex = 19,
                     MemoBlockNumber = 78
-                });
+                },
+                verifyExplicitClearAfterUpdate: true);
             SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 propertyName: "TOPMARGIN",
