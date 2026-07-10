@@ -80,6 +80,7 @@ void print_error_line(
 void print_license_status(const copperfin::licensing::LicenseStatus& status) {
     using copperfin::licensing::LicenseState;
 
+    std::cout << "status: ok\n";
     std::cout << "state: " << copperfin::licensing::license_state_name(status.state) << "\n";
     if (status.state == LicenseState::free) {
         return;

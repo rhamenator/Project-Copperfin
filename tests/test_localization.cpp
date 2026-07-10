@@ -3001,6 +3001,31 @@ void test_inspect_usage_routes_through_localization(const std::string& inspect_p
     fs::remove_all(temp_root, ignored);
 }
 
+void test_inspect_license_status_preserves_machine_contracts(const std::string& inspect_path) {
+    ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR");
+    set_env_value("COPPERFIN_LOCALE_DIR", "", false);
+
+    const auto expect_license_status_contract = [&](const std::string& selected_locale, const std::string& issue_tag) {
+        set_env_value("COPPERFIN_LOCALE", selected_locale, true);
+        const std::string output = run_command_capture(shell_quote(inspect_path) + " --license-status 2>&1");
+
+        const std::size_t status_position = output.find("status: ok");
+        const std::size_t state_position = output.find("state: ");
+        expect(status_position != std::string::npos,
+               issue_tag + ": copperfin_inspect --license-status should preserve the machine-readable status line");
+        expect(state_position != std::string::npos,
+               issue_tag + ": copperfin_inspect --license-status should preserve the machine-readable state line");
+        if (status_position != std::string::npos && state_position != std::string::npos) {
+            expect(status_position < state_position,
+                   issue_tag + ": copperfin_inspect --license-status should print status before state");
+        }
+    };
+
+    expect_license_status_contract("es-419", "#3816");
+    expect_license_status_contract("qps-ploc", "#3816");
+}
+
 void test_runtime_package_warnings_pseudo_localize() {
     namespace fs = std::filesystem;
 
@@ -3155,6 +3180,7 @@ int main(int argc, char** argv) {
     test_runtime_package_warnings_pseudo_localize();
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);
+        test_inspect_license_status_preserves_machine_contracts(argv[1]);
         test_inspect_error_prefix_routes_through_localization(argv[1]);
     } else {
         expect(false, "#1779: test_localization requires the copperfin_inspect executable path");
