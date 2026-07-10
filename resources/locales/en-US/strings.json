@@ -939,6 +939,7 @@
   "Runtime.Prg.Dispatch.Error.ReplaceRequiresFieldWithExpressionAssignment": "REPLACE requires at least one FIELD WITH expression assignment",
   "Runtime.Prg.Dispatch.Error.UpdateRequiresSetFieldExpressionAssignments": "UPDATE requires SET field = expression assignments",
   "Runtime.Prg.Dispatch.Error.InsertIntoRequiresValuesClause": "INSERT INTO requires a VALUES clause",
+  "Runtime.Prg.Dispatch.Error.InsertIntoSelectQueryInvalid": "INSERT INTO SELECT query could not be parsed or resolved",
   "Runtime.Prg.Dispatch.Error.ObjectTargetAssignmentFailed": "Object target assignment failed",
   "Runtime.Prg.Dispatch.Error.OleObjectNotFoundForPropertyAssignment": "OLE object not found for property assignment: {targetIdentifier}",
   "Runtime.Prg.Dispatch.Error.UnlockRecordTargetRecordNotFound": "UNLOCK RECORD target record not found",

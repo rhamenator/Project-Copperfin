@@ -36,6 +36,7 @@
 #include <future>
 #include <map>
 #include <iterator>
+#include <limits>
 #include <mutex>
 #include <new>
 #include <optional>
@@ -217,6 +218,40 @@ namespace copperfin::runtime
             default:
                 return value_as_string(value);
             }
+        }
+
+        std::string serialize_insert_value_expression(const PrgValue &value)
+        {
+            if (value.is_null)
+            {
+                return ".NULL.";
+            }
+            if (value.kind == PrgValueKind::empty)
+            {
+                return "\"\"";
+            }
+            if (value.kind == PrgValueKind::number)
+            {
+                std::ostringstream stream;
+                stream << std::setprecision(std::numeric_limits<double>::max_digits10)
+                       << value.number_value;
+                return stream.str();
+            }
+            return serialize_runtime_expression_text(value);
+        }
+
+        std::string serialize_insert_row_expression_list(const std::vector<PrgValue> &row)
+        {
+            std::string result;
+            for (std::size_t index = 0U; index < row.size(); ++index)
+            {
+                if (index != 0U)
+                {
+                    result.push_back(',');
+                }
+                result += serialize_insert_value_expression(row[index]);
+            }
+            return result;
         }
 
         std::string make_native_method_override_key(
@@ -822,7 +857,12 @@ namespace copperfin::runtime
             const std::vector<std::optional<std::string>> &argument_references);
         bool requery_native_list_control(
             RuntimeOleObjectState &runtime_object,
-            const Frame &frame);
+            const Frame &frame,
+            bool require_query_resolution = false);
+        bool materialize_select_query_rows(
+            const std::string &query_text,
+            const Frame &frame,
+            std::vector<std::vector<PrgValue>> &rows);
         PrgValue bind_native_event(
             const Frame &source_frame,
             const std::vector<PrgValue> &arguments,
@@ -3055,7 +3095,8 @@ namespace copperfin::runtime
 
     bool PrgRuntimeSession::Impl::requery_native_list_control(
         RuntimeOleObjectState &runtime_object,
-        const Frame &frame)
+        const Frame &frame,
+        bool require_query_resolution)
     {
         const std::string normalized_base_class =
             normalize_identifier(trim_copy(runtime_object.base_class_name));
@@ -4150,12 +4191,20 @@ namespace copperfin::runtime
             QueryPlan plan;
             if (!parse_query_plan(query_text, plan))
             {
+                if (require_query_resolution)
+                {
+                    return false;
+                }
                 break;
             }
 
             CursorState *cursor = resolve_cursor_target(plan.source_designator);
             if (cursor == nullptr)
             {
+                if (require_query_resolution)
+                {
+                    return false;
+                }
                 break;
             }
 
@@ -4165,6 +4214,10 @@ namespace copperfin::runtime
                 joined_cursor = resolve_cursor_target(plan.joined_source_designator);
                 if (joined_cursor == nullptr)
                 {
+                    if (require_query_resolution)
+                    {
+                        return false;
+                    }
                     break;
                 }
             }
@@ -4213,6 +4266,26 @@ namespace copperfin::runtime
             normalize_native_list_control_sorted_invariant(runtime_object);
         }
         sync_native_list_control_displayvalue_from_selection(runtime_object);
+        return true;
+    }
+
+    bool PrgRuntimeSession::Impl::materialize_select_query_rows(
+        const std::string &query_text,
+        const Frame &frame,
+        std::vector<std::vector<PrgValue>> &rows)
+    {
+        RuntimeOleObjectState query_surface;
+        query_surface.base_class_name = "listbox";
+        query_surface.properties["rowsourcetype"] = make_number_value(3.0);
+        query_surface.properties["rowsource"] = make_string_value(query_text);
+        if (!requery_native_list_control(query_surface, frame, true))
+        {
+            last_error_message = runtime_text(
+                "Runtime.Prg.Dispatch.Error.InsertIntoSelectQueryInvalid");
+            return false;
+        }
+
+        rows = std::move(query_surface.list_rows);
         return true;
     }
 

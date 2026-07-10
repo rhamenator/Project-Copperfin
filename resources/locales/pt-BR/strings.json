@@ -1301,6 +1301,7 @@
   "Runtime.Prg.Dispatch.Error.ReplaceRequiresFieldWithExpressionAssignment": "REPLACE requer pelo menos uma atribuicao FIELD WITH de expressao",
   "Runtime.Prg.Dispatch.Error.UpdateRequiresSetFieldExpressionAssignments": "UPDATE requer atribuicoes SET campo = expressao",
   "Runtime.Prg.Dispatch.Error.InsertIntoRequiresValuesClause": "INSERT INTO requer uma clausula VALUES",
+  "Runtime.Prg.Dispatch.Error.InsertIntoSelectQueryInvalid": "Nao foi possivel analisar ou resolver a consulta SELECT de INSERT INTO",
   "Runtime.Prg.Dispatch.Error.ObjectTargetAssignmentFailed": "Falha na atribuicao do destino do objeto",
   "Runtime.Prg.Dispatch.Error.OleObjectNotFoundForPropertyAssignment": "Objeto OLE nao encontrado para atribuicao de propriedade: {targetIdentifier}",
   "Runtime.Prg.Dispatch.Error.UnlockRecordTargetRecordNotFound": "UNLOCK RECORD nao encontrou o registro de destino",

@@ -2797,11 +2797,54 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
-                if (!execute_with_command_undo(cursor->source_path, "INSERT INTO", [&]
-                    {
-                        return insert_record_values(*cursor, frame, statement.expression, statement.secondary_expression);
-                    }))
+
+                const bool inserts_query_rows =
+                    normalize_identifier(statement.tertiary_expression) == "select";
+                std::vector<std::vector<PrgValue>> query_rows;
+                if (inserts_query_rows &&
+                    !materialize_select_query_rows(statement.secondary_expression, frame, query_rows))
                 {
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                const CursorPositionSnapshot original_position = capture_cursor_snapshot(*cursor);
+                const std::size_t original_record_count = cursor->record_count;
+                const std::vector<vfp::DbfRecord> original_remote_records =
+                    cursor->remote ? cursor->remote_records : std::vector<vfp::DbfRecord>{};
+                const bool inserted = execute_with_command_undo(cursor->source_path, "INSERT INTO", [&]
+                    {
+                        if (!inserts_query_rows)
+                        {
+                            return insert_record_values(
+                                *cursor,
+                                frame,
+                                statement.expression,
+                                statement.secondary_expression);
+                        }
+
+                        for (const auto &row : query_rows)
+                        {
+                            if (!insert_record_values(
+                                    *cursor,
+                                    frame,
+                                    statement.expression,
+                                    serialize_insert_row_expression_list(row)))
+                            {
+                                return false;
+                            }
+                        }
+                        return true;
+                    });
+                if (!inserted)
+                {
+                    if (cursor->remote)
+                    {
+                        cursor->remote_records = original_remote_records;
+                    }
+                    cursor->record_count = original_record_count;
+                    restore_cursor_snapshot(*cursor, original_position);
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};

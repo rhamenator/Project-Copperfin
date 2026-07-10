@@ -1833,10 +1833,17 @@ Program parse_program(const std::string& path) {
             statement.kind = StatementKind::insert_into_command;
             const std::string body = trim_copy(line.substr(12U));
             const std::size_t values_position = find_keyword_top_level(body, "VALUES");
-            if (values_position == std::string::npos) {
+            const std::size_t select_position = find_keyword_top_level(body, "SELECT");
+            const bool inserts_query_rows =
+                select_position != std::string::npos &&
+                (values_position == std::string::npos || select_position < values_position);
+            const std::size_t source_position = inserts_query_rows
+                                                    ? select_position
+                                                    : values_position;
+            if (source_position == std::string::npos) {
                 statement.identifier = body;
             } else {
-                std::string target = trim_copy(body.substr(0U, values_position));
+                std::string target = trim_copy(body.substr(0U, source_position));
                 const std::size_t open_paren = target.find('(');
                 if (open_paren != std::string::npos) {
                     const std::size_t close_paren = target.rfind(')');
@@ -1846,11 +1853,16 @@ Program parse_program(const std::string& path) {
                     }
                 }
                 statement.identifier = target;
-                std::string values = trim_copy(body.substr(values_position + 6U));
-                if (values.size() >= 2U && values.front() == '(' && values.back() == ')') {
-                    values = trim_copy(values.substr(1U, values.size() - 2U));
+                if (!inserts_query_rows) {
+                    std::string values = trim_copy(body.substr(values_position + 6U));
+                    if (values.size() >= 2U && values.front() == '(' && values.back() == ')') {
+                        values = trim_copy(values.substr(1U, values.size() - 2U));
+                    }
+                    statement.secondary_expression = values;
+                } else {
+                    statement.secondary_expression = trim_copy(body.substr(select_position));
+                    statement.tertiary_expression = "select";
                 }
-                statement.secondary_expression = values;
             }
         } else if (upper == "DELETE" || starts_with_insensitive(line, "DELETE ")) {
             statement.kind = StatementKind::delete_command;

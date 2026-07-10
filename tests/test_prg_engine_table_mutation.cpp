@@ -1236,6 +1236,155 @@ void test_insert_into_and_delete_from_local_table() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_insert_into_select_materializes_filtered_ordered_rows() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_insert_select";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const fs::path target_path = temp_root / "target.dbf";
+    const fs::path other_path = temp_root / "other.dbf";
+    write_people_dbf(source_path, {{"ALPHA", 10}, {"BRAVO", 20}, {"CHARLIE", 30}});
+    write_people_dbf(target_path, {{"TARGET", 1}});
+    write_people_dbf(other_path, {{"OTHER", 2}});
+
+    const fs::path main_path = temp_root / "insert_select.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "' ALIAS Source IN 0\n"
+        "GO 2 IN Source\n"
+        "USE '" + target_path.string() + "' ALIAS Target IN 0\n"
+        "USE '" + other_path.string() + "' ALIAS Other IN 0\n"
+        "SELECT Other\n"
+        "INSERT INTO Target (NAME, AGE) SELECT NAME, AGE FROM Source WHERE AGE >= 20 ORDER BY AGE DESC\n"
+        "INSERT INTO Target SELECT NAME, AGE FROM Source WHERE AGE = 10\n"
+        "nSourceRec = RECNO('Source')\n"
+        "INSERT INTO Source (NAME, AGE) SELECT NAME, AGE FROM Source WHERE AGE = 10\n"
+        "nSourceCount = RECCOUNT('Source')\n"
+        "cSelectedAlias = ALIAS()\n"
+        "nOtherRec = RECNO('Other')\n"
+        "nTargetCount = RECCOUNT('Target')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+
+    expect(state.completed, "INSERT INTO SELECT script should complete: " + state.message);
+    const auto selected_alias = state.globals.find("cselectedalias");
+    const auto source_rec = state.globals.find("nsourcerec");
+    const auto source_count = state.globals.find("nsourcecount");
+    const auto other_rec = state.globals.find("notherrec");
+    const auto target_count = state.globals.find("ntargetcount");
+    expect(selected_alias != state.globals.end(), "INSERT INTO SELECT should preserve the selected alias");
+    expect(source_rec != state.globals.end(), "INSERT INTO SELECT should expose the restored source record pointer");
+    expect(source_count != state.globals.end(), "self INSERT INTO SELECT should expose the finite source record count");
+    expect(other_rec != state.globals.end(), "INSERT INTO SELECT should expose the selected cursor pointer");
+    expect(target_count != state.globals.end(), "INSERT INTO SELECT should expose the target record count");
+    if (selected_alias != state.globals.end()) {
+        expect(uppercase_ascii(copperfin::runtime::format_value(selected_alias->second)) == "OTHER",
+               "INSERT INTO SELECT should not change the selected work area");
+    }
+    if (source_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(source_rec->second) == "2",
+               "INSERT INTO SELECT should restore the source record pointer after materialization");
+    }
+    if (source_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(source_count->second) == "4",
+               "self INSERT INTO SELECT should materialize before appending instead of chasing new rows");
+    }
+    if (other_rec != state.globals.end()) {
+        expect(copperfin::runtime::format_value(other_rec->second) == "1",
+               "INSERT INTO SELECT should preserve the selected cursor pointer");
+    }
+    if (target_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(target_count->second) == "4",
+               "INSERT INTO SELECT should append rows with explicit and schema-order target mapping");
+    }
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(target_path.string(), 5U);
+    expect(parse_result.ok, "INSERT INTO SELECT should leave the target DBF readable");
+    expect(parse_result.table.records.size() == 4U,
+           "INSERT INTO SELECT should persist the original and three selected rows");
+    if (parse_result.table.records.size() == 4U) {
+        expect(parse_result.table.records[1].values[0].display_value == "CHARLIE",
+               "INSERT INTO SELECT should honor descending query order for the first appended row");
+        expect(parse_result.table.records[1].values[1].display_value == "30",
+               "INSERT INTO SELECT should preserve the first appended numeric value");
+        expect(parse_result.table.records[2].values[0].display_value == "BRAVO",
+               "INSERT INTO SELECT should append the remaining filtered row");
+        expect(parse_result.table.records[2].values[1].display_value == "20",
+               "INSERT INTO SELECT should preserve the remaining numeric value");
+        expect(parse_result.table.records[3].values[0].display_value == "ALPHA",
+               "INSERT INTO SELECT without a target field list should use target schema order");
+        expect(parse_result.table.records[3].values[1].display_value == "10",
+               "INSERT INTO SELECT schema-order mapping should preserve the numeric value");
+    }
+    expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.insert_into";
+    }), "INSERT INTO SELECT should emit runtime.insert_into after the batch succeeds");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_insert_into_select_rolls_back_the_whole_failed_batch() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_insert_select_rollback";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const fs::path target_path = temp_root / "target.dbf";
+    write_people_dbf(source_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+    write_people_dbf(target_path, {{"TARGET", 1}});
+    const auto original_size = fs::file_size(target_path);
+
+    const fs::path main_path = temp_root / "insert_select_rollback.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "' ALIAS Source IN 0\n"
+        "USE '" + target_path.string() + "' ALIAS Target IN 0\n"
+        "INSERT INTO Target (NAME, AGE) SELECT IIF(AGE = 20, 'THIS-NAME-IS-TOO-LONG', NAME), AGE FROM Source ORDER BY AGE\n"
+        "nAfterError = RECCOUNT('Target')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+           "failed INSERT INTO SELECT should pause with an error");
+    expect(state.location.line == 3U,
+           "failed INSERT INTO SELECT should highlight the batch statement");
+    expect(state.message.find("too large") != std::string::npos,
+           "failed INSERT INTO SELECT should preserve the target field-write error");
+
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "continuing after failed INSERT INTO SELECT should keep the session alive");
+    const auto after_error = state.globals.find("naftererror");
+    expect(after_error != state.globals.end(),
+           "failed INSERT INTO SELECT should expose the restored target record count");
+    if (after_error != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after_error->second) == "1",
+               "failed INSERT INTO SELECT should restore the in-memory target record count");
+    }
+
+    expect(fs::file_size(target_path) == original_size,
+           "failed INSERT INTO SELECT should restore the original DBF size");
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(target_path.string(), 5U);
+    expect(parse_result.ok, "failed INSERT INTO SELECT rollback should leave the target DBF readable");
+    expect(parse_result.table.records.size() == 1U,
+           "failed INSERT INTO SELECT should roll back rows appended earlier in the batch");
+    if (parse_result.table.records.size() == 1U) {
+        expect(parse_result.table.records[0].values[0].display_value == "TARGET",
+               "failed INSERT INTO SELECT should preserve the original target row");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_insert_into_rolls_back_failed_local_append() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_insert_rollback";
@@ -2512,6 +2661,8 @@ int main() {
     test_rlock_retry_blocking_is_rejected_inside_critical_section();
     test_flock_retry_blocking_is_rejected_inside_critical_section();
     test_insert_into_and_delete_from_local_table();
+    test_insert_into_select_materializes_filtered_ordered_rows();
+    test_insert_into_select_rolls_back_the_whole_failed_batch();
     test_insert_into_rolls_back_failed_local_append();
     test_indexed_table_mutation_succeeds_for_structural_indexes();
     test_append_blank_supports_opaque_field_layouts_at_runtime();

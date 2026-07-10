@@ -2777,6 +2777,7 @@ void test_runtime_residual_command_dispatch_errors_route_through_catalog() {
         "Runtime.Prg.Dispatch.Error.ReplaceRequiresFieldWithExpressionAssignment",
         "Runtime.Prg.Dispatch.Error.UpdateRequiresSetFieldExpressionAssignments",
         "Runtime.Prg.Dispatch.Error.InsertIntoRequiresValuesClause",
+        "Runtime.Prg.Dispatch.Error.InsertIntoSelectQueryInvalid",
         "Runtime.Prg.Dispatch.Error.UnlockRecordTargetRecordNotFound",
         "Runtime.Prg.Dispatch.Error.SleepCancelled"
     };
@@ -2801,6 +2802,10 @@ void test_runtime_residual_command_dispatch_errors_route_through_catalog() {
         english.translate("Runtime.Prg.Dispatch.Error.InsertIntoRequiresValuesClause") ==
             "INSERT INTO requires a VALUES clause",
         "#2717: INSERT INTO VALUES-clause error should localize through the runtime catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.InsertIntoSelectQueryInvalid") ==
+            "INSERT INTO SELECT query could not be parsed or resolved",
+        "#3853: INSERT INTO SELECT query errors should localize through the runtime catalog");
     expect(
         english.translate("Runtime.Prg.Dispatch.Error.UnlockRecordTargetRecordNotFound") ==
             "UNLOCK RECORD target record not found",
