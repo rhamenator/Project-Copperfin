@@ -501,6 +501,25 @@ void finalize_page_setup_summary(StudioReportLayoutSnapshot& snapshot) {
         assign_setting(*parsed_value);
     };
 
+    const auto apply_string_setting = [&](std::string_view setting_name, auto assign_setting) {
+        const auto setting = std::find_if(
+            snapshot.settings.begin(),
+            snapshot.settings.end(),
+            [&](const StudioNamedValue& named_value) {
+                return equals_ignore_case(named_value.name, setting_name);
+            });
+        if (setting == snapshot.settings.end()) {
+            return;
+        }
+
+        const std::string value = trim_copy(setting->value);
+        if (value.empty()) {
+            return;
+        }
+
+        assign_setting(value);
+    };
+
     apply_setting("ORIENTATION", [&](int value) {
         snapshot.page_setup_available = true;
         snapshot.orientation_available = true;
@@ -565,6 +584,10 @@ void finalize_page_setup_summary(StudioReportLayoutSnapshot& snapshot) {
         snapshot.column_setup_available = true;
         snapshot.column_spacing_available = true;
         snapshot.column_spacing = value;
+    });
+    apply_string_setting("TAG", [&](const std::string& value) {
+        snapshot.sort_expression_available = true;
+        snapshot.sort_expression = value;
     });
 }
 

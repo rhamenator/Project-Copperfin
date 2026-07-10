@@ -238,6 +238,10 @@ void test_studio_host_json_preserves_selected_label_settings(const std::string& 
                     "#3744: selected label settings JSON should expose paper-width availability");
     expect_contains(settings_process.stdout_text, "\"paperWidth\": 2159",
                     "#3744: selected label settings JSON should preserve paper-width values");
+    expect_contains(settings_process.stdout_text, "\"sortExpressionAvailable\": true",
+                    "#3745: selected label settings JSON should expose sort-expression availability");
+    expect_contains(settings_process.stdout_text, "\"sortExpression\": \"customer.country\"",
+                    "#3745: selected label settings JSON should preserve sort-expression values");
     expect_contains(settings_process.stdout_text, "\"selectedReportSectionAvailable\": false",
                     "#1504: selected label settings should not advertise selected-section availability");
     expect_contains(settings_process.stdout_text, "\"selectedReportSection\": null",
@@ -350,6 +354,10 @@ void test_studio_host_json_preserves_selected_label_settings(const std::string& 
                     "#3744: selected deleted label settings JSON should keep live paper-width unavailable");
     expect_contains(deleted_settings_process.stdout_text, "\"paperWidth\": 0",
                     "#3744: selected deleted label settings JSON should keep live paper-width zero");
+    expect_contains(deleted_settings_process.stdout_text, "\"sortExpressionAvailable\": false",
+                    "#3745: selected deleted label settings JSON should keep live sort-expression unavailable");
+    expect_contains(deleted_settings_process.stdout_text, "\"sortExpression\": \"\"",
+                    "#3745: selected deleted label settings JSON should keep live sort-expression empty");
     expect_contains_in_order(
         deleted_settings_process.stdout_text,
         {

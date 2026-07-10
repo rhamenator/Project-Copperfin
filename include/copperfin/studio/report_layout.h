@@ -179,6 +179,8 @@ struct StudioReportLayoutSnapshot {
     int column_width = 0;
     bool column_spacing_available = false;
     int column_spacing = 0;
+    bool sort_expression_available = false;
+    std::string sort_expression{};
     std::size_t live_object_count = 0;
     std::size_t placed_object_count = 0;
     std::size_t deleted_placed_object_count = 0;

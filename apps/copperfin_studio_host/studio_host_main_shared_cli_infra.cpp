@@ -2957,6 +2957,11 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document,
         std::cout << "      \"columnSpacingAvailable\": "
                   << (report_layout.column_spacing_available ? "true" : "false") << ",\n";
         std::cout << "      \"columnSpacing\": " << report_layout.column_spacing << ",\n";
+        std::cout << "      \"sortExpressionAvailable\": "
+                  << (report_layout.sort_expression_available ? "true" : "false") << ",\n";
+        std::cout << "      \"sortExpression\": ";
+        print_json_string(report_layout.sort_expression);
+        std::cout << ",\n";
         std::cout << "      \"liveObjectCount\": " << report_layout.live_object_count << ",\n";
         std::cout << "      \"placedObjectCount\": " << report_layout.placed_object_count << ",\n";
         std::cout << "      \"deletedPlacedObjectCount\": " << report_layout.deleted_placed_object_count << ",\n";

@@ -1912,6 +1912,54 @@ void test_build_report_layout_summarizes_paper_dimensions() {
     }
 }
 
+void test_build_report_layout_summarizes_root_sort_expression() {
+    copperfin::studio::StudioDocumentModel document;
+    document.display_name = "sort-expression.frx";
+    document.kind = copperfin::studio::StudioAssetKind::report;
+    document.table_preview_available = true;
+
+    document.table_preview.records = {
+        {
+            .record_index = 0U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "1"),
+                value("OBJCODE", "53"),
+                value("EXPR", "ORIENTATION=1\r\nPAPERSIZE=9", 48U),
+                value("TAG", "customer.country", 49U)
+            }
+        }
+    };
+
+    const auto layout = copperfin::studio::build_report_layout(document);
+    expect(layout.available, "#3745: report layout should be available for root sort settings");
+    expect(layout.page_setup_available, "#3745: root sort settings should preserve page setup availability");
+    expect(layout.orientation_available && layout.orientation_code == 1,
+        "#3745: root sort settings should preserve memo-derived orientation");
+    expect(layout.paper_size_available && layout.paper_size_code == 9,
+        "#3745: root sort settings should preserve memo-derived paper size");
+    expect(layout.sort_expression_available,
+        "#3745: root sort settings should expose sort-expression availability");
+    expect(layout.sort_expression == "customer.country",
+        "#3745: root sort settings should expose the root sort expression");
+    expect(layout.settings.size() == 3U, "#3745: root sort settings should preserve root setting counts");
+
+    const auto tag = std::find_if(layout.settings.begin(), layout.settings.end(), [](const auto& setting) {
+        return setting.name == "TAG";
+    });
+    expect(tag != layout.settings.end(), "#3745: root sort settings should appear in root settings");
+    if (tag != layout.settings.end()) {
+        expect(tag->record_index == 0U, "#3745: root sort settings should retain source record provenance");
+        expect(tag->field_index == 3U, "#3745: root sort settings should retain DBF field provenance");
+        expect(tag->source_line_index == copperfin::studio::StudioReportMissingLineIndex,
+            "#3745: root sort settings should not masquerade as memo-line settings");
+        expect(tag->memo_block_number == 49U,
+            "#3745: root sort settings should expose direct TAG memo provenance");
+        expect(tag->value == "customer.country",
+            "#3745: root sort settings should preserve the TAG field value text");
+    }
+}
+
 void test_build_report_layout_preserves_band_unique_ids_for_section_identity() {
     copperfin::studio::StudioDocumentModel document;
     document.display_name = "detail-ids.frx";
@@ -2015,6 +2063,7 @@ int main() {
     test_build_report_layout_includes_direct_paper_size_settings();
     test_build_report_layout_includes_direct_side_margin_settings();
     test_build_report_layout_summarizes_paper_dimensions();
+    test_build_report_layout_summarizes_root_sort_expression();
     test_build_report_layout_preserves_band_unique_ids_for_section_identity();
 
     if (failures != 0) {
