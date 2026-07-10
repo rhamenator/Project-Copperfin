@@ -2282,11 +2282,25 @@ internal static class Program
                 },
                 expectRawSnapshotProperty: false,
                 verifyExplicitClearAfterUpdate: true);
-            SmokeAssetEditorRealAssetSettingShouldRemainUnavailable(
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
                 propertyName: "RIGHTMARGIN",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: 25,
+                expectedUpdatedSelectionValue: "25",
                 expectedSectionCount: 5,
-                expectLabel: false);
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "RIGHTMARGIN",
+                    Value = "25",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 304
+                },
+                expectRawSnapshotProperty: false,
+                verifyExplicitClearAfterUpdate: true);
             SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
                 propertyName: "PAPERLENGTH",
@@ -2344,11 +2358,25 @@ internal static class Program
                 },
                 expectRawSnapshotProperty: false,
                 verifyExplicitClearAfterUpdate: true);
-            SmokeAssetEditorRealAssetSettingShouldRemainUnavailable(
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
                 propertyName: "RIGHTMARGIN",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: 25,
+                expectedUpdatedSelectionValue: "25",
                 expectedSectionCount: 5,
-                expectLabel: true);
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "RIGHTMARGIN",
+                    Value = "25",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 78
+                },
+                expectRawSnapshotProperty: false,
+                verifyExplicitClearAfterUpdate: true);
             SmokeAssetEditorSettingsRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 propertyName: "GRIDV",
