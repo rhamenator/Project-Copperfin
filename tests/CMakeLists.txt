@@ -68,6 +68,7 @@ add_executable(test_build_host_output
     test_build_host_output.cpp
 )
 target_link_libraries(test_build_host_output PRIVATE cf_vfp_assets)
+add_dependencies(test_build_host_output copperfin_build_host copperfin_runtime_host)
 
 if(MSVC)
     target_compile_options(test_build_host_output PRIVATE /W4 /permissive-)

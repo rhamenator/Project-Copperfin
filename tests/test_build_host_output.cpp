@@ -524,16 +524,7 @@ void run_library_build_host_smoke(
         const std::string security_mode = manifest_value_for_key(manifest_text, "security_mode");
         const std::string runtime_host_sha256 = manifest_value_for_key(manifest_text, "runtime_host_sha256");
         const bool debug_manifest_has_security_roles = debug_manifest_text.find("security_roles=") != std::string::npos;
-        const std::string dotnet_enabled = manifest_value_for_key(manifest_text, "dotnet_enabled");
         const std::string dotnet_story = manifest_value_for_key(manifest_text, "dotnet_story");
-        const std::string dotnet_policy_allowlist = manifest_value_for_key(manifest_text, "dotnet_policy_allowlist");
-        const std::string dotnet_policy_denylist = manifest_value_for_key(manifest_text, "dotnet_policy_denylist");
-        const std::string dotnet_parity_matrix_entries = manifest_value_for_key(manifest_text, "dotnet_parity_matrix_entries");
-        const std::string dotnet_policy_allowlist_items = manifest_value_for_key(manifest_text, "dotnet_policy_allowlist_items");
-        const std::string dotnet_policy_denylist_items = manifest_value_for_key(manifest_text, "dotnet_policy_denylist_items");
-        const std::string dotnet_parity_matrix_count = manifest_value_for_key(manifest_text, "dotnet_parity_matrix_count");
-        const std::string dotnet_gateway_task_primitives = manifest_value_for_key(manifest_text, "dotnet_gateway_task_primitives");
-        const std::string dotnet_gateway_unsafe_reflection = manifest_value_for_key(manifest_text, "dotnet_gateway_unsafe_reflection");
         expect(debug_manifest_text.find("security_role=" + security_role) != std::string::npos,
                "build host debug manifest should mirror the effective security role for " + extension + " outputs");
         expect(debug_manifest_text.find("security_mode=" + security_mode) != std::string::npos,
@@ -542,38 +533,64 @@ void run_library_build_host_smoke(
                "build host debug manifest should mirror the runtime host SHA-256 digest for " + extension + " outputs");
         expect(debug_manifest_has_security_roles,
                "build host debug manifest should mirror the security-role count for " + extension + " outputs");
-        expect(debug_manifest_text.find("dotnet_enabled=" + dotnet_enabled) != std::string::npos,
-               "build host debug manifest should mirror the .NET availability flag for " + extension + " outputs");
+        expect(!dotnet_story.empty(),
+               "build host runtime manifest should preserve the .NET story for " + extension + " outputs");
         expect(debug_manifest_text.find("dotnet_story=" + dotnet_story) != std::string::npos,
                "build host debug manifest should mirror the .NET story for " + extension + " outputs");
-        expect(debug_manifest_text.find("dotnet_policy_allowlist=" + dotnet_policy_allowlist) != std::string::npos,
-               "build host debug manifest should mirror the .NET allowlist summary for " + extension + " outputs");
-        expect(debug_manifest_text.find("dotnet_policy_denylist=" + dotnet_policy_denylist) != std::string::npos,
-               "build host debug manifest should mirror the .NET denylist summary for " + extension + " outputs");
-        expect(debug_manifest_text.find("dotnet_parity_matrix_entries=" + dotnet_parity_matrix_entries) != std::string::npos,
-               "build host debug manifest should mirror the .NET parity summary for " + extension + " outputs");
-        expect(debug_manifest_text.find("dotnet_policy_allowlist_items=" + dotnet_policy_allowlist_items) != std::string::npos,
-               "build host debug manifest should mirror the .NET allowlist item count for " + extension + " outputs");
-        expect(debug_manifest_text.find("dotnet_policy_denylist_items=" + dotnet_policy_denylist_items) != std::string::npos,
-               "build host debug manifest should mirror the .NET denylist item count for " + extension + " outputs");
-        expect(debug_manifest_text.find("dotnet_parity_matrix_count=" + dotnet_parity_matrix_count) != std::string::npos,
-               "build host debug manifest should mirror the .NET parity item count for " + extension + " outputs");
-        expect(debug_manifest_text.find("dotnet_gateway_task_primitives=" + dotnet_gateway_task_primitives) != std::string::npos,
-               "build host debug manifest should mirror the .NET gateway allow decision for " + extension + " outputs");
-        expect(debug_manifest_text.find("dotnet_gateway_unsafe_reflection=" + dotnet_gateway_unsafe_reflection) != std::string::npos,
-               "build host debug manifest should mirror the .NET gateway deny decision for " + extension + " outputs");
+        expect(manifest_value_for_key(manifest_text, "dotnet_enabled").empty(),
+               "build host runtime manifest should omit the .NET availability flag for " + extension + " outputs");
+        expect(manifest_value_for_key(manifest_text, "dotnet_policy_allowlist").empty(),
+               "build host runtime manifest should omit the .NET allowlist summary for " + extension + " outputs");
+        expect(manifest_value_for_key(manifest_text, "dotnet_policy_denylist").empty(),
+               "build host runtime manifest should omit the .NET denylist summary for " + extension + " outputs");
+        expect(manifest_value_for_key(manifest_text, "dotnet_parity_matrix_entries").empty(),
+               "build host runtime manifest should omit the .NET parity summary for " + extension + " outputs");
+        expect(manifest_value_for_key(manifest_text, "dotnet_policy_allowlist_items").empty(),
+               "build host runtime manifest should omit the .NET allowlist item count for " + extension + " outputs");
+        expect(manifest_value_for_key(manifest_text, "dotnet_policy_denylist_items").empty(),
+               "build host runtime manifest should omit the .NET denylist item count for " + extension + " outputs");
+        expect(manifest_value_for_key(manifest_text, "dotnet_parity_matrix_count").empty(),
+               "build host runtime manifest should omit the .NET parity item count for " + extension + " outputs");
+        expect(manifest_value_for_key(manifest_text, "dotnet_gateway_task_primitives").empty(),
+               "build host runtime manifest should omit the .NET gateway allow decision for " + extension + " outputs");
+        expect(manifest_value_for_key(manifest_text, "dotnet_gateway_unsafe_reflection").empty(),
+               "build host runtime manifest should omit the .NET gateway deny decision for " + extension + " outputs");
+        expect(!manifest_value_for_key(debug_manifest_text, "dotnet_enabled").empty(),
+               "build host debug manifest should preserve the .NET availability flag for " + extension + " outputs");
+        expect(!manifest_value_for_key(debug_manifest_text, "dotnet_policy_allowlist").empty(),
+               "build host debug manifest should preserve the .NET allowlist summary for " + extension + " outputs");
+        expect(!manifest_value_for_key(debug_manifest_text, "dotnet_policy_denylist").empty(),
+               "build host debug manifest should preserve the .NET denylist summary for " + extension + " outputs");
+        expect(!manifest_value_for_key(debug_manifest_text, "dotnet_parity_matrix_entries").empty(),
+               "build host debug manifest should preserve the .NET parity summary for " + extension + " outputs");
+        expect(!manifest_value_for_key(debug_manifest_text, "dotnet_policy_allowlist_items").empty(),
+               "build host debug manifest should preserve the .NET allowlist item count for " + extension + " outputs");
+        expect(!manifest_value_for_key(debug_manifest_text, "dotnet_policy_denylist_items").empty(),
+               "build host debug manifest should preserve the .NET denylist item count for " + extension + " outputs");
+        expect(!manifest_value_for_key(debug_manifest_text, "dotnet_parity_matrix_count").empty(),
+               "build host debug manifest should preserve the .NET parity item count for " + extension + " outputs");
+        expect(!manifest_value_for_key(debug_manifest_text, "dotnet_gateway_task_primitives").empty(),
+               "build host debug manifest should preserve the .NET gateway allow decision for " + extension + " outputs");
+        expect(!manifest_value_for_key(debug_manifest_text, "dotnet_gateway_unsafe_reflection").empty(),
+               "build host debug manifest should preserve the .NET gateway deny decision for " + extension + " outputs");
         const std::vector<std::string> runtime_allowlist_items = lines_with_prefix(manifest_text, "dotnet_policy_allowlist_item=");
         const std::vector<std::string> debug_allowlist_items = lines_with_prefix(debug_manifest_text, "dotnet_policy_allowlist_item=");
-        expect(debug_allowlist_items == runtime_allowlist_items,
-               "build host debug manifest should mirror the .NET allowlist items for " + extension + " outputs");
+        expect(runtime_allowlist_items.empty(),
+               "build host runtime manifest should omit the .NET allowlist items for " + extension + " outputs");
+        expect(!debug_allowlist_items.empty(),
+               "build host debug manifest should preserve the .NET allowlist items for " + extension + " outputs");
         const std::vector<std::string> runtime_denylist_items = lines_with_prefix(manifest_text, "dotnet_policy_denylist_item=");
         const std::vector<std::string> debug_denylist_items = lines_with_prefix(debug_manifest_text, "dotnet_policy_denylist_item=");
-        expect(debug_denylist_items == runtime_denylist_items,
-               "build host debug manifest should mirror the .NET denylist items for " + extension + " outputs");
+        expect(runtime_denylist_items.empty(),
+               "build host runtime manifest should omit the .NET denylist items for " + extension + " outputs");
+        expect(!debug_denylist_items.empty(),
+               "build host debug manifest should preserve the .NET denylist items for " + extension + " outputs");
         const std::vector<std::string> runtime_parity_items = lines_with_prefix(manifest_text, "dotnet_parity_matrix_item=");
         const std::vector<std::string> debug_parity_items = lines_with_prefix(debug_manifest_text, "dotnet_parity_matrix_item=");
-        expect(debug_parity_items == runtime_parity_items,
-               "build host debug manifest should mirror the .NET parity entries for " + extension + " outputs");
+        expect(runtime_parity_items.empty(),
+               "build host runtime manifest should omit the .NET parity entries for " + extension + " outputs");
+        expect(!debug_parity_items.empty(),
+               "build host debug manifest should preserve the .NET parity entries for " + extension + " outputs");
         const std::vector<std::string> extensibility_summary_keys{
             "language_integration_count",
             "ai_feature_count",
@@ -581,24 +598,29 @@ void run_library_build_host_smoke(
             "language_integrations",
             "ai_features"};
         for (const auto& key : extensibility_summary_keys) {
-            const std::string value = manifest_value_for_key(manifest_text, key);
-            expect(!value.empty(),
-                   "build host runtime manifest should provide " + key + " for debug-manifest mirroring on " + extension + " outputs");
-            expect(debug_manifest_text.find(key + "=" + value) != std::string::npos,
-                   "build host debug manifest should mirror " + key + " for " + extension + " outputs");
+            expect(manifest_value_for_key(manifest_text, key).empty(),
+                   "build host runtime manifest should omit " + key + " for " + extension + " outputs");
+            expect(!manifest_value_for_key(debug_manifest_text, key).empty(),
+                   "build host debug manifest should preserve " + key + " for " + extension + " outputs");
         }
         const std::vector<std::string> runtime_language_integrations = lines_with_prefix(manifest_text, "language_integration=");
         const std::vector<std::string> debug_language_integrations = lines_with_prefix(debug_manifest_text, "language_integration=");
-        expect(debug_language_integrations == runtime_language_integrations,
-               "build host debug manifest should mirror language integration entries for " + extension + " outputs");
+        expect(runtime_language_integrations.empty(),
+               "build host runtime manifest should omit language integration entries for " + extension + " outputs");
+        expect(!debug_language_integrations.empty(),
+               "build host debug manifest should preserve language integration entries for " + extension + " outputs");
         const std::vector<std::string> runtime_ai_features = lines_with_prefix(manifest_text, "ai_feature=");
         const std::vector<std::string> debug_ai_features = lines_with_prefix(debug_manifest_text, "ai_feature=");
-        expect(debug_ai_features == runtime_ai_features,
-               "build host debug manifest should mirror AI feature entries for " + extension + " outputs");
+        expect(runtime_ai_features.empty(),
+               "build host runtime manifest should omit AI feature entries for " + extension + " outputs");
+        expect(!debug_ai_features.empty(),
+               "build host debug manifest should preserve AI feature entries for " + extension + " outputs");
         const std::vector<std::string> runtime_guardrails = lines_with_prefix(manifest_text, "extensibility_guardrail=");
         const std::vector<std::string> debug_guardrails = lines_with_prefix(debug_manifest_text, "extensibility_guardrail=");
-        expect(debug_guardrails == runtime_guardrails,
-               "build host debug manifest should mirror extensibility guardrails for " + extension + " outputs");
+        expect(runtime_guardrails.empty(),
+               "build host runtime manifest should omit extensibility guardrails for " + extension + " outputs");
+        expect(!debug_guardrails.empty(),
+               "build host debug manifest should preserve extensibility guardrails for " + extension + " outputs");
         const std::vector<std::string> runtime_feature_flags = lines_with_prefix(manifest_text, "feature_flag=");
         const std::vector<std::string> debug_feature_flags = lines_with_prefix(debug_manifest_text, "feature_flag=");
         expect(runtime_feature_flags.empty(),
@@ -721,9 +743,13 @@ void run_library_build_host_smoke(
             expect(exported_symbols == declared_api_symbols,
                    "build host should preserve the dedicated DLL API-manifest export contract");
             const std::string api_manifest = read_text(library_api_manifest_path);
-            const fs::path wrapper_source_path = manifest_value_for_key(manifest_text, "native_wrapper_source_path");
+            expect(manifest_value_for_key(manifest_text, "native_wrapper_source_path").empty(),
+                   "build host DLL runtime manifest should omit the native-wrapper source path");
+            expect(manifest_value_for_key(manifest_text, "native_wrapper_cmake_path").empty(),
+                   "build host DLL runtime manifest should omit the native-wrapper CMake path");
+            const fs::path wrapper_source_path = manifest_value_for_key(debug_manifest_text, "native_wrapper_source_path");
             const std::string wrapper_source = wrapper_source_path.empty() ? std::string{} : read_text(wrapper_source_path);
-            const fs::path wrapper_cmake_path = manifest_value_for_key(manifest_text, "native_wrapper_cmake_path");
+            const fs::path wrapper_cmake_path = manifest_value_for_key(debug_manifest_text, "native_wrapper_cmake_path");
             const std::string wrapper_cmake = wrapper_cmake_path.empty() ? std::string{} : read_text(wrapper_cmake_path);
             expect(api_manifest.find("output_kind=dll") != std::string::npos,
                    "build host DLL API manifest should declare the DLL output kind");
@@ -1752,9 +1778,13 @@ void run_library_build_host_smoke(
             expect(exported_symbols == declared_api_symbols,
                    "build host should preserve the API-manifest export contract for fll outputs");
             const std::string api_manifest = read_text(fll_api_manifest_path);
-            const fs::path wrapper_source_path = manifest_value_for_key(manifest_text, "native_wrapper_source_path");
+            expect(manifest_value_for_key(manifest_text, "native_wrapper_source_path").empty(),
+                   "build host FLL runtime manifest should omit the native-wrapper source path");
+            expect(manifest_value_for_key(manifest_text, "native_wrapper_cmake_path").empty(),
+                   "build host FLL runtime manifest should omit the native-wrapper CMake path");
+            const fs::path wrapper_source_path = manifest_value_for_key(debug_manifest_text, "native_wrapper_source_path");
             const std::string wrapper_source = wrapper_source_path.empty() ? std::string{} : read_text(wrapper_source_path);
-            const fs::path wrapper_cmake_path = manifest_value_for_key(manifest_text, "native_wrapper_cmake_path");
+            const fs::path wrapper_cmake_path = manifest_value_for_key(debug_manifest_text, "native_wrapper_cmake_path");
             const std::string wrapper_cmake = wrapper_cmake_path.empty() ? std::string{} : read_text(wrapper_cmake_path);
             expect(api_manifest.find("registration_symbol=_FoxTable") != std::string::npos,
                    "build host FLL manifest should declare the FoxTable registration symbol");
