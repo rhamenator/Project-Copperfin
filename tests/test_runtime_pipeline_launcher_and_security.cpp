@@ -198,6 +198,14 @@ void test_dotnet_launcher_request_falls_back_to_native_host_when_unavailable() {
 
 void test_security_enabled_runtime_host_name_validation() {
     namespace fs = std::filesystem;
+    const fs::path locale_root =
+        fs::path(COPPERFIN_TEST_SOURCE_DIR) / "resources" / "locales";
+    expect(fs::is_directory(locale_root),
+           "security-enabled runtime-host path test should resolve the source localization catalogs");
+    ScopedEnvironmentVariable locale_dir(
+        "COPPERFIN_LOCALE_DIR",
+        locale_root.string());
+    ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "en-US");
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_security_tests";
     const fs::path project_dir = temp_root / "project";
     const fs::path output_dir = temp_root / "output";
@@ -248,6 +256,56 @@ void test_security_enabled_runtime_host_name_validation() {
         non_canonical_runtime_host.string());
 
     expect(!rejected_result.ok, "security-enabled packaging should reject non-standard runtime host names");
+
+    const fs::path original_working_directory = fs::current_path();
+    std::error_code current_path_error;
+    fs::current_path(temp_root, current_path_error);
+    expect(!current_path_error, "security-enabled runtime-host path test should enter its fixture directory");
+    const std::string relative_runtime_host = canonical_runtime_host.filename().string();
+    expect(fs::exists(relative_runtime_host),
+           "security-enabled runtime-host path test should expose an existing relative fixture path");
+
+    const auto relative_rejected_result = copperfin::runtime::materialize_runtime_package(
+        secure_plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        relative_runtime_host);
+    expect(!relative_rejected_result.ok,
+           "security-enabled packaging should reject an existing caller-relative runtime host path");
+    expect(relative_rejected_result.error ==
+               "Security-enabled packaging requires an absolute runtime host source path.",
+           "security-enabled relative runtime-host rejection should preserve the localized English diagnostic; observed: " +
+               relative_rejected_result.error);
+
+    {
+        ScopedEnvironmentVariable portuguese_locale("COPPERFIN_LOCALE", "pt-BR");
+        const auto localized_relative_rejection = copperfin::runtime::materialize_runtime_package(
+            secure_plan,
+            copperfin::security::default_native_security_profile(),
+            copperfin::platform::default_extensibility_profile(),
+            relative_runtime_host);
+        expect(!localized_relative_rejection.ok &&
+                   localized_relative_rejection.error ==
+                       "Pacotes com seguranca exigem um caminho absoluto do runtime host.",
+               "security-enabled relative runtime-host rejection should localize without weakening the path rule; observed: " +
+                   localized_relative_rejection.error);
+    }
+
+    std::error_code restore_path_error;
+    fs::current_path(original_working_directory, restore_path_error);
+    expect(!restore_path_error, "security-enabled runtime-host path test should restore its working directory");
+
+    const fs::path safely_noncanonical_runtime_host =
+        canonical_runtime_host.parent_path() / "." / canonical_runtime_host.filename();
+    expect(safely_noncanonical_runtime_host.is_absolute(),
+           "security-enabled runtime-host noncanonical fixture should remain caller-absolute");
+    const auto noncanonical_accepted_result = copperfin::runtime::materialize_runtime_package(
+        secure_plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        safely_noncanonical_runtime_host.string());
+    expect(noncanonical_accepted_result.ok,
+           "security-enabled packaging should accept an absolute runtime-host path with safe dot normalization");
 
     const auto accepted_result = copperfin::runtime::materialize_runtime_package(
         secure_plan,

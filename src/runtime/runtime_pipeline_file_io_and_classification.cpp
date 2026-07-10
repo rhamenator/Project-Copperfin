@@ -423,6 +423,11 @@ bool validate_runtime_host_source_path(
     }
 
     std::filesystem::path source(runtime_host_source_path);
+    if (plan.security_enabled && !source.is_absolute()) {
+        error = runtime_text("Runtime.Package.Error.SecurityRequiresAbsoluteRuntimeHostPath");
+        return false;
+    }
+
     std::error_code canonical_error;
     source = std::filesystem::weakly_canonical(source, canonical_error);
     if (canonical_error) {
@@ -437,11 +442,6 @@ bool validate_runtime_host_source_path(
 
     if (plan.security_enabled) {
         const std::string expected_file_name = runtime_host_file_name();
-        if (!source.is_absolute()) {
-            error = runtime_text("Runtime.Package.Error.SecurityRequiresAbsoluteRuntimeHostPath");
-            return false;
-        }
-
         if (lowercase_copy(source.filename().string()) != expected_file_name) {
             error = runtime_text("Runtime.Package.Error.SecurityRequiresCanonicalRuntimeHostName");
             return false;

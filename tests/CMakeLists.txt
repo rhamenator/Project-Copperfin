@@ -3926,6 +3926,7 @@ copperfin_add_test(test_runtime_pipeline cf_runtime_pipeline
     test_runtime_pipeline_startup_and_staging.cpp
     test_runtime_pipeline_launcher_and_security.cpp
 )
+target_compile_definitions(test_runtime_pipeline PRIVATE COPPERFIN_TEST_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 
 copperfin_add_test(test_security_controls cf_security
     test_security_controls.cpp
