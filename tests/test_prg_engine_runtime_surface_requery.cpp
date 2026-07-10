@@ -636,9 +636,20 @@ void test_query_file_requery_refreshes_single_cursor_query_rows() {
     fs::remove_all(temp_root, ignored);
 }
 
-void test_sql_statement_requery_refreshes_joined_query_rows() {
+void run_joined_query_requery_test(int row_source_type, bool explicit_inner_join) {
     namespace fs = std::filesystem;
-    const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_requery_sql_join";
+    const std::string row_source_label =
+        row_source_type == 3 ? "sql-statement" : "query-file";
+    const std::string join_label =
+        explicit_inner_join ? "inner-joined" : "joined";
+    const std::string fixture_suffix =
+        std::string(row_source_type == 3 ? "sql" : "query") +
+        (explicit_inner_join ? "_inner_join" : "_join");
+    const std::string join_keyword =
+        explicit_inner_join ? "INNER JOIN" : "JOIN";
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / ("copperfin_native_requery_" + fixture_suffix);
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
@@ -653,8 +664,13 @@ void test_sql_statement_requery_refreshes_joined_query_rows() {
         {"Alpha", "Ada", "1"},
         {"Marlow", "Mia", "3"}};
     const auto create_employee_result =
-        copperfin::vfp::create_dbf_table_file(employee_path.string(), employee_fields, employee_records);
-    expect(create_employee_result.ok, "joined SQL Requery() fixture should create the employee DBF");
+        copperfin::vfp::create_dbf_table_file(
+            employee_path.string(),
+            employee_fields,
+            employee_records);
+    expect(create_employee_result.ok,
+           join_label + " " + row_source_label +
+               " Requery() fixture should create the employee DBF");
     if (!create_employee_result.ok) {
         fs::remove_all(temp_root, ignored);
         return;
@@ -668,22 +684,46 @@ void test_sql_statement_requery_refreshes_joined_query_rows() {
         {"1", "West"},
         {"2", "East"}};
     const auto create_region_result =
-        copperfin::vfp::create_dbf_table_file(regions_path.string(), region_fields, region_records);
-    expect(create_region_result.ok, "joined SQL Requery() fixture should create the regions DBF");
+        copperfin::vfp::create_dbf_table_file(
+            regions_path.string(),
+            region_fields,
+            region_records);
+    expect(create_region_result.ok,
+           join_label + " " + row_source_label +
+               " Requery() fixture should create the regions DBF");
     if (!create_region_result.ok) {
         fs::remove_all(temp_root, ignored);
         return;
     }
 
-    const fs::path main_path = temp_root / "requery_sql_join.prg";
+    std::string row_source_assignment;
+    if (row_source_type == 4) {
+        const fs::path query_path = temp_root / "region_join.qpr";
+        write_text(
+            query_path,
+            "SELECT employee.last_name, regions.region_name ;\n"
+            " FROM employee " + join_keyword +
+                " regions ON employee.region_id = regions.region_id ;\n"
+            " ORDER BY employee.last_name INTO CURSOR temp2\n");
+        row_source_assignment = "oList.RowSource = 'region_join.qpr'\n";
+    } else {
+        row_source_assignment =
+            "oList.RowSource = \"SELECT employee.last_name, regions.region_name "
+            "FROM employee " +
+            join_keyword +
+            " regions ON employee.region_id = regions.region_id ORDER BY "
+            "employee.last_name INTO CURSOR temp2\"\n";
+    }
+
+    const fs::path main_path = temp_root / ("requery_" + fixture_suffix + ".prg");
     write_text(
         main_path,
         "USE '" + employee_path.string() + "' ALIAS employee IN 0\n"
         "USE '" + regions_path.string() + "' ALIAS regions IN 0\n"
         "oList = CREATEOBJECT('ListBox')\n"
         "oList.ColumnCount = 2\n"
-        "oList.RowSourceType = 3\n"
-        "oList.RowSource = \"SELECT employee.last_name, regions.region_name FROM employee JOIN regions ON employee.region_id = regions.region_id ORDER BY employee.last_name INTO CURSOR temp2\"\n"
+        "oList.RowSourceType = " + std::to_string(row_source_type) + "\n" +
+            row_source_assignment +
         "nBefore = oList.ListCount\n"
         "oList.Requery()\n"
         "nAfterFirst = oList.ListCount\n"
@@ -724,7 +764,8 @@ void test_sql_statement_requery_refreshes_joined_query_rows() {
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed,
-           std::string("joined sql-statement Requery() script should complete: ") + state.message +
+           join_label + " " + row_source_label +
+               " Requery() script should complete: " + state.message +
                " @line=" + std::to_string(state.location.line));
 
     const auto check = [&](const std::string &name, const std::string &expected) {
@@ -758,157 +799,33 @@ void test_sql_statement_requery_refreshes_joined_query_rows() {
     check("nemployeerecnoaftersecond", "3");
     check("nregionrecnoaftersecond", "3");
 
-    const bool has_joined_sql_requery_event = std::any_of(
+    const bool has_joined_query_requery_event = std::any_of(
         state.events.begin(),
         state.events.end(),
         [](const copperfin::runtime::RuntimeEvent &event) {
             return event.category == "prg.object.requery";
         });
-    expect(has_joined_sql_requery_event,
-           "joined sql-statement Requery() should emit a native requery event");
+    expect(has_joined_query_requery_event,
+           join_label + " " + row_source_label +
+               " Requery() should emit a native requery event");
 
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_statement_requery_refreshes_joined_query_rows() {
+    run_joined_query_requery_test(3, false);
+}
+
+void test_sql_statement_requery_refreshes_explicit_inner_join_query_rows() {
+    run_joined_query_requery_test(3, true);
+}
+
 void test_query_file_requery_refreshes_joined_query_rows() {
-    namespace fs = std::filesystem;
-    const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_requery_query_join";
-    std::error_code ignored;
-    fs::remove_all(temp_root, ignored);
-    fs::create_directories(temp_root);
+    run_joined_query_requery_test(4, false);
+}
 
-    const fs::path employee_path = temp_root / "employee.dbf";
-    const std::vector<copperfin::vfp::DbfFieldDescriptor> employee_fields{
-        {.name = "LAST_NAME", .type = 'C', .length = 24U},
-        {.name = "FIRST_NAME", .type = 'C', .length = 24U},
-        {.name = "REGION_ID", .type = 'N', .length = 3U}};
-    const std::vector<std::vector<std::string>> employee_records{
-        {"Zulu", "Anne", "2"},
-        {"Alpha", "Ada", "1"},
-        {"Marlow", "Mia", "3"}};
-    const auto create_employee_result =
-        copperfin::vfp::create_dbf_table_file(employee_path.string(), employee_fields, employee_records);
-    expect(create_employee_result.ok, "joined query-file Requery() fixture should create the employee DBF");
-    if (!create_employee_result.ok) {
-        fs::remove_all(temp_root, ignored);
-        return;
-    }
-
-    const fs::path regions_path = temp_root / "regions.dbf";
-    const std::vector<copperfin::vfp::DbfFieldDescriptor> region_fields{
-        {.name = "REGION_ID", .type = 'N', .length = 3U},
-        {.name = "REGION_NAME", .type = 'C', .length = 24U}};
-    const std::vector<std::vector<std::string>> region_records{
-        {"1", "West"},
-        {"2", "East"}};
-    const auto create_region_result =
-        copperfin::vfp::create_dbf_table_file(regions_path.string(), region_fields, region_records);
-    expect(create_region_result.ok, "joined query-file Requery() fixture should create the regions DBF");
-    if (!create_region_result.ok) {
-        fs::remove_all(temp_root, ignored);
-        return;
-    }
-
-    const fs::path query_path = temp_root / "region_join.qpr";
-    write_text(
-        query_path,
-        "SELECT employee.last_name, regions.region_name ;\n"
-        " FROM employee JOIN regions ON employee.region_id = regions.region_id ;\n"
-        " ORDER BY employee.last_name INTO CURSOR temp2\n");
-
-    const fs::path main_path = temp_root / "requery_query_join.prg";
-    write_text(
-        main_path,
-        "USE '" + employee_path.string() + "' ALIAS employee IN 0\n"
-        "USE '" + regions_path.string() + "' ALIAS regions IN 0\n"
-        "oList = CREATEOBJECT('ListBox')\n"
-        "oList.ColumnCount = 2\n"
-        "oList.RowSourceType = 4\n"
-        "oList.RowSource = 'region_join.qpr'\n"
-        "nBefore = oList.ListCount\n"
-        "oList.Requery()\n"
-        "nAfterFirst = oList.ListCount\n"
-        "cFirst11 = oList.List(1, 1)\n"
-        "cFirst12 = oList.List(1, 2)\n"
-        "cFirst21 = oList.List(2, 1)\n"
-        "cFirst22 = oList.List(2, 2)\n"
-        "oList.ListIndex = 2\n"
-        "cDisplayBeforeSecond = oList.DisplayValue\n"
-        "GO 1 IN employee\n"
-        "REPLACE LAST_NAME WITH 'Delta' IN employee\n"
-        "GO 2 IN regions\n"
-        "REPLACE REGION_NAME WITH 'South' IN regions\n"
-        "APPEND BLANK IN regions\n"
-        "REPLACE REGION_ID WITH 3 IN regions\n"
-        "REPLACE REGION_NAME WITH 'North' IN regions\n"
-        "GO 3 IN employee\n"
-        "GO 3 IN regions\n"
-        "nEmployeeRecnoBeforeSecond = RECNO('employee')\n"
-        "nRegionRecnoBeforeSecond = RECNO('regions')\n"
-        "oList.Requery()\n"
-        "nAfterSecond = oList.ListCount\n"
-        "nListIndexAfterSecond = oList.ListIndex\n"
-        "cDisplayAfterSecond = oList.DisplayValue\n"
-        "cSecond11 = oList.List(1, 1)\n"
-        "cSecond12 = oList.List(1, 2)\n"
-        "cSecond21 = oList.List(2, 1)\n"
-        "cSecond22 = oList.List(2, 2)\n"
-        "cSecond31 = oList.List(3, 1)\n"
-        "cSecond32 = oList.List(3, 2)\n"
-        "nEmployeeRecnoAfterSecond = RECNO('employee')\n"
-        "nRegionRecnoAfterSecond = RECNO('regions')\n"
-        "RETURN\n");
-
-    copperfin::runtime::PrgRuntimeSession session =
-        copperfin::runtime::PrgRuntimeSession::create(
-            make_runtime_session_options(main_path.string(), temp_root.string()));
-
-    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-    expect(state.completed,
-           std::string("joined query-file Requery() script should complete: ") + state.message +
-               " @line=" + std::to_string(state.location.line));
-
-    const auto check = [&](const std::string &name, const std::string &expected) {
-        const auto found = state.globals.find(name);
-        expect(found != state.globals.end(), name + " should be captured");
-        if (found != state.globals.end()) {
-            expect(copperfin::runtime::format_value(found->second) == expected,
-                   name + " expected '" + expected + "' got '" +
-                       copperfin::runtime::format_value(found->second) + "'");
-        }
-    };
-
-    check("nbefore", "0");
-    check("nafterfirst", "2");
-    check("cfirst11", "Alpha");
-    check("cfirst12", "West");
-    check("cfirst21", "Zulu");
-    check("cfirst22", "East");
-    check("cdisplaybeforesecond", "Zulu");
-    check("nemployeerecnobeforesecond", "3");
-    check("nregionrecnobeforesecond", "3");
-    check("naftersecond", "3");
-    check("nlistindexaftersecond", "2");
-    check("cdisplayaftersecond", "Delta");
-    check("csecond11", "Alpha");
-    check("csecond12", "West");
-    check("csecond21", "Delta");
-    check("csecond22", "South");
-    check("csecond31", "Marlow");
-    check("csecond32", "North");
-    check("nemployeerecnoaftersecond", "3");
-    check("nregionrecnoaftersecond", "3");
-
-    const bool has_joined_query_file_requery_event = std::any_of(
-        state.events.begin(),
-        state.events.end(),
-        [](const copperfin::runtime::RuntimeEvent &event) {
-            return event.category == "prg.object.requery";
-        });
-    expect(has_joined_query_file_requery_event,
-           "joined query-file Requery() should emit a native requery event");
-
-    fs::remove_all(temp_root, ignored);
+void test_query_file_requery_refreshes_explicit_inner_join_query_rows() {
+    run_joined_query_requery_test(4, true);
 }
 
 }  // namespace
@@ -921,7 +838,9 @@ int main() {
     test_sql_statement_requery_refreshes_single_cursor_query_rows();
     test_query_file_requery_refreshes_single_cursor_query_rows();
     test_sql_statement_requery_refreshes_joined_query_rows();
+    test_sql_statement_requery_refreshes_explicit_inner_join_query_rows();
     test_query_file_requery_refreshes_joined_query_rows();
+    test_query_file_requery_refreshes_explicit_inner_join_query_rows();
     if (const int failures = test_failures(); failures != 0) {
         std::cerr << failures << " test(s) failed\n";
         return 1;

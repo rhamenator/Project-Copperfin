@@ -3254,6 +3254,36 @@ namespace copperfin::runtime
             return expression;
         };
 
+        const auto strip_trailing_join_modifier =
+            [&](std::string designator,
+                std::string_view modifier_keyword) -> std::string
+        {
+            designator = trim_copy(std::move(designator));
+            if (designator.size() <= modifier_keyword.size())
+            {
+                return designator;
+            }
+
+            const std::string upper_designator = uppercase_copy(designator);
+            const std::size_t modifier_position =
+                upper_designator.size() - modifier_keyword.size();
+            if (upper_designator.compare(
+                    modifier_position,
+                    modifier_keyword.size(),
+                    modifier_keyword) != 0)
+            {
+                return designator;
+            }
+
+            if (std::isspace(static_cast<unsigned char>(
+                    designator[modifier_position - 1U])) == 0)
+            {
+                return designator;
+            }
+
+            return trim_copy(designator.substr(0U, modifier_position));
+        };
+
         const auto parse_query_plan =
             [&](const std::string &raw_query_text,
                 QueryPlan &plan) -> bool
@@ -3324,8 +3354,9 @@ namespace copperfin::runtime
                     return false;
                 }
 
-                primary_source_designator =
-                    trim_copy(from_clause.substr(0U, join_position));
+                primary_source_designator = strip_trailing_join_modifier(
+                    trim_copy(from_clause.substr(0U, join_position)),
+                    "INNER");
                 joined_source_designator = trim_copy(
                     from_clause.substr(after_join, on_position - after_join));
                 join_on_expression =
