@@ -219,6 +219,13 @@ namespace copperfin::runtime
             }
         }
 
+        std::string make_native_method_override_key(
+            const std::string &program_path,
+            const std::string &qualified_method_name)
+        {
+            return normalize_path(program_path) + ":" + normalize_identifier(qualified_method_name);
+        }
+
         bool is_native_visual_runtime_object(const RuntimeOleObjectState &runtime_object)
         {
             if (runtime_object.class_hierarchy.empty())
@@ -702,6 +709,7 @@ namespace copperfin::runtime
         std::map<int, RuntimeOleObjectState> ole_objects;
         std::map<int, std::map<std::string, std::string>> native_property_expression_text_by_handle;
         std::map<int, std::map<std::string, std::string>> native_default_property_expression_text_by_handle;
+        std::map<std::string, std::string> native_method_source_text_by_key;
         std::optional<int> representative_active_form_handle;
         std::optional<int> representative_application_forms_collection_handle;
         std::string representative_application_caption = "Microsoft Visual FoxPro";
@@ -813,6 +821,10 @@ namespace copperfin::runtime
         std::optional<std::string> read_native_method_source_if_present(
             const RuntimeOleObjectState &runtime_object,
             const std::string &method_name);
+        bool write_native_method_source_if_present(
+            const RuntimeOleObjectState &runtime_object,
+            const std::string &method_name,
+            const std::string &method_source_text);
         std::optional<PrgValue> invoke_runtime_object_reference_member(
             const PrgValue &object_reference,
             const std::string &member_path,
@@ -2386,6 +2398,28 @@ namespace copperfin::runtime
             }
 
             target_object->last_action = effective_member_path + "(" + property_name + ")";
+            ++target_object->action_count;
+            return make_empty_value();
+        }
+        if (leaf == "writemethod" &&
+            (!target_object->class_hierarchy.empty() || !target_object->source.empty()))
+        {
+            if (arguments.size() < 2U)
+            {
+                return make_empty_value();
+            }
+
+            const std::string method_name = trim_copy(value_as_string(arguments[0]));
+            const std::string method_source_text = value_as_string(arguments[1]);
+            if (!write_native_method_source_if_present(
+                    *target_object,
+                    method_name,
+                    method_source_text))
+            {
+                return make_empty_value();
+            }
+
+            target_object->last_action = effective_member_path + "(" + method_name + ")";
             ++target_object->action_count;
             return make_empty_value();
         }
@@ -4864,6 +4898,14 @@ namespace copperfin::runtime
             return std::nullopt;
         }
 
+        if (const auto override_text =
+                native_method_source_text_by_key.find(
+                    make_native_method_override_key(method_program_path, qualified_method_name));
+            override_text != native_method_source_text_by_key.end())
+        {
+            return override_text->second;
+        }
+
         Program &method_program = load_program(method_program_path);
         if (!method_program.source_lines.empty() &&
             method->declaration_location.line > 0 &&
@@ -4897,6 +4939,95 @@ namespace copperfin::runtime
             source_text += statement.text;
         }
         return source_text;
+    }
+
+    bool PrgRuntimeSession::Impl::write_native_method_source_if_present(
+        const RuntimeOleObjectState &runtime_object,
+        const std::string &method_name,
+        const std::string &method_source_text)
+    {
+        const std::string normalized_method_name = normalize_identifier(method_name);
+        if (normalized_method_name.empty() || runtime_object.source.empty())
+        {
+            return false;
+        }
+
+        Program &program = load_program(runtime_object.source);
+        std::string qualified_method_name;
+        const auto method_lookup =
+            find_native_class_method_lookup(
+                program,
+                runtime_object.prog_id,
+                normalized_method_name,
+                true,
+                qualified_method_name);
+        if (!method_lookup.has_value() || method_lookup->routine == nullptr)
+        {
+            return false;
+        }
+
+        const std::string temp_routine_name = "__CopperfinWriteMethodTemp";
+        const bool parse_as_function = method_lookup->routine->kind == RoutineKind::function;
+        std::error_code ignored;
+        std::filesystem::create_directories(runtime_temp_directory, ignored);
+        const std::filesystem::path temp_path =
+            runtime_temp_directory /
+            ("writemethod_" + std::to_string(runtime_instance_id) + "_" +
+             std::to_string(static_cast<unsigned long long>(executed_statement_count)) + ".prg");
+
+        {
+            std::ofstream output(temp_path, std::ios::binary | std::ios::trunc);
+            if (!output)
+            {
+                return false;
+            }
+
+            if (parse_as_function)
+            {
+                output << "FUNCTION " << temp_routine_name << "\n";
+                output << method_source_text << "\n";
+                output << "ENDFUNC\n";
+            }
+            else
+            {
+                output << "PROCEDURE " << temp_routine_name << "\n";
+                output << method_source_text << "\n";
+                output << "ENDPROC\n";
+            }
+        }
+
+        Program parsed_program = parse_program(temp_path.string());
+        std::filesystem::remove(temp_path, ignored);
+
+        const auto parsed_method =
+            parsed_program.routines.find(normalize_identifier(temp_routine_name));
+        if (parsed_method == parsed_program.routines.end())
+        {
+            return false;
+        }
+
+        Routine updated_routine = parsed_method->second;
+        updated_routine.name = method_lookup->routine->name;
+        updated_routine.kind = method_lookup->routine->kind;
+        updated_routine.declaration_location = method_lookup->routine->declaration_location;
+        updated_routine.body_end_line_exclusive =
+            updated_routine.declaration_location.line + updated_routine.statements.size() + 1U;
+
+        std::size_t line_number = updated_routine.declaration_location.line;
+        for (Statement &statement : updated_routine.statements)
+        {
+            statement.location.file_path = updated_routine.declaration_location.file_path;
+            statement.location.line = line_number;
+            ++line_number;
+        }
+
+        auto &mutable_methods =
+            const_cast<PrgClassDefinition *>(method_lookup->class_definition)->methods;
+        mutable_methods[normalized_method_name] = updated_routine;
+        native_method_source_text_by_key[make_native_method_override_key(
+            method_lookup->program->path,
+            qualified_method_name)] = method_source_text;
+        return true;
     }
 
     bool PrgRuntimeSession::Impl::write_native_property_if_present(
