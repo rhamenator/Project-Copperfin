@@ -624,6 +624,7 @@ bool is_builtin_native_runtime_method_name(
 
     if (normalized_member_name == "additem" ||
         normalized_member_name == "addlistitem" ||
+        normalized_member_name == "clear" ||
         normalized_member_name == "removeitem" ||
         normalized_member_name == "removelistitem") {
         const std::string normalized_base_class =
@@ -661,6 +662,7 @@ bool native_list_control_allows_multiple_selection(const RuntimeOleObjectState& 
 }
 
 bool native_list_control_rowsourcetype_supports_additem(const RuntimeOleObjectState& runtime_object);
+bool native_list_control_rowsourcetype_supports_clear(const RuntimeOleObjectState& runtime_object);
 
 bool native_list_control_sorted_enabled(const RuntimeOleObjectState& runtime_object) {
     if (!is_native_list_control_runtime_object(runtime_object) ||
@@ -687,6 +689,20 @@ bool native_list_control_rowsourcetype_supports_additem(const RuntimeOleObjectSt
 
     const long long value = std::llround(value_as_number(rowsourcetype->second));
     return value == 0LL || value == 1LL;
+}
+
+bool native_list_control_rowsourcetype_supports_clear(const RuntimeOleObjectState& runtime_object) {
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return false;
+    }
+
+    const auto rowsourcetype = runtime_object.properties.find("rowsourcetype");
+    if (rowsourcetype == runtime_object.properties.end()) {
+        return true;
+    }
+
+    const long long value = std::llround(value_as_number(rowsourcetype->second));
+    return value == 0LL;
 }
 
 void sync_native_list_control_selected_state_size(RuntimeOleObjectState& runtime_object) {
@@ -1104,6 +1120,33 @@ bool remove_native_list_control_slot(
 
     sync_native_list_control_displayvalue_from_selection_impl(runtime_object);
     return true;
+}
+
+void clear_native_list_control_rows(RuntimeOleObjectState& runtime_object) {
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return;
+    }
+
+    const auto previous_value = runtime_object.properties.find("value");
+    const PrgValue previous_value_snapshot =
+        previous_value == runtime_object.properties.end()
+            ? make_string_value("")
+            : previous_value->second;
+    const bool prefer_index_value = native_list_control_prefers_index_value(runtime_object);
+
+    runtime_object.list_rows.clear();
+    runtime_object.collection_items.clear();
+    runtime_object.collection_item_keys.clear();
+    runtime_object.list_selected.clear();
+    runtime_object.properties["listindex"] = make_number_value(0.0);
+    runtime_object.properties["newindex"] = make_number_value(0.0);
+    runtime_object.properties["newitemid"] = make_number_value(0.0);
+    sync_native_list_control_count_impl(runtime_object);
+    sync_native_list_control_displayvalue_from_selection_impl(runtime_object);
+    runtime_object.properties["value"] = prefer_index_value
+                                             ? native_list_control_empty_index_value(
+                                                   previous_value_snapshot)
+                                             : make_string_value("");
 }
 
 std::optional<std::size_t> parse_native_list_control_selected_member_slot_impl(
@@ -2407,6 +2450,9 @@ std::vector<std::string> collect_object_member_names(const RuntimeOleObjectState
         if (is_builtin_native_runtime_method_name(runtime_object, "resettodefault")) {
             unique_members.insert("resettodefault");
         }
+        if (is_builtin_native_runtime_method_name(runtime_object, "clear")) {
+            unique_members.insert("clear");
+        }
         if (is_builtin_native_runtime_method_name(runtime_object, "additem")) {
             unique_members.insert("additem");
         }
@@ -3274,6 +3320,15 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
         runtime_object.properties["newitemid"] = make_number_value(static_cast<double>(item_id));
         sync_native_list_control_displayvalue_from_selection_impl(runtime_object);
         return make_number_value(static_cast<double>(item_id));
+    }
+
+    if (normalized_method_name == "clear") {
+        if (!native_list_control_rowsourcetype_supports_clear(runtime_object)) {
+            return make_empty_value();
+        }
+
+        clear_native_list_control_rows(runtime_object);
+        return make_empty_value();
     }
 
     if (normalized_method_name == "removeitem") {

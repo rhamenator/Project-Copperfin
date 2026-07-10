@@ -2284,7 +2284,7 @@ namespace copperfin::runtime
         {
             target_object->last_action = effective_member_path + "()";
             ++target_object->action_count;
-            if (leaf == "additem" || leaf == "addlistitem" || leaf == "removeitem" ||
+            if (leaf == "additem" || leaf == "addlistitem" || leaf == "clear" || leaf == "removeitem" ||
                 leaf == "removelistitem")
             {
                 events.push_back({.category = "prg.object." + leaf,

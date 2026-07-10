@@ -10545,6 +10545,193 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_list_controls_clear_builtin_clears_rows_and_honors_rowsourcetype_gate()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_list_controls_clear";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_list_controls_clear.prg";
+        write_text(
+            main_path,
+            "oPlainCombo = CREATEOBJECT('ComboBox')\n"
+            "lPlainHasClear = PEMSTATUS(oPlainCombo, 'Clear', 1)\n"
+            "lPlainGetClear = GETPEM(oPlainCombo, 'Clear')\n"
+            "nPlainMethodCount = AMEMBERS(aPlainMethods, oPlainCombo, 2)\n"
+            "nPlainHasClear = ASCAN(aPlainMethods, 'CLEAR')\n"
+            "oPlainCombo.AddItem('Alpha')\n"
+            "oPlainCombo.AddItem('Beta')\n"
+            "oPlainCombo.ListIndex = 2\n"
+            "oPlainCombo.Clear()\n"
+            "nPlainComboCountAfterClear = oPlainCombo.ListCount\n"
+            "nPlainComboIndexAfterClear = oPlainCombo.ListIndex\n"
+            "nPlainComboItemIdAfterClear = oPlainCombo.ListItemID\n"
+            "nPlainComboNewIndexAfterClear = oPlainCombo.NewIndex\n"
+            "nPlainComboNewItemIdAfterClear = oPlainCombo.NewItemId\n"
+            "cPlainComboDisplayAfterClear = oPlainCombo.DisplayValue\n"
+            "cPlainComboValueAfterClear = oPlainCombo.Value\n"
+            "oPlainList = CREATEOBJECT('ListBox')\n"
+            "oPlainList.MultiSelect = .T.\n"
+            "oPlainList.AddItem('North')\n"
+            "oPlainList.AddItem('South')\n"
+            "oPlainList.Selected(1) = .T.\n"
+            "oPlainList.Selected(2) = .T.\n"
+            "oPlainList.Clear()\n"
+            "nPlainListCountAfterClear = oPlainList.ListCount\n"
+            "nPlainListIndexAfterClear = oPlainList.ListIndex\n"
+            "nPlainListItemIdAfterClear = oPlainList.ListItemID\n"
+            "cPlainListDisplayAfterClear = oPlainList.DisplayValue\n"
+            "cPlainListValueAfterClear = oPlainList.Value\n"
+            "lPlainListSelected1AfterClear = oPlainList.Selected(1)\n"
+            "oValueCombo = CREATEOBJECT('ComboBox')\n"
+            "oValueCombo.RowSourceType = 1\n"
+            "oValueCombo.AddItem('March')\n"
+            "oValueCombo.AddItem('April')\n"
+            "oValueCombo.ListIndex = 2\n"
+            "oValueCombo.Clear()\n"
+            "nValueComboCountAfterClear = oValueCombo.ListCount\n"
+            "nValueComboIndexAfterClear = oValueCombo.ListIndex\n"
+            "cValueComboDisplayAfterClear = oValueCombo.DisplayValue\n"
+            "oSeedCombo = CREATEOBJECT('SeededCombo')\n"
+            "oSeedList = CREATEOBJECT('SeededList')\n"
+            "nSeedComboCount = oSeedCombo.ListCount\n"
+            "nSeedListCount = oSeedList.ListCount\n"
+            "cSeedComboDisplay = oSeedCombo.DisplayValue\n"
+            "cSeedListDisplay = oSeedList.DisplayValue\n"
+            "RETURN\n"
+            "DEFINE CLASS SeededCombo AS ComboBox\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddItem('One')\n"
+            "        THIS.AddItem('Two')\n"
+            "        THIS.ListIndex = 2\n"
+            "        THIS.Clear()\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS SeededList AS ListBox\n"
+            "    MultiSelect = .T.\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddItem('East')\n"
+            "        THIS.AddItem('West')\n"
+            "        THIS.Selected(2) = .T.\n"
+            "        THIS.Clear()\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Clear list-control script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplainhasclear", "true");
+        check("lplaingetclear", "true");
+        check("nplaincombocountafterclear", "0");
+        check("nplaincomboindexafterclear", "0");
+        check("nplaincomboitemidafterclear", "0");
+        check("nplaincombonewindexafterclear", "0");
+        check("nplaincombonewitemidafterclear", "0");
+        check("cplaincombodisplayafterclear", "");
+        check("cplaincombovalueafterclear", "");
+        check("nplainlistcountafterclear", "0");
+        check("nplainlistindexafterclear", "0");
+        check("nplainlistitemidafterclear", "0");
+        check("cplainlistdisplayafterclear", "");
+        check("cplainlistvalueafterclear", "");
+        check("lplainlistselected1afterclear", "false");
+        check("nvaluecombocountafterclear", "2");
+        check("nvaluecomboindexafterclear", "2");
+        check("cvaluecombodisplayafterclear", "April");
+        check("nseedcombocount", "0");
+        check("nseedlistcount", "0");
+        check("cseedcombodisplay", "");
+        check("cseedlistdisplay", "");
+
+        const auto plain_has_clear = state.globals.find("nplainhasclear");
+        expect(plain_has_clear != state.globals.end(),
+               "nPlainHasClear variable should be present");
+        if (plain_has_clear != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(plain_has_clear->second) != "0",
+                   "AMEMBERS(..., 2) should expose the native Clear builtin for ComboBox");
+        }
+
+        expect(state.ole_objects.size() == 5U,
+               "native Clear coverage should register plain, gated, and derived combo/list objects");
+        if (state.ole_objects.size() == 5U)
+        {
+            const auto &plain_combo = state.ole_objects[0];
+            const auto &plain_list = state.ole_objects[1];
+            const auto &value_combo = state.ole_objects[2];
+            const auto &seed_combo = state.ole_objects[3];
+            const auto &seed_list = state.ole_objects[4];
+
+            expect(plain_combo.collection_items.empty(),
+                   "plain ComboBox Clear coverage should remove all runtime items");
+            expect(plain_list.collection_items.empty(),
+                   "plain ListBox Clear coverage should remove all runtime items");
+            expect(seed_combo.collection_items.empty(),
+                   "derived ComboBox Clear coverage should preserve Init-time clear");
+            expect(seed_list.collection_items.empty(),
+                   "derived ListBox Clear coverage should preserve Init-time clear");
+
+            expect(value_combo.collection_items.size() == 2U,
+                   "RowSourceType 1 Clear coverage should leave existing runtime items unchanged");
+            if (value_combo.collection_items.size() == 2U)
+            {
+                expect(copperfin::runtime::format_value(value_combo.collection_items[0]) == "March",
+                       "RowSourceType 1 Clear coverage should preserve the first item");
+                expect(copperfin::runtime::format_value(value_combo.collection_items[1]) == "April",
+                       "RowSourceType 1 Clear coverage should preserve the second item");
+            }
+
+            const auto plain_combo_listcount = plain_combo.properties.find("listcount");
+            const auto plain_combo_listindex = plain_combo.properties.find("listindex");
+            const auto plain_combo_display = plain_combo.properties.find("displayvalue");
+            const auto plain_combo_newindex = plain_combo.properties.find("newindex");
+            const auto plain_combo_newitemid = plain_combo.properties.find("newitemid");
+            expect(plain_combo_listcount != plain_combo.properties.end() &&
+                       copperfin::runtime::format_value(plain_combo_listcount->second) == "0",
+                   "plain ComboBox Clear coverage should keep ListCount synchronized");
+            expect(plain_combo_listindex != plain_combo.properties.end() &&
+                       copperfin::runtime::format_value(plain_combo_listindex->second) == "0",
+                   "plain ComboBox Clear coverage should clear ListIndex");
+            expect(plain_combo_display != plain_combo.properties.end() &&
+                       copperfin::runtime::format_value(plain_combo_display->second).empty(),
+                   "plain ComboBox Clear coverage should clear DisplayValue");
+            expect(plain_combo_newindex != plain_combo.properties.end() &&
+                       copperfin::runtime::format_value(plain_combo_newindex->second) == "0",
+                   "plain ComboBox Clear coverage should reset NewIndex");
+            expect(plain_combo_newitemid != plain_combo.properties.end() &&
+                       copperfin::runtime::format_value(plain_combo_newitemid->second) == "0",
+                   "plain ComboBox Clear coverage should reset NewItemId");
+        }
+
+        const bool has_clear_event = std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
+        {
+            return event.category == "prg.object.clear";
+        });
+        expect(has_clear_event,
+               "native Clear coverage should emit representative list-control method events");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_list_controls_multicolumn_additem_followthrough_stays_coherent()
     {
         namespace fs = std::filesystem;
@@ -52938,6 +53125,7 @@ int main()
     test_native_listindex_defaults_mutates_and_stays_builtin();
     test_native_displayvalue_defaults_mutates_and_stays_builtin();
     test_native_list_controls_additem_builtin_populates_runtime_items();
+    test_native_list_controls_clear_builtin_clears_rows_and_honors_rowsourcetype_gate();
     test_native_list_controls_multicolumn_additem_followthrough_stays_coherent();
     test_native_list_controls_writable_list_cells_stay_coherent();
     test_native_list_controls_listcount_list_and_removeitem_stay_coherent();
