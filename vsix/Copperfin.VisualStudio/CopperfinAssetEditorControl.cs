@@ -2953,7 +2953,14 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
     private CopperfinStudioNamedValue? FindReportSetting(CopperfinStudioReportLayout reportLayout, string name)
     {
-        return reportLayout.Settings.FirstOrDefault(setting =>
+        var liveSetting = reportLayout.Settings.FirstOrDefault(setting =>
+            string.Equals(setting.Name, name, StringComparison.OrdinalIgnoreCase));
+        if (liveSetting is not null)
+        {
+            return liveSetting;
+        }
+
+        return reportLayout.DeletedSettings.FirstOrDefault(setting =>
             string.Equals(setting.Name, name, StringComparison.OrdinalIgnoreCase));
     }
 

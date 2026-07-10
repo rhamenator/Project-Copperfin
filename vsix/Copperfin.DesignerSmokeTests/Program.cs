@@ -6299,7 +6299,12 @@ internal static class Program
                         new() { Name = "LEFTMARGIN", Value = "15" },
                         new() { Name = "RIGHTMARGIN", Value = "25" }
                     },
-                    DeletedSettings = new List<CopperfinStudioNamedValue> { new() },
+                    DeletedSettings = new List<CopperfinStudioNamedValue>
+                    {
+                        new() { Name = "TAG", Value = "deleted.country" },
+                        new() { Name = "ORIENTATION", Value = "9" },
+                        new() { Name = "DRIVER", Value = "deleted-driver" }
+                    },
                     UnplacedObjects = new List<CopperfinStudioReportLayoutObject> { new() },
                     DeletedObjects = new List<CopperfinStudioReportLayoutObject> { new(), new(), new(), new() }
                 }
@@ -6329,10 +6334,13 @@ internal static class Program
                    englishDetails.IndexOf("Printer Output: FPR4:", StringComparison.Ordinal) >= 0 &&
                    englishDetails.IndexOf("Left Margin: 15", StringComparison.Ordinal) >= 0 &&
                    englishDetails.IndexOf("Right Margin: 25", StringComparison.Ordinal) >= 0 &&
+                   englishDetails.IndexOf("deleted.country", StringComparison.Ordinal) < 0 &&
+                   englishDetails.IndexOf("Orientation: 9", StringComparison.Ordinal) < 0 &&
+                   englishDetails.IndexOf("Printer Driver: deleted-driver", StringComparison.Ordinal) < 0 &&
                    englishDetails.IndexOf("Bottom Margin:", StringComparison.Ordinal) < 0 &&
                    englishDetails.IndexOf("Preview bounds:", StringComparison.Ordinal) >= 0 &&
                    englishDetails.IndexOf("Deleted preview bounds:", StringComparison.Ordinal) >= 0,
-                "English report layout shell summary should include live report counts plus root sort, printer, grid, and page-setup metadata without fabricating missing optional fields");
+                "English report layout shell summary should include live report counts plus root sort, printer, grid, and page-setup metadata without letting deleted settings override live values or fabricating missing optional fields");
 
             using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
             var spanishDetails = InvokeAssetEditorString(spanishControl, "BuildSnapshotDetailsText", info, snapshot);
@@ -6413,6 +6421,45 @@ internal static class Program
                    pseudoDetails.IndexOf(pseudoLocalization.Text("AssetEditor.Details.ReportPreviewBoundsSummary").Substring(0, 6), StringComparison.Ordinal) >= 0 &&
                    pseudoDetails.IndexOf(pseudoLocalization.Text("AssetEditor.Details.DeletedReportPreviewBoundsSummary").Substring(0, 6), StringComparison.Ordinal) >= 0,
                 "Pseudo-localized report layout shell summary should route root sort/printer/grid/page-setup metadata through the shared catalog");
+
+            var deletedOnlySnapshot = new CopperfinStudioSnapshotDocument
+            {
+                AssetFamily = "label",
+                ReportLayout = new CopperfinStudioReportLayout
+                {
+                    Sections = new List<CopperfinStudioReportSection> { new() },
+                    DeletedSections = new List<CopperfinStudioReportSection> { new() },
+                    Groupings = new List<CopperfinStudioReportGrouping>(),
+                    Settings = new List<CopperfinStudioNamedValue>(),
+                    DeletedSettings = new List<CopperfinStudioNamedValue>
+                    {
+                        new() { Name = "TAG", Value = "deleted.only.tag" },
+                        new() { Name = "ORIENTATION", Value = "7" },
+                        new() { Name = "GRIDV", Value = "6" },
+                        new() { Name = "COPIES", Value = "4" },
+                        new() { Name = "DRIVER", Value = "deleted-winspool" },
+                        new() { Name = "OUTPUT", Value = "DELETED:" }
+                    },
+                    UnplacedObjects = new List<CopperfinStudioReportLayoutObject>(),
+                    DeletedObjects = new List<CopperfinStudioReportLayoutObject>()
+                }
+            };
+
+            var deletedOnlyDetails = InvokeAssetEditorString(englishControl, "BuildSnapshotDetailsText", info, deletedOnlySnapshot);
+            Expect(deletedOnlyDetails.IndexOf("Sections: 1", StringComparison.Ordinal) >= 0 &&
+                   deletedOnlyDetails.IndexOf("Deleted sections: 1", StringComparison.Ordinal) >= 0 &&
+                   deletedOnlyDetails.IndexOf("Groupings: 0", StringComparison.Ordinal) >= 0 &&
+                   deletedOnlyDetails.IndexOf("Settings: 0", StringComparison.Ordinal) >= 0 &&
+                   deletedOnlyDetails.IndexOf("Deleted settings: 6", StringComparison.Ordinal) >= 0 &&
+                   deletedOnlyDetails.IndexOf("Active Sort Expression: deleted.only.tag", StringComparison.Ordinal) >= 0 &&
+                   deletedOnlyDetails.IndexOf("Orientation: 7", StringComparison.Ordinal) >= 0 &&
+                   deletedOnlyDetails.IndexOf("Vertical Grid: 6", StringComparison.Ordinal) >= 0 &&
+                   deletedOnlyDetails.IndexOf("Copies: 4", StringComparison.Ordinal) >= 0 &&
+                   deletedOnlyDetails.IndexOf("Printer Driver: deleted-winspool", StringComparison.Ordinal) >= 0 &&
+                   deletedOnlyDetails.IndexOf("Printer Output: DELETED:", StringComparison.Ordinal) >= 0 &&
+                   deletedOnlyDetails.IndexOf("Preview bounds:", StringComparison.Ordinal) < 0 &&
+                   deletedOnlyDetails.IndexOf("Deleted preview bounds:", StringComparison.Ordinal) < 0,
+                "Deleted-settings-only report layout shell summary should surface deleted root sort and printer/grid/page-setup metadata through the managed details path without fabricating preview bounds");
         }
         finally
         {
