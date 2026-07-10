@@ -526,6 +526,82 @@ void test_native_list_control_controlsource_stays_synchronized_after_row_mutatio
     fs::remove_all(temp_root, ignored);
 }
 
+void test_native_list_control_controlsource_stays_synchronized_after_sorted_reordering() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_native_list_control_controlsource_sorted";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "native_list_control_controlsource_sorted.prg";
+    write_text(
+        main_path,
+        "CREATE CURSOR lookupstate (nchoice N(2,0))\n"
+        "APPEND BLANK\n"
+        "REPLACE nchoice WITH 0\n"
+        "oCombo = CREATEOBJECT('ComboBox')\n"
+        "oCombo.ControlSource = 'lookupstate.nchoice'\n"
+        "oCombo.AddItem('Zulu')\n"
+        "oCombo.AddItem('alpha')\n"
+        "oCombo.AddItem('Echo')\n"
+        "oCombo.ListIndex = 2\n"
+        "nFieldBeforeSort = lookupstate.nchoice\n"
+        "oCombo.Sorted = .T.\n"
+        "nComboIndexAfterSort = oCombo.ListIndex\n"
+        "nFieldAfterSort = lookupstate.nchoice\n"
+        "oCombo.AddItem('Bravo')\n"
+        "nComboIndexAfterSortedAdd = oCombo.ListIndex\n"
+        "nFieldAfterSortedAdd = lookupstate.nchoice\n"
+        "nBoundMem = 0\n"
+        "oList = CREATEOBJECT('ListBox')\n"
+        "oList.ControlSource = 'nBoundMem'\n"
+        "oList.AddItem('Zulu')\n"
+        "oList.AddItem('alpha')\n"
+        "oList.AddItem('Echo')\n"
+        "oList.ListIndex = 2\n"
+        "nMemBeforeSort = nBoundMem\n"
+        "oList.Sorted = .T.\n"
+        "nListIndexAfterSort = oList.ListIndex\n"
+        "nMemAfterSort = nBoundMem\n"
+        "oList.AddItem('Bravo')\n"
+        "nListIndexAfterSortedAdd = oList.ListIndex\n"
+        "nMemAfterSortedAdd = nBoundMem\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           std::string("native list-control ControlSource sorted-reordering script should complete: ") +
+               state.message + " @line=" + std::to_string(state.location.line));
+
+    const auto check = [&](const std::string& name, const std::string& expected) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), name + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(found->second) + "'");
+        }
+    };
+
+    check("nfieldbeforesort", "2");
+    check("ncomboindexaftersort", "3");
+    check("nfieldaftersort", "3");
+    check("ncomboindexaftersortedadd", "4");
+    check("nfieldaftersortedadd", "4");
+    check("nmembeforesort", "2");
+    check("nlistindexaftersort", "3");
+    check("nmemaftersort", "3");
+    check("nlistindexaftersortedadd", "4");
+    check("nmemaftersortedadd", "4");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -536,6 +612,7 @@ int main() {
     test_native_list_control_controlsource_drives_boundto_value_semantics();
     test_native_list_control_controlsource_requery_keeps_numeric_value_coherent();
     test_native_list_control_controlsource_stays_synchronized_after_row_mutation_methods();
+    test_native_list_control_controlsource_stays_synchronized_after_sorted_reordering();
     if (const int failures = test_failures(); failures != 0) {
         std::cerr << failures << " test(s) failed\n";
         return 1;

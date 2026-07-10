@@ -2338,7 +2338,8 @@ namespace copperfin::runtime
         if (auto list_control_result = invoke_native_list_control_method(*target_object, leaf, arguments);
             list_control_result.has_value())
         {
-            if (leaf == "clear" || leaf == "removeitem" || leaf == "removelistitem")
+            if (leaf == "additem" || leaf == "addlistitem" || leaf == "clear" ||
+                leaf == "removeitem" || leaf == "removelistitem")
             {
                 write_native_list_control_controlsource_target(*target_object, frame);
             }
@@ -5470,6 +5471,13 @@ namespace copperfin::runtime
                     normalized_property_name == "rowsourcetype")
                 {
                     normalize_native_list_control_sorted_invariant(runtime_object);
+                }
+                if (normalized_property_name == "sorted")
+                {
+                    if (!write_native_list_control_controlsource_target(runtime_object, source_frame))
+                    {
+                        return false;
+                    }
                 }
                 if (normalized_property_name == "boundcolumn" ||
                     normalized_property_name == "boundto")
