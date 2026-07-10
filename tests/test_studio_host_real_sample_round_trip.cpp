@@ -33,6 +33,10 @@ void expect_contains(const std::string& text, const std::string& needle, const s
     expect(text.find(needle) != std::string::npos, message);
 }
 
+void expect_not_contains(const std::string& text, const std::string& needle, const std::string& message) {
+    expect(text.find(needle) == std::string::npos, message);
+}
+
 std::string quote_command_argument(const std::string& value) {
     std::string quoted = "\"";
     quoted.reserve(value.size() + 2U);
@@ -104,6 +108,22 @@ ProcessResult run_process_capture(
     }
 #endif
     return result;
+}
+
+std::string selected_settings_segment(const std::string& json_text) {
+    const std::string start_marker = "\"selectedReportSettings\": [";
+    const std::string end_marker = "\n    \"selectedReportSelectionKind\":";
+    const std::size_t start = json_text.find(start_marker);
+    if (start == std::string::npos) {
+        return {};
+    }
+
+    const std::size_t end = json_text.find(end_marker, start);
+    if (end == std::string::npos) {
+        return json_text.substr(start);
+    }
+
+    return json_text.substr(start, end - start);
 }
 
 struct RealSamplePair {
@@ -356,6 +376,136 @@ void exercise_real_sample_round_trip(
     expect_contains(reopen_gridh_process.stdout_text,
                     "\"gridVertical\": 16",
                     "#3711: real sample reopen after GRIDH should preserve the earlier GRIDV update");
+
+    const std::string after_gridh_primary_bytes = read_binary(copied_primary);
+
+    const auto clear_gridv_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", copied_primary.string(),
+            "--clear-property",
+            "--record", "0",
+            "--property-name", "GRIDV",
+            "--json"
+        },
+        temp_root);
+    if (clear_gridv_process.exit_code != 0) {
+        std::cerr << "studio host sample GRIDV clear stdout:\n" << clear_gridv_process.stdout_text << "\n";
+        std::cerr << "studio host sample GRIDV clear stderr:\n" << clear_gridv_process.stderr_text << "\n";
+    }
+    expect(clear_gridv_process.exit_code == 0, "#3797: real sample GRIDV clear should succeed");
+
+    const auto cleared_gridv_property = copperfin::vfp::query_visual_object_property({
+        .path = copied_primary.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "GRIDV"
+    });
+    expect(cleared_gridv_property.ok &&
+               cleared_gridv_property.value.empty(),
+           "#3797: real sample GRIDV clear should clear the persisted setting state");
+    expect(read_binary(copied_primary) != after_gridh_primary_bytes,
+           "#3797: real sample GRIDV clear should change the primary asset bytes again");
+    expect(read_binary(copied_sidecar) == original_sidecar_bytes,
+           "#3797: real sample GRIDV clear should preserve sidecar bytes");
+
+    const auto reopen_after_gridv_clear = run_process_capture(
+        studio_host_path,
+        {"--path", copied_primary.string(), "--record", "0", "--json"},
+        temp_root);
+    if (reopen_after_gridv_clear.exit_code != 0) {
+        std::cerr << "studio host sample reopen after GRIDV clear stdout:\n"
+                  << reopen_after_gridv_clear.stdout_text << "\n";
+        std::cerr << "studio host sample reopen after GRIDV clear stderr:\n"
+                  << reopen_after_gridv_clear.stderr_text << "\n";
+    }
+    expect(reopen_after_gridv_clear.exit_code == 0, "#3797: real sample reopen after GRIDV clear should succeed");
+    expect_contains(reopen_after_gridv_clear.stdout_text,
+                    "\"gridVerticalAvailable\": false",
+                    "#3797: real sample GRIDV clear should remove grid-vertical availability");
+    expect_contains(reopen_after_gridv_clear.stdout_text,
+                    "\"gridVertical\": 0",
+                    "#3797: real sample GRIDV clear should clear the grid-vertical value");
+    expect_contains(reopen_after_gridv_clear.stdout_text,
+                    "\"gridHorizontalAvailable\": true",
+                    "#3797: real sample GRIDV clear should preserve grid-horizontal availability");
+    expect_contains(reopen_after_gridv_clear.stdout_text,
+                    "\"gridHorizontal\": " + gridh_target_value,
+                    "#3797: real sample GRIDV clear should preserve the updated GRIDH value");
+    const std::string gridv_cleared_settings = selected_settings_segment(reopen_after_gridv_clear.stdout_text);
+    expect(!gridv_cleared_settings.empty(),
+           "#3797: real sample GRIDV clear should expose a selected-settings JSON block");
+    if (!gridv_cleared_settings.empty()) {
+        expect_not_contains(gridv_cleared_settings,
+                            "\"name\": \"GRIDV\"",
+                            "#3797: real sample GRIDV clear should remove GRIDV from selected settings");
+    }
+
+    const std::string after_gridv_clear_primary_bytes = read_binary(copied_primary);
+
+    const auto clear_gridh_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", copied_primary.string(),
+            "--clear-property",
+            "--record", "0",
+            "--property-name", "GRIDH",
+            "--json"
+        },
+        temp_root);
+    if (clear_gridh_process.exit_code != 0) {
+        std::cerr << "studio host sample GRIDH clear stdout:\n" << clear_gridh_process.stdout_text << "\n";
+        std::cerr << "studio host sample GRIDH clear stderr:\n" << clear_gridh_process.stderr_text << "\n";
+    }
+    expect(clear_gridh_process.exit_code == 0, "#3797: real sample GRIDH clear should succeed");
+
+    const auto cleared_gridh_property = copperfin::vfp::query_visual_object_property({
+        .path = copied_primary.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "GRIDH"
+    });
+    expect(cleared_gridh_property.ok &&
+               cleared_gridh_property.value.empty(),
+           "#3797: real sample GRIDH clear should clear the persisted setting state");
+    expect(read_binary(copied_primary) != after_gridv_clear_primary_bytes,
+           "#3797: real sample GRIDH clear should change the primary asset bytes again");
+    expect(read_binary(copied_sidecar) == original_sidecar_bytes,
+           "#3797: real sample GRIDH clear should preserve sidecar bytes");
+
+    const auto reopen_after_gridh_clear = run_process_capture(
+        studio_host_path,
+        {"--path", copied_primary.string(), "--record", "0", "--json"},
+        temp_root);
+    if (reopen_after_gridh_clear.exit_code != 0) {
+        std::cerr << "studio host sample reopen after GRIDH clear stdout:\n"
+                  << reopen_after_gridh_clear.stdout_text << "\n";
+        std::cerr << "studio host sample reopen after GRIDH clear stderr:\n"
+                  << reopen_after_gridh_clear.stderr_text << "\n";
+    }
+    expect(reopen_after_gridh_clear.exit_code == 0, "#3797: real sample reopen after GRIDH clear should succeed");
+    expect_contains(reopen_after_gridh_clear.stdout_text,
+                    "\"gridVerticalAvailable\": false",
+                    "#3797: real sample GRIDH clear should preserve cleared grid-vertical availability");
+    expect_contains(reopen_after_gridh_clear.stdout_text,
+                    "\"gridHorizontalAvailable\": false",
+                    "#3797: real sample GRIDH clear should remove grid-horizontal availability");
+    expect_contains(reopen_after_gridh_clear.stdout_text,
+                    "\"gridHorizontal\": 0",
+                    "#3797: real sample GRIDH clear should clear the grid-horizontal value");
+    const std::string cleared_settings = selected_settings_segment(reopen_after_gridh_clear.stdout_text);
+    expect(!cleared_settings.empty(),
+           "#3797: real sample GRIDH clear should expose a selected-settings JSON block");
+    if (!cleared_settings.empty()) {
+        expect_not_contains(cleared_settings,
+                            "\"name\": \"GRIDV\"",
+                            "#3797: real sample GRIDH clear should keep GRIDV removed from selected settings");
+        expect_not_contains(cleared_settings,
+                            "\"name\": \"GRIDH\"",
+                            "#3797: real sample GRIDH clear should remove GRIDH from selected settings");
+    }
 }
 
 void test_real_vfp9_report_and_label_samples_round_trip(const std::string& studio_host_path) {
