@@ -5,6 +5,20 @@
 #include "test_runtime_pipeline_support.h"
 
 namespace cf_test_runtime_pipeline {
+namespace {
+
+void expect_manifest_omits_keys(
+    const std::string& manifest_text,
+    const std::vector<std::string>& keys,
+    const std::string& manifest_label) {
+    for (const auto& key : keys) {
+        expect(manifest_text.find(key + "=") == std::string::npos,
+               manifest_label + " should omit " + key);
+    }
+}
+
+}  // namespace
+
 void test_library_output_package_emits_module_definition_from_prg_routines() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_library_contract";
@@ -1250,18 +1264,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output manifest should record DLL output kind");
         expect(runtime_manifest.find("project_title=LibraryDemo") != std::string::npos,
                "library-output manifest should record the project title");
-        expect(runtime_manifest.find("project_path=" + quote_manifest_value((project_dir / "librarydemo.pjx").string())) != std::string::npos,
-               "library-output manifest should record the project path");
         expect(runtime_manifest.find("package_root=" + quote_manifest_value(result.plan.package_root)) != std::string::npos,
                "library-output manifest should record the package root");
         expect(runtime_manifest.find("content_root=" + quote_manifest_value(result.plan.content_root)) != std::string::npos,
                "library-output manifest should record the content root");
-        expect(runtime_manifest.find("ast_manifest_path=" + quote_manifest_value(result.plan.ast_manifest_path)) != std::string::npos,
-               "library-output manifest should record the AST manifest path");
-        expect(runtime_manifest.find("ir_manifest_path=" + quote_manifest_value(result.plan.ir_manifest_path)) != std::string::npos,
-               "library-output manifest should record the IR manifest path");
-        expect(runtime_manifest.find("transpiled_csharp_path=" + quote_manifest_value(result.plan.transpiled_csharp_path)) != std::string::npos,
-               "library-output manifest should record the transpiled C# path");
         expect(runtime_manifest.find("configuration=debug") != std::string::npos,
                "library-output manifest should record the debug build configuration");
         expect(runtime_manifest.find("security_enabled=false") != std::string::npos,
@@ -1280,16 +1286,21 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output manifest should record the emitted module-definition path");
         expect(runtime_manifest.find("library_api_manifest_path=" + quote_manifest_value(result.plan.library_api_manifest_path)) != std::string::npos,
                "library-output manifest should record the dedicated DLL API-manifest path");
-        expect(runtime_manifest.find("native_wrapper_source_path=" + quote_manifest_value(result.plan.native_wrapper_source_path)) != std::string::npos,
-               "library-output manifest should record the wrapper source path");
-        expect(runtime_manifest.find("native_wrapper_cmake_path=" + quote_manifest_value(result.plan.native_wrapper_cmake_path)) != std::string::npos,
-               "library-output manifest should record the wrapper CMake path");
-        expect(runtime_manifest.find("native_wrapper_build_script_path=" + quote_manifest_value(result.plan.native_wrapper_build_script_path)) != std::string::npos,
-               "library-output manifest should record the wrapper shell build script path");
-        expect(runtime_manifest.find("native_wrapper_build_powershell_path=" + quote_manifest_value(result.plan.native_wrapper_build_powershell_path)) != std::string::npos,
-               "library-output manifest should record the wrapper PowerShell build script path");
         expect(runtime_manifest.find("library_callable_convention=vfp_declare_default") != std::string::npos,
                "library-output manifest should record the VFP DLL calling convention contract");
+        expect_manifest_omits_keys(
+            runtime_manifest,
+            {
+                "project_path",
+                "ast_manifest_path",
+                "ir_manifest_path",
+                "transpiled_csharp_path",
+                "native_wrapper_source_path",
+                "native_wrapper_cmake_path",
+                "native_wrapper_build_script_path",
+                "native_wrapper_build_powershell_path"
+            },
+            "library-output runtime manifest");
         expect(runtime_manifest.find("library_function_arity=InitLibrary|1") != std::string::npos,
                "library-output manifest should record InitLibrary arity");
         expect(runtime_manifest.find("library_function_arity=AddNumbers|2") != std::string::npos,
@@ -2872,14 +2883,6 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output manifest should mirror InitLibrary callable surface");
         expect(runtime_manifest.find("library_function_call_surface=AddNumbers|ParamBlk*|_RetInt") != std::string::npos,
                "fll-output manifest should mirror AddNumbers callable surface");
-        expect(runtime_manifest.find("native_wrapper_source_path=" + quote_manifest_value(result.plan.native_wrapper_source_path)) != std::string::npos,
-               "fll-output manifest should record the wrapper source path");
-        expect(runtime_manifest.find("native_wrapper_cmake_path=" + quote_manifest_value(result.plan.native_wrapper_cmake_path)) != std::string::npos,
-               "fll-output manifest should record the wrapper CMake path");
-        expect(runtime_manifest.find("native_wrapper_build_script_path=" + quote_manifest_value(result.plan.native_wrapper_build_script_path)) != std::string::npos,
-               "fll-output manifest should record the wrapper shell build script path");
-        expect(runtime_manifest.find("native_wrapper_build_powershell_path=" + quote_manifest_value(result.plan.native_wrapper_build_powershell_path)) != std::string::npos,
-               "fll-output manifest should record the wrapper PowerShell build script path");
         expect(runtime_manifest.find("feature_flag=build.output.library_contract|true|build_output") != std::string::npos,
                "fll-output manifest should expose the library-contract feature flag");
         expect(runtime_manifest.find("feature_flag=build.output.native_library_wrapper|true|build_output") != std::string::npos,
@@ -2888,18 +2891,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output manifest should expose the FLL API-contract feature flag");
         expect(runtime_manifest.find("project_title=LibraryDemo") != std::string::npos,
                "fll-output manifest should record the project title");
-        expect(runtime_manifest.find("project_path=" + quote_manifest_value((project_dir / "librarydemo.pjx").string())) != std::string::npos,
-               "fll-output manifest should record the project path");
         expect(runtime_manifest.find("package_root=" + quote_manifest_value(result.plan.package_root)) != std::string::npos,
                "fll-output manifest should record the package root");
         expect(runtime_manifest.find("content_root=" + quote_manifest_value(result.plan.content_root)) != std::string::npos,
                "fll-output manifest should record the content root");
-        expect(runtime_manifest.find("ast_manifest_path=" + quote_manifest_value(result.plan.ast_manifest_path)) != std::string::npos,
-               "fll-output manifest should record the AST manifest path");
-        expect(runtime_manifest.find("ir_manifest_path=" + quote_manifest_value(result.plan.ir_manifest_path)) != std::string::npos,
-               "fll-output manifest should record the IR manifest path");
-        expect(runtime_manifest.find("transpiled_csharp_path=" + quote_manifest_value(result.plan.transpiled_csharp_path)) != std::string::npos,
-               "fll-output manifest should record the transpiled C# path");
         expect(runtime_manifest.find("configuration=debug") != std::string::npos,
                "fll-output manifest should record the debug build configuration");
         expect(runtime_manifest.find("security_enabled=false") != std::string::npos,
@@ -2914,6 +2909,19 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output manifest should record the runtime host SHA-256 digest");
         expect(runtime_manifest.find("security_roles=" + std::to_string(copperfin::security::default_native_security_profile().roles.size())) != std::string::npos,
                "fll-output manifest should record the security-role count");
+        expect_manifest_omits_keys(
+            runtime_manifest,
+            {
+                "project_path",
+                "ast_manifest_path",
+                "ir_manifest_path",
+                "transpiled_csharp_path",
+                "native_wrapper_source_path",
+                "native_wrapper_cmake_path",
+                "native_wrapper_build_script_path",
+                "native_wrapper_build_powershell_path"
+            },
+            "fll-output runtime manifest");
         const std::vector<std::string> runtime_asset_lines = lines_with_prefix(runtime_manifest, "asset=");
         expect(!runtime_asset_lines.empty(),
                "fll-output manifest should record staged asset inventory");
@@ -3599,8 +3607,11 @@ void test_runtime_package_emits_ast_manifest_for_prg_sources() {
                "ast manifest should preserve routine statement text");
 
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
-        expect(runtime_manifest.find("ast_manifest_path=" + quote_manifest_value(result.plan.ast_manifest_path)) != std::string::npos,
-               "runtime manifest should record the AST-manifest path");
+        const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
+        expect(debug_manifest.find("ast_manifest_path=" + quote_manifest_value(result.plan.ast_manifest_path)) != std::string::npos,
+               "debug manifest should record the AST-manifest path");
+        expect(runtime_manifest.find("ast_manifest_path=") == std::string::npos,
+               "runtime manifest should omit the AST-manifest path");
         expect(runtime_manifest.find("feature_flag=build.output.ast_contract|true|build_output") != std::string::npos,
                "runtime manifest should expose the AST-contract feature flag");
     }
@@ -3696,8 +3707,11 @@ void test_runtime_package_emits_ir_manifest_with_instruction_mapping() {
                "ir manifest should emit named routines");
 
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
-        expect(runtime_manifest.find("ir_manifest_path=" + quote_manifest_value(result.plan.ir_manifest_path)) != std::string::npos,
-               "runtime manifest should record the IR-manifest path");
+        const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
+        expect(debug_manifest.find("ir_manifest_path=" + quote_manifest_value(result.plan.ir_manifest_path)) != std::string::npos,
+               "debug manifest should record the IR-manifest path");
+        expect(runtime_manifest.find("ir_manifest_path=") == std::string::npos,
+               "runtime manifest should omit the IR-manifest path");
         expect(runtime_manifest.find("feature_flag=build.output.ir_contract|true|build_output") != std::string::npos,
                "runtime manifest should expose the IR-contract feature flag");
     }
@@ -3805,8 +3819,11 @@ void test_runtime_package_emits_csharp_transpilation_for_procedural_prg_code() {
         }
 
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
-        expect(runtime_manifest.find("transpiled_csharp_path=" + quote_manifest_value(result.plan.transpiled_csharp_path)) != std::string::npos,
-               "runtime manifest should record the transpiled C# artifact path");
+        const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
+        expect(debug_manifest.find("transpiled_csharp_path=" + quote_manifest_value(result.plan.transpiled_csharp_path)) != std::string::npos,
+               "debug manifest should record the transpiled C# artifact path");
+        expect(runtime_manifest.find("transpiled_csharp_path=") == std::string::npos,
+               "runtime manifest should omit the transpiled C# artifact path");
         expect(runtime_manifest.find("feature_flag=build.output.csharp_transpilation|true|build_output") != std::string::npos,
                "runtime manifest should expose the C# transpilation feature flag");
     }

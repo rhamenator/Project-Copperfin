@@ -231,13 +231,9 @@ std::string build_runtime_manifest_text(
     std::ostringstream stream;
     stream << "manifest_version=" << kRuntimeManifestVersion << "\n";
     stream << "project_title=" << quote_manifest_value(plan.project_title) << "\n";
-    stream << "project_path=" << quote_manifest_value(plan.project_path) << "\n";
     stream << "package_root=" << quote_manifest_value(plan.package_root) << "\n";
     stream << "content_root=" << quote_manifest_value(plan.content_root) << "\n";
     stream << "working_directory=" << quote_manifest_value(plan.working_directory) << "\n";
-    stream << "ast_manifest_path=" << quote_manifest_value(plan.ast_manifest_path) << "\n";
-    stream << "ir_manifest_path=" << quote_manifest_value(plan.ir_manifest_path) << "\n";
-    stream << "transpiled_csharp_path=" << quote_manifest_value(plan.transpiled_csharp_path) << "\n";
     stream << "startup_item=" << quote_manifest_value(plan.startup_item) << "\n";
     stream << "startup_source=" << quote_manifest_value(plan.startup_source_path) << "\n";
     stream << "configuration=" << build_configuration_name(plan.configuration) << "\n";
@@ -245,10 +241,6 @@ std::string build_runtime_manifest_text(
     stream << "primary_output_path=" << quote_manifest_value(plan.launcher_output_path) << "\n";
     stream << "primary_output_materialized=" << (plan.primary_output_materialized ? "true" : "false") << "\n";
     stream << "module_definition_path=" << quote_manifest_value(plan.module_definition_path) << "\n";
-    stream << "native_wrapper_source_path=" << quote_manifest_value(plan.native_wrapper_source_path) << "\n";
-    stream << "native_wrapper_cmake_path=" << quote_manifest_value(plan.native_wrapper_cmake_path) << "\n";
-    stream << "native_wrapper_build_script_path=" << quote_manifest_value(plan.native_wrapper_build_script_path) << "\n";
-    stream << "native_wrapper_build_powershell_path=" << quote_manifest_value(plan.native_wrapper_build_powershell_path) << "\n";
     stream << "library_api_manifest_path=" << quote_manifest_value(plan.library_api_manifest_path) << "\n";
     stream << "fll_api_manifest_path=" << quote_manifest_value(plan.fll_api_manifest_path) << "\n";
     stream << "fll_loader_entrypoint="
