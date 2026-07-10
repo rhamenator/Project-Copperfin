@@ -18,6 +18,7 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         public string LocalizationKey { get; set; } = string.Empty;
         public bool Numeric { get; set; }
         public bool MaterializeWhenMissing { get; set; }
+        public bool RequiresSnapshotPropertyPresence { get; set; }
     }
 
     private sealed class SelectionField
@@ -295,12 +296,16 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         IReadOnlyList<CopperfinStudioNamedValue> settings,
         CopperfinLocalization localization,
         bool deleted = false,
-        CopperfinStudioReportLayout? reportLayout = null)
+        CopperfinStudioReportLayout? reportLayout = null,
+        IEnumerable<string>? availablePropertyNames = null)
     {
         var selection = new CopperfinDesignerSelection
         {
             RecordIndex = settings.FirstOrDefault()?.RecordIndex ?? 0
         };
+        var availablePropertyNameSet = availablePropertyNames is null
+            ? null
+            : new HashSet<string>(availablePropertyNames, StringComparer.OrdinalIgnoreCase);
 
         selection.AddReadOnlyInt(
             "RECORDINDEX",
@@ -401,6 +406,13 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         foreach (var settingName in GetOptionalReportStringSettingNames())
         {
             if (!seenNames.Add(settingName.Name))
+            {
+                continue;
+            }
+
+            if (settingName.RequiresSnapshotPropertyPresence &&
+                availablePropertyNameSet is not null &&
+                !availablePropertyNameSet.Contains(settingName.Name))
             {
                 continue;
             }
@@ -596,8 +608,8 @@ internal sealed class CopperfinDesignerSelection : ICustomTypeDescriptor
         yield return new ReportSettingDescriptor { Name = "PAPERWIDTH", LocalizationKey = "AssetEditor.Property.PaperWidth", Numeric = true, MaterializeWhenMissing = true };
         yield return new ReportSettingDescriptor { Name = "TOPMARGIN", LocalizationKey = "AssetEditor.Property.TopMargin", Numeric = true, MaterializeWhenMissing = true };
         yield return new ReportSettingDescriptor { Name = "BOTMARGIN", LocalizationKey = "AssetEditor.Property.BottomMargin", Numeric = true, MaterializeWhenMissing = true };
-        yield return new ReportSettingDescriptor { Name = "LEFTMARGIN", LocalizationKey = "AssetEditor.Property.LeftMargin", Numeric = true, MaterializeWhenMissing = true };
-        yield return new ReportSettingDescriptor { Name = "RIGHTMARGIN", LocalizationKey = "AssetEditor.Property.RightMargin", Numeric = true, MaterializeWhenMissing = true };
+        yield return new ReportSettingDescriptor { Name = "LEFTMARGIN", LocalizationKey = "AssetEditor.Property.LeftMargin", Numeric = true, MaterializeWhenMissing = true, RequiresSnapshotPropertyPresence = true };
+        yield return new ReportSettingDescriptor { Name = "RIGHTMARGIN", LocalizationKey = "AssetEditor.Property.RightMargin", Numeric = true, MaterializeWhenMissing = true, RequiresSnapshotPropertyPresence = true };
         yield return new ReportSettingDescriptor { Name = "COLS", LocalizationKey = "AssetEditor.Property.Columns", Numeric = true, MaterializeWhenMissing = true };
         yield return new ReportSettingDescriptor { Name = "COLWIDTH", LocalizationKey = "AssetEditor.Property.ColumnWidth", Numeric = true, MaterializeWhenMissing = true };
         yield return new ReportSettingDescriptor { Name = "COLSPACING", LocalizationKey = "AssetEditor.Property.ColumnSpacing", Numeric = true, MaterializeWhenMissing = true };

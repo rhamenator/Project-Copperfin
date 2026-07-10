@@ -2156,6 +2156,26 @@ internal static class Program
                     FieldIndex = 63,
                     MemoBlockNumber = 0
                 });
+            SmokeAssetEditorRealAssetSettingShouldRemainUnavailable(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
+                propertyName: "LEFTMARGIN",
+                expectedSectionCount: 5,
+                expectLabel: false);
+            SmokeAssetEditorRealAssetSettingShouldRemainUnavailable(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
+                propertyName: "RIGHTMARGIN",
+                expectedSectionCount: 5,
+                expectLabel: false);
+            SmokeAssetEditorRealAssetSettingShouldRemainUnavailable(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
+                propertyName: "LEFTMARGIN",
+                expectedSectionCount: 5,
+                expectLabel: true);
+            SmokeAssetEditorRealAssetSettingShouldRemainUnavailable(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
+                propertyName: "RIGHTMARGIN",
+                expectedSectionCount: 5,
+                expectLabel: true);
             SmokeAssetEditorSettingsRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 propertyName: "GRIDV",
@@ -25207,6 +25227,123 @@ internal static class Program
                     expectLabel,
                     $"reloaded undone editor real asset settings snapshot should keep {propertyName} absent");
             }
+
+            TearDownForm(hostForm);
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+    }
+
+    private static void SmokeAssetEditorRealAssetSettingShouldRemainUnavailable(
+        string? sourcePath,
+        string propertyName,
+        int expectedSectionCount,
+        bool expectLabel)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
+        {
+            Console.WriteLine($"SKIP: {(string.IsNullOrWhiteSpace(sourcePath) ? "real asset editor settings availability candidate" : sourcePath)} not found.");
+            return;
+        }
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "CopperfinDesignerSmokeRealAssetEditorSettingAvailability-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var assetPath = CreateWritableAssetCopy(sourcePath!, tempRoot);
+        var settingsScopeTitle = new CopperfinLocalization("en-US").Text("AssetEditor.ReportSection.Settings");
+
+        try
+        {
+            var loadedSnapshot = CopperfinStudioSnapshotClient.TryLoad(assetPath);
+            Expect(loadedSnapshot.Success && loadedSnapshot.Document is not null,
+                $"real asset editor settings availability smoke should load snapshot data for {sourcePath}");
+            if (!loadedSnapshot.Success || loadedSnapshot.Document is null || loadedSnapshot.Document.ReportLayout is null)
+            {
+                return;
+            }
+
+            AssertRealAssetSettingMissingSnapshot(
+                loadedSnapshot.Document,
+                propertyName,
+                expectedSectionCount,
+                expectLabel,
+                $"initial editor real asset settings snapshot should keep {propertyName} absent");
+
+            var settingsRecordIndex = loadedSnapshot.Document.ReportLayout.Settings.FirstOrDefault()?.RecordIndex ?? 0;
+
+            using var hostForm = new Form
+            {
+                Width = 1400,
+                Height = 1000,
+                ShowInTaskbar = false,
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-32000, -32000)
+            };
+
+            using var control = new CopperfinAssetEditorControl
+            {
+                Dock = DockStyle.Fill
+            };
+
+            hostForm.Controls.Add(control);
+            hostForm.Show();
+            Application.DoEvents();
+            control.LoadDocument(assetPath);
+
+            var sectionListView = GetPrivateListView(control, "sectionListView");
+            var objectListView = GetPrivateListView(control, "objectListView");
+            var propertyGrid = GetPrivatePropertyGrid(control);
+            var surface = FindDesignSurface(control);
+            var loaded = WaitUntil(
+                TimeSpan.FromSeconds(8),
+                () => sectionListView.Items.Cast<ListViewItem>().Any(item => string.Equals(item.Text, settingsScopeTitle, StringComparison.Ordinal)));
+            Expect(loaded, $"real asset editor settings availability smoke should load section data for {sourcePath}");
+            if (!loaded)
+            {
+                TearDownForm(hostForm);
+                return;
+            }
+
+            foreach (ListViewItem item in sectionListView.Items)
+            {
+                item.Selected = string.Equals(item.Text, settingsScopeTitle, StringComparison.Ordinal);
+            }
+
+            InvokeAssetEditorVoid(control, "SyncExplorerSelection");
+            Application.DoEvents();
+
+            Expect(propertyGrid.SelectedObject is CopperfinDesignerSelection initialSelection &&
+                   initialSelection.RecordIndex == settingsRecordIndex &&
+                   objectListView.Items.Count == 0 &&
+                   ReadSelectionPropertyValue(initialSelection, propertyName) is null &&
+                   !initialSelection.TryGetUpdate(propertyName, out _, out _) &&
+                   (surface is null ||
+                    (ReadPrivateNullableInt(surface, "selectedReportSectionRecordIndex") is null &&
+                     ReadPrivateNullableInt(surface, "selectedRecordIndex") is null &&
+                     !ReadPrivateBoolField(surface, "unplacedReportObjectsSelected"))),
+                $"real asset editor settings availability smoke should keep {propertyName} unavailable for {sourcePath}");
+            if (propertyGrid.SelectedObject is not CopperfinDesignerSelection settingsSelection)
+            {
+                TearDownForm(hostForm);
+                return;
+            }
+
+            var propertyDescriptor = TypeDescriptor.GetProperties(settingsSelection)[propertyName];
+            Expect(propertyDescriptor is null,
+                $"real asset editor settings availability smoke should not surface editable property {propertyName} for {sourcePath}");
 
             TearDownForm(hostForm);
         }

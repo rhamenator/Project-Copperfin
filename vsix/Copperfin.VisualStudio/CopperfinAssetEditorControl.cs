@@ -27,6 +27,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         public int RecordIndex { get; set; }
         public bool Deleted { get; set; }
         public List<CopperfinStudioNamedValue> Settings { get; } = new();
+        public List<string> AvailablePropertyNames { get; } = new();
     }
 
     private sealed class ReportGroupingScope
@@ -1059,6 +1060,12 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                     Deleted = false
                 };
                 settingsScope.Settings.AddRange(reportLayout.Settings);
+                settingsScope.AvailablePropertyNames.AddRange(
+                    currentSnapshot?.Objects
+                        .FirstOrDefault(candidate => candidate.RecordIndex == settingsScope.RecordIndex)?
+                        .Properties
+                        .Select(candidate => candidate.Name) ??
+                    Enumerable.Empty<string>());
 
                 var item = new ListViewItem(L("AssetEditor.ReportSection.Settings"));
                 item.SubItems.Add(reportLayout.Settings.Count.ToString());
@@ -1075,6 +1082,12 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                     Deleted = true
                 };
                 deletedSettingsScope.Settings.AddRange(reportLayout.DeletedSettings);
+                deletedSettingsScope.AvailablePropertyNames.AddRange(
+                    currentSnapshot?.Objects
+                        .FirstOrDefault(candidate => candidate.RecordIndex == deletedSettingsScope.RecordIndex)?
+                        .Properties
+                        .Select(candidate => candidate.Name) ??
+                    Enumerable.Empty<string>());
 
                 var item = new ListViewItem(F("AssetEditor.ReportSection.Deleted", L("AssetEditor.ReportSection.Settings")));
                 item.SubItems.Add(reportLayout.DeletedSettings.Count.ToString());
@@ -1259,7 +1272,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                     settingsScope.Settings,
                     localization,
                     settingsScope.Deleted,
-                    currentSnapshot?.ReportLayout);
+                    currentSnapshot?.ReportLayout,
+                    settingsScope.AvailablePropertyNames);
                 designSurface.SelectRecord(null);
                 return;
             }
