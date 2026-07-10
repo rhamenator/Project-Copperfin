@@ -132,11 +132,15 @@ ProcessResult run_process_capture(
     const std::filesystem::path& working_directory) {
     namespace fs = std::filesystem;
 
-    const fs::path resolved_executable_path = fs::absolute(executable_path);
     const fs::path stdout_path = working_directory / "build_host_stdout.log";
     const fs::path stderr_path = working_directory / "build_host_stderr.log";
+    const fs::path executable_hint(executable_path);
+    const std::string command_executable =
+        executable_hint.is_absolute() || executable_hint.has_parent_path()
+            ? fs::absolute(executable_hint).string()
+            : executable_path;
 
-    std::string command = quote_command_argument(resolved_executable_path.string());
+    std::string command = quote_command_argument(command_executable);
     for (const auto& argument : arguments) {
         command += " ";
         command += quote_command_argument(argument);
@@ -3268,6 +3272,51 @@ void run_build_host_localized_usage_smoke(const std::string& build_host_path) {
     fs::remove_all(temp_root, ignored);
 }
 
+void run_build_host_localized_usage_path_search_smoke(const std::string& build_host_path) {
+    namespace fs = std::filesystem;
+
+    expect(fs::exists(build_host_path), "build host executable should exist before running PATH-localized usage smoke test");
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_build_host_localized_usage_path_search";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    const fs::path nested_working_directory = temp_root / "cwd" / "nested";
+    fs::create_directories(nested_working_directory);
+
+    const fs::path resolved_build_host_path = fs::absolute(build_host_path);
+    const std::string executable_name = resolved_build_host_path.filename().string();
+    const std::string original_path = copperfin::test_support::getenv_value("PATH");
+#if defined(_WIN32)
+    const char path_separator = ';';
+#else
+    const char path_separator = ':';
+#endif
+    const std::string seeded_path =
+        resolved_build_host_path.parent_path().string() +
+        (original_path.empty() ? std::string() : std::string(1U, path_separator) + original_path);
+
+    {
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
+        ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+        ScopedEnvironmentValue search_path("PATH", false);
+        set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+        search_path.set(seeded_path);
+
+        const auto process = run_process_capture(executable_name, {}, nested_working_directory);
+        expect(process.exit_code == 2,
+               "PATH-launched pseudo-localized build host usage should still fail usage validation");
+        expect(process.stdout_text.find("[!! ") != std::string::npos,
+               "PATH-launched pseudo-localized build host usage should decorate prose through the located catalogs");
+        expect(process.stdout_text.find("BuildHost.Usage") == std::string::npos,
+               "PATH-launched build host usage should not leak the raw usage catalog key");
+        expect(process.stdout_text.find("BuildHost.Usage.LicenseStatus") == std::string::npos,
+               "PATH-launched build host usage should not leak the raw license-status catalog key");
+        expect(process.stdout_text.find("--license-status") != std::string::npos,
+               "PATH-launched pseudo-localized build host usage should preserve invariant CLI flags");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -3283,6 +3332,7 @@ int main(int argc, char** argv) {
     run_default_runtime_host_resolution_smoke(argv[1]);
     run_emit_dotnet_launcher_fallback_smoke(argv[1]);
     run_build_host_localized_usage_smoke(argv[1]);
+    run_build_host_localized_usage_path_search_smoke(argv[1]);
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

@@ -258,6 +258,53 @@ void test_catalog_root_resolution_finds_repo_build_output_layout_from_executable
     fs::remove_all(temp_root, ignored);
 }
 
+void test_catalog_root_resolution_finds_repo_build_output_layout_from_path_launched_basename() {
+    namespace fs = std::filesystem;
+    ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR");
+    ScopedEnvironmentValue search_path("PATH", false);
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_path_catalog_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root / "resources" / "locales");
+    seed_test_catalogs(temp_root / "resources" / "locales");
+
+#if defined(_WIN32)
+    const std::string executable_name = "copperfin_build_host.exe";
+#else
+    const std::string executable_name = "copperfin_build_host";
+#endif
+    const fs::path executable_path = temp_root / "build" / "Release" / executable_name;
+    fs::create_directories(executable_path.parent_path());
+    write_text(executable_path, "");
+
+    const std::string original_path = getenv_value("PATH");
+#if defined(_WIN32)
+    const char path_separator = ';';
+#else
+    const char path_separator = ':';
+#endif
+    const std::string seeded_path =
+        executable_path.parent_path().string() +
+        (original_path.empty() ? std::string() : std::string(1U, path_separator) + original_path);
+    search_path.set(seeded_path);
+
+    const fs::path nested_working_directory = temp_root / "cwd" / "nested";
+    fs::create_directories(nested_working_directory);
+    const fs::path previous_working_directory = fs::current_path();
+    fs::current_path(nested_working_directory);
+    const fs::path resolved_root = copperfin::localization::resolve_catalog_root(executable_name);
+    const auto catalog = copperfin::localization::load_catalogs(resolved_root, "en-US");
+    fs::current_path(previous_working_directory);
+
+    expect(
+        fs::equivalent(resolved_root, temp_root / "resources" / "locales") &&
+            catalog.translate("Command.Inspect") == "Inspect",
+        "#3810: catalog root resolution should find build-output resources from a PATH-launched basename");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_parser_behavior_remains_locale_invariant() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_parser_invariant_tests";
@@ -3066,6 +3113,7 @@ int main(int argc, char** argv) {
     test_machine_contract_fields_remain_invariant();
     test_catalog_root_resolution_searches_parent_directories();
     test_catalog_root_resolution_finds_repo_build_output_layout_from_executable_path();
+    test_catalog_root_resolution_finds_repo_build_output_layout_from_path_launched_basename();
     test_parser_behavior_remains_locale_invariant();
     test_runtime_session_diagnostics_route_through_catalog();
     test_runtime_cursor_diagnostics_route_through_catalog();
