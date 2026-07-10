@@ -113,8 +113,10 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output package should emit a dedicated DLL API manifest");
         expect(!fs::exists(result.plan.launcher_output_path),
                "library-output package should not fake a DLL binary");
-        expect(!fs::exists(result.plan.runtime_host_destination_path),
-               "library-output package should not bundle an executable runtime host into the DLL output slot");
+        expect(fs::exists(result.plan.runtime_host_destination_path),
+               "library-output package should stage the runtime host beside the generated wrapper contract");
+        expect(read_text(result.plan.runtime_host_destination_path) == "runtime-host",
+               "library-output package should preserve the runtime host payload bytes");
         expect(!result.plan.primary_output_materialized,
                "library-output package should report that the primary DLL binary is not yet materialized");
 
@@ -1280,6 +1282,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output manifest should record the audit log path");
         expect(runtime_manifest.find("runtime_host_sha256=" + quote_manifest_value(result.plan.runtime_host_sha256)) != std::string::npos,
                "library-output manifest should record the runtime host SHA-256 digest");
+        expect(runtime_manifest.find("extension_payload=" + quote_manifest_value(result.plan.runtime_host_destination_path) + "|") != std::string::npos,
+               "library-output manifest should record the staged runtime host as an extension payload");
         expect(runtime_manifest.find("security_roles=") == std::string::npos,
                "library-output runtime manifest should omit the security-role count summary");
         expect(runtime_manifest.find("library_callable_convention=vfp_declare_default") != std::string::npos,
@@ -1341,6 +1345,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output debug manifest should record the audit log path");
         expect(debug_manifest.find("runtime_host_sha256=" + quote_manifest_value(result.plan.runtime_host_sha256)) != std::string::npos,
                "library-output debug manifest should record the runtime host SHA-256 digest");
+        expect(debug_manifest.find("extension_payload=" + quote_manifest_value(result.plan.runtime_host_destination_path) + "|") != std::string::npos,
+               "library-output debug manifest should record the staged runtime host as an extension payload");
         expect(debug_manifest.find("security_roles=" + std::to_string(copperfin::security::default_native_security_profile().roles.size())) != std::string::npos,
                "library-output debug manifest should record the security-role count");
         const std::vector<std::string> dotnet_summary_keys{
@@ -1490,10 +1496,14 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                        "library-output runtime pipeline should mark the primary output as materialized");
                 expect(fs::exists(build_result.plan.launcher_output_path),
                        "library-output runtime pipeline should materialize the requested DLL output");
+                expect(fs::exists(build_result.plan.runtime_host_destination_path),
+                       "library-output runtime pipeline should preserve the staged runtime host after building the DLL");
                 const std::string built_runtime_manifest = read_text(build_result.plan.manifest_path);
                 const std::string built_debug_manifest = read_text(build_result.plan.debug_manifest_path);
                 expect(built_runtime_manifest.find("primary_output_materialized=") == std::string::npos,
                        "library-output runtime pipeline should keep the materialized primary output state out of the runtime manifest");
+                expect(built_runtime_manifest.find("extension_payload=" + quote_manifest_value(build_result.plan.runtime_host_destination_path) + "|") != std::string::npos,
+                       "library-output runtime pipeline should preserve the staged runtime host as an extension payload");
                 expect(built_runtime_manifest.find("extension_payload=" + quote_manifest_value(build_result.plan.launcher_output_path) + "|") != std::string::npos,
                        "library-output runtime pipeline should record the built DLL as an extension payload");
                 expect(built_debug_manifest.find("primary_output_path=" + quote_manifest_value(build_result.plan.launcher_output_path)) != std::string::npos,
@@ -1524,6 +1534,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                        "library-output runtime pipeline should preserve the audit log path in the rewritten debug manifest");
                 expect(built_debug_manifest.find("runtime_host_sha256=" + quote_manifest_value(build_result.plan.runtime_host_sha256)) != std::string::npos,
                        "library-output runtime pipeline should preserve the runtime host SHA-256 digest in the rewritten debug manifest");
+                expect(built_debug_manifest.find("extension_payload=" + quote_manifest_value(build_result.plan.runtime_host_destination_path) + "|") != std::string::npos,
+                       "library-output runtime pipeline should preserve the staged runtime host in the rewritten debug manifest");
                 expect(built_debug_manifest.find("security_roles=" + std::to_string(copperfin::security::default_native_security_profile().roles.size())) != std::string::npos,
                        "library-output runtime pipeline should preserve the security-role count in the rewritten debug manifest");
                 for (const auto& key : dotnet_summary_keys) {
@@ -1726,8 +1738,10 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output package should emit an API manifest");
         expect(!fs::exists(result.plan.launcher_output_path),
                "fll-output package should not fake an FLL binary");
-        expect(!fs::exists(result.plan.runtime_host_destination_path),
-               "fll-output package should not bundle an executable runtime host into the FLL output slot");
+        expect(fs::exists(result.plan.runtime_host_destination_path),
+               "fll-output package should stage the runtime host beside the generated wrapper contract");
+        expect(read_text(result.plan.runtime_host_destination_path) == "runtime-host",
+               "fll-output package should preserve the runtime host payload bytes");
         expect(!result.plan.primary_output_materialized,
                "fll-output package should report that the primary FLL binary is not yet materialized");
 
@@ -2945,6 +2959,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output manifest should record the audit log path");
         expect(runtime_manifest.find("runtime_host_sha256=" + quote_manifest_value(result.plan.runtime_host_sha256)) != std::string::npos,
                "fll-output manifest should record the runtime host SHA-256 digest");
+        expect(runtime_manifest.find("extension_payload=" + quote_manifest_value(result.plan.runtime_host_destination_path) + "|") != std::string::npos,
+               "fll-output manifest should record the staged runtime host as an extension payload");
         expect(runtime_manifest.find("security_roles=") == std::string::npos,
                "fll-output runtime manifest should omit the security-role count summary");
         expect_manifest_omits_keys(
@@ -2998,6 +3014,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output debug manifest should record the audit log path");
         expect(debug_manifest.find("runtime_host_sha256=" + quote_manifest_value(result.plan.runtime_host_sha256)) != std::string::npos,
                "fll-output debug manifest should record the runtime host SHA-256 digest");
+        expect(debug_manifest.find("extension_payload=" + quote_manifest_value(result.plan.runtime_host_destination_path) + "|") != std::string::npos,
+               "fll-output debug manifest should record the staged runtime host as an extension payload");
         expect(debug_manifest.find("security_roles=" + std::to_string(copperfin::security::default_native_security_profile().roles.size())) != std::string::npos,
                "fll-output debug manifest should record the security-role count");
         const std::vector<std::string> fll_dotnet_summary_keys{
@@ -3149,10 +3167,14 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                        "fll-output runtime pipeline should mark the primary output as materialized");
                 expect(fs::exists(build_result.plan.launcher_output_path),
                        "fll-output runtime pipeline should materialize the requested FLL output");
+                expect(fs::exists(build_result.plan.runtime_host_destination_path),
+                       "fll-output runtime pipeline should preserve the staged runtime host after building the FLL");
                 const std::string built_runtime_manifest = read_text(build_result.plan.manifest_path);
                 const std::string built_debug_manifest = read_text(build_result.plan.debug_manifest_path);
                 expect(built_runtime_manifest.find("primary_output_materialized=") == std::string::npos,
                        "fll-output runtime pipeline should keep the materialized primary output state out of the runtime manifest");
+                expect(built_runtime_manifest.find("extension_payload=" + quote_manifest_value(build_result.plan.runtime_host_destination_path) + "|") != std::string::npos,
+                       "fll-output runtime pipeline should preserve the staged runtime host as an extension payload");
                 expect(built_runtime_manifest.find("extension_payload=" + quote_manifest_value(build_result.plan.launcher_output_path) + "|") != std::string::npos,
                        "fll-output runtime pipeline should record the built FLL as an extension payload");
                 expect(built_debug_manifest.find("primary_output_path=" + quote_manifest_value(build_result.plan.launcher_output_path)) != std::string::npos,
@@ -3183,6 +3205,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                        "fll-output runtime pipeline should preserve the audit log path in the rewritten debug manifest");
                 expect(built_debug_manifest.find("runtime_host_sha256=" + quote_manifest_value(build_result.plan.runtime_host_sha256)) != std::string::npos,
                        "fll-output runtime pipeline should preserve the runtime host SHA-256 digest in the rewritten debug manifest");
+                expect(built_debug_manifest.find("extension_payload=" + quote_manifest_value(build_result.plan.runtime_host_destination_path) + "|") != std::string::npos,
+                       "fll-output runtime pipeline should preserve the staged runtime host in the rewritten debug manifest");
                 expect(built_debug_manifest.find("security_roles=" + std::to_string(copperfin::security::default_native_security_profile().roles.size())) != std::string::npos,
                        "fll-output runtime pipeline should preserve the security-role count in the rewritten debug manifest");
                 for (const auto& key : fll_dotnet_summary_keys) {

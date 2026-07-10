@@ -64,6 +64,7 @@ bool append_runtime_artifact_digest(
     std::string& error);
 bool is_library_output_kind(const BuildOutputKind output_kind);
 bool is_native_host_output_kind(const BuildOutputKind output_kind);
+std::string runtime_host_file_name();
 std::string resolve_output_file_name(const studio::StudioProjectWorkspace& workspace, const std::string& project_title);
 BuildOutputKind infer_build_output_kind_from_output_path(const std::string& output_path);
 bool copy_file_if_exists(

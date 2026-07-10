@@ -426,8 +426,9 @@ std::string build_csharp_transpilation_source(const RuntimePackagePlan& plan) {
     return stream.str();
 }
 
-std::string build_launcher_program_source(const RuntimePackagePlan&) {
+std::string build_launcher_program_source(const RuntimePackagePlan& plan) {
     std::ostringstream stream;
+    const std::string runtime_host_name = std::filesystem::path(plan.runtime_host_destination_path).filename().string();
     stream << "using System;\n";
     stream << "using System.Collections.Generic;\n";
     stream << "using System.Diagnostics;\n";
@@ -438,7 +439,7 @@ std::string build_launcher_program_source(const RuntimePackagePlan&) {
     stream << "    {\n";
     stream << "        var locale = SelectLocale(args);\n";
     stream << "        var baseDir = AppContext.BaseDirectory;\n";
-    stream << "        var runtimeHost = Path.Combine(baseDir, \"copperfin_runtime_host.exe\");\n";
+    stream << "        var runtimeHost = Path.Combine(baseDir, \"" << runtime_host_name << "\");\n";
     stream << "        var manifest = Path.Combine(baseDir, \"app.cfmanifest\");\n";
     stream << "        var debugManifest = Path.Combine(baseDir, \"app.cfdebug\");\n";
     stream << "        if (!File.Exists(runtimeHost))\n";

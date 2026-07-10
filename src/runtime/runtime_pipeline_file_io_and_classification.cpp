@@ -347,6 +347,14 @@ bool is_native_host_output_kind(const BuildOutputKind output_kind) {
         output_kind == BuildOutputKind::unknown;
 }
 
+std::string runtime_host_file_name() {
+#if defined(_WIN32)
+    return "copperfin_runtime_host.exe";
+#else
+    return "copperfin_runtime_host";
+#endif
+}
+
 std::string resolve_output_file_name(const studio::StudioProjectWorkspace& workspace, const std::string& project_title) {
     const std::filesystem::path configured_output(workspace.build_plan.output_path);
     const std::string file_name = configured_output.filename().string();
@@ -428,11 +436,7 @@ bool validate_runtime_host_source_path(
     }
 
     if (plan.security_enabled) {
-#ifdef _WIN32
-        const std::string expected_file_name = "copperfin_runtime_host.exe";
-#else
-        const std::string expected_file_name = "copperfin_runtime_host";
-#endif
+        const std::string expected_file_name = runtime_host_file_name();
         if (!source.is_absolute()) {
             error = runtime_text("Runtime.Package.Error.SecurityRequiresAbsoluteRuntimeHostPath");
             return false;

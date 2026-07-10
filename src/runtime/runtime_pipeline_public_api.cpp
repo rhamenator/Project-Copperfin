@@ -140,7 +140,7 @@ RuntimePackagePlan create_runtime_package_plan(
         app_archive_manifest_file_name += ".contents";
         plan.app_archive_manifest_path = (package_root / app_archive_manifest_file_name).string();
     }
-    plan.runtime_host_destination_path = (package_root / "copperfin_runtime_host.exe").string();
+    plan.runtime_host_destination_path = (package_root / runtime_host_file_name()).string();
     plan.working_directory = content_root.lexically_normal().string();
     plan.startup_item = workspace.build_plan.startup_item;
     plan.security_role = resolve_security_role(enable_security);
@@ -442,7 +442,7 @@ RuntimeMaterializeResult materialize_runtime_package(
 
     RuntimePackagePlan materialized_plan = plan;
     std::string error;
-    if (is_native_host_output_kind(plan.output_kind) &&
+    if ((is_native_host_output_kind(plan.output_kind) || is_library_output_kind(plan.output_kind)) &&
         !validate_runtime_host_source_path(plan, runtime_host_source_path, error)) {
         return {.ok = false, .error = error};
     }
@@ -474,6 +474,18 @@ RuntimeMaterializeResult materialize_runtime_package(
     }
 
     if (is_library_output_kind(plan.output_kind)) {
+        if (!copy_file_if_exists(runtime_host_source_path, plan.runtime_host_destination_path, error)) {
+            return {.ok = false, .error = error};
+        }
+        if (!append_runtime_artifact_digest(materialized_plan.extension_payload_digests, plan.runtime_host_destination_path, error)) {
+            return {.ok = false, .error = error};
+        }
+        const auto runtime_host_digest = security::sha256_hex_for_file(plan.runtime_host_destination_path);
+        if (!runtime_host_digest.ok) {
+            return {.ok = false, .error = runtime_host_digest.error};
+        }
+        materialized_plan.runtime_host_sha256 = runtime_host_digest.hex_digest;
+
         std::filesystem::create_directories(std::filesystem::path(plan.native_wrapper_source_path).parent_path(), directory_error);
         if (directory_error) {
             return {.ok = false, .error = runtime_text("Runtime.Package.Error.CreateNativeWrapperDirectoryFailed")};
