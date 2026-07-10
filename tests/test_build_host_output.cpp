@@ -476,6 +476,16 @@ void run_library_build_host_smoke(
                "build host runtime manifest should omit the IR manifest path for " + extension + " outputs");
         expect(manifest_text.find("transpiled_csharp_path=" + expected_transpiled_csharp.string()) == std::string::npos,
                "build host runtime manifest should omit the transpiled C# path for " + extension + " outputs");
+        expect(manifest_text.find("module_definition_path=") == std::string::npos,
+               "build host runtime manifest should omit the module-definition path for " + extension + " outputs");
+        expect(manifest_text.find("library_api_manifest_path=") == std::string::npos,
+               "build host runtime manifest should omit the DLL API-manifest path for " + extension + " outputs");
+        expect(manifest_text.find("fll_api_manifest_path=") == std::string::npos,
+               "build host runtime manifest should omit the FLL API-manifest path for " + extension + " outputs");
+        expect(manifest_text.find("fxp_token_manifest_path=") == std::string::npos,
+               "build host runtime manifest should omit the FXP token-manifest path for " + extension + " outputs");
+        expect(manifest_text.find("app_archive_manifest_path=") == std::string::npos,
+               "build host runtime manifest should omit the APP archive-manifest path for " + extension + " outputs");
         expect(manifest_text.find("configuration=debug") != std::string::npos,
                "build host manifest should record the debug build configuration for " + extension + " outputs");
         expect(manifest_text.find("security_enabled=false") != std::string::npos,
@@ -491,8 +501,6 @@ void run_library_build_host_smoke(
         if (extension == "dll") {
             expect(manifest_text.find("library_callable_convention=vfp_declare_default") != std::string::npos,
                    "build host manifest should record the VFP DLL calling convention contract");
-            expect(manifest_text.find("library_api_manifest_path=") != std::string::npos,
-                   "build host manifest should record the dedicated DLL API-manifest path");
             expect(lines_with_prefix(manifest_text, "library_function_").empty(),
                    "build host runtime manifest should omit DLL library-function inventory");
         }

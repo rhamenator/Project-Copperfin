@@ -240,9 +240,6 @@ std::string build_runtime_manifest_text(
     stream << "output_kind=" << quote_manifest_value(build_output_kind_name(plan.output_kind)) << "\n";
     stream << "primary_output_path=" << quote_manifest_value(plan.launcher_output_path) << "\n";
     stream << "primary_output_materialized=" << (plan.primary_output_materialized ? "true" : "false") << "\n";
-    stream << "module_definition_path=" << quote_manifest_value(plan.module_definition_path) << "\n";
-    stream << "library_api_manifest_path=" << quote_manifest_value(plan.library_api_manifest_path) << "\n";
-    stream << "fll_api_manifest_path=" << quote_manifest_value(plan.fll_api_manifest_path) << "\n";
     stream << "fll_loader_entrypoint="
            << quote_manifest_value(plan.output_kind == BuildOutputKind::fll ? std::string(kFllLoaderEntrypoint) : std::string()) << "\n";
     stream << "fll_registration_symbol="
@@ -255,8 +252,6 @@ std::string build_runtime_manifest_text(
            << quote_manifest_value((plan.output_kind == BuildOutputKind::dll || plan.output_kind == BuildOutputKind::ocx)
                                        ? std::string(kVfpLibraryCallableConvention)
                                        : std::string()) << "\n";
-    stream << "fxp_token_manifest_path=" << quote_manifest_value(plan.fxp_token_manifest_path) << "\n";
-    stream << "app_archive_manifest_path=" << quote_manifest_value(plan.app_archive_manifest_path) << "\n";
     stream << "security_enabled=" << (plan.security_enabled ? "true" : "false") << "\n";
     stream << "security_role=" << quote_manifest_value(plan.security_role) << "\n";
     stream << "security_mode=" << quote_manifest_value(security_profile.mode) << "\n";

@@ -1282,10 +1282,6 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output manifest should record the runtime host SHA-256 digest");
         expect(runtime_manifest.find("security_roles=") == std::string::npos,
                "library-output runtime manifest should omit the security-role count summary");
-        expect(runtime_manifest.find("module_definition_path=" + quote_manifest_value(result.plan.module_definition_path)) != std::string::npos,
-               "library-output manifest should record the emitted module-definition path");
-        expect(runtime_manifest.find("library_api_manifest_path=" + quote_manifest_value(result.plan.library_api_manifest_path)) != std::string::npos,
-               "library-output manifest should record the dedicated DLL API-manifest path");
         expect(runtime_manifest.find("library_callable_convention=vfp_declare_default") != std::string::npos,
                "library-output manifest should record the VFP DLL calling convention contract");
         expect_manifest_omits_keys(
@@ -1295,6 +1291,11 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                 "ast_manifest_path",
                 "ir_manifest_path",
                 "transpiled_csharp_path",
+                "module_definition_path",
+                "library_api_manifest_path",
+                "fll_api_manifest_path",
+                "fxp_token_manifest_path",
+                "app_archive_manifest_path",
                 "native_wrapper_source_path",
                 "native_wrapper_cmake_path",
                 "native_wrapper_build_script_path",
@@ -2914,8 +2915,6 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
         const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
         expect(runtime_manifest.find("output_kind=fll") != std::string::npos,
                "fll-output manifest should record FLL output kind");
-        expect(runtime_manifest.find("fll_api_manifest_path=" + quote_manifest_value(result.plan.fll_api_manifest_path)) != std::string::npos,
-               "fll-output manifest should record the emitted API-manifest path");
         expect(runtime_manifest.find("fll_loader_entrypoint=FoxInfo") != std::string::npos,
                "fll-output manifest should record the FLL loader entrypoint");
         expect(runtime_manifest.find("fll_registration_symbol=_FoxTable") != std::string::npos,
@@ -2955,6 +2954,11 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                 "ast_manifest_path",
                 "ir_manifest_path",
                 "transpiled_csharp_path",
+                "module_definition_path",
+                "library_api_manifest_path",
+                "fll_api_manifest_path",
+                "fxp_token_manifest_path",
+                "app_archive_manifest_path",
                 "native_wrapper_source_path",
                 "native_wrapper_cmake_path",
                 "native_wrapper_build_script_path",
@@ -3404,8 +3408,6 @@ void test_fxp_output_package_emits_token_manifest_from_prg_statements() {
         const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
         expect(runtime_manifest.find("output_kind=fxp") != std::string::npos,
                "fxp-output manifest should record FXP output kind");
-        expect(runtime_manifest.find("fxp_token_manifest_path=" + quote_manifest_value(result.plan.fxp_token_manifest_path)) != std::string::npos,
-               "fxp-output manifest should record the emitted token-manifest path");
         expect(runtime_manifest.find("primary_output_materialized=true") != std::string::npos,
                "fxp-output manifest should record the materialized FXP contract file");
         expect(runtime_manifest.find("extension_payload=" + quote_manifest_value(result.plan.launcher_output_path) + "|") != std::string::npos,
@@ -3416,6 +3418,8 @@ void test_fxp_output_package_emits_token_manifest_from_prg_statements() {
                "fxp-output debug manifest should preserve the FXP token-contract feature flag");
         expect(debug_manifest.find("output_kind=fxp") != std::string::npos,
                "fxp-output debug manifest should record FXP output kind");
+        expect(debug_manifest.find("fxp_token_manifest_path=" + quote_manifest_value(result.plan.fxp_token_manifest_path)) != std::string::npos,
+               "fxp-output debug manifest should record the emitted token-manifest path");
         expect(debug_manifest.find("launcher_mode=foxpro_tokenized_contract") != std::string::npos,
                "fxp-output debug manifest should record the tokenized-contract mode");
     }
@@ -3608,8 +3612,6 @@ void test_app_output_package_emits_archive_manifest_for_staged_assets() {
         const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
         expect(runtime_manifest.find("output_kind=app") != std::string::npos,
                "app-output manifest should record APP output kind");
-        expect(runtime_manifest.find("app_archive_manifest_path=" + quote_manifest_value(result.plan.app_archive_manifest_path)) != std::string::npos,
-               "app-output manifest should record the emitted archive-manifest path");
         expect(runtime_manifest.find("primary_output_materialized=true") != std::string::npos,
                "app-output manifest should record the materialized primary archive");
         expect(runtime_manifest.find("extension_payload=" + quote_manifest_value(result.plan.launcher_output_path) + "|") != std::string::npos,
@@ -3620,6 +3622,8 @@ void test_app_output_package_emits_archive_manifest_for_staged_assets() {
                "app-output debug manifest should preserve the APP archive-contract feature flag");
         expect(debug_manifest.find("output_kind=app") != std::string::npos,
                "app-output debug manifest should record APP output kind");
+        expect(debug_manifest.find("app_archive_manifest_path=" + quote_manifest_value(result.plan.app_archive_manifest_path)) != std::string::npos,
+               "app-output debug manifest should record the emitted archive-manifest path");
         expect(debug_manifest.find("launcher_mode=foxpro_application_archive_contract") != std::string::npos,
                "app-output debug manifest should record the archive-contract mode");
     }
