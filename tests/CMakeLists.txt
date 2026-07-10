@@ -960,6 +960,22 @@ add_test(
     COMMAND $<TARGET_FILE:test_studio_host_real_sample_printquality_round_trip> $<TARGET_FILE:copperfin_studio_host>
 )
 
+add_executable(test_studio_host_real_sample_yresolution_round_trip
+    test_studio_host_real_sample_yresolution_round_trip.cpp
+)
+target_link_libraries(test_studio_host_real_sample_yresolution_round_trip PRIVATE cf_vfp_assets)
+
+if(MSVC)
+    target_compile_options(test_studio_host_real_sample_yresolution_round_trip PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_studio_host_real_sample_yresolution_round_trip PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_studio_host_real_sample_yresolution_round_trip
+    COMMAND $<TARGET_FILE:test_studio_host_real_sample_yresolution_round_trip> $<TARGET_FILE:copperfin_studio_host>
+)
+
 add_executable(test_studio_host_real_sample_page_setup_settings_round_trip
     test_studio_host_real_sample_page_setup_settings_round_trip.cpp
 )
