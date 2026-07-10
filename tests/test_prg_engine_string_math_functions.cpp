@@ -72,6 +72,15 @@ namespace
             "f = IIF(.T., 'yes', 'no')\n"
             "iif_true_guard = IIF(.T., 'guard-true', 1 / 0)\n"
             "iif_false_guard = IIF(.F., 1 / 0, 'guard-false')\n"
+            "and_true = (1 = 1) AND (2 = 2)\n"
+            "and_false = (1 = 1) AND (2 = 3)\n"
+            "or_true = (1 = 2) OR (2 = 2)\n"
+            "or_false = (1 = 2) OR (2 = 3)\n"
+            "and_dotted = .T. .AND. .F.\n"
+            "or_dotted = .F. .OR. .T.\n"
+            "logic_precedence = .T. OR .F. AND .F.\n"
+            "and_short_guard = .F. AND (1 / 0)\n"
+            "or_short_guard = .T. OR (1 / 0)\n"
             "g = BETWEEN(5, 1, 10)\n"
             "h = OCCURS('l', 'hello world')\n"
             "v = VAL('42')\n"
@@ -257,6 +266,15 @@ namespace
         check("f", "yes");
         check("iif_true_guard", "guard-true");
         check("iif_false_guard", "guard-false");
+        check("and_true", "true");
+        check("and_false", "false");
+        check("or_true", "true");
+        check("or_false", "false");
+        check("and_dotted", "false");
+        check("or_dotted", "true");
+        check("logic_precedence", "true");
+        check("and_short_guard", "false");
+        check("or_short_guard", "true");
         check("g", "true");
         check("h", "3");
         check("v", "42");

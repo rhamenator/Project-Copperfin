@@ -140,6 +140,76 @@ void test_do_while_and_loop_control_flow() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_logical_operators_drive_control_flow() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_logical_control_flow";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "logical_flow.prg";
+    write_text(
+        main_path,
+        "cIfBranch = ''\n"
+        "nLoopCount = 0\n"
+        "nOrCount = 0\n"
+        "IF (1 = 1) AND (2 = 3)\n"
+        "    cIfBranch = 'wrong-true'\n"
+        "ELSE\n"
+        "    cIfBranch = 'correct-false'\n"
+        "ENDIF\n"
+        "DO WHILE nLoopCount < 3 AND .F.\n"
+        "    nLoopCount = nLoopCount + 1\n"
+        "ENDDO\n"
+        "DO WHILE nOrCount < 2 OR .F.\n"
+        "    nOrCount = nOrCount + 1\n"
+        "ENDDO\n"
+        "lAndGuard = .F. AND (1 / 0)\n"
+        "lOrGuard = .T. OR (1 / 0)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "logical operator control-flow script should complete");
+
+    const auto if_branch = state.globals.find("cifbranch");
+    const auto loop_count = state.globals.find("nloopcount");
+    const auto or_count = state.globals.find("norcount");
+    const auto and_guard = state.globals.find("landguard");
+    const auto or_guard = state.globals.find("lorguard");
+
+    expect(if_branch != state.globals.end(), "compound IF should assign a branch marker");
+    expect(loop_count != state.globals.end(), "compound AND in DO WHILE should leave its loop counter");
+    expect(or_count != state.globals.end(), "compound OR in DO WHILE should leave its loop counter");
+    expect(and_guard != state.globals.end(), "short-circuited AND assignment should complete");
+    expect(or_guard != state.globals.end(), "short-circuited OR assignment should complete");
+
+    if (if_branch != state.globals.end()) {
+        expect(copperfin::runtime::format_value(if_branch->second) == "correct-false",
+               "compound IF should evaluate the full AND expression");
+    }
+    if (loop_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(loop_count->second) == "0",
+               "DO WHILE with false AND tail should not execute its body");
+    }
+    if (or_count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(or_count->second) == "2",
+               "DO WHILE with OR tail should reevaluate both clauses until the left side becomes false");
+    }
+    if (and_guard != state.globals.end()) {
+        expect(copperfin::runtime::format_value(and_guard->second) == "false",
+               "AND should short-circuit a false left operand");
+    }
+    if (or_guard != state.globals.end()) {
+        expect(copperfin::runtime::format_value(or_guard->second) == "true",
+               "OR should short-circuit a true left operand");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_do_case_control_flow() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_do_case";

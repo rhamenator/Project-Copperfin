@@ -55,6 +55,7 @@ using ScopedEnvironmentValue = copperfin::test_support::ScopedEnvironmentValue;
 // ==== Control-flow construct tests (DO WHILE/CASE, FOR EACH, SCAN, WITH, TEXT/ENDTEXT, command scanning) ====
 void test_command_keyword_scanner_ignores_nested_text();
 void test_do_while_and_loop_control_flow();
+void test_logical_operators_drive_control_flow();
 void test_do_case_control_flow();
 void test_push_pop_key_menu_popup_stack_commands();
 void test_text_endtext_literal_blocks();

@@ -225,12 +225,96 @@
         PrgValue parse()
             {
                 position_ = 0;
-                PrgValue value = parse_comparison();
+                PrgValue value = parse_expression();
                 skip_whitespace();
                 return value;
             }
 
         private:
+            struct ScopedEvaluationSuppression
+            {
+                explicit ScopedEvaluationSuppression(ExpressionParser& parser)
+                    : parser_(parser),
+                      previous_(parser.suppress_evaluation_)
+                {
+                    parser_.suppress_evaluation_ = true;
+                }
+
+                ~ScopedEvaluationSuppression()
+                {
+                    parser_.suppress_evaluation_ = previous_;
+                }
+
+            private:
+                ExpressionParser& parser_;
+                bool previous_;
+            };
+
+            PrgValue parse_expression()
+            {
+                return parse_or();
+            }
+
+            PrgValue parse_or()
+            {
+                PrgValue left = parse_and();
+                while (true)
+                {
+                    if (match_logical_or_operator())
+                    {
+                        if (suppress_evaluation_)
+                        {
+                            (void)parse_and();
+                            left = make_boolean_value(false);
+                            continue;
+                        }
+
+                        if (value_as_bool(left))
+                        {
+                            ScopedEvaluationSuppression suppress_rhs(*this);
+                            (void)parse_and();
+                            left = make_boolean_value(true);
+                            continue;
+                        }
+
+                        left = make_boolean_value(value_as_bool(parse_and()));
+                        continue;
+                    }
+
+                    return left;
+                }
+            }
+
+            PrgValue parse_and()
+            {
+                PrgValue left = parse_comparison();
+                while (true)
+                {
+                    if (match_logical_and_operator())
+                    {
+                        if (suppress_evaluation_)
+                        {
+                            (void)parse_comparison();
+                            left = make_boolean_value(false);
+                            continue;
+                        }
+
+                        if (!value_as_bool(left))
+                        {
+                            ScopedEvaluationSuppression suppress_rhs(*this);
+                            (void)parse_comparison();
+                            left = make_boolean_value(false);
+                            continue;
+                        }
+
+                        left = make_boolean_value(value_as_bool(parse_comparison()));
+                        continue;
+                    }
+
+                    return left;
+                }
+            }
+
             PrgValue parse_comparison()
             {
                 PrgValue left = parse_additive();
@@ -239,12 +323,24 @@
                     skip_whitespace();
                     if (match("<>"))
                     {
-                        left = make_boolean_value(!values_equal(left, parse_additive()));
+                        PrgValue right = parse_additive();
+                        if (suppress_evaluation_)
+                        {
+                            left = make_boolean_value(false);
+                        }
+                        else
+                        {
+                            left = make_boolean_value(!values_equal(left, right));
+                        }
                     }
                     else if (match("<="))
                     {
                         PrgValue right = parse_additive();
-                        if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string)
+                        if (suppress_evaluation_)
+                        {
+                            left = make_boolean_value(false);
+                        }
+                        else if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string)
                         {
                             left = make_boolean_value(value_as_string(left) <= value_as_string(right));
                         }
@@ -262,7 +358,11 @@
                     else if (match(">="))
                     {
                         PrgValue right = parse_additive();
-                        if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string)
+                        if (suppress_evaluation_)
+                        {
+                            left = make_boolean_value(false);
+                        }
+                        else if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string)
                         {
                             left = make_boolean_value(value_as_string(left) >= value_as_string(right));
                         }
@@ -279,12 +379,24 @@
                     }
                     else if (match("==") || match("="))
                     {
-                        left = make_boolean_value(values_equal(left, parse_additive()));
+                        PrgValue right = parse_additive();
+                        if (suppress_evaluation_)
+                        {
+                            left = make_boolean_value(false);
+                        }
+                        else
+                        {
+                            left = make_boolean_value(values_equal(left, right));
+                        }
                     }
                     else if (match("<"))
                     {
                         PrgValue right = parse_additive();
-                        if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string)
+                        if (suppress_evaluation_)
+                        {
+                            left = make_boolean_value(false);
+                        }
+                        else if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string)
                         {
                             left = make_boolean_value(value_as_string(left) < value_as_string(right));
                         }
@@ -302,7 +414,11 @@
                     else if (match(">"))
                     {
                         PrgValue right = parse_additive();
-                        if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string)
+                        if (suppress_evaluation_)
+                        {
+                            left = make_boolean_value(false);
+                        }
+                        else if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string)
                         {
                             left = make_boolean_value(value_as_string(left) > value_as_string(right));
                         }
@@ -333,7 +449,11 @@
                     if (match("+"))
                     {
                         PrgValue right = parse_multiplicative();
-                        if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string)
+                        if (suppress_evaluation_)
+                        {
+                            left = make_empty_value();
+                        }
+                        else if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string)
                         {
                             left = make_string_value(value_as_string(left) + value_as_string(right));
                         }
@@ -353,7 +473,11 @@
                     else if (match("-"))
                     {
                         PrgValue right = parse_multiplicative();
-                        if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
+                        if (suppress_evaluation_)
+                        {
+                            left = make_empty_value();
+                        }
+                        else if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
                             (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64))
                         {
                             left = make_int64_value(
@@ -381,7 +505,11 @@
                     if (match("*"))
                     {
                         PrgValue right = parse_unary();
-                        if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
+                        if (suppress_evaluation_)
+                        {
+                            left = make_empty_value();
+                        }
+                        else if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
                             (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64))
                         {
                             left = make_int64_value(
@@ -396,7 +524,11 @@
                     else if (match("/"))
                     {
                         PrgValue right = parse_unary();
-                        if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
+                        if (suppress_evaluation_)
+                        {
+                            left = make_empty_value();
+                        }
+                        else if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
                             (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64))
                         {
                             const std::int64_t divisor = static_cast<std::int64_t>(value_as_number(right));
@@ -424,11 +556,20 @@
                 skip_whitespace();
                 if (match("!"))
                 {
+                    if (suppress_evaluation_)
+                    {
+                        (void)parse_unary();
+                        return make_boolean_value(false);
+                    }
                     return make_boolean_value(!value_as_bool(parse_unary()));
                 }
                 if (match("-"))
                 {
                     PrgValue operand = parse_unary();
+                    if (suppress_evaluation_)
+                    {
+                        return make_empty_value();
+                    }
                     if (operand.kind == PrgValueKind::int64)
                     {
                         return make_int64_value(-operand.int64_value);
@@ -443,12 +584,17 @@
                 skip_whitespace();
                 if (match("("))
                 {
-                    PrgValue value = parse_comparison();
+                    PrgValue value = parse_expression();
                     match(")");
                     return value;
                 }
                 if (match("&"))
                 {
+                    if (suppress_evaluation_)
+                    {
+                        skip_macro_reference();
+                        return make_empty_value();
+                    }
                     PrgValue macro_value = parse_macro_reference();
                     if (macro_value.kind == PrgValueKind::string)
                     {
@@ -502,8 +648,15 @@
                 }
 
                 skip_whitespace();
-                if (match("["))
-                {
+                    if (match("["))
+                    {
+                        if (suppress_evaluation_)
+                        {
+                        (void)parse_expression();
+                        skip_whitespace();
+                        match("]");
+                        return make_empty_value();
+                    }
                     return apply_postfix_member_and_collection_access(
                         parse_indexed_identifier_access(identifier, ']'));
                 }
@@ -513,7 +666,18 @@
                     const std::string normalized_identifier = normalize_identifier(identifier);
                     if (normalized_identifier == "iif")
                     {
-                        return apply_postfix_member_and_collection_access(parse_iif_invocation());
+                        PrgValue value = parse_iif_invocation();
+                        if (suppress_evaluation_)
+                        {
+                            return skip_postfix_member_and_collection_access();
+                        }
+                        return apply_postfix_member_and_collection_access(value);
+                    }
+
+                    if (suppress_evaluation_)
+                    {
+                        (void)parse_invocation_arguments(identifier);
+                        return skip_postfix_member_and_collection_access();
                     }
 
                     const auto invocation = parse_invocation_arguments(identifier);
@@ -553,6 +717,11 @@
                     }
                     return apply_postfix_member_and_collection_access(
                         evaluate_function(identifier, arguments, raw_arguments, argument_references));
+                }
+
+                if (suppress_evaluation_)
+                {
+                    return skip_postfix_member_and_collection_access();
                 }
 
                 return apply_postfix_member_and_collection_access(resolve_identifier(identifier));
@@ -1398,12 +1567,12 @@
 
             PrgValue parse_array_element_access(const std::string &array_name, char close_delimiter)
             {
-                const std::size_t row = static_cast<std::size_t>(std::max<double>(0.0, value_as_number(parse_comparison())));
+                const std::size_t row = static_cast<std::size_t>(std::max<double>(0.0, value_as_number(parse_expression())));
                 std::size_t column = 1U;
                 skip_whitespace();
                 if (match(","))
                 {
-                    column = static_cast<std::size_t>(std::max<double>(0.0, value_as_number(parse_comparison())));
+                    column = static_cast<std::size_t>(std::max<double>(0.0, value_as_number(parse_expression())));
                 }
                 match(std::string(1U, close_delimiter));
                 return array_value_callback_(array_name, row, column);
@@ -1411,7 +1580,7 @@
 
             PrgValue parse_indexed_identifier_access(const std::string &identifier, char close_delimiter)
             {
-                const PrgValue selector = parse_comparison();
+                const PrgValue selector = parse_expression();
                 if (array_exists_callback_(identifier))
                 {
                     return finish_array_element_access(identifier, selector, close_delimiter);
@@ -1438,6 +1607,11 @@
                     {
                         current = parse_native_collection_item_access(current, ']');
                         continue;
+                    }
+
+                    if (starts_with_dotted_logical_operator())
+                    {
+                        return current;
                     }
 
                     if (!match("."))
@@ -1495,7 +1669,7 @@
 
             PrgValue parse_native_collection_item_access(const PrgValue &collection_value, char close_delimiter)
             {
-                const PrgValue selector = parse_comparison();
+                const PrgValue selector = parse_expression();
                 return finish_native_collection_item_access(collection_value, selector, close_delimiter);
             }
 
@@ -1511,7 +1685,7 @@
                 if (match(","))
                 {
                     column = static_cast<std::size_t>(
-                        std::max<double>(0.0, value_as_number(parse_comparison())));
+                        std::max<double>(0.0, value_as_number(parse_expression())));
                 }
                 match(std::string(1U, close_delimiter));
                 return array_value_callback_(array_name, row, column);
@@ -1525,7 +1699,7 @@
                 skip_whitespace();
                 if (match(","))
                 {
-                    (void)parse_comparison();
+                    (void)parse_expression();
                 }
                 match(std::string(1U, close_delimiter));
 
@@ -1602,7 +1776,7 @@
                         position_ = at_start;
                     }
 
-                    invocation.arguments.push_back(parse_comparison());
+                    invocation.arguments.push_back(parse_expression());
                     argument_end = position_;
                     if (argument_end == argument_start)
                     {
@@ -1756,7 +1930,7 @@
                     throw std::runtime_error(runtime_text("Runtime.Prg.Expression.Error.ExpectedFunctionArgument"));
                 }
 
-                const PrgValue condition = parse_comparison();
+                const PrgValue condition = parse_expression();
                 skip_whitespace();
                 if (!match(","))
                 {
@@ -1787,9 +1961,14 @@
                     throw std::runtime_error(runtime_text("Runtime.Prg.Expression.Error.ExpectedClosingParenthesis"));
                 }
 
+                if (suppress_evaluation_)
+                {
+                    return make_empty_value();
+                }
+
                 return value_as_bool(condition)
-                    ? eval_expression_callback_(true_branch_text)
-                    : eval_expression_callback_(false_branch_text);
+                           ? eval_expression_callback_(true_branch_text)
+                           : eval_expression_callback_(false_branch_text);
             }
 
             std::string resolve_array_argument_name(
@@ -2056,6 +2235,57 @@
                     }
                 }
                 return text_.substr(start, position_ - start);
+            }
+
+            void skip_macro_reference()
+            {
+                skip_whitespace();
+                while (position_ < text_.size())
+                {
+                    const char ch = text_[position_];
+                    if (std::isalnum(static_cast<unsigned char>(ch)) != 0 || ch == '_')
+                    {
+                        ++position_;
+                        continue;
+                    }
+                    break;
+                }
+
+                if (peek() != '.')
+                {
+                    return;
+                }
+
+                ++position_;
+                if (peek() == '.')
+                {
+                    ++position_;
+                    while (position_ < text_.size())
+                    {
+                        const char ch = text_[position_];
+                        if (std::isalnum(static_cast<unsigned char>(ch)) != 0 ||
+                            ch == '_' ||
+                            ch == '.' ||
+                            ch == '&')
+                        {
+                            ++position_;
+                            continue;
+                        }
+                        break;
+                    }
+                    return;
+                }
+
+                while (position_ < text_.size())
+                {
+                    const char ch = text_[position_];
+                    if (std::isalnum(static_cast<unsigned char>(ch)) != 0 || ch == '_')
+                    {
+                        ++position_;
+                        continue;
+                    }
+                    break;
+                }
             }
 
             PrgValue parse_macro_reference()
@@ -2362,6 +2592,164 @@
                 return false;
             }
 
+            bool match_logical_and_operator()
+            {
+                return match_dotted_logical_operator(".AND.") || match_identifier_keyword("AND");
+            }
+
+            bool match_logical_or_operator()
+            {
+                return match_dotted_logical_operator(".OR.") || match_identifier_keyword("OR");
+            }
+
+            bool match_dotted_logical_operator(const std::string& dotted_keyword)
+            {
+                skip_whitespace();
+                if (position_ + dotted_keyword.size() > text_.size())
+                {
+                    return false;
+                }
+
+                for (std::size_t index = 0; index < dotted_keyword.size(); ++index)
+                {
+                    const unsigned char actual = static_cast<unsigned char>(text_[position_ + index]);
+                    const unsigned char expected = static_cast<unsigned char>(dotted_keyword[index]);
+                    if (std::tolower(actual) != std::tolower(expected))
+                    {
+                        return false;
+                    }
+                }
+
+                position_ += dotted_keyword.size();
+                return true;
+            }
+
+            bool match_identifier_keyword(const std::string& keyword)
+            {
+                skip_whitespace();
+                if (position_ + keyword.size() > text_.size())
+                {
+                    return false;
+                }
+
+                for (std::size_t index = 0; index < keyword.size(); ++index)
+                {
+                    const unsigned char actual = static_cast<unsigned char>(text_[position_ + index]);
+                    const unsigned char expected = static_cast<unsigned char>(keyword[index]);
+                    if (std::tolower(actual) != std::tolower(expected))
+                    {
+                        return false;
+                    }
+                }
+
+                const auto is_identifier_char = [](char ch)
+                {
+                    return std::isalnum(static_cast<unsigned char>(ch)) != 0 || ch == '_' || ch == '.';
+                };
+                if (position_ > 0 && is_identifier_char(text_[position_ - 1]))
+                {
+                    return false;
+                }
+                const std::size_t end = position_ + keyword.size();
+                if (end < text_.size() && is_identifier_char(text_[end]))
+                {
+                    return false;
+                }
+
+                position_ = end;
+                return true;
+            }
+
+            bool starts_with_dotted_logical_operator() const
+            {
+                const auto starts_with_insensitive = [&](std::string_view token)
+                {
+                    if (position_ + token.size() > text_.size())
+                    {
+                        return false;
+                    }
+                    for (std::size_t index = 0; index < token.size(); ++index)
+                    {
+                        const unsigned char actual = static_cast<unsigned char>(text_[position_ + index]);
+                        const unsigned char expected = static_cast<unsigned char>(token[index]);
+                        if (std::tolower(actual) != std::tolower(expected))
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                };
+
+                return starts_with_insensitive(".AND.") || starts_with_insensitive(".OR.");
+            }
+
+            PrgValue skip_postfix_member_and_collection_access()
+            {
+                while (true)
+                {
+                    skip_whitespace();
+                    if (match("("))
+                    {
+                        (void)parse_expression();
+                        skip_whitespace();
+                        while (match(","))
+                        {
+                            (void)parse_expression();
+                            skip_whitespace();
+                        }
+                        match(")");
+                        continue;
+                    }
+
+                    if (match("["))
+                    {
+                        (void)parse_expression();
+                        skip_whitespace();
+                        if (match(","))
+                        {
+                            (void)parse_expression();
+                        }
+                        match("]");
+                        continue;
+                    }
+
+                    if (starts_with_dotted_logical_operator())
+                    {
+                        return make_empty_value();
+                    }
+
+                    if (!match("."))
+                    {
+                        return make_empty_value();
+                    }
+
+                    const std::string member_name = parse_identifier();
+                    if (member_name.empty())
+                    {
+                        return make_empty_value();
+                    }
+
+                    skip_whitespace();
+                    if (match("("))
+                    {
+                        if (!match(")"))
+                        {
+                            while (true)
+                            {
+                                (void)parse_expression();
+                                skip_whitespace();
+                                if (match(")"))
+                                {
+                                    break;
+                                }
+                                match(",");
+                            }
+                        }
+                        continue;
+                    }
+                }
+            }
+
             char peek() const
             {
                 return position_ < text_.size() ? text_[position_] : '\0';
@@ -2487,6 +2875,7 @@
             const std::string &error_handler_;
             const std::string &shutdown_handler_;
             bool exact_string_compare_ = false;
+            bool suppress_evaluation_ = false;
             std::size_t position_ = 0;
         };
 

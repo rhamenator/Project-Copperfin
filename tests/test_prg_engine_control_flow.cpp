@@ -9,6 +9,7 @@ using namespace cf_test_prg_engine_control_flow;
 int main() {
     test_command_keyword_scanner_ignores_nested_text();
     test_do_while_and_loop_control_flow();
+    test_logical_operators_drive_control_flow();
     test_do_case_control_flow();
     test_cursor_use_and_seek_errors_use_default_locale_messages();
     test_push_pop_key_menu_popup_stack_commands();
