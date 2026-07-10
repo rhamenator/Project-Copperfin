@@ -636,6 +636,141 @@ void test_query_file_requery_refreshes_single_cursor_query_rows() {
     fs::remove_all(temp_root, ignored);
 }
 
+void run_distinct_order_ordinal_requery_test(int row_source_type) {
+    namespace fs = std::filesystem;
+    const std::string row_source_label =
+        row_source_type == 3 ? "sql-statement" : "query-file";
+    const fs::path temp_root =
+        fs::temp_directory_path() / ("copperfin_native_requery_distinct_order_ordinal_" +
+                                     std::string(row_source_type == 3 ? "sql" : "query"));
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "employee.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "LAST_NAME", .type = 'C', .length = 24U},
+        {.name = "FIRST_NAME", .type = 'C', .length = 24U},
+        {.name = "REGION", .type = 'C', .length = 12U}};
+    const std::vector<std::vector<std::string>> records{
+        {"Zulu", "Anne", "West"},
+        {"Baker", "Ben", "East"},
+        {"Alpha", "Ada", "East"},
+        {"Marlow", "Mia", ""}};
+    const auto create_result =
+        copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
+    expect(create_result.ok,
+           "distinct ORDER BY ordinal " + row_source_label +
+               " Requery() fixture should create a DBF table");
+    if (!create_result.ok) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    std::string row_source_assignment;
+    if (row_source_type == 4) {
+        const fs::path query_path = temp_root / "distinct_regions.qpr";
+        write_text(
+            query_path,
+            "SELECT DISTINCT region ;\n"
+            " FROM employee ;\n"
+            " WHERE NOT EMPTY(region) ;\n"
+            " ORDER BY 1 INTO CURSOR temp2\n");
+        row_source_assignment = "oList.RowSource = 'distinct_regions.qpr'\n";
+    } else {
+        row_source_assignment =
+            "oList.RowSource = \"SELECT DISTINCT region FROM employee "
+            "WHERE NOT EMPTY(region) ORDER BY 1 INTO CURSOR temp2\"\n";
+    }
+
+    const fs::path main_path =
+        temp_root / ("requery_distinct_order_ordinal_" +
+                      std::string(row_source_type == 3 ? "sql" : "query") + ".prg");
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS employee IN 0\n"
+        "oList = CREATEOBJECT('ListBox')\n"
+        "oList.RowSourceType = " + std::to_string(row_source_type) + "\n" +
+            row_source_assignment +
+        "nBefore = oList.ListCount\n"
+        "oList.Requery()\n"
+        "nAfterFirst = oList.ListCount\n"
+        "cFirst1 = oList.List(1)\n"
+        "cFirst2 = oList.List(2)\n"
+        "oList.ListIndex = 2\n"
+        "cDisplayBeforeSecond = oList.DisplayValue\n"
+        "GO 3 IN employee\n"
+        "REPLACE REGION WITH 'Central' IN employee\n"
+        "APPEND BLANK IN employee\n"
+        "REPLACE LAST_NAME WITH 'North' IN employee\n"
+        "REPLACE FIRST_NAME WITH 'Nia' IN employee\n"
+        "REPLACE REGION WITH 'East' IN employee\n"
+        "nRecnoBeforeSecond = RECNO('employee')\n"
+        "oList.Requery()\n"
+        "nAfterSecond = oList.ListCount\n"
+        "nListIndexAfterSecond = oList.ListIndex\n"
+        "cDisplayAfterSecond = oList.DisplayValue\n"
+        "cSecond1 = oList.List(1)\n"
+        "cSecond2 = oList.List(2)\n"
+        "cSecond3 = oList.List(3)\n"
+        "nRecnoAfterSecond = RECNO('employee')\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "distinct ORDER BY ordinal " + row_source_label +
+               " Requery() script should complete: " + state.message +
+               " @line=" + std::to_string(state.location.line));
+
+    const auto check = [&](const std::string &name, const std::string &expected) {
+        const auto found = state.globals.find(name);
+        expect(found != state.globals.end(), name + " should be captured");
+        if (found != state.globals.end()) {
+            expect(copperfin::runtime::format_value(found->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(found->second) + "'");
+        }
+    };
+
+    check("nbefore", "0");
+    check("nafterfirst", "2");
+    check("cfirst1", "East");
+    check("cfirst2", "West");
+    check("cdisplaybeforesecond", "West");
+    check("nrecnobeforesecond", "5");
+    check("naftersecond", "3");
+    check("nlistindexaftersecond", "2");
+    check("cdisplayaftersecond", "East");
+    check("csecond1", "Central");
+    check("csecond2", "East");
+    check("csecond3", "West");
+    check("nrecnoaftersecond", "5");
+
+    const bool has_distinct_requery_event = std::any_of(
+        state.events.begin(),
+        state.events.end(),
+        [](const copperfin::runtime::RuntimeEvent &event) {
+            return event.category == "prg.object.requery";
+        });
+    expect(has_distinct_requery_event,
+           "distinct ORDER BY ordinal " + row_source_label +
+               " Requery() should emit a native requery event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_sql_statement_requery_refreshes_distinct_ordered_single_cursor_query_rows() {
+    run_distinct_order_ordinal_requery_test(3);
+}
+
+void test_query_file_requery_refreshes_distinct_ordered_single_cursor_query_rows() {
+    run_distinct_order_ordinal_requery_test(4);
+}
+
 void test_sql_statement_requery_refreshes_single_cursor_query_rows_with_aliases() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_requery_sql_statement_alias";
@@ -1327,6 +1462,8 @@ int main() {
     test_fields_requery_refreshes_alias_qualified_field_list();
     test_sql_statement_requery_refreshes_single_cursor_query_rows();
     test_query_file_requery_refreshes_single_cursor_query_rows();
+    test_sql_statement_requery_refreshes_distinct_ordered_single_cursor_query_rows();
+    test_query_file_requery_refreshes_distinct_ordered_single_cursor_query_rows();
     test_sql_statement_requery_refreshes_single_cursor_query_rows_with_aliases();
     test_query_file_requery_refreshes_single_cursor_query_rows_with_aliases();
     test_sql_statement_requery_refreshes_joined_query_rows();

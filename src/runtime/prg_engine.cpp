@@ -3116,6 +3116,7 @@ namespace copperfin::runtime
         struct QueryOrderExpression
         {
             std::string expression;
+            std::optional<std::size_t> projection_ordinal;
             bool descending = false;
         };
 
@@ -3137,6 +3138,7 @@ namespace copperfin::runtime
             std::vector<std::string> projection_expressions;
             std::string where_expression;
             std::vector<QueryOrderExpression> order_expressions;
+            bool distinct = false;
         };
 
         const auto normalize_query_text = [](std::string text) -> std::string
@@ -3362,7 +3364,13 @@ namespace copperfin::runtime
                 return false;
             }
 
-            const std::size_t projection_start = 6U;
+            std::size_t projection_start = 6U;
+            bool distinct = false;
+            if (upper_query.compare(projection_start, 9U, " DISTINCT") == 0)
+            {
+                projection_start += 9U;
+                distinct = true;
+            }
             const std::size_t from_position =
                 find_top_level_keyword(upper_query, projection_start, "FROM");
             if (from_position == std::string::npos)
@@ -3530,7 +3538,27 @@ namespace copperfin::runtime
                     {
                         return false;
                     }
+
+                    std::optional<std::size_t> projection_ordinal;
+                    const bool all_digits = std::all_of(
+                        order_expression.begin(),
+                        order_expression.end(),
+                        [](char current)
+                        {
+                            return std::isdigit(static_cast<unsigned char>(current)) != 0;
+                        });
+                    if (all_digits)
+                    {
+                        const std::size_t ordinal =
+                            static_cast<std::size_t>(std::strtoull(order_expression.c_str(), nullptr, 10));
+                        if (ordinal > 0U)
+                        {
+                            projection_ordinal = ordinal;
+                        }
+                    }
+
                     order_expressions.push_back({.expression = std::move(order_expression),
+                                                 .projection_ordinal = projection_ordinal,
                                                  .descending = descending});
                 }
             }
@@ -3557,6 +3585,7 @@ namespace copperfin::runtime
             plan.projection_expressions = std::move(projection_expressions);
             plan.where_expression = std::move(where_expression);
             plan.order_expressions = std::move(order_expressions);
+            plan.distinct = distinct;
             return true;
         };
 
@@ -3571,6 +3600,51 @@ namespace copperfin::runtime
                 return value.kind == PrgValueKind::number ||
                        value.kind == PrgValueKind::int64 ||
                        value.kind == PrgValueKind::uint64;
+            };
+            const auto row_values_equal =
+                [&](const std::vector<PrgValue> &left, const std::vector<PrgValue> &right) -> bool
+            {
+                const auto prg_values_equal = [&](const PrgValue &left_value, const PrgValue &right_value) -> bool
+                {
+                    if (left_value.kind == PrgValueKind::string || right_value.kind == PrgValueKind::string)
+                    {
+                        return trim_copy(value_as_string(left_value)) == trim_copy(value_as_string(right_value));
+                    }
+                    if (left_value.kind == PrgValueKind::boolean || right_value.kind == PrgValueKind::boolean)
+                    {
+                        return value_as_bool(left_value) == value_as_bool(right_value);
+                    }
+                    if ((left_value.kind == PrgValueKind::int64 || left_value.kind == PrgValueKind::uint64) &&
+                        (right_value.kind == PrgValueKind::int64 || right_value.kind == PrgValueKind::uint64))
+                    {
+                        return left_value.kind == PrgValueKind::int64
+                                   ? (right_value.kind == PrgValueKind::int64
+                                          ? left_value.int64_value == right_value.int64_value
+                                          : left_value.int64_value >= 0 &&
+                                                static_cast<std::uint64_t>(left_value.int64_value) ==
+                                                    right_value.uint64_value)
+                                   : (right_value.kind == PrgValueKind::uint64
+                                          ? left_value.uint64_value == right_value.uint64_value
+                                          : right_value.int64_value >= 0 &&
+                                                left_value.uint64_value ==
+                                                    static_cast<std::uint64_t>(right_value.int64_value));
+                    }
+                    return std::abs(value_as_number(left_value) - value_as_number(right_value)) < 0.000001;
+                };
+
+                if (left.size() != right.size())
+                {
+                    return false;
+                }
+
+                for (std::size_t index = 0U; index < left.size(); ++index)
+                {
+                    if (!prg_values_equal(left[index], right[index]))
+                    {
+                        return false;
+                    }
+                }
+                return true;
             };
 
             struct MaterializedQueryRow
@@ -3649,8 +3723,17 @@ namespace copperfin::runtime
 
                     for (const QueryOrderExpression &order_expression : plan.order_expressions)
                     {
-                        query_row.order_keys.push_back(
-                            evaluate_expression(order_expression.expression, frame, &cursor));
+                        if (order_expression.projection_ordinal.has_value() &&
+                            *order_expression.projection_ordinal <= query_row.values.size())
+                        {
+                            query_row.order_keys.push_back(
+                                query_row.values[*order_expression.projection_ordinal - 1U]);
+                        }
+                        else
+                        {
+                            query_row.order_keys.push_back(
+                                evaluate_expression(order_expression.expression, frame, &cursor));
+                        }
                     }
 
                     materialized_rows.push_back(std::move(query_row));
@@ -3736,6 +3819,27 @@ namespace copperfin::runtime
                     joined_cursor->bof = previous_bof;
                     joined_cursor->eof = previous_eof;
                 }
+            }
+
+            if (plan.distinct)
+            {
+                std::vector<MaterializedQueryRow> distinct_rows;
+                distinct_rows.reserve(materialized_rows.size());
+                for (auto &query_row : materialized_rows)
+                {
+                    const bool already_present = std::any_of(
+                        distinct_rows.begin(),
+                        distinct_rows.end(),
+                        [&](const MaterializedQueryRow &candidate)
+                        {
+                            return row_values_equal(candidate.values, query_row.values);
+                        });
+                    if (!already_present)
+                    {
+                        distinct_rows.push_back(std::move(query_row));
+                    }
+                }
+                materialized_rows = std::move(distinct_rows);
             }
 
             restore_cursor_snapshot(cursor, original);
