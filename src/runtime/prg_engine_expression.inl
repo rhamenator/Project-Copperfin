@@ -773,6 +773,18 @@
                 const std::vector<std::optional<std::string>> &argument_references)
             {
                 const std::string function = normalize_identifier(identifier);
+                const auto is_selector_style_native_member_name =
+                    [](const std::string &member_name) -> bool
+                {
+                    const std::string normalized_member_name =
+                        normalize_identifier(member_name);
+                    return normalized_member_name == "list" ||
+                           normalized_member_name == "listitem" ||
+                           normalized_member_name == "selected" ||
+                           normalized_member_name == "selectedid" ||
+                           normalized_member_name == "indextoitemid" ||
+                           normalized_member_name == "itemidtoindex";
+                };
                 const auto try_native_collection_default_item =
                     [&]() -> std::optional<PrgValue>
                 {
@@ -812,8 +824,31 @@
                 const auto member_separator = function.find('.');
                 if (member_separator != std::string::npos)
                 {
+                    const std::string raw_base_name = identifier.substr(0U, member_separator);
+                    const std::string raw_member_path = identifier.substr(member_separator + 1U);
                     const std::string base_name = function.substr(0U, member_separator);
                     const std::string member_path = function.substr(member_separator + 1U);
+                    if (is_selector_style_native_member_name(raw_member_path))
+                    {
+                        PrgValue current = resolve_identifier(raw_base_name);
+                        std::string selector_member_name = raw_member_path;
+                        selector_member_name.push_back('(');
+                        for (std::size_t index = 0U; index < arguments.size(); ++index)
+                        {
+                            if (index != 0U)
+                            {
+                                selector_member_name += ", ";
+                            }
+                            selector_member_name += format_value(arguments[index]);
+                        }
+                        selector_member_name.push_back(')');
+                        if (const auto selector_value =
+                                read_native_member_callback_(current, selector_member_name);
+                            selector_value.has_value())
+                        {
+                            return *selector_value;
+                        }
+                    }
                     return ole_invoke_callback_(base_name, member_path, arguments, argument_references);
                 }
                 if ((function == "min" || function == "max") && arguments.size() >= 2U)
@@ -1646,6 +1681,18 @@
 
             PrgValue parse_indexed_identifier_access(const std::string &identifier, char close_delimiter)
             {
+                const auto is_selector_style_native_member_name =
+                    [](const std::string &member_name) -> bool
+                {
+                    const std::string normalized_member_name =
+                        normalize_identifier(member_name);
+                    return normalized_member_name == "list" ||
+                           normalized_member_name == "listitem" ||
+                           normalized_member_name == "selected" ||
+                           normalized_member_name == "selectedid" ||
+                           normalized_member_name == "indextoitemid" ||
+                           normalized_member_name == "itemidtoindex";
+                };
                 const PrgValue selector = parse_expression();
                 skip_whitespace();
                 std::optional<PrgValue> secondary_selector;
@@ -1683,8 +1730,29 @@
                 const std::size_t member_separator = identifier.rfind('.');
                 if (member_separator != std::string::npos && ole_invoke_callback_)
                 {
-                    const std::string base_name = identifier.substr(0U, member_separator);
-                    const std::string member_path = identifier.substr(member_separator + 1U);
+                    const std::string raw_base_name = identifier.substr(0U, member_separator);
+                    const std::string raw_member_path = identifier.substr(member_separator + 1U);
+                    const std::string normalized_identifier = normalize_identifier(identifier);
+                    const std::size_t normalized_separator = normalized_identifier.rfind('.');
+                    const std::string base_name = normalized_identifier.substr(0U, normalized_separator);
+                    const std::string member_path = normalized_identifier.substr(normalized_separator + 1U);
+                    if (is_selector_style_native_member_name(raw_member_path))
+                    {
+                        PrgValue current = resolve_identifier(raw_base_name);
+                        std::string selector_member_name =
+                            raw_member_path + "[" + format_value(selector);
+                        if (secondary_selector.has_value())
+                        {
+                            selector_member_name += ", " + format_value(*secondary_selector);
+                        }
+                        selector_member_name.push_back(']');
+                        if (const auto selector_value =
+                                read_native_member_callback_(current, selector_member_name);
+                            selector_value.has_value())
+                        {
+                            return *selector_value;
+                        }
+                    }
                     std::vector<PrgValue> arguments{selector};
                     if (secondary_selector.has_value())
                     {

@@ -548,7 +548,8 @@
             {
                 std::string assignment_identifier = resolve_runtime_target_identifier(raw_identifier, frame);
                 if (assignment_identifier.find('.') != std::string::npos &&
-                    assignment_identifier.find('(') != std::string::npos)
+                    (assignment_identifier.find('(') != std::string::npos ||
+                     assignment_identifier.find('[') != std::string::npos))
                 {
                     const auto separator = assignment_identifier.find('.');
                     const std::string object_part = assignment_identifier.substr(0U, separator);
@@ -557,8 +558,13 @@
                         const std::string member_path = assignment_identifier.substr(separator + 1U);
                         const std::string normalized_member_path = normalize_identifier(member_path);
                         if (starts_with_insensitive(normalized_member_path, "selected(") ||
+                            starts_with_insensitive(normalized_member_path, "selected[") ||
                             starts_with_insensitive(normalized_member_path, "selectedid(") ||
-                            starts_with_insensitive(normalized_member_path, "list("))
+                            starts_with_insensitive(normalized_member_path, "selectedid[") ||
+                            starts_with_insensitive(normalized_member_path, "list(") ||
+                            starts_with_insensitive(normalized_member_path, "list[") ||
+                            starts_with_insensitive(normalized_member_path, "listitem(") ||
+                            starts_with_insensitive(normalized_member_path, "listitem["))
                         {
                             const PrgValue object_value = lookup_variable(frame, object_part);
                             auto object = resolve_ole_object(object_value);

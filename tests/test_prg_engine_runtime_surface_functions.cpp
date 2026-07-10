@@ -11926,6 +11926,7 @@ namespace
             "nTargetId = 10\n"
             "oPlain.ListItem[m.nTargetId, 2] = 'Zulu Prime'\n"
             "cItem10Col2AfterDirectWrite = oPlain.ListItem(10, 2)\n"
+            "cDisplayRow3Col2BeforeSetPem = oPlain.List(3, 2)\n"
             "lSetPem20 = SETPEM(oPlain, 'ListItem(20,2)', 'Alpha Prime')\n"
             "xGetPem20 = GETPEM(oPlain, 'ListItem[20,2]')\n"
             "cDisplayRow1Col2AfterSetPem = oPlain.List(1, 2)\n"
@@ -11987,6 +11988,7 @@ namespace
         check("citem20col2aftersort", "A");
         check("citem10fromvarread", "Zulu");
         check("citem10col2afterdirectwrite", "Zulu Prime");
+        check("cdisplayrow3col2beforesetpem", "Zulu Prime");
         check("lsetpem20", "true");
         check("xgetpem20", "Alpha Prime");
         check("cdisplayrow1col2aftersetpem", "Alpha Prime");

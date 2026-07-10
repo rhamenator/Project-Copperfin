@@ -3646,6 +3646,32 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
             slot.has_value() ? static_cast<double>(*slot + 1U) : 0.0);
     }
 
+    if (normalized_method_name == "listitem") {
+        if (arguments.empty()) {
+            return make_string_value("");
+        }
+
+        materialize_native_list_control_rows(runtime_object);
+        const long long requested_item_id = std::llround(value_as_number(arguments[0]));
+        if (requested_item_id < 1LL) {
+            return make_string_value("");
+        }
+
+        long long requested_column = 1LL;
+        if (arguments.size() >= 2U) {
+            requested_column = std::llround(value_as_number(arguments[1]));
+            if (requested_column < 1LL) {
+                return make_string_value("");
+            }
+        }
+
+        const auto item_value = read_native_list_control_item_cell(
+            runtime_object,
+            requested_item_id,
+            static_cast<std::size_t>(requested_column - 1LL));
+        return item_value.value_or(make_string_value(""));
+    }
+
     if (normalized_method_name == "addlistitem") {
         if (arguments.empty() ||
             !native_list_control_rowsourcetype_supports_additem(runtime_object)) {
