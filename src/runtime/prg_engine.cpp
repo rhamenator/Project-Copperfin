@@ -598,6 +598,28 @@ namespace copperfin::runtime
             std::intptr_t lparam = 0;
         };
 
+        struct ActiveNativeEventKeyGuard
+        {
+            std::set<std::string> &active_keys;
+            std::string key;
+            bool engaged = false;
+
+            ActiveNativeEventKeyGuard(std::set<std::string> &keys, std::string event_key)
+                : active_keys(keys),
+                  key(std::move(event_key))
+            {
+                engaged = active_keys.insert(key).second;
+            }
+
+            ~ActiveNativeEventKeyGuard()
+            {
+                if (engaged)
+                {
+                    active_keys.erase(key);
+                }
+            }
+        };
+
 #include "prg_engine_free_functions.inl"
     } // namespace
 
@@ -4455,7 +4477,7 @@ namespace copperfin::runtime
 
         if (!bindings.empty() && !already_active)
         {
-            active_native_event_keys.insert(active_event_key);
+            ActiveNativeEventKeyGuard active_event_guard(active_native_event_keys, active_event_key);
             invoke_delegates_for_phase(false);
             auto result = invoke_native_object_method_body_if_present(
                 runtime_object,
@@ -4464,7 +4486,6 @@ namespace copperfin::runtime
                 arguments,
                 argument_references);
             invoke_delegates_for_phase(true);
-            active_native_event_keys.erase(active_event_key);
             return result;
         }
 
@@ -4717,7 +4738,11 @@ namespace copperfin::runtime
             return make_boolean_value(true);
         }
 
-        active_native_event_keys.insert(active_event_key);
+        ActiveNativeEventKeyGuard active_event_guard(active_native_event_keys, active_event_key);
+        if (!active_event_guard.engaged)
+        {
+            return make_boolean_value(true);
+        }
         const auto invoke_delegates_for_phase = [&](bool after_source_method)
         {
             for (const NativeEventBinding &binding : bindings)
@@ -4744,7 +4769,6 @@ namespace copperfin::runtime
             event_arguments,
             event_argument_references);
         invoke_delegates_for_phase(true);
-        active_native_event_keys.erase(active_event_key);
 
         events.push_back({.category = "prg.event.raise",
                           .detail = (*source_object)->prog_id + "." + event_name,
@@ -5462,7 +5486,7 @@ namespace copperfin::runtime
 
         if (!bindings.empty() && !already_active)
         {
-            active_native_event_keys.insert(active_event_key);
+            ActiveNativeEventKeyGuard active_event_guard(active_native_event_keys, active_event_key);
             const auto invoke_delegates_for_phase = [&](bool after_source_member)
             {
                 for (const NativeEventBinding &binding : bindings)
@@ -5484,7 +5508,6 @@ namespace copperfin::runtime
             invoke_delegates_for_phase(false);
             auto result = perform_property_read();
             invoke_delegates_for_phase(true);
-            active_native_event_keys.erase(active_event_key);
             return result;
         }
 
@@ -6417,7 +6440,7 @@ namespace copperfin::runtime
 
         if (!bindings.empty() && !already_active)
         {
-            active_native_event_keys.insert(active_event_key);
+            ActiveNativeEventKeyGuard active_event_guard(active_native_event_keys, active_event_key);
             const auto invoke_delegates_for_phase = [&](bool after_source_member)
             {
                 for (const NativeEventBinding &binding : bindings)
@@ -6439,7 +6462,6 @@ namespace copperfin::runtime
             invoke_delegates_for_phase(false);
             const bool result = perform_property_write();
             invoke_delegates_for_phase(true);
-            active_native_event_keys.erase(active_event_key);
             return result;
         }
 

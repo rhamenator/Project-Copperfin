@@ -49777,6 +49777,160 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_same_prg_native_raiseevent_handler_fault_does_not_disable_future_dispatch()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_raiseevent_fault_recovery";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_raiseevent_fault_recovery.prg";
+        write_text(
+            main_path,
+            "cSequence = ''\n"
+            "nHandlerCalls = 0\n"
+            "nSourceCalls = 0\n"
+            "oSource = CREATEOBJECT('SourceThing')\n"
+            "nBind = BINDEVENT(oSource, 'Ping', 'HandlePing')\n"
+            "lCaught = .F.\n"
+            "TRY\n"
+            "    lFirstRaised = RAISEEVENT(oSource, 'Ping', 1)\n"
+            "CATCH TO oErr\n"
+            "    lCaught = .T.\n"
+            "    cFirstError = oErr.Message\n"
+            "ENDTRY\n"
+            "lSecondRaised = RAISEEVENT(oSource, 'Ping', 2)\n"
+            "RETURN\n"
+            "PROCEDURE HandlePing\n"
+            "    LPARAMETERS tnValue\n"
+            "    nHandlerCalls = nHandlerCalls + 1\n"
+            "    cSequence = cSequence + '[handler:' + TRANSFORM(tnValue) + ']'\n"
+            "    IF nHandlerCalls = 1\n"
+            "        1 / 0\n"
+            "    ENDIF\n"
+            "    RETURN\n"
+            "ENDPROC\n"
+            "DEFINE CLASS SourceThing AS Custom\n"
+            "    FUNCTION Ping\n"
+            "        LPARAMETERS tnValue\n"
+            "        nSourceCalls = nSourceCalls + 1\n"
+            "        cSequence = cSequence + '[source:' + TRANSFORM(tnValue) + ']'\n"
+            "        RETURN 'ping:' + TRANSFORM(tnValue)\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native RAISEEVENT fault-recovery script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("nbind", "1");
+        check("lcaught", "true");
+        check("lsecondraised", "true");
+        check("nhandlercalls", "2");
+        check("nsourcecalls", "2");
+        check("csequence", "[source:1][handler:1][source:2][handler:2]");
+
+        const auto first_error = state.globals.find("cfirsterror");
+        expect(first_error != state.globals.end(),
+               "faulting RAISEEVENT handler should populate the CATCH error message");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_same_prg_native_bindevent_method_handler_fault_does_not_disable_future_delegate_dispatch()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_method_bindevent_fault_recovery";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_method_bindevent_fault_recovery.prg";
+        write_text(
+            main_path,
+            "cSequence = ''\n"
+            "nHandlerCalls = 0\n"
+            "nSourceCalls = 0\n"
+            "oSource = CREATEOBJECT('SourceThing')\n"
+            "nBind = BINDEVENT(oSource, 'Ping', 'HandlePing', 1)\n"
+            "lCaught = .F.\n"
+            "TRY\n"
+            "    cFirstDirect = oSource.Ping(1)\n"
+            "CATCH TO oErr\n"
+            "    lCaught = .T.\n"
+            "    cFirstError = oErr.Message\n"
+            "ENDTRY\n"
+            "cSecondDirect = oSource.Ping(2)\n"
+            "RETURN\n"
+            "PROCEDURE HandlePing\n"
+            "    LPARAMETERS tnValue\n"
+            "    nHandlerCalls = nHandlerCalls + 1\n"
+            "    cSequence = cSequence + '[handler:' + TRANSFORM(tnValue) + ']'\n"
+            "    IF nHandlerCalls = 1\n"
+            "        1 / 0\n"
+            "    ENDIF\n"
+            "    RETURN\n"
+            "ENDPROC\n"
+            "DEFINE CLASS SourceThing AS Custom\n"
+            "    FUNCTION Ping\n"
+            "        LPARAMETERS tnValue\n"
+            "        nSourceCalls = nSourceCalls + 1\n"
+            "        cSequence = cSequence + '[source:' + TRANSFORM(tnValue) + ']'\n"
+            "        RETURN 'ping:' + TRANSFORM(tnValue)\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native method BINDEVENT fault-recovery script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("nbind", "1");
+        check("lcaught", "true");
+        check("cseconddirect", "ping:2");
+        check("nhandlercalls", "2");
+        check("nsourcecalls", "1");
+        check("csequence", "[handler:1][handler:2][source:2]");
+
+        const auto first_error = state.globals.find("cfirsterror");
+        expect(first_error != state.globals.end(),
+               "faulting method delegate should populate the CATCH error message");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_same_prg_native_aevents_enumerates_same_session_bindings_without_clobbering_zero_row_targets()
     {
         namespace fs = std::filesystem;
@@ -52055,6 +52209,106 @@ namespace
         });
         expect(has_delegate_event,
                "native property BINDEVENT dispatch should emit delegate events");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_same_prg_native_bindevent_property_handler_fault_does_not_disable_future_dispatch()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_property_bindevent_fault_recovery";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_property_bindevent_fault_recovery.prg";
+        write_text(
+            main_path,
+            "nCaptionCalls = 0\n"
+            "nRawCalls = 0\n"
+            "oCreate = CREATEOBJECT('ChildWidget')\n"
+            "nBindCaption = BINDEVENT(oCreate, 'Caption', 'HandleCaption')\n"
+            "nBindRaw = BINDEVENT(oCreate, 'nRaw', 'HandleRaw', 1)\n"
+            "lCaptionCaught = .F.\n"
+            "TRY\n"
+            "    cCaptionFirst = oCreate.Caption\n"
+            "CATCH TO oCaptionErr\n"
+            "    lCaptionCaught = .T.\n"
+            "    cCaptionError = oCaptionErr.Message\n"
+            "ENDTRY\n"
+            "cCaptionSecond = oCreate.Caption\n"
+            "lRawCaught = .F.\n"
+            "TRY\n"
+            "    oCreate.nRaw = 7\n"
+            "CATCH TO oRawErr\n"
+            "    lRawCaught = .T.\n"
+            "    cRawError = oRawErr.Message\n"
+            "ENDTRY\n"
+            "oCreate.nRaw = 9\n"
+            "nRawFinal = oCreate.nRaw\n"
+            "RETURN\n"
+            "PROCEDURE HandleCaption\n"
+            "    LPARAMETERS tuValue\n"
+            "    nCaptionCalls = nCaptionCalls + 1\n"
+            "    IF nCaptionCalls = 1\n"
+            "        1 / 0\n"
+            "    ENDIF\n"
+            "    RETURN\n"
+            "ENDPROC\n"
+            "PROCEDURE HandleRaw\n"
+            "    LPARAMETERS tuValue\n"
+            "    nRawCalls = nRawCalls + 1\n"
+            "    IF nRawCalls = 1\n"
+            "        1 / 0\n"
+            "    ENDIF\n"
+            "    RETURN\n"
+            "ENDPROC\n"
+            "DEFINE CLASS ParentWidget AS Custom\n"
+            "    cBacking = 'Parent'\n"
+            "    nRaw = 5\n"
+            "    FUNCTION Caption_Access\n"
+            "        RETURN THIS.cBacking + ':A'\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ChildWidget AS ParentWidget\n"
+            "    cBacking = 'Child'\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native property BINDEVENT fault-recovery script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("nbindcaption", "1");
+        check("nbindraw", "1");
+        check("lcaptioncaught", "true");
+        check("ccaptionsecond", "Child:A");
+        check("ncaptioncalls", "2");
+        check("lrawcaught", "true");
+        check("nrawfinal", "9");
+        check("nrawcalls", "3");
+
+        const auto caption_error = state.globals.find("ccaptionerror");
+        const auto raw_error = state.globals.find("crawerror");
+        expect(caption_error != state.globals.end(),
+               "faulting property-read delegate should populate the CATCH error message");
+        expect(raw_error != state.globals.end(),
+               "faulting property-write delegate should populate the CATCH error message");
 
         fs::remove_all(temp_root, ignored);
     }
@@ -54361,8 +54615,10 @@ int main()
     test_same_prg_inherited_methods_dispatch_self_calls_to_most_derived_overrides();
     test_external_base_inherited_methods_dispatch_self_calls_to_most_derived_overrides();
     test_external_prg_base_methods_support_dodefault_dispatch();
-    test_external_prg_base_methods_reflect_through_getpem_pemstatus_and_amembers();
+        test_external_prg_base_methods_reflect_through_getpem_pemstatus_and_amembers();
         test_same_prg_native_bindevent_raiseevent_and_unbindevents_dispatch_same_session_handlers();
+        test_same_prg_native_raiseevent_handler_fault_does_not_disable_future_dispatch();
+        test_same_prg_native_bindevent_method_handler_fault_does_not_disable_future_delegate_dispatch();
         test_same_prg_native_aevents_enumerates_same_session_bindings_without_clobbering_zero_row_targets();
         test_same_prg_native_aevents_zero_reports_current_event_metadata_during_delegate_dispatch();
         test_same_prg_native_windows_message_bindevent_and_aevents_dispatch_during_read_events();
@@ -54383,6 +54639,7 @@ int main()
         test_runtime_olecontrol_direct_member_shadowing_stays_blocked();
         test_runtime_native_visual_controls_without_hwnd_fail_deterministically();
         test_same_prg_native_bindevent_property_access_and_assign_dispatch_preserve_current_event_metadata();
+        test_same_prg_native_bindevent_property_handler_fault_does_not_disable_future_dispatch();
         test_same_prg_native_access_assign_methods_virtualize_ordinary_property_reads_and_writes();
     test_native_accessor_backed_properties_reflect_through_getpem_pemstatus_and_amembers();
     test_external_prg_base_accessor_backed_properties_dispatch_and_reflect();
