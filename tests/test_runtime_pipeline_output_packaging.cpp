@@ -3998,8 +3998,8 @@ void test_runtime_manifest_records_generated_compiler_contract_digests() {
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
         const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
         for (const auto& digest : result.plan.compiler_contract_digests) {
-            expect(runtime_manifest.find("compiler_contract=" + quote_manifest_value(digest.path) + "|" + quote_manifest_value(digest.sha256)) != std::string::npos,
-                   "runtime manifest should record each generated compiler-contract digest");
+            expect(runtime_manifest.find("compiler_contract=" + quote_manifest_value(digest.path) + "|" + quote_manifest_value(digest.sha256)) == std::string::npos,
+                   "runtime manifest should omit compiler-contract digests from the execution contract");
             expect(debug_manifest.find("compiler_contract=" + quote_manifest_value(digest.path) + "|" + quote_manifest_value(digest.sha256)) != std::string::npos,
                    "debug manifest should record each generated compiler-contract digest");
         }

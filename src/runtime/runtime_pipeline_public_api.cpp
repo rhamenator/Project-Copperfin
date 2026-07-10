@@ -342,12 +342,6 @@ std::string build_runtime_manifest_text(
                << quote_manifest_value(digest.sha256) << "\n";
     }
 
-    for (const auto& digest : plan.compiler_contract_digests) {
-        stream << "compiler_contract="
-               << quote_manifest_value(digest.path) << "|"
-               << quote_manifest_value(digest.sha256) << "\n";
-    }
-
     for (const auto& symbol : plan.exported_symbols) {
         stream << "export_symbol=" << quote_manifest_value(symbol) << "\n";
     }
