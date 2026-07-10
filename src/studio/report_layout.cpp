@@ -484,14 +484,16 @@ void finalize_preview_bounds(StudioReportLayoutSnapshot& snapshot) {
 }
 
 void finalize_page_setup_summary(StudioReportLayoutSnapshot& snapshot) {
+    const auto& summary_settings = snapshot.settings.empty() ? snapshot.deleted_settings : snapshot.settings;
+
     const auto apply_setting = [&](std::string_view setting_name, auto assign_setting) {
         const auto setting = std::find_if(
-            snapshot.settings.begin(),
-            snapshot.settings.end(),
+            summary_settings.begin(),
+            summary_settings.end(),
             [&](const StudioNamedValue& named_value) {
                 return equals_ignore_case(named_value.name, setting_name);
             });
-        if (setting == snapshot.settings.end()) {
+        if (setting == summary_settings.end()) {
             return;
         }
 
@@ -505,12 +507,12 @@ void finalize_page_setup_summary(StudioReportLayoutSnapshot& snapshot) {
 
     const auto apply_string_setting = [&](std::string_view setting_name, auto assign_setting) {
         const auto setting = std::find_if(
-            snapshot.settings.begin(),
-            snapshot.settings.end(),
+            summary_settings.begin(),
+            summary_settings.end(),
             [&](const StudioNamedValue& named_value) {
                 return equals_ignore_case(named_value.name, setting_name);
             });
-        if (setting == snapshot.settings.end()) {
+        if (setting == summary_settings.end()) {
             return;
         }
 

@@ -346,18 +346,52 @@ void test_studio_host_json_preserves_selected_label_settings(const std::string& 
                     "#1497: deleted selected label settings JSON should not expose live settings");
     expect_contains(deleted_settings_process.stdout_text, "\"deletedSettingCount\": 11",
                     "#1497: deleted selected label settings JSON should expose deleted setting counts");
-    expect_contains(deleted_settings_process.stdout_text, "\"paperLengthAvailable\": false",
-                    "#3744: selected deleted label settings JSON should keep live paper-length unavailable");
-    expect_contains(deleted_settings_process.stdout_text, "\"paperLength\": 0",
-                    "#3744: selected deleted label settings JSON should keep live paper-length zero");
-    expect_contains(deleted_settings_process.stdout_text, "\"paperWidthAvailable\": false",
-                    "#3744: selected deleted label settings JSON should keep live paper-width unavailable");
-    expect_contains(deleted_settings_process.stdout_text, "\"paperWidth\": 0",
-                    "#3744: selected deleted label settings JSON should keep live paper-width zero");
-    expect_contains(deleted_settings_process.stdout_text, "\"sortExpressionAvailable\": false",
-                    "#3745: selected deleted label settings JSON should keep live sort-expression unavailable");
-    expect_contains(deleted_settings_process.stdout_text, "\"sortExpression\": \"\"",
-                    "#3745: selected deleted label settings JSON should keep live sort-expression empty");
+    expect_contains(deleted_settings_process.stdout_text, "\"pageSetupAvailable\": true",
+                    "#3815: deleted selected label settings JSON should surface fallback page-setup availability");
+    expect_contains(deleted_settings_process.stdout_text, "\"orientationAvailable\": true",
+                    "#3815: deleted selected label settings JSON should surface fallback orientation availability");
+    expect_contains(deleted_settings_process.stdout_text, "\"orientationCode\": 0",
+                    "#3815: deleted selected label settings JSON should surface fallback orientation values");
+    expect_contains(deleted_settings_process.stdout_text, "\"paperSizeAvailable\": true",
+                    "#3815: deleted selected label settings JSON should surface fallback paper-size availability");
+    expect_contains(deleted_settings_process.stdout_text, "\"paperSizeCode\": 1",
+                    "#3815: deleted selected label settings JSON should surface fallback paper-size values");
+    expect_contains(deleted_settings_process.stdout_text, "\"paperLengthAvailable\": true",
+                    "#3815: deleted selected label settings JSON should surface fallback paper-length availability");
+    expect_contains(deleted_settings_process.stdout_text, "\"paperLength\": 2794",
+                    "#3815: deleted selected label settings JSON should surface fallback paper-length values");
+    expect_contains(deleted_settings_process.stdout_text, "\"paperWidthAvailable\": true",
+                    "#3815: deleted selected label settings JSON should surface fallback paper-width availability");
+    expect_contains(deleted_settings_process.stdout_text, "\"paperWidth\": 2159",
+                    "#3815: deleted selected label settings JSON should surface fallback paper-width values");
+    expect_contains(deleted_settings_process.stdout_text, "\"topMarginAvailable\": true",
+                    "#3815: deleted selected label settings JSON should surface fallback top-margin availability");
+    expect_contains(deleted_settings_process.stdout_text, "\"topMargin\": 10",
+                    "#3815: deleted selected label settings JSON should surface fallback top-margin values");
+    expect_contains(deleted_settings_process.stdout_text, "\"bottomMarginAvailable\": true",
+                    "#3815: deleted selected label settings JSON should surface fallback bottom-margin availability");
+    expect_contains(deleted_settings_process.stdout_text, "\"bottomMargin\": 20",
+                    "#3815: deleted selected label settings JSON should surface fallback bottom-margin values");
+    expect_contains(deleted_settings_process.stdout_text, "\"leftMarginAvailable\": true",
+                    "#3815: deleted selected label settings JSON should surface fallback left-margin availability");
+    expect_contains(deleted_settings_process.stdout_text, "\"leftMargin\": 15",
+                    "#3815: deleted selected label settings JSON should surface fallback left-margin values");
+    expect_contains(deleted_settings_process.stdout_text, "\"rightMarginAvailable\": true",
+                    "#3815: deleted selected label settings JSON should surface fallback right-margin availability");
+    expect_contains(deleted_settings_process.stdout_text, "\"rightMargin\": 25",
+                    "#3815: deleted selected label settings JSON should surface fallback right-margin values");
+    expect_contains(deleted_settings_process.stdout_text, "\"gridVerticalAvailable\": true",
+                    "#3815: deleted selected label settings JSON should surface fallback vertical-grid availability");
+    expect_contains(deleted_settings_process.stdout_text, "\"gridVertical\": 4",
+                    "#3815: deleted selected label settings JSON should surface fallback vertical-grid values");
+    expect_contains(deleted_settings_process.stdout_text, "\"gridHorizontalAvailable\": true",
+                    "#3815: deleted selected label settings JSON should surface fallback horizontal-grid availability");
+    expect_contains(deleted_settings_process.stdout_text, "\"gridHorizontal\": 8",
+                    "#3815: deleted selected label settings JSON should surface fallback horizontal-grid values");
+    expect_contains(deleted_settings_process.stdout_text, "\"sortExpressionAvailable\": true",
+                    "#3815: deleted selected label settings JSON should surface fallback sort-expression availability");
+    expect_contains(deleted_settings_process.stdout_text, "\"sortExpression\": \"customer.country\"",
+                    "#3815: deleted selected label settings JSON should surface fallback sort-expression values");
     expect_contains_in_order(
         deleted_settings_process.stdout_text,
         {

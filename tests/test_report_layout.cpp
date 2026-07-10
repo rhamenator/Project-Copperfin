@@ -1976,6 +1976,135 @@ void test_build_report_layout_summarizes_color_and_copies() {
     }
 }
 
+void test_build_report_layout_falls_back_to_deleted_root_summary_settings() {
+    copperfin::studio::StudioDocumentModel document;
+    document.display_name = "deleted-root-summary.frx";
+    document.kind = copperfin::studio::StudioAssetKind::report;
+    document.table_preview_available = true;
+
+    document.table_preview.records = {
+        {
+            .record_index = 0U,
+            .deleted = true,
+            .values = {
+                value("OBJTYPE", "1"),
+                value("OBJCODE", "53"),
+                value(
+                    "EXPR",
+                    "ORIENTATION=1\r\nPAPERSIZE=9\r\nPAPERLENGTH=2794\r\nPAPERWIDTH=2159\r\nBOTMARGIN=20\r\nGRIDV=4\r\nGRIDH=8\r\nCOLOR=0\r\nCOPIES=3\r\nDRIVER=HP LaserJet\r\nDEVICE=winspool\r\nOUTPUT=invoice.pdf\r\nCOLS=2\r\nCOLWIDTH=3000\r\nCOLSPACING=250",
+                    51U),
+                value("TOPMARGIN", "10"),
+                value("TAG", "customer.country", 52U),
+                value("LEFTMARGIN", "15"),
+                value("RIGHTMARGIN", "25")
+            }
+        }
+    };
+
+    const auto layout = copperfin::studio::build_report_layout(document);
+    expect(layout.available, "#3815: deleted-only report layout should still be available");
+    expect(layout.settings.empty(), "#3815: deleted-only report layout should keep live root settings empty");
+    expect(layout.deleted_settings.size() == 19U,
+        "#3815: deleted-only report layout should preserve deleted root setting counts");
+    expect(layout.page_setup_available, "#3815: deleted root settings should surface page-setup availability");
+    expect(layout.orientation_available && layout.orientation_code == 1,
+        "#3815: deleted root settings should surface orientation summary values");
+    expect(layout.paper_size_available && layout.paper_size_code == 9,
+        "#3815: deleted root settings should surface paper-size summary values");
+    expect(layout.paper_length_available && layout.paper_length == 2794,
+        "#3815: deleted root settings should surface paper-length summary values");
+    expect(layout.paper_width_available && layout.paper_width == 2159,
+        "#3815: deleted root settings should surface paper-width summary values");
+    expect(layout.top_margin_available && layout.top_margin == 10,
+        "#3815: deleted root settings should surface top-margin summary values");
+    expect(layout.bottom_margin_available && layout.bottom_margin == 20,
+        "#3815: deleted root settings should surface bottom-margin summary values");
+    expect(layout.left_margin_available && layout.left_margin == 15,
+        "#3815: deleted root settings should surface left-margin summary values");
+    expect(layout.right_margin_available && layout.right_margin == 25,
+        "#3815: deleted root settings should surface right-margin summary values");
+    expect(layout.grid_vertical_available && layout.grid_vertical == 4,
+        "#3815: deleted root settings should surface vertical-grid summary values");
+    expect(layout.grid_horizontal_available && layout.grid_horizontal == 8,
+        "#3815: deleted root settings should surface horizontal-grid summary values");
+    expect(layout.color_available && layout.color == 0,
+        "#3815: deleted root settings should surface COLOR summary values");
+    expect(layout.copies_available && layout.copies == 3,
+        "#3815: deleted root settings should surface COPIES summary values");
+    expect(layout.driver_available && layout.driver == "HP LaserJet",
+        "#3815: deleted root settings should surface DRIVER summary values");
+    expect(layout.device_available && layout.device == "winspool",
+        "#3815: deleted root settings should surface DEVICE summary values");
+    expect(layout.output_available && layout.output == "invoice.pdf",
+        "#3815: deleted root settings should surface OUTPUT summary values");
+    expect(layout.column_setup_available, "#3815: deleted root settings should surface column-setup availability");
+    expect(layout.column_count_available && layout.column_count == 2,
+        "#3815: deleted root settings should surface column-count summary values");
+    expect(layout.column_width_available && layout.column_width == 3000,
+        "#3815: deleted root settings should surface column-width summary values");
+    expect(layout.column_spacing_available && layout.column_spacing == 250,
+        "#3815: deleted root settings should surface column-spacing summary values");
+    expect(layout.sort_expression_available && layout.sort_expression == "customer.country",
+        "#3815: deleted root settings should surface TAG-derived sort summary values");
+}
+
+void test_build_report_layout_prefers_live_root_summary_settings_over_deleted_fallback() {
+    copperfin::studio::StudioDocumentModel document;
+    document.display_name = "live-root-preferred.frx";
+    document.kind = copperfin::studio::StudioAssetKind::report;
+    document.table_preview_available = true;
+
+    document.table_preview.records = {
+        {
+            .record_index = 0U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "1"),
+                value("OBJCODE", "53"),
+                value("EXPR", "ORIENTATION=0\r\nPAPERSIZE=1", 53U),
+                value("TOPMARGIN", "10")
+            }
+        },
+        {
+            .record_index = 1U,
+            .deleted = true,
+            .values = {
+                value("OBJTYPE", "1"),
+                value("OBJCODE", "53"),
+                value("EXPR", "PAPERLENGTH=2794\r\nPAPERWIDTH=2159\r\nCOLS=2\r\nCOLWIDTH=3000\r\nCOLSPACING=250", 54U),
+                value("TOPMARGIN", "99"),
+                value("TAG", "customer.country", 55U)
+            }
+        }
+    };
+
+    const auto layout = copperfin::studio::build_report_layout(document);
+    expect(layout.available, "#3815: mixed live/deleted report layout should be available");
+    expect(layout.settings.size() == 3U, "#3815: mixed live/deleted report layout should keep live root settings intact");
+    expect(layout.deleted_settings.size() == 6U,
+        "#3815: mixed live/deleted report layout should keep deleted root settings separate");
+    expect(layout.page_setup_available, "#3815: live root settings should still surface page-setup availability");
+    expect(layout.orientation_available && layout.orientation_code == 0,
+        "#3815: live root settings should win for orientation summary values");
+    expect(layout.paper_size_available && layout.paper_size_code == 1,
+        "#3815: live root settings should win for paper-size summary values");
+    expect(layout.top_margin_available && layout.top_margin == 10,
+        "#3815: live root settings should win for direct top-margin summary values");
+    expect(!layout.paper_length_available && layout.paper_length == 0,
+        "#3815: deleted root paper length should not backfill live-root summary gaps");
+    expect(!layout.paper_width_available && layout.paper_width == 0,
+        "#3815: deleted root paper width should not backfill live-root summary gaps");
+    expect(!layout.column_setup_available, "#3815: deleted root column settings should not backfill live-root summary gaps");
+    expect(!layout.column_count_available && layout.column_count == 0,
+        "#3815: deleted root column counts should not backfill live-root summary gaps");
+    expect(!layout.column_width_available && layout.column_width == 0,
+        "#3815: deleted root column widths should not backfill live-root summary gaps");
+    expect(!layout.column_spacing_available && layout.column_spacing == 0,
+        "#3815: deleted root column spacing should not backfill live-root summary gaps");
+    expect(!layout.sort_expression_available && layout.sort_expression.empty(),
+        "#3815: deleted root TAG should not backfill live-root sort summary gaps");
+}
+
 void test_build_report_layout_summarizes_root_sort_expression() {
     copperfin::studio::StudioDocumentModel document;
     document.display_name = "sort-expression.frx";
@@ -2128,6 +2257,8 @@ int main() {
     test_build_report_layout_includes_direct_side_margin_settings();
     test_build_report_layout_summarizes_paper_dimensions();
     test_build_report_layout_summarizes_color_and_copies();
+    test_build_report_layout_falls_back_to_deleted_root_summary_settings();
+    test_build_report_layout_prefers_live_root_summary_settings_over_deleted_fallback();
     test_build_report_layout_summarizes_root_sort_expression();
     test_build_report_layout_preserves_band_unique_ids_for_section_identity();
 
