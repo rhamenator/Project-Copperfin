@@ -1170,7 +1170,7 @@ std::optional<std::size_t> parse_native_list_control_selected_member_slot_impl(
         [](const std::string& candidate, const std::string& base_name) -> std::optional<std::string>
     {
         const std::string trimmed = trim_copy(candidate);
-        const std::string normalized = normalize_identifier(trimmed);
+        const std::string normalized = lowercase_copy(trimmed);
         const auto extract_for_delimiters =
             [&](char open_delimiter, char close_delimiter) -> std::optional<std::string>
         {
@@ -1229,7 +1229,7 @@ std::optional<NativeListControlCellReference> parse_native_list_control_list_mem
         [](const std::string& candidate, const std::string& base_name) -> std::optional<std::string>
     {
         const std::string trimmed = trim_copy(candidate);
-        const std::string normalized = normalize_identifier(trimmed);
+        const std::string normalized = lowercase_copy(trimmed);
         const auto extract_for_delimiters =
             [&](char open_delimiter, char close_delimiter) -> std::optional<std::string>
         {
@@ -1299,7 +1299,7 @@ std::optional<NativeListControlItemCellReference> parse_native_list_control_list
         [](const std::string& candidate, const std::string& base_name) -> std::optional<std::string>
     {
         const std::string trimmed = trim_copy(candidate);
-        const std::string normalized = normalize_identifier(trimmed);
+        const std::string normalized = lowercase_copy(trimmed);
         const auto extract_for_delimiters =
             [&](char open_delimiter, char close_delimiter) -> std::optional<std::string>
         {
@@ -1369,7 +1369,7 @@ std::optional<long long> parse_native_list_control_selectedid_member_item_id_imp
         [](const std::string& candidate, const std::string& base_name) -> std::optional<std::string>
     {
         const std::string trimmed = trim_copy(candidate);
-        const std::string normalized = normalize_identifier(trimmed);
+        const std::string normalized = lowercase_copy(trimmed);
         const auto extract_for_delimiters =
             [&](char open_delimiter, char close_delimiter) -> std::optional<std::string>
         {
@@ -1402,6 +1402,124 @@ std::optional<long long> parse_native_list_control_selectedid_member_item_id_imp
     };
 
     const auto selector_text = extract_member_selector_text(member_name, "selectedid");
+    if (!selector_text.has_value() || selector_text->empty()) {
+        return std::nullopt;
+    }
+
+    try {
+        const long long requested_item_id = std::stoll(*selector_text);
+        if (requested_item_id < 1LL) {
+            return std::nullopt;
+        }
+        return requested_item_id;
+    } catch (const std::exception&) {
+        return std::nullopt;
+    }
+}
+
+std::optional<std::size_t> parse_native_list_control_indextoitemid_member_slot_impl(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& member_name) {
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return std::nullopt;
+    }
+
+    const auto extract_member_selector_text =
+        [](const std::string& candidate, const std::string& base_name) -> std::optional<std::string>
+    {
+        const std::string trimmed = trim_copy(candidate);
+        const std::string normalized = lowercase_copy(trimmed);
+        const auto extract_for_delimiters =
+            [&](char open_delimiter, char close_delimiter) -> std::optional<std::string>
+        {
+            std::string prefix = base_name;
+            prefix.push_back(open_delimiter);
+            if (!starts_with_insensitive(normalized, prefix) ||
+                normalized.empty() ||
+                normalized.back() != close_delimiter)
+            {
+                return std::nullopt;
+            }
+
+            const std::size_t open = trimmed.find(open_delimiter);
+            const std::size_t close = trimmed.rfind(close_delimiter);
+            if (open == std::string::npos ||
+                close == std::string::npos ||
+                close <= open + 1U)
+            {
+                return std::nullopt;
+            }
+            return trim_copy(trimmed.substr(open + 1U, close - open - 1U));
+        };
+
+        if (const auto parenthesized = extract_for_delimiters('(', ')');
+            parenthesized.has_value())
+        {
+            return parenthesized;
+        }
+        return extract_for_delimiters('[', ']');
+    };
+
+    const auto selector_text = extract_member_selector_text(member_name, "indextoitemid");
+    if (!selector_text.has_value() || selector_text->empty()) {
+        return std::nullopt;
+    }
+
+    try {
+        const long long requested_index = std::stoll(*selector_text);
+        if (requested_index < 1LL) {
+            return std::nullopt;
+        }
+        return static_cast<std::size_t>(requested_index - 1LL);
+    } catch (const std::exception&) {
+        return std::nullopt;
+    }
+}
+
+std::optional<long long> parse_native_list_control_itemidtoindex_member_item_id_impl(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& member_name) {
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return std::nullopt;
+    }
+
+    const auto extract_member_selector_text =
+        [](const std::string& candidate, const std::string& base_name) -> std::optional<std::string>
+    {
+        const std::string trimmed = trim_copy(candidate);
+        const std::string normalized = lowercase_copy(trimmed);
+        const auto extract_for_delimiters =
+            [&](char open_delimiter, char close_delimiter) -> std::optional<std::string>
+        {
+            std::string prefix = base_name;
+            prefix.push_back(open_delimiter);
+            if (!starts_with_insensitive(normalized, prefix) ||
+                normalized.empty() ||
+                normalized.back() != close_delimiter)
+            {
+                return std::nullopt;
+            }
+
+            const std::size_t open = trimmed.find(open_delimiter);
+            const std::size_t close = trimmed.rfind(close_delimiter);
+            if (open == std::string::npos ||
+                close == std::string::npos ||
+                close <= open + 1U)
+            {
+                return std::nullopt;
+            }
+            return trim_copy(trimmed.substr(open + 1U, close - open - 1U));
+        };
+
+        if (const auto parenthesized = extract_for_delimiters('(', ')');
+            parenthesized.has_value())
+        {
+            return parenthesized;
+        }
+        return extract_for_delimiters('[', ']');
+    };
+
+    const auto selector_text = extract_member_selector_text(member_name, "itemidtoindex");
     if (!selector_text.has_value() || selector_text->empty()) {
         return std::nullopt;
     }
@@ -2712,6 +2830,20 @@ std::optional<long long> parse_native_list_control_selectedid_member_item_id(
     return parse_native_list_control_selectedid_member_item_id_impl(runtime_object, member_name);
 }
 
+std::optional<std::size_t> parse_native_list_control_indextoitemid_member_slot(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& member_name)
+{
+    return parse_native_list_control_indextoitemid_member_slot_impl(runtime_object, member_name);
+}
+
+std::optional<long long> parse_native_list_control_itemidtoindex_member_item_id(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& member_name)
+{
+    return parse_native_list_control_itemidtoindex_member_item_id_impl(runtime_object, member_name);
+}
+
 void refresh_native_list_control_controlsource_value_kind_hint(
     RuntimeOleObjectState& runtime_object,
     const RuntimeControlSourceValueResolver& resolver)
@@ -3739,6 +3871,44 @@ std::optional<PrgValue> read_native_list_control_item_cell(
     return read_native_list_control_cell(runtime_object, *row_slot, column_slot);
 }
 
+std::optional<PrgValue> read_native_list_control_item_id_for_slot(
+    RuntimeOleObjectState& runtime_object,
+    std::size_t row_slot)
+{
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return std::nullopt;
+    }
+
+    materialize_native_list_control_rows(runtime_object);
+    if (row_slot >= runtime_object.collection_item_keys.size()) {
+        return make_number_value(0.0);
+    }
+
+    try {
+        return make_number_value(
+            static_cast<double>(std::stoll(runtime_object.collection_item_keys[row_slot])));
+    } catch (const std::exception&) {
+        return make_number_value(0.0);
+    }
+}
+
+std::optional<PrgValue> read_native_list_control_index_for_item_id(
+    RuntimeOleObjectState& runtime_object,
+    long long item_id)
+{
+    if (!is_native_list_control_runtime_object(runtime_object)) {
+        return std::nullopt;
+    }
+
+    materialize_native_list_control_rows(runtime_object);
+    if (item_id < 1LL) {
+        return make_number_value(0.0);
+    }
+
+    const auto row_slot = find_native_list_control_row_by_item_id(runtime_object, item_id);
+    return make_number_value(row_slot.has_value() ? static_cast<double>(*row_slot + 1U) : 0.0);
+}
+
 std::optional<PrgValue> read_native_identity_metadata(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     // Ordinary dotted reads intentionally trail reflection parity for metadata we have not widened yet.
@@ -4097,7 +4267,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             return make_boolean_value(false);
         }
         if (parse_native_list_control_list_member_cell(*runtime_object, property_name).has_value() ||
-            parse_native_list_control_listitem_member_cell(*runtime_object, property_name).has_value()) {
+            parse_native_list_control_listitem_member_cell(*runtime_object, property_name).has_value() ||
+            parse_native_list_control_indextoitemid_member_slot(*runtime_object, property_name).has_value() ||
+            parse_native_list_control_itemidtoindex_member_item_id(*runtime_object, property_name).has_value()) {
             return make_boolean_value(false);
         }
         if (is_native_identity_member_name(*runtime_object, property_name) ||
@@ -4208,6 +4380,16 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                 *runtime_object,
                 item_cell->item_id,
                 item_cell->column_slot);
+        }
+        if (const auto item_id_slot =
+                parse_native_list_control_indextoitemid_member_slot(*runtime_object, member_name);
+            item_id_slot.has_value()) {
+            return *read_native_list_control_item_id_for_slot(*runtime_object, *item_id_slot);
+        }
+        if (const auto item_index_id =
+                parse_native_list_control_itemidtoindex_member_item_id(*runtime_object, member_name);
+            item_index_id.has_value()) {
+            return *read_native_list_control_index_for_item_id(*runtime_object, *item_index_id);
         }
         if (is_native_listcount_member_name(*runtime_object, member_name)) {
             sync_native_list_control_count(*runtime_object);
@@ -4478,7 +4660,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             return make_boolean_value(false);
         }
         if (parse_native_list_control_list_member_cell(*runtime_object, property_name).has_value() ||
-            parse_native_list_control_listitem_member_cell(*runtime_object, property_name).has_value()) {
+            parse_native_list_control_listitem_member_cell(*runtime_object, property_name).has_value() ||
+            parse_native_list_control_indextoitemid_member_slot(*runtime_object, property_name).has_value() ||
+            parse_native_list_control_itemidtoindex_member_item_id(*runtime_object, property_name).has_value()) {
             return make_boolean_value(false);
         }
         if (is_native_identity_member_name(*runtime_object, property_name) ||

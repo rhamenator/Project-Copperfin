@@ -5077,9 +5077,10 @@ namespace copperfin::runtime
                 {
                     std::string prefix = base_name;
                     prefix.push_back(open_delimiter);
-                    if (!starts_with_insensitive(normalized_property_name, prefix) ||
-                        normalized_property_name.empty() ||
-                        normalized_property_name.back() != close_delimiter)
+                    const std::string folded_property_name = lowercase_copy(trimmed_property_name);
+                    if (!starts_with_insensitive(folded_property_name, prefix) ||
+                        folded_property_name.empty() ||
+                        folded_property_name.back() != close_delimiter)
                     {
                         return std::nullopt;
                     }
@@ -5148,9 +5149,10 @@ namespace copperfin::runtime
                 {
                     std::string prefix = base_name;
                     prefix.push_back(open_delimiter);
-                    if (!starts_with_insensitive(normalized_property_name, prefix) ||
-                        normalized_property_name.empty() ||
-                        normalized_property_name.back() != close_delimiter)
+                    const std::string folded_property_name = lowercase_copy(trimmed_property_name);
+                    if (!starts_with_insensitive(folded_property_name, prefix) ||
+                        folded_property_name.empty() ||
+                        folded_property_name.back() != close_delimiter)
                     {
                         return std::nullopt;
                     }
@@ -5202,6 +5204,124 @@ namespace copperfin::runtime
                 .column_slot = static_cast<std::size_t>(requested_column - 1LL)};
         };
 
+        auto resolve_indextoitemid_member_slot = [&]() -> std::optional<std::size_t>
+        {
+            const auto literal_slot =
+                parse_native_list_control_indextoitemid_member_slot(runtime_object, property_name);
+            if (literal_slot.has_value())
+            {
+                return literal_slot;
+            }
+
+            const auto extract_selector_text = [&](const std::string& base_name) -> std::optional<std::string>
+            {
+                const std::string trimmed_property_name = trim_copy(property_name);
+                const auto extract_for_delimiters =
+                    [&](char open_delimiter, char close_delimiter) -> std::optional<std::string>
+                {
+                    std::string prefix = base_name;
+                    prefix.push_back(open_delimiter);
+                    const std::string folded_property_name = lowercase_copy(trimmed_property_name);
+                    if (!starts_with_insensitive(folded_property_name, prefix) ||
+                        folded_property_name.empty() ||
+                        folded_property_name.back() != close_delimiter)
+                    {
+                        return std::nullopt;
+                    }
+
+                    const std::size_t open = trimmed_property_name.find(open_delimiter);
+                    const std::size_t close = trimmed_property_name.rfind(close_delimiter);
+                    if (open == std::string::npos ||
+                        close == std::string::npos ||
+                        close <= open + 1U)
+                    {
+                        return std::nullopt;
+                    }
+                    return trimmed_property_name.substr(open + 1U, close - open - 1U);
+                };
+
+                if (const auto parenthesized = extract_for_delimiters('(', ')');
+                    parenthesized.has_value())
+                {
+                    return parenthesized;
+                }
+                return extract_for_delimiters('[', ']');
+            };
+
+            const auto selector_text = extract_selector_text("indextoitemid");
+            if (!selector_text.has_value())
+            {
+                return std::nullopt;
+            }
+
+            const PrgValue selector_value = evaluate_expression(*selector_text, source_frame);
+            const long long requested_index = std::llround(value_as_number(selector_value));
+            if (requested_index < 1LL)
+            {
+                return std::nullopt;
+            }
+            return static_cast<std::size_t>(requested_index - 1LL);
+        };
+
+        auto resolve_itemidtoindex_member_item_id = [&]() -> std::optional<long long>
+        {
+            const auto literal_item_id =
+                parse_native_list_control_itemidtoindex_member_item_id(runtime_object, property_name);
+            if (literal_item_id.has_value())
+            {
+                return literal_item_id;
+            }
+
+            const auto extract_selector_text = [&](const std::string& base_name) -> std::optional<std::string>
+            {
+                const std::string trimmed_property_name = trim_copy(property_name);
+                const auto extract_for_delimiters =
+                    [&](char open_delimiter, char close_delimiter) -> std::optional<std::string>
+                {
+                    std::string prefix = base_name;
+                    prefix.push_back(open_delimiter);
+                    const std::string folded_property_name = lowercase_copy(trimmed_property_name);
+                    if (!starts_with_insensitive(folded_property_name, prefix) ||
+                        folded_property_name.empty() ||
+                        folded_property_name.back() != close_delimiter)
+                    {
+                        return std::nullopt;
+                    }
+
+                    const std::size_t open = trimmed_property_name.find(open_delimiter);
+                    const std::size_t close = trimmed_property_name.rfind(close_delimiter);
+                    if (open == std::string::npos ||
+                        close == std::string::npos ||
+                        close <= open + 1U)
+                    {
+                        return std::nullopt;
+                    }
+                    return trimmed_property_name.substr(open + 1U, close - open - 1U);
+                };
+
+                if (const auto parenthesized = extract_for_delimiters('(', ')');
+                    parenthesized.has_value())
+                {
+                    return parenthesized;
+                }
+                return extract_for_delimiters('[', ']');
+            };
+
+            const auto selector_text = extract_selector_text("itemidtoindex");
+            if (!selector_text.has_value())
+            {
+                return std::nullopt;
+            }
+
+            const PrgValue selector_value = evaluate_expression(*selector_text, source_frame);
+            const long long requested_item_id = std::llround(value_as_number(selector_value));
+            if (requested_item_id < 1LL)
+            {
+                return std::nullopt;
+            }
+            return requested_item_id;
+        };
+
         const auto perform_property_read = [&]() -> std::optional<PrgValue>
         {
             if (auto access_result = invoke_native_object_method_body_if_present(
@@ -5239,6 +5359,20 @@ namespace copperfin::runtime
                     runtime_object,
                     item_cell->item_id,
                     item_cell->column_slot);
+            }
+            if (const auto item_id_slot = resolve_indextoitemid_member_slot();
+                item_id_slot.has_value())
+            {
+                return read_native_list_control_item_id_for_slot(
+                    runtime_object,
+                    *item_id_slot);
+            }
+            if (const auto item_index_id = resolve_itemidtoindex_member_item_id();
+                item_index_id.has_value())
+            {
+                return read_native_list_control_index_for_item_id(
+                    runtime_object,
+                    *item_index_id);
             }
             if (is_native_listcount_member_name(runtime_object, normalized_property_name))
             {
@@ -5626,9 +5760,10 @@ namespace copperfin::runtime
                 {
                     std::string prefix = base_name;
                     prefix.push_back(open_delimiter);
-                    if (!starts_with_insensitive(normalized_property_name, prefix) ||
-                        normalized_property_name.empty() ||
-                        normalized_property_name.back() != close_delimiter)
+                    const std::string folded_property_name = lowercase_copy(trimmed_property_name);
+                    if (!starts_with_insensitive(folded_property_name, prefix) ||
+                        folded_property_name.empty() ||
+                        folded_property_name.back() != close_delimiter)
                     {
                         return std::nullopt;
                     }
@@ -5686,9 +5821,10 @@ namespace copperfin::runtime
                 {
                     std::string prefix = base_name;
                     prefix.push_back(open_delimiter);
-                    if (!starts_with_insensitive(normalized_property_name, prefix) ||
-                        normalized_property_name.empty() ||
-                        normalized_property_name.back() != close_delimiter)
+                    const std::string folded_property_name = lowercase_copy(trimmed_property_name);
+                    if (!starts_with_insensitive(folded_property_name, prefix) ||
+                        folded_property_name.empty() ||
+                        folded_property_name.back() != close_delimiter)
                     {
                         return std::nullopt;
                     }
@@ -5746,9 +5882,10 @@ namespace copperfin::runtime
                 {
                     std::string prefix = base_name;
                     prefix.push_back(open_delimiter);
-                    if (!starts_with_insensitive(normalized_property_name, prefix) ||
-                        normalized_property_name.empty() ||
-                        normalized_property_name.back() != close_delimiter)
+                    const std::string folded_property_name = lowercase_copy(trimmed_property_name);
+                    if (!starts_with_insensitive(folded_property_name, prefix) ||
+                        folded_property_name.empty() ||
+                        folded_property_name.back() != close_delimiter)
                     {
                         return std::nullopt;
                     }
@@ -5817,9 +5954,10 @@ namespace copperfin::runtime
                 {
                     std::string prefix = base_name;
                     prefix.push_back(open_delimiter);
-                    if (!starts_with_insensitive(normalized_property_name, prefix) ||
-                        normalized_property_name.empty() ||
-                        normalized_property_name.back() != close_delimiter)
+                    const std::string folded_property_name = lowercase_copy(trimmed_property_name);
+                    if (!starts_with_insensitive(folded_property_name, prefix) ||
+                        folded_property_name.empty() ||
+                        folded_property_name.back() != close_delimiter)
                     {
                         return std::nullopt;
                     }
@@ -5869,6 +6007,124 @@ namespace copperfin::runtime
             return NativeListControlItemCellReference{
                 .item_id = requested_item_id,
                 .column_slot = static_cast<std::size_t>(requested_column - 1LL)};
+        };
+
+        auto resolve_indextoitemid_member_slot = [&]() -> std::optional<std::size_t>
+        {
+            const auto literal_slot =
+                parse_native_list_control_indextoitemid_member_slot(runtime_object, property_name);
+            if (literal_slot.has_value())
+            {
+                return literal_slot;
+            }
+
+            const auto extract_selector_text = [&](const std::string& base_name) -> std::optional<std::string>
+            {
+                const std::string trimmed_property_name = trim_copy(property_name);
+                const auto extract_for_delimiters =
+                    [&](char open_delimiter, char close_delimiter) -> std::optional<std::string>
+                {
+                    std::string prefix = base_name;
+                    prefix.push_back(open_delimiter);
+                    const std::string folded_property_name = lowercase_copy(trimmed_property_name);
+                    if (!starts_with_insensitive(folded_property_name, prefix) ||
+                        folded_property_name.empty() ||
+                        folded_property_name.back() != close_delimiter)
+                    {
+                        return std::nullopt;
+                    }
+
+                    const std::size_t open = trimmed_property_name.find(open_delimiter);
+                    const std::size_t close = trimmed_property_name.rfind(close_delimiter);
+                    if (open == std::string::npos ||
+                        close == std::string::npos ||
+                        close <= open + 1U)
+                    {
+                        return std::nullopt;
+                    }
+                    return trimmed_property_name.substr(open + 1U, close - open - 1U);
+                };
+
+                if (const auto parenthesized = extract_for_delimiters('(', ')');
+                    parenthesized.has_value())
+                {
+                    return parenthesized;
+                }
+                return extract_for_delimiters('[', ']');
+            };
+
+            const auto selector_text = extract_selector_text("indextoitemid");
+            if (!selector_text.has_value())
+            {
+                return std::nullopt;
+            }
+
+            const PrgValue selector_value = evaluate_expression(*selector_text, source_frame);
+            const long long requested_index = std::llround(value_as_number(selector_value));
+            if (requested_index < 1LL)
+            {
+                return std::nullopt;
+            }
+            return static_cast<std::size_t>(requested_index - 1LL);
+        };
+
+        auto resolve_itemidtoindex_member_item_id = [&]() -> std::optional<long long>
+        {
+            const auto literal_item_id =
+                parse_native_list_control_itemidtoindex_member_item_id(runtime_object, property_name);
+            if (literal_item_id.has_value())
+            {
+                return literal_item_id;
+            }
+
+            const auto extract_selector_text = [&](const std::string& base_name) -> std::optional<std::string>
+            {
+                const std::string trimmed_property_name = trim_copy(property_name);
+                const auto extract_for_delimiters =
+                    [&](char open_delimiter, char close_delimiter) -> std::optional<std::string>
+                {
+                    std::string prefix = base_name;
+                    prefix.push_back(open_delimiter);
+                    const std::string folded_property_name = lowercase_copy(trimmed_property_name);
+                    if (!starts_with_insensitive(folded_property_name, prefix) ||
+                        folded_property_name.empty() ||
+                        folded_property_name.back() != close_delimiter)
+                    {
+                        return std::nullopt;
+                    }
+
+                    const std::size_t open = trimmed_property_name.find(open_delimiter);
+                    const std::size_t close = trimmed_property_name.rfind(close_delimiter);
+                    if (open == std::string::npos ||
+                        close == std::string::npos ||
+                        close <= open + 1U)
+                    {
+                        return std::nullopt;
+                    }
+                    return trimmed_property_name.substr(open + 1U, close - open - 1U);
+                };
+
+                if (const auto parenthesized = extract_for_delimiters('(', ')');
+                    parenthesized.has_value())
+                {
+                    return parenthesized;
+                }
+                return extract_for_delimiters('[', ']');
+            };
+
+            const auto selector_text = extract_selector_text("itemidtoindex");
+            if (!selector_text.has_value())
+            {
+                return std::nullopt;
+            }
+
+            const PrgValue selector_value = evaluate_expression(*selector_text, source_frame);
+            const long long requested_item_id = std::llround(value_as_number(selector_value));
+            if (requested_item_id < 1LL)
+            {
+                return std::nullopt;
+            }
+            return requested_item_id;
         };
 
         const auto perform_property_write = [&]() -> bool
@@ -5997,6 +6253,11 @@ namespace copperfin::runtime
                         item_cell->item_id,
                         item_cell->column_slot,
                         assigned_value);
+                }
+                if (resolve_indextoitemid_member_slot().has_value() ||
+                    resolve_itemidtoindex_member_item_id().has_value())
+                {
+                    return false;
                 }
                 if (const auto selected_slot = resolve_selected_member_slot();
                     selected_slot.has_value())

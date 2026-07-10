@@ -1647,15 +1647,52 @@
             PrgValue parse_indexed_identifier_access(const std::string &identifier, char close_delimiter)
             {
                 const PrgValue selector = parse_expression();
+                skip_whitespace();
+                std::optional<PrgValue> secondary_selector;
+                if (match(","))
+                {
+                    secondary_selector = parse_expression();
+                    skip_whitespace();
+                }
+                match(std::string(1U, close_delimiter));
+
                 if (array_exists_callback_(identifier))
                 {
-                    return finish_array_element_access(identifier, selector, close_delimiter);
+                    const std::size_t row =
+                        static_cast<std::size_t>(std::max<double>(0.0, value_as_number(selector)));
+                    const std::size_t column =
+                        secondary_selector.has_value()
+                            ? static_cast<std::size_t>(std::max<double>(
+                                  0.0,
+                                  value_as_number(*secondary_selector)))
+                            : 1U;
+                    return array_value_callback_(identifier, row, column);
                 }
 
-                return finish_native_collection_item_access(
-                    resolve_identifier(identifier),
-                    selector,
-                    close_delimiter);
+                const std::size_t member_separator = identifier.rfind('.');
+                if (member_separator != std::string::npos && ole_invoke_callback_)
+                {
+                    const std::string base_name = identifier.substr(0U, member_separator);
+                    const std::string member_path = identifier.substr(member_separator + 1U);
+                    std::vector<PrgValue> arguments{selector};
+                    if (secondary_selector.has_value())
+                    {
+                        arguments.push_back(*secondary_selector);
+                    }
+                    return ole_invoke_callback_(base_name, member_path, arguments, {});
+                }
+
+                RuntimeOleObjectState *runtime_object =
+                    resolve_object_callback_(resolve_identifier(identifier));
+                if (runtime_object != nullptr &&
+                    is_native_collection_object(*runtime_object))
+                {
+                    const auto item_value =
+                        invoke_native_collection_method(*runtime_object, "item", {selector});
+                    return item_value.value_or(make_empty_value());
+                }
+
+                return make_empty_value();
             }
 
             PrgValue apply_postfix_member_and_collection_access(PrgValue current)
@@ -1692,6 +1729,82 @@
                     }
 
                     skip_whitespace();
+                    if (peek() == '[')
+                    {
+                        match("[");
+
+                        const PrgValue selector = parse_expression();
+                        skip_whitespace();
+                        std::optional<PrgValue> secondary_selector;
+                        if (match(","))
+                        {
+                            secondary_selector = parse_expression();
+                            skip_whitespace();
+                        }
+                        match("]");
+
+                        if (suppress_evaluation_)
+                        {
+                            current = make_empty_value();
+                            continue;
+                        }
+
+                        if (invoke_native_member_callback_)
+                        {
+                            std::vector<PrgValue> selector_arguments{selector};
+                            if (secondary_selector.has_value())
+                            {
+                                selector_arguments.push_back(*secondary_selector);
+                            }
+                            const auto invoked_value = invoke_native_member_callback_(
+                                current,
+                                member_name,
+                                selector_arguments,
+                                {});
+                            if (invoked_value.has_value())
+                            {
+                                current = *invoked_value;
+                                continue;
+                            }
+                        }
+
+                        std::string selector_member_name =
+                            member_name + "[" + format_value(selector);
+                        if (secondary_selector.has_value())
+                        {
+                            selector_member_name += ", " + format_value(*secondary_selector);
+                        }
+                        selector_member_name.push_back(']');
+
+                        const auto selector_value =
+                            read_native_member_callback_(current, selector_member_name);
+                        if (selector_value.has_value())
+                        {
+                            current = *selector_value;
+                            continue;
+                        }
+
+                        const auto member_value =
+                            read_native_member_callback_(current, member_name);
+                        if (!member_value.has_value())
+                        {
+                            return {};
+                        }
+
+                        RuntimeOleObjectState *member_object =
+                            resolve_object_callback_(*member_value);
+                        if (member_object == nullptr ||
+                            !is_native_collection_object(*member_object))
+                        {
+                            return {};
+                        }
+
+                        const auto item_value =
+                            invoke_native_collection_method(*member_object, "item", {selector});
+                        current = item_value.value_or(make_empty_value());
+                        continue;
+                    }
+
                     if (peek() == '(')
                     {
                         const auto member_value = read_native_member_callback_(current, member_name);
