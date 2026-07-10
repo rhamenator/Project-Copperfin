@@ -271,7 +271,11 @@ std::string default_output_path(const StudioDocumentModel& document, const std::
     const std::string stem = project_title.empty()
         ? filename_stem_for_vfp_path(document.path)
         : project_title;
+#if defined(_WIN32)
     const std::string leaf = stem + ".exe";
+#else
+    const std::string leaf = stem;
+#endif
     const std::size_t separator = document.path.find_last_of("/\\");
     if (separator != std::string::npos) {
         return document.path.substr(0U, separator + 1U) + leaf;
@@ -304,6 +308,7 @@ std::string infer_output_kind(const std::string& output_path) {
 
 std::string build_target_for_output_kind(
     const std::string& output_kind,
+    const std::string& output_path,
     const localization::LocalizedCatalog& catalog) {
     if (output_kind == "dll") {
         return project_workspace_text(catalog, "Studio.ProjectWorkspace.BuildTarget.WindowsDynamicLinkLibrary");
@@ -319,6 +324,9 @@ std::string build_target_for_output_kind(
     }
     if (output_kind == "ocx") {
         return project_workspace_text(catalog, "Studio.ProjectWorkspace.BuildTarget.WindowsActiveXControl");
+    }
+    if (output_kind == "executable" && extension_of(output_path) != ".exe") {
+        return project_workspace_text(catalog, "Studio.ProjectWorkspace.BuildTarget.NativeExecutable");
     }
     return project_workspace_text(catalog, "Studio.ProjectWorkspace.BuildTarget.WindowsExecutable");
 }
@@ -382,10 +390,12 @@ StudioProjectWorkspace build_project_workspace(
         workspace.project_title = filename_stem_for_vfp_path(document.path);
     }
 
+    bool generated_default_output_path = false;
     if (workspace.output_path.empty()) {
         workspace.output_path = default_output_path(document, workspace.project_title);
         workspace.output_path_field_index = StudioProjectMissingFieldIndex;
         workspace.output_path_memo_block_number = 0U;
+        generated_default_output_path = true;
     }
 
     std::vector<StudioProjectGroup> groups;
@@ -513,9 +523,15 @@ StudioProjectWorkspace build_project_workspace(
     workspace.build_plan.output_path = workspace.output_path;
     workspace.build_plan.output_path_memo_block_number = workspace.output_path_memo_block_number;
     workspace.build_plan.output_kind = infer_output_kind(workspace.output_path);
+    if (generated_default_output_path && workspace.build_plan.output_kind == "unknown") {
+        workspace.build_plan.output_kind = "executable";
+    }
     workspace.build_plan.output_kind_field_index = workspace.output_path_field_index;
     workspace.build_plan.output_kind_memo_block_number = workspace.output_path_memo_block_number;
-    workspace.build_plan.build_target = build_target_for_output_kind(workspace.build_plan.output_kind, catalog);
+    workspace.build_plan.build_target = build_target_for_output_kind(
+        workspace.build_plan.output_kind,
+        workspace.output_path,
+        catalog);
     workspace.build_plan.build_target_field_index = workspace.output_path_field_index;
     workspace.build_plan.build_target_memo_block_number = workspace.output_path_memo_block_number;
     workspace.build_plan.total_items = workspace.entries.size();

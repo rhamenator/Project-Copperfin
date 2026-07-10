@@ -1549,6 +1549,7 @@
   "Studio.ProjectWorkspace.BuildTarget.VisualFoxProTokenizedProgram": "x64 Visual FoxPro tokenized program",
   "Studio.ProjectWorkspace.BuildTarget.WindowsActiveXControl": "x64 Windows ActiveX control",
   "Studio.ProjectWorkspace.BuildTarget.WindowsDynamicLinkLibrary": "x64 Windows dynamic-link library",
+  "Studio.ProjectWorkspace.BuildTarget.NativeExecutable": "x64 native executable",
   "Studio.ProjectWorkspace.BuildTarget.WindowsExecutable": "x64 Windows executable",
   "Studio.ProjectWorkspace.Fallback.RecordTitle": "Record {recordIndex}",
   "Studio.Toolbox.Category.Containers": "Containers",

@@ -22,6 +22,27 @@ void expect(bool condition, const std::string& message) {
     }
 }
 
+std::string expected_default_workspace_output_path(const std::string& project_path, const std::string& stem) {
+#if defined(_WIN32)
+    const std::string leaf = stem + ".exe";
+#else
+    const std::string leaf = stem;
+#endif
+    const std::size_t separator = project_path.find_last_of("/\\");
+    if (separator != std::string::npos) {
+        return project_path.substr(0U, separator + 1U) + leaf;
+    }
+    return (std::filesystem::path(project_path).parent_path() / leaf).string();
+}
+
+std::string expected_default_workspace_build_target() {
+#if defined(_WIN32)
+    return "x64 Windows executable";
+#else
+    return "x64 native executable";
+#endif
+}
+
 std::size_t count_missing_locale_keys(
     const copperfin::localization::LocalizedCatalog& catalog,
     std::string_view locale,
@@ -326,6 +347,7 @@ void test_project_workspace_catalog_entries_cover_placeholder_locales() {
         "Studio.ProjectWorkspace.BuildTarget.VisualFoxProTokenizedProgram",
         "Studio.ProjectWorkspace.BuildTarget.WindowsActiveXControl",
         "Studio.ProjectWorkspace.BuildTarget.WindowsDynamicLinkLibrary",
+        "Studio.ProjectWorkspace.BuildTarget.NativeExecutable",
         "Studio.ProjectWorkspace.BuildTarget.WindowsExecutable",
         "Studio.ProjectWorkspace.Fallback.RecordTitle"};
 
@@ -349,6 +371,10 @@ void test_project_workspace_catalog_entries_cover_placeholder_locales() {
             "Ejecutable de Windows x64",
         "#2622: es-419 project-workspace executable build target should localize through the catalog");
     expect(
+        spanish_catalog.translate("Studio.ProjectWorkspace.BuildTarget.NativeExecutable") ==
+            "Ejecutable nativo x64",
+        "#2622: es-419 project-workspace native executable build target should localize through the catalog");
+    expect(
         spanish_catalog.translate("Studio.ProjectWorkspace.BuildTarget.VisualFoxProLibrary") ==
             "Biblioteca de Visual FoxPro x64",
         "#2622: es-419 project-workspace VFP library build target should localize through the catalog");
@@ -356,6 +382,10 @@ void test_project_workspace_catalog_entries_cover_placeholder_locales() {
         portuguese_catalog.translate("Studio.ProjectWorkspace.BuildTarget.WindowsDynamicLinkLibrary") ==
             "Biblioteca de vinculo dinamico do Windows x64",
         "#2622: pt-BR project-workspace DLL build target should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.ProjectWorkspace.BuildTarget.NativeExecutable") ==
+            "Executavel nativo x64",
+        "#2622: pt-BR project-workspace native executable build target should localize through the catalog");
     expect(
         portuguese_catalog.translate("Studio.ProjectWorkspace.BuildTarget.VisualFoxProTokenizedProgram") ==
             "Programa tokenizado do Visual FoxPro x64",
@@ -374,6 +404,10 @@ void test_project_workspace_catalog_entries_cover_placeholder_locales() {
         pseudo_catalog.translate("Studio.ProjectWorkspace.BuildTarget.WindowsActiveXControl") ==
             copperfin::localization::pseudo_localize("x64 Windows ActiveX control"),
         "#2622: qps-ploc project-workspace build targets should resolve through the pseudo-localization transform");
+    expect(
+        pseudo_catalog.translate("Studio.ProjectWorkspace.BuildTarget.NativeExecutable") ==
+            copperfin::localization::pseudo_localize("x64 native executable"),
+        "#2622: qps-ploc native executable build target should resolve through the pseudo-localization transform");
 
     expect(
         count_missing_locale_keys(spanish_catalog, "es-419", keys) == 0U,
@@ -468,14 +502,16 @@ void test_build_project_workspace_with_excluded_assets() {
     const auto workspace = copperfin::studio::build_project_workspace(document);
     expect(workspace.available, "legacy project workspace should still be available");
     expect(
-        workspace.build_plan.output_path == R"(E:\Project-Copperfin\samples\LEGACYAPP.exe)",
-        "workspace should fall back to a default output path when the stored memo output is unresolved");
+        workspace.build_plan.output_path == expected_default_workspace_output_path(document.path, "LEGACYAPP"),
+        "workspace should fall back to a platform-appropriate default output path when the stored memo output is unresolved");
     expect(workspace.output_path_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
            "#678: unresolved memo output fallback should not masquerade as stored OUTFILE provenance");
     expect(workspace.project_title_field_index == 1U, "#678: workspace title should keep KEY provenance when KEY supplies title");
     expect(workspace.build_plan.output_kind == "executable", "default output path fallback should still infer executable output kind");
     expect(workspace.build_plan.output_kind_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
            "#683: fallback output kind provenance should not masquerade as stored OUTFILE provenance");
+    expect(workspace.build_plan.build_target == expected_default_workspace_build_target(),
+           "#3790: fallback executable build target should stay coherent with the synthesized output path");
     expect(workspace.build_plan.build_target_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
            "#683: fallback build target provenance should not masquerade as stored OUTFILE provenance");
     expect(
@@ -519,8 +555,8 @@ void test_build_project_workspace_suppresses_unresolved_memo_placeholders() {
            "#726: build-plan fallback titles should preserve missing-field provenance");
     expect(workspace.build_plan.project_title_memo_block_number == 0U,
            "#726: build-plan fallback titles should expose memo block zero");
-    expect(workspace.output_path == R"(E:\Project-Copperfin\samples\memodemo.exe)",
-           "#694: unresolved memo OUTFILE values should keep default output fallback behavior");
+    expect(workspace.output_path == expected_default_workspace_output_path(document.path, "memodemo"),
+           "#694: unresolved memo OUTFILE values should keep platform-appropriate default output fallback behavior");
     expect(workspace.output_path_field_index == copperfin::studio::StudioProjectMissingFieldIndex,
            "#694: unresolved output placeholders should not masquerade as usable output provenance");
     expect(workspace.output_path_memo_block_number == 0U, "#714: fallback output paths should expose memo block zero");
@@ -532,6 +568,10 @@ void test_build_project_workspace_suppresses_unresolved_memo_placeholders() {
            "#714: fallback build-plan output paths should expose memo block zero");
     expect(workspace.build_plan.output_kind_memo_block_number == 0U,
            "#714: fallback build-plan output kind should expose memo block zero");
+    expect(workspace.build_plan.output_kind == "executable",
+           "#3790: unresolved memo OUTFILE fallbacks should still classify as executables");
+    expect(workspace.build_plan.build_target == expected_default_workspace_build_target(),
+           "#3790: unresolved memo OUTFILE fallbacks should keep a coherent executable build target");
     expect(workspace.build_plan.build_target_memo_block_number == 0U,
            "#714: fallback build-plan target should expose memo block zero");
     expect(workspace.entries[1].name == "Record 1", "#694: unresolved memo names should use the synthetic entry fallback");
