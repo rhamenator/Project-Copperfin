@@ -2263,11 +2263,25 @@ internal static class Program
                 },
                 expectRawSnapshotProperty: false,
                 verifyExplicitClearAfterUpdate: true);
-            SmokeAssetEditorRealAssetSettingShouldRemainUnavailable(
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
                 propertyName: "LEFTMARGIN",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: 15,
+                expectedUpdatedSelectionValue: "15",
                 expectedSectionCount: 5,
-                expectLabel: false);
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "LEFTMARGIN",
+                    Value = "15",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 304
+                },
+                expectRawSnapshotProperty: false,
+                verifyExplicitClearAfterUpdate: true);
             SmokeAssetEditorRealAssetSettingShouldRemainUnavailable(
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
                 propertyName: "RIGHTMARGIN",
@@ -2311,11 +2325,25 @@ internal static class Program
                 },
                 expectRawSnapshotProperty: false,
                 verifyExplicitClearAfterUpdate: true);
-            SmokeAssetEditorRealAssetSettingShouldRemainUnavailable(
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
                 propertyName: "LEFTMARGIN",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: 15,
+                expectedUpdatedSelectionValue: "15",
                 expectedSectionCount: 5,
-                expectLabel: true);
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "LEFTMARGIN",
+                    Value = "15",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 78
+                },
+                expectRawSnapshotProperty: false,
+                verifyExplicitClearAfterUpdate: true);
             SmokeAssetEditorRealAssetSettingShouldRemainUnavailable(
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
                 propertyName: "RIGHTMARGIN",
