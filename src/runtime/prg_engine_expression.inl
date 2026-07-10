@@ -1669,6 +1669,17 @@
                     return array_value_callback_(identifier, row, column);
                 }
 
+                const PrgValue identifier_value = resolve_identifier(identifier);
+                RuntimeOleObjectState *runtime_object =
+                    resolve_object_callback_(identifier_value);
+                if (runtime_object != nullptr &&
+                    is_native_collection_object(*runtime_object))
+                {
+                    const auto item_value =
+                        invoke_native_collection_method(*runtime_object, "item", {selector});
+                    return item_value.value_or(make_empty_value());
+                }
+
                 const std::size_t member_separator = identifier.rfind('.');
                 if (member_separator != std::string::npos && ole_invoke_callback_)
                 {
@@ -1680,16 +1691,6 @@
                         arguments.push_back(*secondary_selector);
                     }
                     return ole_invoke_callback_(base_name, member_path, arguments, {});
-                }
-
-                RuntimeOleObjectState *runtime_object =
-                    resolve_object_callback_(resolve_identifier(identifier));
-                if (runtime_object != nullptr &&
-                    is_native_collection_object(*runtime_object))
-                {
-                    const auto item_value =
-                        invoke_native_collection_method(*runtime_object, "item", {selector});
-                    return item_value.value_or(make_empty_value());
                 }
 
                 return make_empty_value();
@@ -1749,6 +1750,41 @@
                             continue;
                         }
 
+                        std::string selector_member_name =
+                            member_name + "[" + format_value(selector);
+                        if (secondary_selector.has_value())
+                        {
+                            selector_member_name += ", " + format_value(*secondary_selector);
+                        }
+                        selector_member_name.push_back(']');
+
+                        const auto selector_value =
+                            read_native_member_callback_(current, selector_member_name);
+                        if (selector_value.has_value())
+                        {
+                            current = *selector_value;
+                            continue;
+                        }
+
+                        const auto member_value =
+                            read_native_member_callback_(current, member_name);
+                        if (member_value.has_value())
+                        {
+                            RuntimeOleObjectState *member_object =
+                                resolve_object_callback_(*member_value);
+                            if (member_object != nullptr &&
+                                is_native_collection_object(*member_object))
+                            {
+                                const auto item_value =
+                                    invoke_native_collection_method(*member_object, "item", {selector});
+                                if (item_value.has_value())
+                                {
+                                    current = *item_value;
+                                    continue;
+                                }
+                            }
+                        }
+
                         if (invoke_native_member_callback_)
                         {
                             std::vector<PrgValue> selector_arguments{selector};
@@ -1768,41 +1804,7 @@
                             }
                         }
 
-                        std::string selector_member_name =
-                            member_name + "[" + format_value(selector);
-                        if (secondary_selector.has_value())
-                        {
-                            selector_member_name += ", " + format_value(*secondary_selector);
-                        }
-                        selector_member_name.push_back(']');
-
-                        const auto selector_value =
-                            read_native_member_callback_(current, selector_member_name);
-                        if (selector_value.has_value())
-                        {
-                            current = *selector_value;
-                            continue;
-                        }
-
-                        const auto member_value =
-                            read_native_member_callback_(current, member_name);
-                        if (!member_value.has_value())
-                        {
-                            return {};
-                        }
-
-                        RuntimeOleObjectState *member_object =
-                            resolve_object_callback_(*member_value);
-                        if (member_object == nullptr ||
-                            !is_native_collection_object(*member_object))
-                        {
-                            return {};
-                        }
-
-                        const auto item_value =
-                            invoke_native_collection_method(*member_object, "item", {selector});
-                        current = item_value.value_or(make_empty_value());
-                        continue;
+                        return {};
                     }
 
                     if (peek() == '(')
