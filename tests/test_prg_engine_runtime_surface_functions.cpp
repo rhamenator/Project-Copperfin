@@ -6125,7 +6125,7 @@ namespace
             "nFunctionValue = DoubleIt(3)\n"
             "cFirstControlBaseClass = oForm.Controls(1).BaseClass\n"
             "cGridColumnCurrentControl = oForm.grdLedger.Columns(1).CurrentControl\n"
-            "cNestedGridColumnCurrentControl = oForm.Controls(2).Columns(1).CurrentControl\n"
+            "cNestedGridColumnCurrentControl = oForm.Controls(1).Columns(1).CurrentControl\n"
             "RETURN\n"
             "FUNCTION DoubleIt\n"
             "    LPARAMETERS tnValue\n"
@@ -6137,8 +6137,8 @@ namespace
             "    ColumnCount = 1\n"
             "ENDDEFINE\n"
             "DEFINE CLASS MainForm AS Form\n"
-            "    ADD OBJECT cmdSave AS SaveButton\n"
             "    ADD OBJECT grdLedger AS LedgerGrid\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
             "ENDDEFINE\n");
 
         copperfin::runtime::PrgRuntimeSession session =
@@ -6163,7 +6163,7 @@ namespace
 
         check("carrayvalue", "array-two");
         check("nfunctionvalue", "6");
-        check("cfirstcontrolbaseclass", "CommandButton");
+        check("cfirstcontrolbaseclass", "Grid");
         check("cgridcolumncurrentcontrol", "Text1");
         check("cnestedgridcolumncurrentcontrol", "Text1");
 
@@ -6192,7 +6192,7 @@ namespace
             "cDefaultItemBaseClass = oDefaultItem.BaseClass\n"
             "cGridColumnName = oForm.grdLedger.Columns[1].Name\n"
             "cGridColumnCurrentControl = oForm.grdLedger.Columns[1].CurrentControl\n"
-            "cNestedGridColumnCurrentControl = oForm.Controls[2].Columns[1].CurrentControl\n"
+            "cNestedGridColumnCurrentControl = oForm.Controls[1].Columns[1].CurrentControl\n"
             "RETURN\n"
             "DEFINE CLASS SaveButton AS CommandButton\n"
             "ENDDEFINE\n"
@@ -6200,8 +6200,8 @@ namespace
             "    ColumnCount = 1\n"
             "ENDDEFINE\n"
             "DEFINE CLASS MainForm AS Form\n"
-            "    ADD OBJECT cmdSave AS SaveButton\n"
             "    ADD OBJECT grdLedger AS LedgerGrid\n"
+            "    ADD OBJECT cmdSave AS SaveButton\n"
             "ENDDEFINE\n");
 
         copperfin::runtime::PrgRuntimeSession session =
@@ -6225,9 +6225,9 @@ namespace
         };
 
         check("carraybybracket", "array-two");
-        check("cfirstcontrolbaseclass", "CommandButton");
-        check("csecondobjectbaseclass", "Grid");
-        check("cdefaultitembaseclass", "CommandButton");
+        check("cfirstcontrolbaseclass", "Grid");
+        check("csecondobjectbaseclass", "CommandButton");
+        check("cdefaultitembaseclass", "Grid");
         check("cgridcolumnname", "Column1");
         check("cgridcolumncurrentcontrol", "Text1");
         check("cnestedgridcolumncurrentcontrol", "Text1");
@@ -6251,11 +6251,12 @@ namespace
             "nObjectsCount = oForm.Objects.Count\n"
             "oFirst = oForm.Objects(1)\n"
             "cFirstTag = oFirst.cTag\n"
+            "cSecondTag = oForm.Objects[2].cTag\n"
             "cLoop = ''\n"
             "FOR EACH oChild IN oForm.Objects FOXOBJECT\n"
             "    cLoop = cLoop + IIF(EMPTY(cLoop), '', ',') + oChild.cTag\n"
             "ENDFOR\n"
-            "lRemoved = oForm.RemoveObject('cmdSave')\n"
+            "lRemoved = oForm.RemoveObject('zzSave')\n"
             "nObjectsCountAfterRemove = oForm.Objects.Count\n"
             "oRemaining = oForm.Objects(1)\n"
             "cRemainingTag = oRemaining.cTag\n"
@@ -6268,8 +6269,8 @@ namespace
             "ENDDEFINE\n"
             "DEFINE CLASS DemoForm AS Form\n"
             "    PROCEDURE Init\n"
-            "        THIS.AddObject('cmdSave', 'SaveButton')\n"
-            "        THIS.AddObject('lblBadge', 'BadgeLabel')\n"
+            "        THIS.AddObject('zzSave', 'SaveButton')\n"
+            "        THIS.AddObject('aaBadge', 'BadgeLabel')\n"
             "        RETURN\n"
             "    ENDPROC\n"
             "ENDDEFINE\n");
@@ -6297,6 +6298,7 @@ namespace
         check("lhasobjects", "true");
         check("nobjectscount", "2");
         check("cfirsttag", "save");
+        check("csecondtag", "badge");
         check("cloop", "save,badge");
         check("lremoved", "true");
         check("nobjectscountafterremove", "1");
@@ -6335,11 +6337,12 @@ namespace
             "nControlsCount = oForm.Controls.Count\n"
             "oFirst = oForm.Controls(1)\n"
             "cFirstTag = oFirst.cTag\n"
+            "cSecondTag = oForm.Controls[2].cTag\n"
             "cLoop = ''\n"
             "FOR EACH oChild IN oForm.Controls FOXOBJECT\n"
             "    cLoop = cLoop + IIF(EMPTY(cLoop), '', ',') + oChild.cTag\n"
             "ENDFOR\n"
-            "lRemoved = oForm.RemoveObject('cmdSave')\n"
+            "lRemoved = oForm.RemoveObject('zzSave')\n"
             "nControlsCountAfterRemove = oForm.Controls.Count\n"
             "oRemaining = oForm.Controls(1)\n"
             "cRemainingTag = oRemaining.cTag\n"
@@ -6352,8 +6355,8 @@ namespace
             "ENDDEFINE\n"
             "DEFINE CLASS DemoForm AS Form\n"
             "    PROCEDURE Init\n"
-            "        THIS.AddObject('cmdSave', 'SaveButton')\n"
-            "        THIS.AddObject('lblBadge', 'BadgeLabel')\n"
+            "        THIS.AddObject('zzSave', 'SaveButton')\n"
+            "        THIS.AddObject('aaBadge', 'BadgeLabel')\n"
             "        RETURN\n"
             "    ENDPROC\n"
             "ENDDEFINE\n");
@@ -6381,6 +6384,7 @@ namespace
         check("lhascontrols", "true");
         check("ncontrolscount", "2");
         check("cfirsttag", "save");
+        check("csecondtag", "badge");
         check("cloop", "save,badge");
         check("lremoved", "true");
         check("ncontrolscountafterremove", "1");

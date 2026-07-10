@@ -1941,6 +1941,24 @@
                         return left.first < right.first;
                     });
             }
+            if (!child_members.empty())
+            {
+                std::sort(
+                    child_members.begin(),
+                    child_members.end(),
+                    [&](const auto &left, const auto &right)
+                    {
+                        const auto left_child = resolve_ole_object(left.second);
+                        const auto right_child = resolve_ole_object(right.second);
+                        const int left_handle = left_child.has_value() ? (*left_child)->handle : 0;
+                        const int right_handle = right_child.has_value() ? (*right_child)->handle : 0;
+                        if (left_handle != right_handle)
+                        {
+                            return left_handle < right_handle;
+                        }
+                        return left.first < right.first;
+                    });
+            }
             if (is_native_pageframe_runtime_object(runtime_object))
             {
                 for (const NativePageFramePageMember &page_member :
