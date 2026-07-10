@@ -172,10 +172,10 @@ void test_dotnet_launcher_request_falls_back_to_native_host_when_unavailable() {
 
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
         const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
-        expect(runtime_manifest.find("launcher_mode=native_runtime_host") != std::string::npos,
-               "dotnet-fallback manifest should record the native runtime host mode");
-        expect(runtime_manifest.find("launcher_fallback=dotnet_output_unavailable") != std::string::npos,
-               "dotnet-fallback manifest should record the .NET-unavailable fallback reason");
+        expect(runtime_manifest.find("launcher_mode=") == std::string::npos,
+               "dotnet-fallback runtime manifest should omit launcher mode from the execution contract");
+        expect(runtime_manifest.find("launcher_fallback=") == std::string::npos,
+               "dotnet-fallback runtime manifest should omit launcher fallback from the execution contract");
         expect(lines_with_prefix(runtime_manifest, "feature_flag=").empty(),
                "dotnet-fallback runtime manifest should omit feature-flag inventory from the execution contract");
         expect(debug_manifest.find("launcher_mode=native_runtime_host") != std::string::npos,
