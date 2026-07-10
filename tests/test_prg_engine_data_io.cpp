@@ -59,7 +59,10 @@ int main() {
     test_copy_structure_to_creates_empty_schema();
     test_copy_to_from_empty_table_produces_valid_empty_dbf();
     test_append_from_copies_records_into_current_table();
+    test_append_from_skips_extra_source_fields();
+    test_append_from_rolls_back_matched_field_write_failure();
     test_append_from_is_reverted_by_undo();
+    test_append_from_transaction_rollback_restores_destination();
     test_copy_to_type_sdf_writes_fixed_width_text_rows();
     test_append_from_type_sdf_imports_fixed_width_text_rows();
     test_copy_to_type_csv_and_delimited_text_rows();

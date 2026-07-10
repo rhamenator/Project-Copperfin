@@ -5997,9 +5997,14 @@
                     return {.ok = false, .message = last_error_message};
                 }
                 current_command_undo_journal().command_label = "APPEND FROM";
+                const CursorPositionSnapshot append_from_original_position = capture_cursor_snapshot(*cursor);
+                const std::size_t append_from_original_record_count = cursor->record_count;
                 struct AppendFromCommandUndoGuard
                 {
                     PrgRuntimeSession::Impl &runtime;
+                    CursorState &cursor;
+                    CursorPositionSnapshot original_position;
+                    std::size_t original_record_count = 0U;
                     bool committed = false;
                     ~AppendFromCommandUndoGuard()
                     {
@@ -6010,9 +6015,15 @@
                         else
                         {
                             runtime.rollback_active_command_undo_journal();
+                            cursor.record_count = original_record_count;
+                            runtime.restore_cursor_snapshot(cursor, original_position);
                         }
                     }
-                } append_from_command_undo_guard{*this};
+                } append_from_command_undo_guard{
+                    *this,
+                    *cursor,
+                    append_from_original_position,
+                    append_from_original_record_count};
 
                 if (append_from_sdf)
                 {
@@ -6745,6 +6756,8 @@
                     return {.ok = false, .message = last_error_message};
                 }
                 std::size_t appended_count = 0U;
+                const std::vector<vfp::DbfFieldDescriptor> destination_fields =
+                    cursor_field_descriptors(*cursor);
                 for (const auto &src_rec : src_result.table.records)
                 {
                     if (src_rec.deleted)
@@ -6774,6 +6787,20 @@
                         {
                             continue;
                         }
+                        const std::string normalized_source_field =
+                            collapse_identifier(src_field.field_name);
+                        const bool destination_has_field = std::any_of(
+                            destination_fields.begin(),
+                            destination_fields.end(),
+                            [&](const vfp::DbfFieldDescriptor &destination_field)
+                            {
+                                return collapse_identifier(destination_field.name) ==
+                                       normalized_source_field;
+                            });
+                        if (!destination_has_field)
+                        {
+                            continue;
+                        }
                         const auto rep_result = vfp::replace_record_field_value(
                             cursor->source_path,
                             cursor->recno - 1U,
@@ -6781,8 +6808,14 @@
                             src_field.display_value);
                         if (!rep_result.ok)
                         {
-                            // Field may not exist in destination — skip silently
-                            continue;
+                            last_error_message = runtime_text(
+                                "Runtime.Prg.Dispatch.Error.AppendFromFailed",
+                                {
+                                    {"errorMessage", rep_result.error},
+                                });
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                            return {.ok = false, .message = last_error_message};
                         }
                         cursor->record_count = rep_result.record_count;
                     }

@@ -405,6 +405,149 @@ void test_append_from_copies_records_into_current_table() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_append_from_skips_extra_source_fields() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_extra_source_field";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> source_fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+        {.name = "EXTRA", .type = 'C', .length = 8U},
+    };
+    const auto source_create = copperfin::vfp::create_dbf_table_file(
+        source_path.string(), source_fields, {{"BOB", "IGNORED"}});
+    expect(source_create.ok, "APPEND FROM extra-field source fixture should be created");
+
+    const fs::path dest_path = temp_root / "dest.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dest_fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+    };
+    const auto dest_create = copperfin::vfp::create_dbf_table_file(
+        dest_path.string(), dest_fields, {{"ALICE"}});
+    expect(dest_create.ok, "APPEND FROM extra-field destination fixture should be created");
+
+    const fs::path main_path = temp_root / "append_from_extra_source_field.prg";
+    write_text(
+        main_path,
+        "USE '" + dest_path.string() + "' ALIAS Dest IN 0\n"
+        "APPEND FROM '" + source_path.string() + "'\n"
+        "nCount = RECCOUNT()\n"
+        "GO 2\n"
+        "cName = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path, temp_root));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "APPEND FROM should safely skip source fields absent from the destination: " + state.message);
+    const auto count = state.globals.find("ncount");
+    const auto name = state.globals.find("cname");
+    expect(count != state.globals.end(), "APPEND FROM extra-field script should expose record count");
+    expect(name != state.globals.end(), "APPEND FROM extra-field script should expose the matched field");
+    if (count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count->second) == "2",
+               "APPEND FROM should append the row even when the source has an extra field");
+    }
+    if (name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name->second) == "BOB",
+               "APPEND FROM should still copy matched fields when skipping an extra source field");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_append_from_rolls_back_matched_field_write_failure() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_write_failure";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> source_fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+    };
+    const auto source_create = copperfin::vfp::create_dbf_table_file(
+        source_path.string(), source_fields, {{"TWO"}, {"TOO-LONG"}});
+    expect(source_create.ok, "APPEND FROM failure source fixture should be created");
+
+    const fs::path dest_path = temp_root / "dest.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> dest_fields{
+        {.name = "NAME", .type = 'C', .length = 3U},
+    };
+    const auto dest_create = copperfin::vfp::create_dbf_table_file(
+        dest_path.string(), dest_fields, {{"ONE"}});
+    expect(dest_create.ok, "APPEND FROM failure destination fixture should be created");
+    const auto original_size = fs::file_size(dest_path);
+
+    const fs::path main_path = temp_root / "append_from_write_failure.prg";
+    write_text(
+        main_path,
+        "USE '" + dest_path.string() + "' ALIAS Dest IN 0\n"
+        "GO 1\n"
+        "APPEND FROM '" + source_path.string() + "'\n"
+        "nAfterError = RECCOUNT()\n"
+        "nRecAfterError = RECNO()\n"
+        "cNameAfterError = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path, temp_root));
+    auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+           "matched APPEND FROM field-write failure should pause with an error");
+    expect(state.location.line == 3U,
+           "matched APPEND FROM field-write failure should highlight the command");
+    const std::string expected_writer_error =
+        "APPEND FROM: " + copperfin::localization::pseudo_localize(
+            "Character value is too large for the target field.");
+    expect(state.message == expected_writer_error,
+           "failed APPEND FROM should preserve the localized matched-field writer diagnostic (got '" +
+               state.message + "')");
+    expect(!session.can_undo_command(),
+           "failed APPEND FROM should roll back instead of committing an undo entry");
+
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "continuing after failed APPEND FROM should keep the session alive");
+    const auto count = state.globals.find("naftererror");
+    const auto recno = state.globals.find("nrecaftererror");
+    const auto name = state.globals.find("cnameaftererror");
+    expect(count != state.globals.end(), "failed APPEND FROM should expose restored record count");
+    expect(recno != state.globals.end(), "failed APPEND FROM should expose restored record pointer");
+    expect(name != state.globals.end(), "failed APPEND FROM should expose the original current row");
+    if (count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count->second) == "1",
+               "failed APPEND FROM should restore the in-memory record count");
+    }
+    if (recno != state.globals.end()) {
+        expect(copperfin::runtime::format_value(recno->second) == "1",
+               "failed APPEND FROM should restore the pre-command record pointer");
+    }
+    if (name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name->second) == "ONE",
+               "failed APPEND FROM should restore the original current row");
+    }
+
+    expect(fs::file_size(dest_path) == original_size,
+           "failed APPEND FROM should restore the original DBF size");
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(dest_path.string(), 5U);
+    expect(parse_result.ok, "failed APPEND FROM rollback should leave the DBF readable");
+    expect(parse_result.table.records.size() == 1U,
+           "failed APPEND FROM should remove rows appended before the matched-field failure");
+    if (parse_result.table.records.size() == 1U) {
+        expect(parse_result.table.records[0].values[0].display_value == "ONE",
+               "failed APPEND FROM should preserve the original destination row");
+    }
+    expect(std::none_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.append_from";
+    }), "failed APPEND FROM should not emit a success event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_append_from_is_reverted_by_undo() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_undo";
@@ -450,6 +593,62 @@ void test_append_from_is_reverted_by_undo() {
     expect(result.table.records.size() == 1U,
         "UNDO should leave only the original destination record on disk (got " +
             std::to_string(result.table.records.size()) + ")");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_append_from_transaction_rollback_restores_destination() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_transaction_rollback";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path dest_path = temp_root / "dest.dbf";
+    const fs::path source_path = temp_root / "source.dbf";
+    write_simple_dbf(dest_path, {"ALICE"});
+    write_simple_dbf(source_path, {"BOB", "CAROL"});
+
+    const fs::path main_path = temp_root / "append_from_transaction_rollback.prg";
+    write_text(
+        main_path,
+        "USE '" + dest_path.string() + "' ALIAS Dest IN 0\n"
+        "BEGIN TRANSACTION\n"
+        "APPEND FROM '" + source_path.string() + "'\n"
+        "nDuring = RECCOUNT()\n"
+        "ROLLBACK\n"
+        "nAfter = RECCOUNT()\n"
+        "GO 1\n"
+        "cName = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path, temp_root));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "APPEND FROM transaction rollback script should complete: " + state.message);
+    const auto during = state.globals.find("nduring");
+    const auto after = state.globals.find("nafter");
+    const auto name = state.globals.find("cname");
+    expect(during != state.globals.end(), "APPEND FROM transaction should expose the pre-rollback count");
+    expect(after != state.globals.end(), "APPEND FROM transaction should expose the restored count");
+    expect(name != state.globals.end(), "APPEND FROM transaction should expose the original row");
+    if (during != state.globals.end()) {
+        expect(copperfin::runtime::format_value(during->second) == "3",
+               "APPEND FROM rows should be visible before transaction rollback");
+    }
+    if (after != state.globals.end()) {
+        expect(copperfin::runtime::format_value(after->second) == "1",
+               "ROLLBACK should remove native DBF APPEND FROM rows from cursor state");
+    }
+    if (name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name->second) == "ALICE",
+               "ROLLBACK should preserve the original native DBF destination row");
+    }
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(dest_path.string(), 5U);
+    expect(parse_result.ok, "APPEND FROM transaction rollback should leave the DBF readable");
+    expect(parse_result.table.records.size() == 1U,
+           "APPEND FROM transaction rollback should restore the original disk record count");
 
     fs::remove_all(temp_root, ignored);
 }
