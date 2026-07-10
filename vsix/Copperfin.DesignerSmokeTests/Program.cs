@@ -2070,6 +2070,44 @@ internal static class Program
                 },
                 expectRawSnapshotProperty: false);
             SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
+                propertyName: "DEVICE",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: "report-device",
+                expectedUpdatedSelectionValue: "report-device",
+                expectedSectionCount: 5,
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "DEVICE",
+                    Value = "report-device",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 304
+                },
+                expectRawSnapshotProperty: false,
+                verifyExplicitClearAfterUpdate: true);
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
+                propertyName: "DEVICE",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: "label-device",
+                expectedUpdatedSelectionValue: "label-device",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "DEVICE",
+                    Value = "label-device",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 78
+                },
+                expectRawSnapshotProperty: false,
+                verifyExplicitClearAfterUpdate: true);
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 propertyName: "TAG",
                 expectedOriginalSelectionValue: string.Empty,
