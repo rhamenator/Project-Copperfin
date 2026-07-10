@@ -711,7 +711,7 @@ void test_runtime_host_prefers_debug_manifest_for_implicit_debug_launches(const 
         "dotnet_story=none\n");
     write_text(
         debug_manifest_path,
-        "manifest_version=1\n"
+        "debug_manifest_version=2\n"
         "project_title=ImplicitDebugManifest\n"
         "startup_item=debug_main.prg\n"
         "startup_source=" + debug_startup_path.string() + "\n"

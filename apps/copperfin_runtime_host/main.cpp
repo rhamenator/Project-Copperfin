@@ -871,9 +871,18 @@ std::optional<int> parse_manifest_version_value(const std::string& value) {
 
 bool validate_manifest_version(
     const ManifestMap& manifest,
+    const std::string& manifest_path,
     const copperfin::localization::LocalizedCatalog& catalog,
     std::string& error) {
-    const std::string raw_version = first_value(manifest, "manifest_version");
+    std::string raw_version = first_value(manifest, "manifest_version");
+    const std::filesystem::path normalized_manifest_path =
+        std::filesystem::path(manifest_path).lexically_normal();
+    const bool debug_manifest_contract_allowed =
+        equals_insensitive(normalized_manifest_path.filename().string(), "app.cfdebug") ||
+        equals_insensitive(normalized_manifest_path.extension().string(), ".cfdebug");
+    if (trim_copy(raw_version).empty() && debug_manifest_contract_allowed) {
+        raw_version = first_value(manifest, "debug_manifest_version");
+    }
     if (trim_copy(raw_version).empty()) {
         error = localized_message(catalog, "RuntimeHost.Error.ManifestVersionMissing");
         return false;
@@ -1738,7 +1747,7 @@ int main(int argc, char** argv) {
         return 4;
     }
     std::string manifest_version_error;
-    if (!validate_manifest_version(manifest, catalog, manifest_version_error)) {
+    if (!validate_manifest_version(manifest, manifest_path, catalog, manifest_version_error)) {
         std::cout << "status: error\n";
         print_error_line(catalog, manifest_version_error);
         return 4;
