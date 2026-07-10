@@ -74,8 +74,32 @@ std::string host_os_name() {
 #endif
 }
 
+bool is_windows_drive_absolute_path(const std::string& value) {
+    return value.size() >= 3U &&
+        std::isalpha(static_cast<unsigned char>(value[0])) != 0 &&
+        value[1] == ':' &&
+        (value[2] == '\\' || value[2] == '/');
+}
+
+bool is_unc_path(const std::string& value) {
+    return value.size() >= 2U &&
+        ((value[0] == '\\' && value[1] == '\\') || (value[0] == '/' && value[1] == '/'));
+}
+
+std::string normalize_relative_path_separators(std::string value) {
+    std::replace(value.begin(), value.end(), '\\', std::filesystem::path::preferred_separator);
+    return value;
+}
+
 std::filesystem::path filesystem_probe_path(const std::string& raw_path, const std::string& default_directory) {
-    std::filesystem::path path(raw_path.empty() ? default_directory : raw_path);
+    if (raw_path.empty()) {
+        return std::filesystem::path(default_directory).lexically_normal();
+    }
+    if (is_windows_drive_absolute_path(raw_path) || is_unc_path(raw_path)) {
+        return std::filesystem::path(raw_path);
+    }
+
+    std::filesystem::path path(normalize_relative_path_separators(raw_path));
     if (path.is_relative()) {
         path = std::filesystem::path(default_directory) / path;
     }

@@ -370,6 +370,9 @@ namespace
         std::error_code ignored;
         fs::remove_all(temp_root, ignored);
         fs::create_directories(temp_root);
+        const fs::path nested_probe_dir = temp_root / "runtime_surface_probe";
+        fs::create_directories(nested_probe_dir);
+        write_text(nested_probe_dir / "nested_probe.prg", "RETURN\n");
 
         const fs::path main_path = temp_root / "runtime_surface_extensions.prg";
         write_text(
@@ -396,6 +399,9 @@ namespace
             "lDiskSpacePositive = nDiskSpace > 0\n"
             "nDriveType = DRIVETYPE()\n"
             "nMissingDriveType = DRIVETYPE('missing-path')\n"
+            "nBackslashDiskSpace = DISKSPACE('runtime_surface_probe\\nested_probe.prg')\n"
+            "lBackslashDiskSpacePositive = nBackslashDiskSpace > 0\n"
+            "nBackslashDriveType = DRIVETYPE('runtime_surface_probe\\nested_probe.prg')\n"
             "cSysCurrent = SYS(2003)\n"
             "cSysTemp = SYS(2023)\n"
             "cSysDisk = SYS(2020)\n"
@@ -555,6 +561,8 @@ namespace
         check("ldiskspacepositive", "true");
         check("ndrivetype", "3");
         check("nmissingdrivetype", "0");
+        check("lbackslashdiskspacepositive", "true");
+        check("nbackslashdrivetype", "3");
         check("csyscurrent", temp_root.string());
         check("lsysdiskpositive", "true");
         check("ctransformdefault", "5");
