@@ -7907,6 +7907,7 @@ internal static class Program
             new() { Name = "PAPERLENGTH", Value = "4318", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 4, MemoBlockNumber = 18 },
             new() { Name = "PAPERWIDTH", Value = "2794", RecordIndex = 0, FieldIndex = 6, SourceLineIndex = 5, MemoBlockNumber = 18 },
             new() { Name = "TOPMARGIN", Value = "40", RecordIndex = 0, FieldIndex = 3, MemoBlockNumber = 0 },
+            new() { Name = "BOTMARGIN", Value = "55", RecordIndex = 0, FieldIndex = 63, MemoBlockNumber = 0 },
             new() { Name = "LEFTMARGIN", Value = "35", RecordIndex = 0, FieldIndex = 10, MemoBlockNumber = 0 },
             new() { Name = "RIGHTMARGIN", Value = "45", RecordIndex = 0, FieldIndex = 11, MemoBlockNumber = 0 },
             new() { Name = "TAG", Value = "deleted.customer.country", RecordIndex = 0, FieldIndex = 9, MemoBlockNumber = 21 },
@@ -7972,6 +7973,7 @@ internal static class Program
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["SORTEXPRESSIONMEMO"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "21", StringComparison.Ordinal),
             "Deleted report settings explorer selection should expose deleted sort metadata from the shared settings model");
         Expect(string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["LEFTMARGIN"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "35", StringComparison.Ordinal) &&
+               string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["BOTMARGIN"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "55", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["COLS"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "3", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["COLWIDTH"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "2400", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["COLSPACING"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "180", StringComparison.Ordinal) &&
@@ -7989,7 +7991,7 @@ internal static class Program
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["COLLATE"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "0", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["COPIES"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "2", StringComparison.Ordinal) &&
                string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["RIGHTMARGIN"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "45", StringComparison.Ordinal),
-            "Deleted report settings explorer selection should expose deleted column-setup, paper-dimension, printer-identity, print-profile, auxiliary print, color, and side-margin metadata from the shared settings model");
+            "Deleted report settings explorer selection should expose deleted column-setup, paper-dimension, printer-identity, print-profile, auxiliary print, color, and margin metadata from the shared settings model");
         Expect(string.Equals(TypeDescriptor.GetProperties(propertyGrid.SelectedObject)["DELETEDPREVIEWBOUNDS"]?.GetValue(propertyGrid.SelectedObject)?.ToString(), "L 1000 T 2600 R 2200 B 2900   Size: 1200 x 300", StringComparison.Ordinal),
             "Deleted report settings explorer selection should expose deleted preview metadata from the shared report-layout model");
 
@@ -7997,6 +7999,8 @@ internal static class Program
         {
             ExpectSelectionUpdate(editableSelection, "TOPMARGIN", 55, "55",
                 "Deleted report settings property-grid selection should serialize numeric deleted-root-setting edits through the shared update path");
+            ExpectSelectionUpdate(editableSelection, "BOTMARGIN", 65, "65",
+                "Deleted report settings property-grid selection should serialize deleted bottom-margin edits through the shared update path");
             ExpectSelectionUpdate(editableSelection, "COLS", 4, "4",
                 "Deleted report settings property-grid selection should serialize deleted column-count edits through the shared update path");
             ExpectSelectionUpdate(editableSelection, "COLWIDTH", 3000, "3000",
@@ -8067,6 +8071,9 @@ internal static class Program
         Expect(spanishProperties.Any(property => string.Equals(property.DisplayName, "Expresión de orden activa", StringComparison.Ordinal)) &&
                string.Equals(spanishProperties.First(property => string.Equals(property.Name, "SORTEXPRESSION", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "deleted.customer.country", StringComparison.Ordinal),
             "Spanish deleted report settings property-grid selection should localize deleted sort metadata labels");
+        Expect(spanishProperties.Any(property => string.Equals(property.DisplayName, "Margen inferior", StringComparison.Ordinal)) &&
+               string.Equals(spanishProperties.First(property => string.Equals(property.Name, "BOTMARGIN", StringComparison.Ordinal)).GetValue(spanishSelection)?.ToString(), "55", StringComparison.Ordinal),
+            "Spanish deleted report settings property-grid selection should localize deleted bottom-margin labels");
         Expect(spanishProperties.Any(property => string.Equals(property.DisplayName, "Limites de vista previa eliminada", StringComparison.Ordinal)),
             "Spanish deleted report settings property-grid selection should localize deleted preview metadata labels");
 
@@ -8081,6 +8088,9 @@ internal static class Program
         Expect(portugueseProperties.Any(property => string.Equals(property.DisplayName, "Expressão de ordenação ativa", StringComparison.Ordinal)) &&
                string.Equals(portugueseProperties.First(property => string.Equals(property.Name, "SORTEXPRESSION", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "deleted.customer.country", StringComparison.Ordinal),
             "Portuguese deleted report settings property-grid selection should localize deleted sort metadata labels");
+        Expect(portugueseProperties.Any(property => string.Equals(property.DisplayName, "Margem inferior", StringComparison.Ordinal)) &&
+               string.Equals(portugueseProperties.First(property => string.Equals(property.Name, "BOTMARGIN", StringComparison.Ordinal)).GetValue(portugueseSelection)?.ToString(), "55", StringComparison.Ordinal),
+            "Portuguese deleted report settings property-grid selection should localize deleted bottom-margin labels");
         Expect(portugueseProperties.Any(property => string.Equals(property.DisplayName, "Limites da visualização excluída", StringComparison.Ordinal)),
             "Portuguese deleted report settings property-grid selection should localize deleted preview metadata labels");
 
@@ -8096,6 +8106,9 @@ internal static class Program
         Expect(pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.ActiveSortExpression"), StringComparison.Ordinal)) &&
                string.Equals(pseudoProperties.First(property => string.Equals(property.Name, "SORTEXPRESSION", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), "deleted.customer.country", StringComparison.Ordinal),
             "Pseudo-localized deleted report settings property-grid selection should route deleted sort metadata through the shared catalog");
+        Expect(pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.BottomMargin"), StringComparison.Ordinal)) &&
+               string.Equals(pseudoProperties.First(property => string.Equals(property.Name, "BOTMARGIN", StringComparison.Ordinal)).GetValue(pseudoSelection)?.ToString(), "55", StringComparison.Ordinal),
+            "Pseudo-localized deleted report settings property-grid selection should route deleted bottom-margin metadata through the shared catalog");
         Expect(pseudoProperties.Any(property => string.Equals(property.DisplayName, pseudoLocalization.Text("AssetEditor.Property.DeletedPreviewBounds"), StringComparison.Ordinal)),
             "Pseudo-localized deleted report settings property-grid selection should route deleted preview metadata through the shared catalog");
 
@@ -8130,35 +8143,37 @@ internal static class Program
                string.Equals(deletedSettings[5].Name, "PAPERWIDTH", StringComparison.Ordinal) &&
                deletedSettings[5].FieldIndex == 6 &&
                string.Equals(deletedSettings[6].Value, "40", StringComparison.Ordinal) &&
-               string.Equals(deletedSettings[7].Name, "LEFTMARGIN", StringComparison.Ordinal) &&
-               deletedSettings[7].FieldIndex == 10 &&
-               string.Equals(deletedSettings[8].Name, "RIGHTMARGIN", StringComparison.Ordinal) &&
-               deletedSettings[8].FieldIndex == 11 &&
-               string.Equals(deletedSettings[9].Name, "TAG", StringComparison.Ordinal) &&
-               deletedSettings[9].FieldIndex == 9 &&
-               deletedSettings[9].MemoBlockNumber == 21 &&
-               string.Equals(deletedSettings[10].Name, "DRIVER", StringComparison.Ordinal) &&
-               deletedSettings[10].FieldIndex == 6 &&
-               string.Equals(deletedSettings[11].Name, "DEVICE", StringComparison.Ordinal) &&
+               string.Equals(deletedSettings[7].Name, "BOTMARGIN", StringComparison.Ordinal) &&
+               deletedSettings[7].FieldIndex == 63 &&
+               string.Equals(deletedSettings[8].Name, "LEFTMARGIN", StringComparison.Ordinal) &&
+               deletedSettings[8].FieldIndex == 10 &&
+               string.Equals(deletedSettings[9].Name, "RIGHTMARGIN", StringComparison.Ordinal) &&
+               deletedSettings[9].FieldIndex == 11 &&
+               string.Equals(deletedSettings[10].Name, "TAG", StringComparison.Ordinal) &&
+               deletedSettings[10].FieldIndex == 9 &&
+               deletedSettings[10].MemoBlockNumber == 21 &&
+               string.Equals(deletedSettings[11].Name, "DRIVER", StringComparison.Ordinal) &&
                deletedSettings[11].FieldIndex == 6 &&
-               string.Equals(deletedSettings[12].Name, "OUTPUT", StringComparison.Ordinal) &&
+               string.Equals(deletedSettings[12].Name, "DEVICE", StringComparison.Ordinal) &&
                deletedSettings[12].FieldIndex == 6 &&
-               string.Equals(deletedSettings[13].Name, "DEFAULTSOURCE", StringComparison.Ordinal) &&
+               string.Equals(deletedSettings[13].Name, "OUTPUT", StringComparison.Ordinal) &&
                deletedSettings[13].FieldIndex == 6 &&
-               string.Equals(deletedSettings[14].Name, "PRINTQUALITY", StringComparison.Ordinal) &&
+               string.Equals(deletedSettings[14].Name, "DEFAULTSOURCE", StringComparison.Ordinal) &&
                deletedSettings[14].FieldIndex == 6 &&
-               string.Equals(deletedSettings[15].Name, "YRESOLUTION", StringComparison.Ordinal) &&
+               string.Equals(deletedSettings[15].Name, "PRINTQUALITY", StringComparison.Ordinal) &&
                deletedSettings[15].FieldIndex == 6 &&
-               string.Equals(deletedSettings[16].Name, "TTOPTION", StringComparison.Ordinal) &&
+               string.Equals(deletedSettings[16].Name, "YRESOLUTION", StringComparison.Ordinal) &&
                deletedSettings[16].FieldIndex == 6 &&
-               string.Equals(deletedSettings[17].Name, "COLOR", StringComparison.Ordinal) &&
+               string.Equals(deletedSettings[17].Name, "TTOPTION", StringComparison.Ordinal) &&
                deletedSettings[17].FieldIndex == 6 &&
-               string.Equals(deletedSettings[18].Name, "ASCII", StringComparison.Ordinal) &&
+               string.Equals(deletedSettings[18].Name, "COLOR", StringComparison.Ordinal) &&
                deletedSettings[18].FieldIndex == 6 &&
-               string.Equals(deletedSettings[19].Name, "COLLATE", StringComparison.Ordinal) &&
+               string.Equals(deletedSettings[19].Name, "ASCII", StringComparison.Ordinal) &&
                deletedSettings[19].FieldIndex == 6 &&
-               string.Equals(deletedSettings[20].Name, "COPIES", StringComparison.Ordinal) &&
-               deletedSettings[20].FieldIndex == 6,
+               string.Equals(deletedSettings[20].Name, "COLLATE", StringComparison.Ordinal) &&
+               deletedSettings[20].FieldIndex == 6 &&
+               string.Equals(deletedSettings[21].Name, "COPIES", StringComparison.Ordinal) &&
+               deletedSettings[21].FieldIndex == 6,
             "Localized deleted report settings property-grid selection should preserve deleted root-setting machine contracts");
     }
 
