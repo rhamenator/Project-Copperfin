@@ -4296,7 +4296,23 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         return make_number_value(static_cast<double>(*loaded_count));
     }
     if (function == "set" && !arguments.empty()) {
-        return make_string_value(set_callback(value_as_string(arguments[0])));
+        std::string option_name = value_as_string(arguments[0]);
+        if (arguments.size() >= 2U && normalize_identifier(option_name) == "textmerge") {
+            const PrgValue &variant = arguments[1];
+            std::string variant_text;
+            if (variant.kind == PrgValueKind::number ||
+                variant.kind == PrgValueKind::int64 ||
+                variant.kind == PrgValueKind::uint64) {
+                variant_text = std::to_string(static_cast<long long>(std::llround(value_as_number(variant))));
+            } else {
+                variant_text = trim_copy(value_as_string(variant));
+            }
+
+            if (variant_text == "1" || variant_text == "3") {
+                option_name += "," + variant_text;
+            }
+        }
+        return make_string_value(set_callback(option_name));
     }
     if (function == "error") {
         return make_number_value(static_cast<double>(last_error_code));

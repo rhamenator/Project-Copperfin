@@ -1477,7 +1477,36 @@ namespace copperfin::runtime
             },
             [this](const std::string &option_name)
             {
-                const std::string normalized_name = normalize_identifier(option_name);
+                const std::string trimmed_option_name = trim_copy(option_name);
+                if (trimmed_option_name == "__textmerge_delimiters__")
+                {
+                    const auto [left_delimiter, right_delimiter] = current_textmerge_delimiters();
+                    return std::to_string(left_delimiter.size()) + ":" + left_delimiter + right_delimiter;
+                }
+
+                std::string base_option_name = trimmed_option_name;
+                std::string option_variant;
+                const std::size_t comma_position = trimmed_option_name.find(',');
+                if (comma_position != std::string::npos)
+                {
+                    base_option_name = trim_copy(trimmed_option_name.substr(0U, comma_position));
+                    option_variant = trim_copy(trimmed_option_name.substr(comma_position + 1U));
+                }
+
+                const std::string normalized_name = normalize_identifier(base_option_name);
+                const std::string normalized_variant = normalize_identifier(option_variant);
+                if (normalized_name == "textmerge" && normalized_variant == "1")
+                {
+                    const auto [left_delimiter, right_delimiter] = current_textmerge_delimiters();
+                    return left_delimiter + "," + right_delimiter;
+                }
+                if (normalized_name == "textmerge" && normalized_variant == "3")
+                {
+                    const auto found_show_mode = current_set_state().find("textmerge_show");
+                    return found_show_mode == current_set_state().end() || trim_copy(found_show_mode->second).empty()
+                               ? std::string{"SHOW"}
+                               : uppercase_copy(found_show_mode->second);
+                }
                 if (normalized_name == "default")
                 {
                     return current_default_directory();

@@ -1654,8 +1654,9 @@
                     return {.ok = false, .message = last_error_message};
                 }
                 std::string text_value = statement.expression;
-                if (normalize_identifier(statement.tertiary_expression) == "textmerge")
+                if (normalize_identifier(statement.tertiary_expression) == "textmerge" || is_set_enabled("textmerge"))
                 {
+                    const auto [left_delimiter, right_delimiter] = current_textmerge_delimiters();
                     const auto apply_textmerge =
                         [&](const std::string& source_text) {
                             std::string merged_text;
@@ -1664,7 +1665,7 @@
                             std::size_t cursor = 0U;
                             while (cursor < source_text.size())
                             {
-                                const std::size_t start = source_text.find("<<", cursor);
+                                const std::size_t start = source_text.find(left_delimiter, cursor);
                                 if (start == std::string::npos)
                                 {
                                     merged_text.append(source_text.substr(cursor));
@@ -1672,7 +1673,7 @@
                                 }
 
                                 merged_text.append(source_text.substr(cursor, start - cursor));
-                                const std::size_t end = source_text.find(">>", start + 2U);
+                                const std::size_t end = source_text.find(right_delimiter, start + left_delimiter.size());
                                 if (end == std::string::npos)
                                 {
                                     merged_text.append(source_text.substr(start));
@@ -1680,13 +1681,15 @@
                                 }
 
                                 const std::string merge_expression =
-                                    trim_copy(source_text.substr(start + 2U, end - start - 2U));
+                                    trim_copy(source_text.substr(
+                                        start + left_delimiter.size(),
+                                        end - start - left_delimiter.size()));
                                 if (!merge_expression.empty())
                                 {
                                     merged_text.append(value_as_string(evaluate_expression(merge_expression, frame)));
                                 }
 
-                                cursor = end + 2U;
+                                cursor = end + right_delimiter.size();
                             }
 
                             return merged_text;
@@ -3371,6 +3374,100 @@
                                       .detail = cursor->filter_expression.empty() ? "OFF" : cursor->filter_expression,
                                       .location = statement.location});
                     return {};
+                }
+                if (normalized_name == "textmerge")
+                {
+                    auto clamp_textmerge_delimiter = [](std::string delimiter) -> std::string
+                    {
+                        if (delimiter.size() > 2U)
+                        {
+                            delimiter.resize(2U);
+                        }
+                        return delimiter;
+                    };
+
+                    std::string textmerge_value = trim_copy(option_value);
+                    if (starts_with_insensitive(textmerge_value, "DELIMITERS"))
+                    {
+                        textmerge_value = trim_copy(textmerge_value.substr(10U));
+                        if (starts_with_insensitive(textmerge_value, "TO "))
+                        {
+                            textmerge_value = trim_copy(textmerge_value.substr(3U));
+                        }
+
+                        std::string left_delimiter = "<<";
+                        std::string right_delimiter = ">>";
+                        if (!textmerge_value.empty())
+                        {
+                            const std::vector<std::string> delimiter_parts = split_csv_like(textmerge_value);
+                            if (!delimiter_parts.empty())
+                            {
+                                left_delimiter = clamp_textmerge_delimiter(
+                                    evaluate_set_string_value(delimiter_parts[0], "<<"));
+                                if (delimiter_parts.size() >= 2U)
+                                {
+                                    right_delimiter = clamp_textmerge_delimiter(
+                                        evaluate_set_string_value(delimiter_parts[1], left_delimiter));
+                                }
+                                else
+                                {
+                                    right_delimiter = left_delimiter;
+                                }
+
+                                if (left_delimiter.empty())
+                                {
+                                    left_delimiter = "<<";
+                                }
+                                if (right_delimiter.empty())
+                                {
+                                    right_delimiter = left_delimiter;
+                                }
+                            }
+                        }
+
+                        current_set_state()["textmerge_left_delimiter"] = left_delimiter;
+                        current_set_state()["textmerge_right_delimiter"] = right_delimiter;
+                        events.push_back({.category = "runtime.set",
+                                          .detail = statement.expression,
+                                          .location = statement.location});
+                        return {};
+                    }
+
+                    bool recognized_textmerge_state = false;
+                    bool saw_unrecognized_textmerge_token = false;
+                    std::istringstream textmerge_stream(textmerge_value);
+                    std::string textmerge_token;
+                    while (textmerge_stream >> textmerge_token)
+                    {
+                        const std::string normalized_textmerge_token = normalize_identifier(textmerge_token);
+                        if (normalized_textmerge_token == "on" || normalized_textmerge_token == "off")
+                        {
+                            current_set_state()["textmerge"] = normalized_textmerge_token;
+                            recognized_textmerge_state = true;
+                            continue;
+                        }
+                        if (normalized_textmerge_token == "show" || normalized_textmerge_token == "noshow")
+                        {
+                            current_set_state()["textmerge_show"] = normalized_textmerge_token;
+                            recognized_textmerge_state = true;
+                            continue;
+                        }
+
+                        saw_unrecognized_textmerge_token = true;
+                        break;
+                    }
+
+                    if (recognized_textmerge_state && !saw_unrecognized_textmerge_token)
+                    {
+                        if (current_set_state().find("textmerge") == current_set_state().end())
+                        {
+                            current_set_state()["textmerge"] = "off";
+                        }
+                        events.push_back({.category = "runtime.set",
+                                          .detail = statement.expression,
+                                          .location = statement.location});
+                        return {};
+                    }
                 }
                 if (!normalized_name.empty())
                 {

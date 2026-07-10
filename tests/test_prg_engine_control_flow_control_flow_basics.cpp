@@ -535,6 +535,65 @@ void test_text_endtext_literal_blocks() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_text_endtext_honors_set_textmerge_state_and_delimiters() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_textmerge_set_state";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "textmerge_state.prg";
+    write_text(
+        main_path,
+        "cName = 'Copperfin'\n"
+        "SET TEXTMERGE ON\n"
+        "SET TEXTMERGE DELIMITERS TO '{|', '|}'\n"
+        "TEXT TO cMerged NOSHOW\n"
+        "Value={|cName|}\n"
+        "ENDTEXT\n"
+        "SET TEXTMERGE OFF\n"
+        "TEXT TO cLiteral NOSHOW\n"
+        "Value={|cName|}\n"
+        "ENDTEXT\n"
+        "SET TEXTMERGE DELIMITERS TO '<@'\n"
+        "TEXT TO cMergedShared TEXTMERGE NOSHOW\n"
+        "Shared=<@cName<@\n"
+        "ENDTEXT\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "TEXT/ENDTEXT script honoring SET TEXTMERGE state should complete");
+
+    const auto merged = state.globals.find("cmerged");
+    const auto literal = state.globals.find("cliteral");
+    const auto merged_shared = state.globals.find("cmergedshared");
+
+    expect(merged != state.globals.end(), "plain TEXT/ENDTEXT should assign merged output when SET TEXTMERGE is ON");
+    expect(literal != state.globals.end(), "plain TEXT/ENDTEXT should assign literal output when SET TEXTMERGE is OFF");
+    expect(merged_shared != state.globals.end(), "TEXT ... TEXTMERGE should honor shared delimiters from SET TEXTMERGE DELIMITERS");
+
+    if (merged != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(merged->second) == "Value=Copperfin\n",
+            "plain TEXT/ENDTEXT should merge current session delimiters when SET TEXTMERGE is ON");
+    }
+    if (literal != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(literal->second) == "Value={|cName|}\n",
+            "plain TEXT/ENDTEXT should stay literal when SET TEXTMERGE is OFF");
+    }
+    if (merged_shared != state.globals.end()) {
+        expect(
+            copperfin::runtime::format_value(merged_shared->second) == "Shared=Copperfin\n",
+            "TEXT ... TEXTMERGE should honor single-argument shared delimiters from SET TEXTMERGE DELIMITERS");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_scan_on_empty_table_does_not_execute_body() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_scan_empty_table";

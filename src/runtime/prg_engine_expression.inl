@@ -1267,8 +1267,35 @@
                 {
                     const std::string text = value_as_string(arguments[0]);
                     const bool recursive = arguments.size() >= 2U && value_as_bool(arguments[1]);
-                    const std::string left_delim  = arguments.size() >= 4U ? value_as_string(arguments[2]) : "<<";
-                    const std::string right_delim = arguments.size() >= 4U ? value_as_string(arguments[3]) : ">>";
+                    std::string left_delim = "<<";
+                    std::string right_delim = ">>";
+                    if (arguments.size() >= 3U)
+                    {
+                        left_delim = value_as_string(arguments[2]);
+                        right_delim = arguments.size() >= 4U ? value_as_string(arguments[3]) : left_delim;
+                    }
+                    else
+                    {
+                        const std::string encoded_delimiters = set_callback_("__textmerge_delimiters__");
+                        const std::size_t colon_position = encoded_delimiters.find(':');
+                        if (colon_position != std::string::npos)
+                        {
+                            try
+                            {
+                                const std::size_t left_length = static_cast<std::size_t>(
+                                    std::stoull(encoded_delimiters.substr(0U, colon_position)));
+                                const std::string delimiters = encoded_delimiters.substr(colon_position + 1U);
+                                if (left_length <= delimiters.size())
+                                {
+                                    left_delim = delimiters.substr(0U, left_length);
+                                    right_delim = delimiters.substr(left_length);
+                                }
+                            }
+                            catch (...)
+                            {
+                            }
+                        }
+                    }
                     if (left_delim.empty() || right_delim.empty())
                     {
                         return make_string_value(text);

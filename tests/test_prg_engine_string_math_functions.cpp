@@ -616,6 +616,70 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_textmerge_set_state_and_delimiters()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_textmerge_set_state";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "textmerge_set.prg";
+        write_text(
+            main_path,
+            "cTextmergeDefault = SET('TEXTMERGE')\n"
+            "cDelimsDefault = SET('TEXTMERGE', 1)\n"
+            "SET TEXTMERGE ON NOSHOW\n"
+            "cTextmergeOn = SET('TEXTMERGE')\n"
+            "SET TEXTMERGE DELIMITERS TO '{|', '|}'\n"
+            "cDelimsCustom = SET('TEXTMERGE', 1)\n"
+            "cMergedFromSet = TEXTMERGE('Value={|1+1|}')\n"
+            "SET DATASESSION TO 2\n"
+            "cTextmergeSession2 = SET('TEXTMERGE')\n"
+            "cDelimsSession2 = SET('TEXTMERGE', 1)\n"
+            "SET DATASESSION TO 1\n"
+            "cDelimsRestored = SET('TEXTMERGE', 1)\n"
+            "SET TEXTMERGE DELIMITERS TO '<@'\n"
+            "cDelimsShared = SET('TEXTMERGE', 1)\n"
+            "cMergedShared = TEXTMERGE('Shared=<@3+4<@')\n"
+            "SET TEXTMERGE DELIMITERS TO\n"
+            "cDelimsReset = SET('TEXTMERGE', 1)\n"
+            "cMergedReset = TEXTMERGE('Reset=<<2+1>>')\n"
+            "RETURN\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "SET TEXTMERGE delimiter script should complete");
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            const std::string actual = copperfin::runtime::format_value(it->second);
+            expect(actual == expected, name + ": expected \"" + expected + "\", got \"" + actual + "\"");
+        };
+
+        check("ctextmergedefault", "OFF");
+        check("cdelimsdefault", "<<,>>");
+        check("ctextmergeon", "ON");
+        check("cdelimscustom", "{|,|}");
+        check("cmergedfromset", "Value=2");
+        check("ctextmergesession2", "OFF");
+        check("cdelimssession2", "<<,>>");
+        check("cdelimsrestored", "{|,|}");
+        check("cdelimsshared", "<@,<@");
+        check("cmergedshared", "Shared=7");
+        check("cdelimsreset", "<<,>>");
+        check("cmergedreset", "Reset=3");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_nested_macro_eval_textmerge_execscript_semantics()
     {
         namespace fs = std::filesystem;
@@ -844,6 +908,7 @@ int main()
     test_index_expression_trim_functions_preserve_non_space_whitespace();
     test_index_expression_padl_truncation_matches_runtime_padl();
     test_financial_and_misc_expression_functions();
+    test_textmerge_set_state_and_delimiters();
     test_nested_macro_eval_textmerge_execscript_semantics();
     test_numeric_domain_errors_route_through_runtime_catalog();
     test_numeric_coercion_of_blank_padded_string_does_not_fault();

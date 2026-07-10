@@ -855,6 +855,23 @@
             return empty_state;
         }
 
+        std::pair<std::string, std::string> current_textmerge_delimiters() const
+        {
+            const auto &set_state = current_set_state();
+            const auto left_found = set_state.find("textmerge_left_delimiter");
+            const auto right_found = set_state.find("textmerge_right_delimiter");
+
+            const std::string left_delimiter =
+                left_found == set_state.end() || left_found->second.empty()
+                    ? std::string{"<<"}
+                    : left_found->second;
+            const std::string right_delimiter =
+                right_found == set_state.end() || right_found->second.empty()
+                    ? std::string{">>"}
+                    : right_found->second;
+            return {left_delimiter, right_delimiter};
+        }
+
         void move_cursor_to(CursorState &cursor, long long target_recno)
         {
             if (cursor.record_count == 0U)
