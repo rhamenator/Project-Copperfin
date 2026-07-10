@@ -6296,6 +6296,12 @@ internal static class Program
                         new() { Name = "DRIVER", Value = "winspool" },
                         new() { Name = "DEVICE", Value = "FinePrint 2000" },
                         new() { Name = "OUTPUT", Value = "FPR4:" },
+                        new() { Name = "DEFAULTSOURCE", Value = "15" },
+                        new() { Name = "PRINTQUALITY", Value = "600" },
+                        new() { Name = "YRESOLUTION", Value = "600" },
+                        new() { Name = "TTOPTION", Value = "3" },
+                        new() { Name = "ASCII", Value = "9" },
+                        new() { Name = "COLLATE", Value = "1" },
                         new() { Name = "LEFTMARGIN", Value = "15" },
                         new() { Name = "RIGHTMARGIN", Value = "25" }
                     },
@@ -6315,7 +6321,7 @@ internal static class Program
             Expect(englishDetails.IndexOf("Sections: 3", StringComparison.Ordinal) >= 0 &&
                    englishDetails.IndexOf("Deleted sections: 2", StringComparison.Ordinal) >= 0 &&
                    englishDetails.IndexOf("Groupings: 1", StringComparison.Ordinal) >= 0 &&
-                   englishDetails.IndexOf("Settings: 15", StringComparison.Ordinal) >= 0 &&
+                   englishDetails.IndexOf("Settings: 21", StringComparison.Ordinal) >= 0 &&
                    englishDetails.IndexOf("Deleted settings: 1", StringComparison.Ordinal) >= 0 &&
                    englishDetails.IndexOf("Unplaced objects: 1", StringComparison.Ordinal) >= 0 &&
                    englishDetails.IndexOf("Deleted objects: 4", StringComparison.Ordinal) >= 0 &&
@@ -6332,6 +6338,12 @@ internal static class Program
                    englishDetails.IndexOf("Printer Driver: winspool", StringComparison.Ordinal) >= 0 &&
                    englishDetails.IndexOf("Printer Device: FinePrint 2000", StringComparison.Ordinal) >= 0 &&
                    englishDetails.IndexOf("Printer Output: FPR4:", StringComparison.Ordinal) >= 0 &&
+                   englishDetails.IndexOf("Default Source: 15", StringComparison.Ordinal) >= 0 &&
+                   englishDetails.IndexOf("Print Quality: 600", StringComparison.Ordinal) >= 0 &&
+                   englishDetails.IndexOf("Y Resolution: 600", StringComparison.Ordinal) >= 0 &&
+                   englishDetails.IndexOf("TrueType Option: 3", StringComparison.Ordinal) >= 0 &&
+                   englishDetails.IndexOf("ASCII: 9", StringComparison.Ordinal) >= 0 &&
+                   englishDetails.IndexOf("Collate: 1", StringComparison.Ordinal) >= 0 &&
                    englishDetails.IndexOf("Left Margin: 15", StringComparison.Ordinal) >= 0 &&
                    englishDetails.IndexOf("Right Margin: 25", StringComparison.Ordinal) >= 0 &&
                    englishDetails.IndexOf("deleted.country", StringComparison.Ordinal) < 0 &&
@@ -6365,6 +6377,12 @@ internal static class Program
                    spanishDetails.IndexOf("Controlador de impresora: winspool", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Dispositivo de impresora: FinePrint 2000", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Salida de impresora: FPR4:", StringComparison.Ordinal) >= 0 &&
+                   spanishDetails.IndexOf("Fuente predeterminada: 15", StringComparison.Ordinal) >= 0 &&
+                   spanishDetails.IndexOf("Calidad de impresión: 600", StringComparison.Ordinal) >= 0 &&
+                   spanishDetails.IndexOf("Resolución Y: 600", StringComparison.Ordinal) >= 0 &&
+                   spanishDetails.IndexOf("Opción de TrueType: 3", StringComparison.Ordinal) >= 0 &&
+                   spanishDetails.IndexOf("ASCII: 9", StringComparison.Ordinal) >= 0 &&
+                   spanishDetails.IndexOf("Intercalar: 1", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Margen izquierdo: 15", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Margen derecho: 25", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Limites de vista previa:", StringComparison.Ordinal) >= 0 &&
@@ -6394,6 +6412,12 @@ internal static class Program
                    portugueseDetails.IndexOf("Controlador da impressora: winspool", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Dispositivo da impressora: FinePrint 2000", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Saída da impressora: FPR4:", StringComparison.Ordinal) >= 0 &&
+                   portugueseDetails.IndexOf("Origem padrão: 15", StringComparison.Ordinal) >= 0 &&
+                   portugueseDetails.IndexOf("Qualidade de impressão: 600", StringComparison.Ordinal) >= 0 &&
+                   portugueseDetails.IndexOf("Resolução Y: 600", StringComparison.Ordinal) >= 0 &&
+                   portugueseDetails.IndexOf("Opção de TrueType: 3", StringComparison.Ordinal) >= 0 &&
+                   portugueseDetails.IndexOf("ASCII: 9", StringComparison.Ordinal) >= 0 &&
+                   portugueseDetails.IndexOf("Intercalar: 1", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Margem esquerda: 15", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Margem direita: 25", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Limites da visualização:", StringComparison.Ordinal) >= 0 &&
@@ -6417,6 +6441,12 @@ internal static class Program
                    pseudoDetails.IndexOf(pseudoLocalization.Text("AssetEditor.Property.PrinterDriver").Substring(0, 6), StringComparison.Ordinal) >= 0 &&
                    pseudoDetails.IndexOf(pseudoLocalization.Text("AssetEditor.Property.PrinterDevice").Substring(0, 6), StringComparison.Ordinal) >= 0 &&
                    pseudoDetails.IndexOf(pseudoLocalization.Text("AssetEditor.Property.PrinterOutput").Substring(0, 6), StringComparison.Ordinal) >= 0 &&
+                   pseudoDetails.IndexOf(pseudoLocalization.Text("AssetEditor.Property.DefaultSource").Substring(0, 6), StringComparison.Ordinal) >= 0 &&
+                   pseudoDetails.IndexOf(pseudoLocalization.Text("AssetEditor.Property.PrintQuality").Substring(0, 6), StringComparison.Ordinal) >= 0 &&
+                   pseudoDetails.IndexOf(pseudoLocalization.Text("AssetEditor.Property.YResolution").Substring(0, 6), StringComparison.Ordinal) >= 0 &&
+                   pseudoDetails.IndexOf(pseudoLocalization.Text("AssetEditor.Property.TrueTypeOption").Substring(0, 6), StringComparison.Ordinal) >= 0 &&
+                   pseudoDetails.IndexOf(pseudoLocalization.Text("AssetEditor.Property.Ascii").Substring(0, 6), StringComparison.Ordinal) >= 0 &&
+                   pseudoDetails.IndexOf(pseudoLocalization.Text("AssetEditor.Property.Collate").Substring(0, 6), StringComparison.Ordinal) >= 0 &&
                    pseudoDetails.IndexOf(pseudoLocalization.Text("AssetEditor.Property.LeftMargin").Substring(0, 6), StringComparison.Ordinal) >= 0 &&
                    pseudoDetails.IndexOf(pseudoLocalization.Text("AssetEditor.Details.ReportPreviewBoundsSummary").Substring(0, 6), StringComparison.Ordinal) >= 0 &&
                    pseudoDetails.IndexOf(pseudoLocalization.Text("AssetEditor.Details.DeletedReportPreviewBoundsSummary").Substring(0, 6), StringComparison.Ordinal) >= 0,
@@ -6438,7 +6468,13 @@ internal static class Program
                         new() { Name = "GRIDV", Value = "6" },
                         new() { Name = "COPIES", Value = "4" },
                         new() { Name = "DRIVER", Value = "deleted-winspool" },
-                        new() { Name = "OUTPUT", Value = "DELETED:" }
+                        new() { Name = "OUTPUT", Value = "DELETED:" },
+                        new() { Name = "DEFAULTSOURCE", Value = "16" },
+                        new() { Name = "PRINTQUALITY", Value = "1200" },
+                        new() { Name = "YRESOLUTION", Value = "1200" },
+                        new() { Name = "TTOPTION", Value = "2" },
+                        new() { Name = "ASCII", Value = "10" },
+                        new() { Name = "COLLATE", Value = "0" }
                     },
                     UnplacedObjects = new List<CopperfinStudioReportLayoutObject>(),
                     DeletedObjects = new List<CopperfinStudioReportLayoutObject>()
@@ -6450,13 +6486,19 @@ internal static class Program
                    deletedOnlyDetails.IndexOf("Deleted sections: 1", StringComparison.Ordinal) >= 0 &&
                    deletedOnlyDetails.IndexOf("Groupings: 0", StringComparison.Ordinal) >= 0 &&
                    deletedOnlyDetails.IndexOf("Settings: 0", StringComparison.Ordinal) >= 0 &&
-                   deletedOnlyDetails.IndexOf("Deleted settings: 6", StringComparison.Ordinal) >= 0 &&
+                   deletedOnlyDetails.IndexOf("Deleted settings: 12", StringComparison.Ordinal) >= 0 &&
                    deletedOnlyDetails.IndexOf("Active Sort Expression: deleted.only.tag", StringComparison.Ordinal) >= 0 &&
                    deletedOnlyDetails.IndexOf("Orientation: 7", StringComparison.Ordinal) >= 0 &&
                    deletedOnlyDetails.IndexOf("Vertical Grid: 6", StringComparison.Ordinal) >= 0 &&
                    deletedOnlyDetails.IndexOf("Copies: 4", StringComparison.Ordinal) >= 0 &&
                    deletedOnlyDetails.IndexOf("Printer Driver: deleted-winspool", StringComparison.Ordinal) >= 0 &&
                    deletedOnlyDetails.IndexOf("Printer Output: DELETED:", StringComparison.Ordinal) >= 0 &&
+                   deletedOnlyDetails.IndexOf("Default Source: 16", StringComparison.Ordinal) >= 0 &&
+                   deletedOnlyDetails.IndexOf("Print Quality: 1200", StringComparison.Ordinal) >= 0 &&
+                   deletedOnlyDetails.IndexOf("Y Resolution: 1200", StringComparison.Ordinal) >= 0 &&
+                   deletedOnlyDetails.IndexOf("TrueType Option: 2", StringComparison.Ordinal) >= 0 &&
+                   deletedOnlyDetails.IndexOf("ASCII: 10", StringComparison.Ordinal) >= 0 &&
+                   deletedOnlyDetails.IndexOf("Collate: 0", StringComparison.Ordinal) >= 0 &&
                    deletedOnlyDetails.IndexOf("Preview bounds:", StringComparison.Ordinal) < 0 &&
                    deletedOnlyDetails.IndexOf("Deleted preview bounds:", StringComparison.Ordinal) < 0,
                 "Deleted-settings-only report layout shell summary should surface deleted root sort and printer/grid/page-setup metadata through the managed details path without fabricating preview bounds");

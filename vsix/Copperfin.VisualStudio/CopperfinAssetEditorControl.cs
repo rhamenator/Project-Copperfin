@@ -2919,6 +2919,12 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         AppendReportSettingSummaryPart(pageSetupParts, snapshot.ReportLayout, "DRIVER", "AssetEditor.Property.PrinterDriver");
         AppendReportSettingSummaryPart(pageSetupParts, snapshot.ReportLayout, "DEVICE", "AssetEditor.Property.PrinterDevice");
         AppendReportSettingSummaryPart(pageSetupParts, snapshot.ReportLayout, "OUTPUT", "AssetEditor.Property.PrinterOutput");
+        AppendReportSettingSummaryPart(pageSetupParts, snapshot.ReportLayout, "DEFAULTSOURCE", "AssetEditor.Property.DefaultSource");
+        AppendReportSettingSummaryPart(pageSetupParts, snapshot.ReportLayout, "PRINTQUALITY", "AssetEditor.Property.PrintQuality");
+        AppendReportSettingSummaryPart(pageSetupParts, snapshot.ReportLayout, "YRESOLUTION", "AssetEditor.Property.YResolution");
+        AppendReportSettingSummaryPart(pageSetupParts, snapshot.ReportLayout, "TTOPTION", "AssetEditor.Property.TrueTypeOption");
+        AppendReportSettingSummaryPart(pageSetupParts, snapshot.ReportLayout, "ASCII", "AssetEditor.Property.Ascii");
+        AppendReportSettingSummaryPart(pageSetupParts, snapshot.ReportLayout, "COLLATE", "AssetEditor.Property.Collate");
         if (pageSetupParts.Count > 0)
         {
             details += Environment.NewLine + string.Join("   ", pageSetupParts);
