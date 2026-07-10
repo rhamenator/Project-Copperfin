@@ -84,6 +84,10 @@ namespace
             "substr_miss = 'zz' $ 'abcdef'\n"
             "neq_hash = 1 # 2\n"
             "neq_bang_equal = 1 != 2\n"
+            "pow_caret = 2 ^ 3\n"
+            "pow_starstar = 2 ** 3\n"
+            "pow_negative = 2 ^ -1\n"
+            "pow_mul_mix = 2 * 2 ^ 3\n"
             "logic_precedence = .T. OR .F. AND .F.\n"
             "and_short_guard = .F. AND (1 / 0)\n"
             "or_short_guard = .T. OR (1 / 0)\n"
@@ -284,6 +288,10 @@ namespace
         check("substr_miss", "false");
         check("neq_hash", "true");
         check("neq_bang_equal", "true");
+        check("pow_caret", "8");
+        check("pow_starstar", "8");
+        check("pow_negative", "0.5");
+        check("pow_mul_mix", "16");
         check("logic_precedence", "true");
         check("and_short_guard", "false");
         check("or_short_guard", "true");

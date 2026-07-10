@@ -590,7 +590,23 @@
                     }
                     return make_number_value(-value_as_number(operand));
                 }
-                return parse_primary();
+                return parse_power();
+            }
+
+            PrgValue parse_power()
+            {
+                PrgValue left = parse_primary();
+                skip_whitespace();
+                if (match("**") || match("^"))
+                {
+                    PrgValue right = parse_unary();
+                    if (suppress_evaluation_)
+                    {
+                        return make_empty_value();
+                    }
+                    return make_number_value(std::pow(value_as_number(left), value_as_number(right)));
+                }
+                return left;
             }
 
             PrgValue parse_primary()

@@ -174,6 +174,12 @@ void test_logical_operators_drive_control_flow() {
         "IF 1 != 2\n"
         "    cNotBranch = cNotBranch + '|bang-ne'\n"
         "ENDIF\n"
+        "IF 2 ^ 3 = 8\n"
+        "    cNotBranch = cNotBranch + '|pow-caret'\n"
+        "ENDIF\n"
+        "IF 2 ** 3 = 8\n"
+        "    cNotBranch = cNotBranch + '|pow-starstar'\n"
+        "ENDIF\n"
         "DO WHILE nLoopCount < 3 AND .F.\n"
         "    nLoopCount = nLoopCount + 1\n"
         "ENDDO\n"
@@ -209,8 +215,8 @@ void test_logical_operators_drive_control_flow() {
                "compound IF should evaluate the full AND expression");
     }
     if (not_branch != state.globals.end()) {
-        expect(copperfin::runtime::format_value(not_branch->second) == "keyword-not|contains|hash-ne|bang-ne",
-               "NOT/.NOT., $, #, and != should behave correctly in IF predicates");
+        expect(copperfin::runtime::format_value(not_branch->second) == "keyword-not|contains|hash-ne|bang-ne|pow-caret|pow-starstar",
+               "NOT/.NOT., $, #, !=, ^, and ** should behave correctly in IF predicates");
     }
     if (loop_count != state.globals.end()) {
         expect(copperfin::runtime::format_value(loop_count->second) == "0",
