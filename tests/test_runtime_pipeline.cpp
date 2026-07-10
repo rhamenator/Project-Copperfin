@@ -30,7 +30,7 @@ int main() {
     test_runtime_manifest_records_generated_compiler_contract_digests();
     test_startup_dbf_companion_assets_are_staged();
     test_uppercase_dbf_companion_assets_are_staged();
-    test_runtime_package_license_fields_bump_manifest_schema_versions();
+    test_runtime_package_license_fields_stay_debug_only();
     test_security_enabled_runtime_host_name_validation();
     test_runtime_security_role_environment_fidelity();
     test_materialize_fails_before_asset_staging_when_runtime_host_source_is_invalid();

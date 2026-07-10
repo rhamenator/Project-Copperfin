@@ -262,13 +262,6 @@ std::string build_runtime_manifest_text(
     stream << "security_mode=" << quote_manifest_value(security_profile.mode) << "\n";
     stream << "audit_log_path=" << quote_manifest_value(plan.audit_log_path) << "\n";
     stream << "runtime_host_sha256=" << quote_manifest_value(plan.runtime_host_sha256) << "\n";
-    stream << "license_state=" << quote_manifest_value(plan.license_state) << "\n";
-    stream << "license_type=" << quote_manifest_value(plan.license_type) << "\n";
-    stream << "license_id=" << quote_manifest_value(plan.license_id) << "\n";
-    stream << "license_licensee=" << quote_manifest_value(plan.license_licensee) << "\n";
-    stream << "license_seats=" << plan.license_seats << "\n";
-    stream << "license_subscription_expires=" << quote_manifest_value(plan.license_subscription_expires) << "\n";
-    stream << "license_perpetual_max_major_version=" << plan.license_perpetual_max_major_version << "\n";
     stream << "security_roles=" << security_profile.roles.size() << "\n";
     stream << "launcher_mode=" << quote_manifest_value(plan.launcher_mode) << "\n";
     stream << "launcher_fallback=" << quote_manifest_value(plan.launcher_fallback) << "\n";
