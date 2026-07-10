@@ -13377,6 +13377,115 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_tabstop_defaults_mutate_and_stay_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_tabstop";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_tabstop.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('CommandButton')\n"
+            "lPlainHasTabStop = PEMSTATUS(oPlain, 'TabStop', 1)\n"
+            "lPlainTabStopReadOnly = PEMSTATUS(oPlain, 'TabStop', 5)\n"
+            "lPlainBefore = oPlain.TabStop\n"
+            "xPlainGetPemBefore = GETPEM(oPlain, 'TabStop')\n"
+            "oPlain.TabStop = .F.\n"
+            "lPlainAfterDirectAssign = oPlain.TabStop\n"
+            "lPlainSetPem = SETPEM(oPlain, 'TabStop', .T.)\n"
+            "lPlainAfterSetPem = oPlain.TabStop\n"
+            "lPlainAddProperty = ADDPROPERTY(oPlain, 'TabStop', .F.)\n"
+            "lPlainRemoveProperty = REMOVEPROPERTY(oPlain, 'TabStop')\n"
+            "oForm = CREATEOBJECT('TabStopForm')\n"
+            "lTextBefore = oForm.txtName.TabStop\n"
+            "lContainerBefore = oForm.cntHost.TabStop\n"
+            "lNestedBefore = oForm.cntHost.cmdNested.TabStop\n"
+            "lNestedRead = oForm.cmdProbe.ReadNestedTabStop()\n"
+            "oForm.cmdProbe.DisableNestedTabStop()\n"
+            "lNestedAfterChild = oForm.cntHost.cmdNested.TabStop\n"
+            "lChildSetPem = SETPEM(oForm.txtName, 'TabStop', .F.)\n"
+            "lTextAfterSetPem = oForm.txtName.TabStop\n"
+            "xChildGetPem = GETPEM(oForm.txtName, 'TabStop')\n"
+            "lChildHasTabStop = PEMSTATUS(oForm.txtName, 'TabStop', 1)\n"
+            "lChildTabStopReadOnly = PEMSTATUS(oForm.txtName, 'TabStop', 5)\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oForm.txtName, 1)\n"
+            "lPropHasTabStop = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'TABSTOP'\n"
+            "        lPropHasTabStop = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('DerivedButton')\n"
+            "lDerivedBefore = oDerived.TabStop\n"
+            "RETURN\n"
+            "DEFINE CLASS ProbeButton AS CommandButton\n"
+            "    FUNCTION ReadNestedTabStop\n"
+            "        RETURN THISFORM.cntHost.cmdNested.TabStop\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE DisableNestedTabStop\n"
+            "        THISFORM.cntHost.cmdNested.TabStop = .F.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS TabStopForm AS Form\n"
+            "    ADD OBJECT txtName AS TextBox\n"
+            "    ADD OBJECT cntHost AS HostContainer\n"
+            "    ADD OBJECT cmdProbe AS ProbeButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS HostContainer AS Container\n"
+            "    ADD OBJECT cmdNested AS CommandButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DerivedButton AS CommandButton\n"
+            "    TabStop = .F.\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native TabStop property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplainhastabstop", "true");
+        check("lplaintabstopreadonly", "false");
+        check("lplainbefore", "true");
+        check("xplaingetpembefore", "true");
+        check("lplainafterdirectassign", "false");
+        check("lplainsetpem", "true");
+        check("lplainaftersetpem", "true");
+        check("lplainaddproperty", "false");
+        check("lplainremoveproperty", "false");
+        check("ltextbefore", "true");
+        check("lcontainerbefore", "true");
+        check("lnestedbefore", "true");
+        check("lnestedread", "true");
+        check("lnestedafterchild", "false");
+        check("lchildsetpem", "true");
+        check("ltextaftersetpem", "false");
+        check("xchildgetpem", "false");
+        check("lchildhastabstop", "true");
+        check("lchildtabstopreadonly", "false");
+        check("lprophastabstop", "true");
+        check("lderivedbefore", "false");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_text_entry_readonly_defaults_mutate_and_stay_builtin()
     {
         namespace fs = std::filesystem;
@@ -52760,6 +52869,7 @@ int main()
     test_native_visual_backcolor_defaults_mutate_and_stay_builtin();
     test_native_visual_forecolor_defaults_mutate_and_stay_builtin();
     test_native_tabindex_defaults_mutate_and_stay_builtin();
+    test_native_tabstop_defaults_mutate_and_stay_builtin();
     test_native_release_thisform_command_releases_owner_form();
     test_native_release_thisformset_command_releases_owner_alias();
     test_native_release_override_runs_before_builtin_release_path();

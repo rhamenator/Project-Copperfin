@@ -546,6 +546,29 @@ bool native_tabindex_runtime_object_matches(const RuntimeOleObjectState& runtime
            normalized_base_class == "textbox";
 }
 
+bool native_tabstop_runtime_object_matches(const RuntimeOleObjectState& runtime_object) {
+    if (runtime_object.class_hierarchy.empty()) {
+        return false;
+    }
+
+    const std::string normalized_base_class =
+        normalize_identifier(trim_copy(runtime_object.base_class_name));
+    return normalized_base_class == "checkbox" ||
+           normalized_base_class == "combobox" ||
+           normalized_base_class == "commandbutton" ||
+           normalized_base_class == "container" ||
+           normalized_base_class == "editbox" ||
+           normalized_base_class == "form" ||
+           normalized_base_class == "grid" ||
+           normalized_base_class == "listbox" ||
+           normalized_base_class == "olecontrol" ||
+           normalized_base_class == "optionbutton" ||
+           normalized_base_class == "page" ||
+           normalized_base_class == "pageframe" ||
+           normalized_base_class == "spinner" ||
+           normalized_base_class == "textbox";
+}
+
 bool is_native_focusable_runtime_object(const RuntimeOleObjectState& runtime_object) {
     if (runtime_object.class_hierarchy.empty()) {
         return false;
@@ -1615,6 +1638,14 @@ bool native_tabindex_member_name_matches(
     return normalized_member_name == "tabindex" &&
            native_tabindex_runtime_object_matches(runtime_object) &&
            runtime_object.properties.contains("tabindex");
+}
+
+bool native_tabstop_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    return normalized_member_name == "tabstop" &&
+           native_tabstop_runtime_object_matches(runtime_object) &&
+           runtime_object.properties.contains("tabstop");
 }
 
 bool native_string_control_value_member_name_matches(
@@ -2748,6 +2779,16 @@ bool is_native_tabindex_member_name(const RuntimeOleObjectState& runtime_object,
     return native_tabindex_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_tabstop_runtime_object(const RuntimeOleObjectState& runtime_object)
+{
+    return native_tabstop_runtime_object_matches(runtime_object);
+}
+
+bool is_native_tabstop_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_tabstop_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_control_readonly_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_control_readonly_member_name_matches(runtime_object, normalized_member_name);
@@ -3746,6 +3787,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_visual_backcolor_member_name(*runtime_object, property_name) ||
             is_native_visual_forecolor_member_name(*runtime_object, property_name) ||
             is_native_tabindex_member_name(*runtime_object, property_name) ||
+            is_native_tabstop_member_name(*runtime_object, property_name) ||
             is_native_visual_geometry_member_name(*runtime_object, property_name) ||
             is_native_combobox_style_member_name(*runtime_object, property_name) ||
             is_native_control_readonly_member_name(*runtime_object, property_name) ||
@@ -4106,6 +4148,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_visual_backcolor_member_name(*runtime_object, property_name) ||
             is_native_visual_forecolor_member_name(*runtime_object, property_name) ||
             is_native_tabindex_member_name(*runtime_object, property_name) ||
+            is_native_tabstop_member_name(*runtime_object, property_name) ||
             is_native_visual_geometry_member_name(*runtime_object, property_name) ||
             is_native_combobox_style_member_name(*runtime_object, property_name) ||
             is_native_control_readonly_member_name(*runtime_object, property_name) ||

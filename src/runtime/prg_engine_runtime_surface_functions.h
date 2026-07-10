@@ -59,6 +59,8 @@ bool is_native_visual_visible_member_name(const RuntimeOleObjectState& runtime_o
 bool is_native_visual_geometry_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_tabindex_runtime_object(const RuntimeOleObjectState& runtime_object);
 bool is_native_tabindex_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_tabstop_runtime_object(const RuntimeOleObjectState& runtime_object);
+bool is_native_tabstop_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_allowaddnew_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_deletemark_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_splitbar_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);

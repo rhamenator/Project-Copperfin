@@ -1291,6 +1291,12 @@
                     make_number_value(static_cast<double>(next_native_tab_index(runtime_object)));
             }
 
+            if (is_native_tabstop_runtime_object(runtime_object) &&
+                !runtime_object.properties.contains("tabstop"))
+            {
+                runtime_object.properties["tabstop"] = make_boolean_value(true);
+            }
+
             if ((normalized_base_class == "textbox" ||
                  normalized_base_class == "combobox" ||
                  normalized_base_class == "listbox") &&
