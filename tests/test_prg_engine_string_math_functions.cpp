@@ -80,6 +80,8 @@ namespace
             "or_dotted = .F. .OR. .T.\n"
             "not_keyword = NOT (1 = 2)\n"
             "not_dotted = .NOT. (1 = 2)\n"
+            "substr_hit = 'ab' $ 'abcdef'\n"
+            "substr_miss = 'zz' $ 'abcdef'\n"
             "logic_precedence = .T. OR .F. AND .F.\n"
             "and_short_guard = .F. AND (1 / 0)\n"
             "or_short_guard = .T. OR (1 / 0)\n"
@@ -276,6 +278,8 @@ namespace
         check("or_dotted", "true");
         check("not_keyword", "true");
         check("not_dotted", "true");
+        check("substr_hit", "true");
+        check("substr_miss", "false");
         check("logic_precedence", "true");
         check("and_short_guard", "false");
         check("or_short_guard", "true");

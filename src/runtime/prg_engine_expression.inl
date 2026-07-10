@@ -389,6 +389,20 @@
                             left = make_boolean_value(values_equal(left, right));
                         }
                     }
+                    else if (match("$"))
+                    {
+                        PrgValue right = parse_additive();
+                        if (suppress_evaluation_)
+                        {
+                            left = make_boolean_value(false);
+                        }
+                        else
+                        {
+                            const std::string needle = value_as_string(left);
+                            const std::string haystack = value_as_string(right);
+                            left = make_boolean_value(haystack.find(needle) != std::string::npos);
+                        }
+                    }
                     else if (match("<"))
                     {
                         PrgValue right = parse_additive();
