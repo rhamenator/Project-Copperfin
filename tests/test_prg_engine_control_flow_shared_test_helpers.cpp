@@ -5,10 +5,6 @@
 #include "test_prg_engine_control_flow_support.h"
 
 namespace cf_test_prg_engine_control_flow {
-void set_env_value(const std::string& name, const std::string& value, bool has_value) {
-    copperfin::test_support::set_env_value(name, value, has_value);
-}
-
 std::size_t count_missing_locale_keys(
     const copperfin::localization::LocalizedCatalog& catalog,
     std::string_view locale,

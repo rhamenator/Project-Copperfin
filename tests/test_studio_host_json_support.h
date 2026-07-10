@@ -51,8 +51,8 @@ struct ProcessResult;
 // ==== Shared test helpers (process invocation, locale env, assertion helpers, generic fixtures) ====
 
 extern int failures;
-std::string getenv_value(const std::string& name);
-void set_env_value(const std::string& name, const std::string& value, bool has_value);
+using copperfin::test_support::getenv_value;
+using copperfin::test_support::set_env_value;
 void expect(bool condition, const std::string& message);
 void expect_contains(const std::string& text, const std::string& needle, const std::string& message);
 void expect_not_contains(const std::string& text, const std::string& needle, const std::string& message);

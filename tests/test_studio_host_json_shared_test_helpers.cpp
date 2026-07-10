@@ -7,14 +7,6 @@
 namespace cf_test_studio_host_json {
 int failures = 0;
 
-std::string getenv_value(const std::string& name) {
-    return copperfin::test_support::getenv_value(name);
-}
-
-void set_env_value(const std::string& name, const std::string& value, bool has_value) {
-    copperfin::test_support::set_env_value(name, value, has_value);
-}
-
 void expect(bool condition, const std::string& message) {
     if (!condition) {
         std::cerr << "FAIL: " << message << "\n";

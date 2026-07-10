@@ -5,10 +5,6 @@
 #include "test_prg_engine_data_io_support.h"
 
 namespace cf_test_prg_engine_data_io {
-void set_env_value(const std::string& name, const std::string& value, bool has_value) {
-    copperfin::test_support::set_env_value(name, value, has_value);
-}
-
 void test_runtime_array_mutator_functions() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_array_mutators";

@@ -580,7 +580,7 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
         materialize_result.error == "Package plan is not valid.",
         "#2390: materialize_runtime_package should preserve the default localized invalid-plan diagnostic");
 
-    set_env_variable("COPPERFIN_LOCALE", "es-419", true);
+    set_env_value("COPPERFIN_LOCALE", "es-419", true);
     const auto spanish_materialize_result = copperfin::runtime::materialize_runtime_package(
         invalid_plan,
         copperfin::security::default_native_security_profile(),
@@ -594,7 +594,7 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
     copperfin::runtime::RuntimePackagePlan executable_plan{};
     executable_plan.ok = true;
     executable_plan.output_kind = copperfin::runtime::BuildOutputKind::executable;
-    set_env_variable("COPPERFIN_LOCALE", "en-US", true);
+    set_env_value("COPPERFIN_LOCALE", "en-US", true);
     const auto build_result = copperfin::runtime::build_runtime_package_primary_output(
         executable_plan,
         copperfin::security::default_native_security_profile(),
@@ -604,7 +604,7 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
         build_result.error == "Primary-output builds are only supported for library-output packages.",
         "#2390: primary-output build should preserve the default localized unsupported-kind diagnostic");
 
-    set_env_variable("COPPERFIN_LOCALE", "pt-BR", true);
+    set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
     const auto portuguese_build_result = copperfin::runtime::build_runtime_package_primary_output(
         executable_plan,
         copperfin::security::default_native_security_profile(),
@@ -615,7 +615,7 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
                 "Builds de saida primaria sao suportados apenas para pacotes de saida de biblioteca.",
         "#2606: runtime package primary-output diagnostics should refresh to pt-BR when the runtime locale changes in-process");
 
-    set_env_variable("COPPERFIN_LOCALE", "qps-ploc", true);
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
     const auto pseudo_materialize_result = copperfin::runtime::materialize_runtime_package(
         invalid_plan,
         copperfin::security::default_native_security_profile(),

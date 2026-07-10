@@ -39,7 +39,7 @@ namespace cf_test_prg_engine_data_io {
 using namespace copperfin::test_support;
 
 // ==== Shared test helpers and fixtures ====
-void set_env_value(const std::string& name, const std::string& value, bool has_value);
+using copperfin::test_support::set_env_value;
 void test_runtime_array_mutator_functions();
 void test_set_filter_dimension_sleep_runtime_errors_localize();
 void test_aerror_content_for_sql_passthrough_fault();

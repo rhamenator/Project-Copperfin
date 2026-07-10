@@ -152,14 +152,6 @@ std::string manifest_value_for_key(const std::string& text, const std::string& k
     return {};
 }
 
-std::string getenv_value(const std::string& name) {
-    return copperfin::test_support::getenv_value(name);
-}
-
-void set_env_variable(const std::string& name, const std::string& value, bool has_value) {
-    copperfin::test_support::set_env_value(name, value, has_value);
-}
-
 bool dotnet_is_available() {
 #if defined(_WIN32)
     const char* argv[] = {"dotnet", "--version", nullptr};

@@ -53,8 +53,8 @@ std::size_t count_missing_locale_keys(
     const std::vector<std::string_view>& keys);
 std::vector<std::string> lines_with_prefix(const std::string& text, const std::string& prefix);
 std::string manifest_value_for_key(const std::string& text, const std::string& key);
-std::string getenv_value(const std::string& name);
-void set_env_variable(const std::string& name, const std::string& value, bool has_value);
+using copperfin::test_support::getenv_value;
+using copperfin::test_support::set_env_value;
 bool dotnet_is_available();
 std::string native_cxx_command();
 bool native_cxx_is_available();
