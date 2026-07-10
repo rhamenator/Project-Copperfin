@@ -185,6 +185,40 @@ namespace copperfin::runtime
             });
         }
 
+        std::string serialize_runtime_expression_text(const PrgValue &value)
+        {
+            switch (value.kind)
+            {
+            case PrgValueKind::boolean:
+                return value.boolean_value ? ".T." : ".F.";
+            case PrgValueKind::number:
+            case PrgValueKind::int64:
+            case PrgValueKind::uint64:
+                return value_as_string(value);
+            case PrgValueKind::string:
+            {
+                std::string quoted = value.string_value;
+                std::string escaped;
+                escaped.reserve(quoted.size());
+                for (const char ch : quoted)
+                {
+                    if (ch == '"')
+                    {
+                        escaped += "\"\"";
+                    }
+                    else
+                    {
+                        escaped.push_back(ch);
+                    }
+                }
+                return "\"" + escaped + "\"";
+            }
+            case PrgValueKind::empty:
+            default:
+                return value_as_string(value);
+            }
+        }
+
         bool is_native_visual_runtime_object(const RuntimeOleObjectState &runtime_object)
         {
             if (runtime_object.class_hierarchy.empty())
@@ -666,6 +700,8 @@ namespace copperfin::runtime
         std::map<int, std::size_t> memowidth_by_session;
         std::map<int, std::map<int, RuntimeSqlConnectionState>> sql_connections_by_session;
         std::map<int, RuntimeOleObjectState> ole_objects;
+        std::map<int, std::map<std::string, std::string>> native_property_expression_text_by_handle;
+        std::map<int, std::map<std::string, std::string>> native_default_property_expression_text_by_handle;
         std::optional<int> representative_active_form_handle;
         std::optional<int> representative_application_forms_collection_handle;
         std::string representative_application_caption = "Microsoft Visual FoxPro";
@@ -771,6 +807,9 @@ namespace copperfin::runtime
             RuntimeOleObjectState &runtime_object,
             const std::string &property_name,
             const Frame &source_frame);
+        std::optional<std::string> read_native_property_expression_if_present(
+            RuntimeOleObjectState &runtime_object,
+            const std::string &property_name);
         std::optional<PrgValue> invoke_runtime_object_reference_member(
             const PrgValue &object_reference,
             const std::string &member_path,
@@ -787,7 +826,8 @@ namespace copperfin::runtime
             RuntimeOleObjectState &runtime_object,
             const std::string &property_name,
             const PrgValue &assigned_value,
-            const Frame &source_frame);
+            const Frame &source_frame,
+            std::optional<std::string> assigned_expression_text = std::nullopt);
         std::optional<PrgValue> invoke_native_object_method_body_if_present(
             RuntimeOleObjectState &runtime_object,
             const std::string &identifier,
@@ -2293,6 +2333,20 @@ namespace copperfin::runtime
             }
             return *list_control_result;
         }
+        if (leaf == "readexpression" &&
+            (!target_object->class_hierarchy.empty() || !target_object->source.empty()))
+        {
+            if (arguments.empty())
+            {
+                return make_string_value("");
+            }
+
+            const auto expression_text =
+                read_native_property_expression_if_present(*target_object, value_as_string(arguments.front()));
+            target_object->last_action = effective_member_path + "(" + value_as_string(arguments.front()) + ")";
+            ++target_object->action_count;
+            return make_string_value(expression_text.value_or(std::string{}));
+        }
         if (leaf == "move" &&
             is_native_visual_runtime_object(*target_object))
         {
@@ -2426,11 +2480,24 @@ namespace copperfin::runtime
                 return make_boolean_value(false);
             }
 
+            std::optional<std::string> default_expression_text;
+            if (const auto default_texts =
+                    native_default_property_expression_text_by_handle.find(target_object->handle);
+                default_texts != native_default_property_expression_text_by_handle.end())
+            {
+                if (const auto expression_text = default_texts->second.find(normalized_property_name);
+                    expression_text != default_texts->second.end())
+                {
+                    default_expression_text = expression_text->second;
+                }
+            }
+
             const bool restored = write_native_property_if_present(
                 *target_object,
                 property_name,
                 default_value->second,
-                frame);
+                frame,
+                default_expression_text);
             if (!restored)
             {
                 return make_boolean_value(false);
@@ -4694,17 +4761,73 @@ namespace copperfin::runtime
         return perform_property_read();
     }
 
+    std::optional<std::string> PrgRuntimeSession::Impl::read_native_property_expression_if_present(
+        RuntimeOleObjectState &runtime_object,
+        const std::string &property_name)
+    {
+        const std::string normalized_property_name = normalize_identifier(property_name);
+        if (normalized_property_name.empty())
+        {
+            return std::nullopt;
+        }
+
+        if (const auto object_texts = native_property_expression_text_by_handle.find(runtime_object.handle);
+            object_texts != native_property_expression_text_by_handle.end())
+        {
+            if (const auto expression_text = object_texts->second.find(normalized_property_name);
+                expression_text != object_texts->second.end())
+            {
+                return expression_text->second;
+            }
+        }
+
+        if (const auto property = runtime_object.properties.find(normalized_property_name);
+            property != runtime_object.properties.end())
+        {
+            return serialize_runtime_expression_text(property->second);
+        }
+
+        if (is_native_olecontrol_host_object(runtime_object))
+        {
+            RuntimeOleObjectState *object_surface = ensure_native_olecontrol_object_surface(runtime_object);
+            if (object_surface != nullptr && object_surface->handle != runtime_object.handle)
+            {
+                return read_native_property_expression_if_present(*object_surface, property_name);
+            }
+        }
+
+        return std::nullopt;
+    }
+
     bool PrgRuntimeSession::Impl::write_native_property_if_present(
         RuntimeOleObjectState &runtime_object,
         const std::string &property_name,
         const PrgValue &assigned_value,
-        const Frame &source_frame)
+        const Frame &source_frame,
+        std::optional<std::string> assigned_expression_text)
     {
         const std::string normalized_property_name = normalize_identifier(property_name);
         if (normalized_property_name.empty())
         {
             return false;
         }
+
+        const auto remember_property_expression = [&]()
+        {
+            if (normalized_property_name.empty())
+            {
+                return;
+            }
+
+            std::string expression_text = assigned_expression_text.value_or(std::string{});
+            expression_text = trim_copy(expression_text);
+            if (expression_text.empty())
+            {
+                expression_text = serialize_runtime_expression_text(assigned_value);
+            }
+            native_property_expression_text_by_handle[runtime_object.handle][normalized_property_name] =
+                std::move(expression_text);
+        };
 
         auto resolve_selected_member_slot = [&]() -> std::optional<std::size_t>
         {
@@ -4830,6 +4953,7 @@ namespace copperfin::runtime
                     {assigned_value},
                     {}).has_value())
             {
+                remember_property_expression();
                 return true;
             }
             if (is_native_olecontrol_host_object(runtime_object) &&
@@ -4867,37 +4991,66 @@ namespace copperfin::runtime
                 }
                 if (is_native_column_bound_member_name(runtime_object, normalized_property_name))
                 {
-                    return write_native_column_bound_property(runtime_object, assigned_value);
+                    const bool wrote =
+                        write_native_column_bound_property(runtime_object, assigned_value);
+                    if (wrote)
+                    {
+                        remember_property_expression();
+                    }
+                    return wrote;
                 }
                 if (is_native_columnorder_member_name(runtime_object, normalized_property_name))
                 {
-                    return write_native_columnorder_property(runtime_object, assigned_value);
+                    const bool wrote =
+                        write_native_columnorder_property(runtime_object, assigned_value);
+                    if (wrote)
+                    {
+                        remember_property_expression();
+                    }
+                    return wrote;
                 }
                 if (is_native_columncount_member_name(runtime_object, normalized_property_name) &&
                     is_native_grid_runtime_object(runtime_object))
                 {
-                    return write_native_grid_columncount_property(
+                    const bool wrote = write_native_grid_columncount_property(
                         runtime_object,
                         assigned_value,
                         source_frame);
+                    if (wrote)
+                    {
+                        remember_property_expression();
+                    }
+                    return wrote;
                 }
                 if (is_native_pagecount_member_name(runtime_object, normalized_property_name) &&
                     is_native_pageframe_runtime_object(runtime_object))
                 {
-                    return write_native_pageframe_pagecount_property(
+                    const bool wrote = write_native_pageframe_pagecount_property(
                         runtime_object,
                         assigned_value,
                         source_frame);
+                    if (wrote)
+                    {
+                        remember_property_expression();
+                    }
+                    return wrote;
                 }
                 if (is_native_listitemid_member_name(runtime_object, normalized_property_name))
                 {
-                    return write_native_list_control_item_id(runtime_object, assigned_value) &&
-                           write_native_list_control_controlsource_target(runtime_object, source_frame);
+                    const bool wrote =
+                        write_native_list_control_item_id(runtime_object, assigned_value) &&
+                        write_native_list_control_controlsource_target(runtime_object, source_frame);
+                    if (wrote)
+                    {
+                        remember_property_expression();
+                    }
+                    return wrote;
                 }
                 if (is_native_activepage_member_name(runtime_object, normalized_property_name))
                 {
                     runtime_object.properties[normalized_property_name] = assigned_value;
                     normalize_native_pageframe_activepage_invariant(runtime_object);
+                    remember_property_expression();
                     return true;
                 }
                 if (const auto list_cell = resolve_list_member_cell();
@@ -4930,7 +5083,13 @@ namespace copperfin::runtime
                 if (is_native_controlsource_member_name(runtime_object, normalized_property_name) &&
                     is_native_column_runtime_object(runtime_object))
                 {
-                    return write_native_column_controlsource_property(runtime_object, assigned_value);
+                    const bool wrote =
+                        write_native_column_controlsource_property(runtime_object, assigned_value);
+                    if (wrote)
+                    {
+                        remember_property_expression();
+                    }
+                    return wrote;
                 }
                 if (normalized_property_name == "readonly" &&
                     native_combobox_readonly_assignment_blocked(runtime_object, assigned_value))
@@ -4992,6 +5151,7 @@ namespace copperfin::runtime
                         return false;
                     }
                 }
+                remember_property_expression();
                 return true;
             }
             return false;
@@ -5188,6 +5348,8 @@ namespace copperfin::runtime
                                (!binding.target_is_routine && binding.target_handle == handle);
                     }),
                 native_event_bindings.end());
+            native_property_expression_text_by_handle.erase(handle);
+            native_default_property_expression_text_by_handle.erase(handle);
             ole_objects.erase(handle);
         }
 

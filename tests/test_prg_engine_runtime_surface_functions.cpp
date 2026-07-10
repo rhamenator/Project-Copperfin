@@ -47604,6 +47604,78 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_readexpression_returns_live_property_expression_text()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_readexpression";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_readexpression.prg";
+        write_text(
+            main_path,
+            "oWidget = CREATEOBJECT('ProbeWidget')\n"
+            "cClassTextExpr = oWidget.ReadExpression('cText')\n"
+            "cClassCountExpr = oWidget.ReadExpression('nCount')\n"
+            "lHasReadExpression = PEMSTATUS(oWidget, 'ReadExpression', 1)\n"
+            "lReadExpressionReadOnly = PEMSTATUS(oWidget, 'ReadExpression', 5)\n"
+            "lGetReadExpression = GETPEM(oWidget, 'ReadExpression')\n"
+            "nMethods = AMEMBERS(aMethods, oWidget, 2)\n"
+            "nHasReadExpression = ASCAN(aMethods, 'READEXPRESSION')\n"
+            "oWidget.cText = LOWER(\"BETA\")\n"
+            "oWidget.nCount = 2 + 5\n"
+            "cRuntimeTextExpr = oWidget.ReadExpression('cText')\n"
+            "cRuntimeCountExpr = oWidget.ReadExpression('nCount')\n"
+            "cMissingExpr = oWidget.ReadExpression('missingProperty')\n"
+            "RETURN\n"
+            "DEFINE CLASS ProbeWidget AS Custom\n"
+            "    cText = UPPER(\"alpha\")\n"
+            "    nCount = 1 + 2\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native ReadExpression script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " variable not found");
+            if (it != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(it->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(it->second) + "'");
+            }
+        };
+
+        check("cclasstextexpr", "UPPER(\"alpha\")");
+        check("cclasscountexpr", "1 + 2");
+        check("lhasreadexpression", "true");
+        check("lreadexpressionreadonly", "false");
+        check("lgetreadexpression", "true");
+        check("cruntimetextexpr", "LOWER(\"BETA\")");
+        check("cruntimecountexpr", "2 + 5");
+        check("cmissingexpr", "");
+
+        const auto has_readexpression = state.globals.find("nhasreadexpression");
+        expect(has_readexpression != state.globals.end(),
+               "native ReadExpression reflection script should preserve AMEMBERS() presence");
+        if (has_readexpression != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(has_readexpression->second) != "0",
+                   "AMEMBERS(..., 2) should expose the shipped native ReadExpression builtin");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_builtin_methods_reflect_through_pemstatus_getpem_and_amembers()
     {
         namespace fs = std::filesystem;
@@ -53152,6 +53224,7 @@ int main()
     test_native_release_override_nodefault_suppresses_builtin_release_path();
     test_native_resettodefault_builtin_fallback_restores_inherited_defaults();
     test_native_resettodefault_override_wins_over_builtin_default_restore();
+    test_native_readexpression_returns_live_property_expression_text();
     test_native_builtin_methods_reflect_through_pemstatus_getpem_and_amembers();
     test_same_prg_native_bare_helper_calls_resolve_to_current_instance_before_top_level_routines();
     test_inherited_external_prg_base_methods_resolve_bare_helper_calls_against_defining_library();

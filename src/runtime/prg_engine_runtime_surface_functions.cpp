@@ -593,6 +593,11 @@ bool is_native_focusable_runtime_object(const RuntimeOleObjectState& runtime_obj
 bool is_builtin_native_runtime_method_name(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
+    if (normalized_member_name == "readexpression" &&
+        (!runtime_object.class_hierarchy.empty() || !runtime_object.source.empty())) {
+        return true;
+    }
+
     if (runtime_object.class_hierarchy.empty()) {
         return false;
     }

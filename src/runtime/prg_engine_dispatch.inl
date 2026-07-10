@@ -542,7 +542,9 @@
                 detail += " arrays=" + (array_detail.empty() ? std::string{"<none>"} : array_detail);
             };
 
-            auto assign_runtime_target_value = [&](const std::string &raw_identifier, const PrgValue &assignment_value) -> ExecutionOutcome
+            auto assign_runtime_target_value = [&](const std::string &raw_identifier,
+                                                  const PrgValue &assignment_value,
+                                                  std::optional<std::string> assignment_expression_text = std::nullopt) -> ExecutionOutcome
             {
                 std::string assignment_identifier = resolve_runtime_target_identifier(raw_identifier, frame);
                 if (assignment_identifier.find('.') != std::string::npos &&
@@ -573,7 +575,8 @@
                                         *runtime_object,
                                         effective_member_path,
                                         assignment_value,
-                                        frame))
+                                        frame,
+                                        assignment_expression_text))
                                 {
                                     runtime_object->last_action = effective_member_path + " = " + value_as_string(assignment_value);
                                     ++runtime_object->action_count;
@@ -655,7 +658,8 @@
                                 *runtime_object,
                                 property_name,
                                 assignment_value,
-                                frame))
+                                frame,
+                                assignment_expression_text))
                         {
                             runtime_object->last_action = effective_member_path + " = " + value_as_string(assignment_value);
                             ++runtime_object->action_count;
@@ -1050,7 +1054,10 @@
             case StatementKind::assignment:
             {
                 const PrgValue assignment_value = evaluate_expression(statement.expression, frame);
-                return assign_runtime_target_value(statement.identifier, assignment_value);
+                return assign_runtime_target_value(
+                    statement.identifier,
+                    assignment_value,
+                    trim_copy(statement.expression));
             }
             case StatementKind::expression:
                 if (!statement.expression.empty())

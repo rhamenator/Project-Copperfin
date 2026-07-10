@@ -1056,6 +1056,8 @@
                             return binding.target_handle == handle;
                         }),
                     window_message_bindings.end());
+                native_property_expression_text_by_handle.erase(handle);
+                native_default_property_expression_text_by_handle.erase(handle);
                 ole_objects.erase(found);
             }
         }
@@ -2844,6 +2846,8 @@
 
                     runtime_object->properties[property_name] =
                         evaluate_expression(property_statement.expression, frame);
+                    native_property_expression_text_by_handle[runtime_object->handle][property_name] =
+                        trim_copy(property_statement.expression);
                 }
             }
             seed_native_olecontrol_timeout_policy_properties(*runtime_object);
@@ -2860,6 +2864,8 @@
             (void)read_native_collection_member(*runtime_object, "count");
             runtime_object->default_properties = runtime_object->properties;
             runtime_object->default_properties.erase("parent");
+            native_default_property_expression_text_by_handle[runtime_object->handle] =
+                native_property_expression_text_by_handle[runtime_object->handle];
             const PrgValue runtime_object_reference = make_runtime_object_reference(*runtime_object);
             for (const NativeClassLookup &lineage_class : class_lineage)
             {
@@ -2917,6 +2923,8 @@
 
                         child_object->properties[property_name] =
                             evaluate_expression(property_statement.expression, frame);
+                        native_property_expression_text_by_handle[child_object->handle][property_name] =
+                            trim_copy(property_statement.expression);
                     }
                     refresh_native_list_control_controlsource_value_kind_hint(
                         *child_object,
