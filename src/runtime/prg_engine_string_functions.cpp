@@ -735,10 +735,10 @@ std::optional<PrgValue> evaluate_string_function(
             if (found_count == occurrence) {
                 return make_number_value(static_cast<double>(found + 1U));
             }
-            if (found == 0U) {
+            if (found < needle.size()) {
                 break;
             }
-            search_pos = found - 1U;
+            search_pos = found - needle.size();
         }
         return make_number_value(0.0);
     }

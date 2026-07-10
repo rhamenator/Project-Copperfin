@@ -75,6 +75,8 @@ namespace
             "v = VAL('42')\n"
             "at_second = AT('ha', 'ha ha ha', 2)\n"
             "rat_second = RAT('ha', 'ha ha ha', 2)\n"
+            "rat_overlap_second = RAT('aa', 'aaaa', 2)\n"
+            "rat_overlap_third = RAT('aa', 'aaaa', 3)\n"
             "atc_hit = ATC('FOX', 'red fox')\n"
             "ratc_hit = RATC('FOX', 'fox red fox')\n"
             "line_text = 'alpha' + CHR(13) + CHR(10) + 'Beta fox' + CHR(10) + 'gamma fox'\n"
@@ -256,6 +258,8 @@ namespace
         check("v", "42");
         check("at_second", "4");
         check("rat_second", "4");
+        check("rat_overlap_second", "1");
+        check("rat_overlap_third", "0");
         check("atc_hit", "5");
         check("ratc_hit", "9");
         check("atline_hit", "2");
