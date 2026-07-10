@@ -1816,6 +1816,44 @@ internal static class Program
                 },
                 expectRawSnapshotProperty: false);
             SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
+                propertyName: "DRIVER",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: "cups",
+                expectedUpdatedSelectionValue: "cups",
+                expectedSectionCount: 5,
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "DRIVER",
+                    Value = "cups",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 304
+                },
+                expectRawSnapshotProperty: false,
+                verifyExplicitClearAfterUpdate: true);
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
+                propertyName: "DRIVER",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: "cupslbl",
+                expectedUpdatedSelectionValue: "cupslbl",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "DRIVER",
+                    Value = "cupslbl",
+                    RecordIndex = 0,
+                    FieldIndex = 6,
+                    SourceLineIndex = 3,
+                    MemoBlockNumber = 78
+                },
+                expectRawSnapshotProperty: false,
+                verifyExplicitClearAfterUpdate: true);
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 propertyName: "DEFAULTSOURCE",
                 expectedOriginalSelectionValue: string.Empty,
