@@ -362,131 +362,152 @@ internal static class Program
         public string? FooterStateDisplay { get; set; }
     }
 
-    [STAThread]
-    private static int Main()
+    private sealed class DesignerSmokeTestRunner
     {
-        Application.EnableVisualStyles();
-        Application.SetCompatibleTextRenderingDefault(false);
+        public DesignerSmokeTestRunner(string[] args)
+        {
+            ParseArguments(args);
+        }
 
-        SmokeDesignSurfaceWithSyntheticReportLayout();
-        SmokeLocalizedReportDesignSurfaceContext();
-        SmokeLocalizedAssetEditorChrome();
-        SmokePseudoLocalizedAssetEditorChrome();
-        SmokeLocalizedHostModeSubtitles();
-        SmokeProjectWorkflowWarningParsingLocalization();
-        SmokeLocalizedProjectWorkspaceChrome();
-        SmokeLocalizedProjectCommandDebuggerChrome();
-        SmokeLocalizedProjectWorkspacePlaceholders();
-        SmokeLocalizedExplorerColumnHeaders();
-        SmokeLocalizedAssetFamilyGuidance();
-        SmokeLocalizedReportLayoutShellSummary();
-        SmokeLocalizedSnapshotUndoPropertyStatus();
-        SmokeLocalizedLaunchWorkflowDialogText();
-        SmokeReportSectionGroupingExplorerTitles();
-        SmokeReportSectionScopedObjectFiltering();
-        SmokeReportSectionPropertyGridSelection();
-        SmokeReportGroupingExplorerSelection();
-        SmokeReportSettingsExplorerSelection();
-        SmokeDeletedReportSettingsExplorerSelection();
-        SmokeAssetEditorReportGroupingPropertyGridHostUpdate();
-        SmokeAssetEditorReportSectionPropertyGridHostUpdate();
-        SmokeAssetEditorReportSettingsPropertyGridHostUpdate();
-        SmokeAssetEditorDeletedReportSettingsPropertyGridHostUpdate();
-        SmokeAssetEditorDeletedReportSettingsMissingOrientationHostUpdate();
-        SmokeAssetEditorDeletedReportSettingsMissingPaperSizeHostUpdate();
-        SmokeAssetEditorDeletedReportSettingsMissingGridVHostUpdate();
-        SmokeAssetEditorDeletedReportSettingsMissingGridHHostUpdate();
-        SmokeAssetEditorDeletedReportSettingsMissingPaperLengthHostUpdate();
-        SmokeAssetEditorDeletedReportSettingsMissingPaperWidthHostUpdate();
-        SmokeAssetEditorDeletedReportSettingsMissingLeftMarginHostUpdate();
-        SmokeAssetEditorDeletedReportSettingsMissingRightMarginHostUpdate();
-        SmokeAssetEditorDeletedReportSettingsMissingTopBottomMarginHostUpdate();
-        SmokeAssetEditorDeletedReportSettingsMissingTagHostUpdate();
-        SmokeAssetEditorDeletedReportSettingsMissingDefaultSourceHostUpdate();
-        SmokeAssetEditorDeletedReportSettingsMissingDriverHostUpdate();
-        SmokeAssetEditorDeletedReportSettingsMissingDeviceHostUpdate();
-        SmokeAssetEditorDeletedReportSettingsMissingOutputHostUpdate();
-        SmokeAssetEditorDeletedReportSettingsMissingPrintQualityHostUpdate();
-        SmokeAssetEditorDeletedReportSettingsMissingYResolutionHostUpdate();
-        SmokeAssetEditorDeletedReportSettingsMissingTTOptionHostUpdate();
-        SmokeAssetEditorDeletedReportSettingsMissingAsciiHostUpdate();
-        SmokeAssetEditorDeletedReportSettingsMissingCollateHostUpdate();
-        SmokeAssetEditorDeletedReportSettingsMissingCopiesHostUpdate();
-        SmokeAssetEditorDeletedReportSettingsMissingColorHostUpdate();
-        SmokeAssetEditorDeletedReportSettingsMissingColSpacingHostUpdate();
-        SmokeAssetEditorDeletedReportSettingsMissingColWidthHostUpdate();
-        SmokeAssetEditorDeletedReportSettingsMissingColsHostUpdate();
-        SmokeAssetEditorDeletedReportSectionPropertyGridHostUpdate();
-        SmokeAssetEditorLabelSectionPropertyGridHostUpdate();
-        SmokeAssetEditorDeletedLabelSectionPropertyGridHostUpdate();
-        SmokeAssetEditorReportObjectPropertyGridHostUpdate();
-        SmokeAssetEditorUnplacedReportObjectPropertyGridHostUpdate();
-        SmokeAssetEditorUnplacedReportObjectHostUpdateRefreshesShellSummary();
-        SmokeAssetEditorUnplacedReportObjectPlacementIntoSectionRefreshesContinuity();
-        SmokeAssetEditorDeletedReportObjectHostUpdateRefreshesShellSummary();
-        SmokeAssetEditorUndoRefreshesReportShellSummary();
-        SmokeAssetEditorUndoRefreshesDeletedReportShellSummary();
-        SmokeAssetEditorDuplicateObjectCommandRefreshesReportShellSummary();
-        SmokeAssetEditorRenameObjectCommandRefreshesReportShellSummary();
-        SmokeAssetEditorReorderFrontObjectCommandRefreshesReportShellSummary();
-        SmokeAssetEditorAlignLeftObjectCommandRefreshesReportShellSummary();
-        SmokeAssetEditorAlignTopObjectCommandRefreshesReportShellSummary();
-        SmokeAssetEditorMatchWidthObjectCommandRefreshesReportShellSummary();
-        SmokeAssetEditorMatchHeightObjectCommandRefreshesReportShellSummary();
-        SmokeAssetEditorMatchSizeObjectCommandRefreshesReportShellSummary();
-        SmokeAssetEditorDistributeHorizontallyObjectCommandRefreshesReportShellSummary();
-        SmokeAssetEditorDistributeVerticallyObjectCommandRefreshesReportShellSummary();
-        SmokeAssetEditorSnapHorizontallyObjectCommandRefreshesReportShellSummary();
-        SmokeAssetEditorSnapVerticallyObjectCommandRefreshesReportShellSummary();
-        SmokeAssetEditorSnapToGridObjectCommandRefreshesReportShellSummary();
-        SmokeAssetEditorDeleteObjectCommandRefreshesReportShellSummary();
-        SmokeAssetEditorRestoreObjectCommandRefreshesReportShellSummary();
-        SmokeAssetEditorLabelObjectPropertyGridHostUpdate();
-        SmokeAssetEditorLabelObjectPlacementIntoUnplacedRefreshesContinuity();
-        SmokeAssetEditorUnplacedLabelObjectPropertyGridHostUpdate();
-        SmokeAssetEditorUnplacedLabelObjectHostUpdateRefreshesShellSummary();
-        SmokeAssetEditorDeletedLabelObjectHostUpdateRefreshesShellSummary();
-        SmokeAssetEditorUndoRefreshesLabelShellSummary();
-        SmokeAssetEditorUndoRefreshesDeletedLabelShellSummary();
-        SmokeAssetEditorDuplicateObjectCommandRefreshesLabelShellSummary();
-        SmokeAssetEditorRenameObjectCommandRefreshesDeletedLabelShellSummary();
-        SmokeAssetEditorReorderBackObjectCommandRefreshesLabelShellSummary();
-        SmokeAssetEditorAlignLeftObjectCommandRefreshesLabelShellSummary();
-        SmokeAssetEditorAlignTopObjectCommandRefreshesLabelShellSummary();
-        SmokeAssetEditorMatchWidthObjectCommandRefreshesLabelShellSummary();
-        SmokeAssetEditorMatchHeightObjectCommandRefreshesLabelShellSummary();
-        SmokeAssetEditorMatchSizeObjectCommandRefreshesLabelShellSummary();
-        SmokeAssetEditorDistributeHorizontallyObjectCommandRefreshesLabelShellSummary();
-        SmokeAssetEditorDistributeVerticallyObjectCommandRefreshesLabelShellSummary();
-        SmokeAssetEditorSnapHorizontallyObjectCommandRefreshesLabelShellSummary();
-        SmokeAssetEditorSnapVerticallyObjectCommandRefreshesLabelShellSummary();
-        SmokeAssetEditorSnapToGridObjectCommandRefreshesLabelShellSummary();
-        SmokeAssetEditorDeleteObjectCommandRefreshesLabelShellSummary();
-        SmokeAssetEditorRestoreObjectCommandRefreshesLabelShellSummary();
-        SmokeAssetEditorDeletedReportObjectPropertyGridHostUpdate();
-        SmokeAssetEditorDeletedLabelObjectPropertyGridHostUpdate();
-        SmokeReportObjectPropertyGridLocalization();
-        SmokeSharedDesignerSelectionLocalization();
-        SmokeLocalizedCodeReferenceKindLabels();
-        SmokeLocalizedProjectInsightArtifactKindLabels();
-        SmokeLocalizedBuilderSummaryArtifactKindLabels();
-        SmokeLocalizedWorkspaceGroupTitles();
-        SmokeLocalizedProjectWorkspaceExplorerGroupTitles();
-        SmokeLocalizedProjectFallbackKindAndGroupLabels();
-        SmokeLocalizedReportObjectKindSubtitles();
-        SmokeLocalizedReportObjectFallbackTitles();
-        SmokeReportSelectionPreservedAcrossExplorerRefresh();
-        SmokeDeletedReportSectionExplorerSelection();
-        SmokeReportSurfaceScopeSelection();
-        SmokeReportSurfaceObjectScopeAlignment();
-        SmokeLabelSurfaceScopeSelection();
-        SmokeLabelSurfaceObjectScopeAlignment();
-        SmokeReportSurfaceObjectDragging();
-        SmokeLabelSurfaceObjectDragging();
-        SmokeAssetEditorReportDragUsesBatchStudioHostUpdate();
-        SmokeAssetEditorReportDragRefreshesShellSummary();
-        SmokeAssetEditorLabelDragRefreshesShellSummary();
-        SmokeDeletedReportSectionDesignSurfaceRendering();
+        public bool ShouldInitializeUi => ready_ && !listOnly_;
+
+        public void Run(string testName, Action smokeTest)
+        {
+            if (!ready_ || !MatchesFilters(testName))
+            {
+                return;
+            }
+
+            matchedAnyTest_ = true;
+            if (listOnly_)
+            {
+                Console.WriteLine(testName);
+                return;
+            }
+
+            smokeTest();
+        }
+
+        public int Finish()
+        {
+            if (!ready_)
+            {
+                return exitCode_;
+            }
+
+            if (!matchedAnyTest_)
+            {
+                Console.Error.WriteLine("no tests matched the requested selection");
+                return 3;
+            }
+
+            if (listOnly_)
+            {
+                return 0;
+            }
+
+            if (failures != 0)
+            {
+                Console.Error.WriteLine($"{failures} UI smoke test(s) failed.");
+                return 1;
+            }
+
+            Console.WriteLine("All UI smoke tests passed.");
+            return 0;
+        }
+
+        private static void PrintUsage()
+        {
+            Console.Error.WriteLine(
+                "usage: Copperfin.DesignerSmokeTests [--list-tests] [--filter <substring>] [--exact <name>]\n" +
+                "       Copperfin.DesignerSmokeTests --list-tests [--filter <substring>] [--exact <name>]");
+        }
+
+        private void FailUsage(string message, int code = 2)
+        {
+            Console.Error.WriteLine(message);
+            PrintUsage();
+            ready_ = false;
+            exitCode_ = code;
+        }
+
+        private void ParseArguments(string[] args)
+        {
+            for (int index = 0; index < args.Length; ++index)
+            {
+                string argument = args[index];
+                if (argument == "--help")
+                {
+                    PrintUsage();
+                    ready_ = false;
+                    exitCode_ = 0;
+                    return;
+                }
+                if (argument == "--list-tests")
+                {
+                    listOnly_ = true;
+                    continue;
+                }
+                if (argument == "--filter")
+                {
+                    if (index + 1 >= args.Length)
+                    {
+                        FailUsage("missing value for --filter");
+                        return;
+                    }
+
+                    substringFilter_ = args[++index];
+                    continue;
+                }
+                if (argument == "--exact")
+                {
+                    if (index + 1 >= args.Length)
+                    {
+                        FailUsage("missing value for --exact");
+                        return;
+                    }
+
+                    exactFilter_ = args[++index];
+                    continue;
+                }
+                if (argument.StartsWith("-", StringComparison.Ordinal))
+                {
+                    FailUsage("unknown option: " + argument);
+                    return;
+                }
+
+                FailUsage("unexpected positional argument: " + argument);
+                return;
+            }
+        }
+
+        private bool MatchesFilters(string testName)
+        {
+            if (!string.IsNullOrEmpty(exactFilter_) &&
+                !string.Equals(testName, exactFilter_, StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            if (!string.IsNullOrEmpty(substringFilter_) &&
+                testName.IndexOf(substringFilter_, StringComparison.Ordinal) < 0)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool ready_ = true;
+        private int exitCode_;
+        private bool listOnly_;
+        private bool matchedAnyTest_;
+        private string substringFilter_ = string.Empty;
+        private string exactFilter_ = string.Empty;
+    }
+
+    private static void SmokeResolvedRealAssetCoverageCluster()
+    {
         WithResolvedRealAssetToolchain(() =>
         {
             SmokeAssetEditorWithRealAsset(
@@ -5853,16 +5874,141 @@ internal static class Program
                 TryResolveVfpSourceAsset("VFPSource/EnvMgr/envmgr.vcx"),
                 TryResolveVfpSourceAsset("VFPSource/ReportBuilder/handler_context.mnx"));
         });
+    }
 
-        if (failures != 0)
+    [STAThread]
+    private static int Main(string[] args)
+    {
+        DesignerSmokeTestRunner runner = new DesignerSmokeTestRunner(args);
+        if (runner.ShouldInitializeUi)
         {
-            Console.Error.WriteLine($"{failures} UI smoke test(s) failed.");
-            return 1;
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
         }
 
-        Console.WriteLine("All UI smoke tests passed.");
-        return 0;
-    }
+        runner.Run(nameof(SmokeDesignSurfaceWithSyntheticReportLayout), SmokeDesignSurfaceWithSyntheticReportLayout);
+        runner.Run(nameof(SmokeLocalizedReportDesignSurfaceContext), SmokeLocalizedReportDesignSurfaceContext);
+        runner.Run(nameof(SmokeLocalizedAssetEditorChrome), SmokeLocalizedAssetEditorChrome);
+        runner.Run(nameof(SmokePseudoLocalizedAssetEditorChrome), SmokePseudoLocalizedAssetEditorChrome);
+        runner.Run(nameof(SmokeLocalizedHostModeSubtitles), SmokeLocalizedHostModeSubtitles);
+        runner.Run(nameof(SmokeProjectWorkflowWarningParsingLocalization), SmokeProjectWorkflowWarningParsingLocalization);
+        runner.Run(nameof(SmokeLocalizedProjectWorkspaceChrome), SmokeLocalizedProjectWorkspaceChrome);
+        runner.Run(nameof(SmokeLocalizedProjectCommandDebuggerChrome), SmokeLocalizedProjectCommandDebuggerChrome);
+        runner.Run(nameof(SmokeLocalizedProjectWorkspacePlaceholders), SmokeLocalizedProjectWorkspacePlaceholders);
+        runner.Run(nameof(SmokeLocalizedExplorerColumnHeaders), SmokeLocalizedExplorerColumnHeaders);
+        runner.Run(nameof(SmokeLocalizedAssetFamilyGuidance), SmokeLocalizedAssetFamilyGuidance);
+        runner.Run(nameof(SmokeLocalizedReportLayoutShellSummary), SmokeLocalizedReportLayoutShellSummary);
+        runner.Run(nameof(SmokeLocalizedSnapshotUndoPropertyStatus), SmokeLocalizedSnapshotUndoPropertyStatus);
+        runner.Run(nameof(SmokeLocalizedLaunchWorkflowDialogText), SmokeLocalizedLaunchWorkflowDialogText);
+        runner.Run(nameof(SmokeReportSectionGroupingExplorerTitles), SmokeReportSectionGroupingExplorerTitles);
+        runner.Run(nameof(SmokeReportSectionScopedObjectFiltering), SmokeReportSectionScopedObjectFiltering);
+        runner.Run(nameof(SmokeReportSectionPropertyGridSelection), SmokeReportSectionPropertyGridSelection);
+        runner.Run(nameof(SmokeReportGroupingExplorerSelection), SmokeReportGroupingExplorerSelection);
+        runner.Run(nameof(SmokeReportSettingsExplorerSelection), SmokeReportSettingsExplorerSelection);
+        runner.Run(nameof(SmokeDeletedReportSettingsExplorerSelection), SmokeDeletedReportSettingsExplorerSelection);
+        runner.Run(nameof(SmokeAssetEditorReportGroupingPropertyGridHostUpdate), SmokeAssetEditorReportGroupingPropertyGridHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorReportSectionPropertyGridHostUpdate), SmokeAssetEditorReportSectionPropertyGridHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorReportSettingsPropertyGridHostUpdate), SmokeAssetEditorReportSettingsPropertyGridHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportSettingsPropertyGridHostUpdate), SmokeAssetEditorDeletedReportSettingsPropertyGridHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportSettingsMissingOrientationHostUpdate), SmokeAssetEditorDeletedReportSettingsMissingOrientationHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportSettingsMissingPaperSizeHostUpdate), SmokeAssetEditorDeletedReportSettingsMissingPaperSizeHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportSettingsMissingGridVHostUpdate), SmokeAssetEditorDeletedReportSettingsMissingGridVHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportSettingsMissingGridHHostUpdate), SmokeAssetEditorDeletedReportSettingsMissingGridHHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportSettingsMissingPaperLengthHostUpdate), SmokeAssetEditorDeletedReportSettingsMissingPaperLengthHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportSettingsMissingPaperWidthHostUpdate), SmokeAssetEditorDeletedReportSettingsMissingPaperWidthHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportSettingsMissingLeftMarginHostUpdate), SmokeAssetEditorDeletedReportSettingsMissingLeftMarginHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportSettingsMissingRightMarginHostUpdate), SmokeAssetEditorDeletedReportSettingsMissingRightMarginHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportSettingsMissingTopBottomMarginHostUpdate), SmokeAssetEditorDeletedReportSettingsMissingTopBottomMarginHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportSettingsMissingTagHostUpdate), SmokeAssetEditorDeletedReportSettingsMissingTagHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportSettingsMissingDefaultSourceHostUpdate), SmokeAssetEditorDeletedReportSettingsMissingDefaultSourceHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportSettingsMissingDriverHostUpdate), SmokeAssetEditorDeletedReportSettingsMissingDriverHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportSettingsMissingDeviceHostUpdate), SmokeAssetEditorDeletedReportSettingsMissingDeviceHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportSettingsMissingOutputHostUpdate), SmokeAssetEditorDeletedReportSettingsMissingOutputHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportSettingsMissingPrintQualityHostUpdate), SmokeAssetEditorDeletedReportSettingsMissingPrintQualityHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportSettingsMissingYResolutionHostUpdate), SmokeAssetEditorDeletedReportSettingsMissingYResolutionHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportSettingsMissingTTOptionHostUpdate), SmokeAssetEditorDeletedReportSettingsMissingTTOptionHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportSettingsMissingAsciiHostUpdate), SmokeAssetEditorDeletedReportSettingsMissingAsciiHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportSettingsMissingCollateHostUpdate), SmokeAssetEditorDeletedReportSettingsMissingCollateHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportSettingsMissingCopiesHostUpdate), SmokeAssetEditorDeletedReportSettingsMissingCopiesHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportSettingsMissingColorHostUpdate), SmokeAssetEditorDeletedReportSettingsMissingColorHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportSettingsMissingColSpacingHostUpdate), SmokeAssetEditorDeletedReportSettingsMissingColSpacingHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportSettingsMissingColWidthHostUpdate), SmokeAssetEditorDeletedReportSettingsMissingColWidthHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportSettingsMissingColsHostUpdate), SmokeAssetEditorDeletedReportSettingsMissingColsHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportSectionPropertyGridHostUpdate), SmokeAssetEditorDeletedReportSectionPropertyGridHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorLabelSectionPropertyGridHostUpdate), SmokeAssetEditorLabelSectionPropertyGridHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedLabelSectionPropertyGridHostUpdate), SmokeAssetEditorDeletedLabelSectionPropertyGridHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorReportObjectPropertyGridHostUpdate), SmokeAssetEditorReportObjectPropertyGridHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorUnplacedReportObjectPropertyGridHostUpdate), SmokeAssetEditorUnplacedReportObjectPropertyGridHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorUnplacedReportObjectHostUpdateRefreshesShellSummary), SmokeAssetEditorUnplacedReportObjectHostUpdateRefreshesShellSummary);
+        runner.Run(nameof(SmokeAssetEditorUnplacedReportObjectPlacementIntoSectionRefreshesContinuity), SmokeAssetEditorUnplacedReportObjectPlacementIntoSectionRefreshesContinuity);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportObjectHostUpdateRefreshesShellSummary), SmokeAssetEditorDeletedReportObjectHostUpdateRefreshesShellSummary);
+        runner.Run(nameof(SmokeAssetEditorUndoRefreshesReportShellSummary), SmokeAssetEditorUndoRefreshesReportShellSummary);
+        runner.Run(nameof(SmokeAssetEditorUndoRefreshesDeletedReportShellSummary), SmokeAssetEditorUndoRefreshesDeletedReportShellSummary);
+        runner.Run(nameof(SmokeAssetEditorDuplicateObjectCommandRefreshesReportShellSummary), SmokeAssetEditorDuplicateObjectCommandRefreshesReportShellSummary);
+        runner.Run(nameof(SmokeAssetEditorRenameObjectCommandRefreshesReportShellSummary), SmokeAssetEditorRenameObjectCommandRefreshesReportShellSummary);
+        runner.Run(nameof(SmokeAssetEditorReorderFrontObjectCommandRefreshesReportShellSummary), SmokeAssetEditorReorderFrontObjectCommandRefreshesReportShellSummary);
+        runner.Run(nameof(SmokeAssetEditorAlignLeftObjectCommandRefreshesReportShellSummary), SmokeAssetEditorAlignLeftObjectCommandRefreshesReportShellSummary);
+        runner.Run(nameof(SmokeAssetEditorAlignTopObjectCommandRefreshesReportShellSummary), SmokeAssetEditorAlignTopObjectCommandRefreshesReportShellSummary);
+        runner.Run(nameof(SmokeAssetEditorMatchWidthObjectCommandRefreshesReportShellSummary), SmokeAssetEditorMatchWidthObjectCommandRefreshesReportShellSummary);
+        runner.Run(nameof(SmokeAssetEditorMatchHeightObjectCommandRefreshesReportShellSummary), SmokeAssetEditorMatchHeightObjectCommandRefreshesReportShellSummary);
+        runner.Run(nameof(SmokeAssetEditorMatchSizeObjectCommandRefreshesReportShellSummary), SmokeAssetEditorMatchSizeObjectCommandRefreshesReportShellSummary);
+        runner.Run(nameof(SmokeAssetEditorDistributeHorizontallyObjectCommandRefreshesReportShellSummary), SmokeAssetEditorDistributeHorizontallyObjectCommandRefreshesReportShellSummary);
+        runner.Run(nameof(SmokeAssetEditorDistributeVerticallyObjectCommandRefreshesReportShellSummary), SmokeAssetEditorDistributeVerticallyObjectCommandRefreshesReportShellSummary);
+        runner.Run(nameof(SmokeAssetEditorSnapHorizontallyObjectCommandRefreshesReportShellSummary), SmokeAssetEditorSnapHorizontallyObjectCommandRefreshesReportShellSummary);
+        runner.Run(nameof(SmokeAssetEditorSnapVerticallyObjectCommandRefreshesReportShellSummary), SmokeAssetEditorSnapVerticallyObjectCommandRefreshesReportShellSummary);
+        runner.Run(nameof(SmokeAssetEditorSnapToGridObjectCommandRefreshesReportShellSummary), SmokeAssetEditorSnapToGridObjectCommandRefreshesReportShellSummary);
+        runner.Run(nameof(SmokeAssetEditorDeleteObjectCommandRefreshesReportShellSummary), SmokeAssetEditorDeleteObjectCommandRefreshesReportShellSummary);
+        runner.Run(nameof(SmokeAssetEditorRestoreObjectCommandRefreshesReportShellSummary), SmokeAssetEditorRestoreObjectCommandRefreshesReportShellSummary);
+        runner.Run(nameof(SmokeAssetEditorLabelObjectPropertyGridHostUpdate), SmokeAssetEditorLabelObjectPropertyGridHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorLabelObjectPlacementIntoUnplacedRefreshesContinuity), SmokeAssetEditorLabelObjectPlacementIntoUnplacedRefreshesContinuity);
+        runner.Run(nameof(SmokeAssetEditorUnplacedLabelObjectPropertyGridHostUpdate), SmokeAssetEditorUnplacedLabelObjectPropertyGridHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorUnplacedLabelObjectHostUpdateRefreshesShellSummary), SmokeAssetEditorUnplacedLabelObjectHostUpdateRefreshesShellSummary);
+        runner.Run(nameof(SmokeAssetEditorDeletedLabelObjectHostUpdateRefreshesShellSummary), SmokeAssetEditorDeletedLabelObjectHostUpdateRefreshesShellSummary);
+        runner.Run(nameof(SmokeAssetEditorUndoRefreshesLabelShellSummary), SmokeAssetEditorUndoRefreshesLabelShellSummary);
+        runner.Run(nameof(SmokeAssetEditorUndoRefreshesDeletedLabelShellSummary), SmokeAssetEditorUndoRefreshesDeletedLabelShellSummary);
+        runner.Run(nameof(SmokeAssetEditorDuplicateObjectCommandRefreshesLabelShellSummary), SmokeAssetEditorDuplicateObjectCommandRefreshesLabelShellSummary);
+        runner.Run(nameof(SmokeAssetEditorRenameObjectCommandRefreshesDeletedLabelShellSummary), SmokeAssetEditorRenameObjectCommandRefreshesDeletedLabelShellSummary);
+        runner.Run(nameof(SmokeAssetEditorReorderBackObjectCommandRefreshesLabelShellSummary), SmokeAssetEditorReorderBackObjectCommandRefreshesLabelShellSummary);
+        runner.Run(nameof(SmokeAssetEditorAlignLeftObjectCommandRefreshesLabelShellSummary), SmokeAssetEditorAlignLeftObjectCommandRefreshesLabelShellSummary);
+        runner.Run(nameof(SmokeAssetEditorAlignTopObjectCommandRefreshesLabelShellSummary), SmokeAssetEditorAlignTopObjectCommandRefreshesLabelShellSummary);
+        runner.Run(nameof(SmokeAssetEditorMatchWidthObjectCommandRefreshesLabelShellSummary), SmokeAssetEditorMatchWidthObjectCommandRefreshesLabelShellSummary);
+        runner.Run(nameof(SmokeAssetEditorMatchHeightObjectCommandRefreshesLabelShellSummary), SmokeAssetEditorMatchHeightObjectCommandRefreshesLabelShellSummary);
+        runner.Run(nameof(SmokeAssetEditorMatchSizeObjectCommandRefreshesLabelShellSummary), SmokeAssetEditorMatchSizeObjectCommandRefreshesLabelShellSummary);
+        runner.Run(nameof(SmokeAssetEditorDistributeHorizontallyObjectCommandRefreshesLabelShellSummary), SmokeAssetEditorDistributeHorizontallyObjectCommandRefreshesLabelShellSummary);
+        runner.Run(nameof(SmokeAssetEditorDistributeVerticallyObjectCommandRefreshesLabelShellSummary), SmokeAssetEditorDistributeVerticallyObjectCommandRefreshesLabelShellSummary);
+        runner.Run(nameof(SmokeAssetEditorSnapHorizontallyObjectCommandRefreshesLabelShellSummary), SmokeAssetEditorSnapHorizontallyObjectCommandRefreshesLabelShellSummary);
+        runner.Run(nameof(SmokeAssetEditorSnapVerticallyObjectCommandRefreshesLabelShellSummary), SmokeAssetEditorSnapVerticallyObjectCommandRefreshesLabelShellSummary);
+        runner.Run(nameof(SmokeAssetEditorSnapToGridObjectCommandRefreshesLabelShellSummary), SmokeAssetEditorSnapToGridObjectCommandRefreshesLabelShellSummary);
+        runner.Run(nameof(SmokeAssetEditorDeleteObjectCommandRefreshesLabelShellSummary), SmokeAssetEditorDeleteObjectCommandRefreshesLabelShellSummary);
+        runner.Run(nameof(SmokeAssetEditorRestoreObjectCommandRefreshesLabelShellSummary), SmokeAssetEditorRestoreObjectCommandRefreshesLabelShellSummary);
+        runner.Run(nameof(SmokeAssetEditorDeletedReportObjectPropertyGridHostUpdate), SmokeAssetEditorDeletedReportObjectPropertyGridHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorDeletedLabelObjectPropertyGridHostUpdate), SmokeAssetEditorDeletedLabelObjectPropertyGridHostUpdate);
+        runner.Run(nameof(SmokeReportObjectPropertyGridLocalization), SmokeReportObjectPropertyGridLocalization);
+        runner.Run(nameof(SmokeSharedDesignerSelectionLocalization), SmokeSharedDesignerSelectionLocalization);
+        runner.Run(nameof(SmokeLocalizedCodeReferenceKindLabels), SmokeLocalizedCodeReferenceKindLabels);
+        runner.Run(nameof(SmokeLocalizedProjectInsightArtifactKindLabels), SmokeLocalizedProjectInsightArtifactKindLabels);
+        runner.Run(nameof(SmokeLocalizedBuilderSummaryArtifactKindLabels), SmokeLocalizedBuilderSummaryArtifactKindLabels);
+        runner.Run(nameof(SmokeLocalizedWorkspaceGroupTitles), SmokeLocalizedWorkspaceGroupTitles);
+        runner.Run(nameof(SmokeLocalizedProjectWorkspaceExplorerGroupTitles), SmokeLocalizedProjectWorkspaceExplorerGroupTitles);
+        runner.Run(nameof(SmokeLocalizedProjectFallbackKindAndGroupLabels), SmokeLocalizedProjectFallbackKindAndGroupLabels);
+        runner.Run(nameof(SmokeLocalizedReportObjectKindSubtitles), SmokeLocalizedReportObjectKindSubtitles);
+        runner.Run(nameof(SmokeLocalizedReportObjectFallbackTitles), SmokeLocalizedReportObjectFallbackTitles);
+        runner.Run(nameof(SmokeReportSelectionPreservedAcrossExplorerRefresh), SmokeReportSelectionPreservedAcrossExplorerRefresh);
+        runner.Run(nameof(SmokeDeletedReportSectionExplorerSelection), SmokeDeletedReportSectionExplorerSelection);
+        runner.Run(nameof(SmokeReportSurfaceScopeSelection), SmokeReportSurfaceScopeSelection);
+        runner.Run(nameof(SmokeReportSurfaceObjectScopeAlignment), SmokeReportSurfaceObjectScopeAlignment);
+        runner.Run(nameof(SmokeLabelSurfaceScopeSelection), SmokeLabelSurfaceScopeSelection);
+        runner.Run(nameof(SmokeLabelSurfaceObjectScopeAlignment), SmokeLabelSurfaceObjectScopeAlignment);
+        runner.Run(nameof(SmokeReportSurfaceObjectDragging), SmokeReportSurfaceObjectDragging);
+        runner.Run(nameof(SmokeLabelSurfaceObjectDragging), SmokeLabelSurfaceObjectDragging);
+        runner.Run(nameof(SmokeAssetEditorReportDragUsesBatchStudioHostUpdate), SmokeAssetEditorReportDragUsesBatchStudioHostUpdate);
+        runner.Run(nameof(SmokeAssetEditorReportDragRefreshesShellSummary), SmokeAssetEditorReportDragRefreshesShellSummary);
+        runner.Run(nameof(SmokeAssetEditorLabelDragRefreshesShellSummary), SmokeAssetEditorLabelDragRefreshesShellSummary);
+        runner.Run(nameof(SmokeDeletedReportSectionDesignSurfaceRendering), SmokeDeletedReportSectionDesignSurfaceRendering);
+        runner.Run(nameof(SmokeResolvedRealAssetCoverageCluster), SmokeResolvedRealAssetCoverageCluster);
+
+        return runner.Finish();
+        }
 
     private static void SmokeDesignSurfaceWithSyntheticReportLayout()
     {
