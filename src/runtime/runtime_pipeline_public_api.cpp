@@ -342,10 +342,6 @@ std::string build_runtime_manifest_text(
                << quote_manifest_value(digest.sha256) << "\n";
     }
 
-    for (const auto& symbol : plan.exported_symbols) {
-        stream << "export_symbol=" << quote_manifest_value(symbol) << "\n";
-    }
-
     append_library_function_manifest_lines(stream, plan, false);
 
     append_warning_manifest_lines(stream, plan);

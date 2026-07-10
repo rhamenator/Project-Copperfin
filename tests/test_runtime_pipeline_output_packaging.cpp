@@ -1323,10 +1323,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output manifest should record InitLibrary call-surface contract");
         expect(runtime_manifest.find("library_function_call_surface=AddNumbers|vfp_declare_default|int tnLeft, int tnRight") != std::string::npos,
                "library-output manifest should record AddNumbers call-surface contract");
-        expect(runtime_manifest.find("export_symbol=InitLibrary") != std::string::npos,
-               "library-output manifest should record discovered export symbols");
-        expect(runtime_manifest.find("export_symbol=AddNumbers") != std::string::npos,
-               "library-output manifest should record all discovered export symbols");
+        expect(lines_with_prefix(runtime_manifest, "export_symbol=").empty(),
+               "library-output runtime manifest should omit export-symbol inventory from the execution contract");
         expect(runtime_manifest.find("primary_output_materialized=false") != std::string::npos,
                "library-output manifest should record the honest non-materialized DLL state");
         expect(lines_with_prefix(runtime_manifest, "feature_flag=").empty(),
