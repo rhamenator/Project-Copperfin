@@ -2862,6 +2862,14 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
                "#2585: es-419 runtime host usage should localize alternate usage prose while preserving CLI tokens");
         expect(process.stdout_text.find("Usage: copperfin_runtime_host --manifest <path> [--debug]") == std::string::npos,
                "#2585: es-419 runtime host usage should not fall back to raw English prose");
+
+        const auto slash_locale_process = run_process_capture(runtime_host_path, {"/locale", "es-419"}, temp_root);
+        expect(slash_locale_process.exit_code == 2,
+               "#3752: /locale should keep the normal usage exit code when no manifest is available");
+        expect(slash_locale_process.stdout_text.find("Uso: copperfin_runtime_host --manifest <path> [--debug]") != std::string::npos,
+               "#3752: /locale should select the same localized catalog as --locale");
+        expect(slash_locale_process.stdout_text.find("Usage: copperfin_runtime_host --manifest <path> [--debug]") == std::string::npos,
+               "#3752: /locale should not fall back to raw English prose");
     }
 
     {
@@ -2877,6 +2885,16 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
                    process.stdout_text.find("--debug-command") != std::string::npos &&
                    process.stdout_text.find("<continue|step|next|out|watch:<expr>|select:<action-id>|invoke:<action-id>|break:add:<file:line>|break:remove:<file:line>|break:add-action:<action-id>|break:remove-action:<action-id>|break:clear|break:list>") != std::string::npos,
                "#2349: pseudo-localized runtime host usage should preserve CLI and debug-command tokens");
+
+        const auto slash_debug = run_process_capture(runtime_host_path, {"/debug"}, temp_root);
+        expect(slash_debug.exit_code == 2,
+               "#3752: /debug should keep the normal usage exit code when no manifest is available");
+        expect(slash_debug.stdout_text.find("status: error") == std::string::npos,
+               "#3752: /debug should be accepted as a host alias instead of surfacing an unknown-argument contract");
+        expect(slash_debug.stdout_text.find("[!! ") != std::string::npos,
+               "#3752: /debug acceptance should still honor the selected pseudo-localized catalog");
+        expect(slash_debug.stdout_text.find("--debug-command") != std::string::npos,
+               "#3752: /debug acceptance should preserve ordinary usage/debug token output");
 
         const auto unknown_argument = run_process_capture(runtime_host_path, {"--unknown-option"}, temp_root);
         expect(unknown_argument.exit_code == 2,

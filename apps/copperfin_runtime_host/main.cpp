@@ -77,6 +77,10 @@ bool starts_with_insensitive(const std::string& value, const std::string& prefix
     return true;
 }
 
+bool equals_insensitive(const std::string& value, const std::string& expected) {
+    return value.size() == expected.size() && starts_with_insensitive(value, expected);
+}
+
 const copperfin::runtime::XAssetActionBinding* find_pause_xasset_action(
     const copperfin::runtime::RuntimePauseState& state,
     const copperfin::runtime::XAssetExecutableModel& model) {
@@ -1024,7 +1028,7 @@ std::string resolve_federation_security_role() {
 
 std::string explicit_locale_from_arguments(int argc, char** argv) {
     for (int index = 1; index + 1 < argc; ++index) {
-        if (std::string(argv[index]) == "--locale") {
+        if (equals_insensitive(argv[index], "--locale") || equals_insensitive(argv[index], "/locale")) {
             return argv[index + 1];
         }
     }
@@ -1531,7 +1535,7 @@ int main(int argc, char** argv) {
             federation_planning_require = parse_bool(argv[++index]);
         } else if (arg == "--federation-planning-audit" && (index + 1) < argc) {
             federation_policy_audit = parse_bool(argv[++index]);
-        } else if (arg == "--debug") {
+        } else if (equals_insensitive(arg, "--debug") || equals_insensitive(arg, "/debug")) {
             debug_mode = true;
         } else if (arg == "--breakpoint" && (index + 1) < argc) {
             breakpoint_args.emplace_back(argv[++index]);
@@ -1561,7 +1565,7 @@ int main(int argc, char** argv) {
             bridge_options.response_media_type = argv[++index];
         } else if (arg == "--schema-version" && (index + 1) < argc) {
             bridge_options.schema_version = argv[++index];
-        } else if (arg == "--locale" && (index + 1) < argc) {
+        } else if ((equals_insensitive(arg, "--locale") || equals_insensitive(arg, "/locale")) && (index + 1) < argc) {
             ++index;
         } else {
             std::cout << "status: error\n";
