@@ -402,6 +402,7 @@
   "RuntimeHost.Error.ManifestVersionUnsupported": "manifest_version no es compatible: {version}. Las versiones compatibles son: {supportedVersions}.",
   "RuntimeHost.Error.RuntimeHostSha256Mismatch": "El hash del runtime host no coincide con el digest del manifiesto.",
   "RuntimeHost.Error.SecurityPolicyDenied": "La politica de seguridad denego {permission} para el rol '{role}'.",
+  "RuntimeHost.Error.TrueFalseValueRequired": "El valor de {option} debe ser true o false.",
   "RuntimeHost.Error.ExtensionPayloadMalformed": "La entrada extension_payload del manifiesto esta mal formada.",
   "RuntimeHost.Error.ExtensionPayloadMissingFromPackage": "Falta el payload de extension en el paquete: {fileName}",
   "RuntimeHost.Error.ExtensionPayloadSha256Mismatch": "El hash del payload de extension no coincide: {fileName}",

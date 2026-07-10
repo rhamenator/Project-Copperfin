@@ -91,6 +91,7 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Prompt.QuitConfirm\": \"Do you want to quit this application? [{yesToken}/{defaultNoToken}]: \",\n"
         "  \"RuntimeHost.Error.RuntimeHostSha256Mismatch\": \"Runtime host hash does not match manifest digest.\",\n"
         "  \"RuntimeHost.Error.SecurityPolicyDenied\": \"Security policy denied {permission} for role '{role}'.\",\n"
+        "  \"RuntimeHost.Error.TrueFalseValueRequired\": \"The {option} value must be true or false.\",\n"
         "  \"RuntimeHost.Error.UnknownArgument\": \"Unknown argument: {argument}\",\n"
         "  \"RuntimeHost.Error.UnknownFederationBackend\": \"Unknown federation backend: {backend}\",\n"
         "  \"Platform.FederationExecution.Error.AiPlannerNotImplemented\": \"Planner is not yet implemented for {planMode} AI policy. Deterministic translation failed: {translationError}\",\n"
@@ -153,6 +154,7 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Prompt.QuitConfirm\": \"Desea salir de esta aplicacion? [{yesToken}/{defaultNoToken}]: \",\n"
         "  \"RuntimeHost.Error.RuntimeHostSha256Mismatch\": \"El hash del runtime host no coincide con el digest del manifiesto.\",\n"
         "  \"RuntimeHost.Error.SecurityPolicyDenied\": \"La politica de seguridad denego {permission} para el rol '{role}'.\",\n"
+        "  \"RuntimeHost.Error.TrueFalseValueRequired\": \"El valor de {option} debe ser true o false.\",\n"
         "  \"RuntimeHost.Error.UnknownArgument\": \"Argumento desconocido: {argument}\",\n"
         "  \"RuntimeHost.Error.UnknownFederationBackend\": \"Backend de federacion desconocido: {backend}\",\n"
         "  \"Platform.FederationExecution.Error.AiPlannerNotImplemented\": \"El planner aun no esta implementado para la politica de IA {planMode}. La traduccion deterministica fallo: {translationError}\",\n"
@@ -203,6 +205,7 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Prompt.QuitConfirm\": \"Deseja sair deste aplicativo? [{yesToken}/{defaultNoToken}]: \",\n"
         "  \"RuntimeHost.Error.RuntimeHostSha256Mismatch\": \"O hash do runtime host nao corresponde ao digest do manifesto.\",\n"
         "  \"RuntimeHost.Error.SecurityPolicyDenied\": \"A politica de seguranca negou {permission} para a funcao '{role}'.\",\n"
+        "  \"RuntimeHost.Error.TrueFalseValueRequired\": \"O valor de {option} deve ser true ou false.\",\n"
         "  \"RuntimeHost.Error.UnknownArgument\": \"Argumento desconhecido: {argument}\",\n"
         "  \"RuntimeHost.Error.UnknownFederationBackend\": \"Backend de federacao desconhecido: {backend}\",\n"
         "  \"Platform.FederationExecution.Error.AiPlannerNotImplemented\": \"O planner ainda nao esta implementado para a politica de IA {planMode}. A traducao deterministica falhou: {translationError}\",\n"
@@ -2846,6 +2849,25 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
                "#2349: runtime host en-US usage should remain stable");
         expect(process.stdout_text.find("--federation-backend <sqlite|postgresql|sqlserver|oracle>") != std::string::npos,
                "#2349: runtime host en-US usage should preserve federation CLI tokens");
+
+        const auto invalid_federation_bool = run_process_capture(
+            runtime_host_path,
+            {
+                "--federation-backend", "sqlite",
+                "--federation-query", "SELECT * FROM customer",
+                "--federation-planning-enable", "maybe"
+            },
+            temp_root);
+        expect(invalid_federation_bool.exit_code == 2,
+               "#3791: runtime host should reject invalid federation planning booleans");
+        expect(invalid_federation_bool.stdout_text.find("status: error") != std::string::npos,
+               "#3791: invalid federation planning booleans should preserve machine-readable status");
+        expect(invalid_federation_bool.stdout_text.find(
+                   "error: The --federation-planning-enable value must be true or false.") != std::string::npos,
+               "#3791: invalid federation planning booleans should localize the en-US parse error");
+        expect(invalid_federation_bool.stdout_text.find("--federation-planning-enable") != std::string::npos &&
+                   invalid_federation_bool.stdout_text.find("<true|false>") != std::string::npos,
+               "#3791: invalid federation planning booleans should preserve invariant CLI tokens in usage output");
     }
 
     {
@@ -2870,6 +2892,23 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
                "#3752: /locale should select the same localized catalog as --locale");
         expect(slash_locale_process.stdout_text.find("Usage: copperfin_runtime_host --manifest <path> [--debug]") == std::string::npos,
                "#3752: /locale should not fall back to raw English prose");
+
+        const auto invalid_federation_bool = run_process_capture(
+            runtime_host_path,
+            {
+                "--federation-backend", "sqlite",
+                "--federation-query", "SELECT * FROM customer",
+                "--federation-planning-require", "quizas"
+            },
+            temp_root);
+        expect(invalid_federation_bool.exit_code == 2,
+               "#3791: es-419 invalid federation planning booleans should keep the usage exit code");
+        expect(invalid_federation_bool.stdout_text.find(
+                   "error: El valor de --federation-planning-require debe ser true o false.") != std::string::npos,
+               "#3791: es-419 invalid federation planning booleans should localize parse errors while preserving option tokens");
+        expect(invalid_federation_bool.stdout_text.find(
+                   "error: The --federation-planning-require value must be true or false.") == std::string::npos,
+               "#3791: es-419 invalid federation planning booleans should not fall back to raw English prose");
     }
 
     {
@@ -2919,6 +2958,25 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
         expect(missing_federation_argument.stdout_text.find("--federation-backend") != std::string::npos &&
                    missing_federation_argument.stdout_text.find("--federation-query") != std::string::npos,
                "#2351: pseudo-localized federation validation should preserve CLI tokens");
+
+        const auto invalid_federation_bool = run_process_capture(
+            runtime_host_path,
+            {
+                "--federation-backend", "sqlite",
+                "--federation-query", "SELECT * FROM customer",
+                "--federation-planning-audit", "maybe"
+            },
+            temp_root);
+        expect(invalid_federation_bool.exit_code == 2,
+               "#3791: pseudo-localized invalid federation planning booleans should keep the usage exit code");
+        expect(invalid_federation_bool.stdout_text.find("status: error") != std::string::npos,
+               "#3791: pseudo-localized invalid federation planning booleans should preserve machine-readable status");
+        expect(invalid_federation_bool.stdout_text.find("[!! ") != std::string::npos,
+               "#3791: pseudo-localized invalid federation planning booleans should decorate prose");
+        expect(invalid_federation_bool.stdout_text.find("--federation-planning-audit") != std::string::npos &&
+                   invalid_federation_bool.stdout_text.find("true") != std::string::npos &&
+                   invalid_federation_bool.stdout_text.find("false") != std::string::npos,
+               "#3791: pseudo-localized invalid federation planning booleans should preserve invariant boolean tokens");
 
         const fs::path bridge_manifest_path = temp_root / "bridge.cfmanifest";
         const fs::path bridge_source_path = temp_root / "bridge.prg";

@@ -110,6 +110,21 @@ bool parse_bool(const std::string& value) {
     return normalized == "1" || normalized == "true" || normalized == "yes";
 }
 
+bool parse_cli_bool_token(const std::string& value, bool& parsed) {
+    const std::string normalized = lowercase_copy(trim_copy(value));
+    if (normalized == "true" || normalized == ".t." || normalized == "t" || normalized == "1" ||
+        normalized == "yes" || normalized == "on") {
+        parsed = true;
+        return true;
+    }
+    if (normalized == "false" || normalized == ".f." || normalized == "f" || normalized == "0" ||
+        normalized == "no" || normalized == "off") {
+        parsed = false;
+        return true;
+    }
+    return false;
+}
+
 std::string escape_json_string(const std::string& value) {
     std::string result;
     result.reserve(value.size());
@@ -463,6 +478,15 @@ std::string localized_message_or_default(
     const copperfin::localization::PlaceholderMap& placeholders = {}) {
     const std::string translated = localized_message(catalog, key, placeholders);
     return translated == key ? fallback : translated;
+}
+
+std::string runtime_host_parse_boolean_value_required(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& option) {
+    return localized_message(
+        catalog,
+        "RuntimeHost.Error.TrueFalseValueRequired",
+        {{"option", option}});
 }
 
 void print_error_line(
@@ -1530,11 +1554,35 @@ int main(int argc, char** argv) {
         } else if (arg == "--federation-target" && (index + 1) < argc) {
             federation_target = argv[++index];
         } else if (arg == "--federation-planning-enable" && (index + 1) < argc) {
-            federation_planning_enable = parse_bool(argv[++index]);
+            const std::string token = argv[++index];
+            if (!parse_cli_bool_token(token, federation_planning_enable)) {
+                std::cout << "status: error\n";
+                print_error_line(
+                    catalog,
+                    runtime_host_parse_boolean_value_required(catalog, "--federation-planning-enable"));
+                print_usage(catalog);
+                return 2;
+            }
         } else if (arg == "--federation-planning-require" && (index + 1) < argc) {
-            federation_planning_require = parse_bool(argv[++index]);
+            const std::string token = argv[++index];
+            if (!parse_cli_bool_token(token, federation_planning_require)) {
+                std::cout << "status: error\n";
+                print_error_line(
+                    catalog,
+                    runtime_host_parse_boolean_value_required(catalog, "--federation-planning-require"));
+                print_usage(catalog);
+                return 2;
+            }
         } else if (arg == "--federation-planning-audit" && (index + 1) < argc) {
-            federation_policy_audit = parse_bool(argv[++index]);
+            const std::string token = argv[++index];
+            if (!parse_cli_bool_token(token, federation_policy_audit)) {
+                std::cout << "status: error\n";
+                print_error_line(
+                    catalog,
+                    runtime_host_parse_boolean_value_required(catalog, "--federation-planning-audit"));
+                print_usage(catalog);
+                return 2;
+            }
         } else if (equals_insensitive(arg, "--debug") || equals_insensitive(arg, "/debug")) {
             debug_mode = true;
         } else if (arg == "--breakpoint" && (index + 1) < argc) {

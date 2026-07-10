@@ -759,6 +759,7 @@
   "RuntimeHost.Error.ManifestVersionUnsupported": "Unsupported manifest_version: {version}. Supported versions: {supportedVersions}.",
   "RuntimeHost.Error.RuntimeHostSha256Mismatch": "Runtime host hash does not match manifest digest.",
   "RuntimeHost.Error.SecurityPolicyDenied": "Security policy denied {permission} for role '{role}'.",
+  "RuntimeHost.Error.TrueFalseValueRequired": "The {option} value must be true or false.",
   "RuntimeHost.Error.ExtensionPayloadMalformed": "extension_payload entry is malformed in manifest.",
   "RuntimeHost.Error.ExtensionPayloadMissingFromPackage": "Extension payload is missing from the package: {fileName}",
   "RuntimeHost.Error.ExtensionPayloadSha256Mismatch": "Extension payload hash mismatch: {fileName}",

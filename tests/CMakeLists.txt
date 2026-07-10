@@ -52,6 +52,7 @@ add_executable(test_runtime_host_debug_output
 )
 target_link_libraries(test_runtime_host_debug_output PRIVATE cf_design_model cf_xbase_runtime cf_vfp_assets)
 target_link_libraries(test_runtime_host_debug_output PRIVATE cf_security)
+add_dependencies(test_runtime_host_debug_output copperfin_runtime_host)
 
 if(MSVC)
     target_compile_options(test_runtime_host_debug_output PRIVATE /W4 /permissive-)
