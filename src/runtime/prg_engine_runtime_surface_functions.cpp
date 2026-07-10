@@ -4367,6 +4367,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_collection_member_name(*runtime_object, property_name)) {
             return make_boolean_value(false);
         }
+        if (runtime_object->default_properties.contains(property_name)) {
+            return make_boolean_value(false);
+        }
         if (!reflectable_member_exists_locally(*runtime_object, property_name)) {
             if (RuntimeOleObjectState* object_surface =
                     resolve_direct_olecontrol_reflection_surface(*runtime_object);
@@ -4758,6 +4761,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             is_native_olecontrol_conflict_member_name(*runtime_object, property_name) ||
             native_child_parent_member_name_matches(*runtime_object, property_name) ||
             is_native_collection_member_name(*runtime_object, property_name)) {
+            return make_boolean_value(false);
+        }
+        if (runtime_object->default_properties.contains(property_name)) {
             return make_boolean_value(false);
         }
         if (!runtime_object->properties.contains(property_name)) {

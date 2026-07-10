@@ -29503,6 +29503,176 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_same_prg_native_default_property_stays_protected_from_addproperty_and_removeproperty()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_default_property_guards";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_default_property_guards.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildWidget')\n"
+            "cRoleBefore = GETPEM(oCreate, 'cRole')\n"
+            "lAddRole = ADDPROPERTY(oCreate, 'cRole', 'ShadowRole')\n"
+            "cRoleAfterAdd = GETPEM(oCreate, 'cRole')\n"
+            "lRemoveRole = REMOVEPROPERTY(oCreate, 'cRole')\n"
+            "cRoleAfterRemove = GETPEM(oCreate, 'cRole')\n"
+            "oCreate.cRole = 'AssignedRole'\n"
+            "cRoleAfterAssign = GETPEM(oCreate, 'cRole')\n"
+            "RETURN\n"
+            "DEFINE CLASS ParentWidget AS Custom\n"
+            "    cRole = 'ParentRole'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ChildWidget AS ParentWidget\n"
+            "    cRole = 'ChildRole'\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native default-property guard script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("crolebefore", "ChildRole");
+        check("laddrole", "false");
+        check("croleafteradd", "ChildRole");
+        check("lremoverole", "false");
+        check("croleafterremove", "ChildRole");
+        check("croleafterassign", "AssignedRole");
+
+        expect(state.ole_objects.size() == 1U,
+               "native default-property guards should register one native object");
+        if (state.ole_objects.size() == 1U)
+        {
+            const auto &native_object = state.ole_objects[0];
+            expect(native_object.prog_id == "ChildWidget",
+                   "native default-property guards should preserve child class identity");
+            const auto property_value = native_object.properties.find("crole");
+            expect(property_value != native_object.properties.end(),
+                   "native default-property guards should keep the live class-defined property materialized");
+            if (property_value != native_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(property_value->second) == "AssignedRole",
+                       "native default-property guards should allow ordinary assignment after blocked helper mutations");
+            }
+            const auto default_value = native_object.default_properties.find("crole");
+            expect(default_value != native_object.default_properties.end(),
+                   "native default-property guards should snapshot class-defined defaults");
+            if (default_value != native_object.default_properties.end())
+            {
+                expect(copperfin::runtime::format_value(default_value->second) == "ChildRole",
+                       "native default-property guards should preserve the original class-defined default");
+            }
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_external_prg_default_property_stays_protected_from_addproperty_and_removeproperty()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_external_prg_default_property_guards";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path library_path = temp_root / "widgetlib.prg";
+        write_text(
+            library_path,
+            "DEFINE CLASS ParentWidget AS Custom\n"
+            "    cRole = 'ParentRole'\n"
+            "ENDDEFINE\n");
+
+        const fs::path main_path = temp_root / "external_default_property_guards.prg";
+        write_text(
+            main_path,
+            "oCreate = CREATEOBJECT('ChildWidget')\n"
+            "cRoleBefore = GETPEM(oCreate, 'cRole')\n"
+            "lAddRole = ADDPROPERTY(oCreate, 'cRole', 'ShadowRole')\n"
+            "cRoleAfterAdd = GETPEM(oCreate, 'cRole')\n"
+            "lRemoveRole = REMOVEPROPERTY(oCreate, 'cRole')\n"
+            "cRoleAfterRemove = GETPEM(oCreate, 'cRole')\n"
+            "oCreate.cRole = 'AssignedRole'\n"
+            "cRoleAfterAssign = GETPEM(oCreate, 'cRole')\n"
+            "RETURN\n"
+            "DEFINE CLASS ChildWidget AS ParentWidget OF widgetlib.prg\n"
+            "    cRole = 'ChildRole'\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("external default-property guard script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("crolebefore", "ChildRole");
+        check("laddrole", "false");
+        check("croleafteradd", "ChildRole");
+        check("lremoverole", "false");
+        check("croleafterremove", "ChildRole");
+        check("croleafterassign", "AssignedRole");
+
+        expect(state.ole_objects.size() == 1U,
+               "external default-property guards should register one native object");
+        if (state.ole_objects.size() == 1U)
+        {
+            const auto &native_object = state.ole_objects[0];
+            expect(native_object.prog_id == "ChildWidget",
+                   "external default-property guards should preserve child class identity");
+            expect(native_object.class_library == library_path.string(),
+                   "external default-property guards should preserve external class library provenance");
+            const auto property_value = native_object.properties.find("crole");
+            expect(property_value != native_object.properties.end(),
+                   "external default-property guards should keep the live class-defined property materialized");
+            if (property_value != native_object.properties.end())
+            {
+                expect(copperfin::runtime::format_value(property_value->second) == "AssignedRole",
+                       "external default-property guards should allow ordinary assignment after blocked helper mutations");
+            }
+            const auto default_value = native_object.default_properties.find("crole");
+            expect(default_value != native_object.default_properties.end(),
+                   "external default-property guards should snapshot class-defined defaults");
+            if (default_value != native_object.default_properties.end())
+            {
+                expect(copperfin::runtime::format_value(default_value->second) == "ChildRole",
+                       "external default-property guards should preserve the original external class-defined default");
+            }
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_same_prg_native_identity_metadata_cannot_be_shadowed_through_direct_assignment()
     {
         namespace fs = std::filesystem;
@@ -54000,6 +54170,8 @@ int main()
     test_external_prg_identity_metadata_stays_protected_from_removeproperty();
     test_same_prg_native_identity_metadata_cannot_be_shadowed_through_addproperty();
     test_external_prg_identity_metadata_cannot_be_shadowed_through_addproperty();
+    test_same_prg_native_default_property_stays_protected_from_addproperty_and_removeproperty();
+    test_external_prg_default_property_stays_protected_from_addproperty_and_removeproperty();
     test_same_prg_native_identity_metadata_cannot_be_shadowed_through_direct_assignment();
     test_external_prg_identity_metadata_cannot_be_shadowed_through_direct_assignment();
     test_same_prg_native_identity_metadata_reads_through_ordinary_properties();
