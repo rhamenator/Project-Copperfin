@@ -3667,7 +3667,11 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             summary.AppendLine(L("AssetEditor.Summary.CurrentBuilderTargets"));
             foreach (var node in insights.ObjectNodes.Take(8))
             {
-                summary.AppendLine(F("AssetEditor.Summary.ObjectNodeLine", node.Kind, node.Title));
+                summary.AppendLine(
+                    F(
+                        "AssetEditor.Summary.ObjectNodeLine",
+                        BuildProjectInsightArtifactKindDisplayText(node.Kind),
+                        node.Title));
             }
         }
 

@@ -468,6 +468,7 @@ internal static class Program
         SmokeSharedDesignerSelectionLocalization();
         SmokeLocalizedCodeReferenceKindLabels();
         SmokeLocalizedProjectInsightArtifactKindLabels();
+        SmokeLocalizedBuilderSummaryArtifactKindLabels();
         SmokeLocalizedWorkspaceGroupTitles();
         SmokeLocalizedProjectWorkspaceExplorerGroupTitles();
         SmokeLocalizedProjectFallbackKindAndGroupLabels();
@@ -6590,6 +6591,48 @@ internal static class Program
                pseudoDataSummary.IndexOf("[Table]", StringComparison.Ordinal) < 0 &&
                pseudoDataSummary.IndexOf("[Query]", StringComparison.Ordinal) < 0,
             "Pseudo-localized project summaries should route displayed object and data kind labels through the shared catalog instead of leaking raw tokens");
+    }
+
+    private static void SmokeLocalizedBuilderSummaryArtifactKindLabels()
+    {
+        var snapshot = new CopperfinStudioSnapshotDocument
+        {
+            ProjectWorkspace = new CopperfinStudioProjectWorkspace
+            {
+                ProjectTitle = "sample.pjx"
+            }
+        };
+
+        var insights = new CopperfinProjectInsights
+        {
+            ProjectRoot = @"C:\src\sample",
+            ObjectNodes = new List<CopperfinProjectObjectNode>
+            {
+                new() { Kind = "Program", Title = "main.prg", FilePath = @"C:\src\sample\main.prg" },
+                new() { Kind = "Class", Title = "app.customer.editor", FilePath = @"C:\src\sample\editor.prg" }
+            }
+        };
+
+        using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
+        var spanishSummary = InvokeAssetEditorString(spanishControl, "BuildBuilderSummary", snapshot, insights);
+        Expect(spanishSummary.IndexOf("[Programa] main.prg", StringComparison.Ordinal) >= 0 &&
+               spanishSummary.IndexOf("[Clase] app.customer.editor", StringComparison.Ordinal) >= 0,
+            "Spanish builder summaries should localize displayed current-target artifact kinds");
+
+        using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
+        var portugueseSummary = InvokeAssetEditorString(portugueseControl, "BuildBuilderSummary", snapshot, insights);
+        Expect(portugueseSummary.IndexOf("[Programa] main.prg", StringComparison.Ordinal) >= 0 &&
+               portugueseSummary.IndexOf("[Classe] app.customer.editor", StringComparison.Ordinal) >= 0,
+            "Portuguese builder summaries should localize displayed current-target artifact kinds");
+
+        var pseudoLocalization = new CopperfinLocalization("qps-ploc");
+        using var pseudoControl = new CopperfinAssetEditorControl(pseudoLocalization);
+        var pseudoSummary = InvokeAssetEditorString(pseudoControl, "BuildBuilderSummary", snapshot, insights);
+        Expect(pseudoSummary.IndexOf(pseudoLocalization.Text("AssetEditor.Summary.ArtifactKind.Program"), StringComparison.Ordinal) >= 0 &&
+               pseudoSummary.IndexOf(pseudoLocalization.Text("AssetEditor.Summary.ArtifactKind.Class"), StringComparison.Ordinal) >= 0 &&
+               pseudoSummary.IndexOf("[Program]", StringComparison.Ordinal) < 0 &&
+               pseudoSummary.IndexOf("[Class]", StringComparison.Ordinal) < 0,
+            "Pseudo-localized builder summaries should route current-target artifact kinds through the shared catalog instead of leaking raw tokens");
     }
 
     private static void SmokeLocalizedWorkspaceGroupTitles()
