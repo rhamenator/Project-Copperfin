@@ -222,6 +222,14 @@ void test_studio_host_json_preserves_selected_label_settings(const std::string& 
                     "#1958: selected label settings JSON should preserve deleted preview widths");
     expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
                     "#1958: selected label settings JSON should preserve deleted preview heights");
+    expect_contains(settings_process.stdout_text, "\"leftMarginAvailable\": true",
+                    "#3742: selected label settings JSON should expose left-margin availability");
+    expect_contains(settings_process.stdout_text, "\"leftMargin\": 15",
+                    "#3742: selected label settings JSON should preserve left-margin values");
+    expect_contains(settings_process.stdout_text, "\"rightMarginAvailable\": true",
+                    "#3742: selected label settings JSON should expose right-margin availability");
+    expect_contains(settings_process.stdout_text, "\"rightMargin\": 25",
+                    "#3742: selected label settings JSON should preserve right-margin values");
     expect_contains(settings_process.stdout_text, "\"selectedReportSectionAvailable\": false",
                     "#1504: selected label settings should not advertise selected-section availability");
     expect_contains(settings_process.stdout_text, "\"selectedReportSection\": null",

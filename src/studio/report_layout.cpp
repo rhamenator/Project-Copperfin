@@ -519,11 +519,15 @@ void finalize_page_setup_summary(StudioReportLayoutSnapshot& snapshot) {
         snapshot.bottom_margin_available = true;
         snapshot.bottom_margin = value;
     });
-    apply_setting("LEFTMARGIN", [&](int) {
+    apply_setting("LEFTMARGIN", [&](int value) {
         snapshot.page_setup_available = true;
+        snapshot.left_margin_available = true;
+        snapshot.left_margin = value;
     });
-    apply_setting("RIGHTMARGIN", [&](int) {
+    apply_setting("RIGHTMARGIN", [&](int value) {
         snapshot.page_setup_available = true;
+        snapshot.right_margin_available = true;
+        snapshot.right_margin = value;
     });
     apply_setting("GRIDV", [&](int value) {
         snapshot.page_setup_available = true;

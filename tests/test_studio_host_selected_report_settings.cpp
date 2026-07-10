@@ -220,6 +220,14 @@ void test_studio_host_json_preserves_selected_report_settings(const std::string&
                     "#1956: selected report settings JSON should preserve deleted preview widths");
     expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
                     "#1956: selected report settings JSON should preserve deleted preview heights");
+    expect_contains(settings_process.stdout_text, "\"leftMarginAvailable\": true",
+                    "#3742: selected report settings JSON should expose left-margin availability");
+    expect_contains(settings_process.stdout_text, "\"leftMargin\": 15",
+                    "#3742: selected report settings JSON should preserve left-margin values");
+    expect_contains(settings_process.stdout_text, "\"rightMarginAvailable\": true",
+                    "#3742: selected report settings JSON should expose right-margin availability");
+    expect_contains(settings_process.stdout_text, "\"rightMargin\": 25",
+                    "#3742: selected report settings JSON should preserve right-margin values");
     expect_contains(settings_process.stdout_text, "\"selectedReportSectionAvailable\": false",
                     "#1514: selected report settings should not advertise selected-section availability");
     expect_contains(settings_process.stdout_text, "\"selectedReportSection\": null",

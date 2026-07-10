@@ -1776,6 +1776,76 @@ void test_build_report_layout_includes_direct_paper_size_settings() {
     }
 }
 
+void test_build_report_layout_includes_direct_side_margin_settings() {
+    copperfin::studio::StudioDocumentModel document;
+    document.display_name = "side-margins.frx";
+    document.kind = copperfin::studio::StudioAssetKind::report;
+    document.table_preview_available = true;
+
+    document.table_preview.records = {
+        {
+            .record_index = 0U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "1"),
+                value("OBJCODE", "53"),
+                value("EXPR", "ORIENTATION=0\r\nPAPERSIZE=1\r\nTOPMARGIN=10\r\nBOTMARGIN=20\r\nGRIDV=4\r\nGRIDH=8", 46U),
+                value("LEFTMARGIN", "15"),
+                value("RIGHTMARGIN", "25")
+            }
+        }
+    };
+
+    const auto layout = copperfin::studio::build_report_layout(document);
+    expect(layout.available, "#3742: report layout should be available for direct side-margin settings");
+    expect(layout.page_setup_available, "#3742: direct side margins should preserve page setup availability");
+    expect(layout.left_margin_available, "#3742: direct left margin should mark left-margin metadata available");
+    expect(layout.left_margin == 15, "#3742: direct left margin should refresh left-margin values");
+    expect(layout.right_margin_available, "#3742: direct right margin should mark right-margin metadata available");
+    expect(layout.right_margin == 25, "#3742: direct right margin should refresh right-margin values");
+    expect(layout.orientation_available && layout.orientation_code == 0,
+        "#3742: direct side margins should preserve memo-derived orientation");
+    expect(layout.paper_size_available && layout.paper_size_code == 1,
+        "#3742: direct side margins should preserve memo-derived paper size");
+    expect(layout.top_margin_available && layout.top_margin == 10,
+        "#3742: direct side margins should preserve memo-derived top margins");
+    expect(layout.bottom_margin_available && layout.bottom_margin == 20,
+        "#3742: direct side margins should preserve memo-derived bottom margins");
+    expect(layout.grid_vertical_available && layout.grid_vertical == 4,
+        "#3742: direct side margins should preserve memo-derived vertical grid spacing");
+    expect(layout.grid_horizontal_available && layout.grid_horizontal == 8,
+        "#3742: direct side margins should preserve memo-derived horizontal grid spacing");
+    expect(layout.settings.size() == 8U, "#3742: direct side margins should preserve root setting counts");
+
+    const auto left_margin = std::find_if(layout.settings.begin(), layout.settings.end(), [](const auto& setting) {
+        return setting.name == "LEFTMARGIN";
+    });
+    expect(left_margin != layout.settings.end(), "#3742: direct left margin should appear in root settings");
+    if (left_margin != layout.settings.end()) {
+        expect(left_margin->record_index == 0U, "#3742: direct left margin should retain source record provenance");
+        expect(left_margin->field_index == 3U, "#3742: direct left margin should retain DBF field provenance");
+        expect(left_margin->source_line_index == copperfin::studio::StudioReportMissingLineIndex,
+            "#3742: direct left margin should not masquerade as a memo-line setting");
+        expect(left_margin->memo_block_number == 0U,
+            "#3742: direct left margin should expose memo block zero for non-memo fields");
+        expect(left_margin->value == "15", "#3742: direct left margin should preserve the field value text");
+    }
+
+    const auto right_margin = std::find_if(layout.settings.begin(), layout.settings.end(), [](const auto& setting) {
+        return setting.name == "RIGHTMARGIN";
+    });
+    expect(right_margin != layout.settings.end(), "#3742: direct right margin should appear in root settings");
+    if (right_margin != layout.settings.end()) {
+        expect(right_margin->record_index == 0U, "#3742: direct right margin should retain source record provenance");
+        expect(right_margin->field_index == 4U, "#3742: direct right margin should retain DBF field provenance");
+        expect(right_margin->source_line_index == copperfin::studio::StudioReportMissingLineIndex,
+            "#3742: direct right margin should not masquerade as a memo-line setting");
+        expect(right_margin->memo_block_number == 0U,
+            "#3742: direct right margin should expose memo block zero for non-memo fields");
+        expect(right_margin->value == "25", "#3742: direct right margin should preserve the field value text");
+    }
+}
+
 void test_build_report_layout_preserves_band_unique_ids_for_section_identity() {
     copperfin::studio::StudioDocumentModel document;
     document.display_name = "detail-ids.frx";
@@ -1877,6 +1947,7 @@ int main() {
     test_build_report_layout_reports_missing_title_provenance_when_unavailable();
     test_build_report_layout_includes_direct_orientation_settings();
     test_build_report_layout_includes_direct_paper_size_settings();
+    test_build_report_layout_includes_direct_side_margin_settings();
     test_build_report_layout_preserves_band_unique_ids_for_section_identity();
 
     if (failures != 0) {

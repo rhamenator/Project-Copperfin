@@ -160,6 +160,10 @@ struct StudioReportLayoutSnapshot {
     int top_margin = 0;
     bool bottom_margin_available = false;
     int bottom_margin = 0;
+    bool left_margin_available = false;
+    int left_margin = 0;
+    bool right_margin_available = false;
+    int right_margin = 0;
     bool grid_vertical_available = false;
     int grid_vertical = 0;
     bool grid_horizontal_available = false;

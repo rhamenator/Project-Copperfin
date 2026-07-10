@@ -2928,6 +2928,12 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document,
         std::cout << "      \"bottomMarginAvailable\": "
                   << (report_layout.bottom_margin_available ? "true" : "false") << ",\n";
         std::cout << "      \"bottomMargin\": " << report_layout.bottom_margin << ",\n";
+        std::cout << "      \"leftMarginAvailable\": "
+                  << (report_layout.left_margin_available ? "true" : "false") << ",\n";
+        std::cout << "      \"leftMargin\": " << report_layout.left_margin << ",\n";
+        std::cout << "      \"rightMarginAvailable\": "
+                  << (report_layout.right_margin_available ? "true" : "false") << ",\n";
+        std::cout << "      \"rightMargin\": " << report_layout.right_margin << ",\n";
         std::cout << "      \"gridVerticalAvailable\": "
                   << (report_layout.grid_vertical_available ? "true" : "false") << ",\n";
         std::cout << "      \"gridVertical\": " << report_layout.grid_vertical << ",\n";
