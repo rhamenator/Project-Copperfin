@@ -810,6 +810,9 @@ namespace copperfin::runtime
         std::optional<std::string> read_native_property_expression_if_present(
             RuntimeOleObjectState &runtime_object,
             const std::string &property_name);
+        std::optional<std::string> read_native_method_source_if_present(
+            const RuntimeOleObjectState &runtime_object,
+            const std::string &method_name);
         std::optional<PrgValue> invoke_runtime_object_reference_member(
             const PrgValue &object_reference,
             const std::string &member_path,
@@ -2346,6 +2349,20 @@ namespace copperfin::runtime
             target_object->last_action = effective_member_path + "(" + value_as_string(arguments.front()) + ")";
             ++target_object->action_count;
             return make_string_value(expression_text.value_or(std::string{}));
+        }
+        if (leaf == "readmethod" &&
+            (!target_object->class_hierarchy.empty() || !target_object->source.empty()))
+        {
+            if (arguments.empty())
+            {
+                return make_string_value("");
+            }
+
+            const auto source_text =
+                read_native_method_source_if_present(*target_object, value_as_string(arguments.front()));
+            target_object->last_action = effective_member_path + "(" + value_as_string(arguments.front()) + ")";
+            ++target_object->action_count;
+            return make_string_value(source_text.value_or(std::string{}));
         }
         if (leaf == "move" &&
             is_native_visual_runtime_object(*target_object))
@@ -4797,6 +4814,64 @@ namespace copperfin::runtime
         }
 
         return std::nullopt;
+    }
+
+    std::optional<std::string> PrgRuntimeSession::Impl::read_native_method_source_if_present(
+        const RuntimeOleObjectState &runtime_object,
+        const std::string &method_name)
+    {
+        const std::string normalized_method_name = normalize_identifier(method_name);
+        if (normalized_method_name.empty() || runtime_object.source.empty())
+        {
+            return std::nullopt;
+        }
+
+        std::string method_program_path;
+        std::string qualified_method_name;
+        const Routine *method =
+            find_native_object_method(runtime_object,
+                                      normalized_method_name,
+                                      method_program_path,
+                                      qualified_method_name);
+        (void)qualified_method_name;
+        if (method == nullptr)
+        {
+            return std::nullopt;
+        }
+
+        Program &method_program = load_program(method_program_path);
+        if (!method_program.source_lines.empty() &&
+            method->declaration_location.line > 0 &&
+            method->body_end_line_exclusive > method->declaration_location.line)
+        {
+            const std::size_t body_start_index = method->declaration_location.line;
+            const std::size_t body_end_index =
+                std::min(method->body_end_line_exclusive - 1U, method_program.source_lines.size());
+            if (body_start_index < body_end_index)
+            {
+                std::string source_text;
+                for (std::size_t line_index = body_start_index; line_index < body_end_index; ++line_index)
+                {
+                    if (!source_text.empty())
+                    {
+                        source_text += "\n";
+                    }
+                    source_text += method_program.source_lines[line_index];
+                }
+                return source_text;
+            }
+        }
+
+        std::string source_text;
+        for (const Statement &statement : method->statements)
+        {
+            if (!source_text.empty())
+            {
+                source_text += "\n";
+            }
+            source_text += statement.text;
+        }
+        return source_text;
     }
 
     bool PrgRuntimeSession::Impl::write_native_property_if_present(

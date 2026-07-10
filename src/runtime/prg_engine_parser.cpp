@@ -217,6 +217,24 @@ std::vector<LogicalLine> load_logical_lines(const std::string& path) {
     return lines;
 }
 
+std::vector<std::string> load_source_lines(const std::string& path) {
+    std::ifstream input(path, std::ios::binary);
+    std::vector<std::string> lines;
+    if (!input) {
+        return lines;
+    }
+
+    std::string raw_line;
+    while (std::getline(input, raw_line)) {
+        if (!raw_line.empty() && raw_line.back() == '\r') {
+            raw_line.pop_back();
+        }
+        lines.push_back(std::move(raw_line));
+    }
+
+    return lines;
+}
+
 bool is_preprocessor_identifier_start(const char ch) {
     return std::isalpha(static_cast<unsigned char>(ch)) != 0 || ch == '_';
 }
@@ -1192,11 +1210,18 @@ void parse_default_statement(const std::string& line, Statement& statement) {
 Program parse_program(const std::string& path) {
     Program program;
     program.path = normalize_path(path);
+    program.source_lines = load_source_lines(path);
     program.main.name = "main";
 
     Routine* current = &program.main;
     PrgClassDefinition* current_class = nullptr;
     NativeChildObjectDeclaration* current_child_object = nullptr;
+    const auto finalize_open_routine = [&](const std::size_t end_line_exclusive)
+    {
+        if (current != &program.main && current != nullptr && current->body_end_line_exclusive == 0) {
+            current->body_end_line_exclusive = end_line_exclusive;
+        }
+    };
     for (const auto& logical_line : load_preprocessed_logical_lines(path)) {
         const std::size_t line_number = logical_line.line_number;
         const std::string line = trim_copy(logical_line.text);
@@ -1244,12 +1269,14 @@ Program parse_program(const std::string& path) {
             continue;
         }
         if (current_class != nullptr && trimmed_upper == "ENDDEFINE") {
+            finalize_open_routine(line_number);
             current_child_object = nullptr;
             current_class = nullptr;
             current = &program.main;
             continue;
         }
         if (starts_with_insensitive(line, "PROCEDURE ") || starts_with_insensitive(line, "FUNCTION ")) {
+            finalize_open_routine(line_number);
             const auto separator = line.find(' ');
             std::string routine_signature = trim_copy(line.substr(separator + 1U));
             std::string inline_parameter_clause;
@@ -1290,6 +1317,7 @@ Program parse_program(const std::string& path) {
             continue;
         }
         if (starts_with_insensitive(line, "ENDPROC") || starts_with_insensitive(line, "ENDFUNC") || starts_with_insensitive(line, "END FUNC")) {
+            finalize_open_routine(line_number);
             current = &program.main;
             continue;
         }
@@ -2223,6 +2251,8 @@ Program parse_program(const std::string& path) {
             current->statements.push_back(std::move(statement));
         }
     }
+
+    finalize_open_routine(program.source_lines.size() + 1U);
 
     return program;
 }

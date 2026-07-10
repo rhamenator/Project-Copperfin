@@ -165,6 +165,7 @@ struct Routine {
     std::string name;
     RoutineKind kind = RoutineKind::main;
     SourceLocation declaration_location{};
+    std::size_t body_end_line_exclusive = 0;
     std::vector<Statement> statements;
 };
 
@@ -189,6 +190,7 @@ struct PrgClassDefinition {
 
 struct Program {
     std::string path;
+    std::vector<std::string> source_lines;
     Routine main{};
     std::map<std::string, Routine> routines;
     std::map<std::string, PrgClassDefinition> classes;
