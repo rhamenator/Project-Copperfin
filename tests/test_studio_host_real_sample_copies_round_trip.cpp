@@ -303,6 +303,12 @@ void exercise_real_sample_copies_round_trip(
                     "\"settingCount\": 6",
                     "#3773: real sample COPIES update should add a sixth live root setting");
     expect_contains(reopen_after_set.stdout_text,
+                    "\"copiesAvailable\": true",
+                    "#3806: real sample COPIES update should expose copies summary availability");
+    expect_contains(reopen_after_set.stdout_text,
+                    "\"copies\": " + sample.copies_value,
+                    "#3806: real sample COPIES update should expose the live copies summary value");
+    expect_contains(reopen_after_set.stdout_text,
                     "\"name\": \"COPIES\", \"recordIndex\": 0, \"fieldIndex\": 6, \"sourceLineIndex\": 3, \"memoBlockNumber\": " +
                         std::to_string(sample.copies_memo_block_number) + ", \"value\": \"" + sample.copies_value + "\"",
                     "#3773: real sample COPIES update should expose memo-backed COPIES provenance");
@@ -359,6 +365,12 @@ void exercise_real_sample_copies_round_trip(
     expect_contains(reopen_after_clear.stdout_text,
                     "\"settingCount\": 5",
                     "#3773: real sample COPIES clear should restore the original live setting count");
+    expect_contains(reopen_after_clear.stdout_text,
+                    "\"copiesAvailable\": false",
+                    "#3806: real sample COPIES clear should restore missing copies summary availability");
+    expect_contains(reopen_after_clear.stdout_text,
+                    "\"copies\": 0",
+                    "#3806: real sample COPIES clear should restore the default copies summary value");
     const std::string selected_settings = selected_settings_segment(reopen_after_clear.stdout_text);
     expect(!selected_settings.empty(),
            "#3773: real sample COPIES clear should expose a selected-settings JSON block");

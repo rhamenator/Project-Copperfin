@@ -392,6 +392,8 @@ void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValu
     append_direct_setting("RIGHTMARGIN");
     append_direct_setting("GRIDV");
     append_direct_setting("GRIDH");
+    append_direct_setting("COLOR");
+    append_direct_setting("COPIES");
     append_direct_setting("COLS");
     append_direct_setting("COLWIDTH");
     append_direct_setting("COLSPACING");
@@ -569,6 +571,16 @@ void finalize_page_setup_summary(StudioReportLayoutSnapshot& snapshot) {
         snapshot.page_setup_available = true;
         snapshot.grid_horizontal_available = true;
         snapshot.grid_horizontal = value;
+    });
+    apply_setting("COLOR", [&](int value) {
+        snapshot.page_setup_available = true;
+        snapshot.color_available = true;
+        snapshot.color = value;
+    });
+    apply_setting("COPIES", [&](int value) {
+        snapshot.page_setup_available = true;
+        snapshot.copies_available = true;
+        snapshot.copies = value;
     });
     apply_string_setting("DRIVER", [&](const std::string& value) {
         snapshot.page_setup_available = true;

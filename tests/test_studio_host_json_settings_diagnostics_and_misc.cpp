@@ -963,6 +963,96 @@ void test_studio_host_json_exposes_printer_identity_report_settings_summary(
         fs::remove_all(temp_root, ignored);
     }
 }
+
+void test_studio_host_json_exposes_color_and_copies_report_settings_summary(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_color_copies_settings_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto write_color_copies_layout = [](const fs::path& asset_path) {
+        const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+            {.name = "OBJTYPE", .type = 'N', .length = 10U},
+            {.name = "OBJCODE", .type = 'N', .length = 10U},
+            {.name = "EXPR", .type = 'M', .length = 10U}
+        };
+        const std::vector<std::vector<std::string>> records{
+            {"1", "53", "ORIENTATION=0\r\nPAPERSIZE=1\r\nGRIDV=4\r\nGRIDH=8\r\nCOLOR=0\r\nCOPIES=3"}
+        };
+
+        const auto create_result =
+            copperfin::vfp::create_dbf_table_file(asset_path.string(), fields, records);
+        expect(create_result.ok,
+               "#3806: synthetic report table for color/copies settings summary should be created");
+    };
+
+    const auto run_color_copies_layout = [&](const fs::path& asset_path,
+                                             const std::string& title,
+                                             const std::string& label) {
+        write_color_copies_layout(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " color/copies summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " color/copies summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#3806: color/copies settings summary should keep report/label inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#3806: color/copies layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#3806: color/copies label layouts should retain label identity");
+        } else {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": false",
+                            "#3806: color/copies report layouts should retain report identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#3806: color/copies layouts should mark page setup available");
+        expect_contains(summary_process.stdout_text, "\"colorAvailable\": true",
+                        "#3806: color/copies layouts should expose color availability");
+        expect_contains(summary_process.stdout_text, "\"color\": 0",
+                        "#3806: color/copies layouts should expose the live color value");
+        expect_contains(summary_process.stdout_text, "\"copiesAvailable\": true",
+                        "#3806: color/copies layouts should expose copies availability");
+        expect_contains(summary_process.stdout_text, "\"copies\": 3",
+                        "#3806: color/copies layouts should expose the live copies value");
+        expect_contains(summary_process.stdout_text, "\"settingCount\": 6",
+                        "#3806: color/copies layouts should preserve live setting counts");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4, \"memoBlockNumber\": 1, \"value\": \"0\"",
+                        "#3806: color/copies layouts should preserve COLOR provenance");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"COPIES\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 5, \"memoBlockNumber\": 1, \"value\": \"3\"",
+                        "#3806: color/copies layouts should preserve COPIES provenance");
+        expect_empty_report_layout_preview_bounds(
+            summary_process.stdout_text,
+            "#3806: color/copies settings summary JSON");
+    };
+
+    run_color_copies_layout(temp_root / "color_copies.frx",
+                            "color_copies.frx",
+                            "report");
+    run_color_copies_layout(temp_root / "color_copies.lbx",
+                            "color_copies.lbx",
+                            "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
 #endif
 
 }  // namespace cf_test_studio_host_json

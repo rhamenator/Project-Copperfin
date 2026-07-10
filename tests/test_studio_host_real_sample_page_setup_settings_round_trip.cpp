@@ -474,8 +474,8 @@ void test_real_vfp9_report_and_label_page_setup_settings_round_trip(const std::s
             .updated_value = "1",
             .updated_provenance_prefix =
                 "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 6, \"sourceLineIndex\": 0",
-            .updated_json_needles = {"\"orientationCode\": 1", "\"paperSizeCode\": 1"},
-            .restored_json_needles = {"\"orientationCode\": 0", "\"paperSizeCode\": 1"}
+            .updated_json_needles = {"\"orientationCode\": 1", "\"paperSizeCode\": 1", "\"colorAvailable\": true", "\"color\": 1"},
+            .restored_json_needles = {"\"orientationCode\": 0", "\"paperSizeCode\": 1", "\"colorAvailable\": true", "\"color\": 1"}
         },
         {
             .property_name = "PAPERSIZE",
@@ -483,8 +483,8 @@ void test_real_vfp9_report_and_label_page_setup_settings_round_trip(const std::s
             .updated_value = "9",
             .updated_provenance_prefix =
                 "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 6, \"sourceLineIndex\": 1",
-            .updated_json_needles = {"\"orientationCode\": 0", "\"paperSizeCode\": 9"},
-            .restored_json_needles = {"\"orientationCode\": 0", "\"paperSizeCode\": 1"}
+            .updated_json_needles = {"\"orientationCode\": 0", "\"paperSizeCode\": 9", "\"colorAvailable\": true", "\"color\": 1"},
+            .restored_json_needles = {"\"orientationCode\": 0", "\"paperSizeCode\": 1", "\"colorAvailable\": true", "\"color\": 1"}
         },
         {
             .property_name = "COLOR",
@@ -492,8 +492,8 @@ void test_real_vfp9_report_and_label_page_setup_settings_round_trip(const std::s
             .updated_value = "0",
             .updated_provenance_prefix =
                 "\"name\": \"COLOR\", \"recordIndex\": 0, \"fieldIndex\": 6, \"sourceLineIndex\": 2",
-            .updated_json_needles = {"\"orientationCode\": 0", "\"paperSizeCode\": 1"},
-            .restored_json_needles = {"\"orientationCode\": 0", "\"paperSizeCode\": 1"}
+            .updated_json_needles = {"\"orientationCode\": 0", "\"paperSizeCode\": 1", "\"colorAvailable\": true", "\"color\": 0"},
+            .restored_json_needles = {"\"orientationCode\": 0", "\"paperSizeCode\": 1", "\"colorAvailable\": true", "\"color\": 1"}
         }
     };
 

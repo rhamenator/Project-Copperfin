@@ -2946,6 +2946,12 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document,
         std::cout << "      \"gridHorizontalAvailable\": "
                   << (report_layout.grid_horizontal_available ? "true" : "false") << ",\n";
         std::cout << "      \"gridHorizontal\": " << report_layout.grid_horizontal << ",\n";
+        std::cout << "      \"colorAvailable\": "
+                  << (report_layout.color_available ? "true" : "false") << ",\n";
+        std::cout << "      \"color\": " << report_layout.color << ",\n";
+        std::cout << "      \"copiesAvailable\": "
+                  << (report_layout.copies_available ? "true" : "false") << ",\n";
+        std::cout << "      \"copies\": " << report_layout.copies << ",\n";
         std::cout << "      \"driverAvailable\": "
                   << (report_layout.driver_available ? "true" : "false") << ",\n";
         std::cout << "      \"driver\": ";

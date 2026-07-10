@@ -1191,6 +1191,8 @@ void test_studio_host_json_preserves_report_settings_without_root_expr_schema(
     const std::string& studio_host_path);
 void test_studio_host_json_exposes_printer_identity_report_settings_summary(
     const std::string& studio_host_path);
+void test_studio_host_json_exposes_color_and_copies_report_settings_summary(
+    const std::string& studio_host_path);
 
 // ==== Report layout JSON tests: section band exposure by selector ====
 // ==== Report layout JSON tests: detail/header/footer section lifecycle ====

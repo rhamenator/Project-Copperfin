@@ -172,6 +172,10 @@ struct StudioReportLayoutSnapshot {
     int grid_vertical = 0;
     bool grid_horizontal_available = false;
     int grid_horizontal = 0;
+    bool color_available = false;
+    int color = 0;
+    bool copies_available = false;
+    int copies = 0;
     bool driver_available = false;
     std::string driver{};
     bool device_available = false;

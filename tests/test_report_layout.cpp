@@ -1912,6 +1912,70 @@ void test_build_report_layout_summarizes_paper_dimensions() {
     }
 }
 
+void test_build_report_layout_summarizes_color_and_copies() {
+    copperfin::studio::StudioDocumentModel document;
+    document.display_name = "color-copies.frx";
+    document.kind = copperfin::studio::StudioAssetKind::report;
+    document.table_preview_available = true;
+
+    document.table_preview.records = {
+        {
+            .record_index = 0U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "1"),
+                value("OBJCODE", "53"),
+                value("EXPR",
+                      "ORIENTATION=0\r\nPAPERSIZE=1\r\nGRIDV=4\r\nGRIDH=8\r\nCOLOR=0\r\nCOPIES=3",
+                      48U)
+            }
+        }
+    };
+
+    const auto layout = copperfin::studio::build_report_layout(document);
+    expect(layout.available, "#3806: report layout should be available for COLOR/COPIES fixtures");
+    expect(layout.page_setup_available, "#3806: COLOR/COPIES fixtures should preserve page setup availability");
+    expect(layout.color_available && layout.color == 0,
+           "#3806: COLOR fixtures should expose additive color summary metadata");
+    expect(layout.copies_available && layout.copies == 3,
+           "#3806: COPIES fixtures should expose additive copies summary metadata");
+    expect(layout.orientation_available && layout.orientation_code == 0,
+           "#3806: COLOR/COPIES fixtures should preserve memo-derived orientation");
+    expect(layout.paper_size_available && layout.paper_size_code == 1,
+           "#3806: COLOR/COPIES fixtures should preserve memo-derived paper size");
+    expect(layout.grid_vertical_available && layout.grid_vertical == 4,
+           "#3806: COLOR/COPIES fixtures should preserve memo-derived vertical grid spacing");
+    expect(layout.grid_horizontal_available && layout.grid_horizontal == 8,
+           "#3806: COLOR/COPIES fixtures should preserve memo-derived horizontal grid spacing");
+    expect(layout.settings.size() == 6U, "#3806: COLOR/COPIES fixtures should preserve root setting counts");
+
+    const auto color = std::find_if(layout.settings.begin(), layout.settings.end(), [](const auto& setting) {
+        return setting.name == "COLOR";
+    });
+    expect(color != layout.settings.end(), "#3806: COLOR should appear in root settings");
+    if (color != layout.settings.end()) {
+        expect(color->record_index == 0U, "#3806: COLOR should retain source record provenance");
+        expect(color->field_index == 2U, "#3806: COLOR should retain EXPR field provenance");
+        expect(color->source_line_index == 4U, "#3806: COLOR should retain memo line provenance");
+        expect(color->memo_block_number == 48U,
+               "#3806: COLOR should expose EXPR memo provenance");
+        expect(color->value == "0", "#3806: COLOR should preserve the field value text");
+    }
+
+    const auto copies = std::find_if(layout.settings.begin(), layout.settings.end(), [](const auto& setting) {
+        return setting.name == "COPIES";
+    });
+    expect(copies != layout.settings.end(), "#3806: COPIES should appear in root settings");
+    if (copies != layout.settings.end()) {
+        expect(copies->record_index == 0U, "#3806: COPIES should retain source record provenance");
+        expect(copies->field_index == 2U, "#3806: COPIES should retain EXPR field provenance");
+        expect(copies->source_line_index == 5U, "#3806: COPIES should retain memo line provenance");
+        expect(copies->memo_block_number == 48U,
+               "#3806: COPIES should expose EXPR memo provenance");
+        expect(copies->value == "3", "#3806: COPIES should preserve the field value text");
+    }
+}
+
 void test_build_report_layout_summarizes_root_sort_expression() {
     copperfin::studio::StudioDocumentModel document;
     document.display_name = "sort-expression.frx";
@@ -2063,6 +2127,7 @@ int main() {
     test_build_report_layout_includes_direct_paper_size_settings();
     test_build_report_layout_includes_direct_side_margin_settings();
     test_build_report_layout_summarizes_paper_dimensions();
+    test_build_report_layout_summarizes_color_and_copies();
     test_build_report_layout_summarizes_root_sort_expression();
     test_build_report_layout_preserves_band_unique_ids_for_section_identity();
 
