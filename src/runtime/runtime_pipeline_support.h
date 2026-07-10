@@ -125,7 +125,10 @@ bool write_fxp_primary_output_contract(
     std::string& error);
 std::string build_app_archive_manifest_source(const RuntimePackagePlan& plan);
 bool write_app_archive_primary_output(const RuntimePackagePlan& plan, std::string& error);
-void append_library_function_manifest_lines(std::ostringstream& stream, const RuntimePackagePlan& plan);
+void append_library_function_manifest_lines(
+    std::ostringstream& stream,
+    const RuntimePackagePlan& plan,
+    bool include_source_provenance);
 void append_runtime_asset_manifest_lines(std::ostringstream& stream, const RuntimePackagePlan& plan);
 void append_warning_manifest_lines(std::ostringstream& stream, const RuntimePackagePlan& plan);
 void append_runtime_feature_flag_manifest_lines(

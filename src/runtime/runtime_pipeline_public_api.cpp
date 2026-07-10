@@ -361,7 +361,7 @@ std::string build_runtime_manifest_text(
         stream << "export_symbol=" << quote_manifest_value(symbol) << "\n";
     }
 
-    append_library_function_manifest_lines(stream, plan);
+    append_library_function_manifest_lines(stream, plan, false);
 
     append_warning_manifest_lines(stream, plan);
 
@@ -507,7 +507,7 @@ std::string build_debug_manifest_text(
     }
     append_runtime_asset_manifest_lines(stream, plan);
     append_warning_manifest_lines(stream, plan);
-    append_library_function_manifest_lines(stream, plan);
+    append_library_function_manifest_lines(stream, plan, true);
     return stream.str();
 }
 

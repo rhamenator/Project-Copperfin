@@ -175,7 +175,10 @@ bool write_app_archive_primary_output(const RuntimePackagePlan& plan, std::strin
     return write_text_file(plan.launcher_output_path, stream.str(), error);
 }
 
-void append_library_function_manifest_lines(std::ostringstream& stream, const RuntimePackagePlan& plan) {
+void append_library_function_manifest_lines(
+    std::ostringstream& stream,
+    const RuntimePackagePlan& plan,
+    bool include_source_provenance) {
     if (!is_library_output_kind(plan.output_kind)) {
         return;
     }
@@ -195,12 +198,14 @@ void append_library_function_manifest_lines(std::ostringstream& stream, const Ru
         stream << "library_function_kind="
                << quote_manifest_value(symbol) << "|"
                << quote_manifest_value(kind_found == routine_kinds.end() ? std::string("function") : kind_found->second) << "\n";
-        stream << "library_function_source="
-               << quote_manifest_value(symbol) << "|"
-               << (location_found == routine_locations.end()
-                       ? std::string{}
-                       : build_manifest_source_location(location_found->second))
-               << "\n";
+        if (include_source_provenance) {
+            stream << "library_function_source="
+                   << quote_manifest_value(symbol) << "|"
+                   << (location_found == routine_locations.end()
+                           ? std::string{}
+                           : build_manifest_source_location(location_found->second))
+                   << "\n";
+        }
         stream << "library_function_arity="
                << quote_manifest_value(symbol) << "|"
                << parameter_count << "\n";
