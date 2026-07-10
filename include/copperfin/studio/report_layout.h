@@ -182,6 +182,18 @@ struct StudioReportLayoutSnapshot {
     std::string device{};
     bool output_available = false;
     std::string output{};
+    bool default_source_available = false;
+    int default_source = 0;
+    bool print_quality_available = false;
+    int print_quality = 0;
+    bool y_resolution_available = false;
+    int y_resolution = 0;
+    bool true_type_option_available = false;
+    int true_type_option = 0;
+    bool ascii_available = false;
+    int ascii = 0;
+    bool collate_available = false;
+    int collate = 0;
     bool column_setup_available = false;
     bool column_count_available = false;
     int column_count = 0;

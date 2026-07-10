@@ -2967,6 +2967,24 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document,
         std::cout << "      \"output\": ";
         print_json_string(report_layout.output);
         std::cout << ",\n";
+        std::cout << "      \"defaultSourceAvailable\": "
+                  << (report_layout.default_source_available ? "true" : "false") << ",\n";
+        std::cout << "      \"defaultSource\": " << report_layout.default_source << ",\n";
+        std::cout << "      \"printQualityAvailable\": "
+                  << (report_layout.print_quality_available ? "true" : "false") << ",\n";
+        std::cout << "      \"printQuality\": " << report_layout.print_quality << ",\n";
+        std::cout << "      \"yResolutionAvailable\": "
+                  << (report_layout.y_resolution_available ? "true" : "false") << ",\n";
+        std::cout << "      \"yResolution\": " << report_layout.y_resolution << ",\n";
+        std::cout << "      \"trueTypeOptionAvailable\": "
+                  << (report_layout.true_type_option_available ? "true" : "false") << ",\n";
+        std::cout << "      \"trueTypeOption\": " << report_layout.true_type_option << ",\n";
+        std::cout << "      \"asciiAvailable\": "
+                  << (report_layout.ascii_available ? "true" : "false") << ",\n";
+        std::cout << "      \"ascii\": " << report_layout.ascii << ",\n";
+        std::cout << "      \"collateAvailable\": "
+                  << (report_layout.collate_available ? "true" : "false") << ",\n";
+        std::cout << "      \"collate\": " << report_layout.collate << ",\n";
         std::cout << "      \"columnSetupAvailable\": "
                   << (report_layout.column_setup_available ? "true" : "false") << ",\n";
         std::cout << "      \"columnCountAvailable\": "

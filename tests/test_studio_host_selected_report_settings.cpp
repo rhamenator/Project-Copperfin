@@ -136,7 +136,7 @@ void write_synthetic_report_table_for_layout_json(const std::filesystem::path& r
         {.name = "UNIQUEID", .type = 'C', .length = 24U}
     };
     const std::vector<std::vector<std::string>> records{
-        {"1", "53", "ORIENTATION=0\nPAPERSIZE=1\nPAPERLENGTH=2794\nPAPERWIDTH=2159\nBOTMARGIN=20\nGRIDV=4\nGRIDH=8", "", "", "", "", "", "10", "customer.country", "15", "25", ""},
+        {"1", "53", "ORIENTATION=0\nPAPERSIZE=1\nPAPERLENGTH=2794\nPAPERWIDTH=2159\nBOTMARGIN=20\nGRIDV=4\nGRIDH=8\nDEFAULTSOURCE=15\nPRINTQUALITY=600\nYRESOLUTION=600\nTTOPTION=3\nASCII=9\nCOLLATE=1", "", "", "", "", "", "10", "customer.country", "15", "25", ""},
         {"9", "1", "", "", "0", "", "2000", "", "", "", "", "", ""},
         {"9", "4", "", "", "2000", "", "5000", "", "", "", "", "", ""},
         {"8", "0", "customer.company", "1200", "2600", "4000", "450", "Segoe UI", "", "", "", "", "field-guid"},
@@ -240,6 +240,30 @@ void test_studio_host_json_preserves_selected_report_settings(const std::string&
                     "#3745: selected report settings JSON should expose sort-expression availability");
     expect_contains(settings_process.stdout_text, "\"sortExpression\": \"customer.country\"",
                     "#3745: selected report settings JSON should preserve sort-expression values");
+    expect_contains(settings_process.stdout_text, "\"defaultSourceAvailable\": true",
+                    "#3818: selected report settings JSON should expose default-source availability");
+    expect_contains(settings_process.stdout_text, "\"defaultSource\": 15",
+                    "#3818: selected report settings JSON should preserve default-source values");
+    expect_contains(settings_process.stdout_text, "\"printQualityAvailable\": true",
+                    "#3818: selected report settings JSON should expose print-quality availability");
+    expect_contains(settings_process.stdout_text, "\"printQuality\": 600",
+                    "#3818: selected report settings JSON should preserve print-quality values");
+    expect_contains(settings_process.stdout_text, "\"yResolutionAvailable\": true",
+                    "#3818: selected report settings JSON should expose y-resolution availability");
+    expect_contains(settings_process.stdout_text, "\"yResolution\": 600",
+                    "#3818: selected report settings JSON should preserve y-resolution values");
+    expect_contains(settings_process.stdout_text, "\"trueTypeOptionAvailable\": true",
+                    "#3818: selected report settings JSON should expose TrueType-option availability");
+    expect_contains(settings_process.stdout_text, "\"trueTypeOption\": 3",
+                    "#3818: selected report settings JSON should preserve TrueType-option values");
+    expect_contains(settings_process.stdout_text, "\"asciiAvailable\": true",
+                    "#3818: selected report settings JSON should expose ASCII availability");
+    expect_contains(settings_process.stdout_text, "\"ascii\": 9",
+                    "#3818: selected report settings JSON should preserve ASCII values");
+    expect_contains(settings_process.stdout_text, "\"collateAvailable\": true",
+                    "#3818: selected report settings JSON should expose COLLATE availability");
+    expect_contains(settings_process.stdout_text, "\"collate\": 1",
+                    "#3818: selected report settings JSON should preserve COLLATE values");
     expect_contains(settings_process.stdout_text, "\"selectedReportSectionAvailable\": false",
                     "#1514: selected report settings should not advertise selected-section availability");
     expect_contains(settings_process.stdout_text, "\"selectedReportSection\": null",
@@ -334,7 +358,7 @@ void test_studio_host_json_preserves_selected_report_settings(const std::string&
                     "#1515: selected deleted report settings should serialize null containing-object sections");
     expect_contains(deleted_settings_process.stdout_text, "\"settingCount\": 0",
                     "#1477: deleted selected report settings JSON should not expose live settings");
-    expect_contains(deleted_settings_process.stdout_text, "\"deletedSettingCount\": 11",
+    expect_contains(deleted_settings_process.stdout_text, "\"deletedSettingCount\": 17",
                     "#1477: deleted selected report settings JSON should expose deleted setting counts");
     expect_contains(deleted_settings_process.stdout_text, "\"pageSetupAvailable\": true",
                     "#3815: deleted selected report settings JSON should surface fallback page-setup availability");
@@ -382,6 +406,30 @@ void test_studio_host_json_preserves_selected_report_settings(const std::string&
                     "#3815: deleted selected report settings JSON should surface fallback sort-expression availability");
     expect_contains(deleted_settings_process.stdout_text, "\"sortExpression\": \"customer.country\"",
                     "#3815: deleted selected report settings JSON should surface fallback sort-expression values");
+    expect_contains(deleted_settings_process.stdout_text, "\"defaultSourceAvailable\": true",
+                    "#3818: deleted selected report settings JSON should surface fallback default-source availability");
+    expect_contains(deleted_settings_process.stdout_text, "\"defaultSource\": 15",
+                    "#3818: deleted selected report settings JSON should surface fallback default-source values");
+    expect_contains(deleted_settings_process.stdout_text, "\"printQualityAvailable\": true",
+                    "#3818: deleted selected report settings JSON should surface fallback print-quality availability");
+    expect_contains(deleted_settings_process.stdout_text, "\"printQuality\": 600",
+                    "#3818: deleted selected report settings JSON should surface fallback print-quality values");
+    expect_contains(deleted_settings_process.stdout_text, "\"yResolutionAvailable\": true",
+                    "#3818: deleted selected report settings JSON should surface fallback y-resolution availability");
+    expect_contains(deleted_settings_process.stdout_text, "\"yResolution\": 600",
+                    "#3818: deleted selected report settings JSON should surface fallback y-resolution values");
+    expect_contains(deleted_settings_process.stdout_text, "\"trueTypeOptionAvailable\": true",
+                    "#3818: deleted selected report settings JSON should surface fallback TrueType-option availability");
+    expect_contains(deleted_settings_process.stdout_text, "\"trueTypeOption\": 3",
+                    "#3818: deleted selected report settings JSON should surface fallback TrueType-option values");
+    expect_contains(deleted_settings_process.stdout_text, "\"asciiAvailable\": true",
+                    "#3818: deleted selected report settings JSON should surface fallback ASCII availability");
+    expect_contains(deleted_settings_process.stdout_text, "\"ascii\": 9",
+                    "#3818: deleted selected report settings JSON should surface fallback ASCII values");
+    expect_contains(deleted_settings_process.stdout_text, "\"collateAvailable\": true",
+                    "#3818: deleted selected report settings JSON should surface fallback COLLATE availability");
+    expect_contains(deleted_settings_process.stdout_text, "\"collate\": 1",
+                    "#3818: deleted selected report settings JSON should surface fallback COLLATE values");
     expect_contains_in_order(
         deleted_settings_process.stdout_text,
         {

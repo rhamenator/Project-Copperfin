@@ -1976,6 +1976,53 @@ void test_build_report_layout_summarizes_color_and_copies() {
     }
 }
 
+void test_build_report_layout_summarizes_auxiliary_print_settings() {
+    copperfin::studio::StudioDocumentModel document;
+    document.display_name = "aux-print-settings.frx";
+    document.kind = copperfin::studio::StudioAssetKind::report;
+    document.table_preview_available = true;
+
+    document.table_preview.records = {
+        {
+            .record_index = 0U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "1"),
+                value("OBJCODE", "53"),
+                value(
+                    "EXPR",
+                    "ORIENTATION=0\r\nPAPERSIZE=1\r\nGRIDV=4\r\nGRIDH=8\r\nDEFAULTSOURCE=15\r\nPRINTQUALITY=600\r\nYRESOLUTION=600\r\nTTOPTION=3\r\nASCII=9\r\nCOLLATE=1",
+                    49U)
+            }
+        }
+    };
+
+    const auto layout = copperfin::studio::build_report_layout(document);
+    expect(layout.available, "#3818: report layout should be available for auxiliary print settings");
+    expect(layout.page_setup_available, "#3818: auxiliary print settings should preserve page setup availability");
+    expect(layout.orientation_available && layout.orientation_code == 0,
+        "#3818: auxiliary print settings should preserve memo-derived orientation");
+    expect(layout.paper_size_available && layout.paper_size_code == 1,
+        "#3818: auxiliary print settings should preserve memo-derived paper size");
+    expect(layout.grid_vertical_available && layout.grid_vertical == 4,
+        "#3818: auxiliary print settings should preserve memo-derived vertical grid spacing");
+    expect(layout.grid_horizontal_available && layout.grid_horizontal == 8,
+        "#3818: auxiliary print settings should preserve memo-derived horizontal grid spacing");
+    expect(layout.default_source_available && layout.default_source == 15,
+        "#3818: auxiliary print settings should expose DEFAULTSOURCE summary values");
+    expect(layout.print_quality_available && layout.print_quality == 600,
+        "#3818: auxiliary print settings should expose PRINTQUALITY summary values");
+    expect(layout.y_resolution_available && layout.y_resolution == 600,
+        "#3818: auxiliary print settings should expose YRESOLUTION summary values");
+    expect(layout.true_type_option_available && layout.true_type_option == 3,
+        "#3818: auxiliary print settings should expose TTOPTION summary values");
+    expect(layout.ascii_available && layout.ascii == 9,
+        "#3818: auxiliary print settings should expose ASCII summary values");
+    expect(layout.collate_available && layout.collate == 1,
+        "#3818: auxiliary print settings should expose COLLATE summary values");
+    expect(layout.settings.size() == 10U, "#3818: auxiliary print settings should preserve root setting counts");
+}
+
 void test_build_report_layout_falls_back_to_deleted_root_summary_settings() {
     copperfin::studio::StudioDocumentModel document;
     document.display_name = "deleted-root-summary.frx";
@@ -1991,7 +2038,7 @@ void test_build_report_layout_falls_back_to_deleted_root_summary_settings() {
                 value("OBJCODE", "53"),
                 value(
                     "EXPR",
-                    "ORIENTATION=1\r\nPAPERSIZE=9\r\nPAPERLENGTH=2794\r\nPAPERWIDTH=2159\r\nBOTMARGIN=20\r\nGRIDV=4\r\nGRIDH=8\r\nCOLOR=0\r\nCOPIES=3\r\nDRIVER=HP LaserJet\r\nDEVICE=winspool\r\nOUTPUT=invoice.pdf\r\nCOLS=2\r\nCOLWIDTH=3000\r\nCOLSPACING=250",
+                    "ORIENTATION=1\r\nPAPERSIZE=9\r\nPAPERLENGTH=2794\r\nPAPERWIDTH=2159\r\nBOTMARGIN=20\r\nGRIDV=4\r\nGRIDH=8\r\nCOLOR=0\r\nCOPIES=3\r\nDRIVER=HP LaserJet\r\nDEVICE=winspool\r\nOUTPUT=invoice.pdf\r\nDEFAULTSOURCE=15\r\nPRINTQUALITY=600\r\nYRESOLUTION=600\r\nTTOPTION=3\r\nASCII=9\r\nCOLLATE=1\r\nCOLS=2\r\nCOLWIDTH=3000\r\nCOLSPACING=250",
                     51U),
                 value("TOPMARGIN", "10"),
                 value("TAG", "customer.country", 52U),
@@ -2004,7 +2051,7 @@ void test_build_report_layout_falls_back_to_deleted_root_summary_settings() {
     const auto layout = copperfin::studio::build_report_layout(document);
     expect(layout.available, "#3815: deleted-only report layout should still be available");
     expect(layout.settings.empty(), "#3815: deleted-only report layout should keep live root settings empty");
-    expect(layout.deleted_settings.size() == 19U,
+    expect(layout.deleted_settings.size() == 25U,
         "#3815: deleted-only report layout should preserve deleted root setting counts");
     expect(layout.page_setup_available, "#3815: deleted root settings should surface page-setup availability");
     expect(layout.orientation_available && layout.orientation_code == 1,
@@ -2037,6 +2084,18 @@ void test_build_report_layout_falls_back_to_deleted_root_summary_settings() {
         "#3815: deleted root settings should surface DEVICE summary values");
     expect(layout.output_available && layout.output == "invoice.pdf",
         "#3815: deleted root settings should surface OUTPUT summary values");
+    expect(layout.default_source_available && layout.default_source == 15,
+        "#3818: deleted root settings should surface DEFAULTSOURCE summary values");
+    expect(layout.print_quality_available && layout.print_quality == 600,
+        "#3818: deleted root settings should surface PRINTQUALITY summary values");
+    expect(layout.y_resolution_available && layout.y_resolution == 600,
+        "#3818: deleted root settings should surface YRESOLUTION summary values");
+    expect(layout.true_type_option_available && layout.true_type_option == 3,
+        "#3818: deleted root settings should surface TTOPTION summary values");
+    expect(layout.ascii_available && layout.ascii == 9,
+        "#3818: deleted root settings should surface ASCII summary values");
+    expect(layout.collate_available && layout.collate == 1,
+        "#3818: deleted root settings should surface COLLATE summary values");
     expect(layout.column_setup_available, "#3815: deleted root settings should surface column-setup availability");
     expect(layout.column_count_available && layout.column_count == 2,
         "#3815: deleted root settings should surface column-count summary values");
@@ -2071,7 +2130,7 @@ void test_build_report_layout_prefers_live_root_summary_settings_over_deleted_fa
             .values = {
                 value("OBJTYPE", "1"),
                 value("OBJCODE", "53"),
-                value("EXPR", "PAPERLENGTH=2794\r\nPAPERWIDTH=2159\r\nCOLS=2\r\nCOLWIDTH=3000\r\nCOLSPACING=250", 54U),
+                value("EXPR", "PAPERLENGTH=2794\r\nPAPERWIDTH=2159\r\nDEFAULTSOURCE=15\r\nPRINTQUALITY=600\r\nYRESOLUTION=600\r\nTTOPTION=3\r\nASCII=9\r\nCOLLATE=1\r\nCOLS=2\r\nCOLWIDTH=3000\r\nCOLSPACING=250", 54U),
                 value("TOPMARGIN", "99"),
                 value("TAG", "customer.country", 55U)
             }
@@ -2081,7 +2140,7 @@ void test_build_report_layout_prefers_live_root_summary_settings_over_deleted_fa
     const auto layout = copperfin::studio::build_report_layout(document);
     expect(layout.available, "#3815: mixed live/deleted report layout should be available");
     expect(layout.settings.size() == 3U, "#3815: mixed live/deleted report layout should keep live root settings intact");
-    expect(layout.deleted_settings.size() == 6U,
+    expect(layout.deleted_settings.size() == 12U,
         "#3815: mixed live/deleted report layout should keep deleted root settings separate");
     expect(layout.page_setup_available, "#3815: live root settings should still surface page-setup availability");
     expect(layout.orientation_available && layout.orientation_code == 0,
@@ -2103,6 +2162,18 @@ void test_build_report_layout_prefers_live_root_summary_settings_over_deleted_fa
         "#3815: deleted root column spacing should not backfill live-root summary gaps");
     expect(!layout.sort_expression_available && layout.sort_expression.empty(),
         "#3815: deleted root TAG should not backfill live-root sort summary gaps");
+    expect(!layout.default_source_available && layout.default_source == 0,
+        "#3818: deleted root DEFAULTSOURCE should not backfill live-root summary gaps");
+    expect(!layout.print_quality_available && layout.print_quality == 0,
+        "#3818: deleted root PRINTQUALITY should not backfill live-root summary gaps");
+    expect(!layout.y_resolution_available && layout.y_resolution == 0,
+        "#3818: deleted root YRESOLUTION should not backfill live-root summary gaps");
+    expect(!layout.true_type_option_available && layout.true_type_option == 0,
+        "#3818: deleted root TTOPTION should not backfill live-root summary gaps");
+    expect(!layout.ascii_available && layout.ascii == 0,
+        "#3818: deleted root ASCII should not backfill live-root summary gaps");
+    expect(!layout.collate_available && layout.collate == 0,
+        "#3818: deleted root COLLATE should not backfill live-root summary gaps");
 }
 
 void test_build_report_layout_summarizes_root_sort_expression() {
@@ -2257,6 +2328,7 @@ int main() {
     test_build_report_layout_includes_direct_side_margin_settings();
     test_build_report_layout_summarizes_paper_dimensions();
     test_build_report_layout_summarizes_color_and_copies();
+    test_build_report_layout_summarizes_auxiliary_print_settings();
     test_build_report_layout_falls_back_to_deleted_root_summary_settings();
     test_build_report_layout_prefers_live_root_summary_settings_over_deleted_fallback();
     test_build_report_layout_summarizes_root_sort_expression();

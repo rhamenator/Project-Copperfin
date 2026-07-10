@@ -599,6 +599,36 @@ void finalize_page_setup_summary(StudioReportLayoutSnapshot& snapshot) {
         snapshot.output_available = true;
         snapshot.output = value;
     });
+    apply_setting("DEFAULTSOURCE", [&](int value) {
+        snapshot.page_setup_available = true;
+        snapshot.default_source_available = true;
+        snapshot.default_source = value;
+    });
+    apply_setting("PRINTQUALITY", [&](int value) {
+        snapshot.page_setup_available = true;
+        snapshot.print_quality_available = true;
+        snapshot.print_quality = value;
+    });
+    apply_setting("YRESOLUTION", [&](int value) {
+        snapshot.page_setup_available = true;
+        snapshot.y_resolution_available = true;
+        snapshot.y_resolution = value;
+    });
+    apply_setting("TTOPTION", [&](int value) {
+        snapshot.page_setup_available = true;
+        snapshot.true_type_option_available = true;
+        snapshot.true_type_option = value;
+    });
+    apply_setting("ASCII", [&](int value) {
+        snapshot.page_setup_available = true;
+        snapshot.ascii_available = true;
+        snapshot.ascii = value;
+    });
+    apply_setting("COLLATE", [&](int value) {
+        snapshot.page_setup_available = true;
+        snapshot.collate_available = true;
+        snapshot.collate = value;
+    });
     apply_setting("COLS", [&](int value) {
         snapshot.column_setup_available = true;
         snapshot.column_count_available = true;
