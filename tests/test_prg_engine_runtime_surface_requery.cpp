@@ -636,17 +636,22 @@ void test_query_file_requery_refreshes_single_cursor_query_rows() {
     fs::remove_all(temp_root, ignored);
 }
 
-void run_joined_query_requery_test(int row_source_type, bool explicit_inner_join) {
+struct JoinedQueryVariant {
+    const char *keyword;
+    const char *label;
+    const char *suffix;
+    bool expect_unmatched_left_row;
+};
+
+void run_joined_query_requery_test(int row_source_type, const JoinedQueryVariant &variant) {
     namespace fs = std::filesystem;
     const std::string row_source_label =
         row_source_type == 3 ? "sql-statement" : "query-file";
-    const std::string join_label =
-        explicit_inner_join ? "inner-joined" : "joined";
+    const std::string join_label = variant.label;
     const std::string fixture_suffix =
         std::string(row_source_type == 3 ? "sql" : "query") +
-        (explicit_inner_join ? "_inner_join" : "_join");
-    const std::string join_keyword =
-        explicit_inner_join ? "INNER JOIN" : "JOIN";
+        variant.suffix;
+    const std::string join_keyword = variant.keyword;
 
     const fs::path temp_root =
         fs::temp_directory_path() / ("copperfin_native_requery_" + fixture_suffix);
@@ -731,6 +736,11 @@ void run_joined_query_requery_test(int row_source_type, bool explicit_inner_join
         "cFirst12 = oList.List(1, 2)\n"
         "cFirst21 = oList.List(2, 1)\n"
         "cFirst22 = oList.List(2, 2)\n"
+        + (variant.expect_unmatched_left_row
+               ? std::string(
+                     "cFirst31 = oList.List(3, 1)\n"
+                     "cFirst32 = oList.List(3, 2)\n")
+               : std::string()) +
         "oList.ListIndex = 2\n"
         "cDisplayBeforeSecond = oList.DisplayValue\n"
         "GO 1 IN employee\n"
@@ -779,12 +789,23 @@ void run_joined_query_requery_test(int row_source_type, bool explicit_inner_join
     };
 
     check("nbefore", "0");
-    check("nafterfirst", "2");
-    check("cfirst11", "Alpha");
-    check("cfirst12", "West");
-    check("cfirst21", "Zulu");
-    check("cfirst22", "East");
-    check("cdisplaybeforesecond", "Zulu");
+    if (variant.expect_unmatched_left_row) {
+        check("nafterfirst", "3");
+        check("cfirst11", "Alpha");
+        check("cfirst12", "West");
+        check("cfirst21", "Marlow");
+        check("cfirst22", "");
+        check("cfirst31", "Zulu");
+        check("cfirst32", "East");
+        check("cdisplaybeforesecond", "Marlow");
+    } else {
+        check("nafterfirst", "2");
+        check("cfirst11", "Alpha");
+        check("cfirst12", "West");
+        check("cfirst21", "Zulu");
+        check("cfirst22", "East");
+        check("cdisplaybeforesecond", "Zulu");
+    }
     check("nemployeerecnobeforesecond", "3");
     check("nregionrecnobeforesecond", "3");
     check("naftersecond", "3");
@@ -813,19 +834,75 @@ void run_joined_query_requery_test(int row_source_type, bool explicit_inner_join
 }
 
 void test_sql_statement_requery_refreshes_joined_query_rows() {
-    run_joined_query_requery_test(3, false);
+    static constexpr JoinedQueryVariant kJoined{
+        .keyword = "JOIN",
+        .label = "joined",
+        .suffix = "_join",
+        .expect_unmatched_left_row = false};
+    run_joined_query_requery_test(3, kJoined);
 }
 
 void test_sql_statement_requery_refreshes_explicit_inner_join_query_rows() {
-    run_joined_query_requery_test(3, true);
+    static constexpr JoinedQueryVariant kInnerJoined{
+        .keyword = "INNER JOIN",
+        .label = "inner-joined",
+        .suffix = "_inner_join",
+        .expect_unmatched_left_row = false};
+    run_joined_query_requery_test(3, kInnerJoined);
+}
+
+void test_sql_statement_requery_refreshes_left_join_query_rows() {
+    static constexpr JoinedQueryVariant kLeftJoined{
+        .keyword = "LEFT JOIN",
+        .label = "left-joined",
+        .suffix = "_left_join",
+        .expect_unmatched_left_row = true};
+    run_joined_query_requery_test(3, kLeftJoined);
+}
+
+void test_sql_statement_requery_refreshes_left_outer_join_query_rows() {
+    static constexpr JoinedQueryVariant kLeftOuterJoined{
+        .keyword = "LEFT OUTER JOIN",
+        .label = "left-outer-joined",
+        .suffix = "_left_outer_join",
+        .expect_unmatched_left_row = true};
+    run_joined_query_requery_test(3, kLeftOuterJoined);
 }
 
 void test_query_file_requery_refreshes_joined_query_rows() {
-    run_joined_query_requery_test(4, false);
+    static constexpr JoinedQueryVariant kJoined{
+        .keyword = "JOIN",
+        .label = "joined",
+        .suffix = "_join",
+        .expect_unmatched_left_row = false};
+    run_joined_query_requery_test(4, kJoined);
 }
 
 void test_query_file_requery_refreshes_explicit_inner_join_query_rows() {
-    run_joined_query_requery_test(4, true);
+    static constexpr JoinedQueryVariant kInnerJoined{
+        .keyword = "INNER JOIN",
+        .label = "inner-joined",
+        .suffix = "_inner_join",
+        .expect_unmatched_left_row = false};
+    run_joined_query_requery_test(4, kInnerJoined);
+}
+
+void test_query_file_requery_refreshes_left_join_query_rows() {
+    static constexpr JoinedQueryVariant kLeftJoined{
+        .keyword = "LEFT JOIN",
+        .label = "left-joined",
+        .suffix = "_left_join",
+        .expect_unmatched_left_row = true};
+    run_joined_query_requery_test(4, kLeftJoined);
+}
+
+void test_query_file_requery_refreshes_left_outer_join_query_rows() {
+    static constexpr JoinedQueryVariant kLeftOuterJoined{
+        .keyword = "LEFT OUTER JOIN",
+        .label = "left-outer-joined",
+        .suffix = "_left_outer_join",
+        .expect_unmatched_left_row = true};
+    run_joined_query_requery_test(4, kLeftOuterJoined);
 }
 
 }  // namespace
@@ -839,8 +916,12 @@ int main() {
     test_query_file_requery_refreshes_single_cursor_query_rows();
     test_sql_statement_requery_refreshes_joined_query_rows();
     test_sql_statement_requery_refreshes_explicit_inner_join_query_rows();
+    test_sql_statement_requery_refreshes_left_join_query_rows();
+    test_sql_statement_requery_refreshes_left_outer_join_query_rows();
     test_query_file_requery_refreshes_joined_query_rows();
     test_query_file_requery_refreshes_explicit_inner_join_query_rows();
+    test_query_file_requery_refreshes_left_join_query_rows();
+    test_query_file_requery_refreshes_left_outer_join_query_rows();
     if (const int failures = test_failures(); failures != 0) {
         std::cerr << failures << " test(s) failed\n";
         return 1;

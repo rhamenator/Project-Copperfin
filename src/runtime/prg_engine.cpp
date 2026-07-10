@@ -3121,9 +3121,17 @@ namespace copperfin::runtime
 
         struct QueryPlan
         {
+            enum class JoinKind
+            {
+                none,
+                inner,
+                left
+            };
+
             std::string source_designator;
             std::string joined_source_designator;
             std::string join_on_expression;
+            JoinKind join_kind = JoinKind::none;
             std::vector<std::string> projection_expressions;
             std::string where_expression;
             std::vector<QueryOrderExpression> order_expressions;
@@ -3347,6 +3355,7 @@ namespace copperfin::runtime
             std::string primary_source_designator;
             std::string joined_source_designator;
             std::string join_on_expression;
+            QueryPlan::JoinKind join_kind = QueryPlan::JoinKind::none;
             if (const std::size_t join_position =
                     find_top_level_keyword(upper_from_clause, 0U, "JOIN");
                 join_position != std::string::npos)
@@ -3359,9 +3368,36 @@ namespace copperfin::runtime
                     return false;
                 }
 
-                primary_source_designator = strip_trailing_join_modifier(
-                    trim_copy(from_clause.substr(0U, join_position)),
-                    "INNER");
+                primary_source_designator = trim_copy(from_clause.substr(0U, join_position));
+                const std::string without_outer =
+                    strip_trailing_join_modifier(primary_source_designator, "OUTER");
+                if (without_outer != primary_source_designator)
+                {
+                    const std::string without_left =
+                        strip_trailing_join_modifier(without_outer, "LEFT");
+                    if (without_left != without_outer)
+                    {
+                        primary_source_designator = without_left;
+                        join_kind = QueryPlan::JoinKind::left;
+                    }
+                }
+                if (join_kind == QueryPlan::JoinKind::none)
+                {
+                    const std::string without_left =
+                        strip_trailing_join_modifier(primary_source_designator, "LEFT");
+                    if (without_left != primary_source_designator)
+                    {
+                        primary_source_designator = without_left;
+                        join_kind = QueryPlan::JoinKind::left;
+                    }
+                }
+                if (join_kind == QueryPlan::JoinKind::none)
+                {
+                    primary_source_designator = strip_trailing_join_modifier(
+                        primary_source_designator,
+                        "INNER");
+                    join_kind = QueryPlan::JoinKind::inner;
+                }
                 joined_source_designator = trim_copy(
                     from_clause.substr(after_join, on_position - after_join));
                 join_on_expression =
@@ -3461,6 +3497,7 @@ namespace copperfin::runtime
             plan.source_designator = std::move(primary_source_designator);
             plan.joined_source_designator = std::move(joined_source_designator);
             plan.join_on_expression = std::move(join_on_expression);
+            plan.join_kind = join_kind;
             plan.projection_expressions = std::move(projection_expressions);
             plan.where_expression = std::move(where_expression);
             plan.order_expressions = std::move(order_expressions);
@@ -3546,6 +3583,7 @@ namespace copperfin::runtime
                     continue;
                 }
 
+                bool matched_join = false;
                 for (std::size_t joined_recno = 1U;
                      joined_recno <= joined_cursor->record_count;
                      ++joined_recno)
@@ -3567,7 +3605,57 @@ namespace copperfin::runtime
                         continue;
                     }
 
+                    matched_join = true;
                     materialize_current_row();
+                }
+
+                if (plan.join_kind == QueryPlan::JoinKind::left && !matched_join)
+                {
+                    const std::vector<vfp::DbfFieldDescriptor> joined_fields =
+                        cursor_field_descriptors(*joined_cursor);
+                    auto previous_remote_records = std::move(joined_cursor->remote_records);
+                    auto previous_remote_fields = std::move(joined_cursor->remote_fields);
+                    const bool previous_remote = joined_cursor->remote;
+                    const std::size_t previous_field_count = joined_cursor->field_count;
+                    const std::size_t previous_record_count = joined_cursor->record_count;
+                    const std::size_t previous_recno = joined_cursor->recno;
+                    const bool previous_found = joined_cursor->found;
+                    const bool previous_bof = joined_cursor->bof;
+                    const bool previous_eof = joined_cursor->eof;
+
+                    vfp::DbfRecord blank_joined_record;
+                    blank_joined_record.record_index = 1U;
+                    blank_joined_record.values.reserve(joined_fields.size());
+                    for (const auto &field : joined_fields)
+                    {
+                        blank_joined_record.values.push_back(
+                            vfp::DbfRecordValue{
+                                .field_name = field.name,
+                                .field_type = field.type,
+                                .display_value = ""});
+                    }
+
+                    joined_cursor->remote = true;
+                    joined_cursor->field_count = joined_fields.size();
+                    joined_cursor->record_count = 1U;
+                    joined_cursor->recno = 1U;
+                    joined_cursor->found = false;
+                    joined_cursor->bof = false;
+                    joined_cursor->eof = false;
+                    joined_cursor->remote_fields = joined_fields;
+                    joined_cursor->remote_records = {std::move(blank_joined_record)};
+
+                    materialize_current_row();
+
+                    joined_cursor->remote_records = std::move(previous_remote_records);
+                    joined_cursor->remote_fields = std::move(previous_remote_fields);
+                    joined_cursor->remote = previous_remote;
+                    joined_cursor->field_count = previous_field_count;
+                    joined_cursor->record_count = previous_record_count;
+                    joined_cursor->recno = previous_recno;
+                    joined_cursor->found = previous_found;
+                    joined_cursor->bof = previous_bof;
+                    joined_cursor->eof = previous_eof;
                 }
             }
 
