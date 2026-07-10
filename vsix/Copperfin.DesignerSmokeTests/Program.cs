@@ -2158,6 +2158,16 @@ internal static class Program
                 });
             SmokeAssetEditorRealAssetSettingShouldRemainUnavailable(
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
+                propertyName: "PAPERLENGTH",
+                expectedSectionCount: 5,
+                expectLabel: false);
+            SmokeAssetEditorRealAssetSettingShouldRemainUnavailable(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
+                propertyName: "PAPERWIDTH",
+                expectedSectionCount: 5,
+                expectLabel: false);
+            SmokeAssetEditorRealAssetSettingShouldRemainUnavailable(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
                 propertyName: "LEFTMARGIN",
                 expectedSectionCount: 5,
                 expectLabel: false);
@@ -2166,6 +2176,16 @@ internal static class Program
                 propertyName: "RIGHTMARGIN",
                 expectedSectionCount: 5,
                 expectLabel: false);
+            SmokeAssetEditorRealAssetSettingShouldRemainUnavailable(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
+                propertyName: "PAPERLENGTH",
+                expectedSectionCount: 5,
+                expectLabel: true);
+            SmokeAssetEditorRealAssetSettingShouldRemainUnavailable(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
+                propertyName: "PAPERWIDTH",
+                expectedSectionCount: 5,
+                expectLabel: true);
             SmokeAssetEditorRealAssetSettingShouldRemainUnavailable(
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
                 propertyName: "LEFTMARGIN",
