@@ -4767,6 +4767,148 @@ namespace copperfin::runtime
             return std::nullopt;
         }
 
+        auto resolve_list_member_cell = [&]() -> std::optional<NativeListControlCellReference>
+        {
+            const auto literal_cell =
+                parse_native_list_control_list_member_cell(runtime_object, property_name);
+            if (literal_cell.has_value())
+            {
+                return literal_cell;
+            }
+
+            const auto extract_selector_text = [&](const std::string& base_name) -> std::optional<std::string>
+            {
+                const std::string trimmed_property_name = trim_copy(property_name);
+                const auto extract_for_delimiters =
+                    [&](char open_delimiter, char close_delimiter) -> std::optional<std::string>
+                {
+                    std::string prefix = base_name;
+                    prefix.push_back(open_delimiter);
+                    if (!starts_with_insensitive(normalized_property_name, prefix) ||
+                        normalized_property_name.empty() ||
+                        normalized_property_name.back() != close_delimiter)
+                    {
+                        return std::nullopt;
+                    }
+
+                    const std::size_t open = trimmed_property_name.find(open_delimiter);
+                    const std::size_t close = trimmed_property_name.rfind(close_delimiter);
+                    if (open == std::string::npos ||
+                        close == std::string::npos ||
+                        close <= open + 1U)
+                    {
+                        return std::nullopt;
+                    }
+                    return trimmed_property_name.substr(open + 1U, close - open - 1U);
+                };
+
+                if (const auto parenthesized = extract_for_delimiters('(', ')');
+                    parenthesized.has_value())
+                {
+                    return parenthesized;
+                }
+                return extract_for_delimiters('[', ']');
+            };
+
+            const auto selector_text = extract_selector_text("list");
+            if (!selector_text.has_value())
+            {
+                return std::nullopt;
+            }
+
+            const std::size_t comma = selector_text->find(',');
+            const std::string row_expression = trim_copy(selector_text->substr(0U, comma));
+            const std::string column_expression =
+                comma == std::string::npos ? std::string("1") : trim_copy(selector_text->substr(comma + 1U));
+            if (row_expression.empty() || column_expression.empty())
+            {
+                return std::nullopt;
+            }
+
+            const PrgValue row_value = evaluate_expression(row_expression, source_frame);
+            const PrgValue column_value = evaluate_expression(column_expression, source_frame);
+            const long long requested_row = std::llround(value_as_number(row_value));
+            const long long requested_column = std::llround(value_as_number(column_value));
+            if (requested_row < 1LL || requested_column < 1LL)
+            {
+                return std::nullopt;
+            }
+            return NativeListControlCellReference{
+                .row_slot = static_cast<std::size_t>(requested_row - 1LL),
+                .column_slot = static_cast<std::size_t>(requested_column - 1LL)};
+        };
+
+        auto resolve_listitem_member_cell = [&]() -> std::optional<NativeListControlItemCellReference>
+        {
+            const auto literal_cell =
+                parse_native_list_control_listitem_member_cell(runtime_object, property_name);
+            if (literal_cell.has_value())
+            {
+                return literal_cell;
+            }
+
+            const auto extract_selector_text = [&](const std::string& base_name) -> std::optional<std::string>
+            {
+                const std::string trimmed_property_name = trim_copy(property_name);
+                const auto extract_for_delimiters =
+                    [&](char open_delimiter, char close_delimiter) -> std::optional<std::string>
+                {
+                    std::string prefix = base_name;
+                    prefix.push_back(open_delimiter);
+                    if (!starts_with_insensitive(normalized_property_name, prefix) ||
+                        normalized_property_name.empty() ||
+                        normalized_property_name.back() != close_delimiter)
+                    {
+                        return std::nullopt;
+                    }
+
+                    const std::size_t open = trimmed_property_name.find(open_delimiter);
+                    const std::size_t close = trimmed_property_name.rfind(close_delimiter);
+                    if (open == std::string::npos ||
+                        close == std::string::npos ||
+                        close <= open + 1U)
+                    {
+                        return std::nullopt;
+                    }
+                    return trimmed_property_name.substr(open + 1U, close - open - 1U);
+                };
+
+                if (const auto parenthesized = extract_for_delimiters('(', ')');
+                    parenthesized.has_value())
+                {
+                    return parenthesized;
+                }
+                return extract_for_delimiters('[', ']');
+            };
+
+            const auto selector_text = extract_selector_text("listitem");
+            if (!selector_text.has_value())
+            {
+                return std::nullopt;
+            }
+
+            const std::size_t comma = selector_text->find(',');
+            const std::string item_id_expression = trim_copy(selector_text->substr(0U, comma));
+            const std::string column_expression =
+                comma == std::string::npos ? std::string("1") : trim_copy(selector_text->substr(comma + 1U));
+            if (item_id_expression.empty() || column_expression.empty())
+            {
+                return std::nullopt;
+            }
+
+            const PrgValue item_id_value = evaluate_expression(item_id_expression, source_frame);
+            const PrgValue column_value = evaluate_expression(column_expression, source_frame);
+            const long long requested_item_id = std::llround(value_as_number(item_id_value));
+            const long long requested_column = std::llround(value_as_number(column_value));
+            if (requested_item_id < 1LL || requested_column < 1LL)
+            {
+                return std::nullopt;
+            }
+            return NativeListControlItemCellReference{
+                .item_id = requested_item_id,
+                .column_slot = static_cast<std::size_t>(requested_column - 1LL)};
+        };
+
         const auto perform_property_read = [&]() -> std::optional<PrgValue>
         {
             if (auto access_result = invoke_native_object_method_body_if_present(
@@ -4789,14 +4931,21 @@ namespace copperfin::runtime
             {
                 return *collection_value;
             }
-            if (const auto list_cell =
-                    parse_native_list_control_list_member_cell(runtime_object, property_name);
+            if (const auto list_cell = resolve_list_member_cell();
                 list_cell.has_value())
             {
                 return read_native_list_control_cell(
                     runtime_object,
                     list_cell->row_slot,
                     list_cell->column_slot);
+            }
+            if (const auto item_cell = resolve_listitem_member_cell();
+                item_cell.has_value())
+            {
+                return read_native_list_control_item_cell(
+                    runtime_object,
+                    item_cell->item_id,
+                    item_cell->column_slot);
             }
             if (is_native_listcount_member_name(runtime_object, normalized_property_name))
             {
@@ -5176,22 +5325,48 @@ namespace copperfin::runtime
                 return literal_slot;
             }
 
-            if (!starts_with_insensitive(normalized_property_name, "selected(") ||
-                normalized_property_name.back() != ')')
+            const auto extract_selector_text = [&](const std::string& base_name) -> std::optional<std::string>
             {
-                return std::nullopt;
-            }
+                const std::string trimmed_property_name = trim_copy(property_name);
+                const auto extract_for_delimiters =
+                    [&](char open_delimiter, char close_delimiter) -> std::optional<std::string>
+                {
+                    std::string prefix = base_name;
+                    prefix.push_back(open_delimiter);
+                    if (!starts_with_insensitive(normalized_property_name, prefix) ||
+                        normalized_property_name.empty() ||
+                        normalized_property_name.back() != close_delimiter)
+                    {
+                        return std::nullopt;
+                    }
 
-            const std::size_t open_paren = property_name.find('(');
-            const std::size_t close_paren = property_name.rfind(')');
-            if (open_paren == std::string::npos || close_paren == std::string::npos ||
-                close_paren <= open_paren + 1U)
+                    const std::size_t open = trimmed_property_name.find(open_delimiter);
+                    const std::size_t close = trimmed_property_name.rfind(close_delimiter);
+                    if (open == std::string::npos ||
+                        close == std::string::npos ||
+                        close <= open + 1U)
+                    {
+                        return std::nullopt;
+                    }
+                    return trimmed_property_name.substr(open + 1U, close - open - 1U);
+                };
+
+                if (const auto parenthesized = extract_for_delimiters('(', ')');
+                    parenthesized.has_value())
+                {
+                    return parenthesized;
+                }
+                return extract_for_delimiters('[', ']');
+            };
+
+            const auto selector_text = extract_selector_text("selected");
+            if (!selector_text.has_value())
             {
                 return std::nullopt;
             }
 
             const PrgValue selector_value = evaluate_expression(
-                property_name.substr(open_paren + 1U, close_paren - open_paren - 1U),
+                *selector_text,
                 source_frame);
             const long long requested_index = std::llround(value_as_number(selector_value));
             if (requested_index < 1LL)
@@ -5210,22 +5385,48 @@ namespace copperfin::runtime
                 return literal_item_id;
             }
 
-            if (!starts_with_insensitive(normalized_property_name, "selectedid(") ||
-                normalized_property_name.back() != ')')
+            const auto extract_selector_text = [&](const std::string& base_name) -> std::optional<std::string>
             {
-                return std::nullopt;
-            }
+                const std::string trimmed_property_name = trim_copy(property_name);
+                const auto extract_for_delimiters =
+                    [&](char open_delimiter, char close_delimiter) -> std::optional<std::string>
+                {
+                    std::string prefix = base_name;
+                    prefix.push_back(open_delimiter);
+                    if (!starts_with_insensitive(normalized_property_name, prefix) ||
+                        normalized_property_name.empty() ||
+                        normalized_property_name.back() != close_delimiter)
+                    {
+                        return std::nullopt;
+                    }
 
-            const std::size_t open_paren = property_name.find('(');
-            const std::size_t close_paren = property_name.rfind(')');
-            if (open_paren == std::string::npos || close_paren == std::string::npos ||
-                close_paren <= open_paren + 1U)
+                    const std::size_t open = trimmed_property_name.find(open_delimiter);
+                    const std::size_t close = trimmed_property_name.rfind(close_delimiter);
+                    if (open == std::string::npos ||
+                        close == std::string::npos ||
+                        close <= open + 1U)
+                    {
+                        return std::nullopt;
+                    }
+                    return trimmed_property_name.substr(open + 1U, close - open - 1U);
+                };
+
+                if (const auto parenthesized = extract_for_delimiters('(', ')');
+                    parenthesized.has_value())
+                {
+                    return parenthesized;
+                }
+                return extract_for_delimiters('[', ']');
+            };
+
+            const auto selector_text = extract_selector_text("selectedid");
+            if (!selector_text.has_value())
             {
                 return std::nullopt;
             }
 
             const PrgValue selector_value = evaluate_expression(
-                property_name.substr(open_paren + 1U, close_paren - open_paren - 1U),
+                *selector_text,
                 source_frame);
             const long long requested_item_id = std::llround(value_as_number(selector_value));
             if (requested_item_id < 1LL)
@@ -5244,26 +5445,50 @@ namespace copperfin::runtime
                 return literal_cell;
             }
 
-            if (!starts_with_insensitive(normalized_property_name, "list(") ||
-                normalized_property_name.back() != ')')
+            const auto extract_selector_text = [&](const std::string& base_name) -> std::optional<std::string>
+            {
+                const std::string trimmed_property_name = trim_copy(property_name);
+                const auto extract_for_delimiters =
+                    [&](char open_delimiter, char close_delimiter) -> std::optional<std::string>
+                {
+                    std::string prefix = base_name;
+                    prefix.push_back(open_delimiter);
+                    if (!starts_with_insensitive(normalized_property_name, prefix) ||
+                        normalized_property_name.empty() ||
+                        normalized_property_name.back() != close_delimiter)
+                    {
+                        return std::nullopt;
+                    }
+
+                    const std::size_t open = trimmed_property_name.find(open_delimiter);
+                    const std::size_t close = trimmed_property_name.rfind(close_delimiter);
+                    if (open == std::string::npos ||
+                        close == std::string::npos ||
+                        close <= open + 1U)
+                    {
+                        return std::nullopt;
+                    }
+                    return trimmed_property_name.substr(open + 1U, close - open - 1U);
+                };
+
+                if (const auto parenthesized = extract_for_delimiters('(', ')');
+                    parenthesized.has_value())
+                {
+                    return parenthesized;
+                }
+                return extract_for_delimiters('[', ']');
+            };
+
+            const auto selector_text = extract_selector_text("list");
+            if (!selector_text.has_value())
             {
                 return std::nullopt;
             }
 
-            const std::size_t open_paren = property_name.find('(');
-            const std::size_t close_paren = property_name.rfind(')');
-            if (open_paren == std::string::npos || close_paren == std::string::npos ||
-                close_paren <= open_paren + 1U)
-            {
-                return std::nullopt;
-            }
-
-            const std::string selector_text =
-                property_name.substr(open_paren + 1U, close_paren - open_paren - 1U);
-            const std::size_t comma = selector_text.find(',');
-            const std::string row_expression = trim_copy(selector_text.substr(0U, comma));
+            const std::size_t comma = selector_text->find(',');
+            const std::string row_expression = trim_copy(selector_text->substr(0U, comma));
             const std::string column_expression =
-                comma == std::string::npos ? std::string("1") : trim_copy(selector_text.substr(comma + 1U));
+                comma == std::string::npos ? std::string("1") : trim_copy(selector_text->substr(comma + 1U));
             if (row_expression.empty() || column_expression.empty())
             {
                 return std::nullopt;
@@ -5279,6 +5504,77 @@ namespace copperfin::runtime
             }
             return NativeListControlCellReference{
                 .row_slot = static_cast<std::size_t>(requested_row - 1LL),
+                .column_slot = static_cast<std::size_t>(requested_column - 1LL)};
+        };
+
+        auto resolve_listitem_member_cell = [&]() -> std::optional<NativeListControlItemCellReference>
+        {
+            const auto literal_cell =
+                parse_native_list_control_listitem_member_cell(runtime_object, property_name);
+            if (literal_cell.has_value())
+            {
+                return literal_cell;
+            }
+
+            const auto extract_selector_text = [&](const std::string& base_name) -> std::optional<std::string>
+            {
+                const std::string trimmed_property_name = trim_copy(property_name);
+                const auto extract_for_delimiters =
+                    [&](char open_delimiter, char close_delimiter) -> std::optional<std::string>
+                {
+                    std::string prefix = base_name;
+                    prefix.push_back(open_delimiter);
+                    if (!starts_with_insensitive(normalized_property_name, prefix) ||
+                        normalized_property_name.empty() ||
+                        normalized_property_name.back() != close_delimiter)
+                    {
+                        return std::nullopt;
+                    }
+
+                    const std::size_t open = trimmed_property_name.find(open_delimiter);
+                    const std::size_t close = trimmed_property_name.rfind(close_delimiter);
+                    if (open == std::string::npos ||
+                        close == std::string::npos ||
+                        close <= open + 1U)
+                    {
+                        return std::nullopt;
+                    }
+                    return trimmed_property_name.substr(open + 1U, close - open - 1U);
+                };
+
+                if (const auto parenthesized = extract_for_delimiters('(', ')');
+                    parenthesized.has_value())
+                {
+                    return parenthesized;
+                }
+                return extract_for_delimiters('[', ']');
+            };
+
+            const auto selector_text = extract_selector_text("listitem");
+            if (!selector_text.has_value())
+            {
+                return std::nullopt;
+            }
+
+            const std::size_t comma = selector_text->find(',');
+            const std::string item_id_expression = trim_copy(selector_text->substr(0U, comma));
+            const std::string column_expression =
+                comma == std::string::npos ? std::string("1") : trim_copy(selector_text->substr(comma + 1U));
+            if (item_id_expression.empty() || column_expression.empty())
+            {
+                return std::nullopt;
+            }
+
+            const PrgValue item_id_value = evaluate_expression(item_id_expression, source_frame);
+            const PrgValue column_value = evaluate_expression(column_expression, source_frame);
+            const long long requested_item_id = std::llround(value_as_number(item_id_value));
+            const long long requested_column = std::llround(value_as_number(column_value));
+            if (requested_item_id < 1LL || requested_column < 1LL)
+            {
+                return std::nullopt;
+            }
+            return NativeListControlItemCellReference{
+                .item_id = requested_item_id,
                 .column_slot = static_cast<std::size_t>(requested_column - 1LL)};
         };
 
@@ -5398,6 +5694,15 @@ namespace copperfin::runtime
                         runtime_object,
                         list_cell->row_slot,
                         list_cell->column_slot,
+                        assigned_value);
+                }
+                if (const auto item_cell = resolve_listitem_member_cell();
+                    item_cell.has_value())
+                {
+                    return write_native_list_control_item_cell(
+                        runtime_object,
+                        item_cell->item_id,
+                        item_cell->column_slot,
                         assigned_value);
                 }
                 if (const auto selected_slot = resolve_selected_member_slot();

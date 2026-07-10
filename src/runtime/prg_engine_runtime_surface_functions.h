@@ -36,6 +36,11 @@ struct NativeListControlCellReference {
     std::size_t column_slot = 0U;
 };
 
+struct NativeListControlItemCellReference {
+    long long item_id = 0LL;
+    std::size_t column_slot = 0U;
+};
+
 using RuntimeControlSourceValueResolver =
     std::function<std::optional<PrgValue>(const std::string&)>;
 
@@ -98,13 +103,24 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
 std::optional<NativeListControlCellReference> parse_native_list_control_list_member_cell(
     const RuntimeOleObjectState& runtime_object,
     const std::string& member_name);
+std::optional<NativeListControlItemCellReference> parse_native_list_control_listitem_member_cell(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& member_name);
 std::optional<PrgValue> read_native_list_control_cell(RuntimeOleObjectState& runtime_object,
                                                       std::size_t row_slot,
                                                       std::size_t column_slot);
+std::optional<PrgValue> read_native_list_control_item_cell(
+    RuntimeOleObjectState& runtime_object,
+    long long item_id,
+    std::size_t column_slot);
 bool write_native_list_control_cell(RuntimeOleObjectState& runtime_object,
                                     std::size_t row_slot,
                                     std::size_t column_slot,
                                     const PrgValue& assigned_value);
+bool write_native_list_control_item_cell(RuntimeOleObjectState& runtime_object,
+                                         long long item_id,
+                                         std::size_t column_slot,
+                                         const PrgValue& assigned_value);
 std::optional<std::size_t> parse_native_list_control_selected_member_slot(const RuntimeOleObjectState& runtime_object,
                                                                           const std::string& member_name);
 std::optional<long long> parse_native_list_control_selectedid_member_item_id(const RuntimeOleObjectState& runtime_object,

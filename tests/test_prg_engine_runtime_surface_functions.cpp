@@ -11890,6 +11890,156 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_list_controls_listitem_itemid_addressing_stays_coherent()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root =
+            fs::temp_directory_path() / "copperfin_native_list_controls_listitem";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_list_controls_listitem.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('ComboBox')\n"
+            "oPlain.ColumnCount = 2\n"
+            "lHasListItem = PEMSTATUS(oPlain, 'ListItem', 1)\n"
+            "lListItemReadOnly = PEMSTATUS(oPlain, 'ListItem', 5)\n"
+            "nPropCount = AMEMBERS(aProps, oPlain, 1)\n"
+            "nHasListItem = ASCAN(aProps, 'LISTITEM')\n"
+            "oPlain.AddListItem('Zulu', 10)\n"
+            "oPlain.AddListItem('Z', 10, 2)\n"
+            "oPlain.AddListItem('Alpha', 20)\n"
+            "oPlain.AddListItem('A', 20, 2)\n"
+            "oPlain.AddListItem('Echo', 30)\n"
+            "oPlain.AddListItem('E', 30, 2)\n"
+            "cItem10BeforeSort = oPlain.ListItem(10)\n"
+            "cItem20BeforeSort = oPlain.ListItem[20]\n"
+            "oPlain.Sorted = .T.\n"
+            "cDisplay1AfterSort = oPlain.List(1)\n"
+            "cDisplay3AfterSort = oPlain.List(3)\n"
+            "cItem10AfterSort = oPlain.ListItem[10]\n"
+            "cItem20Col2AfterSort = oPlain.ListItem(20, 2)\n"
+            "nLookupId = 10\n"
+            "cItem10FromVarRead = oPlain.ListItem[m.nLookupId]\n"
+            "nTargetId = 10\n"
+            "oPlain.ListItem[m.nTargetId, 2] = 'Zulu Prime'\n"
+            "cItem10Col2AfterDirectWrite = oPlain.ListItem(10, 2)\n"
+            "lSetPem20 = SETPEM(oPlain, 'ListItem(20,2)', 'Alpha Prime')\n"
+            "xGetPem20 = GETPEM(oPlain, 'ListItem[20,2]')\n"
+            "cDisplayRow1Col2AfterSetPem = oPlain.List(1, 2)\n"
+            "cDisplayRow3Col2AfterDirectWrite = oPlain.List(3, 2)\n"
+            "cMissingItem = oPlain.ListItem(77)\n"
+            "lSetPemMissing = SETPEM(oPlain, 'ListItem(77)', 'Ghost')\n"
+            "lAddPropertyListItem = ADDPROPERTY(oPlain, 'ListItem', 'shadow')\n"
+            "lAddPropertyListItemCell = ADDPROPERTY(oPlain, 'ListItem(20)', 'shadow')\n"
+            "lRemovePropertyListItem = REMOVEPROPERTY(oPlain, 'ListItem')\n"
+            "lRemovePropertyListItemCell = REMOVEPROPERTY(oPlain, 'ListItem[20]')\n"
+            "oPlain.RemoveListItem(20)\n"
+            "cItem20AfterRemove = oPlain.ListItem(20)\n"
+            "cItem10AfterRemove = oPlain.ListItem[10]\n"
+            "cDisplay1AfterRemove = oPlain.List(1)\n"
+            "oSeed = CREATEOBJECT('SeededList')\n"
+            "cSeedItem100 = oSeed.ListItem(100)\n"
+            "cSeedItem200Col2 = oSeed.ListItem[200,2]\n"
+            "RETURN\n"
+            "DEFINE CLASS SeededList AS ListBox\n"
+            "    ColumnCount = 2\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddListItem('North', 200)\n"
+            "        THIS.AddListItem('N', 200, 2)\n"
+            "        THIS.AddListItem('East', 100)\n"
+            "        THIS.AddListItem('E', 100, 2)\n"
+            "        THIS.Sorted = .T.\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native ListItem list-control script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string& name, const std::string& expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" +
+                       copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lhaslistitem", "true");
+        check("llistitemreadonly", "false");
+        check("citem10beforesort", "Zulu");
+        check("citem20beforesort", "Alpha");
+        check("cdisplay1aftersort", "Alpha");
+        check("cdisplay3aftersort", "Zulu");
+        check("citem10aftersort", "Zulu");
+        check("citem20col2aftersort", "A");
+        check("citem10fromvarread", "Zulu");
+        check("citem10col2afterdirectwrite", "Zulu Prime");
+        check("lsetpem20", "true");
+        check("xgetpem20", "Alpha Prime");
+        check("cdisplayrow1col2aftersetpem", "Alpha Prime");
+        check("cdisplayrow3col2afterdirectwrite", "Zulu Prime");
+        check("cmissingitem", "");
+        check("lsetpemmissing", "false");
+        check("laddpropertylistitem", "false");
+        check("laddpropertylistitemcell", "false");
+        check("lremovepropertylistitem", "false");
+        check("lremovepropertylistitemcell", "false");
+        check("citem20afterremove", "");
+        check("citem10afterremove", "Zulu");
+        check("cdisplay1afterremove", "Echo");
+        check("cseeditem100", "East");
+        check("cseeditem200col2", "N");
+
+        const auto plain_has_listitem = state.globals.find("nhaslistitem");
+        expect(plain_has_listitem != state.globals.end(),
+               "nHasListItem variable should be present");
+        if (plain_has_listitem != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(plain_has_listitem->second) != "0",
+                   "AMEMBERS(..., 1) should expose the native ListItem builtin for ComboBox");
+        }
+
+        expect(state.ole_objects.size() == 2U,
+               "native ListItem coverage should register plain and derived list controls");
+        if (state.ole_objects.size() == 2U)
+        {
+            const auto& plain_combo = state.ole_objects[0];
+            const auto& seed_list = state.ole_objects[1];
+
+            expect(plain_combo.collection_item_keys.size() == 2U &&
+                       plain_combo.collection_item_keys[0] == "30" &&
+                       plain_combo.collection_item_keys[1] == "10",
+                   "plain ComboBox ListItem coverage should preserve item IDs after sorted removal");
+            expect(plain_combo.list_rows.size() == 2U &&
+                       copperfin::runtime::format_value(plain_combo.list_rows[0][0]) == "Echo" &&
+                       plain_combo.list_rows[0].size() >= 2U &&
+                       copperfin::runtime::format_value(plain_combo.list_rows[0][1]) == "E" &&
+                       copperfin::runtime::format_value(plain_combo.list_rows[1][0]) == "Zulu" &&
+                       plain_combo.list_rows[1].size() >= 2U &&
+                       copperfin::runtime::format_value(plain_combo.list_rows[1][1]) == "Zulu Prime",
+                   "plain ComboBox ListItem coverage should keep item-ID writes attached to the same logical rows");
+            expect(seed_list.collection_item_keys.size() == 2U &&
+                       seed_list.collection_item_keys[0] == "100" &&
+                       seed_list.collection_item_keys[1] == "200",
+                   "derived ListBox ListItem coverage should preserve sorted Init-time item ID order");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_list_controls_selectedid_selection_stays_coherent()
     {
         namespace fs = std::filesystem;
@@ -54004,6 +54154,7 @@ int main()
     test_native_list_controls_newindex_stays_coherent();
     test_native_list_controls_newindex_addressed_writable_list_cells_stay_coherent();
     test_native_list_controls_listitemid_selection_stays_coherent();
+    test_native_list_controls_listitem_itemid_addressing_stays_coherent();
     test_native_list_controls_selectedid_selection_stays_coherent();
     test_native_list_controls_removelistitem_stays_coherent();
     test_native_listbox_selected_property_stays_coherent();
