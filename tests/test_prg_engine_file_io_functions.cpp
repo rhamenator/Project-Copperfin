@@ -32,6 +32,11 @@ void test_file_io_runtime_functions()
         main_path,
         "nWrite = STRTOFILE('line1' + CHR(10) + 'line2', 'rw.txt')\n"
         "cWhole = FILETOSTR('rw.txt')\n"
+        "nWriteBackslash = STRTOFILE('nested-data', 'nested\\backslash.txt')\n"
+        "cBackslashWhole = FILETOSTR('nested\\backslash.txt')\n"
+        "hBackslashRead = FOPEN('nested\\backslash.txt', 0)\n"
+        "cBackslashChunk = FREAD(hBackslashRead, 6)\n"
+        "nCloseBackslashRead = FCLOSE(hBackslashRead)\n"
         "hRead = FOPEN('rw.txt', 0)\n"
         "cChunk = FREAD(hRead, 4)\n"
         "nTellChunk = FTELL(hRead)\n"
@@ -79,6 +84,10 @@ void test_file_io_runtime_functions()
 
     check("nwrite", "11");
     check("cwhole", "line1\nline2");
+    check("nwritebackslash", "11");
+    check("cbackslashwhole", "nested-data");
+    check("cbackslashchunk", "nested");
+    check("nclosebackslashread", "0");
     check("cchunk", "line");
     check("ntellchunk", "4");
     check("nseekstart", "0");

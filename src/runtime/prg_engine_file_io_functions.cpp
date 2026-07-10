@@ -40,11 +40,34 @@ int& next_file_handle_id() {
     return next_handle;
 }
 
+bool is_windows_drive_absolute_path(const std::string& value) {
+    return value.size() >= 3U &&
+        std::isalpha(static_cast<unsigned char>(value[0])) != 0 &&
+        value[1] == ':' &&
+        (value[2] == '\\' || value[2] == '/');
+}
+
+bool is_unc_path(const std::string& value) {
+    return value.size() >= 2U &&
+        ((value[0] == '\\' && value[1] == '\\') || (value[0] == '/' && value[1] == '/'));
+}
+
+std::string normalize_relative_path_separators(std::string value) {
+    std::replace(value.begin(), value.end(), '\\', std::filesystem::path::preferred_separator);
+    return value;
+}
+
 std::filesystem::path resolve_file_path(const std::string& raw_path, const std::string& default_directory) {
-    std::filesystem::path path(unquote_string(raw_path));
-    if (path.empty()) {
-        path = std::filesystem::path(default_directory);
+    const std::string unquoted = unquote_string(raw_path);
+    if (unquoted.empty()) {
+        return std::filesystem::path(default_directory).lexically_normal();
     }
+
+    if (is_windows_drive_absolute_path(unquoted) || is_unc_path(unquoted)) {
+        return std::filesystem::path(unquoted);
+    }
+
+    std::filesystem::path path(normalize_relative_path_separators(unquoted));
     if (path.is_relative()) {
         path = std::filesystem::path(default_directory) / path;
     }

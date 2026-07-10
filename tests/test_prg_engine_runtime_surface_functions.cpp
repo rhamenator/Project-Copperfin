@@ -671,6 +671,11 @@ namespace
         const fs::path path_only_file_path = path_probe_dir / "path_only.txt";
         const std::string path_only_content = "Found only through SET PATH";
         write_text(path_only_file_path, path_only_content);
+        const fs::path nested_path_probe_dir = path_probe_dir / "nested";
+        fs::create_directories(nested_path_probe_dir);
+        const fs::path nested_path_only_file_path = nested_path_probe_dir / "path_only_backslash.txt";
+        const std::string nested_path_only_content = "Found through backslash path";
+        write_text(nested_path_only_file_path, nested_path_only_content);
 
         const fs::path main_path = temp_root / "filesize_test.prg";
         write_text(
@@ -684,6 +689,8 @@ namespace
             "SET PATH TO '" + path_probe_dir.string() + "'\n"
             "lPathFileAfter = FILE('path_only.txt')\n"
             "nPathFileSize = FILESIZE('path_only.txt')\n"
+            "lBackslashPathFile = FILE('nested\\path_only_backslash.txt')\n"
+            "nBackslashPathFileSize = FILESIZE('nested\\path_only_backslash.txt')\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
@@ -719,6 +726,8 @@ namespace
         check("lpathfilebefore", "false");
         check("lpathfileafter", "true");
         check("npathfilesize", std::to_string(path_only_content.length()));
+        check("lbackslashpathfile", "true");
+        check("nbackslashpathfilesize", std::to_string(nested_path_only_content.length()));
 
         fs::remove_all(temp_root, ignored);
     }
@@ -1015,6 +1024,7 @@ namespace
             "INSERT INTO SourceXml (ID, NAME) VALUES (3, 'GAMMA')\n"
             "cXml = CURSORTOXML('SourceXml')\n"
             "lWriteOk = CURSORTOXML('SourceXml', 'round_trip.xml')\n"
+            "lWriteBackslashOk = CURSORTOXML('SourceXml', 'xml_store\\round_trip.xml')\n"
             "nLoaded = XMLTOCURSOR(cXml, 'DestXml')\n"
             "SELECT DestXml\n"
             "nDestCount = RECCOUNT()\n"
@@ -1027,6 +1037,9 @@ namespace
             "nLoadedFromFile = XMLTOCURSOR('round_trip.xml', 'DestFile')\n"
             "SELECT DestFile\n"
             "nFileCount = RECCOUNT()\n"
+            "nLoadedFromBackslashFile = XMLTOCURSOR('xml_store\\round_trip.xml', 'DestBackslash')\n"
+            "SELECT DestBackslash\n"
+            "nBackslashFileCount = RECCOUNT()\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
@@ -1054,10 +1067,13 @@ namespace
                    copperfin::runtime::format_value(xml_text->second).find("<CopperfinCursor") != std::string::npos,
                "CURSORTOXML() should return Copperfin XML text when output target is omitted");
         check("lwriteok", "true");
+        check("lwritebackslashok", "true");
         check("nloaded", "3");
         check("nloadedfromfile", "3");
+        check("nloadedfrombackslashfile", "3");
         check("ndestcount", "3");
         check("nfilecount", "3");
+        check("nbackslashfilecount", "3");
         check("nfirstid", "1");
         check("cfirstname", "ALPHA");
         check("nlastid", "3");

@@ -403,6 +403,9 @@ std::vector<std::filesystem::path> parse_set_path_entries(const std::string& set
                                 : value.substr(token_start, separator - token_start);
         token = strip_surrounding_quotes(std::move(token));
         if (!token.empty()) {
+            if (!is_windows_drive_absolute_path(token) && !is_unc_path(token)) {
+                token = normalize_relative_path_separators(std::move(token));
+            }
             std::filesystem::path entry(token);
             if (entry.is_relative()) {
                 entry = std::filesystem::path(default_directory) / entry;
@@ -424,7 +427,14 @@ std::filesystem::path resolve_runtime_file_probe_path(
     const std::string& default_directory,
     const std::function<std::string(const std::string&)>& set_callback) {
     std::error_code ignored;
-    std::filesystem::path path(raw_path.empty() ? default_directory : raw_path);
+    if (raw_path.empty()) {
+        return std::filesystem::path(default_directory).lexically_normal();
+    }
+    if (is_windows_drive_absolute_path(raw_path) || is_unc_path(raw_path)) {
+        return std::filesystem::path(raw_path);
+    }
+
+    std::filesystem::path path(normalize_relative_path_separators(raw_path));
     if (!path.is_relative()) {
         return path.lexically_normal();
     }
@@ -4309,11 +4319,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
 
         std::error_code ignored;
-        std::filesystem::path output_path(output_target);
-        if (output_path.is_relative()) {
-            output_path = std::filesystem::path(default_directory) / output_path;
-        }
-        output_path = output_path.lexically_normal();
+        std::filesystem::path output_path = filesystem_probe_path(output_target, default_directory);
         std::filesystem::create_directories(output_path.parent_path(), ignored);
         std::ofstream output(output_path, std::ios::binary | std::ios::trunc);
         output << xml_payload;
@@ -4353,12 +4359,8 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
 
         std::string xml_payload = xml_or_path;
         std::error_code ignored;
-        std::filesystem::path probe_path(xml_or_path);
         if (looks_like_file_path(xml_or_path)) {
-            if (probe_path.is_relative()) {
-                probe_path = std::filesystem::path(default_directory) / probe_path;
-            }
-            probe_path = probe_path.lexically_normal();
+            std::filesystem::path probe_path = filesystem_probe_path(xml_or_path, default_directory);
             if (std::filesystem::exists(probe_path, ignored)) {
                 std::ifstream input(probe_path, std::ios::binary);
                 std::ostringstream buffer;
