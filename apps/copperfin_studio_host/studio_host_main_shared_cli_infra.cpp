@@ -2922,6 +2922,12 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document,
         std::cout << "      \"paperSizeAvailable\": "
                   << (report_layout.paper_size_available ? "true" : "false") << ",\n";
         std::cout << "      \"paperSizeCode\": " << report_layout.paper_size_code << ",\n";
+        std::cout << "      \"paperLengthAvailable\": "
+                  << (report_layout.paper_length_available ? "true" : "false") << ",\n";
+        std::cout << "      \"paperLength\": " << report_layout.paper_length << ",\n";
+        std::cout << "      \"paperWidthAvailable\": "
+                  << (report_layout.paper_width_available ? "true" : "false") << ",\n";
+        std::cout << "      \"paperWidth\": " << report_layout.paper_width << ",\n";
         std::cout << "      \"topMarginAvailable\": "
                   << (report_layout.top_margin_available ? "true" : "false") << ",\n";
         std::cout << "      \"topMargin\": " << report_layout.top_margin << ",\n";

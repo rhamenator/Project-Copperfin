@@ -156,6 +156,10 @@ struct StudioReportLayoutSnapshot {
     int orientation_code = 0;
     bool paper_size_available = false;
     int paper_size_code = 0;
+    bool paper_length_available = false;
+    int paper_length = 0;
+    bool paper_width_available = false;
+    int paper_width = 0;
     bool top_margin_available = false;
     int top_margin = 0;
     bool bottom_margin_available = false;

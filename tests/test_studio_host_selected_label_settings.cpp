@@ -136,7 +136,7 @@ void write_synthetic_report_table_for_layout_json(const std::filesystem::path& r
         {.name = "UNIQUEID", .type = 'C', .length = 24U}
     };
     const std::vector<std::vector<std::string>> records{
-        {"1", "53", "ORIENTATION=0\nPAPERSIZE=1\nBOTMARGIN=20\nGRIDV=4\nGRIDH=8", "", "", "", "", "", "10", "customer.country", "15", "25", ""},
+        {"1", "53", "ORIENTATION=0\nPAPERSIZE=1\nPAPERLENGTH=2794\nPAPERWIDTH=2159\nBOTMARGIN=20\nGRIDV=4\nGRIDH=8", "", "", "", "", "", "10", "customer.country", "15", "25", ""},
         {"9", "1", "", "", "0", "", "2000", "", "", "", "", "", ""},
         {"9", "4", "", "", "2000", "", "5000", "", "", "", "", "", ""},
         {"8", "0", "customer.company", "1200", "2600", "4000", "450", "Segoe UI", "", "", "", "", "field-guid"},
@@ -230,6 +230,14 @@ void test_studio_host_json_preserves_selected_label_settings(const std::string& 
                     "#3742: selected label settings JSON should expose right-margin availability");
     expect_contains(settings_process.stdout_text, "\"rightMargin\": 25",
                     "#3742: selected label settings JSON should preserve right-margin values");
+    expect_contains(settings_process.stdout_text, "\"paperLengthAvailable\": true",
+                    "#3744: selected label settings JSON should expose paper-length availability");
+    expect_contains(settings_process.stdout_text, "\"paperLength\": 2794",
+                    "#3744: selected label settings JSON should preserve paper-length values");
+    expect_contains(settings_process.stdout_text, "\"paperWidthAvailable\": true",
+                    "#3744: selected label settings JSON should expose paper-width availability");
+    expect_contains(settings_process.stdout_text, "\"paperWidth\": 2159",
+                    "#3744: selected label settings JSON should preserve paper-width values");
     expect_contains(settings_process.stdout_text, "\"selectedReportSectionAvailable\": false",
                     "#1504: selected label settings should not advertise selected-section availability");
     expect_contains(settings_process.stdout_text, "\"selectedReportSection\": null",
@@ -246,6 +254,10 @@ void test_studio_host_json_preserves_selected_label_settings(const std::string& 
                     "#1496: selected label settings should expose memo-line setting provenance");
     expect_contains(settings_process.stdout_text, "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1, \"memoBlockNumber\": 1, \"value\": \"1\"",
                     "#1496: selected label settings should expose later memo-line setting provenance");
+    expect_contains(settings_process.stdout_text, "\"name\": \"PAPERLENGTH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2, \"memoBlockNumber\": 1, \"value\": \"2794\"",
+                    "#3744: selected label settings should expose memo-line paper-length provenance");
+    expect_contains(settings_process.stdout_text, "\"name\": \"PAPERWIDTH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3, \"memoBlockNumber\": 1, \"value\": \"2159\"",
+                    "#3744: selected label settings should expose memo-line paper-width provenance");
     expect_contains(settings_process.stdout_text, "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 8, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"10\"",
                     "#1496: selected label settings should expose direct setting provenance");
     expect_contains(settings_process.stdout_text, "\"name\": \"TAG\", \"recordIndex\": 0, \"fieldIndex\": 9, \"sourceLineIndex\": null, \"memoBlockNumber\": 2, \"value\": \"customer.country\"",
@@ -328,8 +340,16 @@ void test_studio_host_json_preserves_selected_label_settings(const std::string& 
                     "#1505: selected deleted label settings should serialize null containing-object sections");
     expect_contains(deleted_settings_process.stdout_text, "\"settingCount\": 0",
                     "#1497: deleted selected label settings JSON should not expose live settings");
-    expect_contains(deleted_settings_process.stdout_text, "\"deletedSettingCount\": 9",
+    expect_contains(deleted_settings_process.stdout_text, "\"deletedSettingCount\": 11",
                     "#1497: deleted selected label settings JSON should expose deleted setting counts");
+    expect_contains(deleted_settings_process.stdout_text, "\"paperLengthAvailable\": false",
+                    "#3744: selected deleted label settings JSON should keep live paper-length unavailable");
+    expect_contains(deleted_settings_process.stdout_text, "\"paperLength\": 0",
+                    "#3744: selected deleted label settings JSON should keep live paper-length zero");
+    expect_contains(deleted_settings_process.stdout_text, "\"paperWidthAvailable\": false",
+                    "#3744: selected deleted label settings JSON should keep live paper-width unavailable");
+    expect_contains(deleted_settings_process.stdout_text, "\"paperWidth\": 0",
+                    "#3744: selected deleted label settings JSON should keep live paper-width zero");
     expect_contains_in_order(
         deleted_settings_process.stdout_text,
         {
@@ -337,6 +357,10 @@ void test_studio_host_json_preserves_selected_label_settings(const std::string& 
             "\"name\": \"ORIENTATION\"",
             "\"recordIndex\": 0",
             "\"name\": \"PAPERSIZE\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"PAPERLENGTH\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"PAPERWIDTH\"",
             "\"recordIndex\": 0",
             "\"name\": \"BOTMARGIN\"",
             "\"recordIndex\": 0",

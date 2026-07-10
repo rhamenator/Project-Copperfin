@@ -384,6 +384,8 @@ void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValu
 
     append_direct_setting("ORIENTATION");
     append_direct_setting("PAPERSIZE");
+    append_direct_setting("PAPERLENGTH");
+    append_direct_setting("PAPERWIDTH");
     append_direct_setting("TOPMARGIN");
     append_direct_setting("BOTMARGIN");
     append_direct_setting("LEFTMARGIN");
@@ -508,6 +510,16 @@ void finalize_page_setup_summary(StudioReportLayoutSnapshot& snapshot) {
         snapshot.page_setup_available = true;
         snapshot.paper_size_available = true;
         snapshot.paper_size_code = value;
+    });
+    apply_setting("PAPERLENGTH", [&](int value) {
+        snapshot.page_setup_available = true;
+        snapshot.paper_length_available = true;
+        snapshot.paper_length = value;
+    });
+    apply_setting("PAPERWIDTH", [&](int value) {
+        snapshot.page_setup_available = true;
+        snapshot.paper_width_available = true;
+        snapshot.paper_width = value;
     });
     apply_setting("TOPMARGIN", [&](int value) {
         snapshot.page_setup_available = true;

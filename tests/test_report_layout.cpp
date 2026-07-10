@@ -1846,6 +1846,72 @@ void test_build_report_layout_includes_direct_side_margin_settings() {
     }
 }
 
+void test_build_report_layout_summarizes_paper_dimensions() {
+    copperfin::studio::StudioDocumentModel document;
+    document.display_name = "paper-dimensions.frx";
+    document.kind = copperfin::studio::StudioAssetKind::report;
+    document.table_preview_available = true;
+
+    document.table_preview.records = {
+        {
+            .record_index = 0U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "1"),
+                value("OBJCODE", "53"),
+                value("EXPR",
+                      "ORIENTATION=0\r\nPAPERSIZE=1\r\nPAPERLENGTH=2794\r\nPAPERWIDTH=2159\r\nTOPMARGIN=10\r\nBOTMARGIN=20\r\nGRIDV=4\r\nGRIDH=8",
+                      47U)
+            }
+        }
+    };
+
+    const auto layout = copperfin::studio::build_report_layout(document);
+    expect(layout.available, "#3744: report layout should be available for paper-dimension settings");
+    expect(layout.page_setup_available, "#3744: paper-dimension settings should preserve page setup availability");
+    expect(layout.orientation_available && layout.orientation_code == 0,
+        "#3744: paper-dimension settings should preserve memo-derived orientation");
+    expect(layout.paper_size_available && layout.paper_size_code == 1,
+        "#3744: paper-dimension settings should preserve memo-derived paper size");
+    expect(layout.paper_length_available && layout.paper_length == 2794,
+        "#3744: paper-dimension settings should expose memo-derived paper length");
+    expect(layout.paper_width_available && layout.paper_width == 2159,
+        "#3744: paper-dimension settings should expose memo-derived paper width");
+    expect(layout.top_margin_available && layout.top_margin == 10,
+        "#3744: paper-dimension settings should preserve memo-derived top margins");
+    expect(layout.bottom_margin_available && layout.bottom_margin == 20,
+        "#3744: paper-dimension settings should preserve memo-derived bottom margins");
+    expect(layout.grid_vertical_available && layout.grid_vertical == 4,
+        "#3744: paper-dimension settings should preserve memo-derived vertical grid spacing");
+    expect(layout.grid_horizontal_available && layout.grid_horizontal == 8,
+        "#3744: paper-dimension settings should preserve memo-derived horizontal grid spacing");
+    expect(layout.settings.size() == 8U, "#3744: paper-dimension settings should preserve root setting counts");
+
+    const auto paper_length = std::find_if(layout.settings.begin(), layout.settings.end(), [](const auto& setting) {
+        return setting.name == "PAPERLENGTH";
+    });
+    expect(paper_length != layout.settings.end(), "#3744: paper length should appear in root settings");
+    if (paper_length != layout.settings.end()) {
+        expect(paper_length->record_index == 0U, "#3744: paper length should retain source record provenance");
+        expect(paper_length->field_index == 2U, "#3744: paper length should retain EXPR field provenance");
+        expect(paper_length->source_line_index == 2U, "#3744: paper length should retain memo line provenance");
+        expect(paper_length->memo_block_number == 47U, "#3744: paper length should retain EXPR memo provenance");
+        expect(paper_length->value == "2794", "#3744: paper length should preserve the field value text");
+    }
+
+    const auto paper_width = std::find_if(layout.settings.begin(), layout.settings.end(), [](const auto& setting) {
+        return setting.name == "PAPERWIDTH";
+    });
+    expect(paper_width != layout.settings.end(), "#3744: paper width should appear in root settings");
+    if (paper_width != layout.settings.end()) {
+        expect(paper_width->record_index == 0U, "#3744: paper width should retain source record provenance");
+        expect(paper_width->field_index == 2U, "#3744: paper width should retain EXPR field provenance");
+        expect(paper_width->source_line_index == 3U, "#3744: paper width should retain memo line provenance");
+        expect(paper_width->memo_block_number == 47U, "#3744: paper width should retain EXPR memo provenance");
+        expect(paper_width->value == "2159", "#3744: paper width should preserve the field value text");
+    }
+}
+
 void test_build_report_layout_preserves_band_unique_ids_for_section_identity() {
     copperfin::studio::StudioDocumentModel document;
     document.display_name = "detail-ids.frx";
@@ -1948,6 +2014,7 @@ int main() {
     test_build_report_layout_includes_direct_orientation_settings();
     test_build_report_layout_includes_direct_paper_size_settings();
     test_build_report_layout_includes_direct_side_margin_settings();
+    test_build_report_layout_summarizes_paper_dimensions();
     test_build_report_layout_preserves_band_unique_ids_for_section_identity();
 
     if (failures != 0) {
