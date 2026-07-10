@@ -238,7 +238,6 @@ std::string build_runtime_manifest_text(
     stream << "startup_source=" << quote_manifest_value(plan.startup_source_path) << "\n";
     stream << "configuration=" << build_configuration_name(plan.configuration) << "\n";
     stream << "output_kind=" << quote_manifest_value(build_output_kind_name(plan.output_kind)) << "\n";
-    stream << "primary_output_materialized=" << (plan.primary_output_materialized ? "true" : "false") << "\n";
     stream << "fll_loader_entrypoint="
            << quote_manifest_value(plan.output_kind == BuildOutputKind::fll ? std::string(kFllLoaderEntrypoint) : std::string()) << "\n";
     stream << "fll_registration_symbol="

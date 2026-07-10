@@ -396,8 +396,8 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
                "dotnet-finalize runtime manifest should omit the primary output path before publish");
         expect(pre_debug_manifest.find("primary_output_path=" + quote_manifest_value(result.plan.launcher_output_path)) != std::string::npos,
                "dotnet-finalize debug manifest should preserve the primary output path before publish");
-        expect(pre_runtime_manifest.find("primary_output_materialized=false") != std::string::npos,
-               "dotnet-finalize runtime manifest should start non-materialized");
+        expect(pre_runtime_manifest.find("primary_output_materialized=") == std::string::npos,
+               "dotnet-finalize runtime manifest should omit the primary-output materialization state before publish");
         expect(pre_debug_manifest.find("primary_output_materialized=false") != std::string::npos,
                "dotnet-finalize debug manifest should start non-materialized");
         expect(pre_runtime_manifest.find("extension_payload=" + quote_manifest_value(result.plan.launcher_output_path) + "|") == std::string::npos,
@@ -421,8 +421,8 @@ void test_dotnet_launcher_finalization_rewrites_manifest_after_publish_output_ma
                    "dotnet-finalize runtime manifest should omit the primary output path after publish");
             expect(debug_manifest.find("primary_output_path=" + quote_manifest_value(finalize_result.plan.launcher_output_path)) != std::string::npos,
                    "dotnet-finalize debug manifest should preserve the primary output path after publish");
-            expect(runtime_manifest.find("primary_output_materialized=true") != std::string::npos,
-                   "dotnet-finalize runtime manifest should report the materialized launcher output");
+            expect(runtime_manifest.find("primary_output_materialized=") == std::string::npos,
+                   "dotnet-finalize runtime manifest should omit the materialized launcher output state after publish");
             expect(debug_manifest.find("primary_output_materialized=true") != std::string::npos,
                    "dotnet-finalize debug manifest should report the materialized launcher output");
             expect(runtime_manifest.find("extension_payload=" + quote_manifest_value(finalize_result.plan.launcher_output_path) + "|") != std::string::npos,

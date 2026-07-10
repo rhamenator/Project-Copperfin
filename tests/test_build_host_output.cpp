@@ -460,8 +460,8 @@ void run_library_build_host_smoke(
     const std::string debug_manifest_text = debug_manifest_path.empty() ? std::string{} : read_text(debug_manifest_path);
     const std::vector<std::string> manifest_asset_lines = lines_with_prefix(manifest_text, "asset=");
     if (!manifest_path.empty()) {
-        expect(manifest_text.find("primary_output_materialized=true") != std::string::npos,
-               "build host manifest should record a materialized primary output for " + extension + " outputs");
+        expect(manifest_text.find("primary_output_materialized=") == std::string::npos,
+               "build host runtime manifest should omit the materialized primary output state for " + extension + " outputs");
         expect(manifest_text.find("project_title=LibraryDemo") != std::string::npos,
                "build host manifest should record the project title for " + extension + " outputs");
         expect(manifest_text.find("project_path=" + project_path.string()) == std::string::npos,
@@ -2865,8 +2865,8 @@ void run_app_build_host_smoke(const std::string& build_host_path) {
     expect(!manifest_path.empty(), "build host should report a manifest path for APP outputs");
     if (!manifest_path.empty()) {
         const std::string manifest_text = read_text(manifest_path);
-        expect(manifest_text.find("primary_output_materialized=true") != std::string::npos,
-               "build host manifest should record a materialized APP primary output");
+        expect(manifest_text.find("primary_output_materialized=") == std::string::npos,
+               "build host runtime manifest should omit the materialized APP primary output state");
         expect(manifest_text.find("extension_payload=" + expected_output.string() + "|") != std::string::npos,
                "build host manifest should record the APP archive as an extension payload");
     }
@@ -2943,8 +2943,8 @@ void run_fxp_build_host_smoke(const std::string& build_host_path) {
     expect(!manifest_path.empty(), "build host should report a manifest path for FXP outputs");
     if (!manifest_path.empty()) {
         const std::string manifest_text = read_text(manifest_path);
-        expect(manifest_text.find("primary_output_materialized=true") != std::string::npos,
-               "build host manifest should record a materialized FXP primary output");
+        expect(manifest_text.find("primary_output_materialized=") == std::string::npos,
+               "build host runtime manifest should omit the materialized FXP primary output state");
         expect(manifest_text.find("extension_payload=" + expected_output.string() + "|") != std::string::npos,
                "build host manifest should record the FXP contract as an extension payload");
     }
@@ -3040,8 +3040,8 @@ void run_default_runtime_host_resolution_smoke(const std::string& build_host_pat
             const std::string manifest_text = read_text(manifest_path);
             expect(manifest_text.find("runtime_host_sha256=") != std::string::npos,
                    "runtime-host resolution smoke test should persist runtime host digest");
-            expect(manifest_text.find("primary_output_materialized=true") != std::string::npos,
-                   "runtime-host resolution smoke test manifest should report primary output materialized");
+            expect(manifest_text.find("primary_output_materialized=") == std::string::npos,
+                   "runtime-host resolution smoke test manifest should omit primary-output materialization state");
         }
         expect(fs::exists(expected_output), "runtime-host fallback test should materialize requested executable");
     }
