@@ -4844,7 +4844,6 @@ namespace copperfin::runtime
             }
             if (!is_native_identity_member_name(runtime_object, normalized_property_name) &&
                 !is_native_controlcount_member_name(runtime_object, normalized_property_name) &&
-                !is_native_pagecount_member_name(runtime_object, normalized_property_name) &&
                 !is_native_child_collection_member_name(runtime_object, normalized_property_name) &&
                 !is_native_listcount_member_name(runtime_object, normalized_property_name) &&
                 !is_native_newindex_member_name(runtime_object, normalized_property_name) &&
@@ -4878,6 +4877,14 @@ namespace copperfin::runtime
                     is_native_grid_runtime_object(runtime_object))
                 {
                     return write_native_grid_columncount_property(
+                        runtime_object,
+                        assigned_value,
+                        source_frame);
+                }
+                if (is_native_pagecount_member_name(runtime_object, normalized_property_name) &&
+                    is_native_pageframe_runtime_object(runtime_object))
+                {
+                    return write_native_pageframe_pagecount_property(
                         runtime_object,
                         assigned_value,
                         source_frame);

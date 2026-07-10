@@ -3411,7 +3411,6 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
                                                         const std::string& member_name) {
         return get_native_identity_reflection_metadata(runtime_object, member_name).has_value() ||
                native_controlcount_member_name_matches(runtime_object, member_name) ||
-               native_pagecount_member_name_matches(runtime_object, member_name) ||
                native_listcount_member_name_matches(runtime_object, member_name) ||
                native_newindex_member_name_matches(runtime_object, member_name) ||
                native_newitemid_member_name_matches(runtime_object, member_name) ||
@@ -3849,7 +3848,6 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         if (native_child_parent_member_name_matches(*runtime_object, member_name) ||
             is_native_controlcount_member_name(*runtime_object, member_name) ||
-            is_native_pagecount_member_name(*runtime_object, member_name) ||
             is_native_listcount_member_name(*runtime_object, member_name) ||
             is_native_newindex_member_name(*runtime_object, member_name) ||
             is_native_newitemid_member_name(*runtime_object, member_name) ||
@@ -3893,6 +3891,11 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             normalize_native_pageframe_activepage_invariant(*runtime_object);
             return make_boolean_value(true);
         }
+        if (is_native_pagecount_member_name(*runtime_object, member_name)) {
+            return make_boolean_value(
+                write_native_member_callback &&
+                write_native_member_callback(arguments[0], member_name, arguments[2]));
+        }
         if (!reflectable_member_exists_locally(*runtime_object, member_name)) {
             if (RuntimeOleObjectState* object_surface =
                     resolve_direct_olecontrol_reflection_surface(*runtime_object);
@@ -3918,6 +3921,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             object_has_member(runtime_object->events, member_name)) {
             if (member_name == "columnorder" ||
                 member_name == "columncount" ||
+                member_name == "pagecount" ||
                 is_native_column_bound_member_name(*runtime_object, member_name) ||
                 is_native_controlsource_member_name(*runtime_object, member_name)) {
                 return make_boolean_value(
@@ -3947,6 +3951,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         if (runtime_object->properties.contains(member_name)) {
             if (member_name == "columnorder" ||
                 member_name == "columncount" ||
+                member_name == "pagecount" ||
                 is_native_column_bound_member_name(*runtime_object, member_name) ||
                 is_native_controlsource_member_name(*runtime_object, member_name)) {
                 return make_boolean_value(

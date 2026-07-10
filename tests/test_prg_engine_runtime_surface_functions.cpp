@@ -6460,7 +6460,7 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
-    void test_native_pageframe_pagecount_reflects_pages_count_and_stays_read_only()
+    void test_native_pageframe_pagecount_grows_shrinks_and_preserves_builtin_reflection()
     {
         namespace fs = std::filesystem;
         const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_pagecount_property";
@@ -6491,13 +6491,21 @@ namespace
             "        lUnionHasPageCount = .T.\n"
             "    ENDIF\n"
             "ENDFOR\n"
-            "lSetPageCount = SETPEM(oFrame, 'PageCount', 99)\n"
+            "lSetPageCount = SETPEM(oFrame, 'PageCount', 2)\n"
+            "nPageCountAfterSetPem = oFrame.PageCount\n"
+            "nPagesCountAfterSetPem = oFrame.Pages.Count\n"
+            "cRemainingSecondTag = oFrame.Pages(2).cTag\n"
             "lAddPageCount = ADDPROPERTY(oFrame, 'PageCount', 99)\n"
             "lRemovePageCount = REMOVEPROPERTY(oFrame, 'PageCount')\n"
-            "lRemoved = oFrame.RemoveObject('pgAlpha')\n"
-            "nPageCountAfterRemove = oFrame.PageCount\n"
-            "nPagesCountAfterRemove = oFrame.Pages.Count\n"
-            "cRemainingTag = oFrame.Pages(1).cTag\n"
+            "oGenerated = CREATEOBJECT('PageFrame')\n"
+            "oGenerated.PageCount = 12\n"
+            "nGeneratedPageCountAfterGrow = oGenerated.PageCount\n"
+            "nGeneratedPagesCountAfterGrow = oGenerated.Pages.Count\n"
+            "cGeneratedFourthPageName = oGenerated.Pages(4).Name\n"
+            "cGeneratedTenthPageName = oGenerated.Pages(10).Name\n"
+            "oGenerated.PageCount = 105\n"
+            "nGeneratedPageCountAfterHighClamp = oGenerated.PageCount\n"
+            "cGeneratedLastPageName = oGenerated.Pages(99).Name\n"
             "RETURN\n"
             "DEFINE CLASS AlphaPage AS Page\n"
             "    cTag = 'alpha'\n"
@@ -6505,10 +6513,18 @@ namespace
             "DEFINE CLASS BetaPage AS Page\n"
             "    cTag = 'beta'\n"
             "ENDDEFINE\n"
+            "DEFINE CLASS GammaPage AS Page\n"
+            "    cTag = 'gamma'\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddObject('lblGone', 'Label')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
             "DEFINE CLASS DemoPageFrame AS PageFrame\n"
             "    PROCEDURE Init\n"
             "        THIS.AddObject('pgAlpha', 'AlphaPage')\n"
             "        THIS.AddObject('pgBeta', 'BetaPage')\n"
+            "        THIS.AddObject('pgGamma', 'GammaPage')\n"
             "        RETURN\n"
             "    ENDPROC\n"
             "ENDDEFINE\n");
@@ -6533,20 +6549,50 @@ namespace
                    name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
         };
 
-        check("npagecountdirect", "2");
-        check("npagecountcollection", "2");
-        check("xpagecountgetpem", "2");
+        check("npagecountdirect", "3");
+        check("npagecountcollection", "3");
+        check("xpagecountgetpem", "3");
         check("lhaspagecount", "true");
-        check("lpagecountreadonly", "true");
+        check("lpagecountreadonly", "false");
         check("lprophaspagecount", "true");
         check("lunionhaspagecount", "true");
-        check("lsetpagecount", "false");
+        check("lsetpagecount", "true");
+        check("npagecountaftersetpem", "2");
+        check("npagescountaftersetpem", "2");
+        check("cremainingsecondtag", "beta");
         check("laddpagecount", "false");
         check("lremovepagecount", "false");
-        check("lremoved", "true");
-        check("npagecountafterremove", "1");
-        check("npagescountafterremove", "1");
-        check("cremainingtag", "beta");
+        check("ngeneratedpagecountaftergrow", "12");
+        check("ngeneratedpagescountaftergrow", "12");
+        check("cgeneratedfourthpagename", "Page4");
+        check("cgeneratedtenthpagename", "Page10");
+        check("ngeneratedpagecountafterhighclamp", "99");
+        check("cgeneratedlastpagename", "Page99");
+
+        const bool leaked_gamma_page = std::any_of(
+            state.ole_objects.begin(),
+            state.ole_objects.end(),
+            [](const auto &object_state)
+            {
+                return object_state.prog_id == "GammaPage";
+            });
+        expect(!leaked_gamma_page,
+               "native PageCount shrink should erase truncated page objects from exported runtime state");
+        const bool leaked_gone_label = std::any_of(
+            state.ole_objects.begin(),
+            state.ole_objects.end(),
+            [](const auto &object_state)
+            {
+                if (object_state.prog_id != "Label")
+                {
+                    return false;
+                }
+                const auto name = object_state.properties.find("name");
+                return name != object_state.properties.end() &&
+                       copperfin::runtime::format_value(name->second) == "lblGone";
+            });
+        expect(!leaked_gone_label,
+               "native PageCount shrink should erase nested objects owned by truncated pages");
 
         fs::remove_all(temp_root, ignored);
     }
@@ -52291,7 +52337,7 @@ int main()
     test_native_objects_child_collection_reflects_count_item_and_foreach_without_leaking_hidden_runtime_surfaces();
     test_native_controls_child_collection_reflects_count_item_and_foreach_without_leaking_hidden_runtime_surfaces();
     test_native_pageframe_pages_child_collection_reflects_count_item_and_foreach_without_leaking_hidden_runtime_surfaces();
-    test_native_pageframe_pagecount_reflects_pages_count_and_stays_read_only();
+    test_native_pageframe_pagecount_grows_shrinks_and_preserves_builtin_reflection();
     test_native_pageframe_activepage_reflects_runtime_selection_and_bounded_reflection();
     test_native_controlcount_reflects_controls_count_and_stays_read_only();
     test_native_form_lockscreen_defaults_mutates_and_stays_builtin();
