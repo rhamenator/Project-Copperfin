@@ -1280,8 +1280,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output manifest should record the audit log path");
         expect(runtime_manifest.find("runtime_host_sha256=" + quote_manifest_value(result.plan.runtime_host_sha256)) != std::string::npos,
                "library-output manifest should record the runtime host SHA-256 digest");
-        expect(runtime_manifest.find("security_roles=" + std::to_string(copperfin::security::default_native_security_profile().roles.size())) != std::string::npos,
-               "library-output manifest should record the security-role count");
+        expect(runtime_manifest.find("security_roles=") == std::string::npos,
+               "library-output runtime manifest should omit the security-role count summary");
         expect(runtime_manifest.find("module_definition_path=" + quote_manifest_value(result.plan.module_definition_path)) != std::string::npos,
                "library-output manifest should record the emitted module-definition path");
         expect(runtime_manifest.find("library_api_manifest_path=" + quote_manifest_value(result.plan.library_api_manifest_path)) != std::string::npos,
@@ -2885,8 +2885,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output manifest should record the audit log path");
         expect(runtime_manifest.find("runtime_host_sha256=" + quote_manifest_value(result.plan.runtime_host_sha256)) != std::string::npos,
                "fll-output manifest should record the runtime host SHA-256 digest");
-        expect(runtime_manifest.find("security_roles=" + std::to_string(copperfin::security::default_native_security_profile().roles.size())) != std::string::npos,
-               "fll-output manifest should record the security-role count");
+        expect(runtime_manifest.find("security_roles=") == std::string::npos,
+               "fll-output runtime manifest should omit the security-role count summary");
         expect_manifest_omits_keys(
             runtime_manifest,
             {

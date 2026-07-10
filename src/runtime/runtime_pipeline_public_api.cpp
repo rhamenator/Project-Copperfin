@@ -262,7 +262,6 @@ std::string build_runtime_manifest_text(
     stream << "security_mode=" << quote_manifest_value(security_profile.mode) << "\n";
     stream << "audit_log_path=" << quote_manifest_value(plan.audit_log_path) << "\n";
     stream << "runtime_host_sha256=" << quote_manifest_value(plan.runtime_host_sha256) << "\n";
-    stream << "security_roles=" << security_profile.roles.size() << "\n";
     stream << "launcher_mode=" << quote_manifest_value(plan.launcher_mode) << "\n";
     stream << "launcher_fallback=" << quote_manifest_value(plan.launcher_fallback) << "\n";
     stream << "dotnet_enabled=" << (extensibility_profile.dotnet_output.available ? "true" : "false") << "\n";
