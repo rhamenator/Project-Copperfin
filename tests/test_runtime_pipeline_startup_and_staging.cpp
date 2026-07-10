@@ -202,20 +202,20 @@ void test_materialize_runtime_package() {
                "runtime manifest should omit unsafe-reflection-load denylist entries");
         expect(lines_with_prefix(runtime_manifest, "dotnet_parity_matrix_item=").empty(),
                "runtime manifest should omit .NET parity matrix entries");
-        expect(runtime_manifest.find("language_integration_count=") != std::string::npos, "runtime manifest should include language integration count");
-        expect(runtime_manifest.find("language_integration=python|") != std::string::npos,
-               "runtime manifest should emit python sidecar language integration");
-        expect(runtime_manifest.find("language_integration=r|") != std::string::npos,
-               "runtime manifest should emit R sidecar language integration");
-        expect(runtime_manifest.find("ai_feature_count=") != std::string::npos, "runtime manifest should include AI feature count");
-        expect(runtime_manifest.find("ai_feature=mcp-host|") != std::string::npos,
-               "runtime manifest should emit MCP host AI feature metadata");
-        expect(runtime_manifest.find("ai_feature=ai-assist|") != std::string::npos,
-               "runtime manifest should emit AI-assisted developer workflow metadata");
-        expect(runtime_manifest.find("extensibility_guardrail_count=") != std::string::npos,
-               "runtime manifest should include extensibility guardrail count");
-        expect(runtime_manifest.find("The trusted execution core stays native-first and security-first.") != std::string::npos,
-               "runtime manifest should include explicit extensibility guardrails");
+        expect(runtime_manifest.find("language_integration_count=") == std::string::npos, "runtime manifest should omit language integration count");
+        expect(lines_with_prefix(runtime_manifest, "language_integration=").empty(),
+               "runtime manifest should omit language integration entries");
+        expect(runtime_manifest.find("ai_feature_count=") == std::string::npos, "runtime manifest should omit AI feature count");
+        expect(lines_with_prefix(runtime_manifest, "ai_feature=").empty(),
+               "runtime manifest should omit AI feature entries");
+        expect(runtime_manifest.find("extensibility_guardrail_count=") == std::string::npos,
+               "runtime manifest should omit extensibility guardrail count");
+        expect(lines_with_prefix(runtime_manifest, "extensibility_guardrail=").empty(),
+               "runtime manifest should omit explicit extensibility guardrails");
+        expect(runtime_manifest.find("language_integrations=") == std::string::npos,
+               "runtime manifest should omit language integration summary counts");
+        expect(runtime_manifest.find("ai_features=") == std::string::npos,
+               "runtime manifest should omit AI feature summary counts");
         expect(runtime_manifest.find("dotnet_gateway_task_primitives=") == std::string::npos, "runtime manifest should omit .NET gateway allow decision diagnostics");
         expect(runtime_manifest.find("dotnet_gateway_unsafe_reflection=") == std::string::npos, "runtime manifest should omit .NET gateway deny decision diagnostics");
         expect(lines_with_prefix(runtime_manifest, "feature_flag=").empty(),
@@ -238,6 +238,26 @@ void test_materialize_runtime_package() {
                "debug manifest should preserve .NET gateway allow decision diagnostics");
         expect(debug_manifest.find("dotnet_gateway_unsafe_reflection=") != std::string::npos,
                "debug manifest should preserve .NET gateway deny decision diagnostics");
+        expect(debug_manifest.find("language_integration_count=") != std::string::npos,
+               "debug manifest should preserve language integration count");
+        expect(debug_manifest.find("language_integration=python|") != std::string::npos,
+               "debug manifest should preserve python sidecar language integration");
+        expect(debug_manifest.find("language_integration=r|") != std::string::npos,
+               "debug manifest should preserve R sidecar language integration");
+        expect(debug_manifest.find("ai_feature_count=") != std::string::npos,
+               "debug manifest should preserve AI feature count");
+        expect(debug_manifest.find("ai_feature=mcp-host|") != std::string::npos,
+               "debug manifest should preserve MCP host AI feature metadata");
+        expect(debug_manifest.find("ai_feature=ai-assist|") != std::string::npos,
+               "debug manifest should preserve AI-assisted developer workflow metadata");
+        expect(debug_manifest.find("extensibility_guardrail_count=") != std::string::npos,
+               "debug manifest should preserve extensibility guardrail count");
+        expect(debug_manifest.find("The trusted execution core stays native-first and security-first.") != std::string::npos,
+               "debug manifest should preserve explicit extensibility guardrails");
+        expect(debug_manifest.find("language_integrations=" + std::to_string(copperfin::platform::default_extensibility_profile().languages.size())) != std::string::npos,
+               "debug manifest should preserve language integration summary counts");
+        expect(debug_manifest.find("ai_features=" + std::to_string(copperfin::platform::default_extensibility_profile().ai_features.size())) != std::string::npos,
+               "debug manifest should preserve AI feature summary counts");
         expect(debug_manifest.find("launcher_mode=dotnet_launcher") != std::string::npos,
                "debug manifest should record the effective launcher mode");
         expect(debug_manifest.find("launcher_fallback=none") != std::string::npos,

@@ -1400,18 +1400,23 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
             "language_integrations",
             "ai_features"};
         for (const auto& key : extensibility_summary_keys) {
-            const std::string value = manifest_value_for_key(runtime_manifest, key);
-            expect(!value.empty(),
-                   "library-output runtime manifest should provide " + key + " for debug-manifest mirroring");
-            expect(debug_manifest.find(key + "=" + value) != std::string::npos,
-                   "library-output debug manifest should mirror " + key);
+            expect(manifest_value_for_key(runtime_manifest, key).empty(),
+                   "library-output runtime manifest should omit " + key);
+            expect(!manifest_value_for_key(debug_manifest, key).empty(),
+                   "library-output debug manifest should preserve " + key);
         }
-        expect(lines_with_prefix(debug_manifest, "language_integration=") == lines_with_prefix(runtime_manifest, "language_integration="),
-               "library-output debug manifest should mirror language integration entries");
-        expect(lines_with_prefix(debug_manifest, "ai_feature=") == lines_with_prefix(runtime_manifest, "ai_feature="),
-               "library-output debug manifest should mirror AI feature entries");
-        expect(lines_with_prefix(debug_manifest, "extensibility_guardrail=") == lines_with_prefix(runtime_manifest, "extensibility_guardrail="),
-               "library-output debug manifest should mirror extensibility guardrails");
+        expect(lines_with_prefix(runtime_manifest, "language_integration=").empty(),
+               "library-output runtime manifest should omit language integration entries");
+        expect(lines_with_prefix(runtime_manifest, "ai_feature=").empty(),
+               "library-output runtime manifest should omit AI feature entries");
+        expect(lines_with_prefix(runtime_manifest, "extensibility_guardrail=").empty(),
+               "library-output runtime manifest should omit extensibility guardrails");
+        expect(!lines_with_prefix(debug_manifest, "language_integration=").empty(),
+               "library-output debug manifest should preserve language integration entries");
+        expect(!lines_with_prefix(debug_manifest, "ai_feature=").empty(),
+               "library-output debug manifest should preserve AI feature entries");
+        expect(!lines_with_prefix(debug_manifest, "extensibility_guardrail=").empty(),
+               "library-output debug manifest should preserve extensibility guardrails");
         expect(!lines_with_prefix(debug_manifest, "feature_flag=").empty(),
                "library-output debug manifest should preserve feature-flag inventory");
         expect(debug_manifest.find("primary_output_path=" + quote_manifest_value(result.plan.launcher_output_path)) != std::string::npos,
@@ -1558,17 +1563,22 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                 expect(built_debug_manifest.find("dotnet_gateway_unsafe_reflection=") != std::string::npos,
                        "library-output rewritten debug manifest should preserve the .NET gateway deny decision");
                 for (const auto& key : extensibility_summary_keys) {
-                    const std::string value = manifest_value_for_key(built_runtime_manifest, key);
-                    expect(!value.empty(),
-                           "library-output rewritten runtime manifest should provide " + key + " for debug-manifest mirroring");
-                    expect(built_debug_manifest.find(key + "=" + value) != std::string::npos,
+                    expect(manifest_value_for_key(built_runtime_manifest, key).empty(),
+                           "library-output rewritten runtime manifest should omit " + key);
+                    expect(!manifest_value_for_key(built_debug_manifest, key).empty(),
                            "library-output runtime pipeline should preserve " + key + " in the rewritten debug manifest");
                 }
-                expect(lines_with_prefix(built_debug_manifest, "language_integration=") == lines_with_prefix(built_runtime_manifest, "language_integration="),
+                expect(lines_with_prefix(built_runtime_manifest, "language_integration=").empty(),
+                       "library-output rewritten runtime manifest should omit language integration entries");
+                expect(lines_with_prefix(built_runtime_manifest, "ai_feature=").empty(),
+                       "library-output rewritten runtime manifest should omit AI feature entries");
+                expect(lines_with_prefix(built_runtime_manifest, "extensibility_guardrail=").empty(),
+                       "library-output rewritten runtime manifest should omit extensibility guardrails");
+                expect(!lines_with_prefix(built_debug_manifest, "language_integration=").empty(),
                        "library-output runtime pipeline should preserve language integration entries in the rewritten debug manifest");
-                expect(lines_with_prefix(built_debug_manifest, "ai_feature=") == lines_with_prefix(built_runtime_manifest, "ai_feature="),
+                expect(!lines_with_prefix(built_debug_manifest, "ai_feature=").empty(),
                        "library-output runtime pipeline should preserve AI feature entries in the rewritten debug manifest");
-                expect(lines_with_prefix(built_debug_manifest, "extensibility_guardrail=") == lines_with_prefix(built_runtime_manifest, "extensibility_guardrail="),
+                expect(!lines_with_prefix(built_debug_manifest, "extensibility_guardrail=").empty(),
                        "library-output runtime pipeline should preserve extensibility guardrails in the rewritten debug manifest");
                 expect(lines_with_prefix(built_runtime_manifest, "feature_flag=").empty(),
                        "library-output rewritten runtime manifest should omit feature-flag inventory");
@@ -3036,18 +3046,23 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
             "language_integrations",
             "ai_features"};
         for (const auto& key : fll_extensibility_summary_keys) {
-            const std::string value = manifest_value_for_key(runtime_manifest, key);
-            expect(!value.empty(),
-                   "fll-output runtime manifest should provide " + key + " for debug-manifest mirroring");
-            expect(debug_manifest.find(key + "=" + value) != std::string::npos,
-                   "fll-output debug manifest should mirror " + key);
+            expect(manifest_value_for_key(runtime_manifest, key).empty(),
+                   "fll-output runtime manifest should omit " + key);
+            expect(!manifest_value_for_key(debug_manifest, key).empty(),
+                   "fll-output debug manifest should preserve " + key);
         }
-        expect(lines_with_prefix(debug_manifest, "language_integration=") == lines_with_prefix(runtime_manifest, "language_integration="),
-               "fll-output debug manifest should mirror language integration entries");
-        expect(lines_with_prefix(debug_manifest, "ai_feature=") == lines_with_prefix(runtime_manifest, "ai_feature="),
-               "fll-output debug manifest should mirror AI feature entries");
-        expect(lines_with_prefix(debug_manifest, "extensibility_guardrail=") == lines_with_prefix(runtime_manifest, "extensibility_guardrail="),
-               "fll-output debug manifest should mirror extensibility guardrails");
+        expect(lines_with_prefix(runtime_manifest, "language_integration=").empty(),
+               "fll-output runtime manifest should omit language integration entries");
+        expect(lines_with_prefix(runtime_manifest, "ai_feature=").empty(),
+               "fll-output runtime manifest should omit AI feature entries");
+        expect(lines_with_prefix(runtime_manifest, "extensibility_guardrail=").empty(),
+               "fll-output runtime manifest should omit extensibility guardrails");
+        expect(!lines_with_prefix(debug_manifest, "language_integration=").empty(),
+               "fll-output debug manifest should preserve language integration entries");
+        expect(!lines_with_prefix(debug_manifest, "ai_feature=").empty(),
+               "fll-output debug manifest should preserve AI feature entries");
+        expect(!lines_with_prefix(debug_manifest, "extensibility_guardrail=").empty(),
+               "fll-output debug manifest should preserve extensibility guardrails");
         expect(!lines_with_prefix(debug_manifest, "feature_flag=").empty(),
                "fll-output debug manifest should preserve feature-flag inventory");
         expect(debug_manifest.find("primary_output_path=" + quote_manifest_value(result.plan.launcher_output_path)) != std::string::npos,
@@ -3202,17 +3217,22 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                 expect(built_debug_manifest.find("dotnet_gateway_unsafe_reflection=") != std::string::npos,
                        "fll-output rewritten debug manifest should preserve the .NET gateway deny decision");
                 for (const auto& key : fll_extensibility_summary_keys) {
-                    const std::string value = manifest_value_for_key(built_runtime_manifest, key);
-                    expect(!value.empty(),
-                           "fll-output rewritten runtime manifest should provide " + key + " for debug-manifest mirroring");
-                    expect(built_debug_manifest.find(key + "=" + value) != std::string::npos,
+                    expect(manifest_value_for_key(built_runtime_manifest, key).empty(),
+                           "fll-output rewritten runtime manifest should omit " + key);
+                    expect(!manifest_value_for_key(built_debug_manifest, key).empty(),
                            "fll-output runtime pipeline should preserve " + key + " in the rewritten debug manifest");
                 }
-                expect(lines_with_prefix(built_debug_manifest, "language_integration=") == lines_with_prefix(built_runtime_manifest, "language_integration="),
+                expect(lines_with_prefix(built_runtime_manifest, "language_integration=").empty(),
+                       "fll-output rewritten runtime manifest should omit language integration entries");
+                expect(lines_with_prefix(built_runtime_manifest, "ai_feature=").empty(),
+                       "fll-output rewritten runtime manifest should omit AI feature entries");
+                expect(lines_with_prefix(built_runtime_manifest, "extensibility_guardrail=").empty(),
+                       "fll-output rewritten runtime manifest should omit extensibility guardrails");
+                expect(!lines_with_prefix(built_debug_manifest, "language_integration=").empty(),
                        "fll-output runtime pipeline should preserve language integration entries in the rewritten debug manifest");
-                expect(lines_with_prefix(built_debug_manifest, "ai_feature=") == lines_with_prefix(built_runtime_manifest, "ai_feature="),
+                expect(!lines_with_prefix(built_debug_manifest, "ai_feature=").empty(),
                        "fll-output runtime pipeline should preserve AI feature entries in the rewritten debug manifest");
-                expect(lines_with_prefix(built_debug_manifest, "extensibility_guardrail=") == lines_with_prefix(built_runtime_manifest, "extensibility_guardrail="),
+                expect(!lines_with_prefix(built_debug_manifest, "extensibility_guardrail=").empty(),
                        "fll-output runtime pipeline should preserve extensibility guardrails in the rewritten debug manifest");
                 expect(lines_with_prefix(built_runtime_manifest, "feature_flag=").empty(),
                        "fll-output rewritten runtime manifest should omit feature-flag inventory");

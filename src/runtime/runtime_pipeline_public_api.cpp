@@ -264,32 +264,6 @@ std::string build_runtime_manifest_text(
     stream << "runtime_host_sha256=" << quote_manifest_value(plan.runtime_host_sha256) << "\n";
     stream << "dotnet_story=" << quote_manifest_value(extensibility_profile.dotnet_output.primary_story) << "\n";
 
-    stream << "language_integration_count=" << extensibility_profile.languages.size() << "\n";
-    for (const auto& language : extensibility_profile.languages) {
-        stream << "language_integration="
-               << quote_manifest_value(language.id) << "|"
-               << quote_manifest_value(language.title) << "|"
-               << quote_manifest_value(language.integration_mode) << "|"
-               << quote_manifest_value(language.trust_boundary) << "|"
-               << quote_manifest_value(language.output_story) << "|"
-               << (language.enabled_by_default ? "true" : "false") << "\n";
-    }
-    stream << "ai_feature_count=" << extensibility_profile.ai_features.size() << "\n";
-    for (const auto& feature : extensibility_profile.ai_features) {
-        stream << "ai_feature="
-               << quote_manifest_value(feature.id) << "|"
-               << quote_manifest_value(feature.title) << "|"
-               << quote_manifest_value(feature.description) << "|"
-               << quote_manifest_value(feature.trust_boundary) << "|"
-               << (feature.enabled_by_default ? "true" : "false") << "\n";
-    }
-    stream << "extensibility_guardrail_count=" << extensibility_profile.guardrails.size() << "\n";
-    for (const auto& guardrail : extensibility_profile.guardrails) {
-        stream << "extensibility_guardrail=" << quote_manifest_value(guardrail) << "\n";
-    }
-
-    stream << "language_integrations=" << extensibility_profile.languages.size() << "\n";
-    stream << "ai_features=" << extensibility_profile.ai_features.size() << "\n";
     append_runtime_asset_manifest_lines(stream, plan);
 
     for (const auto& digest : plan.extension_payload_digests) {
