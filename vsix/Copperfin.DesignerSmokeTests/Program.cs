@@ -6323,7 +6323,7 @@ internal static class Program
                    englishDetails.IndexOf("Deleted sections: 2", StringComparison.Ordinal) >= 0 &&
                    englishDetails.IndexOf("Groupings: 1", StringComparison.Ordinal) >= 0 &&
                    englishDetails.IndexOf("Settings: 21", StringComparison.Ordinal) >= 0 &&
-                   englishDetails.IndexOf("Deleted settings: 1", StringComparison.Ordinal) >= 0 &&
+                   englishDetails.IndexOf("Deleted settings: 3", StringComparison.Ordinal) >= 0 &&
                    englishDetails.IndexOf("Unplaced objects: 1", StringComparison.Ordinal) >= 0 &&
                    englishDetails.IndexOf("Deleted objects: 4", StringComparison.Ordinal) >= 0 &&
                    englishDetails.IndexOf("Active Sort Expression: customer.country", StringComparison.Ordinal) >= 0 &&
@@ -6361,8 +6361,8 @@ internal static class Program
                    spanishDetails.IndexOf("Secciones: 3", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Secciones eliminadas: 2", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Agrupaciones: 1", StringComparison.Ordinal) >= 0 &&
-                   spanishDetails.IndexOf("Configuraciones: 15", StringComparison.Ordinal) >= 0 &&
-                   spanishDetails.IndexOf("Configuraciones eliminadas: 1", StringComparison.Ordinal) >= 0 &&
+                   spanishDetails.IndexOf("Configuraciones: 21", StringComparison.Ordinal) >= 0 &&
+                   spanishDetails.IndexOf("Configuraciones eliminadas: 3", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Objetos sin sección: 1", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Objetos eliminados: 4", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Expresión de orden activa: customer.country", StringComparison.Ordinal) >= 0 &&
@@ -6381,7 +6381,7 @@ internal static class Program
                    spanishDetails.IndexOf("Fuente predeterminada: 15", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Calidad de impresión: 600", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Resolución Y: 600", StringComparison.Ordinal) >= 0 &&
-                   spanishDetails.IndexOf("Opción de TrueType: 3", StringComparison.Ordinal) >= 0 &&
+                   spanishDetails.IndexOf("Opción TrueType: 3", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("ASCII: 9", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Intercalar: 1", StringComparison.Ordinal) >= 0 &&
                    spanishDetails.IndexOf("Margen izquierdo: 15", StringComparison.Ordinal) >= 0 &&
@@ -6396,8 +6396,8 @@ internal static class Program
                    portugueseDetails.IndexOf("Seções: 3", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Seções excluídas: 2", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Agrupamentos: 1", StringComparison.Ordinal) >= 0 &&
-                   portugueseDetails.IndexOf("Configurações: 15", StringComparison.Ordinal) >= 0 &&
-                   portugueseDetails.IndexOf("Configurações excluídas: 1", StringComparison.Ordinal) >= 0 &&
+                   portugueseDetails.IndexOf("Configurações: 21", StringComparison.Ordinal) >= 0 &&
+                   portugueseDetails.IndexOf("Configurações excluídas: 3", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Objetos sem seção: 1", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Objetos excluídos: 4", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Expressão de ordenação ativa: customer.country", StringComparison.Ordinal) >= 0 &&
@@ -6416,7 +6416,7 @@ internal static class Program
                    portugueseDetails.IndexOf("Origem padrão: 15", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Qualidade de impressão: 600", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Resolução Y: 600", StringComparison.Ordinal) >= 0 &&
-                   portugueseDetails.IndexOf("Opção de TrueType: 3", StringComparison.Ordinal) >= 0 &&
+                   portugueseDetails.IndexOf("Opção TrueType: 3", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("ASCII: 9", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Intercalar: 1", StringComparison.Ordinal) >= 0 &&
                    portugueseDetails.IndexOf("Margem esquerda: 15", StringComparison.Ordinal) >= 0 &&
