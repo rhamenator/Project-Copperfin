@@ -3577,7 +3577,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         return make_boolean_value(false);
     }
 
-    if (function == "addproperty" && arguments.size() >= 2U) {
+    if ((function == "addproperty" || function == "addprop") && arguments.size() >= 2U) {
         if (!resolve_object_callback) {
             record_runtime_warning(runtime_text(
                 "Runtime.Prg.RuntimeSurface.Warning.StubRuntimeObjectCallback",

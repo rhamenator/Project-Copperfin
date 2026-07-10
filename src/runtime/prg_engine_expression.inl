@@ -1054,7 +1054,7 @@
                     }
                     return callfn_callback_(handle, call_arguments);
                 }
-                if (function == "createobject" && !arguments.empty())
+                if ((function == "createobject" || function == "createobj") && !arguments.empty())
                 {
                     const std::string prog_id = value_as_string(arguments[0]);
                     std::vector<PrgValue> create_arguments;

@@ -930,6 +930,66 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_common_native_oop_function_abbreviations()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_oop_function_abbreviations";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_oop_function_abbreviations.prg";
+        write_text(
+            main_path,
+            "oAliasEmpty = CREATEOBJ('Empty')\n"
+            "lAliasAdd = ADDPROP(oAliasEmpty, 'ShortProp', 42)\n"
+            "lAliasHasProp = PEMSTATUS(oAliasEmpty, 'ShortProp', 1)\n"
+            "nAliasPropValue = oAliasEmpty.ShortProp\n"
+            "oAliasWidget = CREATEOBJ('AliasWidget')\n"
+            "cAliasCaption = oAliasWidget.Caption\n"
+            "cAliasClass = oAliasWidget.Class\n"
+            "cAliasBaseClass = oAliasWidget.BaseClass\n"
+            "cAliasDescribe = oAliasWidget.Describe('abbr')\n"
+            "RETURN\n"
+            "DEFINE CLASS AliasWidget AS Custom\n"
+            "    Caption = 'AliasWidget'\n"
+            "    FUNCTION Describe\n"
+            "        LPARAMETERS tcPrefix\n"
+            "        RETURN tcPrefix + ':' + THIS.Caption\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("common native OOP abbreviation script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("laliasadd", "true");
+        check("laliashasprop", "true");
+        check("naliaspropvalue", "42");
+        check("caliascaption", "AliasWidget");
+        check("caliasclass", "AliasWidget");
+        check("caliasbaseclass", "Custom");
+        check("caliasdescribe", "abbr:AliasWidget");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_cursor_xml_round_trip_runtime_surface_functions()
     {
         namespace fs = std::filesystem;
@@ -52074,6 +52134,7 @@ int main()
     test_recsize_reclength_expression_functions();
     test_environment_and_sys_introspection_functions();
     test_object_reflection_runtime_surface_functions();
+    test_common_native_oop_function_abbreviations();
     test_cursor_xml_round_trip_runtime_surface_functions();
     test_cursor_xml_invalid_input_runtime_surface_functions();
     test_newobject_getpem_setpem_compobj_functions();
