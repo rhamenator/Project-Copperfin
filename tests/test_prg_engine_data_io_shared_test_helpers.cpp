@@ -70,7 +70,7 @@ void test_runtime_array_mutator_functions() {
         "cTargetThree = aTarget[2,2]\n"
         "nCopyAll = ACOPY(aSource, aFlat)\n"
         "nFlatLen = ALEN(aFlat)\n"
-        "cFlatSix = aFlat[6]\n"
+        "cFlatOne = aFlat[1]\n"
         "DIMENSION aNumericSort[3]\n"
         "aNumericSort[1] = 10\n"
         "aNumericSort[2] = 2\n"
@@ -187,7 +187,7 @@ void test_runtime_array_mutator_functions() {
     const auto target_three = state.globals.find("ctargetthree");
     const auto copy_all = state.globals.find("ncopyall");
     const auto flat_len = state.globals.find("nflatlen");
-    const auto flat_six = state.globals.find("cflatsix");
+    const auto flat_one = state.globals.find("cflatone");
     const auto sort_numeric = state.globals.find("nsortnumeric");
     const auto sort_numeric_one = state.globals.find("nsortnumericone");
     const auto sort_numeric_two = state.globals.find("nsortnumerictwo");
@@ -251,8 +251,8 @@ void test_runtime_array_mutator_functions() {
     expect(target_two != state.globals.end(), "ACOPY should continue across target rows");
     expect(target_three != state.globals.end(), "ACOPY should copy the full requested window");
     expect(copy_all != state.globals.end(), "ACOPY should copy all remaining source elements by default");
-    expect(flat_len != state.globals.end(), "ACOPY should grow a one-dimensional target when needed");
-    expect(flat_six != state.globals.end(), "ACOPY should preserve the final copied source element");
+    expect(flat_len != state.globals.end(), "ACOPY should preserve the existing target size by default");
+    expect(flat_one != state.globals.end(), "ACOPY should preserve the copied element that fits in the existing target");
     expect(sort_numeric != state.globals.end(), "ASORT should sort numeric arrays using numeric order");
     expect(sort_window != state.globals.end(), "ASORT should sort bounded one-dimensional windows");
     expect(sort_rows_by_first != state.globals.end(), "ASORT should sort two-dimensional arrays by row");
@@ -350,13 +350,13 @@ void test_runtime_array_mutator_functions() {
         expect(copperfin::runtime::format_value(target_three->second) == "D", "ACOPY should place source element 4 in target element 5");
     }
     if (copy_all != state.globals.end()) {
-        expect(copperfin::runtime::format_value(copy_all->second) == "6", "ACOPY without count should copy all source elements");
+        expect(copperfin::runtime::format_value(copy_all->second) == "1", "ACOPY without count should clamp to the existing target capacity");
     }
     if (flat_len != state.globals.end()) {
-        expect(copperfin::runtime::format_value(flat_len->second) == "6", "ACOPY should grow a flat target to six elements");
+        expect(copperfin::runtime::format_value(flat_len->second) == "1", "ACOPY should not resize an existing flat target");
     }
-    if (flat_six != state.globals.end()) {
-        expect(copperfin::runtime::format_value(flat_six->second) == "F", "ACOPY should copy the final element into the grown flat target");
+    if (flat_one != state.globals.end()) {
+        expect(copperfin::runtime::format_value(flat_one->second) == "A", "ACOPY should preserve the first copied source element when clamping");
     }
     if (sort_numeric != state.globals.end()) {
         expect(copperfin::runtime::format_value(sort_numeric->second) == "1", "ASORT numeric array should report success");
