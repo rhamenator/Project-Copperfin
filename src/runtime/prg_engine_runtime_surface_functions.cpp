@@ -633,6 +633,8 @@ bool is_builtin_native_runtime_method_name(
     if (normalized_member_name == "additem" ||
         normalized_member_name == "addlistitem" ||
         normalized_member_name == "clear" ||
+        normalized_member_name == "indextoitemid" ||
+        normalized_member_name == "itemidtoindex" ||
         normalized_member_name == "removeitem" ||
         normalized_member_name == "removelistitem") {
         const std::string normalized_base_class =
@@ -2479,6 +2481,12 @@ std::vector<std::string> collect_object_member_names(const RuntimeOleObjectState
         if (is_builtin_native_runtime_method_name(runtime_object, "addlistitem")) {
             unique_members.insert("addlistitem");
         }
+        if (is_builtin_native_runtime_method_name(runtime_object, "indextoitemid")) {
+            unique_members.insert("indextoitemid");
+        }
+        if (is_builtin_native_runtime_method_name(runtime_object, "itemidtoindex")) {
+            unique_members.insert("itemidtoindex");
+        }
         if (is_builtin_native_runtime_method_name(runtime_object, "removeitem")) {
             unique_members.insert("removeitem");
         }
@@ -3277,6 +3285,43 @@ std::optional<PrgValue> invoke_native_list_control_method(RuntimeOleObjectState&
         }
 
         return make_boolean_value(runtime_object.list_selected[*slot]);
+    }
+
+    if (normalized_method_name == "indextoitemid") {
+        if (arguments.empty()) {
+            return make_number_value(0.0);
+        }
+
+        materialize_native_list_control_rows(runtime_object);
+        const long long requested_index = std::llround(value_as_number(arguments[0]));
+        if (requested_index < 1LL ||
+            static_cast<std::size_t>(requested_index) > runtime_object.collection_item_keys.size()) {
+            return make_number_value(0.0);
+        }
+
+        const std::string& item_key =
+            runtime_object.collection_item_keys[static_cast<std::size_t>(requested_index - 1LL)];
+        try {
+            return make_number_value(static_cast<double>(std::stoll(item_key)));
+        } catch (const std::exception&) {
+            return make_number_value(0.0);
+        }
+    }
+
+    if (normalized_method_name == "itemidtoindex") {
+        if (arguments.empty()) {
+            return make_number_value(0.0);
+        }
+
+        materialize_native_list_control_rows(runtime_object);
+        const long long requested_item_id = std::llround(value_as_number(arguments[0]));
+        if (requested_item_id < 1LL) {
+            return make_number_value(0.0);
+        }
+
+        const auto slot = find_native_list_control_row_by_item_id(runtime_object, requested_item_id);
+        return make_number_value(
+            slot.has_value() ? static_cast<double>(*slot + 1U) : 0.0);
     }
 
     if (normalized_method_name == "addlistitem") {
