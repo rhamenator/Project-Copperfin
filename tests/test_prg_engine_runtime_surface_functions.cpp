@@ -48124,6 +48124,141 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_writemethod_creates_missing_method_when_create_flag_is_true()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root =
+            fs::temp_directory_path() / "copperfin_native_prg_writemethod_create";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_writemethod_create.prg";
+        write_text(
+            main_path,
+            "oWidget = CREATEOBJECT('ProbeWidget')\n"
+            "cMissingBefore = oWidget.ReadMethod('Ping')\n"
+            "cBaseDescribeBefore = oWidget.Describe()\n"
+            "oWidget.WriteMethod('Ping', 'LPARAMETERS tcPrefix' + CHR(10) + 'RETURN tcPrefix + ''-created''', .T., 2, 'runtime-only')\n"
+            "oWidget.WriteMethod('Describe', 'RETURN ''derived''', .T.)\n"
+            "cPingMethod = oWidget.ReadMethod('Ping')\n"
+            "cDescribeMethod = oWidget.ReadMethod('Describe')\n"
+            "cAfterPing = oWidget.Ping('alpha')\n"
+            "cAfterDescribe = oWidget.Describe()\n"
+            "nMethods = AMEMBERS(aMethods, oWidget, 2)\n"
+            "nHasPing = ASCAN(aMethods, 'PING')\n"
+            "nHasDescribe = ASCAN(aMethods, 'DESCRIBE')\n"
+            "RETURN\n"
+            "DEFINE CLASS ParentWidget AS Custom\n"
+            "    FUNCTION Describe\n"
+            "        RETURN 'base'\n"
+            "    ENDFUNC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS ProbeWidget AS ParentWidget\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native WriteMethod create script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " variable not found");
+            if (it != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(it->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(it->second) + "'");
+            }
+        };
+
+        check("cmissingbefore", "");
+        check("cbasedescribebefore", "base");
+        check("cpingmethod", "LPARAMETERS tcPrefix\nRETURN tcPrefix + '-created'");
+        check("cdescribemethod", "RETURN 'derived'");
+        check("cafterping", "alpha-created");
+        check("cafterdescribe", "derived");
+
+        const auto has_ping = state.globals.find("nhasping");
+        expect(has_ping != state.globals.end(),
+               "native WriteMethod create script should preserve AMEMBERS() presence for Ping");
+        if (has_ping != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(has_ping->second) != "0",
+                   "AMEMBERS(..., 2) should expose created Ping method");
+        }
+
+        const auto has_describe = state.globals.find("nhasdescribe");
+        expect(has_describe != state.globals.end(),
+               "native WriteMethod create script should preserve AMEMBERS() presence for Describe");
+        if (has_describe != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(has_describe->second) != "0",
+                   "AMEMBERS(..., 2) should expose derived Describe override");
+        }
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_native_writemethod_missing_method_without_create_flag_remains_noop()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root =
+            fs::temp_directory_path() / "copperfin_native_prg_writemethod_no_create";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_writemethod_no_create.prg";
+        write_text(
+            main_path,
+            "oWidget = CREATEOBJECT('ProbeWidget')\n"
+            "oWidget.WriteMethod('Ping', 'RETURN ''created''')\n"
+            "oWidget.WriteMethod('Pong', 'RETURN ''created''', .F.)\n"
+            "cPingMethod = oWidget.ReadMethod('Ping')\n"
+            "cPongMethod = oWidget.ReadMethod('Pong')\n"
+            "nMethods = AMEMBERS(aMethods, oWidget, 2)\n"
+            "nHasPing = ASCAN(aMethods, 'PING')\n"
+            "nHasPong = ASCAN(aMethods, 'PONG')\n"
+            "RETURN\n"
+            "DEFINE CLASS ProbeWidget AS Custom\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(
+                make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native WriteMethod no-create script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " variable not found");
+            if (it != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(it->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(it->second) + "'");
+            }
+        };
+
+        check("cpingmethod", "");
+        check("cpongmethod", "");
+        check("nhasping", "0");
+        check("nhaspong", "0");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_builtin_methods_reflect_through_pemstatus_getpem_and_amembers()
     {
         namespace fs = std::filesystem;
@@ -53679,6 +53814,8 @@ int main()
     test_native_readmethod_returns_class_method_source_text();
     test_native_writeexpression_updates_live_property_values_and_preserves_expression_text();
     test_native_writemethod_updates_existing_method_body_and_invocation();
+    test_native_writemethod_creates_missing_method_when_create_flag_is_true();
+    test_native_writemethod_missing_method_without_create_flag_remains_noop();
     test_native_builtin_methods_reflect_through_pemstatus_getpem_and_amembers();
     test_same_prg_native_bare_helper_calls_resolve_to_current_instance_before_top_level_routines();
     test_inherited_external_prg_base_methods_resolve_bare_helper_calls_against_defining_library();

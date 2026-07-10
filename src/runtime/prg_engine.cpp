@@ -822,9 +822,10 @@ namespace copperfin::runtime
             const RuntimeOleObjectState &runtime_object,
             const std::string &method_name);
         bool write_native_method_source_if_present(
-            const RuntimeOleObjectState &runtime_object,
+            RuntimeOleObjectState &runtime_object,
             const std::string &method_name,
-            const std::string &method_source_text);
+            const std::string &method_source_text,
+            bool create_if_missing = false);
         std::optional<PrgValue> invoke_runtime_object_reference_member(
             const PrgValue &object_reference,
             const std::string &member_path,
@@ -2411,10 +2412,14 @@ namespace copperfin::runtime
 
             const std::string method_name = trim_copy(value_as_string(arguments[0]));
             const std::string method_source_text = value_as_string(arguments[1]);
+            const bool create_if_missing =
+                arguments.size() >= 3U &&
+                value_as_bool(arguments[2]);
             if (!write_native_method_source_if_present(
                     *target_object,
                     method_name,
-                    method_source_text))
+                    method_source_text,
+                    create_if_missing))
             {
                 return make_empty_value();
             }
@@ -4942,9 +4947,10 @@ namespace copperfin::runtime
     }
 
     bool PrgRuntimeSession::Impl::write_native_method_source_if_present(
-        const RuntimeOleObjectState &runtime_object,
+        RuntimeOleObjectState &runtime_object,
         const std::string &method_name,
-        const std::string &method_source_text)
+        const std::string &method_source_text,
+        bool create_if_missing)
     {
         const std::string normalized_method_name = normalize_identifier(method_name);
         if (normalized_method_name.empty() || runtime_object.source.empty())
@@ -4953,21 +4959,43 @@ namespace copperfin::runtime
         }
 
         Program &program = load_program(runtime_object.source);
+        const auto starting_class_lookup =
+            find_native_class_lookup(program, runtime_object.prog_id);
+        if (!starting_class_lookup.has_value() ||
+            starting_class_lookup->class_definition == nullptr)
+        {
+            return false;
+        }
+
+        const auto starting_method =
+            starting_class_lookup->class_definition->methods.find(
+                normalized_method_name);
         std::string qualified_method_name;
-        const auto method_lookup =
+        const auto inherited_method_lookup =
             find_native_class_method_lookup(
                 program,
                 runtime_object.prog_id,
                 normalized_method_name,
                 true,
                 qualified_method_name);
-        if (!method_lookup.has_value() || method_lookup->routine == nullptr)
+        const bool create_on_starting_class =
+            create_if_missing &&
+            starting_method == starting_class_lookup->class_definition->methods.end();
+        const auto &method_lookup =
+            create_on_starting_class
+                ? std::optional<NativeMethodLookup>{}
+                : inherited_method_lookup;
+        if (!create_on_starting_class &&
+            (!method_lookup.has_value() || method_lookup->routine == nullptr))
         {
             return false;
         }
 
         const std::string temp_routine_name = "__CopperfinWriteMethodTemp";
-        const bool parse_as_function = method_lookup->routine->kind == RoutineKind::function;
+        const bool parse_as_function =
+            method_lookup.has_value() &&
+            method_lookup->routine != nullptr &&
+            method_lookup->routine->kind == RoutineKind::function;
         std::error_code ignored;
         std::filesystem::create_directories(runtime_temp_directory, ignored);
         const std::filesystem::path temp_path =
@@ -5007,26 +5035,69 @@ namespace copperfin::runtime
         }
 
         Routine updated_routine = parsed_method->second;
-        updated_routine.name = method_lookup->routine->name;
-        updated_routine.kind = method_lookup->routine->kind;
-        updated_routine.declaration_location = method_lookup->routine->declaration_location;
-        updated_routine.body_end_line_exclusive =
-            updated_routine.declaration_location.line + updated_routine.statements.size() + 1U;
-
-        std::size_t line_number = updated_routine.declaration_location.line;
-        for (Statement &statement : updated_routine.statements)
+        const PrgClassDefinition *target_class_definition = nullptr;
+        const Program *target_program = nullptr;
+        if (create_on_starting_class)
         {
-            statement.location.file_path = updated_routine.declaration_location.file_path;
-            statement.location.line = line_number;
-            ++line_number;
+            updated_routine.name = trim_copy(method_name);
+            updated_routine.kind = RoutineKind::procedure;
+            updated_routine.declaration_location = {};
+            updated_routine.body_end_line_exclusive = 0;
+            target_class_definition = starting_class_lookup->class_definition;
+            target_program = starting_class_lookup->program;
+
+            std::size_t line_number =
+                target_class_definition->declaration_location.line;
+            for (Statement &statement : updated_routine.statements)
+            {
+                statement.location.file_path = target_program->path;
+                statement.location.line = line_number;
+                ++line_number;
+            }
+        }
+        else
+        {
+            updated_routine.name = method_lookup->routine->name;
+            updated_routine.kind = method_lookup->routine->kind;
+            updated_routine.declaration_location =
+                method_lookup->routine->declaration_location;
+            updated_routine.body_end_line_exclusive =
+                updated_routine.declaration_location.line + updated_routine.statements.size() + 1U;
+            target_class_definition = method_lookup->class_definition;
+            target_program = method_lookup->program;
+
+            std::size_t line_number = updated_routine.declaration_location.line;
+            for (Statement &statement : updated_routine.statements)
+            {
+                statement.location.file_path =
+                    updated_routine.declaration_location.file_path;
+                statement.location.line = line_number;
+                ++line_number;
+            }
+        }
+
+        if (target_class_definition == nullptr || target_program == nullptr)
+        {
+            return false;
         }
 
         auto &mutable_methods =
-            const_cast<PrgClassDefinition *>(method_lookup->class_definition)->methods;
+            const_cast<PrgClassDefinition *>(target_class_definition)->methods;
         mutable_methods[normalized_method_name] = updated_routine;
+        const std::string defining_class_name =
+            target_class_definition->name.empty()
+                ? runtime_object.prog_id
+                : target_class_definition->name;
+        qualified_method_name = defining_class_name + "." + updated_routine.name;
         native_method_source_text_by_key[make_native_method_override_key(
-            method_lookup->program->path,
+            target_program->path,
             qualified_method_name)] = method_source_text;
+        if (!runtime_object_member_matches(
+                runtime_object.methods,
+                normalized_method_name))
+        {
+            runtime_object.methods.push_back(updated_routine.name);
+        }
         return true;
     }
 
