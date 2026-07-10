@@ -464,18 +464,18 @@ void run_library_build_host_smoke(
                "build host manifest should record a materialized primary output for " + extension + " outputs");
         expect(manifest_text.find("project_title=LibraryDemo") != std::string::npos,
                "build host manifest should record the project title for " + extension + " outputs");
-        expect(manifest_text.find("project_path=" + project_path.string()) != std::string::npos,
-               "build host manifest should record the project path for " + extension + " outputs");
+        expect(manifest_text.find("project_path=" + project_path.string()) == std::string::npos,
+               "build host runtime manifest should omit the project path for " + extension + " outputs");
         expect(manifest_text.find("package_root=" + (output_dir / "LibraryDemo").string()) != std::string::npos,
                "build host manifest should record the package root for " + extension + " outputs");
         expect(manifest_text.find("content_root=" + (output_dir / "LibraryDemo" / "content").string()) != std::string::npos,
                "build host manifest should record the content root for " + extension + " outputs");
-        expect(manifest_text.find("ast_manifest_path=" + expected_ast_manifest.string()) != std::string::npos,
-               "build host manifest should record the AST manifest path for " + extension + " outputs");
-        expect(manifest_text.find("ir_manifest_path=" + expected_ir_manifest.string()) != std::string::npos,
-               "build host manifest should record the IR manifest path for " + extension + " outputs");
-        expect(manifest_text.find("transpiled_csharp_path=" + expected_transpiled_csharp.string()) != std::string::npos,
-               "build host manifest should record the transpiled C# path for " + extension + " outputs");
+        expect(manifest_text.find("ast_manifest_path=" + expected_ast_manifest.string()) == std::string::npos,
+               "build host runtime manifest should omit the AST manifest path for " + extension + " outputs");
+        expect(manifest_text.find("ir_manifest_path=" + expected_ir_manifest.string()) == std::string::npos,
+               "build host runtime manifest should omit the IR manifest path for " + extension + " outputs");
+        expect(manifest_text.find("transpiled_csharp_path=" + expected_transpiled_csharp.string()) == std::string::npos,
+               "build host runtime manifest should omit the transpiled C# path for " + extension + " outputs");
         expect(manifest_text.find("configuration=debug") != std::string::npos,
                "build host manifest should record the debug build configuration for " + extension + " outputs");
         expect(manifest_text.find("security_enabled=false") != std::string::npos,
@@ -493,30 +493,8 @@ void run_library_build_host_smoke(
                    "build host manifest should record the VFP DLL calling convention contract");
             expect(manifest_text.find("library_api_manifest_path=") != std::string::npos,
                    "build host manifest should record the dedicated DLL API-manifest path");
-            expect(manifest_text.find("library_function_arity=InitLibrary|1") != std::string::npos,
-                   "build host manifest should record InitLibrary DLL arity");
-            expect(manifest_text.find("library_function_arity=AddNumbers|2") != std::string::npos,
-                   "build host manifest should record AddNumbers DLL arity");
-            expect(manifest_text.find("library_function_kind=InitLibrary|procedure") != std::string::npos,
-                   "build host manifest should record InitLibrary DLL routine kind");
-            expect(manifest_text.find("library_function_kind=AddNumbers|function") != std::string::npos,
-                   "build host manifest should record AddNumbers DLL routine kind");
-            expect(manifest_text.find("library_function_source=InitLibrary|" + init_library_source + "|1") != std::string::npos,
-                   "build host manifest should record InitLibrary DLL source provenance");
-            expect(manifest_text.find("library_function_source=AddNumbers|" + add_numbers_source + "|1") != std::string::npos,
-                   "build host manifest should record AddNumbers DLL source provenance");
-            expect(manifest_text.find("library_function_parameters=InitLibrary|tcMode") != std::string::npos,
-                   "build host manifest should record InitLibrary DLL parameter names");
-            expect(manifest_text.find("library_function_parameters=AddNumbers|tnLeft|tnRight") != std::string::npos,
-                   "build host manifest should record AddNumbers DLL parameter names");
-            expect(manifest_text.find("library_function_parameter_declaration=InitLibrary|lparameters") != std::string::npos,
-                   "build host manifest should record InitLibrary DLL parameter declaration style");
-            expect(manifest_text.find("library_function_parameter_declaration=AddNumbers|parameters") != std::string::npos,
-                   "build host manifest should record AddNumbers DLL parameter declaration style");
-            expect(manifest_text.find("library_function_call_surface=InitLibrary|vfp_declare_default|int tcMode") != std::string::npos,
-                   "build host manifest should record InitLibrary DLL call surface");
-            expect(manifest_text.find("library_function_call_surface=AddNumbers|vfp_declare_default|int tnLeft, int tnRight") != std::string::npos,
-                   "build host manifest should record AddNumbers DLL call surface");
+            expect(lines_with_prefix(manifest_text, "library_function_").empty(),
+                   "build host runtime manifest should omit DLL library-function inventory");
         }
     }
     if (!debug_manifest_path.empty()) {
@@ -623,8 +601,10 @@ void run_library_build_host_smoke(
                "build host debug manifest should mirror extensibility guardrails for " + extension + " outputs");
         const std::vector<std::string> runtime_feature_flags = lines_with_prefix(manifest_text, "feature_flag=");
         const std::vector<std::string> debug_feature_flags = lines_with_prefix(debug_manifest_text, "feature_flag=");
-        expect(debug_feature_flags == runtime_feature_flags,
-               "build host debug manifest should mirror runtime feature-flag lines for " + extension + " outputs");
+        expect(runtime_feature_flags.empty(),
+               "build host runtime manifest should omit feature-flag inventory for " + extension + " outputs");
+        expect(!debug_feature_flags.empty(),
+               "build host debug manifest should preserve feature-flag inventory for " + extension + " outputs");
         expect(debug_manifest_text.find("primary_output_materialized=true") != std::string::npos,
                "build host debug manifest should record a materialized primary output for " + extension + " outputs");
         expect(debug_manifest_text.find("extension_payload=" + expected_output.string() + "|") != std::string::npos,
@@ -654,6 +634,30 @@ void run_library_build_host_smoke(
                    "build host DLL debug manifest should record discovered export symbols");
             expect(debug_manifest_text.find("export_symbol=AddNumbers") != std::string::npos,
                    "build host DLL debug manifest should record all export symbols");
+            expect(debug_manifest_text.find("library_function_arity=InitLibrary|1") != std::string::npos,
+                   "build host DLL debug manifest should record InitLibrary arity");
+            expect(debug_manifest_text.find("library_function_arity=AddNumbers|2") != std::string::npos,
+                   "build host DLL debug manifest should record AddNumbers arity");
+            expect(debug_manifest_text.find("library_function_kind=InitLibrary|procedure") != std::string::npos,
+                   "build host DLL debug manifest should record InitLibrary routine kind");
+            expect(debug_manifest_text.find("library_function_kind=AddNumbers|function") != std::string::npos,
+                   "build host DLL debug manifest should record AddNumbers routine kind");
+            expect(debug_manifest_text.find("library_function_source=InitLibrary|" + init_library_source + "|1") != std::string::npos,
+                   "build host DLL debug manifest should record InitLibrary source provenance");
+            expect(debug_manifest_text.find("library_function_source=AddNumbers|" + add_numbers_source + "|1") != std::string::npos,
+                   "build host DLL debug manifest should record AddNumbers source provenance");
+            expect(debug_manifest_text.find("library_function_parameters=InitLibrary|tcMode") != std::string::npos,
+                   "build host DLL debug manifest should record InitLibrary parameter names");
+            expect(debug_manifest_text.find("library_function_parameters=AddNumbers|tnLeft|tnRight") != std::string::npos,
+                   "build host DLL debug manifest should record AddNumbers parameter names");
+            expect(debug_manifest_text.find("library_function_parameter_declaration=InitLibrary|lparameters") != std::string::npos,
+                   "build host DLL debug manifest should record InitLibrary parameter declaration style");
+            expect(debug_manifest_text.find("library_function_parameter_declaration=AddNumbers|parameters") != std::string::npos,
+                   "build host DLL debug manifest should record AddNumbers parameter declaration style");
+            expect(debug_manifest_text.find("library_function_call_surface=InitLibrary|vfp_declare_default|int tcMode") != std::string::npos,
+                   "build host DLL debug manifest should record InitLibrary call surface");
+            expect(debug_manifest_text.find("library_function_call_surface=AddNumbers|vfp_declare_default|int tnLeft, int tnRight") != std::string::npos,
+                   "build host DLL debug manifest should record AddNumbers call surface");
         }
         if (extension == "fll") {
             expect(debug_manifest_text.find("module_definition_path=") != std::string::npos,
@@ -676,6 +680,26 @@ void run_library_build_host_smoke(
                    "build host FLL debug manifest should record discovered routine export symbols");
             expect(debug_manifest_text.find("export_symbol=AddNumbers") != std::string::npos,
                    "build host FLL debug manifest should record all routine export symbols");
+            expect(debug_manifest_text.find("library_function_kind=InitLibrary|procedure") != std::string::npos,
+                   "build host FLL debug manifest should record InitLibrary routine kind");
+            expect(debug_manifest_text.find("library_function_kind=AddNumbers|function") != std::string::npos,
+                   "build host FLL debug manifest should record AddNumbers routine kind");
+            expect(debug_manifest_text.find("library_function_source=InitLibrary|" + init_library_source + "|1") != std::string::npos,
+                   "build host FLL debug manifest should record InitLibrary source provenance");
+            expect(debug_manifest_text.find("library_function_source=AddNumbers|" + add_numbers_source + "|1") != std::string::npos,
+                   "build host FLL debug manifest should record AddNumbers source provenance");
+            expect(debug_manifest_text.find("library_function_parameters=InitLibrary|tcMode") != std::string::npos,
+                   "build host FLL debug manifest should record InitLibrary parameter names");
+            expect(debug_manifest_text.find("library_function_parameters=AddNumbers|tnLeft|tnRight") != std::string::npos,
+                   "build host FLL debug manifest should record AddNumbers parameter names");
+            expect(debug_manifest_text.find("library_function_parameter_declaration=InitLibrary|lparameters") != std::string::npos,
+                   "build host FLL debug manifest should record InitLibrary parameter declaration style");
+            expect(debug_manifest_text.find("library_function_parameter_declaration=AddNumbers|parameters") != std::string::npos,
+                   "build host FLL debug manifest should record AddNumbers parameter declaration style");
+            expect(debug_manifest_text.find("library_function_call_surface=InitLibrary|ParamBlk*|_RetInt") != std::string::npos,
+                   "build host FLL debug manifest should record InitLibrary callable surface");
+            expect(debug_manifest_text.find("library_function_call_surface=AddNumbers|ParamBlk*|_RetInt") != std::string::npos,
+                   "build host FLL debug manifest should record AddNumbers callable surface");
         }
     }
 
@@ -1693,26 +1717,8 @@ void run_library_build_host_smoke(
                    "build host manifest should record the FLL callable signature");
             expect(manifest_text.find("fll_default_return_helper=_RetInt") != std::string::npos,
                    "build host manifest should record the FLL default return helper");
-            expect(manifest_text.find("library_function_kind=InitLibrary|procedure") != std::string::npos,
-                   "build host manifest should mirror InitLibrary FLL routine kind");
-            expect(manifest_text.find("library_function_kind=AddNumbers|function") != std::string::npos,
-                   "build host manifest should mirror AddNumbers FLL routine kind");
-            expect(manifest_text.find("library_function_source=InitLibrary|" + init_library_source + "|1") != std::string::npos,
-                   "build host manifest should mirror InitLibrary FLL source provenance");
-            expect(manifest_text.find("library_function_source=AddNumbers|" + add_numbers_source + "|1") != std::string::npos,
-                   "build host manifest should mirror AddNumbers FLL source provenance");
-            expect(manifest_text.find("library_function_parameters=InitLibrary|tcMode") != std::string::npos,
-                   "build host manifest should mirror InitLibrary FLL parameter names");
-            expect(manifest_text.find("library_function_parameters=AddNumbers|tnLeft|tnRight") != std::string::npos,
-                   "build host manifest should mirror AddNumbers FLL parameter names");
-            expect(manifest_text.find("library_function_parameter_declaration=InitLibrary|lparameters") != std::string::npos,
-                   "build host manifest should mirror InitLibrary FLL parameter declaration style");
-            expect(manifest_text.find("library_function_parameter_declaration=AddNumbers|parameters") != std::string::npos,
-                   "build host manifest should mirror AddNumbers FLL parameter declaration style");
-            expect(manifest_text.find("library_function_call_surface=InitLibrary|ParamBlk*|_RetInt") != std::string::npos,
-                   "build host manifest should mirror InitLibrary FLL callable surface");
-            expect(manifest_text.find("library_function_call_surface=AddNumbers|ParamBlk*|_RetInt") != std::string::npos,
-                   "build host manifest should mirror AddNumbers FLL callable surface");
+            expect(lines_with_prefix(manifest_text, "library_function_").empty(),
+                   "build host runtime manifest should omit FLL library-function inventory");
         }
     }
 

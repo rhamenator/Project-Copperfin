@@ -1301,28 +1301,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                 "native_wrapper_build_powershell_path"
             },
             "library-output runtime manifest");
-        expect(runtime_manifest.find("library_function_arity=InitLibrary|1") != std::string::npos,
-               "library-output manifest should record InitLibrary arity");
-        expect(runtime_manifest.find("library_function_arity=AddNumbers|2") != std::string::npos,
-               "library-output manifest should record AddNumbers arity");
-        expect(runtime_manifest.find("library_function_kind=InitLibrary|procedure") != std::string::npos,
-               "library-output manifest should record InitLibrary routine kind");
-        expect(runtime_manifest.find("library_function_kind=AddNumbers|function") != std::string::npos,
-               "library-output manifest should record AddNumbers routine kind");
-        expect(runtime_manifest.find("library_function_source=") == std::string::npos,
-               "library-output manifest should omit source provenance");
-        expect(runtime_manifest.find("library_function_parameters=InitLibrary|tcMode") != std::string::npos,
-               "library-output manifest should record InitLibrary parameter names");
-        expect(runtime_manifest.find("library_function_parameters=AddNumbers|tnLeft|tnRight") != std::string::npos,
-               "library-output manifest should record AddNumbers parameter names");
-        expect(runtime_manifest.find("library_function_parameter_declaration=InitLibrary|lparameters") != std::string::npos,
-               "library-output manifest should record InitLibrary parameter declaration style");
-        expect(runtime_manifest.find("library_function_parameter_declaration=AddNumbers|parameters") != std::string::npos,
-               "library-output manifest should record AddNumbers parameter declaration style");
-        expect(runtime_manifest.find("library_function_call_surface=InitLibrary|vfp_declare_default|int tcMode") != std::string::npos,
-               "library-output manifest should record InitLibrary call-surface contract");
-        expect(runtime_manifest.find("library_function_call_surface=AddNumbers|vfp_declare_default|int tnLeft, int tnRight") != std::string::npos,
-               "library-output manifest should record AddNumbers call-surface contract");
+        expect(lines_with_prefix(runtime_manifest, "library_function_").empty(),
+               "library-output runtime manifest should omit library-function inventory from the execution contract");
         expect(lines_with_prefix(runtime_manifest, "export_symbol=").empty(),
                "library-output runtime manifest should omit export-symbol inventory from the execution contract");
         expect(runtime_manifest.find("primary_output_materialized=false") != std::string::npos,
@@ -1429,6 +1409,26 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output debug manifest should record discovered DLL export symbols");
         expect(debug_manifest.find("export_symbol=AddNumbers") != std::string::npos,
                "library-output debug manifest should record all DLL export symbols");
+        expect(debug_manifest.find("library_function_kind=InitLibrary|procedure") != std::string::npos,
+               "library-output debug manifest should record InitLibrary routine kind");
+        expect(debug_manifest.find("library_function_kind=AddNumbers|function") != std::string::npos,
+               "library-output debug manifest should record AddNumbers routine kind");
+        expect(debug_manifest.find("library_function_source=InitLibrary|" + quote_manifest_value((project_dir / "librarymain.prg").string()) + "|1") != std::string::npos,
+               "library-output debug manifest should record InitLibrary source provenance");
+        expect(debug_manifest.find("library_function_source=AddNumbers|" + quote_manifest_value((project_dir / "helper.prg").string()) + "|1") != std::string::npos,
+               "library-output debug manifest should record AddNumbers source provenance");
+        expect(debug_manifest.find("library_function_parameters=InitLibrary|tcMode") != std::string::npos,
+               "library-output debug manifest should record InitLibrary parameter names");
+        expect(debug_manifest.find("library_function_parameters=AddNumbers|tnLeft|tnRight") != std::string::npos,
+               "library-output debug manifest should record AddNumbers parameter names");
+        expect(debug_manifest.find("library_function_parameter_declaration=InitLibrary|lparameters") != std::string::npos,
+               "library-output debug manifest should record InitLibrary parameter declaration style");
+        expect(debug_manifest.find("library_function_parameter_declaration=AddNumbers|parameters") != std::string::npos,
+               "library-output debug manifest should record AddNumbers parameter declaration style");
+        expect(debug_manifest.find("library_function_call_surface=InitLibrary|vfp_declare_default|int tcMode") != std::string::npos,
+               "library-output debug manifest should record InitLibrary call-surface contract");
+        expect(debug_manifest.find("library_function_call_surface=AddNumbers|vfp_declare_default|int tnLeft, int tnRight") != std::string::npos,
+               "library-output debug manifest should record AddNumbers call-surface contract");
         expect(debug_manifest.find("native_wrapper_source_path=" + quote_manifest_value(result.plan.native_wrapper_source_path)) != std::string::npos,
                "library-output debug manifest should record the wrapper source path");
         expect(debug_manifest.find("native_wrapper_cmake_path=" + quote_manifest_value(result.plan.native_wrapper_cmake_path)) != std::string::npos,
@@ -1523,6 +1523,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                        "library-output rewritten runtime manifest should omit feature-flag inventory");
                 expect(!lines_with_prefix(built_debug_manifest, "feature_flag=").empty(),
                        "library-output rewritten debug manifest should preserve feature-flag inventory");
+                expect(lines_with_prefix(built_runtime_manifest, "library_function_").empty(),
+                       "library-output rewritten runtime manifest should omit library-function inventory");
                 expect(built_debug_manifest.find("primary_output_materialized=true") != std::string::npos,
                        "library-output runtime pipeline should rewrite the debug manifest with a materialized primary output state");
                 expect(built_debug_manifest.find("extension_payload=" + quote_manifest_value(build_result.plan.launcher_output_path) + "|") != std::string::npos,
@@ -1539,6 +1541,8 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                        "library-output runtime pipeline should preserve DLL export symbols in the rewritten debug manifest");
                 expect(built_debug_manifest.find("export_symbol=AddNumbers") != std::string::npos,
                        "library-output runtime pipeline should preserve all DLL export symbols in the rewritten debug manifest");
+                expect(!lines_with_prefix(built_debug_manifest, "library_function_").empty(),
+                       "library-output runtime pipeline should preserve library-function inventory in the rewritten debug manifest");
                 const std::vector<std::string> built_runtime_asset_lines = lines_with_prefix(built_runtime_manifest, "asset=");
                 expect(!built_runtime_asset_lines.empty(),
                        "library-output runtime pipeline should preserve staged asset inventory in the rewritten runtime manifest");
@@ -2859,24 +2863,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output manifest should record the ParamBlk callable signature");
         expect(runtime_manifest.find("fll_default_return_helper=_RetInt") != std::string::npos,
                "fll-output manifest should record the default return helper");
-        expect(runtime_manifest.find("library_function_kind=InitLibrary|procedure") != std::string::npos,
-               "fll-output manifest should mirror InitLibrary routine kind");
-        expect(runtime_manifest.find("library_function_kind=AddNumbers|function") != std::string::npos,
-               "fll-output manifest should mirror AddNumbers routine kind");
-        expect(runtime_manifest.find("library_function_source=") == std::string::npos,
-               "fll-output manifest should omit source provenance");
-        expect(runtime_manifest.find("library_function_parameters=InitLibrary|tcMode") != std::string::npos,
-               "fll-output manifest should mirror InitLibrary parameter names");
-        expect(runtime_manifest.find("library_function_parameters=AddNumbers|tnLeft|tnRight") != std::string::npos,
-               "fll-output manifest should mirror AddNumbers parameter names");
-        expect(runtime_manifest.find("library_function_parameter_declaration=InitLibrary|lparameters") != std::string::npos,
-               "fll-output manifest should mirror InitLibrary parameter declaration style");
-        expect(runtime_manifest.find("library_function_parameter_declaration=AddNumbers|parameters") != std::string::npos,
-               "fll-output manifest should mirror AddNumbers parameter declaration style");
-        expect(runtime_manifest.find("library_function_call_surface=InitLibrary|ParamBlk*|_RetInt") != std::string::npos,
-               "fll-output manifest should mirror InitLibrary callable surface");
-        expect(runtime_manifest.find("library_function_call_surface=AddNumbers|ParamBlk*|_RetInt") != std::string::npos,
-               "fll-output manifest should mirror AddNumbers callable surface");
+        expect(lines_with_prefix(runtime_manifest, "library_function_").empty(),
+               "fll-output runtime manifest should omit library-function inventory from the execution contract");
         expect(lines_with_prefix(runtime_manifest, "feature_flag=").empty(),
                "fll-output runtime manifest should omit feature-flag inventory from the execution contract");
         expect(runtime_manifest.find("project_title=LibraryDemo") != std::string::npos,
@@ -3134,6 +3122,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                        "fll-output rewritten runtime manifest should omit feature-flag inventory");
                 expect(!lines_with_prefix(built_debug_manifest, "feature_flag=").empty(),
                        "fll-output rewritten debug manifest should preserve feature-flag inventory");
+                expect(lines_with_prefix(built_runtime_manifest, "library_function_").empty(),
+                       "fll-output rewritten runtime manifest should omit library-function inventory");
                 expect(built_debug_manifest.find("primary_output_materialized=true") != std::string::npos,
                        "fll-output runtime pipeline should rewrite the debug manifest with a materialized primary output state");
                 expect(built_debug_manifest.find("extension_payload=" + quote_manifest_value(build_result.plan.launcher_output_path) + "|") != std::string::npos,
@@ -3152,6 +3142,8 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                        "fll-output runtime pipeline should preserve discovered FLL routine export symbols in the rewritten debug manifest");
                 expect(built_debug_manifest.find("export_symbol=AddNumbers") != std::string::npos,
                        "fll-output runtime pipeline should preserve all FLL export symbols in the rewritten debug manifest");
+                expect(!lines_with_prefix(built_debug_manifest, "library_function_").empty(),
+                       "fll-output runtime pipeline should preserve library-function inventory in the rewritten debug manifest");
                 const std::vector<std::string> built_runtime_asset_lines = lines_with_prefix(built_runtime_manifest, "asset=");
                 expect(!built_runtime_asset_lines.empty(),
                        "fll-output runtime pipeline should preserve staged asset inventory in the rewritten runtime manifest");

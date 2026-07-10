@@ -342,8 +342,6 @@ std::string build_runtime_manifest_text(
                << quote_manifest_value(digest.sha256) << "\n";
     }
 
-    append_library_function_manifest_lines(stream, plan, false);
-
     append_warning_manifest_lines(stream, plan);
 
     return stream.str();
