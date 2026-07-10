@@ -1232,7 +1232,7 @@ void test_runtime_host_rejects_extension_payload_basename_fallback(const std::st
         "security_mode=native\n"
         "audit_log_path=" + (builder_root / "security_audit.log").string() + "\n"
         "runtime_host_sha256=" + runtime_host_hash.hex_digest + "\n"
-        "extension_payload=" + deployed_runtime_host.string() + "|" + runtime_host_hash.hex_digest + "\n"
+        "extension_payload=" + (builder_root / deployed_runtime_host.filename()).string() + "|" + runtime_host_hash.hex_digest + "\n"
         "extension_payload=" + (builder_root / "content" / "plugins" / "helper.dll").string() + "|" + helper_hash.hex_digest + "\n"
         "dotnet_story=none\n");
 

@@ -877,18 +877,20 @@ std::optional<int> parse_manifest_version_value(const std::string& value) {
     }
 }
 
+bool is_debug_manifest_contract(const std::string& manifest_path) {
+    const std::filesystem::path normalized_manifest_path =
+        std::filesystem::path(manifest_path).lexically_normal();
+    return equals_insensitive(normalized_manifest_path.filename().string(), "app.cfdebug") ||
+           equals_insensitive(normalized_manifest_path.extension().string(), ".cfdebug");
+}
+
 bool validate_manifest_version(
     const ManifestMap& manifest,
     const std::string& manifest_path,
     const copperfin::localization::LocalizedCatalog& catalog,
     std::string& error) {
     std::string raw_version = first_value(manifest, "manifest_version");
-    const std::filesystem::path normalized_manifest_path =
-        std::filesystem::path(manifest_path).lexically_normal();
-    const bool debug_manifest_contract_allowed =
-        equals_insensitive(normalized_manifest_path.filename().string(), "app.cfdebug") ||
-        equals_insensitive(normalized_manifest_path.extension().string(), ".cfdebug");
-    if (trim_copy(raw_version).empty() && debug_manifest_contract_allowed) {
+    if (trim_copy(raw_version).empty() && is_debug_manifest_contract(manifest_path)) {
         raw_version = first_value(manifest, "debug_manifest_version");
     }
     if (trim_copy(raw_version).empty()) {
@@ -937,6 +939,28 @@ bool relative_path_escapes_root(const std::filesystem::path& relative_path) {
     return false;
 }
 
+std::filesystem::path portable_manifest_path(std::string value) {
+#if !defined(_WIN32)
+    std::replace(value.begin(), value.end(), '\\', '/');
+#endif
+    return std::filesystem::path(value).lexically_normal();
+}
+
+bool manifest_path_is_absolute(const std::filesystem::path& path) {
+    if (path.is_absolute()) {
+        return true;
+    }
+#if !defined(_WIN32)
+    const std::string generic_path = path.generic_string();
+    return generic_path.size() >= 3U &&
+           std::isalpha(static_cast<unsigned char>(generic_path[0])) != 0 &&
+           generic_path[1] == ':' &&
+           generic_path[2] == '/';
+#else
+    return false;
+#endif
+}
+
 std::optional<std::filesystem::path> bind_packaged_path(
     const std::string& manifest_value,
     const std::string& recorded_package_root,
@@ -946,21 +970,11 @@ std::optional<std::filesystem::path> bind_packaged_path(
         return std::nullopt;
     }
 
-    const std::filesystem::path recorded_path(manifest_value);
-    if (std::filesystem::exists(recorded_path)) {
-        return recorded_path.lexically_normal();
-    }
-
-    if (recorded_path.is_relative()) {
-        const std::filesystem::path relative_candidate =
-            (manifest_directory / recorded_path).lexically_normal();
-        if (std::filesystem::exists(relative_candidate)) {
-            return relative_candidate;
-        }
-    }
+    const std::filesystem::path recorded_path = portable_manifest_path(manifest_value);
+    const bool recorded_path_is_absolute = manifest_path_is_absolute(recorded_path);
 
     if (!trim_copy(recorded_package_root).empty()) {
-        const std::filesystem::path package_root(recorded_package_root);
+        const std::filesystem::path package_root = portable_manifest_path(recorded_package_root);
         const std::filesystem::path relative =
             recorded_path.lexically_relative(package_root);
         if (!relative.empty() &&
@@ -971,6 +985,40 @@ std::optional<std::filesystem::path> bind_packaged_path(
             if (std::filesystem::exists(rebound)) {
                 return rebound;
             }
+            if (binding_mode == PackagePathBindingMode::strict_relative_fidelity) {
+                return std::nullopt;
+            }
+        }
+        if (binding_mode == PackagePathBindingMode::strict_relative_fidelity &&
+            recorded_path_is_absolute) {
+            return std::nullopt;
+        }
+    } else if (binding_mode == PackagePathBindingMode::strict_relative_fidelity &&
+               recorded_path_is_absolute) {
+        const std::filesystem::path relative =
+            recorded_path.lexically_relative(manifest_directory);
+        if (relative.empty() ||
+            relative == recorded_path ||
+            relative_path_escapes_root(relative) ||
+            !std::filesystem::exists(recorded_path)) {
+            return std::nullopt;
+        }
+        return recorded_path;
+    }
+
+    if (recorded_path_is_absolute && std::filesystem::exists(recorded_path)) {
+        return recorded_path;
+    }
+
+    if (!recorded_path_is_absolute) {
+        if (binding_mode == PackagePathBindingMode::strict_relative_fidelity &&
+            relative_path_escapes_root(recorded_path)) {
+            return std::nullopt;
+        }
+        const std::filesystem::path relative_candidate =
+            (manifest_directory / recorded_path).lexically_normal();
+        if (std::filesystem::exists(relative_candidate)) {
+            return relative_candidate;
         }
     }
 
@@ -1040,7 +1088,7 @@ bool verify_manifest_hashes(
             error = localized_message(
                 catalog,
                 "RuntimeHost.Error.ExtensionPayloadMissingFromPackage",
-                {{"fileName", std::filesystem::path(parts[0]).filename().string()}});
+                {{"fileName", portable_manifest_path(parts[0]).filename().string()}});
             return false;
         }
 
@@ -1447,12 +1495,22 @@ const copperfin::runtime::XAssetActionBinding* find_breakpoint_xasset_action(
 
 std::string resolve_effective_working_directory(
     const ManifestMap& manifest,
-    const std::filesystem::path& manifest_directory) {
-    return resolve_manifest_bound_directory(
-        manifest,
-        "working_directory",
-        manifest_directory,
-        "content");
+    const std::filesystem::path& manifest_directory,
+    const bool allow_external_debug_directory = false) {
+    const std::string recorded_working_directory = first_value(manifest, "working_directory");
+    if (!trim_copy(recorded_working_directory).empty()) {
+        const auto bound = bind_packaged_path(
+            recorded_working_directory,
+            first_value(manifest, "package_root"),
+            manifest_directory,
+            allow_external_debug_directory
+                ? PackagePathBindingMode::allow_filename_fallback
+                : PackagePathBindingMode::strict_relative_fidelity);
+        if (bound.has_value()) {
+            return bound->string();
+        }
+    }
+    return (manifest_directory / "content").lexically_normal().string();
 }
 
 std::string resolve_effective_audit_log_path(
@@ -1465,40 +1523,104 @@ std::string resolve_effective_audit_log_path(
         "security_audit.log");
 }
 
-std::string resolve_startup_source(
+std::optional<std::filesystem::path> bind_relative_startup_item(
+    const std::string& startup_item,
+    const std::string& root) {
+    if (trim_copy(startup_item).empty() || trim_copy(root).empty()) {
+        return std::nullopt;
+    }
+
+    const std::filesystem::path relative_item = portable_manifest_path(startup_item);
+    if (manifest_path_is_absolute(relative_item) || relative_path_escapes_root(relative_item)) {
+        return std::nullopt;
+    }
+
+    const std::filesystem::path candidate =
+        (std::filesystem::path(root) / relative_item).lexically_normal();
+    if (!std::filesystem::exists(candidate)) {
+        return std::nullopt;
+    }
+    return candidate;
+}
+
+std::optional<std::string> resolve_startup_root(
     const ManifestMap& manifest,
-    const std::filesystem::path& manifest_directory) {
+    const std::string& key,
+    const std::filesystem::path& manifest_directory,
+    const std::filesystem::path& empty_value_fallback,
+    const bool allow_external_debug_directory) {
+    const std::string recorded_root = first_value(manifest, key);
+    if (trim_copy(recorded_root).empty()) {
+        return (manifest_directory / empty_value_fallback).lexically_normal().string();
+    }
+
+    const auto bound = bind_packaged_path(
+        recorded_root,
+        first_value(manifest, "package_root"),
+        manifest_directory,
+        allow_external_debug_directory
+            ? PackagePathBindingMode::allow_filename_fallback
+            : PackagePathBindingMode::strict_relative_fidelity);
+    return bound.has_value()
+        ? std::optional<std::string>(bound->string())
+        : std::nullopt;
+}
+
+std::optional<std::string> resolve_startup_source(
+    const ManifestMap& manifest,
+    const std::filesystem::path& manifest_directory,
+    const bool allow_external_debug_source) {
     const std::string recorded_package_root = first_value(manifest, "package_root");
     const std::string startup_source = first_value(manifest, "startup_source");
-    if (const auto bound_startup = bind_packaged_path(startup_source, recorded_package_root, manifest_directory)) {
+    const std::filesystem::path normalized_startup_source = portable_manifest_path(startup_source);
+    if (allow_external_debug_source &&
+        manifest_path_is_absolute(normalized_startup_source) &&
+        std::filesystem::exists(normalized_startup_source)) {
+        return normalized_startup_source.string();
+    }
+    if (const auto bound_startup = bind_packaged_path(
+            startup_source,
+            recorded_package_root,
+            manifest_directory,
+            PackagePathBindingMode::strict_relative_fidelity)) {
         return bound_startup->string();
     }
 
     const std::string startup_item = first_value(manifest, "startup_item");
-    const std::string content_root = resolve_manifest_bound_directory(
+    const std::filesystem::path normalized_startup_item = portable_manifest_path(startup_item);
+    const bool legacy_item_fallback_allowed =
+        trim_copy(startup_source).empty() ||
+        (!manifest_path_is_absolute(normalized_startup_source) &&
+         normalized_startup_source == normalized_startup_item);
+    if (!legacy_item_fallback_allowed) {
+        return std::nullopt;
+    }
+
+    const std::optional<std::string> content_root = resolve_startup_root(
         manifest,
         "content_root",
         manifest_directory,
-        "content");
-    if (!startup_item.empty() && !content_root.empty()) {
-        const std::filesystem::path candidate =
-            (std::filesystem::path(content_root) / startup_item).lexically_normal();
-        if (std::filesystem::exists(candidate)) {
-            return candidate.string();
+        "content",
+        allow_external_debug_source);
+    if (content_root.has_value()) {
+        if (const auto candidate = bind_relative_startup_item(startup_item, *content_root)) {
+            return candidate->string();
         }
     }
 
-    const std::string working_directory =
-        resolve_effective_working_directory(manifest, manifest_directory);
-    if (!startup_item.empty() && !working_directory.empty()) {
-        const std::filesystem::path candidate =
-            (std::filesystem::path(working_directory) / startup_item).lexically_normal();
-        if (std::filesystem::exists(candidate)) {
-            return candidate.string();
+    const std::optional<std::string> working_directory = resolve_startup_root(
+        manifest,
+        "working_directory",
+        manifest_directory,
+        "content",
+        allow_external_debug_source);
+    if (working_directory.has_value()) {
+        if (const auto candidate = bind_relative_startup_item(startup_item, *working_directory)) {
+            return candidate->string();
         }
     }
 
-    return startup_source;
+    return std::nullopt;
 }
 
 std::string resolve_implicit_manifest_path(const char* argv0, bool debug_mode) {
@@ -1761,8 +1883,18 @@ int main(int argc, char** argv) {
         return 4;
     }
 
+    std::error_code manifest_path_error;
+    std::filesystem::path normalized_manifest_path =
+        std::filesystem::path(manifest_path).lexically_normal();
+    if (normalized_manifest_path.is_relative()) {
+        const std::filesystem::path absolute_manifest_path =
+            std::filesystem::absolute(normalized_manifest_path, manifest_path_error);
+        if (!manifest_path_error) {
+            normalized_manifest_path = absolute_manifest_path.lexically_normal();
+        }
+    }
     const std::filesystem::path manifest_directory =
-        std::filesystem::path(manifest_path).parent_path().lexically_normal();
+        normalized_manifest_path.parent_path();
     const auto assets = all_values(manifest, "asset");
     const auto warnings = all_values(manifest, "warning");
     const bool security_enabled = parse_bool(first_value(manifest, "security_enabled"));
@@ -1819,10 +1951,35 @@ int main(int argc, char** argv) {
         }
     }
 
-    const std::string startup_source =
-        resolve_startup_source(manifest, manifest_directory);
+    const bool debug_manifest_contract = is_debug_manifest_contract(manifest_path);
+    const std::optional<std::string> resolved_startup_source =
+        resolve_startup_source(
+            manifest,
+            manifest_directory,
+            debug_manifest_contract);
+    if (!resolved_startup_source.has_value()) {
+        const std::string recorded_startup_source = first_value(manifest, "startup_source");
+        const std::string recorded_startup_item = first_value(manifest, "startup_item");
+        const std::filesystem::path missing_startup_path = portable_manifest_path(
+            recorded_startup_source.empty() ? recorded_startup_item : recorded_startup_source);
+        const std::string missing_startup_name = missing_startup_path.filename().empty()
+            ? (recorded_startup_source.empty() ? recorded_startup_item : recorded_startup_source)
+            : missing_startup_path.filename().string();
+        std::cout << "status: error\n";
+        print_error_line(
+            catalog,
+            localized_message(
+                catalog,
+                "RuntimeHost.Error.StartupSourceMissingFromPackage",
+                {{"fileName", missing_startup_name}}));
+        return 4;
+    }
+    const std::string startup_source = *resolved_startup_source;
     const std::string working_directory =
-        resolve_effective_working_directory(manifest, manifest_directory);
+        resolve_effective_working_directory(
+            manifest,
+            manifest_directory,
+            debug_manifest_contract);
 
     if (runtime_bridge_mode_requested(bridge_options)) {
         return run_runtime_bridge_invocation(bridge_options, startup_source, working_directory, catalog);

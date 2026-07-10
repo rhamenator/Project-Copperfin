@@ -406,6 +406,7 @@
   "RuntimeHost.Error.ExtensionPayloadMalformed": "La entrada extension_payload del manifiesto esta mal formada.",
   "RuntimeHost.Error.ExtensionPayloadMissingFromPackage": "Falta el payload de extension en el paquete: {fileName}",
   "RuntimeHost.Error.ExtensionPayloadSha256Mismatch": "El hash del payload de extension no coincide: {fileName}",
+  "RuntimeHost.Error.StartupSourceMissingFromPackage": "Falta el origen de inicio en el paquete: {fileName}",
   "RuntimeHost.Error.UnknownArgument": "Argumento desconocido: {argument}",
   "RuntimeHost.Error.UnknownFederationBackend": "Backend de federacion desconocido: {backend}",
   "RuntimeHost.Prompt.QuitConfirm": "Desea salir de esta aplicacion? [{yesToken}/{defaultNoToken}]: ",

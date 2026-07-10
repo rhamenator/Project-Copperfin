@@ -27,6 +27,7 @@ add_test(
     NAME test_runtime_host_binding
     COMMAND ${CMAKE_COMMAND}
         -DRUNTIME_HOST_EXECUTABLE=$<TARGET_FILE:copperfin_runtime_host>
+        -DLOCALE_ROOT=${CMAKE_SOURCE_DIR}/resources/locales
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_runtime_host_binding_check.cmake
 )
 
