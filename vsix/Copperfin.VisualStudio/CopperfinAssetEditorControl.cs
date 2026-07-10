@@ -2274,10 +2274,20 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
     private void ApplyHostMode()
     {
+        titleLabel.Visible = embeddedStudioShell;
+        subtitleLabel.Visible = embeddedStudioShell;
+        guidanceLabel.Visible = embeddedStudioShell;
         launchButton.Visible = !embeddedStudioShell;
         buildButton.Visible = !embeddedStudioShell && CopperfinProjectWorkflow.IsCopperfinProjectPath(currentPath);
         runButton.Visible = !embeddedStudioShell && CopperfinProjectWorkflow.IsCopperfinProjectPath(currentPath);
         debugButton.Visible = !embeddedStudioShell && CopperfinProjectWorkflow.IsCopperfinProjectPath(currentPath);
+        BackColor = embeddedStudioShell
+            ? Color.FromArgb(248, 249, 252)
+            : SystemColors.Control;
+        ForeColor = SystemColors.ControlText;
+        Padding = embeddedStudioShell
+            ? new Padding(24)
+            : new Padding(12, 8, 12, 12);
         subtitleLabel.Text = embeddedStudioShell
             ? this.localization.Text("AssetEditor.StandaloneSubtitle")
             : this.localization.Text("AssetEditor.Subtitle");

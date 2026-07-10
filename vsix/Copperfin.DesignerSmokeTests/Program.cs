@@ -5890,7 +5890,7 @@ internal static class Program
         runner.Run(nameof(SmokeLocalizedReportDesignSurfaceContext), SmokeLocalizedReportDesignSurfaceContext);
         runner.Run(nameof(SmokeLocalizedAssetEditorChrome), SmokeLocalizedAssetEditorChrome);
         runner.Run(nameof(SmokePseudoLocalizedAssetEditorChrome), SmokePseudoLocalizedAssetEditorChrome);
-        runner.Run(nameof(SmokeLocalizedHostModeSubtitles), SmokeLocalizedHostModeSubtitles);
+        runner.Run(nameof(SmokeLocalizedHostModeChromeCompaction), SmokeLocalizedHostModeChromeCompaction);
         runner.Run(nameof(SmokeProjectWorkflowWarningParsingLocalization), SmokeProjectWorkflowWarningParsingLocalization);
         runner.Run(nameof(SmokeLocalizedProjectWorkspaceChrome), SmokeLocalizedProjectWorkspaceChrome);
         runner.Run(nameof(SmokeLocalizedProjectCommandDebuggerChrome), SmokeLocalizedProjectCommandDebuggerChrome);
@@ -6166,6 +6166,7 @@ internal static class Program
     private static void SmokeLocalizedAssetEditorChrome()
     {
         using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
+        spanishControl.EmbeddedStudioShell = true;
         Expect(HasLabelText(spanishControl, "Diseñador visual de Copperfin"),
             "Spanish editor chrome should localize the asset editor title");
         Expect(HasLabelTextContaining(spanishControl, "activos visuales VFP"),
@@ -6181,6 +6182,7 @@ internal static class Program
             "Spanish editor chrome should localize shell command buttons");
 
         using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
+        portugueseControl.EmbeddedStudioShell = true;
         Expect(HasLabelText(portugueseControl, "Designer visual do Copperfin"),
             "Portuguese editor chrome should localize the asset editor title");
         Expect(HasLabelTextContaining(portugueseControl, "ativos visuais VFP"),
@@ -6200,10 +6202,11 @@ internal static class Program
     {
         var pseudoLocalization = new CopperfinLocalization("qps-ploc");
         using var pseudoControl = new CopperfinAssetEditorControl(pseudoLocalization);
+        pseudoControl.EmbeddedStudioShell = true;
 
         Expect(HasLabelText(pseudoControl, pseudoLocalization.Text("AssetEditor.Title")),
             "Pseudo-localized editor chrome should route the asset editor title through the shared catalog");
-        Expect(HasLabelTextContaining(pseudoControl, pseudoLocalization.Text("AssetEditor.Subtitle")),
+        Expect(HasLabelTextContaining(pseudoControl, pseudoLocalization.Text("AssetEditor.StandaloneSubtitle")),
             "Pseudo-localized editor chrome should route the embedded subtitle through the shared catalog");
         Expect(HasButtonText(pseudoControl, pseudoLocalization.Text("AssetEditor.RefreshButton")) &&
                HasButtonText(pseudoControl, pseudoLocalization.Text("AssetEditor.ObjectLifecycle.DuplicateButton")) &&
@@ -6216,27 +6219,61 @@ internal static class Program
             "Pseudo-localized editor chrome should route debugger pane guidance through the shared catalog");
     }
 
-    private static void SmokeLocalizedHostModeSubtitles()
+    private static void SmokeLocalizedHostModeChromeCompaction()
     {
         using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
-        Expect(HasLabelTextContaining(spanishControl, "activos visuales VFP"),
-            "Spanish embedded host mode should localize the asset editor subtitle");
+        var spanishTitleLabel = GetPrivateLabel(spanishControl, "titleLabel");
+        var spanishSubtitleLabel = GetPrivateLabel(spanishControl, "subtitleLabel");
+        var spanishGuidanceLabel = GetPrivateLabel(spanishControl, "guidanceLabel");
+        var spanishLaunchButton = GetPrivateButton(spanishControl, "launchButton");
+        Expect(!spanishTitleLabel.Visible &&
+               !spanishSubtitleLabel.Visible &&
+               !spanishGuidanceLabel.Visible &&
+               spanishLaunchButton.Visible &&
+               spanishControl.Padding == new Padding(12, 8, 12, 12),
+            "Spanish Visual Studio host mode should suppress standalone title chrome and tighten editor padding");
         spanishControl.EmbeddedStudioShell = true;
-        Expect(HasLabelTextContaining(spanishControl, "superficie de diseñador usada dentro de Visual Studio"),
-            "Spanish standalone host mode should localize the asset editor subtitle");
+        Expect(spanishTitleLabel.Visible &&
+               spanishSubtitleLabel.Visible &&
+               spanishGuidanceLabel.Visible &&
+               !spanishLaunchButton.Visible &&
+               spanishControl.Padding == new Padding(24) &&
+               spanishSubtitleLabel.Text.IndexOf("superficie de diseñador usada dentro de Visual Studio", StringComparison.Ordinal) >= 0,
+            "Spanish standalone host mode should restore localized standalone title chrome");
         spanishControl.EmbeddedStudioShell = false;
-        Expect(HasLabelTextContaining(spanishControl, "punto de entrega hacia Copperfin Studio"),
-            "Spanish embedded host mode should restore the localized asset editor subtitle");
+        Expect(!spanishTitleLabel.Visible &&
+               !spanishSubtitleLabel.Visible &&
+               !spanishGuidanceLabel.Visible &&
+               spanishLaunchButton.Visible &&
+               spanishControl.Padding == new Padding(12, 8, 12, 12),
+            "Spanish Visual Studio host mode should reapply compact chrome after toggling back");
 
         using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
-        Expect(HasLabelTextContaining(portugueseControl, "ativos visuais VFP"),
-            "Portuguese embedded host mode should localize the asset editor subtitle");
+        var portugueseTitleLabel = GetPrivateLabel(portugueseControl, "titleLabel");
+        var portugueseSubtitleLabel = GetPrivateLabel(portugueseControl, "subtitleLabel");
+        var portugueseGuidanceLabel = GetPrivateLabel(portugueseControl, "guidanceLabel");
+        var portugueseLaunchButton = GetPrivateButton(portugueseControl, "launchButton");
+        Expect(!portugueseTitleLabel.Visible &&
+               !portugueseSubtitleLabel.Visible &&
+               !portugueseGuidanceLabel.Visible &&
+               portugueseLaunchButton.Visible &&
+               portugueseControl.Padding == new Padding(12, 8, 12, 12),
+            "Portuguese Visual Studio host mode should suppress standalone title chrome and tighten editor padding");
         portugueseControl.EmbeddedStudioShell = true;
-        Expect(HasLabelTextContaining(portugueseControl, "superfície de designer usada dentro do Visual Studio"),
-            "Portuguese standalone host mode should localize the asset editor subtitle");
+        Expect(portugueseTitleLabel.Visible &&
+               portugueseSubtitleLabel.Visible &&
+               portugueseGuidanceLabel.Visible &&
+               !portugueseLaunchButton.Visible &&
+               portugueseControl.Padding == new Padding(24) &&
+               portugueseSubtitleLabel.Text.IndexOf("superfície de designer usada dentro do Visual Studio", StringComparison.Ordinal) >= 0,
+            "Portuguese standalone host mode should restore localized standalone title chrome");
         portugueseControl.EmbeddedStudioShell = false;
-        Expect(HasLabelTextContaining(portugueseControl, "ponto de entrega para o Copperfin Studio"),
-            "Portuguese embedded host mode should restore the localized asset editor subtitle");
+        Expect(!portugueseTitleLabel.Visible &&
+               !portugueseSubtitleLabel.Visible &&
+               !portugueseGuidanceLabel.Visible &&
+               portugueseLaunchButton.Visible &&
+               portugueseControl.Padding == new Padding(12, 8, 12, 12),
+            "Portuguese Visual Studio host mode should reapply compact chrome after toggling back");
     }
 
     private static void SmokeLocalizedProjectWorkspaceChrome()
