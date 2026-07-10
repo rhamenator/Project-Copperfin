@@ -1610,7 +1610,8 @@ internal static class Program
                     SourceLineIndex = 3,
                     MemoBlockNumber = 304
                 },
-                expectRawSnapshotProperty: false);
+                expectRawSnapshotProperty: false,
+                verifyExplicitClearAfterUpdate: true);
             SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
                 propertyName: "COLS",
@@ -1628,7 +1629,8 @@ internal static class Program
                     SourceLineIndex = 3,
                     MemoBlockNumber = 78
                 },
-                expectRawSnapshotProperty: false);
+                expectRawSnapshotProperty: false,
+                verifyExplicitClearAfterUpdate: true);
             SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 propertyName: "COLWIDTH",
@@ -1682,7 +1684,8 @@ internal static class Program
                     SourceLineIndex = 3,
                     MemoBlockNumber = 304
                 },
-                expectRawSnapshotProperty: false);
+                expectRawSnapshotProperty: false,
+                verifyExplicitClearAfterUpdate: true);
             SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
                 propertyName: "COLWIDTH",
@@ -1700,7 +1703,8 @@ internal static class Program
                     SourceLineIndex = 3,
                     MemoBlockNumber = 78
                 },
-                expectRawSnapshotProperty: false);
+                expectRawSnapshotProperty: false,
+                verifyExplicitClearAfterUpdate: true);
             SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 propertyName: "COLSPACING",
@@ -1754,7 +1758,8 @@ internal static class Program
                     SourceLineIndex = 3,
                     MemoBlockNumber = 304
                 },
-                expectRawSnapshotProperty: false);
+                expectRawSnapshotProperty: false,
+                verifyExplicitClearAfterUpdate: true);
             SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
                 TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
                 propertyName: "COLSPACING",
@@ -1772,7 +1777,8 @@ internal static class Program
                     SourceLineIndex = 3,
                     MemoBlockNumber = 78
                 },
-                expectRawSnapshotProperty: false);
+                expectRawSnapshotProperty: false,
+                verifyExplicitClearAfterUpdate: true);
             SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 propertyName: "DRIVER",
