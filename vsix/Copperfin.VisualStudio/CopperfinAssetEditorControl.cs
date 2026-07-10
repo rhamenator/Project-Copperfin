@@ -2912,6 +2912,13 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         AppendReportSettingSummaryPart(pageSetupParts, snapshot.ReportLayout, "BOTMARGIN", "AssetEditor.Property.BottomMargin");
         AppendReportSettingSummaryPart(pageSetupParts, snapshot.ReportLayout, "LEFTMARGIN", "AssetEditor.Property.LeftMargin");
         AppendReportSettingSummaryPart(pageSetupParts, snapshot.ReportLayout, "RIGHTMARGIN", "AssetEditor.Property.RightMargin");
+        AppendReportSettingSummaryPart(pageSetupParts, snapshot.ReportLayout, "GRIDV", "AssetEditor.Property.VerticalGrid");
+        AppendReportSettingSummaryPart(pageSetupParts, snapshot.ReportLayout, "GRIDH", "AssetEditor.Property.HorizontalGrid");
+        AppendReportSettingSummaryPart(pageSetupParts, snapshot.ReportLayout, "COLOR", "AssetEditor.Property.Color");
+        AppendReportSettingSummaryPart(pageSetupParts, snapshot.ReportLayout, "COPIES", "AssetEditor.Property.Copies");
+        AppendReportSettingSummaryPart(pageSetupParts, snapshot.ReportLayout, "DRIVER", "AssetEditor.Property.PrinterDriver");
+        AppendReportSettingSummaryPart(pageSetupParts, snapshot.ReportLayout, "DEVICE", "AssetEditor.Property.PrinterDevice");
+        AppendReportSettingSummaryPart(pageSetupParts, snapshot.ReportLayout, "OUTPUT", "AssetEditor.Property.PrinterOutput");
         if (pageSetupParts.Count > 0)
         {
             details += Environment.NewLine + string.Join("   ", pageSetupParts);
