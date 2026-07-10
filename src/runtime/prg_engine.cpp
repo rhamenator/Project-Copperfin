@@ -3129,7 +3129,9 @@ namespace copperfin::runtime
             };
 
             std::string source_designator;
+            std::string source_alias;
             std::string joined_source_designator;
+            std::string joined_source_alias;
             std::string join_on_expression;
             JoinKind join_kind = JoinKind::none;
             std::vector<std::string> projection_expressions;
@@ -3297,6 +3299,53 @@ namespace copperfin::runtime
             return trim_copy(designator.substr(0U, modifier_position));
         };
 
+        const auto parse_source_designator_and_alias =
+            [&](std::string designator,
+                std::string &source_designator,
+                std::string &source_alias) -> bool
+        {
+            designator = trim_copy(std::move(designator));
+            if (designator.empty())
+            {
+                return false;
+            }
+
+            const std::string upper_designator = uppercase_copy(designator);
+            const std::size_t as_position =
+                find_top_level_keyword(upper_designator, 0U, "AS");
+            if (as_position != std::string::npos)
+            {
+                source_designator = trim_copy(designator.substr(0U, as_position));
+                source_alias = trim_copy(designator.substr(as_position + 2U));
+            }
+            else
+            {
+                const std::size_t whitespace_position = designator.find_first_of(" \t");
+                if (whitespace_position == std::string::npos)
+                {
+                    source_designator = designator;
+                    source_alias.clear();
+                }
+                else
+                {
+                    source_designator = trim_copy(designator.substr(0U, whitespace_position));
+                    source_alias = trim_copy(designator.substr(whitespace_position + 1U));
+                }
+            }
+
+            if (source_designator.empty() ||
+                source_designator.find_first_of(" ,") != std::string::npos)
+            {
+                return false;
+            }
+            if (!source_alias.empty() &&
+                source_alias.find_first_of(" ,") != std::string::npos)
+            {
+                return false;
+            }
+            return true;
+        };
+
         const auto parse_query_plan =
             [&](const std::string &raw_query_text,
                 QueryPlan &plan) -> bool
@@ -3353,7 +3402,9 @@ namespace copperfin::runtime
 
             const std::string upper_from_clause = uppercase_copy(from_clause);
             std::string primary_source_designator;
+            std::string primary_source_alias;
             std::string joined_source_designator;
+            std::string joined_source_alias;
             std::string join_on_expression;
             QueryPlan::JoinKind join_kind = QueryPlan::JoinKind::none;
             if (const std::size_t join_position =
@@ -3398,29 +3449,32 @@ namespace copperfin::runtime
                         "INNER");
                     join_kind = QueryPlan::JoinKind::inner;
                 }
-                joined_source_designator = trim_copy(
+                const std::string raw_joined_source_designator = trim_copy(
                     from_clause.substr(after_join, on_position - after_join));
                 join_on_expression =
                     trim_copy(from_clause.substr(on_position + 2U));
-                if (primary_source_designator.empty() ||
-                    joined_source_designator.empty() ||
+                if (!parse_source_designator_and_alias(
+                        primary_source_designator,
+                        primary_source_designator,
+                        primary_source_alias) ||
+                    !parse_source_designator_and_alias(
+                        raw_joined_source_designator,
+                        joined_source_designator,
+                        joined_source_alias) ||
                     join_on_expression.empty())
-                {
-                    return false;
-                }
-                if (primary_source_designator.find_first_of(" ,") != std::string::npos ||
-                    joined_source_designator.find_first_of(" ,") != std::string::npos)
                 {
                     return false;
                 }
             }
             else
             {
-                if (from_clause.find_first_of(" ,") != std::string::npos)
+                if (!parse_source_designator_and_alias(
+                        from_clause,
+                        primary_source_designator,
+                        primary_source_alias))
                 {
                     return false;
                 }
-                primary_source_designator = from_clause;
             }
 
             std::vector<std::string> projection_expressions;
@@ -3495,7 +3549,9 @@ namespace copperfin::runtime
             }
 
             plan.source_designator = std::move(primary_source_designator);
+            plan.source_alias = std::move(primary_source_alias);
             plan.joined_source_designator = std::move(joined_source_designator);
+            plan.joined_source_alias = std::move(joined_source_alias);
             plan.join_on_expression = std::move(join_on_expression);
             plan.join_kind = join_kind;
             plan.projection_expressions = std::move(projection_expressions);
@@ -3528,6 +3584,29 @@ namespace copperfin::runtime
                 joined_cursor == nullptr
                     ? std::nullopt
                     : std::optional<CursorPositionSnapshot>(capture_cursor_snapshot(*joined_cursor));
+            DataSessionState &session = current_session_state();
+            const auto source_alias_it = session.aliases.find(cursor.work_area);
+            const std::optional<std::string> source_alias_before =
+                source_alias_it == session.aliases.end()
+                    ? std::nullopt
+                    : std::optional<std::string>(source_alias_it->second);
+            if (!plan.source_alias.empty())
+            {
+                session.aliases[cursor.work_area] = plan.source_alias;
+            }
+            std::optional<std::string> joined_alias_before;
+            if (joined_cursor != nullptr)
+            {
+                const auto joined_alias_it = session.aliases.find(joined_cursor->work_area);
+                if (joined_alias_it != session.aliases.end())
+                {
+                    joined_alias_before = joined_alias_it->second;
+                }
+                if (!plan.joined_source_alias.empty())
+                {
+                    session.aliases[joined_cursor->work_area] = plan.joined_source_alias;
+                }
+            }
             std::vector<MaterializedQueryRow> materialized_rows;
             materialized_rows.reserve(cursor.record_count);
 
@@ -3663,6 +3742,28 @@ namespace copperfin::runtime
             if (joined_cursor != nullptr && joined_original.has_value())
             {
                 restore_cursor_snapshot(*joined_cursor, *joined_original);
+            }
+            if (!plan.source_alias.empty())
+            {
+                if (source_alias_before.has_value())
+                {
+                    session.aliases[cursor.work_area] = *source_alias_before;
+                }
+                else
+                {
+                    session.aliases.erase(cursor.work_area);
+                }
+            }
+            if (joined_cursor != nullptr && !plan.joined_source_alias.empty())
+            {
+                if (joined_alias_before.has_value())
+                {
+                    session.aliases[joined_cursor->work_area] = *joined_alias_before;
+                }
+                else
+                {
+                    session.aliases.erase(joined_cursor->work_area);
+                }
             }
 
             std::stable_sort(
