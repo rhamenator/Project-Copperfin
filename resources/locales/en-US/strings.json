@@ -746,7 +746,7 @@
   "RuntimeHost.Debug.Error.UnknownXAssetAction": "Unknown xAsset action: {command}",
   "RuntimeHost.Debug.Error.WatchRequiresPausedState": "Watch evaluation requires an active paused state.",
   "RuntimeHost.Debug.Error.XAssetActionBreakpointsRequireBootstrapMode": "xAsset action breakpoints require xasset-bootstrap mode.",
-  "RuntimeHost.Launch.Note.CompatibilityLauncher": "Startup asset is not a PRG file. PRG execution is real; xBase code embedded in SCX/VCX/FRX/MNX/LBX assets is a later runtime slice.",
+  "RuntimeHost.Launch.Note.CompatibilityLauncher": "Startup asset is not a PRG file and could not be materialized for xAsset bootstrap. This launch is falling back to compatibility-launcher mode.",
   "RuntimeHost.Usage.Federation": "   or: {commandName} {federationBackendOption} {federationBackendValue} {federationQueryOption} {federationQueryValue} [{federationTargetOption} {federationTargetValue}]",
   "RuntimeHost.Usage.FederationPlanning": "       [{planningEnableOption} {booleanValue}] [{planningRequireOption} {booleanValue}] [{planningAuditOption} {booleanValue}]",
   "RuntimeHost.Usage.Manifest": "Usage: {commandName} {manifestOption} {manifestValue} [{debugOption}] [{breakpointOption} {breakpointValue}] [{debugCommandOption} {debugCommandValue}]",

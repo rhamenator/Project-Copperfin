@@ -366,7 +366,7 @@
   "Security.Sha256.Error.BCryptHashDataFailed": "BCryptHashData fallo.",
   "Security.Sha256.Error.BCryptOpenAlgorithmProviderFailed": "BCryptOpenAlgorithmProvider fallo.",
   "Security.Sha256.Error.OpenFileFailed": "No se pudo abrir el archivo para SHA-256: {path}",
-  "RuntimeHost.Launch.Note.CompatibilityLauncher": "El asset de inicio no es un archivo PRG. La ejecucion de PRG es real; el codigo xBase incrustado en assets SCX/VCX/FRX/MNX/LBX corresponde a una fase posterior del runtime.",
+  "RuntimeHost.Launch.Note.CompatibilityLauncher": "El asset de inicio no es un archivo PRG y no pudo materializarse para xAsset bootstrap. Este inicio esta recurriendo al modo compatibility-launcher.",
   "RuntimeHost.Usage.Federation": "   o: {commandName} {federationBackendOption} {federationBackendValue} {federationQueryOption} {federationQueryValue} [{federationTargetOption} {federationTargetValue}]",
   "RuntimeHost.Usage.FederationPlanning": "       [{planningEnableOption} {booleanValue}] [{planningRequireOption} {booleanValue}] [{planningAuditOption} {booleanValue}]",
   "RuntimeHost.Usage.Manifest": "Uso: {commandName} {manifestOption} {manifestValue} [{debugOption}] [{breakpointOption} {breakpointValue}] [{debugCommandOption} {debugCommandValue}]",

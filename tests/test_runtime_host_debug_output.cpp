@@ -77,7 +77,7 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Debug.Error.XAssetActionBreakpointsRequireBootstrapMode\": \"xAsset action breakpoints require xasset-bootstrap mode.\",\n"
         "  \"RuntimeHost.Prefix.Error\": \"error: \",\n"
         "  \"RuntimeHost.Prefix.Warning\": \"warning: \",\n"
-        "  \"RuntimeHost.Launch.Note.CompatibilityLauncher\": \"Startup asset is not a PRG file. PRG execution is real; xBase code embedded in SCX/VCX/FRX/MNX/LBX assets is a later runtime slice.\",\n"
+        "  \"RuntimeHost.Launch.Note.CompatibilityLauncher\": \"Startup asset is not a PRG file and could not be materialized for xAsset bootstrap. This launch is falling back to compatibility-launcher mode.\",\n"
         "  \"RuntimeHost.Error.BridgeFederationModeConflict\": \"Bridge invocation mode cannot be combined with federation query mode.\",\n"
         "  \"RuntimeHost.Error.FederationRequiredOptions\": \"{federationBackendOption} and {federationQueryOption} are both required in federation mode.\",\n"
         "  \"RuntimeHost.Error.ExtensionPayloadMalformed\": \"extension_payload entry is malformed in manifest.\",\n"
@@ -139,7 +139,7 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Debug.Error.XAssetActionBreakpointsRequireBootstrapMode\": \"Los breakpoints de accion xAsset requieren el modo xasset-bootstrap.\",\n"
         "  \"RuntimeHost.Prefix.Error\": \"error: \",\n"
         "  \"RuntimeHost.Prefix.Warning\": \"advertencia: \",\n"
-        "  \"RuntimeHost.Launch.Note.CompatibilityLauncher\": \"El asset de inicio no es un archivo PRG. La ejecucion de PRG es real; el codigo xBase incrustado en assets SCX/VCX/FRX/MNX/LBX corresponde a una fase posterior del runtime.\",\n"
+        "  \"RuntimeHost.Launch.Note.CompatibilityLauncher\": \"El asset de inicio no es un archivo PRG y no pudo materializarse para xAsset bootstrap. Este inicio esta recurriendo al modo compatibility-launcher.\",\n"
         "  \"RuntimeHost.Error.BridgeFederationModeConflict\": \"El modo de invocacion bridge no puede combinarse con el modo de consulta de federacion.\",\n"
         "  \"RuntimeHost.Error.ExtensionPayloadMalformed\": \"La entrada extension_payload del manifiesto esta mal formada.\",\n"
         "  \"RuntimeHost.Error.ExtensionPayloadMissingFromPackage\": \"Falta el payload de extension en el paquete: {fileName}\",\n"
@@ -176,7 +176,7 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
     write_text(
         portuguese_root / "strings.json",
         "{\n"
-        "  \"RuntimeHost.Launch.Note.CompatibilityLauncher\": \"O asset de inicializacao nao e um arquivo PRG. A execucao de PRG e real; o codigo xBase incorporado em assets SCX/VCX/FRX/MNX/LBX pertence a uma etapa posterior do runtime.\",\n"
+        "  \"RuntimeHost.Launch.Note.CompatibilityLauncher\": \"O asset de inicializacao nao e um arquivo PRG e nao pode ser materializado para xAsset bootstrap. Esta inicializacao esta recorrendo ao modo compatibility-launcher.\",\n"
         "  \"RuntimeHost.Bridge.Error.CreateResponseDirectoryFailed\": \"Nao foi possivel criar o diretorio de resposta bridge.\",\n"
         "  \"RuntimeHost.Error.BridgeFederationModeConflict\": \"O modo de invocacao bridge nao pode ser combinado com o modo de consulta de federacao.\",\n"
         "  \"RuntimeHost.Error.ExtensionPayloadMalformed\": \"A entrada extension_payload do manifesto esta malformada.\",\n"
@@ -461,6 +461,65 @@ void write_synthetic_form_asset(const std::filesystem::path& table_path) {
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
     expect(create_result.ok, "synthetic SCX/SCT debugger fixture should be created");
+}
+
+void test_runtime_host_compatibility_launcher_note_reflects_xasset_fallback(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_compatibility_note_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path locale_root = temp_root / "locales";
+    write_runtime_host_usage_catalogs(locale_root);
+    ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+
+    const fs::path table_path = temp_root / "broken.scx";
+    const fs::path manifest_path = temp_root / "app.cfmanifest";
+    write_text(table_path, "not-a-dbf");
+    write_text(
+        manifest_path,
+        "manifest_version=1\n"
+        "project_title=BrokenXAsset\n"
+        "startup_item=broken.scx\n"
+        "startup_source=" + table_path.string() + "\n"
+        "working_directory=" + temp_root.string() + "\n"
+        "security_enabled=false\n"
+        "security_role=\n"
+        "security_mode=native\n"
+        "dotnet_story=none\n");
+
+    const auto process = run_process_capture(
+        runtime_host_path,
+        {"--manifest", manifest_path.string()},
+        temp_root);
+
+    if (process.exit_code != 0) {
+        std::cerr << "compatibility launcher stdout:\n" << process.stdout_text << "\n";
+        std::cerr << "compatibility launcher stderr:\n" << process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(process.exit_code == 0,
+           "#3736: compatibility-launcher fallback should still exit successfully for non-PRG startup assets");
+    expect(process.stdout_text.find("runtime.mode: compatibility-launcher") != std::string::npos,
+           "#3736: compatibility-launcher fallback should report compatibility-launcher mode");
+    expect(process.stdout_text.find(
+               "launch.note: Startup asset is not a PRG file and could not be materialized for xAsset bootstrap. This launch is falling back to compatibility-launcher mode.") != std::string::npos,
+           "#3736: compatibility-launcher fallback should describe xAsset bootstrap fallback instead of claiming non-PRG startup is only a later runtime slice");
+    expect(process.stdout_text.find("later runtime slice") == std::string::npos,
+           "#3736: compatibility-launcher fallback should not emit the stale later-runtime-slice wording");
+    expect(process.stdout_text.find("launch.note: ") != std::string::npos,
+           "#3736: compatibility-launcher fallback should continue surfacing a second detailed launch note");
+    expect(process.stdout_text.find("debug.breakpoint_support: false") != std::string::npos,
+           "#3736: compatibility-launcher fallback should keep breakpoint support disabled");
+    expect(process.stdout_text.find("debug.step_support: false") != std::string::npos,
+           "#3736: compatibility-launcher fallback should keep step-debug support disabled");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
 }
 
 void test_runtime_host_supports_breakpoint_management_commands(const std::string& runtime_host_path) {
@@ -3451,6 +3510,7 @@ int main(int argc, char** argv) {
     test_runtime_host_supports_breakpoint_management_commands(argv[1]);
     test_runtime_host_supports_single_breakpoint_removal(argv[1]);
     test_runtime_host_prefers_debug_manifest_for_implicit_debug_launches(argv[1]);
+    test_runtime_host_compatibility_launcher_note_reflects_xasset_fallback(argv[1]);
     test_runtime_host_reports_xasset_pause_identity(argv[1]);
     test_runtime_host_supports_xasset_action_breakpoint_commands(argv[1]);
     test_runtime_host_surfaces_xasset_breakpoint_metadata_in_pause_output(argv[1]);
