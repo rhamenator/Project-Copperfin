@@ -1080,6 +1080,34 @@ internal static class Program
                     MemoBlockNumber = 17
                 });
             SmokeRealAssetHostBackedMissingSettingsRoundTrip(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
+                propertyName: "TAG",
+                updatedValue: "customer.country",
+                expectedSectionCount: 5,
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "TAG",
+                    Value = "customer.country",
+                    RecordIndex = 0,
+                    FieldIndex = 19,
+                    MemoBlockNumber = 304
+                });
+            SmokeRealAssetHostBackedMissingSettingsRoundTrip(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
+                propertyName: "TAG",
+                updatedValue: "customer.country",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "TAG",
+                    Value = "customer.country",
+                    RecordIndex = 0,
+                    FieldIndex = 19,
+                    MemoBlockNumber = 78
+                });
+            SmokeRealAssetHostBackedMissingSettingsRoundTrip(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
                 propertyName: "TOPMARGIN",
                 updatedValue: "7",
@@ -2028,6 +2056,38 @@ internal static class Program
                     RecordIndex = 0,
                     FieldIndex = 19,
                     MemoBlockNumber = 17
+                });
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\invoice.frx"),
+                propertyName: "TAG",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: "customer.country",
+                expectedUpdatedSelectionValue: "customer.country",
+                expectedSectionCount: 5,
+                expectLabel: false,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "TAG",
+                    Value = "customer.country",
+                    RecordIndex = 0,
+                    FieldIndex = 19,
+                    MemoBlockNumber = 304
+                });
+            SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
+                TryResolveVfp9InstallAsset(@"Samples\Solution\Reports\cust.lbx"),
+                propertyName: "TAG",
+                expectedOriginalSelectionValue: string.Empty,
+                updatedPropertyValue: "customer.country",
+                expectedUpdatedSelectionValue: "customer.country",
+                expectedSectionCount: 5,
+                expectLabel: true,
+                expectedUpdatedSetting: new CopperfinStudioNamedValue
+                {
+                    Name = "TAG",
+                    Value = "customer.country",
+                    RecordIndex = 0,
+                    FieldIndex = 19,
+                    MemoBlockNumber = 78
                 });
             SmokeAssetEditorMissingSettingsStringRoundTripWithRealAsset(
                 TryResolveVfpSourceAsset("VFPSource/Wizards/wzapp/template/Books/Reports/by_author.FRX"),
