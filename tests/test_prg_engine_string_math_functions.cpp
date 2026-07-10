@@ -70,6 +70,8 @@ namespace
             "rand_seeded = RAND(-123)\n"
             "rand_next = RAND()\n"
             "f = IIF(.T., 'yes', 'no')\n"
+            "iif_true_guard = IIF(.T., 'guard-true', 1 / 0)\n"
+            "iif_false_guard = IIF(.F., 1 / 0, 'guard-false')\n"
             "g = BETWEEN(5, 1, 10)\n"
             "h = OCCURS('l', 'hello world')\n"
             "v = VAL('42')\n"
@@ -253,6 +255,8 @@ namespace
         check("rgb_sample", "197121");
         check("rgb_clamped", "16776960");
         check("f", "yes");
+        check("iif_true_guard", "guard-true");
+        check("iif_false_guard", "guard-false");
         check("g", "true");
         check("h", "3");
         check("v", "42");

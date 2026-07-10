@@ -510,11 +510,16 @@
 
                 if (match("("))
                 {
+                    const std::string normalized_identifier = normalize_identifier(identifier);
+                    if (normalized_identifier == "iif")
+                    {
+                        return apply_postfix_member_and_collection_access(parse_iif_invocation());
+                    }
+
                     const auto invocation = parse_invocation_arguments(identifier);
                     const auto &arguments = invocation.arguments;
                     const auto &raw_arguments = invocation.raw_arguments;
                     const auto &argument_references = invocation.argument_references;
-                    const std::string normalized_identifier = normalize_identifier(identifier);
                     const bool prefer_function_call =
                         normalized_identifier == "aclass" ||
                         normalized_identifier == "acopy" ||
@@ -1643,6 +1648,148 @@
                 }
 
                 return invocation;
+            }
+
+            std::string scan_invocation_argument_text()
+            {
+                skip_whitespace();
+                const std::size_t argument_start = position_;
+                std::size_t scan = position_;
+                int parenthesis_depth = 0;
+                int bracket_depth = 0;
+                int brace_depth = 0;
+                char string_delimiter = '\0';
+
+                while (scan < text_.size())
+                {
+                    const char ch = text_[scan];
+                    if (string_delimiter != '\0')
+                    {
+                        ++scan;
+                        if (ch == string_delimiter)
+                        {
+                            if (scan < text_.size() && text_[scan] == string_delimiter)
+                            {
+                                ++scan;
+                            }
+                            else
+                            {
+                                string_delimiter = '\0';
+                            }
+                        }
+                        continue;
+                    }
+
+                    if (ch == '\'' || ch == '"')
+                    {
+                        string_delimiter = ch;
+                        ++scan;
+                        continue;
+                    }
+
+                    if (ch == '(')
+                    {
+                        ++parenthesis_depth;
+                        ++scan;
+                        continue;
+                    }
+                    if (ch == ')')
+                    {
+                        if (parenthesis_depth == 0 && bracket_depth == 0 && brace_depth == 0)
+                        {
+                            break;
+                        }
+                        if (parenthesis_depth > 0)
+                        {
+                            --parenthesis_depth;
+                        }
+                        ++scan;
+                        continue;
+                    }
+                    if (ch == '[')
+                    {
+                        ++bracket_depth;
+                        ++scan;
+                        continue;
+                    }
+                    if (ch == ']')
+                    {
+                        if (bracket_depth > 0)
+                        {
+                            --bracket_depth;
+                        }
+                        ++scan;
+                        continue;
+                    }
+                    if (ch == '{')
+                    {
+                        ++brace_depth;
+                        ++scan;
+                        continue;
+                    }
+                    if (ch == '}')
+                    {
+                        if (brace_depth > 0)
+                        {
+                            --brace_depth;
+                        }
+                        ++scan;
+                        continue;
+                    }
+                    if (ch == ',' && parenthesis_depth == 0 && bracket_depth == 0 && brace_depth == 0)
+                    {
+                        break;
+                    }
+
+                    ++scan;
+                }
+
+                position_ = scan;
+                return trim_copy(text_.substr(argument_start, position_ - argument_start));
+            }
+
+            PrgValue parse_iif_invocation()
+            {
+                skip_whitespace();
+                if (match(")"))
+                {
+                    throw std::runtime_error(runtime_text("Runtime.Prg.Expression.Error.ExpectedFunctionArgument"));
+                }
+
+                const PrgValue condition = parse_comparison();
+                skip_whitespace();
+                if (!match(","))
+                {
+                    throw std::runtime_error(runtime_text("Runtime.Prg.Expression.Error.ExpectedFunctionArgument"));
+                }
+
+                const std::string true_branch_text = scan_invocation_argument_text();
+                if (true_branch_text.empty())
+                {
+                    throw std::runtime_error(runtime_text("Runtime.Prg.Expression.Error.ExpectedFunctionArgument"));
+                }
+
+                skip_whitespace();
+                if (!match(","))
+                {
+                    throw std::runtime_error(runtime_text("Runtime.Prg.Expression.Error.ExpectedFunctionArgument"));
+                }
+
+                const std::string false_branch_text = scan_invocation_argument_text();
+                if (false_branch_text.empty())
+                {
+                    throw std::runtime_error(runtime_text("Runtime.Prg.Expression.Error.ExpectedFunctionArgument"));
+                }
+
+                skip_whitespace();
+                if (!match(")"))
+                {
+                    throw std::runtime_error(runtime_text("Runtime.Prg.Expression.Error.ExpectedClosingParenthesis"));
+                }
+
+                return value_as_bool(condition)
+                    ? eval_expression_callback_(true_branch_text)
+                    : eval_expression_callback_(false_branch_text);
             }
 
             std::string resolve_array_argument_name(
