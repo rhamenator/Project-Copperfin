@@ -524,6 +524,8 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
         "Runtime.Package.Error.NativeWrapperPrimaryOutputConfigureFailed",
         "Runtime.Package.Error.NativeWrapperPrimaryOutputMissing",
         "Runtime.Package.Error.OpenFileFailed",
+        "Runtime.Package.Error.PackageRollbackFailed",
+        "Runtime.Package.Error.PackageTransactionStartFailed",
         "Runtime.Package.Error.PlanInvalid",
         "Runtime.Package.Error.PrimaryOutputMissing",
         "Runtime.Package.Error.PrimaryOutputRequiresLibraryOutput",

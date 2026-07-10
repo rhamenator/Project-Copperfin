@@ -129,6 +129,7 @@ void test_startup_asset_is_staged_even_when_marked_excluded();
 void test_missing_startup_record_surfaces_plan_warnings_and_disables_debug_startup_support();
 void test_debug_source_roots_are_unique_when_source_and_content_paths_match();
 void test_debug_source_roots_preserve_source_first_and_content_second_order();
+void test_repeated_materialization_replaces_generated_package_transactionally();
 
 // ==== Generated-launcher, security, and localization diagnostics tests ====
 void test_generated_launcher_forwards_manifest_and_debug_flag();

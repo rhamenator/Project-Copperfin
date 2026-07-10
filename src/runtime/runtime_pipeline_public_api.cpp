@@ -4,11 +4,404 @@
 
 #include "runtime_pipeline_support.h"
 
+#include <atomic>
+#include <chrono>
+
 namespace copperfin::runtime {
 namespace {
 
 constexpr int kRuntimeManifestVersion = 2;
 constexpr int kDebugManifestVersion = 2;
+constexpr std::string_view kPackageBackupSuffix = ".copperfin-previous";
+constexpr std::string_view kPackageTransactionMarker = ".copperfin-materializing";
+constexpr std::string_view kPackageTransactionOwnerSuffix = ".owner";
+
+class PackageRootTransaction {
+public:
+    explicit PackageRootTransaction(std::filesystem::path package_root)
+        : package_root_(std::move(package_root)),
+          backup_root_(package_root_.string() + std::string(kPackageBackupSuffix)),
+          marker_path_(package_root_.string() + std::string(kPackageTransactionMarker)),
+          backup_owner_path_(backup_root_.string() + std::string(kPackageTransactionOwnerSuffix)),
+          transaction_identity_(
+              "copperfin_package_transaction=1\npackage_root=" +
+              package_root_.lexically_normal().generic_string() + "\n") {
+    }
+
+    PackageRootTransaction(const PackageRootTransaction&) = delete;
+    PackageRootTransaction& operator=(const PackageRootTransaction&) = delete;
+
+    ~PackageRootTransaction() {
+        if (active_) {
+            std::string ignored;
+            (void)rollback(ignored);
+        }
+    }
+
+    bool begin(std::string& error) {
+        std::error_code filesystem_error;
+        const std::filesystem::path parent = package_root_.parent_path();
+        if (!parent.empty()) {
+            std::filesystem::create_directories(parent, filesystem_error);
+            if (filesystem_error) {
+                error = runtime_text(
+                    "Runtime.Package.Error.PackageTransactionStartFailed",
+                    {{"path", package_root_.string()}});
+                return false;
+            }
+        }
+
+        bool interrupted_backup_exists =
+            directory_entry_exists(backup_root_, filesystem_error);
+        if (filesystem_error) {
+            error = runtime_text(
+                "Runtime.Package.Error.PackageTransactionStartFailed",
+                {{"path", backup_root_.string()}});
+            return false;
+        }
+        bool package_exists = directory_entry_exists(package_root_, filesystem_error);
+        if (filesystem_error) {
+            error = runtime_text(
+                "Runtime.Package.Error.PackageTransactionStartFailed",
+                {{"path", package_root_.string()}});
+            return false;
+        }
+        bool transaction_marker_exists = directory_entry_exists(marker_path_, filesystem_error);
+        if (filesystem_error) {
+            error = runtime_text(
+                "Runtime.Package.Error.PackageTransactionStartFailed",
+                {{"path", marker_path_.string()}});
+            return false;
+        }
+        if (transaction_marker_exists && !is_owned_transaction_file(marker_path_)) {
+            error = runtime_text(
+                "Runtime.Package.Error.PackageTransactionStartFailed",
+                {{"path", marker_path_.string()}});
+            return false;
+        }
+        bool backup_owner_exists = directory_entry_exists(backup_owner_path_, filesystem_error);
+        if (filesystem_error) {
+            error = runtime_text(
+                "Runtime.Package.Error.PackageTransactionStartFailed",
+                {{"path", backup_owner_path_.string()}});
+            return false;
+        }
+        if (backup_owner_exists && !is_owned_transaction_file(backup_owner_path_)) {
+            error = runtime_text(
+                "Runtime.Package.Error.PackageTransactionStartFailed",
+                {{"path", backup_owner_path_.string()}});
+            return false;
+        }
+        if (!interrupted_backup_exists && backup_owner_exists) {
+            std::filesystem::remove(backup_owner_path_, filesystem_error);
+            if (filesystem_error) {
+                error = runtime_text(
+                    "Runtime.Package.Error.PackageTransactionStartFailed",
+                    {{"path", backup_owner_path_.string()}});
+                return false;
+            }
+            backup_owner_exists = false;
+        }
+        if (interrupted_backup_exists && !backup_owner_exists) {
+            error = runtime_text(
+                "Runtime.Package.Error.PackageTransactionStartFailed",
+                {{"path", backup_root_.string()}});
+            return false;
+        }
+
+        if (interrupted_backup_exists) {
+            if (!is_direct_directory(backup_root_, filesystem_error) || filesystem_error) {
+                error = runtime_text(
+                    "Runtime.Package.Error.PackageTransactionStartFailed",
+                    {{"path", backup_root_.string()}});
+                return false;
+            }
+            bool partial_package = false;
+            if (package_exists) {
+                const bool package_is_directory =
+                    std::filesystem::is_directory(package_root_, filesystem_error);
+                if (filesystem_error) {
+                    error = runtime_text(
+                        "Runtime.Package.Error.PackageTransactionStartFailed",
+                        {{"path", package_root_.string()}});
+                    return false;
+                }
+                if (!package_is_directory) {
+                    partial_package = true;
+                } else {
+                    partial_package = transaction_marker_exists;
+                }
+            }
+
+            if (partial_package) {
+                std::filesystem::remove_all(package_root_, filesystem_error);
+                if (filesystem_error) {
+                    error = runtime_text(
+                        "Runtime.Package.Error.PackageTransactionStartFailed",
+                        {{"path", package_root_.string()}});
+                    return false;
+                }
+                package_exists = false;
+                had_previous_package_ = true;
+            } else if (package_exists) {
+                std::filesystem::remove_all(backup_root_, filesystem_error);
+                if (filesystem_error) {
+                    error = runtime_text(
+                        "Runtime.Package.Error.PackageTransactionStartFailed",
+                        {{"path", backup_root_.string()}});
+                    return false;
+                }
+                std::filesystem::remove(backup_owner_path_, filesystem_error);
+                if (filesystem_error) {
+                    error = runtime_text(
+                        "Runtime.Package.Error.PackageTransactionStartFailed",
+                        {{"path", backup_owner_path_.string()}});
+                    return false;
+                }
+                interrupted_backup_exists = false;
+            } else {
+                had_previous_package_ = true;
+            }
+        }
+
+        if (!interrupted_backup_exists && transaction_marker_exists) {
+            if (package_exists) {
+                std::filesystem::remove_all(package_root_, filesystem_error);
+                if (filesystem_error) {
+                    error = runtime_text(
+                        "Runtime.Package.Error.PackageTransactionStartFailed",
+                        {{"path", package_root_.string()}});
+                    return false;
+                }
+                package_exists = false;
+            }
+            std::filesystem::remove(marker_path_, filesystem_error);
+            if (filesystem_error) {
+                error = runtime_text(
+                    "Runtime.Package.Error.PackageTransactionStartFailed",
+                    {{"path", marker_path_.string()}});
+                return false;
+            }
+            transaction_marker_exists = false;
+        }
+
+        if (!interrupted_backup_exists && package_exists) {
+            if (filesystem_error || !std::filesystem::is_directory(package_root_, filesystem_error)) {
+                error = runtime_text(
+                    "Runtime.Package.Error.PackageTransactionStartFailed",
+                    {{"path", package_root_.string()}});
+                return false;
+            }
+            std::string owner_error;
+            if (!write_owned_transaction_file_atomically(backup_owner_path_, owner_error)) {
+                error = runtime_text(
+                    "Runtime.Package.Error.PackageTransactionStartFailed",
+                    {{"path", package_root_.string()}});
+                return false;
+            }
+            std::filesystem::rename(package_root_, backup_root_, filesystem_error);
+            if (filesystem_error) {
+                std::error_code ignored;
+                std::filesystem::remove(backup_owner_path_, ignored);
+                error = runtime_text(
+                    "Runtime.Package.Error.PackageTransactionStartFailed",
+                    {{"path", package_root_.string()}});
+                return false;
+            }
+            had_previous_package_ = true;
+        }
+
+        active_ = true;
+        if (!transaction_marker_exists) {
+            std::string marker_error;
+            if (!write_owned_transaction_file_atomically(marker_path_, marker_error)) {
+                std::string ignored;
+                (void)rollback(ignored);
+                error = runtime_text(
+                    "Runtime.Package.Error.PackageTransactionStartFailed",
+                    {{"path", marker_path_.string()}});
+                return false;
+            }
+        }
+        std::filesystem::create_directories(package_root_, filesystem_error);
+        if (filesystem_error) {
+            std::string ignored;
+            (void)rollback(ignored);
+            error = runtime_text(
+                "Runtime.Package.Error.PackageTransactionStartFailed",
+                {{"path", package_root_.string()}});
+            return false;
+        }
+        return true;
+    }
+
+    bool rollback(std::string& error) {
+        if (!active_) {
+            return true;
+        }
+
+        std::error_code filesystem_error;
+        const bool package_exists = std::filesystem::exists(package_root_, filesystem_error);
+        if (filesystem_error) {
+            error = runtime_text(
+                "Runtime.Package.Error.PackageRollbackFailed",
+                {{"path", package_root_.string()}});
+            return false;
+        }
+        if (package_exists) {
+            std::filesystem::remove_all(package_root_, filesystem_error);
+        }
+        if (filesystem_error) {
+            error = runtime_text(
+                "Runtime.Package.Error.PackageRollbackFailed",
+                {{"path", package_root_.string()}});
+            return false;
+        }
+
+        std::filesystem::remove(marker_path_, filesystem_error);
+        if (filesystem_error) {
+            error = runtime_text(
+                "Runtime.Package.Error.PackageRollbackFailed",
+                {{"path", marker_path_.string()}});
+            return false;
+        }
+
+        if (had_previous_package_) {
+            std::filesystem::rename(backup_root_, package_root_, filesystem_error);
+            if (filesystem_error) {
+                error = runtime_text(
+                    "Runtime.Package.Error.PackageRollbackFailed",
+                    {{"path", backup_root_.string()}});
+                return false;
+            }
+            active_ = false;
+            std::filesystem::remove(backup_owner_path_, filesystem_error);
+            if (filesystem_error) {
+                error = runtime_text(
+                    "Runtime.Package.Error.PackageRollbackFailed",
+                    {{"path", backup_owner_path_.string()}});
+                return false;
+            }
+            return true;
+        }
+
+        active_ = false;
+        return true;
+    }
+
+    bool commit(std::string& error, std::string& warning) {
+        if (!active_) {
+            return true;
+        }
+
+        std::error_code filesystem_error;
+        std::filesystem::remove(marker_path_, filesystem_error);
+        if (filesystem_error) {
+            error = runtime_text(
+                "Runtime.Package.Error.PackageTransactionStartFailed",
+                {{"path", package_root_.string()}});
+            return false;
+        }
+
+        active_ = false;
+        if (!had_previous_package_) {
+            return true;
+        }
+
+        std::filesystem::remove_all(backup_root_, filesystem_error);
+        if (filesystem_error) {
+            warning = runtime_text(
+                "Runtime.Package.Warning.PackageBackupCleanupFailed",
+                {{"path", backup_root_.string()}});
+            return true;
+        }
+
+        std::filesystem::remove(backup_owner_path_, filesystem_error);
+        if (filesystem_error) {
+            warning = runtime_text(
+                "Runtime.Package.Warning.PackageBackupCleanupFailed",
+                {{"path", backup_owner_path_.string()}});
+        }
+        return true;
+    }
+
+private:
+    bool write_owned_transaction_file_atomically(
+        const std::filesystem::path& path,
+        std::string& error) const {
+        static std::atomic<unsigned long long> sequence{0U};
+        const auto timestamp = std::chrono::steady_clock::now().time_since_epoch().count();
+        const std::filesystem::path temporary_path =
+            path.string() + ".tmp." + std::to_string(timestamp) + "." +
+            std::to_string(sequence.fetch_add(1U, std::memory_order_relaxed));
+
+        std::error_code filesystem_error;
+        if (directory_entry_exists(temporary_path, filesystem_error) || filesystem_error) {
+            error = runtime_text(
+                "Runtime.Package.Error.PackageTransactionStartFailed",
+                {{"path", temporary_path.string()}});
+            return false;
+        }
+
+        std::string write_error;
+        if (!write_text_file(temporary_path, transaction_identity_, write_error)) {
+            std::filesystem::remove(temporary_path, filesystem_error);
+            error = runtime_text(
+                "Runtime.Package.Error.PackageTransactionStartFailed",
+                {{"path", path.string()}});
+            return false;
+        }
+
+        std::filesystem::rename(temporary_path, path, filesystem_error);
+        if (!filesystem_error) {
+            return true;
+        }
+
+        std::error_code ignored;
+        std::filesystem::remove(temporary_path, ignored);
+        error = runtime_text(
+            "Runtime.Package.Error.PackageTransactionStartFailed",
+            {{"path", path.string()}});
+        return false;
+    }
+
+    static bool directory_entry_exists(
+        const std::filesystem::path& path,
+        std::error_code& error) {
+        const std::filesystem::file_status status =
+            std::filesystem::symlink_status(path, error);
+        if (error == std::errc::no_such_file_or_directory) {
+            error.clear();
+            return false;
+        }
+        return !error && status.type() != std::filesystem::file_type::not_found;
+    }
+
+    static bool is_direct_directory(
+        const std::filesystem::path& path,
+        std::error_code& error) {
+        const std::filesystem::file_status status =
+            std::filesystem::symlink_status(path, error);
+        return !error && status.type() == std::filesystem::file_type::directory;
+    }
+
+    bool is_owned_transaction_file(const std::filesystem::path& path) const {
+        std::error_code filesystem_error;
+        const std::filesystem::file_status status =
+            std::filesystem::symlink_status(path, filesystem_error);
+        return status.type() == std::filesystem::file_type::regular &&
+               !filesystem_error &&
+               read_text_file(path) == transaction_identity_;
+    }
+
+    std::filesystem::path package_root_;
+    std::filesystem::path backup_root_;
+    std::filesystem::path marker_path_;
+    std::filesystem::path backup_owner_path_;
+    std::string transaction_identity_;
+    bool had_previous_package_ = false;
+    bool active_ = false;
+};
 
 }  // namespace
 
@@ -415,15 +808,11 @@ std::string build_debug_manifest_text(
     return stream.str();
 }
 
-RuntimeMaterializeResult materialize_runtime_package(
+static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
     const RuntimePackagePlan& plan,
     const security::NativeSecurityProfile& security_profile,
     const platform::ExtensibilityProfile& extensibility_profile,
     const std::string& runtime_host_source_path) {
-    if (!plan.ok) {
-        return {.ok = false, .error = runtime_text("Runtime.Package.Error.PlanInvalid")};
-    }
-
     std::error_code directory_error;
     std::filesystem::create_directories(plan.package_root, directory_error);
     if (directory_error) {
@@ -442,10 +831,6 @@ RuntimeMaterializeResult materialize_runtime_package(
 
     RuntimePackagePlan materialized_plan = plan;
     std::string error;
-    if ((is_native_host_output_kind(plan.output_kind) || is_library_output_kind(plan.output_kind)) &&
-        !validate_runtime_host_source_path(plan, runtime_host_source_path, error)) {
-        return {.ok = false, .error = error};
-    }
     for (auto& asset : materialized_plan.assets) {
         if (!should_stage_asset(asset)) {
             continue;
@@ -634,6 +1019,64 @@ RuntimeMaterializeResult materialize_runtime_package(
     }
 
     return {.ok = true, .plan = std::move(materialized_plan), .error = {}};
+}
+
+RuntimeMaterializeResult materialize_runtime_package(
+    const RuntimePackagePlan& plan,
+    const security::NativeSecurityProfile& security_profile,
+    const platform::ExtensibilityProfile& extensibility_profile,
+    const std::string& runtime_host_source_path) {
+    if (!plan.ok) {
+        return {.ok = false, .error = runtime_text("Runtime.Package.Error.PlanInvalid")};
+    }
+
+    std::string error;
+    if ((is_native_host_output_kind(plan.output_kind) || is_library_output_kind(plan.output_kind)) &&
+        !validate_runtime_host_source_path(plan, runtime_host_source_path, error)) {
+        return {.ok = false, .error = error};
+    }
+
+    PackageRootTransaction transaction(plan.package_root);
+    if (!transaction.begin(error)) {
+        return {.ok = false, .error = error};
+    }
+
+    RuntimeMaterializeResult result = materialize_runtime_package_in_fresh_root(
+        plan,
+        security_profile,
+        extensibility_profile,
+        runtime_host_source_path);
+    if (!result.ok) {
+        std::string rollback_error;
+        if (!transaction.rollback(rollback_error)) {
+            result.error = rollback_error + "\n" + result.error;
+        }
+        return result;
+    }
+
+    std::string commit_error;
+    std::string cleanup_warning;
+    if (!transaction.commit(commit_error, cleanup_warning)) {
+        std::string rollback_error;
+        if (!transaction.rollback(rollback_error)) {
+            commit_error = rollback_error + "\n" + commit_error;
+        }
+        return {.ok = false, .error = commit_error};
+    }
+    if (!cleanup_warning.empty()) {
+        result.plan.warnings.push_back(cleanup_warning);
+        std::string ignored;
+        (void)write_text_file(
+            result.plan.manifest_path,
+            build_runtime_manifest_text(result.plan, security_profile, extensibility_profile),
+            ignored);
+        (void)write_text_file(
+            result.plan.debug_manifest_path,
+            build_debug_manifest_text(result.plan, security_profile, extensibility_profile),
+            ignored);
+    }
+
+    return result;
 }
 
 RuntimeBuildResult finalize_runtime_package_primary_output(
