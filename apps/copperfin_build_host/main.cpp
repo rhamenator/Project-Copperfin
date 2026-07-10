@@ -273,6 +273,14 @@ bool is_library_output_kind(const copperfin::runtime::BuildOutputKind output_kin
         output_kind == copperfin::runtime::BuildOutputKind::ocx;
 }
 
+bool supports_dotnet_launcher_publish() {
+#if defined(_WIN32)
+    return true;
+#else
+    return false;
+#endif
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -437,7 +445,10 @@ int main(int argc, char** argv) {
         }
     }
 
-    const auto extensibility_profile = copperfin::platform::default_extensibility_profile();
+    auto extensibility_profile = copperfin::platform::default_extensibility_profile();
+    if (emit_dotnet_launcher && !supports_dotnet_launcher_publish()) {
+        extensibility_profile.dotnet_output.available = false;
+    }
     auto plan = copperfin::runtime::create_runtime_package_plan(
         open_result.document,
         workspace,

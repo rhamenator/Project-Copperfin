@@ -3049,6 +3049,80 @@ void run_default_runtime_host_resolution_smoke(const std::string& build_host_pat
     fs::remove_all(temp_root, ignored);
 }
 
+void run_emit_dotnet_launcher_fallback_smoke(const std::string& build_host_path) {
+#if defined(_WIN32)
+    (void)build_host_path;
+#else
+    namespace fs = std::filesystem;
+
+    expect(fs::exists(build_host_path), "build host executable should exist before running dotnet-launcher fallback smoke test");
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_build_host_dotnet_fallback_smoke";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path project_path = project_dir / "dotnetfallback.pjx";
+    const fs::path expected_output = output_dir / "DotNetFallback" / "DotNetFallback.exe";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+    fs::create_directories(output_dir);
+
+    write_text(project_dir / "main.prg", "WAIT WINDOW 'dotnet-fallback'\nRETURN\n");
+    write_synthetic_executable_project(project_path, project_dir, expected_output, "DotNetFallback");
+
+    const auto process = run_process_capture(
+        build_host_path,
+        {
+            "build",
+            "--project",
+            project_path.string(),
+            "--output-dir",
+            output_dir.string(),
+            "--emit-dotnet-launcher"
+        },
+        temp_root);
+
+    expect(process.exit_code == 0,
+           "build host should fall back to native packaging for POSIX --emit-dotnet-launcher requests");
+    expect(process.stdout_text.find("status: ok") != std::string::npos,
+           "dotnet-launcher fallback smoke should preserve machine-readable success status");
+    expect(process.stdout_text.find("output.kind: executable") != std::string::npos,
+           "dotnet-launcher fallback smoke should preserve executable output kind");
+    expect(process.stdout_text.find("primary.output.materialized: true") != std::string::npos,
+           "dotnet-launcher fallback smoke should still materialize a primary output");
+    expect(fs::exists(expected_output),
+           "dotnet-launcher fallback smoke should materialize the native executable output");
+
+    const fs::path manifest_path = value_for_key(process.stdout_text, "manifest.path");
+    const fs::path debug_manifest_path = value_for_key(process.stdout_text, "debug.manifest.path");
+    expect(!manifest_path.empty(),
+           "dotnet-launcher fallback smoke should report a runtime manifest path");
+    expect(!debug_manifest_path.empty(),
+           "dotnet-launcher fallback smoke should report a debug manifest path");
+    if (!manifest_path.empty()) {
+        const std::string manifest_text = read_text(manifest_path);
+        expect(manifest_text.find("launcher_mode=") == std::string::npos,
+               "dotnet-launcher fallback runtime manifest should omit launcher mode from the execution contract");
+        expect(manifest_text.find("launcher_fallback=") == std::string::npos,
+               "dotnet-launcher fallback runtime manifest should omit launcher fallback from the execution contract");
+        expect(lines_with_prefix(manifest_text, "feature_flag=").empty(),
+               "dotnet-launcher fallback runtime manifest should omit feature-flag inventory");
+    }
+    if (!debug_manifest_path.empty()) {
+        const std::string debug_manifest_text = read_text(debug_manifest_path);
+        expect(debug_manifest_text.find("launcher_mode=native_runtime_host") != std::string::npos,
+               "dotnet-launcher fallback debug manifest should record native runtime host mode");
+        expect(debug_manifest_text.find("launcher_fallback=dotnet_output_unavailable") != std::string::npos,
+               "dotnet-launcher fallback debug manifest should record the unavailability fallback reason");
+        expect(debug_manifest_text.find("feature_flag=launcher.dotnet.requested|true|rollout") != std::string::npos,
+               "dotnet-launcher fallback debug manifest should preserve the requested launcher feature flag");
+        expect(debug_manifest_text.find("feature_flag=launcher.dotnet.active|false|host_compatibility") != std::string::npos,
+               "dotnet-launcher fallback debug manifest should record the inactive launcher feature flag");
+    }
+
+    fs::remove_all(temp_root, ignored);
+#endif
+}
+
 void run_build_host_localized_usage_smoke(const std::string& build_host_path) {
     namespace fs = std::filesystem;
 
@@ -3207,6 +3281,7 @@ int main(int argc, char** argv) {
     run_app_build_host_smoke(argv[1]);
     run_fxp_build_host_smoke(argv[1]);
     run_default_runtime_host_resolution_smoke(argv[1]);
+    run_emit_dotnet_launcher_fallback_smoke(argv[1]);
     run_build_host_localized_usage_smoke(argv[1]);
 
     if (failures != 0) {
