@@ -1509,13 +1509,15 @@
                 runtime_object.properties["boundcolumn"] = make_number_value(1.0);
             }
 
-            if (normalized_base_class == "combobox" &&
+            if ((normalized_base_class == "combobox" ||
+                 normalized_base_class == "listbox") &&
                 !runtime_object.properties.contains("columncount"))
             {
                 runtime_object.properties["columncount"] = make_number_value(0.0);
             }
 
-            if (normalized_base_class == "combobox" &&
+            if ((normalized_base_class == "combobox" ||
+                 normalized_base_class == "listbox") &&
                 !runtime_object.properties.contains("columnwidths"))
             {
                 runtime_object.properties["columnwidths"] = make_string_value("");
