@@ -98,6 +98,7 @@ void test_copy_to_array_fills_2d_runtime_array();
 void test_copy_to_array_fields_clause_allows_keyword_named_field();
 void test_append_from_array_writes_records_from_2d_array();
 void test_append_from_array_fields_clause_allows_keyword_named_field();
+void test_copy_append_array_preserves_explicit_fields_order();
 void test_copy_append_array_like_and_except_field_filters();
 void test_copy_append_dbf_like_and_except_field_filters();
 void test_append_from_array_macro_source_preserves_date_and_datetime_fields();

@@ -73,6 +73,7 @@ int main() {
     test_copy_to_array_fields_clause_allows_keyword_named_field();
     test_append_from_array_writes_records_from_2d_array();
     test_append_from_array_fields_clause_allows_keyword_named_field();
+    test_copy_append_array_preserves_explicit_fields_order();
     test_copy_append_array_like_and_except_field_filters();
     test_copy_append_dbf_like_and_except_field_filters();
     test_append_from_array_macro_source_preserves_date_and_datetime_fields();

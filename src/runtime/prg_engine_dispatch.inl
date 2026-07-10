@@ -4980,32 +4980,15 @@
                     // Determine field set (optionally filtered)
                     const std::vector<std::string> field_filter = parse_field_filter_clause(statement.tertiary_expression);
                     const std::string for_expr = statement.quaternary_expression;
-                    // Gather field descriptors for column order from current record or cursor schema
+                    // Gather field descriptors for column order from cursor schema
+                    const std::vector<vfp::DbfFieldDescriptor> source_fields = cursor_field_descriptors(*cursor);
+                    const std::vector<vfp::DbfFieldDescriptor> selected_fields =
+                        filter_field_descriptors(source_fields, field_filter, true);
                     std::vector<std::string> col_names;
-                    const auto sample_rec = current_record(*cursor);
-                    if (sample_rec.has_value())
+                    col_names.reserve(selected_fields.size());
+                    for (const auto &field : selected_fields)
                     {
-                        for (const auto &rv : sample_rec->values)
-                        {
-                            if (field_matches_filter(rv.field_name, field_filter))
-                            {
-                                col_names.push_back(rv.field_name);
-                            }
-                        }
-                    }
-                    else if (cursor->source_path.empty())
-                    {
-                        // Remote cursor — use remote_records schema if available
-                        if (!cursor->remote_records.empty())
-                        {
-                            for (const auto &rv : cursor->remote_records.front().values)
-                            {
-                                if (field_matches_filter(rv.field_name, field_filter))
-                                {
-                                    col_names.push_back(rv.field_name);
-                                }
-                            }
-                        }
+                        col_names.push_back(field.name);
                     }
                     const std::size_t num_cols = col_names.empty() ? 1U : col_names.size();
                     std::vector<PrgValue> flat_values;
@@ -5121,14 +5104,8 @@
                 const std::vector<std::string> field_filter = parse_field_filter_clause(fields_clause);
 
                 // Filter descriptors by FIELDS clause
-                std::vector<vfp::DbfFieldDescriptor> out_fields;
-                for (const auto &f : source_fields)
-                {
-                    if (field_matches_filter(f.name, field_filter))
-                    {
-                        out_fields.push_back(f);
-                    }
-                }
+                std::vector<vfp::DbfFieldDescriptor> out_fields =
+                    filter_field_descriptors(source_fields, field_filter, true);
                 if (out_fields.empty())
                 {
                     last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.CopyToNoFieldsMatchFieldsClause");
@@ -5466,14 +5443,8 @@
                                 });
                             return false;
                         }
-                        std::vector<vfp::DbfFieldDescriptor> target_fields;
-                        for (const auto &f : dest_result.table.fields)
-                        {
-                            if (field_matches_filter(f.name, field_filter))
-                            {
-                                target_fields.push_back(f);
-                            }
-                        }
+                        std::vector<vfp::DbfFieldDescriptor> target_fields =
+                            filter_field_descriptors(dest_result.table.fields, field_filter, true);
                         if (target_fields.empty())
                         {
                             last_error_message =

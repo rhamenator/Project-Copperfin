@@ -1420,6 +1420,101 @@ void test_append_from_array_fields_clause_allows_keyword_named_field() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_copy_append_array_preserves_explicit_fields_order() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_append_array_field_order";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path source_path = temp_root / "source.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 12U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+        {.name = "NOTE", .type = 'C', .length = 12U},
+    };
+    const std::vector<std::vector<std::string>> source_records{
+        {"Alpha", "30", "One"},
+        {"Bravo", "25", "Two"},
+    };
+    const auto source_create = copperfin::vfp::create_dbf_table_file(source_path.string(), fields, source_records);
+    expect(source_create.ok, "COPY/APPEND ARRAY reordered-fields source fixture should be created");
+
+    const fs::path dest_path = temp_root / "dest.dbf";
+    const auto dest_create = copperfin::vfp::create_dbf_table_file(dest_path.string(), fields, {});
+    expect(dest_create.ok, "COPY/APPEND ARRAY reordered-fields destination fixture should be created");
+
+    const fs::path exported_path = temp_root / "exported.dbf";
+    const fs::path main_path = temp_root / "copy_append_array_field_order.prg";
+    write_text(
+        main_path,
+        "USE '" + source_path.string() + "'\n"
+        "COPY TO ARRAY aSelected FIELDS NOTE, NAME\n"
+        "nArrayRows = ALEN(aSelected, 1)\n"
+        "nArrayCols = ALEN(aSelected, 2)\n"
+        "cArray11 = aSelected[1, 1]\n"
+        "cArray12 = aSelected[1, 2]\n"
+        "COPY TO '" + exported_path.string() + "' FIELDS NOTE, NAME\n"
+        "USE '" + dest_path.string() + "'\n"
+        "APPEND FROM ARRAY aSelected FIELDS NOTE, NAME\n"
+        "GO 1\n"
+        "cDestName1 = NAME\n"
+        "nDestAge1 = AGE\n"
+        "cDestNote1 = NOTE\n"
+        "GO 2\n"
+        "cDestName2 = NAME\n"
+        "nDestAge2 = AGE\n"
+        "cDestNote2 = NOTE\n"
+        "nDestRows = RECCOUNT()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#3845: reordered-field COPY/APPEND ARRAY script should complete: " + state.message);
+
+    const auto chk = [&](const std::string& var, const std::string& expected, const std::string& msg) {
+        const auto it = state.globals.find(var);
+        expect(it != state.globals.end(), var + " should exist in globals");
+        if (it != state.globals.end()) {
+            const std::string val = copperfin::runtime::format_value(it->second);
+            expect(val == expected, msg + " (got '" + val + "')");
+        }
+    };
+
+    chk("narrayrows", "2", "#3845: COPY TO ARRAY should preserve both rows with reordered fields");
+    chk("narraycols", "2", "#3845: COPY TO ARRAY should preserve only the reordered selected fields");
+    chk("carray11", "One", "#3845: COPY TO ARRAY should put NOTE in column 1 when FIELDS NOTE, NAME is requested");
+    chk("carray12", "Alpha", "#3845: COPY TO ARRAY should put NAME in column 2 when FIELDS NOTE, NAME is requested");
+    chk("ndestrows", "2", "#3845: APPEND FROM ARRAY should append both reordered rows");
+    chk("cdestname1", "Alpha", "#3845: APPEND FROM ARRAY should restore NAME from reordered column 2");
+    chk("ndestage1", "0", "#3845: APPEND FROM ARRAY should leave omitted AGE blank for row 1");
+    chk("cdestnote1", "One", "#3845: APPEND FROM ARRAY should restore NOTE from reordered column 1");
+    chk("cdestname2", "Bravo", "#3845: APPEND FROM ARRAY should restore NAME from reordered column 2 for row 2");
+    chk("ndestage2", "0", "#3845: APPEND FROM ARRAY should leave omitted AGE blank for row 2");
+    chk("cdestnote2", "Two", "#3845: APPEND FROM ARRAY should restore NOTE from reordered column 1 for row 2");
+
+    const auto exported = copperfin::vfp::parse_dbf_table_from_file(exported_path.string(), 10U);
+    expect(exported.ok, "#3845: reordered-field COPY TO DBF export should remain readable");
+    expect(exported.ok && exported.table.fields.size() == 2U,
+        "#3845: reordered-field COPY TO DBF export should contain exactly the requested two fields");
+    if (exported.ok && exported.table.fields.size() >= 2U) {
+        expect(exported.table.fields[0].name == "NOTE",
+            "#3845: COPY TO DBF should preserve explicit FIELDS order for field 1");
+        expect(exported.table.fields[1].name == "NAME",
+            "#3845: COPY TO DBF should preserve explicit FIELDS order for field 2");
+    }
+    if (exported.ok && exported.table.records.size() >= 1U && exported.table.records[0].values.size() >= 2U) {
+        expect(exported.table.records[0].values[0].display_value == "One",
+            "#3845: exported DBF row 1 column 1 should carry NOTE when NOTE is listed first");
+        expect(exported.table.records[0].values[1].display_value == "Alpha",
+            "#3845: exported DBF row 1 column 2 should carry NAME when NAME is listed second");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_copy_append_array_like_and_except_field_filters() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_copy_append_array_like_except";
