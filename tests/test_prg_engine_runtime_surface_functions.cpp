@@ -46296,6 +46296,79 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_refresh_override_preserves_arguments_for_common_force_pattern()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_refresh_override_args";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_refresh_override_args.prg";
+        write_text(
+            main_path,
+            "oNode = CREATEOBJECT('BrowserNode')\n"
+            "oNode.Refresh(.T.)\n"
+            "lRefreshRan = oNode.lRefreshRan\n"
+            "nRefreshArgs = oNode.nRefreshArgs\n"
+            "lRefreshForce = oNode.lRefreshForce\n"
+            "RETURN\n"
+            "DEFINE CLASS BrowserNode AS Custom\n"
+            "    lRefreshRan = .F.\n"
+            "    nRefreshArgs = 0\n"
+            "    lRefreshForce = .F.\n"
+            "    PROCEDURE Refresh\n"
+            "        LPARAMETERS tlForce\n"
+            "        THIS.lRefreshRan = .T.\n"
+            "        THIS.nRefreshArgs = PCOUNT()\n"
+            "        IF PCOUNT() >= 1\n"
+            "            THIS.lRefreshForce = tlForce\n"
+            "        ENDIF\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Refresh override argument script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string& name, const std::string& expected)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " variable not found");
+            if (it != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(it->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(it->second) + "'");
+            }
+        };
+
+        check("lrefreshran", "true");
+        check("nrefreshargs", "1");
+        check("lrefreshforce", "true");
+
+        const bool has_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto& event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   event.detail == "BrowserNode.Refresh";
+        });
+        expect(has_invoke_event,
+               "native Refresh override argument coverage should emit a prg.object.invoke event");
+
+        const bool has_builtin_refresh_event = std::any_of(state.events.begin(), state.events.end(), [](const auto& event)
+        {
+            return event.category == "prg.object.refresh";
+        });
+        expect(!has_builtin_refresh_event,
+               "native Refresh override argument coverage should not emit the builtin prg.object.refresh event");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_move_builtin_fallback_updates_visual_geometry()
     {
         namespace fs = std::filesystem;
@@ -46628,6 +46701,56 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_show_builtin_fallback_accepts_modal_argument()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_show_modal_builtin";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_show_modal_builtin.prg";
+        write_text(
+            main_path,
+            "#DEFINE SHOW_MODAL 1\n"
+            "oForm = CREATEOBJECT('TaskEditForm')\n"
+            "oForm.Visible = .F.\n"
+            "oForm.Show(SHOW_MODAL)\n"
+            "lVisible = oForm.Visible\n"
+            "RETURN\n"
+            "DEFINE CLASS TaskEditForm AS Form\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Show modal builtin fallback script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto visible = state.globals.find("lvisible");
+        expect(visible != state.globals.end(),
+               "native Show modal builtin fallback script should preserve visible state");
+        if (visible != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(visible->second) == "true",
+                   "native Show modal builtin fallback should accept SHOW_MODAL-style arguments and set Visible");
+        }
+
+        const std::size_t show_event_count = static_cast<std::size_t>(std::count_if(
+            state.events.begin(),
+            state.events.end(),
+            [](const auto& event)
+            {
+                return event.category == "prg.object.show";
+            }));
+        expect(show_event_count == 1U,
+               "native Show modal builtin fallback should emit one show event");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_show_override_wins_over_builtin_visible_toggle()
     {
         namespace fs = std::filesystem;
@@ -46692,6 +46815,83 @@ namespace
         });
         expect(!has_builtin_show_event,
                "native Show override should not emit the builtin prg.object.show event");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_native_show_override_preserves_modal_argument_without_builtin_fallthrough()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_prg_show_modal_override";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_show_modal_override.prg";
+        write_text(
+            main_path,
+            "#DEFINE SHOW_MODAL 1\n"
+            "oForm = CREATEOBJECT('TaskEditForm')\n"
+            "oForm.Show(SHOW_MODAL)\n"
+            "lShowRan = oForm.lShowRan\n"
+            "nShowArgs = oForm.nShowArgs\n"
+            "nShowStyle = oForm.nShowStyle\n"
+            "lVisible = oForm.Visible\n"
+            "RETURN\n"
+            "DEFINE CLASS TaskEditForm AS Form\n"
+            "    Visible = .F.\n"
+            "    lShowRan = .F.\n"
+            "    nShowArgs = 0\n"
+            "    nShowStyle = 0\n"
+            "    PROCEDURE Show\n"
+            "        LPARAMETERS tnStyle\n"
+            "        THIS.lShowRan = .T.\n"
+            "        THIS.nShowArgs = PCOUNT()\n"
+            "        IF PCOUNT() >= 1\n"
+            "            THIS.nShowStyle = tnStyle\n"
+            "        ENDIF\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native Show modal override script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string& name, const std::string& expected)
+        {
+            const auto it = state.globals.find(name);
+            expect(it != state.globals.end(), name + " variable not found");
+            if (it != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(it->second) == expected,
+                       name + " expected '" + expected + "' got '" +
+                           copperfin::runtime::format_value(it->second) + "'");
+            }
+        };
+
+        check("lshowran", "true");
+        check("nshowargs", "1");
+        check("nshowstyle", "1");
+        check("lvisible", "false");
+
+        const bool has_invoke_event = std::any_of(state.events.begin(), state.events.end(), [](const auto& event)
+        {
+            return event.category == "prg.object.invoke" &&
+                   event.detail == "TaskEditForm.Show";
+        });
+        expect(has_invoke_event,
+               "native Show modal override coverage should emit a prg.object.invoke event");
+
+        const bool has_builtin_show_event = std::any_of(state.events.begin(), state.events.end(), [](const auto& event)
+        {
+            return event.category == "prg.object.show";
+        });
+        expect(!has_builtin_show_event,
+               "native Show modal override coverage should not emit the builtin prg.object.show event");
 
         fs::remove_all(temp_root, ignored);
     }
@@ -53411,11 +53611,14 @@ int main()
     test_bare_dotted_native_refresh_statement_invokes_same_prg_override();
     test_bare_dotted_native_release_statement_uses_builtin_release_path();
     test_native_refresh_builtin_fallback_succeeds_for_form_and_children();
+    test_native_refresh_override_preserves_arguments_for_common_force_pattern();
     test_native_move_builtin_fallback_updates_visual_geometry();
     test_native_visual_geometry_members_reflect_and_resist_shadowing();
     test_native_move_override_wins_over_builtin_geometry_updates();
     test_native_show_hide_builtin_fallback_updates_visible_state();
+    test_native_show_builtin_fallback_accepts_modal_argument();
     test_native_show_override_wins_over_builtin_visible_toggle();
+    test_native_show_override_preserves_modal_argument_without_builtin_fallthrough();
     test_native_form_showwindow_defaults_mutates_and_stays_builtin();
     test_native_form_controlbox_defaults_mutates_and_stays_builtin();
     test_native_form_closable_defaults_mutates_and_stays_builtin();
