@@ -40,6 +40,21 @@ void write_text(const std::filesystem::path& path, const std::string& text) {
     output << text;
 }
 
+std::filesystem::path deployed_runtime_host_path(
+    const std::filesystem::path& deployed_root,
+    const std::string& runtime_host_path) {
+    const std::filesystem::path runtime_host_file_name =
+        std::filesystem::path(runtime_host_path).filename();
+    if (!runtime_host_file_name.empty()) {
+        return deployed_root / runtime_host_file_name;
+    }
+#if defined(_WIN32)
+    return deployed_root / "copperfin_runtime_host.exe";
+#else
+    return deployed_root / "copperfin_runtime_host";
+#endif
+}
+
 void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root) {
     const std::filesystem::path english_root = locale_root / "en-US";
     const std::filesystem::path spanish_root = locale_root / "es-419";
@@ -1173,7 +1188,7 @@ void test_runtime_host_rejects_extension_payload_basename_fallback(const std::st
     fs::create_directories(builder_root / "content" / "plugins");
     fs::create_directories(content_root);
 
-    const fs::path deployed_runtime_host = deployed_root / "copperfin_runtime_host.exe";
+    const fs::path deployed_runtime_host = deployed_runtime_host_path(deployed_root, runtime_host_path);
     const fs::path startup_path = content_root / "main.prg";
     const fs::path root_helper_path = deployed_root / "helper.dll";
     const fs::path manifest_path = deployed_root / "app.cfmanifest";
@@ -1280,7 +1295,7 @@ void test_runtime_host_manifest_verification_errors_localize_without_changing_co
     fs::remove_all(temp_root, ignored);
     fs::create_directories(content_root);
 
-    const fs::path deployed_runtime_host = deployed_root / "copperfin_runtime_host.exe";
+    const fs::path deployed_runtime_host = deployed_runtime_host_path(deployed_root, runtime_host_path);
     const fs::path startup_path = content_root / "main.prg";
     const fs::path manifest_path = deployed_root / "app.cfmanifest";
 
@@ -1403,7 +1418,7 @@ void test_runtime_host_security_denial_audit_details_localize_without_changing_a
     {
         const fs::path deployed_root = temp_root / "runtime_admin_denied";
         const fs::path content_root = deployed_root / "content";
-        const fs::path deployed_runtime_host = deployed_root / "copperfin_runtime_host.exe";
+        const fs::path deployed_runtime_host = deployed_runtime_host_path(deployed_root, runtime_host_path);
         const fs::path manifest_path = deployed_root / "app.cfmanifest";
         const fs::path startup_path = content_root / "main.prg";
         const fs::path audit_log_path = deployed_root / "security_audit.log";

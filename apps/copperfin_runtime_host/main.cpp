@@ -81,6 +81,14 @@ bool equals_insensitive(const std::string& value, const std::string& expected) {
     return value.size() == expected.size() && starts_with_insensitive(value, expected);
 }
 
+std::string packaged_runtime_host_file_name() {
+#if defined(_WIN32)
+    return "copperfin_runtime_host.exe";
+#else
+    return "copperfin_runtime_host";
+#endif
+}
+
 const copperfin::runtime::XAssetActionBinding* find_pause_xasset_action(
     const copperfin::runtime::RuntimePauseState& state,
     const copperfin::runtime::XAssetExecutableModel& model) {
@@ -1005,7 +1013,7 @@ bool verify_manifest_hashes(
     }
 
     const auto runtime_host_hash = copperfin::security::sha256_hex_for_file(
-        (manifest_directory / "copperfin_runtime_host.exe").string());
+        (manifest_directory / packaged_runtime_host_file_name()).string());
     if (!runtime_host_hash.ok) {
         error = runtime_host_hash.error;
         return false;
