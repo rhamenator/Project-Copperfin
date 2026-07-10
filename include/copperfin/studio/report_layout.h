@@ -172,6 +172,12 @@ struct StudioReportLayoutSnapshot {
     int grid_vertical = 0;
     bool grid_horizontal_available = false;
     int grid_horizontal = 0;
+    bool driver_available = false;
+    std::string driver{};
+    bool device_available = false;
+    std::string device{};
+    bool output_available = false;
+    std::string output{};
     bool column_setup_available = false;
     bool column_count_available = false;
     int column_count = 0;

@@ -570,6 +570,21 @@ void finalize_page_setup_summary(StudioReportLayoutSnapshot& snapshot) {
         snapshot.grid_horizontal_available = true;
         snapshot.grid_horizontal = value;
     });
+    apply_string_setting("DRIVER", [&](const std::string& value) {
+        snapshot.page_setup_available = true;
+        snapshot.driver_available = true;
+        snapshot.driver = value;
+    });
+    apply_string_setting("DEVICE", [&](const std::string& value) {
+        snapshot.page_setup_available = true;
+        snapshot.device_available = true;
+        snapshot.device = value;
+    });
+    apply_string_setting("OUTPUT", [&](const std::string& value) {
+        snapshot.page_setup_available = true;
+        snapshot.output_available = true;
+        snapshot.output = value;
+    });
     apply_setting("COLS", [&](int value) {
         snapshot.column_setup_available = true;
         snapshot.column_count_available = true;

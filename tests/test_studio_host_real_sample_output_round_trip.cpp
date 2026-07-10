@@ -223,6 +223,19 @@ void expect_common_reopen_json(const std::string& json_text, const RealSamplePai
                     "#3766: real-sample OUTPUT round trip should preserve grid-vertical value");
 }
 
+void expect_output_summary(
+    const std::string& json_text,
+    bool available,
+    const std::string& value,
+    const std::string& evidence) {
+    expect_contains(json_text,
+                    std::string("\"outputAvailable\": ") + (available ? "true" : "false"),
+                    evidence + " should expose output availability");
+    expect_contains(json_text,
+                    "\"output\": \"" + value + "\"",
+                    evidence + " should expose output summary value");
+}
+
 void exercise_real_sample_output_round_trip(
     const std::string& studio_host_path,
     const std::filesystem::path& temp_root,
@@ -299,6 +312,10 @@ void exercise_real_sample_output_round_trip(
     }
     expect(reopen_after_set.exit_code == 0, "#3766: real sample reopen after OUTPUT update should succeed");
     expect_common_reopen_json(reopen_after_set.stdout_text, sample);
+    expect_output_summary(reopen_after_set.stdout_text,
+                          true,
+                          sample.output_value,
+                          "#3796: real sample OUTPUT update");
     expect_contains(reopen_after_set.stdout_text,
                     "\"settingCount\": 6",
                     "#3766: real sample OUTPUT update should add a sixth live root setting");
@@ -356,6 +373,10 @@ void exercise_real_sample_output_round_trip(
     }
     expect(reopen_after_clear.exit_code == 0, "#3766: real sample reopen after OUTPUT clear should succeed");
     expect_common_reopen_json(reopen_after_clear.stdout_text, sample);
+    expect_output_summary(reopen_after_clear.stdout_text,
+                          false,
+                          "",
+                          "#3796: real sample OUTPUT clear");
     expect_contains(reopen_after_clear.stdout_text,
                     "\"settingCount\": 5",
                     "#3766: real sample OUTPUT clear should restore the original live setting count");

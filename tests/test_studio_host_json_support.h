@@ -1189,6 +1189,8 @@ void test_studio_host_json_preserves_invalid_first_duplicate_report_setting_prec
     const std::string& studio_host_path);
 void test_studio_host_json_preserves_report_settings_without_root_expr_schema(
     const std::string& studio_host_path);
+void test_studio_host_json_exposes_printer_identity_report_settings_summary(
+    const std::string& studio_host_path);
 
 // ==== Report layout JSON tests: section band exposure by selector ====
 // ==== Report layout JSON tests: detail/header/footer section lifecycle ====
@@ -1504,6 +1506,8 @@ void write_synthetic_report_table_for_oversized_numeric_layout_json(
 void write_synthetic_report_table_for_fractional_layout_json(
     const std::filesystem::path& report_path);
 void write_synthetic_report_table_for_missing_root_objcode_layout_json(
+    const std::filesystem::path& report_path);
+void write_synthetic_report_table_for_printer_identity_layout_json(
     const std::filesystem::path& report_path);
 void write_synthetic_report_table_for_invalid_first_duplicate_setting_layout_json(
     const std::filesystem::path& report_path);

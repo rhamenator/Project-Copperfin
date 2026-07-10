@@ -178,6 +178,25 @@ void write_synthetic_report_table_for_missing_root_objcode_layout_json(
     expect(delete_result.ok, "#1730: synthetic report table should mark the no-OBJCODE settings row deleted");
 }
 
+void write_synthetic_report_table_for_printer_identity_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "UNIQUEID", .type = 'C', .length = 48U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "DRIVER=cups\nDEVICE=HP LaserJet\nOUTPUT=LPT1", "live-printer-identity-guid"},
+        {"1", "53", "DRIVER=deleted-cups\nDEVICE=Deleted Printer\nOUTPUT=FILE:", "deleted-printer-identity-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#3796: synthetic report table for printer-identity summary should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
+    expect(delete_result.ok, "#3796: synthetic report table should mark deleted printer-identity settings");
+}
+
 void write_synthetic_report_table_for_invalid_first_duplicate_setting_layout_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{

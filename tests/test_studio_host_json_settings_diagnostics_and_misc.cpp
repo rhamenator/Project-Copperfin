@@ -880,6 +880,89 @@ void test_studio_host_json_preserves_report_settings_without_root_expr_schema(
         fs::remove_all(temp_root, ignored);
     }
 }
+
+void test_studio_host_json_exposes_printer_identity_report_settings_summary(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_printer_identity_settings_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_printer_identity_layout = [&](const fs::path& asset_path,
+                                                 const std::string& title,
+                                                 const std::string& label) {
+        write_synthetic_report_table_for_printer_identity_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " printer identity summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " printer identity summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#3796: printer-identity settings summary should keep report/label inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#3796: printer-identity layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#3796: printer-identity label layouts should retain label identity");
+        } else {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": false",
+                            "#3796: printer-identity report layouts should retain report identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#3796: printer-identity layouts should mark page setup available");
+        expect_contains(summary_process.stdout_text, "\"driverAvailable\": true",
+                        "#3796: printer-identity layouts should expose driver availability");
+        expect_contains(summary_process.stdout_text, "\"driver\": \"cups\"",
+                        "#3796: printer-identity layouts should expose the live driver");
+        expect_contains(summary_process.stdout_text, "\"deviceAvailable\": true",
+                        "#3796: printer-identity layouts should expose device availability");
+        expect_contains(summary_process.stdout_text, "\"device\": \"HP LaserJet\"",
+                        "#3796: printer-identity layouts should expose the live device");
+        expect_contains(summary_process.stdout_text, "\"outputAvailable\": true",
+                        "#3796: printer-identity layouts should expose output availability");
+        expect_contains(summary_process.stdout_text, "\"output\": \"LPT1\"",
+                        "#3796: printer-identity layouts should expose the live output");
+        expect_contains(summary_process.stdout_text, "\"settingCount\": 3",
+                        "#3796: printer-identity layouts should preserve live setting counts");
+        expect_contains(summary_process.stdout_text, "\"deletedSettingCount\": 3",
+                        "#3796: printer-identity layouts should preserve deleted setting counts");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"DRIVER\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0, \"memoBlockNumber\": 1, \"value\": \"cups\"",
+                        "#3796: printer-identity layouts should preserve live driver provenance");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"DEVICE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1, \"memoBlockNumber\": 1, \"value\": \"HP LaserJet\"",
+                        "#3796: printer-identity layouts should preserve live device provenance");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"OUTPUT\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2, \"memoBlockNumber\": 1, \"value\": \"LPT1\"",
+                        "#3796: printer-identity layouts should preserve live output provenance");
+        expect_empty_report_layout_preview_bounds(
+            summary_process.stdout_text,
+            "#3796: printer-identity settings summary JSON");
+    };
+
+    run_printer_identity_layout(temp_root / "printer_identity.frx",
+                                "printer_identity.frx",
+                                "report");
+    run_printer_identity_layout(temp_root / "printer_identity.lbx",
+                                "printer_identity.lbx",
+                                "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
 #endif
 
 }  // namespace cf_test_studio_host_json
