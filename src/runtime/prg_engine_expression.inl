@@ -703,6 +703,15 @@
                         }
                         return apply_postfix_member_and_collection_access(value);
                     }
+                    if (normalized_identifier == "icase")
+                    {
+                        PrgValue value = parse_icase_invocation();
+                        if (suppress_evaluation_)
+                        {
+                            return skip_postfix_member_and_collection_access();
+                        }
+                        return apply_postfix_member_and_collection_access(value);
+                    }
 
                     if (suppress_evaluation_)
                     {
@@ -1999,6 +2008,64 @@
                 return value_as_bool(condition)
                            ? eval_expression_callback_(true_branch_text)
                            : eval_expression_callback_(false_branch_text);
+            }
+
+            PrgValue parse_icase_invocation()
+            {
+                skip_whitespace();
+                if (match(")"))
+                {
+                    throw std::runtime_error(runtime_text("Runtime.Prg.Expression.Error.ExpectedFunctionArgument"));
+                }
+
+                std::vector<std::string> argument_texts;
+                while (true)
+                {
+                    const std::string argument_text = scan_invocation_argument_text();
+                    if (argument_text.empty())
+                    {
+                        throw std::runtime_error(runtime_text("Runtime.Prg.Expression.Error.ExpectedFunctionArgument"));
+                    }
+                    argument_texts.push_back(argument_text);
+
+                    skip_whitespace();
+                    if (match(")"))
+                    {
+                        break;
+                    }
+                    if (!match(","))
+                    {
+                        throw std::runtime_error(runtime_text("Runtime.Prg.Expression.Error.ExpectedClosingParenthesis"));
+                    }
+                }
+
+                if (argument_texts.size() < 2U)
+                {
+                    throw std::runtime_error(runtime_text("Runtime.Prg.Expression.Error.ExpectedFunctionArgument"));
+                }
+
+                if (suppress_evaluation_)
+                {
+                    return make_empty_value();
+                }
+
+                const bool has_otherwise_result = (argument_texts.size() % 2U) != 0U;
+                const std::size_t paired_argument_count =
+                    has_otherwise_result ? argument_texts.size() - 1U : argument_texts.size();
+                for (std::size_t index = 0U; index < paired_argument_count; index += 2U)
+                {
+                    const PrgValue condition = eval_expression_callback_(argument_texts[index]);
+                    if (value_as_bool(condition))
+                    {
+                        return eval_expression_callback_(argument_texts[index + 1U]);
+                    }
+                }
+
+                if (has_otherwise_result)
+                {
+                    return eval_expression_callback_(argument_texts.back());
+                }
+                return make_null_value();
             }
 
             std::string resolve_array_argument_name(

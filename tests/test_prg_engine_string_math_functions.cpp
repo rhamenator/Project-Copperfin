@@ -72,6 +72,11 @@ namespace
             "f = IIF(.T., 'yes', 'no')\n"
             "iif_true_guard = IIF(.T., 'guard-true', 1 / 0)\n"
             "iif_false_guard = IIF(.F., 1 / 0, 'guard-false')\n"
+            "icase_first_guard = ICASE(.T., 'guard-first', .T., 1 / 0, 'otherwise')\n"
+            "icase_second_guard = ICASE(.F., 1 / 0, .T., 'guard-second', 'otherwise')\n"
+            "icase_null_condition = ICASE(.NULL., 'null-branch', .T., 'after-null', 'otherwise')\n"
+            "icase_otherwise = ICASE(.F., 1 / 0, .NULL., 'ignored', 'otherwise')\n"
+            "icase_no_match = ICASE(.F., 'miss')\n"
             "and_true = (1 = 1) AND (2 = 2)\n"
             "and_false = (1 = 1) AND (2 = 3)\n"
             "or_true = (1 = 2) OR (2 = 2)\n"
@@ -276,6 +281,10 @@ namespace
         check("f", "yes");
         check("iif_true_guard", "guard-true");
         check("iif_false_guard", "guard-false");
+        check("icase_first_guard", "guard-first");
+        check("icase_second_guard", "guard-second");
+        check("icase_null_condition", "after-null");
+        check("icase_otherwise", "otherwise");
         check("and_true", "true");
         check("and_false", "false");
         check("or_true", "true");
@@ -429,6 +438,16 @@ namespace
                 value = -1.0;
             }
             expect(value >= 0.0 && value < 1.0, name_text + " should be in the RAND() range [0, 1)");
+        }
+
+        const auto icase_no_match = state.globals.find("icase_no_match");
+        expect(icase_no_match != state.globals.end(),
+               "#3746: ICASE without an otherwise result should still assign a variable");
+        if (icase_no_match != state.globals.end())
+        {
+            expect(icase_no_match->second.is_null &&
+                       icase_no_match->second.kind == copperfin::runtime::PrgValueKind::empty,
+                   "#3746: ICASE without an otherwise result should return .NULL. when no condition matches");
         }
 
         fs::remove_all(temp_root, ignored);
