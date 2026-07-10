@@ -334,6 +334,7 @@ namespace copperfin::runtime
         {
             std::size_t for_statement_index = 0;
             std::size_t endfor_statement_index = 0;
+            std::size_t with_stack_depth_at_entry = 0;
             std::string variable_name{};
             double end_value = 0.0;
             double step_value = 1.0;
@@ -348,6 +349,7 @@ namespace copperfin::runtime
         {
             std::size_t scan_statement_index = 0;
             std::size_t endscan_statement_index = 0;
+            std::size_t with_stack_depth_at_entry = 0;
             int work_area = 0;
             std::string for_expression;
             std::string while_expression;
@@ -358,6 +360,7 @@ namespace copperfin::runtime
         {
             std::size_t do_while_statement_index = 0;
             std::size_t enddo_statement_index = 0;
+            std::size_t with_stack_depth_at_entry = 0;
             std::size_t iteration_count = 0;
         };
 

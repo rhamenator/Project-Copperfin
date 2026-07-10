@@ -68,6 +68,7 @@ void test_go_top_bottom_with_no_visible_records_sets_bof_and_eof();
 void test_static_diagnostic_flags_likely_infinite_do_while_loop();
 void test_elseif_control_flow_executes_matching_branch();
 void test_with_endwith_resolves_leading_dot_member_access();
+void test_loop_and_exit_unwind_with_bindings_before_jump();
 void test_print_command_emits_event();
 void test_erase_copy_rename_file_commands();
 void test_rename_file_command_rejects_existing_destination();

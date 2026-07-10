@@ -2047,6 +2047,7 @@
                 }
                 frame.loops.push_back({.for_statement_index = frame.pc - 1U,
                                        .endfor_statement_index = find_matching_endfor(frame, frame.pc - 1U).value_or(frame.pc - 1U),
+                                       .with_stack_depth_at_entry = frame.withs.size(),
                                        .variable_name = normalize_identifier(statement.identifier),
                                        .end_value = end_value,
                                        .step_value = step_value,
@@ -2064,6 +2065,7 @@
                     {
                         frame.whiles.push_back({.do_while_statement_index = frame.pc - 1U,
                                                 .enddo_statement_index = find_matching_enddo(frame, frame.pc - 1U).value_or(frame.pc - 1U),
+                                                .with_stack_depth_at_entry = frame.withs.size(),
                                                 .iteration_count = 0});
                     }
                 }
@@ -2097,6 +2099,10 @@
                 case ActiveLoopKind::scan_loop:
                     return continue_scan_loop(frame, statement, true);
                 case ActiveLoopKind::while_loop:
+                    if (!frame.whiles.empty())
+                    {
+                        unwind_with_bindings(frame, frame.whiles.back().with_stack_depth_at_entry);
+                    }
                     frame.pc = active_loop->start_statement_index;
                     return {};
                 }
@@ -2155,14 +2161,26 @@
                 switch (active_loop->kind)
                 {
                 case ActiveLoopKind::for_loop:
+                    if (!frame.loops.empty())
+                    {
+                        unwind_with_bindings(frame, frame.loops.back().with_stack_depth_at_entry);
+                    }
                     frame.loops.pop_back();
                     frame.pc = active_loop->end_statement_index + 1U;
                     return {};
                 case ActiveLoopKind::scan_loop:
+                    if (!frame.scans.empty())
+                    {
+                        unwind_with_bindings(frame, frame.scans.back().with_stack_depth_at_entry);
+                    }
                     frame.scans.pop_back();
                     frame.pc = active_loop->end_statement_index + 1U;
                     return {};
                 case ActiveLoopKind::while_loop:
+                    if (!frame.whiles.empty())
+                    {
+                        unwind_with_bindings(frame, frame.whiles.back().with_stack_depth_at_entry);
+                    }
                     frame.whiles.pop_back();
                     frame.pc = active_loop->end_statement_index + 1U;
                     return {};
@@ -2524,6 +2542,7 @@
 
                 frame.scans.push_back({.scan_statement_index = frame.pc - 1U,
                                        .endscan_statement_index = find_matching_endscan(frame, frame.pc - 1U).value_or(frame.pc - 1U),
+                                       .with_stack_depth_at_entry = frame.withs.size(),
                                        .work_area = cursor->work_area,
                                        .for_expression = statement.expression,
                                        .while_expression = statement.tertiary_expression,
@@ -7880,6 +7899,7 @@
                 frame.loops.push_back({
                     .for_statement_index = frame.pc - 1U,
                     .endfor_statement_index = find_matching_endfor(frame, frame.pc - 1U).value_or(frame.pc - 1U),
+                    .with_stack_depth_at_entry = frame.withs.size(),
                     .variable_name = var_name,
                     .is_for_each = true,
                     .each_values = std::move(elements),

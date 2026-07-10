@@ -566,6 +566,10 @@
             }
 
             LoopState &loop = frame.loops.back();
+            if (jump_after_completion)
+            {
+                unwind_with_bindings(frame, loop.with_stack_depth_at_entry);
+            }
 
             // FOR EACH loops use a separate continuation path
             if (loop.is_for_each)
@@ -629,6 +633,10 @@
             }
 
             ScanState &scan = frame.scans.back();
+            if (jump_after_completion)
+            {
+                unwind_with_bindings(frame, scan.with_stack_depth_at_entry);
+            }
             ++scan.iteration_count;
             if (scan.iteration_count > max_loop_iterations)
             {

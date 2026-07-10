@@ -1117,6 +1117,100 @@ void test_with_endwith_resolves_leading_dot_member_access() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_loop_and_exit_unwind_with_bindings_before_jump() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_with_loop_unwind";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 21}, {"BRAVO", 28}, {"CHARLIE", 33}});
+
+    const fs::path main_path = temp_root / "with_loop_unwind.prg";
+    write_text(
+        main_path,
+        "outer_obj = CREATEOBJECT('Sample.Object')\n"
+        "inner_obj = CREATEOBJECT('Sample.Object')\n"
+        "outer_obj.Caption = 'Outer'\n"
+        "inner_obj.Caption = 'Inner'\n"
+        "WITH outer_obj\n"
+        "    i = 0\n"
+        "    DO WHILE i < 3\n"
+        "        i = i + 1\n"
+        "        WITH inner_obj\n"
+        "            IF i < 3\n"
+        "                LOOP\n"
+        "            ENDIF\n"
+        "        ENDWITH\n"
+        "    ENDDO\n"
+        "    while_loop_caption = .Caption\n"
+        "    DO WHILE .T.\n"
+        "        WITH inner_obj\n"
+        "            EXIT\n"
+        "        ENDWITH\n"
+        "    ENDDO\n"
+        "    while_exit_caption = .Caption\n"
+        "    FOR j = 1 TO 3\n"
+        "        WITH inner_obj\n"
+        "            IF j < 3\n"
+        "                LOOP\n"
+        "            ENDIF\n"
+        "        ENDWITH\n"
+        "    ENDFOR\n"
+        "    for_loop_caption = .Caption\n"
+        "    FOR k = 1 TO 3\n"
+        "        WITH inner_obj\n"
+        "            EXIT\n"
+        "        ENDWITH\n"
+        "    ENDFOR\n"
+        "    for_exit_caption = .Caption\n"
+        "    USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "    SELECT People\n"
+        "    SCAN\n"
+        "        WITH inner_obj\n"
+        "            IF NAME # 'CHARLIE'\n"
+        "                LOOP\n"
+        "            ENDIF\n"
+        "        ENDWITH\n"
+        "    ENDSCAN\n"
+        "    scan_loop_caption = .Caption\n"
+        "    GO TOP\n"
+        "    SCAN\n"
+        "        WITH inner_obj\n"
+        "            EXIT\n"
+        "        ENDWITH\n"
+        "    ENDSCAN\n"
+        "    scan_exit_caption = .Caption\n"
+        "ENDWITH\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#3842: LOOP/EXIT inside WITH should not leak stale bindings across loop jumps");
+
+    const auto expect_outer_caption = [&](const char *name, const char *description) {
+        const auto value = state.globals.find(name);
+        expect(value != state.globals.end(), std::string("#3842: ") + description + " should assign a result");
+        if (value != state.globals.end()) {
+            expect(
+                copperfin::runtime::format_value(value->second) == "Outer",
+                std::string("#3842: ") + description + " should keep the outer WITH binding active");
+        }
+    };
+
+    expect_outer_caption("while_loop_caption", "DO WHILE LOOP");
+    expect_outer_caption("while_exit_caption", "DO WHILE EXIT");
+    expect_outer_caption("for_loop_caption", "FOR LOOP");
+    expect_outer_caption("for_exit_caption", "FOR EXIT");
+    expect_outer_caption("scan_loop_caption", "SCAN LOOP");
+    expect_outer_caption("scan_exit_caption", "SCAN EXIT");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_print_command_emits_event() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_print_cmd";
