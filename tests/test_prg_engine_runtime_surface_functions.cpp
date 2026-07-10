@@ -13265,6 +13265,118 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_tabindex_defaults_mutate_and_stay_builtin()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_tabindex";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_tabindex.prg";
+        write_text(
+            main_path,
+            "oPlain = CREATEOBJECT('CommandButton')\n"
+            "lPlainHasTabIndex = PEMSTATUS(oPlain, 'TabIndex', 1)\n"
+            "lPlainTabIndexReadOnly = PEMSTATUS(oPlain, 'TabIndex', 5)\n"
+            "nPlainBefore = oPlain.TabIndex\n"
+            "xPlainGetPemBefore = GETPEM(oPlain, 'TabIndex')\n"
+            "oPlain.TabIndex = 4\n"
+            "nPlainAfterDirectAssign = oPlain.TabIndex\n"
+            "lPlainSetPem = SETPEM(oPlain, 'TabIndex', 7)\n"
+            "nPlainAfterSetPem = oPlain.TabIndex\n"
+            "lPlainAddProperty = ADDPROPERTY(oPlain, 'TabIndex', 1)\n"
+            "lPlainRemoveProperty = REMOVEPROPERTY(oPlain, 'TabIndex')\n"
+            "oForm = CREATEOBJECT('TabForm')\n"
+            "nCmdBefore = oForm.cmdOpen.TabIndex\n"
+            "nTextBefore = oForm.txtName.TabIndex\n"
+            "nContainerBefore = oForm.cntHost.TabIndex\n"
+            "nNestedBefore = oForm.cntHost.cmdNested.TabIndex\n"
+            "nNestedRead = oForm.cmdProbe.ReadNestedTabIndex()\n"
+            "oForm.cmdProbe.MoveNestedTabIndex()\n"
+            "nNestedAfterChild = oForm.cntHost.cmdNested.TabIndex\n"
+            "lChildSetPem = SETPEM(oForm.txtName, 'TabIndex', 9)\n"
+            "nTextAfterSetPem = oForm.txtName.TabIndex\n"
+            "xChildGetPem = GETPEM(oForm.txtName, 'TabIndex')\n"
+            "lChildHasTabIndex = PEMSTATUS(oForm.txtName, 'TabIndex', 1)\n"
+            "lChildTabIndexReadOnly = PEMSTATUS(oForm.txtName, 'TabIndex', 5)\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oForm.txtName, 1)\n"
+            "lPropHasTabIndex = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'TABINDEX'\n"
+            "        lPropHasTabIndex = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oDerived = CREATEOBJECT('DerivedButton')\n"
+            "nDerivedBefore = oDerived.TabIndex\n"
+            "RETURN\n"
+            "DEFINE CLASS ProbeButton AS CommandButton\n"
+            "    FUNCTION ReadNestedTabIndex\n"
+            "        RETURN THISFORM.cntHost.cmdNested.TabIndex\n"
+            "    ENDFUNC\n"
+            "    PROCEDURE MoveNestedTabIndex\n"
+            "        THISFORM.cntHost.cmdNested.TabIndex = 5\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS TabForm AS Form\n"
+            "    ADD OBJECT cmdOpen AS CommandButton\n"
+            "    ADD OBJECT txtName AS TextBox\n"
+            "    ADD OBJECT cntHost AS HostContainer\n"
+            "    ADD OBJECT cmdProbe AS ProbeButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS HostContainer AS Container\n"
+            "    ADD OBJECT cmdNested AS CommandButton\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DerivedButton AS CommandButton\n"
+            "    TabIndex = 11\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native TabIndex property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("lplainhastabindex", "true");
+        check("lplaintabindexreadonly", "false");
+        check("nplainbefore", "0");
+        check("xplaingetpembefore", "0");
+        check("nplainafterdirectassign", "4");
+        check("lplainsetpem", "true");
+        check("nplainaftersetpem", "7");
+        check("lplainaddproperty", "false");
+        check("lplainremoveproperty", "false");
+        check("ncmdbefore", "0");
+        check("ntextbefore", "1");
+        check("ncontainerbefore", "2");
+        check("nnestedbefore", "0");
+        check("nnestedread", "0");
+        check("nnestedafterchild", "5");
+        check("lchildsetpem", "true");
+        check("ntextaftersetpem", "9");
+        check("xchildgetpem", "9");
+        check("lchildhastabindex", "true");
+        check("lchildtabindexreadonly", "false");
+        check("lprophastabindex", "true");
+        check("nderivedbefore", "11");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_text_entry_readonly_defaults_mutate_and_stay_builtin()
     {
         namespace fs = std::filesystem;
@@ -52647,6 +52759,7 @@ int main()
     test_native_column_bound_defaults_coordinate_controlsource_and_stay_builtin();
     test_native_visual_backcolor_defaults_mutate_and_stay_builtin();
     test_native_visual_forecolor_defaults_mutate_and_stay_builtin();
+    test_native_tabindex_defaults_mutate_and_stay_builtin();
     test_native_release_thisform_command_releases_owner_form();
     test_native_release_thisformset_command_releases_owner_alias();
     test_native_release_override_runs_before_builtin_release_path();

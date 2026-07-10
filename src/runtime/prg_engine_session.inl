@@ -648,6 +648,56 @@
             return std::max(1, max_order + 1);
         }
 
+        int next_native_tab_index(const RuntimeOleObjectState &runtime_object)
+        {
+            if (!is_native_tabindex_runtime_object(runtime_object))
+            {
+                return 0;
+            }
+
+            const auto parent_reference = native_object_parent_reference(runtime_object);
+            if (!parent_reference.has_value())
+            {
+                return 0;
+            }
+
+            int parent_handle = 0;
+            std::string parent_prog_id;
+            if (!parse_object_handle_reference(*parent_reference, parent_handle, parent_prog_id))
+            {
+                return 0;
+            }
+
+            const auto parent_found = ole_objects.find(parent_handle);
+            if (parent_found == ole_objects.end())
+            {
+                return 0;
+            }
+
+            std::size_t sibling_slot = 0U;
+            for (const int child_handle : collect_native_owned_child_handles(parent_found->second))
+            {
+                if (child_handle == runtime_object.handle ||
+                    child_handle > runtime_object.handle)
+                {
+                    continue;
+                }
+
+                const auto child_found = ole_objects.find(child_handle);
+                if (child_found == ole_objects.end() ||
+                    !is_native_tabindex_runtime_object(child_found->second))
+                {
+                    continue;
+                }
+
+                ++sibling_slot;
+            }
+
+            return static_cast<int>(std::min<std::size_t>(
+                sibling_slot,
+                static_cast<std::size_t>(2147483647U)));
+        }
+
         bool write_native_columnorder_property(
             RuntimeOleObjectState &runtime_object,
             const PrgValue &assigned_value)
@@ -1232,6 +1282,13 @@
                 // Headless contract: seed an explicit deterministic visual foreground
                 // until per-class VFP defaults are modeled with stronger evidence.
                 runtime_object.properties["forecolor"] = make_int64_value(0);
+            }
+
+            if (is_native_tabindex_runtime_object(runtime_object) &&
+                !runtime_object.properties.contains("tabindex"))
+            {
+                runtime_object.properties["tabindex"] =
+                    make_number_value(static_cast<double>(next_native_tab_index(runtime_object)));
             }
 
             if ((normalized_base_class == "textbox" ||
