@@ -64,13 +64,6 @@ std::string lowercase_copy(std::string value) {
     return value;
 }
 
-void set_environment_value(const char* name, const std::string& value) {
-    if (name == nullptr || *name == '\0') {
-        return;
-    }
-    (void)copperfin::platform::write_environment_variable(name, value);
-}
-
 bool starts_with_insensitive(const std::string& value, const std::string& prefix) {
     if (value.size() < prefix.size()) {
         return false;
@@ -1043,7 +1036,7 @@ copperfin::localization::LocalizedCatalog load_localization(
     const std::string& explicit_locale) {
     const std::filesystem::path locale_root = copperfin::localization::resolve_catalog_root(executable_path);
     if (trim_copy(copperfin::platform::read_environment_variable_or_empty("COPPERFIN_LOCALE_DIR")).empty()) {
-        set_environment_value("COPPERFIN_LOCALE_DIR", locale_root.string());
+        (void)copperfin::platform::write_environment_variable("COPPERFIN_LOCALE_DIR", locale_root.string());
     }
     return copperfin::localization::load_catalogs(
         locale_root,
