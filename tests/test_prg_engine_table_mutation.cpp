@@ -2069,6 +2069,86 @@ void test_undo_reverts_latest_alter_table_command() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_append_from_array_rolls_back_failed_multi_row_write() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_append_from_array_write_failure";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+    const auto original_size = fs::file_size(table_path);
+
+    const fs::path main_path = temp_root / "append_from_array_write_failure.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "GO 2\n"
+        "DIMENSION aRows[2,2]\n"
+        "aRows[1,1] = 'GAMMA'\n"
+        "aRows[1,2] = 30\n"
+        "aRows[2,1] = 'THIS-NAME-IS-TOO-LONG'\n"
+        "aRows[2,2] = 40\n"
+        "APPEND FROM ARRAY aRows FIELDS NAME, AGE\n"
+        "nAfterError = RECCOUNT()\n"
+        "nRecAfterError = RECNO()\n"
+        "cNameAfterError = NAME\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path, temp_root));
+
+    auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+           "failed APPEND FROM ARRAY field write should pause with an error");
+    expect(state.location.line == 8U,
+           "failed APPEND FROM ARRAY field write should highlight the command");
+    expect(state.message.find("too large") != std::string::npos,
+           "failed APPEND FROM ARRAY should preserve the DBF writer diagnostic");
+    expect(!session.can_undo_command(),
+           "failed APPEND FROM ARRAY should roll back instead of committing an undo entry");
+
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "continuing after failed APPEND FROM ARRAY should keep the session alive");
+    const auto count = state.globals.find("naftererror");
+    const auto recno = state.globals.find("nrecaftererror");
+    const auto name = state.globals.find("cnameaftererror");
+    expect(count != state.globals.end(), "failed APPEND FROM ARRAY should expose restored record count");
+    expect(recno != state.globals.end(), "failed APPEND FROM ARRAY should expose restored record pointer");
+    expect(name != state.globals.end(), "failed APPEND FROM ARRAY should expose the original current row");
+    if (count != state.globals.end()) {
+        expect(copperfin::runtime::format_value(count->second) == "2",
+               "failed APPEND FROM ARRAY should restore the in-memory record count");
+    }
+    if (recno != state.globals.end()) {
+        expect(copperfin::runtime::format_value(recno->second) == "2",
+               "failed APPEND FROM ARRAY should restore the pre-command record pointer");
+    }
+    if (name != state.globals.end()) {
+        expect(copperfin::runtime::format_value(name->second) == "BRAVO",
+               "failed APPEND FROM ARRAY should restore the original current row");
+    }
+
+    expect(fs::file_size(table_path) == original_size,
+           "failed APPEND FROM ARRAY should restore the original DBF size");
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok, "failed APPEND FROM ARRAY rollback should leave the DBF readable");
+    expect(parse_result.table.records.size() == 2U,
+           "failed APPEND FROM ARRAY should remove every row appended before the failure");
+    if (parse_result.table.records.size() == 2U) {
+        expect(parse_result.table.records[0].values[0].display_value == "ALPHA",
+               "failed APPEND FROM ARRAY should preserve the first original row");
+        expect(parse_result.table.records[1].values[0].display_value == "BRAVO",
+               "failed APPEND FROM ARRAY should preserve the second original row");
+    }
+    expect(std::none_of(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.append_from_array";
+    }), "failed APPEND FROM ARRAY should not emit a success event");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_undo_reverts_latest_append_from_array() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_command_undo_append_from_array";
@@ -2675,6 +2755,7 @@ int main() {
     test_undo_reverts_latest_insert_into_command();
     test_undo_reverts_latest_create_table_command();
     test_undo_reverts_latest_alter_table_command();
+    test_append_from_array_rolls_back_failed_multi_row_write();
     test_undo_reverts_latest_append_from_array();
     test_undo_reverts_latest_replacement_command();
     test_command_undo_query_reports_available_label_after_bulk_operation();

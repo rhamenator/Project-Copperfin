@@ -5470,7 +5470,9 @@
                     }
 
                     std::size_t appended_count = 0U;
-                    if (!execute_with_command_undo(cursor->source_path, "APPEND FROM ARRAY", [&]
+                    const CursorPositionSnapshot original_position = capture_cursor_snapshot(*cursor);
+                    const std::size_t original_record_count = cursor->record_count;
+                    const bool appended = execute_with_command_undo(cursor->source_path, "APPEND FROM ARRAY", [&]
                     {
                         // Determine dest fields order (filtered by FIELDS clause)
                         const std::vector<std::string> field_filter =
@@ -5530,16 +5532,25 @@
                                     cursor->recno - 1U,
                                     target_fields[col - 1U].name,
                                     serialize_prg_value_for_record_field(synthetic_field, val));
-                                if (rep_result.ok)
+                                if (!rep_result.ok)
                                 {
-                                    cursor->record_count = rep_result.record_count;
+                                    last_error_message = runtime_text(
+                                        "Runtime.Prg.Dispatch.Error.AppendFromArrayFailed",
+                                        {
+                                            {"errorMessage", rep_result.error},
+                                        });
+                                    return false;
                                 }
+                                cursor->record_count = rep_result.record_count;
                             }
                             ++appended_count;
                         }
                         return true;
-                    }))
+                    });
+                    if (!appended)
                     {
+                        cursor->record_count = original_record_count;
+                        restore_cursor_snapshot(*cursor, original_position);
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
