@@ -988,6 +988,18 @@
                 runtime_object.properties["columncount"] = make_number_value(-1.0);
             }
 
+            if (normalized_base_class == "pageframe" &&
+                !runtime_object.properties.contains("pagecount"))
+            {
+                runtime_object.properties["pagecount"] = make_number_value(0.0);
+            }
+
+            if (normalized_base_class == "pageframe" &&
+                !runtime_object.properties.contains("activepage"))
+            {
+                runtime_object.properties["activepage"] = make_number_value(0.0);
+            }
+
             if (normalized_base_class == "grid" &&
                 !runtime_object.properties.contains("recordsource"))
             {
@@ -1170,6 +1182,7 @@
             normalize_native_combobox_readonly_invariant(runtime_object);
             normalize_native_list_control_sorted_invariant(runtime_object);
             normalize_native_listbox_multiselect_invariant(runtime_object);
+            normalize_native_pageframe_activepage_invariant(runtime_object);
 
             if (normalized_base_class == "form" &&
                 !runtime_object.properties.contains("showwindow"))
@@ -1597,6 +1610,7 @@
             {
                 runtime_object.properties["pagecount"] =
                     make_number_value(static_cast<double>(pages_collection->collection_items.size()));
+                normalize_native_pageframe_activepage_invariant(runtime_object);
             }
             return objects_collection;
         }

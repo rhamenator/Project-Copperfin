@@ -6551,6 +6551,116 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_native_pageframe_activepage_reflects_runtime_selection_and_bounded_reflection()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_native_activepage_property";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "native_activepage_property.prg";
+        write_text(
+            main_path,
+            "oFrame = CREATEOBJECT('DemoPageFrame')\n"
+            "nActivePageDefault = oFrame.ActivePage\n"
+            "xActivePageGetPem = GETPEM(oFrame, 'ActivePage')\n"
+            "lHasActivePage = PEMSTATUS(oFrame, 'ActivePage', 1)\n"
+            "lActivePageReadOnly = PEMSTATUS(oFrame, 'ActivePage', 5)\n"
+            "nPropMembers = AMEMBERS(aPropMembers, oFrame, 1)\n"
+            "nUnionMembers = AMEMBERS(aUnionMembers, oFrame, 3)\n"
+            "lPropHasActivePage = .F.\n"
+            "lUnionHasActivePage = .F.\n"
+            "FOR i = 1 TO nPropMembers\n"
+            "    IF UPPER(aPropMembers[i]) == 'ACTIVEPAGE'\n"
+            "        lPropHasActivePage = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "FOR i = 1 TO nUnionMembers\n"
+            "    IF UPPER(aUnionMembers[i]) == 'ACTIVEPAGE'\n"
+            "        lUnionHasActivePage = .T.\n"
+            "    ENDIF\n"
+            "ENDFOR\n"
+            "oFrame.ActivePage = 2\n"
+            "nActivePageAfterDirectSet = oFrame.ActivePage\n"
+            "lSetActivePage = SETPEM(oFrame, 'ActivePage', 3)\n"
+            "nActivePageAfterSetPem = oFrame.ActivePage\n"
+            "oFrame.ActivePage = 99\n"
+            "nActivePageAfterHighClamp = oFrame.ActivePage\n"
+            "lAddActivePage = ADDPROPERTY(oFrame, 'ActivePage', 7)\n"
+            "lRemoveActivePage = REMOVEPROPERTY(oFrame, 'ActivePage')\n"
+            "lRemoved = oFrame.RemoveObject('pgGamma')\n"
+            "nActivePageAfterRemove = oFrame.ActivePage\n"
+            "cCurrentTagAfterRemove = oFrame.Pages(oFrame.ActivePage).cTag\n"
+            "oFrame.ActivePage = 0\n"
+            "nActivePageAfterLowClamp = oFrame.ActivePage\n"
+            "oEmpty = CREATEOBJECT('EmptyPageFrame')\n"
+            "nEmptyActivePageDefault = oEmpty.ActivePage\n"
+            "oEmpty.ActivePage = 7\n"
+            "nEmptyActivePageAfterSet = oEmpty.ActivePage\n"
+            "RETURN\n"
+            "DEFINE CLASS AlphaPage AS Page\n"
+            "    cTag = 'alpha'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS BetaPage AS Page\n"
+            "    cTag = 'beta'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS GammaPage AS Page\n"
+            "    cTag = 'gamma'\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS DemoPageFrame AS PageFrame\n"
+            "    PROCEDURE Init\n"
+            "        THIS.AddObject('pgAlpha', 'AlphaPage')\n"
+            "        THIS.AddObject('pgBeta', 'BetaPage')\n"
+            "        THIS.AddObject('pgGamma', 'GammaPage')\n"
+            "        RETURN\n"
+            "    ENDPROC\n"
+            "ENDDEFINE\n"
+            "DEFINE CLASS EmptyPageFrame AS PageFrame\n"
+            "ENDDEFINE\n");
+
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               std::string("native ActivePage property script should complete: ") + state.message +
+                   " @line=" + std::to_string(state.location.line));
+
+        const auto check = [&](const std::string &name, const std::string &expected)
+        {
+            const auto it = state.globals.find(name);
+            if (it == state.globals.end())
+            {
+                expect(false, name + " variable not found");
+                return;
+            }
+            expect(copperfin::runtime::format_value(it->second) == expected,
+                   name + " expected '" + expected + "' got '" + copperfin::runtime::format_value(it->second) + "'");
+        };
+
+        check("nactivepagedefault", "1");
+        check("xactivepagegetpem", "1");
+        check("lhasactivepage", "true");
+        check("lactivepagereadonly", "false");
+        check("lprophasactivepage", "true");
+        check("lunionhasactivepage", "true");
+        check("nactivepageafterdirectset", "2");
+        check("lsetactivepage", "true");
+        check("nactivepageaftersetpem", "3");
+        check("nactivepageafterhighclamp", "3");
+        check("nactivepageafterlowclamp", "1");
+        check("laddactivepage", "false");
+        check("lremoveactivepage", "false");
+        check("lremoved", "true");
+        check("nactivepageafterremove", "2");
+        check("ccurrenttagafterremove", "beta");
+        check("nemptyactivepagedefault", "0");
+        check("nemptyactivepageafterset", "0");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
     void test_native_controlcount_reflects_controls_count_and_stays_read_only()
     {
         namespace fs = std::filesystem;
@@ -52182,6 +52292,7 @@ int main()
     test_native_controls_child_collection_reflects_count_item_and_foreach_without_leaking_hidden_runtime_surfaces();
     test_native_pageframe_pages_child_collection_reflects_count_item_and_foreach_without_leaking_hidden_runtime_surfaces();
     test_native_pageframe_pagecount_reflects_pages_count_and_stays_read_only();
+    test_native_pageframe_activepage_reflects_runtime_selection_and_bounded_reflection();
     test_native_controlcount_reflects_controls_count_and_stays_read_only();
     test_native_form_lockscreen_defaults_mutates_and_stays_builtin();
     test_native_form_windowtype_defaults_mutates_and_stays_builtin();

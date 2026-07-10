@@ -47,6 +47,7 @@ bool is_native_olecontrol_conflict_member_name(const RuntimeOleObjectState& runt
 bool is_native_child_parent_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_controlcount_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_pagecount_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
+bool is_native_activepage_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_form_alwaysontop_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_form_showwindow_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_form_windowstate_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
@@ -73,6 +74,7 @@ bool is_native_column_bound_member_name(const RuntimeOleObjectState& runtime_obj
 bool is_native_child_collection_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool is_native_control_readonly_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name);
 bool native_combobox_readonly_assignment_blocked(const RuntimeOleObjectState& runtime_object, const PrgValue& assigned_value);
+void normalize_native_pageframe_activepage_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_combobox_readonly_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_list_control_sorted_invariant(RuntimeOleObjectState& runtime_object);
 void normalize_native_listbox_multiselect_invariant(RuntimeOleObjectState& runtime_object);

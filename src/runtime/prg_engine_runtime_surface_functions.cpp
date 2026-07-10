@@ -1313,6 +1313,17 @@ bool native_pagecount_member_name_matches(
     return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "pageframe";
 }
 
+bool native_activepage_member_name_matches(
+    const RuntimeOleObjectState& runtime_object,
+    const std::string& normalized_member_name) {
+    if (normalized_member_name != "activepage" ||
+        !runtime_object.properties.contains("activepage")) {
+        return false;
+    }
+
+    return normalize_identifier(trim_copy(runtime_object.base_class_name)) == "pageframe";
+}
+
 bool native_form_alwaysontop_member_name_matches(
     const RuntimeOleObjectState& runtime_object,
     const std::string& normalized_member_name) {
@@ -2560,6 +2571,11 @@ bool is_native_pagecount_member_name(const RuntimeOleObjectState& runtime_object
     return native_pagecount_member_name_matches(runtime_object, normalized_member_name);
 }
 
+bool is_native_activepage_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
+{
+    return native_activepage_member_name_matches(runtime_object, normalized_member_name);
+}
+
 bool is_native_form_alwaysontop_member_name(const RuntimeOleObjectState& runtime_object, const std::string& normalized_member_name)
 {
     return native_form_alwaysontop_member_name_matches(runtime_object, normalized_member_name);
@@ -2664,6 +2680,39 @@ bool native_combobox_readonly_assignment_blocked(const RuntimeOleObjectState& ru
 {
     return native_combobox_is_drop_down_list_style(runtime_object) &&
            value_as_bool(assigned_value);
+}
+
+void normalize_native_pageframe_activepage_invariant(RuntimeOleObjectState& runtime_object)
+{
+    if (normalize_identifier(trim_copy(runtime_object.base_class_name)) != "pageframe") {
+        return;
+    }
+
+    const auto pagecount = runtime_object.properties.find("pagecount");
+    const long long available_pages =
+        pagecount == runtime_object.properties.end()
+            ? 0LL
+            : std::max(0LL, std::llround(value_as_number(pagecount->second)));
+
+    auto activepage = runtime_object.properties.find("activepage");
+    if (activepage == runtime_object.properties.end()) {
+        runtime_object.properties["activepage"] =
+            make_number_value(available_pages > 0LL ? 1.0 : 0.0);
+        return;
+    }
+
+    if (available_pages <= 0LL) {
+        activepage->second = make_number_value(0.0);
+        return;
+    }
+
+    long long requested_page = std::llround(value_as_number(activepage->second));
+    if (requested_page < 1LL) {
+        requested_page = 1LL;
+    } else if (requested_page > available_pages) {
+        requested_page = available_pages;
+    }
+    activepage->second = make_number_value(static_cast<double>(requested_page));
 }
 
 void normalize_native_combobox_readonly_invariant(RuntimeOleObjectState& runtime_object)
@@ -3344,6 +3393,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         return get_native_identity_reflection_metadata(runtime_object, member_name).has_value() ||
                native_controlcount_member_name_matches(runtime_object, member_name) ||
                native_pagecount_member_name_matches(runtime_object, member_name) ||
+               native_activepage_member_name_matches(runtime_object, member_name) ||
                native_listcount_member_name_matches(runtime_object, member_name) ||
                native_sorted_member_name_matches(runtime_object, member_name) ||
                native_newindex_member_name_matches(runtime_object, member_name) ||
@@ -3598,6 +3648,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         if (is_native_identity_member_name(*runtime_object, property_name) ||
             is_native_controlcount_member_name(*runtime_object, property_name) ||
             is_native_pagecount_member_name(*runtime_object, property_name) ||
+            is_native_activepage_member_name(*runtime_object, property_name) ||
             is_native_child_collection_member_name(*runtime_object, property_name) ||
             is_native_name_member_name(*runtime_object, property_name) ||
             is_native_form_alwaysontop_member_name(*runtime_object, property_name) ||
@@ -3694,6 +3745,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         if (is_native_listcount_member_name(*runtime_object, member_name)) {
             sync_native_list_control_count(*runtime_object);
+        }
+        if (is_native_activepage_member_name(*runtime_object, member_name)) {
+            normalize_native_pageframe_activepage_invariant(*runtime_object);
         }
         if (is_native_listitemid_member_name(*runtime_object, member_name)) {
             sync_native_list_control_displayvalue_from_selection(*runtime_object);
@@ -3834,6 +3888,11 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             return make_boolean_value(
                 write_native_list_control_item_id(*runtime_object, arguments[2]));
         }
+        if (is_native_activepage_member_name(*runtime_object, member_name)) {
+            runtime_object->properties[member_name] = arguments[2];
+            normalize_native_pageframe_activepage_invariant(*runtime_object);
+            return make_boolean_value(true);
+        }
         if (!reflectable_member_exists_locally(*runtime_object, member_name)) {
             if (RuntimeOleObjectState* object_surface =
                     resolve_direct_olecontrol_reflection_surface(*runtime_object);
@@ -3873,6 +3932,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             if (member_name == "style" || member_name == "readonly") {
                 normalize_native_combobox_readonly_invariant(*runtime_object);
             }
+            if (is_native_activepage_member_name(*runtime_object, member_name)) {
+                normalize_native_pageframe_activepage_invariant(*runtime_object);
+            }
             if (member_name == "multiselect") {
                 normalize_native_listbox_multiselect_invariant(*runtime_object);
             }
@@ -3898,6 +3960,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             runtime_object->properties[member_name] = arguments[2];
             if (member_name == "style" || member_name == "readonly") {
                 normalize_native_combobox_readonly_invariant(*runtime_object);
+            }
+            if (is_native_activepage_member_name(*runtime_object, member_name)) {
+                normalize_native_pageframe_activepage_invariant(*runtime_object);
             }
             if (member_name == "multiselect") {
                 normalize_native_listbox_multiselect_invariant(*runtime_object);
@@ -3936,6 +4001,7 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         if (is_native_identity_member_name(*runtime_object, property_name) ||
             is_native_controlcount_member_name(*runtime_object, property_name) ||
             is_native_pagecount_member_name(*runtime_object, property_name) ||
+            is_native_activepage_member_name(*runtime_object, property_name) ||
             is_native_child_collection_member_name(*runtime_object, property_name) ||
             is_native_name_member_name(*runtime_object, property_name) ||
             is_native_form_alwaysontop_member_name(*runtime_object, property_name) ||

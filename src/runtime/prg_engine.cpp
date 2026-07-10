@@ -4618,6 +4618,10 @@ namespace copperfin::runtime
             {
                 sync_native_list_control_count(runtime_object);
             }
+            if (is_native_activepage_member_name(runtime_object, normalized_property_name))
+            {
+                normalize_native_pageframe_activepage_invariant(runtime_object);
+            }
             if (is_native_listitemid_member_name(runtime_object, normalized_property_name))
             {
                 sync_native_list_control_displayvalue_from_selection(runtime_object);
@@ -4882,6 +4886,12 @@ namespace copperfin::runtime
                 {
                     return write_native_list_control_item_id(runtime_object, assigned_value) &&
                            write_native_list_control_controlsource_target(runtime_object, source_frame);
+                }
+                if (is_native_activepage_member_name(runtime_object, normalized_property_name))
+                {
+                    runtime_object.properties[normalized_property_name] = assigned_value;
+                    normalize_native_pageframe_activepage_invariant(runtime_object);
+                    return true;
                 }
                 if (const auto list_cell = resolve_list_member_cell();
                     list_cell.has_value())
