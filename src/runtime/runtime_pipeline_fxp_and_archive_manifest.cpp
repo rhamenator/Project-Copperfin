@@ -250,6 +250,21 @@ void append_runtime_asset_manifest_lines(std::ostringstream& stream, const Runti
     }
 }
 
+void append_writable_data_manifest_lines(std::ostringstream& stream, const RuntimePackagePlan& plan) {
+    for (const auto& asset : plan.assets) {
+        if (!asset.package_writable || !asset.copied) {
+            continue;
+        }
+        stream << "data_asset="
+               << quote_manifest_value(asset.staged_path) << "|package_writable\n";
+    }
+    for (const auto& digest : plan.writable_data_payload_digests) {
+        stream << "data_payload="
+               << quote_manifest_value(digest.path) << "|package_writable|"
+               << quote_manifest_value(digest.sha256) << "\n";
+    }
+}
+
 void append_warning_manifest_lines(std::ostringstream& stream, const RuntimePackagePlan& plan) {
     for (const auto& warning : plan.warnings) {
         stream << "warning=" << quote_manifest_value(warning) << "\n";

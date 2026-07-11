@@ -337,9 +337,9 @@ void test_runtime_package_license_fields_stay_debug_only() {
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
         const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
 
-        expect(manifest_value_for_key(runtime_manifest, "manifest_version") == "2",
+        expect(manifest_value_for_key(runtime_manifest, "manifest_version") == "3",
                "runtime manifest should keep the current manifest_version while trimming unused license_* fields");
-        expect(manifest_value_for_key(debug_manifest, "debug_manifest_version") == "2",
+        expect(manifest_value_for_key(debug_manifest, "debug_manifest_version") == "3",
                "debug manifest should keep the current debug_manifest_version while preserving license_* fields");
 
         const std::vector<std::pair<std::string, std::string>> expected_license_fields{
@@ -877,6 +877,115 @@ void test_uppercase_dbf_companion_assets_are_staged() {
                "#3510: runtime packaging should not rewrite uppercase DBF memo companion names to lowercase during staging");
         expect(!fs::exists(content_root / "startup.cdx"),
                "#3510: runtime packaging should not rewrite uppercase DBF index companion names to lowercase during staging");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_writable_dbf_assets_use_data_manifest_surface_and_dbc_stays_immutable() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_writable_data_contract";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    write_text(project_dir / "main.prg", "RETURN\n");
+    write_text(project_dir / "customers.dbf", "synthetic dbf");
+    write_text(project_dir / "customers.FPT", "synthetic memo");
+    write_text(project_dir / "customers.CDX", "synthetic structural index");
+    write_text(project_dir / "customers.IDX", "synthetic compact index");
+    write_text(project_dir / "customers.NDX", "synthetic single-tag index");
+    write_text(project_dir / "customers.MDX", "synthetic multiple-tag index");
+    write_text(project_dir / "catalog.dbc", "synthetic dbc");
+    write_text(project_dir / "catalog.DCT", "synthetic database memo");
+    write_text(project_dir / "catalog.DCX", "synthetic database index");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "writable_data.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "WritableDataDemo";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "WritableDataDemo";
+    workspace.build_plan.output_path = (output_dir / "WritableDataDemo.exe").string();
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program", .excluded = false},
+        {.record_index = 2U, .name = "customers.dbf", .relative_path = "customers.dbf", .type_title = "Table", .excluded = false},
+        {.record_index = 3U, .name = "catalog.dbc", .relative_path = "catalog.dbc", .type_title = "Database", .excluded = false}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::release,
+        true,
+        false);
+    expect(plan.ok, "writable DBF and immutable DBC package contract plan should be created");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+    expect(result.ok, "writable DBF and immutable DBC package contract should materialize");
+    if (result.ok) {
+        const fs::path content_root(result.plan.content_root);
+        const std::string runtime_manifest = read_text(result.plan.manifest_path);
+        const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
+        expect(manifest_value_for_key(runtime_manifest, "manifest_version") == "3",
+               "writable package data should use the version-3 runtime contract");
+        expect(manifest_value_for_key(debug_manifest, "debug_manifest_version") == "3",
+               "writable package data should use the version-3 debug contract");
+        expect(manifest_value_for_key(runtime_manifest, "data_policy") == "package_writable" &&
+                   manifest_value_for_key(debug_manifest, "data_policy") == "package_writable",
+               "runtime and debug manifests should identify the package-writable data policy");
+
+        const std::string data_asset_marker =
+            "data_asset=" + (content_root / "customers.dbf").string() + "|package_writable";
+        expect(runtime_manifest.find(data_asset_marker) != std::string::npos &&
+                   debug_manifest.find(data_asset_marker) != std::string::npos,
+               "runtime/debug manifests should classify non-startup DBF data as package-writable");
+        expect(runtime_manifest.find(
+                   "data_asset=" + (content_root / "catalog.dbc").string() + "|") ==
+                   std::string::npos,
+               "DBC executable metadata should remain outside the writable data surface");
+        for (const auto& companion : {
+                 "customers.FPT",
+                 "customers.CDX",
+                 "customers.IDX",
+                 "customers.NDX",
+                 "customers.MDX"}) {
+            const std::string marker =
+                "data_payload=" + (content_root / companion).string() + "|package_writable|";
+            expect(runtime_manifest.find(marker) != std::string::npos,
+                   std::string("runtime manifest should record writable data payload ") + companion);
+            expect(debug_manifest.find(marker) != std::string::npos,
+                   std::string("debug manifest should preserve writable data payload ") + companion);
+            expect(runtime_manifest.find(
+                       "extension_payload=" + (content_root / companion).string() + "|") ==
+                       std::string::npos,
+                   std::string("writable data payload should not enter immutable extension verification: ") + companion);
+        }
+        for (const auto& companion : {"catalog.DCT", "catalog.DCX"}) {
+            const std::string marker =
+                "extension_payload=" + (content_root / companion).string() + "|";
+            expect(runtime_manifest.find(marker) != std::string::npos,
+                   std::string("DBC companion should remain on the immutable extension surface: ") + companion);
+        }
+        expect(result.plan.writable_data_payload_digests.size() == 5U,
+               "writable DBF companions should remain separate from immutable DBC extension digests");
     }
 
     fs::remove_all(temp_root, ignored);

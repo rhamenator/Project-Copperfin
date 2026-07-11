@@ -39,6 +39,7 @@ struct RuntimePackageAsset {
     bool excluded = false;
     bool exists = false;
     bool required_for_runtime = false;
+    bool package_writable = false;
     bool copied = false;
     std::string sha256;
 };
@@ -108,6 +109,7 @@ struct RuntimePackagePlan {
     std::vector<std::string> exported_symbols;
     std::vector<RuntimeArtifactDigest> compiler_contract_digests;
     std::vector<RuntimeArtifactDigest> extension_payload_digests;
+    std::vector<RuntimeArtifactDigest> writable_data_payload_digests;
     RuntimeDebugLaunchPlan debug_plan{};
     std::vector<std::string> warnings;
 };

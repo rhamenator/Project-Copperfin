@@ -713,6 +713,80 @@ if(NOT indirect_xasset_companion_run_result EQUAL 8 OR
     message(FATAL_ERROR "Runtime host did not fail closed for an xAsset companion symlink or Windows junction.\nstdout:\n${indirect_xasset_companion_output}\nstderr:\n${indirect_xasset_companion_error}")
 endif()
 remove_directory_indirection("${indirect_xasset_companion}")
+
+file(WRITE "${indirection_content_root}/customers.dbf" "writable data seed")
+file(SHA256 "${indirection_content_root}/customers.dbf" indirect_data_asset_hash)
+set(indirect_data_companion "${indirection_content_root}/customers.fpt")
+create_directory_indirection(
+    "${indirection_outside_root}"
+    "${indirect_data_companion}"
+    indirect_data_companion_result
+)
+if(NOT indirect_data_companion_result EQUAL 0)
+    message(FATAL_ERROR "Unable to create the writable data companion symlink or Windows junction required by the runtime-host containment regression.")
+endif()
+set(indirect_data_companion_manifest_text
+"manifest_version=3
+project_title=IndirectDataCompanionDemo
+package_root=${indirection_builder_root}
+content_root=${indirection_builder_root}/content
+working_directory=${indirection_builder_root}/content
+startup_item=main.prg
+startup_source=${indirection_builder_root}/content/main.prg
+security_enabled=true
+security_role=developer
+security_mode=native
+runtime_host_sha256=${indirection_runtime_host_hash}
+data_policy=package_writable
+asset=2|customers.dbf|${indirection_builder_root}/content/customers.dbf|Table|false|true|${indirect_data_asset_hash}|true
+data_asset=${indirection_builder_root}/content/customers.dbf|package_writable
+data_payload=${indirection_builder_root}/content/customers.fpt|package_writable|0000000000000000000000000000000000000000000000000000000000000000
+dotnet_story=none
+")
+file(WRITE "${indirection_root}/app.cfmanifest" "${indirect_data_companion_manifest_text}")
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -E env
+        "COPPERFIN_LOCALE_DIR=${LOCALE_ROOT}"
+        "COPPERFIN_LOCALE=en-US"
+        "${packaged_entrypoint}" --manifest "${indirection_root}/app.cfmanifest"
+    WORKING_DIRECTORY "${test_root}"
+    RESULT_VARIABLE indirect_data_companion_run_result
+    OUTPUT_VARIABLE indirect_data_companion_output
+    ERROR_VARIABLE indirect_data_companion_error
+)
+if(NOT indirect_data_companion_run_result EQUAL 8 OR
+   NOT indirect_data_companion_output MATCHES "status: error" OR
+   NOT indirect_data_companion_output MATCHES "Package path failed physical containment validation: customers\\.fpt")
+    message(FATAL_ERROR "Runtime host did not fail closed for a writable data companion symlink or Windows junction.\nstdout:\n${indirect_data_companion_output}\nstderr:\n${indirect_data_companion_error}")
+endif()
+remove_directory_indirection("${indirect_data_companion}")
+
+file(REMOVE "${indirection_content_root}/customers.dbf")
+set(indirect_data_asset "${indirection_content_root}/customers.dbf")
+create_directory_indirection(
+    "${indirection_outside_root}"
+    "${indirect_data_asset}"
+    indirect_data_asset_result
+)
+if(NOT indirect_data_asset_result EQUAL 0)
+    message(FATAL_ERROR "Unable to create the writable data primary symlink or Windows junction required by the runtime-host containment regression.")
+endif()
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -E env
+        "COPPERFIN_LOCALE_DIR=${LOCALE_ROOT}"
+        "COPPERFIN_LOCALE=en-US"
+        "${packaged_entrypoint}" --manifest "${indirection_root}/app.cfmanifest"
+    WORKING_DIRECTORY "${test_root}"
+    RESULT_VARIABLE indirect_data_asset_run_result
+    OUTPUT_VARIABLE indirect_data_asset_output
+    ERROR_VARIABLE indirect_data_asset_error
+)
+if(NOT indirect_data_asset_run_result EQUAL 8 OR
+   NOT indirect_data_asset_output MATCHES "status: error" OR
+   NOT indirect_data_asset_output MATCHES "Package path failed physical containment validation: customers\\.dbf")
+    message(FATAL_ERROR "Runtime host did not fail closed for a writable data primary symlink or Windows junction.\nstdout:\n${indirect_data_asset_output}\nstderr:\n${indirect_data_asset_error}")
+endif()
+remove_directory_indirection("${indirect_data_asset}")
 remove_directory_indirection("${indirection_link}")
 
 file(WRITE "${test_root}/debug-source.prg" "? \"DEBUG_SOURCE_EXECUTED\"\nRETURN\n")

@@ -890,7 +890,7 @@ struct VerifiedPackagePath {
 };
 using VerifiedPackagePaths = std::vector<VerifiedPackagePath>;
 constexpr int kMinimumSupportedManifestVersion = 1;
-constexpr int kMaximumSupportedManifestVersion = 2;
+constexpr int kMaximumSupportedManifestVersion = 3;
 
 copperfin::studio::StudioAssetKind xasset_kind_for_path(const std::filesystem::path& path);
 
@@ -955,6 +955,23 @@ bool is_debug_manifest_contract(const std::string& manifest_path) {
            equals_insensitive(normalized_manifest_path.extension().string(), ".cfdebug");
 }
 
+std::optional<int> resolved_manifest_version(
+    const ManifestMap& manifest,
+    const std::string& manifest_path) {
+    std::string raw_version = first_value(manifest, "manifest_version");
+    if (trim_copy(raw_version).empty() && is_debug_manifest_contract(manifest_path)) {
+        raw_version = first_value(manifest, "debug_manifest_version");
+    }
+    return parse_manifest_version_value(raw_version);
+}
+
+bool is_sha256_hex(const std::string& value) {
+    return value.size() == 64U &&
+        std::all_of(value.begin(), value.end(), [](unsigned char ch) {
+            return std::isxdigit(ch) != 0;
+        });
+}
+
 bool validate_manifest_version(
     const ManifestMap& manifest,
     const std::string& manifest_path,
@@ -969,7 +986,7 @@ bool validate_manifest_version(
         return false;
     }
 
-    const auto parsed_version = parse_manifest_version_value(raw_version);
+    const auto parsed_version = resolved_manifest_version(manifest, manifest_path);
     if (!parsed_version.has_value() ||
         *parsed_version < kMinimumSupportedManifestVersion ||
         *parsed_version > kMaximumSupportedManifestVersion) {
@@ -977,12 +994,32 @@ bool validate_manifest_version(
             catalog,
             "RuntimeHost.Error.ManifestVersionUnsupported",
             {
-                {"supportedVersions", "1, 2"},
+                {"supportedVersions", "1, 2, 3"},
                 {"version", raw_version}
             });
         return false;
     }
 
+    return true;
+}
+
+bool validate_manifest_data_contract_header(
+    const ManifestMap& manifest,
+    const std::string& manifest_path,
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string& error) {
+    const int manifest_version = resolved_manifest_version(manifest, manifest_path).value_or(0);
+    const auto data_policies = all_values(manifest, "data_policy");
+    const std::string data_policy = data_policies.empty() ? std::string{} : data_policies.front();
+    const bool has_data_entries =
+        !all_values(manifest, "data_asset").empty() ||
+        !all_values(manifest, "data_payload").empty();
+    if ((manifest_version >= 3 &&
+         (data_policies.size() != 1U || data_policy != "package_writable")) ||
+        (manifest_version < 3 && (!data_policies.empty() || has_data_entries))) {
+        error = localized_message(catalog, "RuntimeHost.Error.DataPolicyMalformed");
+        return false;
+    }
     return true;
 }
 
@@ -1203,6 +1240,7 @@ std::string resolve_manifest_bound_directory(
 
 bool verify_manifest_hashes(
     const ManifestMap& manifest,
+    const std::string& manifest_path,
     const std::filesystem::path& manifest_directory,
     const copperfin::localization::LocalizedCatalog& catalog,
     std::string& error,
@@ -1253,6 +1291,112 @@ bool verify_manifest_hashes(
         .sha256 = lowercase_copy(runtime_host_hash.hex_digest)
     });
 
+    const int manifest_version = resolved_manifest_version(
+        manifest,
+        manifest_path).value_or(0);
+    const auto data_asset_values = all_values(manifest, "data_asset");
+    const auto data_payload_values = all_values(manifest, "data_payload");
+    const std::string data_policy = first_value(manifest, "data_policy");
+    if ((manifest_version >= 3 && data_policy != "package_writable") ||
+        (manifest_version < 3 &&
+         (!data_policy.empty() || !data_asset_values.empty() || !data_payload_values.empty()))) {
+        error = localized_message(catalog, "RuntimeHost.Error.DataPolicyMalformed");
+        return false;
+    }
+
+    std::vector<std::filesystem::path> writable_data_paths;
+    std::vector<std::filesystem::path> writable_data_payload_paths;
+    for (const auto& data_asset : data_asset_values) {
+        const auto parts = split_pipe(data_asset);
+        if (parts.size() != 2U || parts[1] != "package_writable") {
+            error = localized_message(catalog, "RuntimeHost.Error.DataAssetMalformed");
+            return false;
+        }
+        copperfin::security::PhysicalPathContainmentFailure containment_failure =
+            copperfin::security::PhysicalPathContainmentFailure::none;
+        const auto bound_path = bind_packaged_path(
+            parts[0],
+            recorded_package_root,
+            manifest_directory,
+            PackagePathBindingMode::strict_relative_fidelity,
+            &containment_failure);
+        if (!bound_path.has_value()) {
+            error = localized_message(
+                catalog,
+                physical_indirection_was_rejected(containment_failure)
+                    ? "RuntimeHost.Error.PackagePathPhysicalContainmentFailed"
+                    : "RuntimeHost.Error.PackagedAssetMissing",
+                {{"fileName", portable_manifest_path(parts[0]).filename().string()}});
+            return false;
+        }
+        if (std::find(writable_data_paths.begin(), writable_data_paths.end(), *bound_path) !=
+            writable_data_paths.end()) {
+            error = localized_message(catalog, "RuntimeHost.Error.DataAssetMalformed");
+            return false;
+        }
+        writable_data_paths.push_back(*bound_path);
+    }
+
+    if (const auto startup_path = bind_packaged_path(
+            first_value(manifest, "startup_source"),
+            recorded_package_root,
+            manifest_directory,
+            PackagePathBindingMode::strict_relative_fidelity);
+        startup_path.has_value() &&
+        std::find(writable_data_paths.begin(), writable_data_paths.end(), *startup_path) !=
+            writable_data_paths.end()) {
+        error = localized_message(catalog, "RuntimeHost.Error.DataAssetMalformed");
+        return false;
+    }
+
+    for (const auto& data_payload : data_payload_values) {
+        const auto parts = split_pipe(data_payload);
+        if (parts.size() != 3U || parts[1] != "package_writable" || !is_sha256_hex(parts[2])) {
+            error = localized_message(catalog, "RuntimeHost.Error.DataPayloadMalformed");
+            return false;
+        }
+        copperfin::security::PhysicalPathContainmentFailure containment_failure =
+            copperfin::security::PhysicalPathContainmentFailure::none;
+        const auto bound_path = bind_packaged_path(
+            parts[0],
+            recorded_package_root,
+            manifest_directory,
+            PackagePathBindingMode::strict_relative_fidelity,
+            &containment_failure);
+        if (!bound_path.has_value()) {
+            error = localized_message(
+                catalog,
+                physical_indirection_was_rejected(containment_failure)
+                    ? "RuntimeHost.Error.PackagePathPhysicalContainmentFailed"
+                    : "RuntimeHost.Error.ExtensionPayloadMissingFromPackage",
+                {{"fileName", portable_manifest_path(parts[0]).filename().string()}});
+            return false;
+        }
+        if (std::find(
+                writable_data_payload_paths.begin(),
+                writable_data_payload_paths.end(),
+                *bound_path) != writable_data_payload_paths.end()) {
+            error = localized_message(catalog, "RuntimeHost.Error.DataPayloadMalformed");
+            return false;
+        }
+        const auto contained_payload = copperfin::security::inspect_physical_path_containment(
+            *bound_path,
+            manifest_directory);
+        const auto payload_snapshot = contained_payload.allowed
+            ? copperfin::security::read_physically_contained_file_snapshot(
+                  contained_payload,
+                  manifest_directory)
+            : copperfin::security::PhysicalFileSnapshotResult{};
+        if (!contained_payload.allowed || !payload_snapshot.ok) {
+            error = localized_message(
+                catalog,
+                "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
+                {{"fileName", bound_path->filename().string()}});
+            return false;
+        }
+        writable_data_payload_paths.push_back(payload_snapshot.containment.canonical_path);
+    }
+
     const auto payload_values = all_values(manifest, "extension_payload");
     for (const auto& payload : payload_values) {
         const auto parts = split_pipe(payload);
@@ -1287,6 +1431,13 @@ bool verify_manifest_hashes(
                 catalog,
                 "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
                 {{"fileName", bound_payload_path->filename().string()}});
+            return false;
+        }
+        if (std::find(
+                writable_data_payload_paths.begin(),
+                writable_data_payload_paths.end(),
+                contained_payload.canonical_path) != writable_data_payload_paths.end()) {
+            error = localized_message(catalog, "RuntimeHost.Error.DataPayloadMalformed");
             return false;
         }
         const auto payload_snapshot =
@@ -1378,7 +1529,17 @@ bool verify_manifest_hashes(
             error = digest.error;
             return false;
         }
-        if (lowercase_copy(digest.hex_digest) != lowercase_copy(parts[6])) {
+        const bool package_writable =
+            std::find(
+                writable_data_paths.begin(),
+                writable_data_paths.end(),
+                contained_asset.canonical_path) != writable_data_paths.end();
+        if (package_writable && !is_sha256_hex(parts[6])) {
+            error = localized_message(catalog, "RuntimeHost.Error.DataAssetMalformed");
+            return false;
+        }
+        if (!package_writable &&
+            lowercase_copy(digest.hex_digest) != lowercase_copy(parts[6])) {
             error = localized_message(
                 catalog,
                 "RuntimeHost.Error.PackagedAssetSha256Mismatch",
@@ -1431,6 +1592,96 @@ bool verify_manifest_hashes(
             .sha256 = lowercase_copy(digest.hex_digest),
             .declared_asset = true
         });
+    }
+
+    for (const auto& data_path : writable_data_paths) {
+        const auto declared_asset = std::find_if(
+            verified_paths.begin(),
+            verified_paths.end(),
+            [&](const auto& candidate) {
+                return candidate.declared_asset &&
+                    candidate.containment.canonical_path == data_path;
+            });
+        if (declared_asset == verified_paths.end()) {
+            error = localized_message(catalog, "RuntimeHost.Error.DataAssetMalformed");
+            return false;
+        }
+
+        const std::string primary_extension = lowercase_copy(data_path.extension().string());
+        const std::vector<std::string> companion_extensions = primary_extension == ".dbf"
+            ? std::vector<std::string>{".fpt", ".cdx", ".idx", ".ndx", ".mdx"}
+            : std::vector<std::string>{};
+        if (companion_extensions.empty()) {
+            error = localized_message(catalog, "RuntimeHost.Error.DataAssetMalformed");
+            return false;
+        }
+
+        std::error_code directory_error;
+        for (const auto& entry : std::filesystem::directory_iterator(data_path.parent_path(), directory_error)) {
+            if (directory_error) {
+                break;
+            }
+            const std::filesystem::path candidate = entry.path();
+            if (lowercase_copy(candidate.stem().string()) != lowercase_copy(data_path.stem().string()) ||
+                std::find(
+                    companion_extensions.begin(),
+                    companion_extensions.end(),
+                    lowercase_copy(candidate.extension().string())) == companion_extensions.end()) {
+                continue;
+            }
+            const auto containment = copperfin::security::inspect_physical_path_containment(
+                candidate,
+                manifest_directory);
+            if (!containment.allowed) {
+                error = localized_message(
+                    catalog,
+                    "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
+                    {{"fileName", candidate.filename().string()}});
+                return false;
+            }
+            if (std::find(
+                    writable_data_payload_paths.begin(),
+                    writable_data_payload_paths.end(),
+                    containment.canonical_path) == writable_data_payload_paths.end()) {
+                error = localized_message(
+                    catalog,
+                    "RuntimeHost.Error.PackagedAssetDigestMissing",
+                    {{"fileName", candidate.filename().string()}});
+                return false;
+            }
+        }
+        if (directory_error) {
+            error = localized_message(
+                catalog,
+                "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
+                {{"fileName", data_path.filename().string()}});
+            return false;
+        }
+    }
+
+    for (const auto& payload_path : writable_data_payload_paths) {
+        const std::string payload_stem = lowercase_copy(payload_path.stem().string());
+        const auto owner = std::find_if(
+            writable_data_paths.begin(),
+            writable_data_paths.end(),
+            [&](const auto& candidate) {
+                return candidate.parent_path() == payload_path.parent_path() &&
+                    lowercase_copy(candidate.stem().string()) == payload_stem;
+            });
+        if (owner == writable_data_paths.end()) {
+            error = localized_message(catalog, "RuntimeHost.Error.DataPayloadMalformed");
+            return false;
+        }
+        const std::string owner_extension = lowercase_copy(owner->extension().string());
+        const std::string payload_extension = lowercase_copy(payload_path.extension().string());
+        const bool allowed_payload = owner_extension == ".dbf" &&
+            (payload_extension == ".fpt" || payload_extension == ".cdx" ||
+             payload_extension == ".idx" || payload_extension == ".ndx" ||
+             payload_extension == ".mdx");
+        if (!allowed_payload) {
+            error = localized_message(catalog, "RuntimeHost.Error.DataPayloadMalformed");
+            return false;
+        }
     }
 
     return true;
@@ -2436,6 +2687,16 @@ int main(int argc, char** argv) {
         print_error_line(catalog, manifest_version_error);
         return 4;
     }
+    std::string data_contract_error;
+    if (!validate_manifest_data_contract_header(
+            manifest,
+            manifest_path,
+            catalog,
+            data_contract_error)) {
+        std::cout << "status: error\n";
+        print_error_line(catalog, data_contract_error);
+        return 4;
+    }
 
     std::error_code manifest_path_error;
     std::filesystem::path normalized_manifest_path =
@@ -2488,6 +2749,7 @@ int main(int argc, char** argv) {
         std::string verification_error;
         if (!verify_manifest_hashes(
                 manifest,
+                manifest_path,
                 manifest_directory,
                 catalog,
                 verification_error,
@@ -2737,6 +2999,9 @@ int main(int argc, char** argv) {
         std::cout << "security.audit_log_path: " << (security_enabled ? audit_log_path : std::string{}) << "\n";
         std::cout << "security.mode: " << first_value(manifest, "security_mode") << "\n";
         std::cout << "dotnet.story: " << first_value(manifest, "dotnet_story") << "\n";
+        std::cout << "data.policy: " << first_value(manifest, "data_policy") << "\n";
+        std::cout << "data.asset_count: " << all_values(manifest, "data_asset").size() << "\n";
+        std::cout << "data.payload_count: " << all_values(manifest, "data_payload").size() << "\n";
         std::cout << "asset.count: " << assets.size() << "\n";
         std::cout << "warning.count: " << warnings.size() << "\n";
     };

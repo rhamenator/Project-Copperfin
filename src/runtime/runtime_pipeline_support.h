@@ -89,6 +89,7 @@ bool is_recognized_security_role(
     const std::string& role_id);
 bool is_prg_path(const std::string& value);
 bool is_xasset_path(const std::string& value);
+bool is_writable_package_data_path(const std::string& value);
 bool should_stage_asset(const RuntimePackageAsset& asset);
 std::vector<std::filesystem::path> infer_companion_source_paths(const std::filesystem::path& source);
 std::vector<std::filesystem::path> copy_companion_files_if_present(
@@ -131,6 +132,7 @@ void append_library_function_manifest_lines(
     const RuntimePackagePlan& plan,
     bool include_source_provenance);
 void append_runtime_asset_manifest_lines(std::ostringstream& stream, const RuntimePackagePlan& plan);
+void append_writable_data_manifest_lines(std::ostringstream& stream, const RuntimePackagePlan& plan);
 void append_warning_manifest_lines(std::ostringstream& stream, const RuntimePackagePlan& plan);
 void append_runtime_feature_flag_manifest_lines(
     std::ostringstream& stream,

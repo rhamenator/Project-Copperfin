@@ -542,6 +542,11 @@ bool is_xasset_path(const std::string& value) {
         extension == ".mnx";
 }
 
+bool is_writable_package_data_path(const std::string& value) {
+    const std::string extension = trim_copy(lowercase_copy(std::filesystem::path(value).extension().string()));
+    return extension == ".dbf";
+}
+
 bool should_stage_asset(const RuntimePackageAsset& asset) {
     return asset.exists && (!asset.excluded || asset.required_for_runtime);
 }

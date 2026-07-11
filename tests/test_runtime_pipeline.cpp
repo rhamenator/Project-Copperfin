@@ -32,6 +32,7 @@ int main() {
     test_runtime_manifest_records_generated_compiler_contract_digests();
     test_startup_dbf_companion_assets_are_staged();
     test_uppercase_dbf_companion_assets_are_staged();
+    test_writable_dbf_assets_use_data_manifest_surface_and_dbc_stays_immutable();
     test_runtime_package_license_fields_stay_debug_only();
     test_security_enabled_runtime_host_name_validation();
     test_runtime_security_role_environment_fidelity();

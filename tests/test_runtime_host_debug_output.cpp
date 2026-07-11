@@ -10,6 +10,7 @@
 #include "copperfin/vfp/dbf_table.h"
 #include "test_environment_support.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -97,6 +98,9 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Error.BridgeFederationModeConflict\": \"Bridge invocation mode cannot be combined with federation query mode.\",\n"
         "  \"RuntimeHost.Error.FederationRequiredOptions\": \"{federationBackendOption} and {federationQueryOption} are both required in federation mode.\",\n"
         "  \"RuntimeHost.Error.AssetEntryMalformed\": \"asset entry is malformed in manifest.\",\n"
+        "  \"RuntimeHost.Error.DataAssetMalformed\": \"data_asset entry is malformed in manifest.\",\n"
+        "  \"RuntimeHost.Error.DataPayloadMalformed\": \"data_payload entry is malformed in manifest.\",\n"
+        "  \"RuntimeHost.Error.DataPolicyMalformed\": \"data_policy is missing or unsupported in manifest.\",\n"
         "  \"RuntimeHost.Error.ExtensionPayloadMalformed\": \"extension_payload entry is malformed in manifest.\",\n"
         "  \"RuntimeHost.Error.ExtensionPayloadMissingFromPackage\": \"Extension payload is missing from the package: {fileName}\",\n"
         "  \"RuntimeHost.Error.ExtensionPayloadSha256Mismatch\": \"Extension payload hash mismatch: {fileName}\",\n"
@@ -168,6 +172,9 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Launch.Note.CompatibilityLauncher\": \"El asset de inicio no es un archivo PRG y no pudo materializarse para xAsset bootstrap. Este inicio esta recurriendo al modo compatibility-launcher.\",\n"
         "  \"RuntimeHost.Error.BridgeFederationModeConflict\": \"El modo de invocacion bridge no puede combinarse con el modo de consulta de federacion.\",\n"
         "  \"RuntimeHost.Error.AssetEntryMalformed\": \"La entrada asset del manifiesto esta mal formada.\",\n"
+        "  \"RuntimeHost.Error.DataAssetMalformed\": \"La entrada data_asset del manifiesto esta mal formada.\",\n"
+        "  \"RuntimeHost.Error.DataPayloadMalformed\": \"La entrada data_payload del manifiesto esta mal formada.\",\n"
+        "  \"RuntimeHost.Error.DataPolicyMalformed\": \"Falta data_policy en el manifiesto o su valor no es compatible.\",\n"
         "  \"RuntimeHost.Error.ExtensionPayloadMalformed\": \"La entrada extension_payload del manifiesto esta mal formada.\",\n"
         "  \"RuntimeHost.Error.ExtensionPayloadMissingFromPackage\": \"Falta el payload de extension en el paquete: {fileName}\",\n"
         "  \"RuntimeHost.Error.ExtensionPayloadSha256Mismatch\": \"El hash del payload de extension no coincide: {fileName}\",\n"
@@ -215,6 +222,9 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Bridge.Error.CreateResponseDirectoryFailed\": \"Nao foi possivel criar o diretorio de resposta bridge.\",\n"
         "  \"RuntimeHost.Error.BridgeFederationModeConflict\": \"O modo de invocacao bridge nao pode ser combinado com o modo de consulta de federacao.\",\n"
         "  \"RuntimeHost.Error.AssetEntryMalformed\": \"A entrada asset do manifesto esta malformada.\",\n"
+        "  \"RuntimeHost.Error.DataAssetMalformed\": \"A entrada data_asset do manifesto esta malformada.\",\n"
+        "  \"RuntimeHost.Error.DataPayloadMalformed\": \"A entrada data_payload do manifesto esta malformada.\",\n"
+        "  \"RuntimeHost.Error.DataPolicyMalformed\": \"data_policy esta ausente ou nao e compativel no manifesto.\",\n"
         "  \"RuntimeHost.Error.ExtensionPayloadMalformed\": \"A entrada extension_payload do manifesto esta malformada.\",\n"
         "  \"RuntimeHost.Error.ExtensionPayloadMissingFromPackage\": \"O payload de extensao esta ausente do pacote: {fileName}\",\n"
         "  \"RuntimeHost.Error.ExtensionPayloadSha256Mismatch\": \"O hash do payload de extensao nao corresponde: {fileName}\",\n"
@@ -544,6 +554,18 @@ void write_synthetic_menu_asset(const std::filesystem::path& table_path) {
         fields,
         {{"1", "MainMenu"}});
     expect(create_result.ok, "synthetic MNX/MNT runtime fixture should be created");
+}
+
+void write_synthetic_writable_data_asset(const std::filesystem::path& table_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 16U},
+        {.name = "NOTE", .type = 'M', .length = 4U}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        table_path.string(),
+        fields,
+        {{"Alice", "seed-value"}});
+    expect(create_result.ok, "synthetic writable DBF/FPT runtime fixture should be created");
 }
 
 void write_synthetic_report_asset(const std::filesystem::path& table_path) {
@@ -979,6 +1001,325 @@ void test_app_cfdebug_preserves_external_xasset_source_compatibility(
            "external app.cfdebug xAssets should continue to use bootstrap execution");
     expect(process.stdout_text.find("debug.reason: event_loop") != std::string::npos,
            "external app.cfdebug should execute memo-backed xAsset lifecycle methods");
+
+    if (failures == failures_before_test) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_security_enabled_writable_package_data_contract(
+    const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+    const int failures_before_test = failures;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_writable_package_data";
+    const fs::path recorded_package_root = temp_root / "builder" / "WritableDataApp";
+    const fs::path recorded_content_root = recorded_package_root / "content";
+    const fs::path deployed_root = temp_root / "deployed";
+    const fs::path content_root = deployed_root / "content";
+    const fs::path startup_path = content_root / "main.prg";
+    const fs::path table_path = content_root / "customers.dbf";
+    const fs::path memo_path = content_root / "customers.fpt";
+    const fs::path database_path = content_root / "catalog.dbc";
+    const fs::path database_memo_path = content_root / "catalog.dct";
+    const fs::path database_index_path = content_root / "catalog.dcx";
+    const fs::path manifest_path = deployed_root / "app.cfmanifest";
+    const fs::path locale_root = temp_root / "locales";
+    const fs::path deployed_runtime_host = deployed_runtime_host_path(deployed_root, runtime_host_path);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(content_root);
+    write_runtime_host_usage_catalogs(locale_root);
+    write_text(
+        startup_path,
+        "USE 'customers.dbf' ALIAS MutableData IN 0\n"
+        "REPLACE NOTE WITH 'runtime-change'\n"
+        "USE IN MutableData\n"
+        "RETURN\n");
+    write_synthetic_writable_data_asset(table_path);
+    write_text(database_path, "synthetic database seed");
+    write_text(database_memo_path, "synthetic database memo seed");
+    write_text(database_index_path, "synthetic database index seed");
+    fs::copy_file(runtime_host_path, deployed_runtime_host, fs::copy_options::overwrite_existing);
+#if defined(__unix__) || defined(__APPLE__)
+    fs::permissions(
+        deployed_runtime_host,
+        fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec,
+        fs::perm_options::add,
+        ignored);
+#endif
+
+    const auto runtime_host_hash = copperfin::security::sha256_hex_for_file(deployed_runtime_host.string());
+    const auto startup_hash = copperfin::security::sha256_hex_for_file(startup_path.string());
+    const auto table_seed_hash = copperfin::security::sha256_hex_for_file(table_path.string());
+    const auto memo_seed_hash = copperfin::security::sha256_hex_for_file(memo_path.string());
+    const auto database_seed_hash = copperfin::security::sha256_hex_for_file(database_path.string());
+    const auto database_memo_seed_hash = copperfin::security::sha256_hex_for_file(database_memo_path.string());
+    const auto database_index_seed_hash = copperfin::security::sha256_hex_for_file(database_index_path.string());
+    expect(
+        runtime_host_hash.ok && startup_hash.ok && table_seed_hash.ok && memo_seed_hash.ok &&
+            database_seed_hash.ok && database_memo_seed_hash.ok && database_index_seed_hash.ok,
+        "writable package-data fixture should hash immutable and writable seed files");
+    if (!runtime_host_hash.ok || !startup_hash.ok || !table_seed_hash.ok || !memo_seed_hash.ok ||
+        !database_seed_hash.ok || !database_memo_seed_hash.ok || !database_index_seed_hash.ok) {
+        return;
+    }
+
+    const auto write_manifest = [&](
+        const bool include_memo_payload,
+        const std::string& data_policy,
+        const std::string& table_seed_override = {},
+        const std::string& memo_seed_override = {}) {
+        const std::string& table_seed = table_seed_override.empty()
+            ? table_seed_hash.hex_digest
+            : table_seed_override;
+        const std::string& memo_seed = memo_seed_override.empty()
+            ? memo_seed_hash.hex_digest
+            : memo_seed_override;
+        std::string text =
+            "manifest_version=3\n"
+            "project_title=WritableDataApp\n"
+            "package_root=" + recorded_package_root.string() + "\n"
+            "content_root=" + recorded_content_root.string() + "\n"
+            "working_directory=" + recorded_content_root.string() + "\n"
+            "startup_item=main.prg\n"
+            "startup_source=" + (recorded_content_root / "main.prg").string() + "\n"
+            "security_enabled=true\n"
+            "security_role=runtime-operator\n"
+            "security_mode=native\n"
+            "runtime_host_sha256=" + runtime_host_hash.hex_digest + "\n"
+            "data_policy=" + data_policy + "\n"
+            "asset=1|main.prg|" + (recorded_content_root / "main.prg").string() +
+                "|Program|false|true|" + startup_hash.hex_digest + "|true\n"
+            "asset=2|customers.dbf|" + (recorded_content_root / "customers.dbf").string() +
+                "|Table|false|true|" + table_seed + "|true\n"
+            "asset=3|catalog.dbc|" + (recorded_content_root / "catalog.dbc").string() +
+                "|Database|false|true|" + database_seed_hash.hex_digest + "|true\n"
+            "data_asset=" + (recorded_content_root / "customers.dbf").string() + "|package_writable\n";
+        if (include_memo_payload) {
+            text += "data_payload=" + (recorded_content_root / "customers.fpt").string() +
+                "|package_writable|" + memo_seed + "\n";
+        }
+        text +=
+            "extension_payload=" + (recorded_content_root / "catalog.dct").string() +
+                "|" + database_memo_seed_hash.hex_digest + "\n"
+            "extension_payload=" + (recorded_content_root / "catalog.dcx").string() +
+                "|" + database_index_seed_hash.hex_digest + "\n"
+            "dotnet_story=none\n";
+        write_text(manifest_path, text);
+    };
+
+    const auto prelaunch_write = copperfin::vfp::replace_record_field_value(
+        table_path.string(),
+        0U,
+        "NOTE",
+        "prelaunch-change");
+    expect(prelaunch_write.ok, "writable package-data fixture should mutate DBF/FPT bytes before launch");
+
+    ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+    write_manifest(true, "package_writable");
+    const auto first_process = run_process_capture(
+        deployed_runtime_host.string(),
+        {"--manifest", manifest_path.string()},
+        deployed_root);
+    if (first_process.exit_code != 0) {
+        std::cerr << "writable package-data first stdout:\n" << first_process.stdout_text << "\n";
+        std::cerr << "writable package-data first stderr:\n" << first_process.stderr_text << "\n";
+    }
+    expect(first_process.exit_code == 0,
+           "security startup should accept direct contained DBF/FPT data changed from seed digests");
+    expect(first_process.stdout_text.find("data.policy: package_writable") != std::string::npos &&
+               first_process.stdout_text.find("data.asset_count: 1") != std::string::npos &&
+               first_process.stdout_text.find("data.payload_count: 1") != std::string::npos,
+           "runtime summary should expose invariant writable package-data fields");
+
+    const auto changed_table = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+    expect(changed_table.ok && !changed_table.table.records.empty(),
+           "runtime USE/REPLACE should leave writable packaged DBF data parseable");
+    if (changed_table.ok && !changed_table.table.records.empty()) {
+        const auto note = std::find_if(
+            changed_table.table.records.front().values.begin(),
+            changed_table.table.records.front().values.end(),
+            [](const auto& value) { return value.field_name == "NOTE"; });
+        expect(note != changed_table.table.records.front().values.end() &&
+                   note->display_value == "runtime-change",
+               "runtime USE/REPLACE should persist memo updates in package-writable DBF/FPT data");
+    }
+
+    const auto second_process = run_process_capture(
+        deployed_runtime_host.string(),
+        {"--manifest", manifest_path.string()},
+        deployed_root);
+    expect(second_process.exit_code == 0,
+           "later security launches should accept ordinary writable DBF/FPT data changes");
+    const auto relaunched_table = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+    bool relaunch_persisted = false;
+    if (relaunched_table.ok && !relaunched_table.table.records.empty()) {
+        const auto relaunched_note = std::find_if(
+            relaunched_table.table.records.front().values.begin(),
+            relaunched_table.table.records.front().values.end(),
+            [](const auto& value) { return value.field_name == "NOTE"; });
+        relaunch_persisted =
+            relaunched_note != relaunched_table.table.records.front().values.end() &&
+            relaunched_note->display_value == "runtime-change";
+    }
+    expect(
+        relaunch_persisted,
+        "package-writable DBF/FPT data should remain parseable and persistent after relaunch");
+
+    const fs::path debug_manifest_path = deployed_root / "app.cfdebug";
+    std::string debug_manifest_text = read_text(manifest_path);
+    debug_manifest_text.replace(
+        debug_manifest_text.find("manifest_version=3"),
+        std::string("manifest_version=3").size(),
+        "debug_manifest_version=3");
+    write_text(debug_manifest_path, debug_manifest_text);
+    const auto debug_manifest_process = run_process_capture(
+        deployed_runtime_host.string(),
+        {"--manifest", debug_manifest_path.string()},
+        deployed_root);
+    expect(debug_manifest_process.exit_code == 0,
+           "security-enabled app.cfdebug should share the version-3 writable DBF contract");
+
+    write_text(database_path, "modified executable database metadata");
+    const auto database_tamper_process = run_process_capture(
+        deployed_runtime_host.string(),
+        {"--manifest", manifest_path.string()},
+        deployed_root);
+    expect(database_tamper_process.exit_code == 8,
+           "DBC metadata should remain immutable until OPEN DATABASE trust semantics are implemented");
+    expect(database_tamper_process.stdout_text.find(
+               "error: Packaged asset hash mismatch: catalog.dbc") != std::string::npos,
+           "DBC tamper should retain the localized immutable packaged-asset digest error");
+    write_text(database_path, "synthetic database seed");
+
+    const std::string startup_source = read_text(startup_path);
+    write_text(startup_path, startup_source + "* immutable tamper\n");
+    const auto immutable_tamper_process = run_process_capture(
+        deployed_runtime_host.string(),
+        {"--manifest", manifest_path.string()},
+        deployed_root);
+    expect(immutable_tamper_process.exit_code == 8,
+           "writable data classification should not weaken immutable PRG digest enforcement");
+    expect(immutable_tamper_process.stdout_text.find(
+               "error: Packaged asset hash mismatch: main.prg") != std::string::npos,
+           "immutable PRG tamper should retain the localized packaged-asset digest error");
+    write_text(startup_path, startup_source);
+
+    write_manifest(false, "package_writable");
+    const auto omitted_payload_process = run_process_capture(
+        deployed_runtime_host.string(),
+        {"--manifest", manifest_path.string()},
+        deployed_root);
+    expect(omitted_payload_process.exit_code == 8,
+           "security startup should reject an existing writable companion omitted from data_payload");
+    expect(omitted_payload_process.stdout_text.find(
+               "error: Packaged asset is missing a verified digest: customers.fpt") != std::string::npos,
+           "omitted writable companion records should preserve localized missing-digest diagnostics");
+
+    write_manifest(true, "package_writable");
+    const std::string memo_contents = read_text(memo_path);
+    fs::remove(memo_path, ignored);
+    const auto missing_writable_payload_process = run_process_capture(
+        deployed_runtime_host.string(),
+        {"--manifest", manifest_path.string()},
+        deployed_root);
+    expect(missing_writable_payload_process.exit_code == 8,
+           "security startup should reject a missing declared writable DBF companion");
+    expect(missing_writable_payload_process.stdout_text.find(
+               "error: Extension payload is missing from the package: customers.fpt") != std::string::npos,
+           "missing writable DBF companions should preserve localized payload-missing diagnostics");
+    write_text(memo_path, memo_contents);
+
+    write_manifest(true, "package_writable");
+    fs::remove(database_memo_path, ignored);
+    const auto missing_payload_process = run_process_capture(
+        deployed_runtime_host.string(),
+        {"--manifest", manifest_path.string()},
+        deployed_root);
+    expect(missing_payload_process.exit_code == 8,
+           "security startup should reject a missing declared immutable DBC companion");
+    expect(missing_payload_process.stdout_text.find(
+               "error: Extension payload is missing from the package: catalog.dct") != std::string::npos,
+           "missing immutable DBC companions should retain localized payload-missing diagnostics");
+    write_text(database_memo_path, "synthetic database memo seed");
+
+    write_manifest(true, "unsupported");
+    {
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "pt-BR");
+        const auto policy_process = run_process_capture(
+            deployed_runtime_host.string(),
+            {"--manifest", manifest_path.string()},
+            deployed_root);
+        expect(policy_process.exit_code == 4,
+               "unsupported writable data policies should fail through manifest-contract validation");
+        expect(policy_process.stdout_text.find(
+                   "status: error\nerro: data_policy esta ausente ou nao e compativel no manifesto.") !=
+                   std::string::npos,
+               "writable data policy errors should localize without changing machine status");
+    }
+
+    write_manifest(true, "package_writable", "not-a-sha256");
+    const auto malformed_primary_seed_process = run_process_capture(
+        deployed_runtime_host.string(),
+        {"--manifest", manifest_path.string()},
+        deployed_root);
+    expect(malformed_primary_seed_process.exit_code == 8 &&
+               malformed_primary_seed_process.stdout_text.find(
+                   "error: data_asset entry is malformed in manifest.") != std::string::npos,
+           "writable DBF seed provenance should require SHA-256 syntax");
+
+    write_manifest(true, "package_writable", {}, "not-a-sha256");
+    const auto malformed_payload_seed_process = run_process_capture(
+        deployed_runtime_host.string(),
+        {"--manifest", manifest_path.string()},
+        deployed_root);
+    expect(malformed_payload_seed_process.exit_code == 8 &&
+               malformed_payload_seed_process.stdout_text.find(
+                   "error: data_payload entry is malformed in manifest.") != std::string::npos,
+           "writable DBF companion seed provenance should require SHA-256 syntax");
+
+    write_manifest(true, "package_writable");
+    write_text(
+        manifest_path,
+        read_text(manifest_path) + "data_policy=package_writable\n");
+    const auto duplicate_policy_process = run_process_capture(
+        deployed_runtime_host.string(),
+        {"--manifest", manifest_path.string()},
+        deployed_root);
+    expect(duplicate_policy_process.exit_code == 4 &&
+               duplicate_policy_process.stdout_text.find(
+                   "error: data_policy is missing or unsupported in manifest.") != std::string::npos,
+           "version-3 manifests should reject duplicate data_policy fields before security verification");
+
+    write_manifest(true, "package_writable");
+    write_text(
+        manifest_path,
+        read_text(manifest_path) +
+            "data_asset=" + (recorded_content_root / "customers.dbf").string() +
+            "|package_writable\n");
+    const auto duplicate_data_asset_process = run_process_capture(
+        deployed_runtime_host.string(),
+        {"--manifest", manifest_path.string()},
+        deployed_root);
+    expect(duplicate_data_asset_process.exit_code == 8 &&
+               duplicate_data_asset_process.stdout_text.find(
+                   "error: data_asset entry is malformed in manifest.") != std::string::npos,
+           "security verification should reject duplicate writable DBF declarations");
+
+    write_manifest(true, "package_writable");
+    write_text(
+        manifest_path,
+        read_text(manifest_path) +
+            "data_payload=" + (recorded_content_root / "customers.fpt").string() +
+            "|package_writable|" + memo_seed_hash.hex_digest + "\n");
+    const auto duplicate_data_payload_process = run_process_capture(
+        deployed_runtime_host.string(),
+        {"--manifest", manifest_path.string()},
+        deployed_root);
+    expect(duplicate_data_payload_process.exit_code == 8 &&
+               duplicate_data_payload_process.stdout_text.find(
+                   "error: data_payload entry is malformed in manifest.") != std::string::npos,
+           "security verification should reject duplicate writable DBF companion declarations");
 
     if (failures == failures_before_test) {
         fs::remove_all(temp_root, ignored);
@@ -2067,7 +2408,8 @@ void test_runtime_host_validates_manifest_versions_without_changing_error_contra
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_manifest_version_contracts";
     const fs::path locale_root = temp_root / "locales";
     const fs::path startup_path = temp_root / "main.prg";
-    const fs::path supported_manifest_path = temp_root / "supported_v2.cfmanifest";
+    const fs::path supported_v3_manifest_path = temp_root / "supported_v3.cfmanifest";
+    const fs::path supported_v2_manifest_path = temp_root / "supported_v2.cfmanifest";
     const fs::path missing_manifest_path = temp_root / "missing_version.cfmanifest";
     const fs::path unsupported_manifest_path = temp_root / "unsupported_version.cfmanifest";
     std::error_code ignored;
@@ -2090,7 +2432,8 @@ void test_runtime_host_validates_manifest_versions_without_changing_error_contra
         "security_role=developer\n"
         "security_mode=off\n"
         "dotnet_story=none\n";
-    write_text(supported_manifest_path, "manifest_version=2\n" + base_manifest);
+    write_text(supported_v3_manifest_path, "manifest_version=3\ndata_policy=package_writable\n" + base_manifest);
+    write_text(supported_v2_manifest_path, "manifest_version=2\n" + base_manifest);
     write_text(missing_manifest_path, base_manifest);
     write_text(unsupported_manifest_path, "manifest_version=99\n" + base_manifest);
 
@@ -2098,12 +2441,24 @@ void test_runtime_host_validates_manifest_versions_without_changing_error_contra
         ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
         const auto process = run_process_capture(
             runtime_host_path,
-            {"--manifest", supported_manifest_path.string()},
+            {"--manifest", supported_v3_manifest_path.string()},
             temp_root);
         expect(process.exit_code == 0,
-               "runtime host should accept supported manifest_version=2 package contracts");
+               "runtime host should accept supported manifest_version=3 package contracts");
         expect(process.stdout_text.find("status: ok") != std::string::npos,
                "runtime host should preserve machine-readable success status for supported manifest versions");
+    }
+
+    {
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {"--manifest", supported_v2_manifest_path.string()},
+            temp_root);
+        expect(process.exit_code == 0,
+               "runtime host should retain legacy manifest_version=2 package compatibility");
+        expect(process.stdout_text.find("status: ok") != std::string::npos,
+               "legacy manifest compatibility should preserve machine-readable success status");
     }
 
     {
@@ -2131,9 +2486,9 @@ void test_runtime_host_validates_manifest_versions_without_changing_error_contra
                "runtime host should reject unsupported manifest versions");
         expect(process.stdout_text.find("status: error") != std::string::npos,
                "runtime host unsupported-manifest-version failures should preserve machine-readable status");
-        expect(process.stdout_text.find("error: manifest_version no es compatible: 99. Las versiones compatibles son: 1, 2.") != std::string::npos,
+        expect(process.stdout_text.find("error: manifest_version no es compatible: 99. Las versiones compatibles son: 1, 2, 3.") != std::string::npos,
                "runtime host should localize unsupported-manifest-version errors while preserving the rejected value");
-        expect(process.stdout_text.find("Unsupported manifest_version: 99. Supported versions: 1, 2.") == std::string::npos,
+        expect(process.stdout_text.find("Unsupported manifest_version: 99. Supported versions: 1, 2, 3.") == std::string::npos,
                "runtime host unsupported-manifest-version localization should not fall back to raw English prose");
     }
 
@@ -4258,6 +4613,7 @@ int main(int argc, char** argv) {
     test_security_enabled_report_and_label_execute_verified_snapshots(argv[1]);
     test_security_enabled_form_class_and_menu_companion_integrity(argv[1]);
     test_app_cfdebug_preserves_external_xasset_source_compatibility(argv[1]);
+    test_security_enabled_writable_package_data_contract(argv[1]);
     test_runtime_host_compatibility_launcher_note_reflects_xasset_fallback(argv[1]);
     test_runtime_host_reports_xasset_pause_identity(argv[1]);
     test_runtime_host_supports_xasset_action_breakpoint_commands(argv[1]);

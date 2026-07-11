@@ -10,8 +10,8 @@
 namespace copperfin::runtime {
 namespace {
 
-constexpr int kRuntimeManifestVersion = 2;
-constexpr int kDebugManifestVersion = 2;
+constexpr int kRuntimeManifestVersion = 3;
+constexpr int kDebugManifestVersion = 3;
 constexpr std::string_view kPackageBackupSuffix = ".copperfin-previous";
 constexpr std::string_view kPackageTransactionMarker = ".copperfin-materializing";
 constexpr std::string_view kPackageTransactionOwnerSuffix = ".owner";
@@ -566,6 +566,8 @@ RuntimePackagePlan create_runtime_package_plan(
             plan.startup_source_path = asset.staged_path;
             plan.debug_plan.startup_source_path = asset.source_path;
         }
+        asset.package_writable =
+            !asset.required_for_runtime && is_writable_package_data_path(asset.source_path);
         if (!asset.exists && !entry.excluded && entry.group_id != "project") {
             plan.warnings.push_back(runtime_text(
                 "Runtime.Package.Warning.MissingProjectAsset",
@@ -649,8 +651,10 @@ std::string build_runtime_manifest_text(
     stream << "audit_log_path=" << quote_manifest_value(plan.audit_log_path) << "\n";
     stream << "runtime_host_sha256=" << quote_manifest_value(plan.runtime_host_sha256) << "\n";
     stream << "dotnet_story=" << quote_manifest_value(extensibility_profile.dotnet_output.primary_story) << "\n";
+    stream << "data_policy=package_writable\n";
 
     append_runtime_asset_manifest_lines(stream, plan);
+    append_writable_data_manifest_lines(stream, plan);
 
     for (const auto& digest : plan.extension_payload_digests) {
         stream << "extension_payload="
@@ -673,6 +677,7 @@ std::string build_debug_manifest_text(
     stream << "project_path=" << quote_manifest_value(plan.project_path) << "\n";
     stream << "package_root=" << quote_manifest_value(plan.package_root) << "\n";
     stream << "content_root=" << quote_manifest_value(plan.content_root) << "\n";
+    stream << "data_policy=package_writable\n";
     stream << "ast_manifest_path=" << quote_manifest_value(plan.ast_manifest_path) << "\n";
     stream << "ir_manifest_path=" << quote_manifest_value(plan.ir_manifest_path) << "\n";
     stream << "transpiled_csharp_path=" << quote_manifest_value(plan.transpiled_csharp_path) << "\n";
@@ -803,6 +808,7 @@ std::string build_debug_manifest_text(
         stream << "export_symbol=" << quote_manifest_value(symbol) << "\n";
     }
     append_runtime_asset_manifest_lines(stream, plan);
+    append_writable_data_manifest_lines(stream, plan);
     append_warning_manifest_lines(stream, plan);
     append_library_function_manifest_lines(stream, plan, true);
     return stream.str();
@@ -844,8 +850,11 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
         const auto copied_companions =
             copy_companion_files_if_present(asset, materialized_plan.warnings);
         for (const auto& companion : copied_companions) {
+            auto& digest_surface = asset.package_writable
+                ? materialized_plan.writable_data_payload_digests
+                : materialized_plan.extension_payload_digests;
             if (!append_runtime_artifact_digest(
-                    materialized_plan.extension_payload_digests,
+                    digest_surface,
                     companion.string(),
                     error)) {
                 return {.ok = false, .error = error};
