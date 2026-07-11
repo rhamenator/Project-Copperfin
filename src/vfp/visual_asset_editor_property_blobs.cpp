@@ -46,8 +46,9 @@ bool is_report_settings_record(const DbfRecord& record) {
 }
 
 bool is_known_report_settings_expr_property(const std::string& normalized_property_name) {
-    static constexpr std::array<std::string_view, 22> known_settings{
+    static constexpr std::array<std::string_view, 23> known_settings{
         "ascii",
+        "botmargin",
         "collate",
         "color",
         "copies",
