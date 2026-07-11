@@ -7352,9 +7352,14 @@ namespace copperfin::runtime
         {
             while (true)
             {
-                if (task_cancel_requested != nullptr && task_cancel_requested->load(std::memory_order_relaxed))
+                const Statement *pending_statement = current_statement();
+                const bool pending_statement_handles_cancellation =
+                    pending_statement != nullptr && pending_statement->kind == StatementKind::sleep_command;
+                if (task_cancel_requested != nullptr &&
+                    task_cancel_requested->load(std::memory_order_relaxed) &&
+                    !pending_statement_handles_cancellation)
                 {
-                    ensure_fault_context_defaults(current_statement(), last_fault_location, last_fault_statement);
+                    ensure_fault_context_defaults(pending_statement, last_fault_location, last_fault_statement);
                     if (!handle_async_runtime_cancellation(
                             last_fault_location,
                             last_fault_statement,

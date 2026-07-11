@@ -247,38 +247,24 @@ void test_request_cancel_rolls_back_active_transaction_and_resets_txnlevel() {
 
     copperfin::runtime::PrgRuntimeSession session =
         copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    session.add_breakpoint({.file_path = main_path.string(), .line = 6U});
+    const auto sleep_breakpoint = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(sleep_breakpoint.reason == copperfin::runtime::DebugPauseReason::breakpoint,
+           "request_cancel transaction test should stop deterministically at SLEEP");
+    expect(sleep_breakpoint.statement_text == "SLEEP 5000",
+           "request_cancel transaction test should identify the pending SLEEP statement");
 
-    std::promise<copperfin::runtime::RuntimePauseState> run_promise;
-    auto run_future = run_promise.get_future();
-    std::thread run_thread([&session, run_promise = std::move(run_promise)]() mutable {
-        try
-        {
-            run_promise.set_value(session.run(copperfin::runtime::DebugResumeAction::continue_run));
-        }
-        catch (...)
-        {
-            run_promise.set_exception(std::current_exception());
-        }
-    });
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
     session.request_cancel();
-
-    const bool finished = run_future.wait_for(std::chrono::seconds(3)) == std::future_status::ready;
-    if (!finished)
-    {
-        run_thread.detach();
-        expect(false, "request_cancel should stop a sleeping transaction without hanging");
-        return;
-    }
-
-    run_thread.join();
-    const auto state = run_future.get();
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(!state.completed, "request_cancel during an active transaction should stop the run with an error pause");
     expect(state.reason == copperfin::runtime::DebugPauseReason::error,
            "request_cancel during an active transaction should return an error pause");
     expect(state.message == "SLEEP cancelled.",
            "request_cancel during SLEEP should preserve the existing localized sleep-cancel message");
+    expect(state.location.file_path == main_path.string() && state.location.line == 6U,
+           "request_cancel during SLEEP should preserve the exact SLEEP source location");
+    expect(state.statement_text == "SLEEP 5000",
+           "request_cancel during SLEEP should preserve the exact faulting statement text");
 
     expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
         return event.category == "runtime.task.cancelled";
@@ -331,6 +317,20 @@ void test_request_cancel_rolls_back_active_transaction_and_resets_txnlevel() {
         expect(!found_pending_journal,
                "request_cancel should clean up staged transaction journals after rollback");
     }
+
+    const fs::path generic_path = temp_root / "request_cancel_generic.prg";
+    write_text(generic_path, "nShouldNotRun = 1\nRETURN\n");
+    copperfin::runtime::PrgRuntimeSession generic_session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(generic_path.string(), temp_root.string(), false));
+    generic_session.request_cancel();
+    const auto generic_state = generic_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(generic_state.reason == copperfin::runtime::DebugPauseReason::error,
+           "request_cancel before a non-SLEEP statement should retain the generic error pause");
+    expect(generic_state.message == "Async task cancelled.",
+           "request_cancel before a non-SLEEP statement should retain the generic localized message");
+    expect(generic_state.globals.find("nshouldnotrun") == generic_state.globals.end(),
+           "generic request_cancel should still prevent the pending non-SLEEP statement from executing");
 
     fs::remove_all(temp_root, ignored);
 }

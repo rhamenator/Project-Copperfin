@@ -7719,6 +7719,21 @@
             }
             case StatementKind::sleep_command:
             {
+                const auto cancel_sleep = [&]() -> ExecutionOutcome
+                {
+                    (void)handle_async_runtime_cancellation(
+                        statement.location,
+                        statement.text,
+                        runtime_text("Runtime.Prg.Dispatch.Error.SleepCancelled"));
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                };
+                if (task_cancel_requested != nullptr && task_cancel_requested->load(std::memory_order_relaxed))
+                {
+                    return cancel_sleep();
+                }
+
                 std::size_t sleep_duration_ms = scheduler_yield_sleep_ms;
                 if (!trim_copy(statement.expression).empty())
                 {
@@ -7752,18 +7767,7 @@
                     {
                         if (task_cancel_requested != nullptr && task_cancel_requested->load(std::memory_order_relaxed))
                         {
-                            if (!handle_async_runtime_cancellation(
-                                    statement.location,
-                                    statement.text,
-                                    runtime_text("Runtime.Prg.Dispatch.Error.SleepCancelled")))
-                            {
-                                last_fault_location = statement.location;
-                                last_fault_statement = statement.text;
-                                return {.ok = false, .message = last_error_message};
-                            }
-                            last_fault_location = statement.location;
-                            last_fault_statement = statement.text;
-                            return {.ok = false, .message = last_error_message};
+                            return cancel_sleep();
                         }
                         std::this_thread::sleep_for(std::chrono::milliseconds(1U));
                     }
