@@ -36,6 +36,7 @@ add_executable(test_localization
     prg_engine_test_support.cpp
 )
 target_link_libraries(test_localization PRIVATE cf_localization cf_runtime_pipeline cf_xbase_runtime)
+add_dependencies(test_localization copperfin_inspect)
 
 if(MSVC)
     target_compile_options(test_localization PRIVATE /W4 /permissive-)
