@@ -7,6 +7,11 @@
         const std::string& function,
         const std::vector<PrgValue>& arguments,
         const std::function<std::string(const std::string&)>& set_callback);
+    std::optional<PrgValue> evaluate_date_time_additive(
+        const PrgValue& left,
+        const PrgValue& right,
+        bool subtract,
+        const std::function<std::string(const std::string&)>& set_callback);
     std::optional<PrgValue> evaluate_string_function(
         const std::string& function,
         const std::vector<PrgValue>& arguments,
@@ -467,6 +472,17 @@
                         {
                             left = make_empty_value();
                         }
+                        else if (left.string_flavor != PrgStringFlavor::none ||
+                                 right.string_flavor != PrgStringFlavor::none)
+                        {
+                            const auto result = evaluate_date_time_additive(left, right, false, set_callback_);
+                            if (!result.has_value())
+                            {
+                                throw std::runtime_error(
+                                    runtime_text("Runtime.Prg.Expression.Error.OperatorOperandTypeMismatch"));
+                            }
+                            left = *result;
+                        }
                         else if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string)
                         {
                             left = make_string_value(value_as_string(left) + value_as_string(right));
@@ -490,6 +506,17 @@
                         if (suppress_evaluation_)
                         {
                             left = make_empty_value();
+                        }
+                        else if (left.string_flavor != PrgStringFlavor::none ||
+                                 right.string_flavor != PrgStringFlavor::none)
+                        {
+                            const auto result = evaluate_date_time_additive(left, right, true, set_callback_);
+                            if (!result.has_value())
+                            {
+                                throw std::runtime_error(
+                                    runtime_text("Runtime.Prg.Expression.Error.OperatorOperandTypeMismatch"));
+                            }
+                            left = *result;
                         }
                         else if (left.kind == PrgValueKind::string && right.kind == PrgValueKind::string)
                         {

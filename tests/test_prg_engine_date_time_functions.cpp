@@ -36,6 +36,17 @@ namespace
             "datetime_ctor = DATETIME(2026, 4, 18, 13, 45, 56)\n"
             "datetime_ctor_partial = DATETIME(2026, 4, 18)\n"
             "datetime_ctor_invalid = DATETIME(2026, 4, 18, 24, 0, 0)\n"
+            "date_plus_days = DATE(2024, 2, 28) + 1\n"
+            "days_plus_date = 1 + DATE(2024, 2, 28)\n"
+            "date_plus_fractional_days = DATE(2024, 3, 2) + (-1.5)\n"
+            "date_minus_days = DATE(2024, 3, 1) - 1\n"
+            "date_day_difference = DATE(2024, 3, 2) - DATE(2024, 2, 28)\n"
+            "date_arithmetic_type = VARTYPE(DATE(2024, 2, 28) + 1)\n"
+            "datetime_plus_seconds = DATETIME(2024, 2, 28, 23, 59, 30) + 90\n"
+            "seconds_plus_datetime = 90 + DATETIME(2024, 2, 28, 23, 59, 30)\n"
+            "datetime_minus_seconds = DATETIME(2024, 3, 1, 0, 0, 30) - 90\n"
+            "datetime_second_difference = DATETIME(2024, 3, 1, 0, 0, 30) - DATETIME(2024, 2, 29, 23, 59, 0)\n"
+            "datetime_arithmetic_type = VARTYPE(DATETIME(2024, 2, 28, 23, 59, 30) + 90)\n"
             "date_default = SET('DATE')\n"
             "century_default = SET('CENTURY')\n"
             "epoch_default = SET('EPOCH')\n"
@@ -125,6 +136,7 @@ namespace
             "SET DATE TO DMY\n"
             "date_set_dmy = SET('DATE')\n"
             "ctod_dmy = CTOD('18/04/2026')\n"
+            "date_arithmetic_dmy = CTOD('18/04/2026') + 14\n"
             "dtoc_dmy = DTOC('18/04/2026')\n"
             "ttoc_dmy = TTOC('18/04/2026 13:45:56')\n"
             "year_dmy = YEAR(ctod_dmy)\n"
@@ -186,6 +198,7 @@ namespace
             "SET HOURS TO 12\n"
             "hours_12 = SET('HOURS')\n"
             "ttoc_hours_12 = TTOC('04/18/2026 13:45:56')\n"
+            "datetime_arithmetic_hours_12 = DATETIME(2026, 4, 18, 13, 45, 56) + 60\n"
             "SET SECONDS OFF\n"
             "seconds_off = SET('SECONDS')\n"
             "ttoc_hours_12_seconds_off = TTOC('04/18/2026 13:45:56')\n"
@@ -239,6 +252,17 @@ namespace
         check("datetime_ctor", "04/18/2026 13:45:56");
         check("datetime_ctor_partial", "04/18/2026 00:00:00");
         check("datetime_ctor_invalid", "");
+        check("date_plus_days", "02/29/2024");
+        check("days_plus_date", "02/29/2024");
+        check("date_plus_fractional_days", "02/29/2024");
+        check("date_minus_days", "02/29/2024");
+        check("date_day_difference", "3");
+        check("date_arithmetic_type", "D");
+        check("datetime_plus_seconds", "02/29/2024 00:01:00");
+        check("seconds_plus_datetime", "02/29/2024 00:01:00");
+        check("datetime_minus_seconds", "02/29/2024 23:59:00");
+        check("datetime_second_difference", "90");
+        check("datetime_arithmetic_type", "T");
         check("date_default", "MDY");
         check("century_default", "ON");
         check("epoch_default", "1950");
@@ -323,6 +347,7 @@ namespace
         check("isleap_2026", "false");
         check("date_set_dmy", "DMY");
         check("ctod_dmy", "18/04/2026");
+        check("date_arithmetic_dmy", "02/05/2026");
         check("dtoc_dmy", "18/04/2026");
         check("ttoc_dmy", "18/04/2026 13:45:56");
         check("year_dmy", "2026");
@@ -372,6 +397,7 @@ namespace
         check("gomonth_mark_dot_dmy", "18.05.2026");
         check("hours_12", "12");
         check("ttoc_hours_12", "04/18/2026 01:45:56 PM");
+        check("datetime_arithmetic_hours_12", "04/18/2026 01:46:56 PM");
         check("seconds_off", "OFF");
         check("ttoc_hours_12_seconds_off", "04/18/2026 01:45 PM");
         check("hours_24", "24");
@@ -418,12 +444,47 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_date_time_arithmetic_rejects_unsupported_operands_without_ending_the_session()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_date_time_arithmetic_fault";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "date_time_arithmetic_fault.prg";
+        write_text(
+            main_path,
+            "invalid_sum = DATE(2024, 2, 28) + DATE(2024, 2, 29)\n"
+            "after_fault = 1\n"
+            "RETURN\n");
+
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path, temp_root));
+        auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+               "date-plus-date should pause with a runtime operand error");
+        expect(state.location.line == 1U,
+               "date-plus-date should identify the exact faulting statement");
+        expect(state.message.find("Operator/operand type mismatch.") != std::string::npos,
+               "unsupported date arithmetic should retain localized VFP Error 107 prose");
+
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "continuing after an unsupported date arithmetic fault should keep the session alive");
+        expect(state.globals.contains("after_fault"),
+               "statements after a trapped date arithmetic fault should execute");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 
 } // namespace
 
 int main()
 {
     test_date_time_expression_functions();
+    test_date_time_arithmetic_rejects_unsupported_operands_without_ending_the_session();
 
     if (test_failures() != 0)
     {

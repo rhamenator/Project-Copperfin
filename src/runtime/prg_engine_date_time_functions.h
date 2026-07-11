@@ -18,4 +18,10 @@ std::optional<PrgValue> evaluate_date_time_function(
     const std::vector<PrgValue>& arguments,
     const std::function<std::string(const std::string&)>& set_callback);
 
+std::optional<PrgValue> evaluate_date_time_additive(
+    const PrgValue& left,
+    const PrgValue& right,
+    bool subtract,
+    const std::function<std::string(const std::string&)>& set_callback);
+
 }  // namespace copperfin::runtime

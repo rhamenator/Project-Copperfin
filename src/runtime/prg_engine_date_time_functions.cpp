@@ -212,6 +212,83 @@ std::string format_runtime_datetime_for_set(
     return stream.str();
 }
 
+bool parse_runtime_time_for_set(
+    const std::string& raw,
+    int& hour,
+    int& minute,
+    int& second,
+    const std::function<std::string(const std::string&)>& set_callback) {
+    std::string value = trim_copy(raw);
+    if (value.empty()) {
+        return false;
+    }
+    if (parse_runtime_time_string(value, hour, minute, second)) {
+        return true;
+    }
+
+    bool afternoon = false;
+    bool has_meridiem = false;
+    if (value.size() > 3U && value[value.size() - 3U] == ' ') {
+        const std::string suffix = uppercase_copy(value.substr(value.size() - 2U));
+        if (suffix == "AM" || suffix == "PM") {
+            has_meridiem = true;
+            afternoon = suffix == "PM";
+            value = trim_copy(value.substr(0U, value.size() - 3U));
+        }
+    }
+    if (has_meridiem != use_twelve_hour_clock(set_callback)) {
+        return false;
+    }
+
+    const std::size_t first_colon = value.find(':');
+    if (first_colon == std::string::npos) {
+        return false;
+    }
+    const std::size_t second_colon = value.find(':', first_colon + 1U);
+    if (second_colon != std::string::npos && value.find(':', second_colon + 1U) != std::string::npos) {
+        return false;
+    }
+    const auto parse_component = [&](std::size_t start, std::size_t length, int& output) -> bool {
+        const std::string component = value.substr(start, length);
+        if (component.empty() ||
+            !std::all_of(component.begin(), component.end(), [](unsigned char ch) { return std::isdigit(ch) != 0; })) {
+            return false;
+        }
+        try {
+            output = std::stoi(component);
+        } catch (...) {
+            return false;
+        }
+        return true;
+    };
+
+    if (!parse_component(0U, first_colon, hour) ||
+        !parse_component(
+            first_colon + 1U,
+            (second_colon == std::string::npos ? value.size() : second_colon) - first_colon - 1U,
+            minute)) {
+        return false;
+    }
+    second = 0;
+    if (second_colon != std::string::npos &&
+        !parse_component(second_colon + 1U, value.size() - second_colon - 1U, second)) {
+        return false;
+    }
+
+    if (has_meridiem) {
+        if (hour < 1 || hour > 12) {
+            return false;
+        }
+        hour %= 12;
+        if (afternoon) {
+            hour += 12;
+        }
+    } else if (hour < 0 || hour > 23) {
+        return false;
+    }
+    return minute >= 0 && minute <= 59 && second >= 0 && second <= 59;
+}
+
 bool parse_runtime_date_for_set(
     const std::string& raw,
     int& year,
@@ -308,7 +385,7 @@ bool parse_runtime_datetime_for_set(
     hour = 0;
     minute = 0;
     second = 0;
-    return time_part.empty() || parse_runtime_time_string(time_part, hour, minute, second);
+    return time_part.empty() || parse_runtime_time_for_set(time_part, hour, minute, second, set_callback);
 }
 
 std::string current_runtime_date() {
@@ -339,6 +416,153 @@ int current_second_of_day() {
 }
 
 }  // namespace
+
+std::optional<PrgValue> evaluate_date_time_additive(
+    const PrgValue& left,
+    const PrgValue& right,
+    bool subtract,
+    const std::function<std::string(const std::string&)>& set_callback) {
+    const bool left_is_numeric = left.kind == PrgValueKind::number ||
+                                 left.kind == PrgValueKind::int64 ||
+                                 left.kind == PrgValueKind::uint64;
+    if (!subtract && left.string_flavor == PrgStringFlavor::none &&
+        right.string_flavor != PrgStringFlavor::none && left_is_numeric) {
+        return evaluate_date_time_additive(right, left, false, set_callback);
+    }
+
+    const bool left_is_date = left.string_flavor == PrgStringFlavor::date;
+    const bool left_is_datetime = left.string_flavor == PrgStringFlavor::datetime;
+    const bool right_is_date = right.string_flavor == PrgStringFlavor::date;
+    const bool right_is_datetime = right.string_flavor == PrgStringFlavor::datetime;
+    const bool right_is_numeric = right.kind == PrgValueKind::number ||
+                                  right.kind == PrgValueKind::int64 ||
+                                  right.kind == PrgValueKind::uint64;
+
+    if ((!left_is_date && !left_is_datetime) ||
+        ((right_is_date || right_is_datetime) && (!subtract || left.string_flavor != right.string_flavor)) ||
+        (!right_is_date && !right_is_datetime && !right_is_numeric)) {
+        return std::nullopt;
+    }
+
+    int left_year = 0;
+    int left_month = 0;
+    int left_day = 0;
+    int left_hour = 0;
+    int left_minute = 0;
+    int left_second = 0;
+    const bool parsed_left = left_is_datetime
+        ? parse_runtime_datetime_for_set(
+              value_as_string(left),
+              left_year,
+              left_month,
+              left_day,
+              left_hour,
+              left_minute,
+              left_second,
+              set_callback)
+        : parse_runtime_date_for_set(value_as_string(left), left_year, left_month, left_day, set_callback);
+    if (!parsed_left) {
+        if (subtract && left.string_flavor == right.string_flavor) {
+            return make_number_value(0.0);
+        }
+        return left_is_datetime ? make_datetime_value(std::string{}) : make_date_value(std::string{});
+    }
+
+    constexpr std::int64_t seconds_per_day = 24LL * 60LL * 60LL;
+    const std::int64_t minimum_julian = date_to_julian(1, 1, 1);
+    const std::int64_t maximum_julian = date_to_julian(9999, 12, 31);
+    const std::int64_t left_julian = date_to_julian(left_year, left_month, left_day);
+    if (right_is_date || right_is_datetime) {
+        int right_year = 0;
+        int right_month = 0;
+        int right_day = 0;
+        int right_hour = 0;
+        int right_minute = 0;
+        int right_second = 0;
+        const bool parsed_right = right_is_datetime
+            ? parse_runtime_datetime_for_set(
+                  value_as_string(right),
+                  right_year,
+                  right_month,
+                  right_day,
+                  right_hour,
+                  right_minute,
+                  right_second,
+                  set_callback)
+            : parse_runtime_date_for_set(value_as_string(right), right_year, right_month, right_day, set_callback);
+        if (!parsed_right) {
+            return make_number_value(0.0);
+        }
+
+        const std::int64_t right_julian = date_to_julian(right_year, right_month, right_day);
+        if (left_is_date) {
+            return make_number_value(static_cast<double>(left_julian - right_julian));
+        }
+
+        const std::int64_t left_total = (left_julian * seconds_per_day) +
+            (left_hour * 3600LL) + (left_minute * 60LL) + left_second;
+        const std::int64_t right_total = (right_julian * seconds_per_day) +
+            (right_hour * 3600LL) + (right_minute * 60LL) + right_second;
+        return make_number_value(static_cast<double>(left_total - right_total));
+    }
+
+    const double raw_delta = value_as_number(right);
+    const std::int64_t maximum_delta = left_is_datetime
+        ? ((maximum_julian - minimum_julian) * seconds_per_day) + seconds_per_day - 1LL
+        : maximum_julian - minimum_julian;
+    if (!std::isfinite(raw_delta) ||
+        raw_delta < -static_cast<double>(maximum_delta) ||
+        raw_delta > static_cast<double>(maximum_delta)) {
+        return left_is_datetime ? make_datetime_value(std::string{}) : make_date_value(std::string{});
+    }
+    const std::int64_t signed_delta = left_is_date
+        ? static_cast<std::int64_t>(std::floor(subtract ? -raw_delta : raw_delta))
+        : (subtract
+              ? -static_cast<std::int64_t>(std::llround(raw_delta))
+              : static_cast<std::int64_t>(std::llround(raw_delta)));
+
+    if (left_is_date) {
+        const std::int64_t result_julian = left_julian + signed_delta;
+        int result_year = 0;
+        int result_month = 0;
+        int result_day = 0;
+        if (!julian_to_runtime_date(static_cast<int>(result_julian), result_year, result_month, result_day)) {
+            return make_date_value(std::string{});
+        }
+        return make_date_value(format_runtime_date_for_set(result_year, result_month, result_day, set_callback));
+    }
+
+    const std::int64_t minimum_total = minimum_julian * seconds_per_day;
+    const std::int64_t maximum_total =
+        (maximum_julian * seconds_per_day) + seconds_per_day - 1LL;
+    const std::int64_t left_total = (left_julian * seconds_per_day) +
+        (left_hour * 3600LL) + (left_minute * 60LL) + left_second;
+    if ((signed_delta > 0 && left_total > maximum_total - signed_delta) ||
+        (signed_delta < 0 && left_total < minimum_total - signed_delta)) {
+        return make_datetime_value(std::string{});
+    }
+    const std::int64_t result_total = left_total + signed_delta;
+    if (result_total < minimum_total || result_total > maximum_total) {
+        return make_datetime_value(std::string{});
+    }
+
+    const int result_julian = static_cast<int>(result_total / seconds_per_day);
+    const int result_second_of_day = static_cast<int>(result_total % seconds_per_day);
+    int result_year = 0;
+    int result_month = 0;
+    int result_day = 0;
+    if (!julian_to_runtime_date(result_julian, result_year, result_month, result_day)) {
+        return make_datetime_value(std::string{});
+    }
+    return make_datetime_value(format_runtime_datetime_for_set(
+        result_year,
+        result_month,
+        result_day,
+        result_second_of_day / 3600,
+        (result_second_of_day % 3600) / 60,
+        result_second_of_day % 60,
+        set_callback));
+}
 
 std::optional<PrgValue> evaluate_date_time_function(
     const std::string& function,
