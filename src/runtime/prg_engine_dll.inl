@@ -682,7 +682,7 @@
                     return make_empty_value();
                 }
 
-                if (has_single_parameter || ret_single)
+                const auto invoke_via_disp_call_func = [&]() -> PrgValue
                 {
                     std::vector<VARTYPE> native_argument_types(nargs);
                     std::vector<VARIANTARG> native_argument_values(nargs);
@@ -777,9 +777,14 @@
                     return ret_integer64
                                ? finalize_integer_result(native_result.llVal)
                                : finalize_integer_result(native_result.lVal);
-                }
+                };
 
 #if defined(_WIN64)
+
+                if (has_single_parameter || ret_single)
+                {
+                    return invoke_via_disp_call_func();
+                }
 
                 std::vector<detail::Win64NativeCallArgument> native_arguments(nargs);
                 for (std::size_t index = 0U; index < nargs; ++index)
@@ -813,61 +818,9 @@
                                          ? finalize_integer_result(static_cast<std::int64_t>(native_result.integer_value))
                                          : finalize_integer_result(static_cast<std::int32_t>(native_result.integer_value))));
 #else
-                // x86: use __stdcall by default (VFP DECLARE default)
-                auto iarg = [&](std::size_t i) -> __int64
-                {
-                    if (i >= flat.size())
-                        return 0LL;
-                    return flat[i].is_double
-                               ? *reinterpret_cast<const __int64 *>(&flat[i].d)
-                               : flat[i].i;
-                };
-                typedef __int32(__stdcall * FnSI_0)();
-                typedef __int32(__stdcall * FnSI_1)(__int32);
-                typedef __int32(__stdcall * FnSI_2)(__int32, __int32);
-                typedef __int32(__stdcall * FnSI_3)(__int32, __int32, __int32);
-                typedef __int32(__stdcall * FnSI_4)(__int32, __int32, __int32, __int32);
-                typedef __int32(__stdcall * FnSI_5)(__int32, __int32, __int32, __int32, __int32);
-                typedef __int32(__stdcall * FnSI_6)(__int32, __int32, __int32, __int32, __int32, __int32);
-                typedef __int32(__stdcall * FnSI_7)(__int32, __int32, __int32, __int32, __int32, __int32, __int32);
-                typedef __int32(__stdcall * FnSI_8)(__int32, __int32, __int32, __int32, __int32, __int32, __int32, __int32);
-
-                auto i32 = [&](std::size_t i) -> __int32
-                { return static_cast<__int32>(iarg(i)); };
-
-                FARPROC fn = declfn.proc_address;
-                __int32 iret = 0;
-                switch (nargs)
-                {
-                case 0:
-                    iret = reinterpret_cast<FnSI_0>(fn)();
-                    break;
-                case 1:
-                    iret = reinterpret_cast<FnSI_1>(fn)(i32(0));
-                    break;
-                case 2:
-                    iret = reinterpret_cast<FnSI_2>(fn)(i32(0), i32(1));
-                    break;
-                case 3:
-                    iret = reinterpret_cast<FnSI_3>(fn)(i32(0), i32(1), i32(2));
-                    break;
-                case 4:
-                    iret = reinterpret_cast<FnSI_4>(fn)(i32(0), i32(1), i32(2), i32(3));
-                    break;
-                case 5:
-                    iret = reinterpret_cast<FnSI_5>(fn)(i32(0), i32(1), i32(2), i32(3), i32(4));
-                    break;
-                case 6:
-                    iret = reinterpret_cast<FnSI_6>(fn)(i32(0), i32(1), i32(2), i32(3), i32(4), i32(5));
-                    break;
-                case 7:
-                    iret = reinterpret_cast<FnSI_7>(fn)(i32(0), i32(1), i32(2), i32(3), i32(4), i32(5), i32(6));
-                    break;
-                default:
-                    iret = reinterpret_cast<FnSI_8>(fn)(i32(0), i32(1), i32(2), i32(3), i32(4), i32(5), i32(6), i32(7));
-                    break;
-                }
-                return finalize_integer_result(iret);
+                // Win32 uses stdcall for native DECLARE and requires type-aware
+                // stack slots for every signature, not only those containing SINGLE.
+                return invoke_via_disp_call_func();
 #endif
             }
 #else

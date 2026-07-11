@@ -2768,6 +2768,84 @@ void test_declared_dll_single_uses_vfp_32_bit_float_width() {
 #endif
 }
 
+void test_declared_dll_win32_uses_typed_stdcall_slots() {
+#if defined(_WIN32) && !defined(_WIN64)
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_declared_dll_win32_typed";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root / "native");
+
+    const fs::path fixture_name = COPPERFIN_DECLARED_DLL_FIXTURE_NAME;
+    const fs::path fixture_source = declared_dll_fixture_source_path();
+    const fs::path fixture_copy = temp_root / "native" / fixture_name;
+    fs::copy_file(fixture_source, fixture_copy, fs::copy_options::overwrite_existing, ignored);
+    expect(!ignored && fs::exists(fixture_copy),
+           "#3940: controlled Win32 typed fixture should copy under the PRG working directory");
+
+    const fs::path main_path = temp_root / "declared_dll_win32_typed.prg";
+    write_text(
+        main_path,
+        "DECLARE DOUBLE CopperfinDeclaredDllX86Mixed IN 'native/" + fixture_name.string() +
+            "' LONG first, DOUBLE second, INTEGER64 third, INTEGER fourth\n"
+        "DECLARE INTEGER64 CopperfinDeclaredDllX86Int64 IN 'native/" + fixture_name.string() + "'\n"
+        "DECLARE DOUBLE CopperfinDeclaredDllX86Split IN 'native/" + fixture_name.string() +
+            "' DOUBLE value, DOUBLE @ whole\n"
+        "DECLARE STRING CopperfinDeclaredDllX86Text IN 'native/" + fixture_name.string() + "'\n"
+        "DECLARE LONG CopperfinDeclaredDllX86Eight IN 'native/" + fixture_name.string() +
+            "' INTEGER first, INTEGER second, INTEGER third, INTEGER fourth, INTEGER fifth, INTEGER sixth, INTEGER seventh, INTEGER eighth\n"
+        "DECLARE LONG CopperfinDeclaredDllX86NumericByRef IN 'native/" + fixture_name.string() +
+            "' LONG @ longValue, INTEGER64 @ integer64Value\n"
+        "nWhole = 0\n"
+        "nLongOut = 0\n"
+        "nInteger64Out = 0\n"
+        "nMixed = CopperfinDeclaredDllX86Mixed(1, 2.5, 4294967297, 4)\n"
+        "nInt64 = CopperfinDeclaredDllX86Int64()\n"
+        "nFraction = CopperfinDeclaredDllX86Split(3.75, @nWhole)\n"
+        "cText = CopperfinDeclaredDllX86Text()\n"
+        "nEight = CopperfinDeclaredDllX86Eight(1, 2, 3, 4, 5, 6, 7, 8)\n"
+        "nByRefResult = CopperfinDeclaredDllX86NumericByRef(@nLongOut, @nInteger64Out)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#3940: Win32 typed fixture should complete: " + state.message);
+
+    const auto expect_value = [&](const std::string &name,
+                                  const std::string &expected,
+                                  const std::string &label)
+    {
+        const auto value = state.globals.find(name);
+        expect(value != state.globals.end(), label + " should be captured");
+        if (value != state.globals.end())
+        {
+            const std::string actual = copperfin::runtime::format_value(value->second);
+            expect(actual == expected, label + "; actual=" + actual);
+        }
+    };
+    expect_value("nmixed", "4294967304.5", "#3940: mixed LONG/DOUBLE/INTEGER64/INTEGER call");
+    expect_value("nint64", "-4294967297", "#3940: signed 64-bit return");
+    expect_value("nfraction", "0.75", "#3940: DOUBLE return with by-reference input");
+    expect_value("nwhole", "3", "#3940: DOUBLE @ writeback");
+    expect_value("ctext", "copperfin-x86", "#3940: pointer-shaped STRING return");
+    expect_value("neight", "36", "#3940: signed LONG return across eight stdcall stack positions");
+    expect_value("nbyrefresult", "-7", "#3940: signed LONG return from numeric by-reference call");
+    expect_value("nlongout", "-123456789", "#3940: signed LONG @ writeback");
+    expect_value("ninteger64out", "-4294967297", "#3940: signed INTEGER64 @ writeback");
+
+    const auto declare_event = std::find_if(state.events.begin(), state.events.end(), [](const auto &event)
+    {
+        return event.category == "runtime.declare_dll" &&
+               event.detail.find("CopperfinDeclaredDllX86Mixed") != std::string::npos;
+    });
+    expect(declare_event != state.events.end(),
+           "#3940: Win32 typed declarations should retain the invariant runtime.declare_dll event");
+
+    fs::remove_all(temp_root, ignored);
+#endif
+}
+
 void test_declare_dll_runtime_errors_localize() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_declare_localization";
@@ -3387,6 +3465,7 @@ int main() {
     test_declared_dll_double_arguments_follow_x64_abi();
     test_declared_dll_long_uses_vfp_32_bit_width();
     test_declared_dll_single_uses_vfp_32_bit_float_width();
+    test_declared_dll_win32_uses_typed_stdcall_slots();
     test_declare_dll_runtime_errors_localize();
     test_set_exact_affects_comparisons_and_seek();
     test_use_again_and_alias_collision_semantics();

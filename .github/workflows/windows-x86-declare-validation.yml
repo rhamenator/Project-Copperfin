@@ -1,0 +1,49 @@
+name: Windows x86 DECLARE Validation
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/windows-x86-declare-validation.yml"
+      - "CMakeLists.txt"
+      - "src/runtime/prg_engine_dll.inl"
+      - "src/runtime/prg_engine_dispatch.inl"
+      - "src/runtime/prg_engine_helpers.cpp"
+      - "src/runtime/prg_engine_helpers.h"
+      - "tests/CMakeLists.txt"
+      - "tests/fixtures/declared_dll_fixture.cpp"
+      - "tests/test_prg_engine_seek_index.cpp"
+  pull_request:
+    paths:
+      - ".github/workflows/windows-x86-declare-validation.yml"
+      - "CMakeLists.txt"
+      - "src/runtime/prg_engine_dll.inl"
+      - "src/runtime/prg_engine_dispatch.inl"
+      - "src/runtime/prg_engine_helpers.cpp"
+      - "src/runtime/prg_engine_helpers.h"
+      - "tests/CMakeLists.txt"
+      - "tests/fixtures/declared_dll_fixture.cpp"
+      - "tests/test_prg_engine_seek_index.cpp"
+
+permissions:
+  contents: read
+
+jobs:
+  windows-x86-declare-validation:
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6.0.2
+
+      - name: Configure x86 native build
+        run: cmake -S . -B build-x86 -A Win32 -DCOPPERFIN_BUILD_TESTS=ON
+
+      - name: Build x86 DECLARE regression target
+        run: cmake --build build-x86 --config Release --parallel --target test_prg_engine_seek_index
+
+      - name: Run x86 DECLARE regression target
+        run: ctest --test-dir build-x86 -C Release --output-on-failure -R "^test_prg_engine_seek_index$"

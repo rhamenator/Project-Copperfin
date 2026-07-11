@@ -18,6 +18,12 @@
 #pragma comment(linker, "/EXPORT:CopperfinDeclaredDllSingleToDouble=_CopperfinDeclaredDllSingleToDouble@12")
 #pragma comment(linker, "/EXPORT:CopperfinDeclaredDllSingleSlots=_CopperfinDeclaredDllSingleSlots@32")
 #pragma comment(linker, "/EXPORT:CopperfinDeclaredDllSingleSplit=_CopperfinDeclaredDllSingleSplit@8")
+#pragma comment(linker, "/EXPORT:CopperfinDeclaredDllX86Mixed=_CopperfinDeclaredDllX86Mixed@24")
+#pragma comment(linker, "/EXPORT:CopperfinDeclaredDllX86Int64=_CopperfinDeclaredDllX86Int64@0")
+#pragma comment(linker, "/EXPORT:CopperfinDeclaredDllX86Split=_CopperfinDeclaredDllX86Split@12")
+#pragma comment(linker, "/EXPORT:CopperfinDeclaredDllX86Text=_CopperfinDeclaredDllX86Text@0")
+#pragma comment(linker, "/EXPORT:CopperfinDeclaredDllX86Eight=_CopperfinDeclaredDllX86Eight@32")
+#pragma comment(linker, "/EXPORT:CopperfinDeclaredDllX86NumericByRef=_CopperfinDeclaredDllX86NumericByRef@8")
 #endif
 
 COPPERFIN_TEST_EXPORT int CopperfinDeclaredDllFixtureValue() {
@@ -82,6 +88,53 @@ COPPERFIN_TEST_EXPORT float COPPERFIN_TEST_CALL CopperfinDeclaredDllSingleSplit(
         *whole = static_cast<float>(integral);
     }
     return value - static_cast<float>(integral);
+}
+
+COPPERFIN_TEST_EXPORT double COPPERFIN_TEST_CALL CopperfinDeclaredDllX86Mixed(
+    long first,
+    double second,
+    std::int64_t third,
+    std::int32_t fourth) {
+    return static_cast<double>(first) + second + static_cast<double>(third) + static_cast<double>(fourth);
+}
+
+COPPERFIN_TEST_EXPORT std::int64_t COPPERFIN_TEST_CALL CopperfinDeclaredDllX86Int64() {
+    return -4294967297LL;
+}
+
+COPPERFIN_TEST_EXPORT double COPPERFIN_TEST_CALL CopperfinDeclaredDllX86Split(double value, double* whole) {
+    const int integral = static_cast<int>(value);
+    if (whole != nullptr) {
+        *whole = static_cast<double>(integral);
+    }
+    return value - static_cast<double>(integral);
+}
+
+COPPERFIN_TEST_EXPORT const char* COPPERFIN_TEST_CALL CopperfinDeclaredDllX86Text() {
+    return "copperfin-x86";
+}
+
+COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllX86Eight(
+    std::int32_t first,
+    std::int32_t second,
+    std::int32_t third,
+    std::int32_t fourth,
+    std::int32_t fifth,
+    std::int32_t sixth,
+    std::int32_t seventh,
+    std::int32_t eighth) {
+    return first + second + third + fourth + fifth + sixth + seventh + eighth;
+}
+
+COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllX86NumericByRef(
+    long* long_value,
+    std::int64_t* integer64_value) {
+    if (long_value == nullptr || integer64_value == nullptr) {
+        return 0;
+    }
+    *long_value = -123456789L;
+    *integer64_value = -4294967297LL;
+    return -7L;
 }
 
 COPPERFIN_TEST_EXPORT double CopperfinDeclaredDllOneSlot(double first) {
