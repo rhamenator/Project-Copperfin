@@ -1483,7 +1483,8 @@ void test_debug_source_roots_are_unique_when_source_and_content_paths_match() {
         plan,
         copperfin::security::default_native_security_profile(),
         copperfin::platform::default_extensibility_profile());
-    const std::string expected_roots_line = "source_roots=" + project_dir.lexically_normal().string();
+    const std::string expected_roots_line =
+        "source_roots=" + quote_manifest_value(project_dir.lexically_normal().string());
     expect(debug_manifest.find(expected_roots_line) != std::string::npos,
            "debug manifest should emit a single normalized source_roots entry");
 
@@ -1542,9 +1543,9 @@ void test_debug_source_roots_preserve_source_first_and_content_second_order() {
         plan,
         copperfin::security::default_native_security_profile(),
         copperfin::platform::default_extensibility_profile());
-    const std::string expected_roots_line =
-        "source_roots=" + source_root.lexically_normal().string() + ";" +
-        (output_dir / "DebugRootsOrder" / "content").lexically_normal().string();
+    const std::string expected_roots_line = "source_roots=" + quote_manifest_value(
+        source_root.lexically_normal().string() + ";" +
+        (output_dir / "DebugRootsOrder" / "content").lexically_normal().string());
     expect(debug_manifest.find(expected_roots_line) != std::string::npos,
            "debug manifest should preserve source-first source_roots ordering");
 
