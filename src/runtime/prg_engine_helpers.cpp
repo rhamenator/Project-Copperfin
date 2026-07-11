@@ -97,6 +97,13 @@ std::string normalize_identifier(std::string value) {
     return lowercase_copy(trim_copy(std::move(value)));
 }
 
+bool declared_dll_type_uses_64_bit_integer(std::string type_name) {
+    const std::string normalized = normalize_identifier(std::move(type_name));
+    return normalized == "longlong" ||
+           normalized == "integer64" ||
+           normalized == "i64";
+}
+
 std::string normalize_memory_variable_identifier(std::string value) {
     std::string normalized = normalize_identifier(std::move(value));
     if (starts_with_insensitive(normalized, "m.")) {

@@ -2,6 +2,8 @@
 // Licensed under the Project Copperfin Source-Available License or
 // Commercial License. See LICENSE.md in the repository root.
 
+#include <cstdint>
+
 #if defined(_WIN32)
 #define COPPERFIN_TEST_EXPORT extern "C" __declspec(dllexport)
 #else
@@ -22,6 +24,17 @@ COPPERFIN_TEST_EXPORT const char* CopperfinDeclaredDllText() {
 
 COPPERFIN_TEST_EXPORT long long CopperfinDeclaredDllInt64() {
     return -4294967297LL;
+}
+
+COPPERFIN_TEST_EXPORT std::int32_t CopperfinDeclaredDllLongWidth(
+    double multiplier,
+    std::int32_t input,
+    std::int32_t* output) {
+    if (multiplier != 1.5 || input != 42 || output == nullptr) {
+        return 0;
+    }
+    *output = -123456789;
+    return -2147483000;
 }
 
 COPPERFIN_TEST_EXPORT double CopperfinDeclaredDllOneSlot(double first) {

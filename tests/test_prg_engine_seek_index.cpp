@@ -2651,6 +2651,52 @@ void test_declared_dll_double_arguments_follow_x64_abi() {
 #endif
 }
 
+void test_declared_dll_long_uses_vfp_32_bit_width() {
+#if defined(_WIN64)
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_declared_dll_long_width";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root / "native");
+
+    const fs::path fixture_name = COPPERFIN_DECLARED_DLL_FIXTURE_NAME;
+    const fs::path fixture_source = declared_dll_fixture_source_path();
+    const fs::path fixture_copy = temp_root / "native" / fixture_name;
+    fs::copy_file(fixture_source, fixture_copy, fs::copy_options::overwrite_existing, ignored);
+    expect(!ignored && fs::exists(fixture_copy),
+           "#3932: controlled LONG-width fixture should copy under the PRG working directory");
+
+    const fs::path main_path = temp_root / "declared_dll_long_width.prg";
+    write_text(
+        main_path,
+        "DECLARE LONG CopperfinDeclaredDllLongWidth IN 'native/" + fixture_name.string() +
+            "' DOUBLE multiplier, LONG input, LONG @ output\n"
+        "nOutput = 42\n"
+        "nReturn = CopperfinDeclaredDllLongWidth(1.5, 42, @nOutput)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#3932: LONG-width fixture should complete: " + state.message);
+
+    const auto returned = state.globals.find("nreturn");
+    const auto output = state.globals.find("noutput");
+    expect(returned != state.globals.end(), "#3932: signed LONG return should be captured");
+    expect(output != state.globals.end(), "#3932: LONG by-reference output should be captured");
+    if (returned != state.globals.end()) {
+        const std::string actual = copperfin::runtime::format_value(returned->second);
+        expect(actual == "-2147483000", "#3932: LONG returns should narrow as signed 32-bit values; actual=" + actual);
+    }
+    if (output != state.globals.end()) {
+        const std::string actual = copperfin::runtime::format_value(output->second);
+        expect(actual == "-123456789", "#3932: LONG @ storage should write back as signed 32-bit; actual=" + actual);
+    }
+
+    fs::remove_all(temp_root, ignored);
+#endif
+}
+
 void test_declare_dll_runtime_errors_localize() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_declare_localization";
@@ -3268,6 +3314,7 @@ int main() {
     test_declared_dll_string_byref_argument_writeback();
     test_declared_dll_explicit_relative_child_path();
     test_declared_dll_double_arguments_follow_x64_abi();
+    test_declared_dll_long_uses_vfp_32_bit_width();
     test_declare_dll_runtime_errors_localize();
     test_set_exact_affects_comparisons_and_seek();
     test_use_again_and_alias_collision_semantics();

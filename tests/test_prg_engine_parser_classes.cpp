@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "../src/runtime/prg_engine_internal.h"
+#include "../src/runtime/prg_engine_helpers.h"
 #include "prg_engine_test_support.h"
 
 #include <cstdlib>
@@ -537,6 +538,16 @@ void test_parse_declare_dll_preserves_vfp_parameter_contract() {
                                             bare_library.tertiary_expression == "LONG @ value",
                                         "#3895: bare DECLARE libraries should retain named by-reference parameter clauses");
     }
+
+    copperfin::test_support::expect(
+        !copperfin::runtime::declared_dll_type_uses_64_bit_integer("LONG") &&
+            !copperfin::runtime::declared_dll_type_uses_64_bit_integer("INTEGER"),
+        "#3932: documented VFP integer declaration types should retain signed 32-bit width");
+    copperfin::test_support::expect(
+        copperfin::runtime::declared_dll_type_uses_64_bit_integer("LONGLONG") &&
+            copperfin::runtime::declared_dll_type_uses_64_bit_integer("Integer64") &&
+            copperfin::runtime::declared_dll_type_uses_64_bit_integer("i64"),
+        "#3932: explicitly named Copperfin 64-bit declaration aliases should remain distinct from VFP LONG");
 
     fs::remove_all(temp_root, ignored);
 }

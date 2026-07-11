@@ -22,6 +22,7 @@ std::string lowercase_copy(std::string value);
 bool starts_with_insensitive(const std::string& value, const std::string& prefix);
 bool paths_equal_insensitive(const std::string& left, const std::string& right);
 std::string normalize_identifier(std::string value);
+bool declared_dll_type_uses_64_bit_integer(std::string type_name);
 std::string normalize_memory_variable_identifier(std::string value);
 std::string normalize_path(const std::string& value);
 bool is_index_file_path(const std::string& value);

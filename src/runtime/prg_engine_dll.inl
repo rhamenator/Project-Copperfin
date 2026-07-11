@@ -156,7 +156,6 @@
             {
                 return i < declared_param_types.size() && declared_param_types[i].by_ref;
             };
-
             // Helper: convert PrgValue → VARIANT
             auto to_variant = [&](const PrgValue &v, const std::string &ptype) -> VARIANT
             {
@@ -177,7 +176,7 @@
                     var.vt = VT_R8;
                     var.dblVal = value_as_number(v);
                 }
-                else if (base == "long" || base == "longlong" || base == "integer64" || base == "i64")
+                else if (declared_dll_type_uses_64_bit_integer(base))
                 {
                     var.vt = VT_I8;
                     var.llVal = static_cast<LONGLONG>(value_as_number(v));
@@ -507,9 +506,7 @@
                                              idx < argument_references.size() &&
                                              argument_references[idx].has_value();
                     const std::string base_pt = ptype;
-                    const bool is_integer64 =
-                        base_pt == "long" || base_pt == "longlong" ||
-                        base_pt == "integer64" || base_pt == "i64";
+                    const bool is_integer64 = declared_dll_type_uses_64_bit_integer(base_pt);
                     ByRefBinding &binding = byref_bindings[idx];
                     binding.base_type = base_pt;
                     binding.reference_name = by_ref_param ? argument_references[idx] : std::nullopt;
@@ -613,9 +610,7 @@
                 const std::string rt = normalize_identifier(declfn.return_type);
                 const bool ret_double = (rt == "double" || rt == "d" || rt == "f");
                 const bool ret_string = (rt == "c" || rt == "string");
-                const bool ret_integer64 =
-                    rt == "long" || rt == "longlong" ||
-                    rt == "integer64" || rt == "i64";
+                const bool ret_integer64 = declared_dll_type_uses_64_bit_integer(rt);
                 const std::size_t nargs = flat.size();
                 const auto finalize_integer_result = [&](const auto result) -> PrgValue
                 {
