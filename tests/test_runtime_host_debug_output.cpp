@@ -325,6 +325,32 @@ std::string quote_command_argument(const std::string& value) {
     return quoted;
 }
 
+bool create_directory_indirection(
+    const std::filesystem::path& target,
+    const std::filesystem::path& link) {
+#if defined(_WIN32)
+    const std::string command =
+        "cmd.exe /d /c mklink /J " + quote_command_argument(link.string()) + " " +
+        quote_command_argument(target.string()) + " > NUL 2>&1";
+    return std::system(command.c_str()) == 0;
+#else
+    std::error_code error;
+    std::filesystem::create_directory_symlink(target, link, error);
+    return !error;
+#endif
+}
+
+void remove_directory_indirection(const std::filesystem::path& link) {
+#if defined(_WIN32)
+    const std::string command =
+        "cmd.exe /d /c rmdir " + quote_command_argument(link.string()) + " > NUL 2>&1";
+    (void)std::system(command.c_str());
+#else
+    std::error_code ignored;
+    std::filesystem::remove(link, ignored);
+#endif
+}
+
 struct ProcessResult {
     int exit_code = -1;
     std::string stdout_text;
@@ -508,6 +534,18 @@ void write_synthetic_form_asset(const std::filesystem::path& table_path) {
     expect(create_result.ok, "synthetic SCX/SCT debugger fixture should be created");
 }
 
+void write_synthetic_menu_asset(const std::filesystem::path& table_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 3U},
+        {.name = "NAME", .type = 'M', .length = 4U}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        table_path.string(),
+        fields,
+        {{"1", "MainMenu"}});
+    expect(create_result.ok, "synthetic MNX/MNT runtime fixture should be created");
+}
+
 void write_synthetic_report_asset(const std::filesystem::path& table_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "PLATFORM", .type = 'C', .length = 16U},
@@ -647,6 +685,303 @@ void test_security_enabled_report_and_label_execute_verified_snapshots(
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
     }
+    }
+}
+
+void test_security_enabled_form_class_and_menu_companion_integrity(
+    const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    struct ExecutableXAssetCase {
+        const char* file_name;
+        copperfin::studio::StudioAssetKind kind;
+        const char* manifest_kind;
+        const char* fixture_suffix;
+    };
+    const std::vector<ExecutableXAssetCase> cases{
+        {"verified.scx", copperfin::studio::StudioAssetKind::form, "Form", "form"},
+        {"verified.vcx", copperfin::studio::StudioAssetKind::class_library, "Class Library", "class"},
+        {"verified.mnx", copperfin::studio::StudioAssetKind::menu, "Menu", "menu"}
+    };
+
+    for (const auto& xasset_case : cases) {
+        const int failures_before_case = failures;
+        const fs::path temp_root =
+            fs::temp_directory_path() /
+            (std::string("copperfin_runtime_host_verified_") + xasset_case.fixture_suffix + "_companion");
+        const fs::path recorded_package_root = temp_root / "builder" / "DemoApp";
+        const fs::path deployed_root = temp_root / "deployed";
+        const fs::path content_root = deployed_root / "content";
+        const fs::path asset_path = content_root / xasset_case.file_name;
+        const fs::path manifest_path = deployed_root / "app.cfmanifest";
+        const fs::path locale_root = temp_root / "locales";
+        const fs::path deployed_runtime_host = deployed_runtime_host_path(deployed_root, runtime_host_path);
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(content_root);
+        write_runtime_host_usage_catalogs(locale_root);
+        if (xasset_case.kind == copperfin::studio::StudioAssetKind::menu) {
+            write_synthetic_menu_asset(asset_path);
+        } else {
+            write_synthetic_form_asset(asset_path);
+        }
+        const fs::path sidecar_path = copperfin::studio::infer_sidecar_path(
+            asset_path.string(),
+            xasset_case.kind);
+        expect(fs::exists(sidecar_path), "executable xAsset security fixture should include its memo sidecar");
+        const std::string original_sidecar_bytes = read_text(sidecar_path);
+
+        fs::copy_file(runtime_host_path, deployed_runtime_host, fs::copy_options::overwrite_existing);
+#if defined(__unix__) || defined(__APPLE__)
+        fs::permissions(
+            deployed_runtime_host,
+            fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec,
+            fs::perm_options::add,
+            ignored);
+#endif
+        const auto runtime_host_hash =
+            copperfin::security::sha256_hex_for_file(deployed_runtime_host.string());
+        const auto asset_hash = copperfin::security::sha256_hex_for_file(asset_path.string());
+        const auto sidecar_hash = copperfin::security::sha256_hex_for_file(sidecar_path.string());
+        expect(runtime_host_hash.ok && asset_hash.ok && sidecar_hash.ok,
+               "executable xAsset security fixture should hash host, primary, and sidecar payloads");
+        if (!runtime_host_hash.ok || !asset_hash.ok || !sidecar_hash.ok) {
+            continue;
+        }
+
+        const fs::path recorded_content_root = recorded_package_root / "content";
+        const auto write_manifest = [&](const bool include_sidecar_digest) {
+            std::string text =
+                std::string("manifest_version=1\n") +
+                "project_title=VerifiedExecutableXAsset\n" +
+                "package_root=" + recorded_package_root.string() + "\n" +
+                "content_root=" + recorded_content_root.string() + "\n" +
+                "working_directory=" + recorded_content_root.string() + "\n" +
+                "startup_item=" + xasset_case.file_name + "\n" +
+                "startup_source=" + (recorded_content_root / xasset_case.file_name).string() + "\n" +
+                "security_enabled=true\n" +
+                "security_role=runtime-operator\n" +
+                "security_mode=native\n" +
+                "runtime_host_sha256=" + runtime_host_hash.hex_digest + "\n" +
+                "asset=1|" + xasset_case.file_name + "|" +
+                    (recorded_content_root / xasset_case.file_name).string() + "|" +
+                    xasset_case.manifest_kind + "|false|true|" + asset_hash.hex_digest + "|true\n";
+            if (include_sidecar_digest) {
+                text += "extension_payload=" +
+                    (recorded_content_root / sidecar_path.filename()).string() + "|" +
+                    sidecar_hash.hex_digest + "\n";
+            }
+            text += "dotnet_story=none\n";
+            write_text(manifest_path, text);
+        };
+        const auto run_manifest = [&](const fs::path& host, const fs::path& manifest) {
+            return run_process_capture(
+                host.string(),
+                {
+                    "--manifest", manifest.string(),
+                    "--debug",
+                    "--breakpoint", "2",
+                    "--debug-command", "continue",
+                    "--debug-command", "continue"
+                },
+                deployed_root);
+        };
+
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        write_manifest(true);
+        const auto valid_process = run_manifest(deployed_runtime_host, manifest_path);
+        if (valid_process.exit_code != 0) {
+            std::cerr << xasset_case.fixture_suffix << " companion valid stdout:\n"
+                      << valid_process.stdout_text << "\n";
+            std::cerr << xasset_case.fixture_suffix << " companion valid stderr:\n"
+                      << valid_process.stderr_text << "\n";
+        }
+        expect(valid_process.exit_code == 0,
+               "security-enabled form/class/menu startup should execute after primary and companion verification");
+        expect(valid_process.stdout_text.find("runtime.mode: xasset-bootstrap") != std::string::npos,
+               "verified form/class/menu startup should use xasset-bootstrap mode");
+        expect(valid_process.stdout_text.find("debug.reason: event_loop") != std::string::npos,
+               "verified form/class/menu startup should reach its event loop");
+        expect(valid_process.stdout_text.find("startup.source: " + asset_path.string()) != std::string::npos,
+               "relocated xAsset packages should preserve their rebound logical startup identity");
+        expect(valid_process.stdout_text.find("copperfin_xasset_snapshot_") == std::string::npos,
+               "private form/class/menu snapshot paths should not leak into runtime output");
+
+        const fs::path package_alias = temp_root / "deployed-alias";
+        const bool alias_created = create_directory_indirection(deployed_root, package_alias);
+        expect(alias_created,
+               "form/class/menu companion smoke should create its deployment-root symlink or Windows junction");
+        if (alias_created) {
+            const auto alias_process = run_manifest(
+                package_alias / deployed_runtime_host.filename(),
+                package_alias / manifest_path.filename());
+            expect(alias_process.exit_code == 0,
+                   "verified xAsset packages should run through a deployment-root symlink or Windows junction");
+            expect(alias_process.stdout_text.find("runtime.mode: xasset-bootstrap") != std::string::npos,
+                   "deployment-root xAsset indirection should preserve bootstrap execution mode");
+            expect(alias_process.stdout_text.find(
+                       "startup.source: " + asset_path.string()) !=
+                       std::string::npos,
+                   "deployment-root xAsset indirection should preserve its admitted startup identity");
+            remove_directory_indirection(package_alias);
+        }
+
+        write_text(sidecar_path, original_sidecar_bytes + "tampered-sidecar");
+        const auto tampered_process = run_process_capture(
+            deployed_runtime_host.string(),
+            {"--manifest", manifest_path.string()},
+            deployed_root);
+        expect(tampered_process.exit_code == 8,
+               "security-enabled form/class/menu startup should reject a modified companion");
+        expect(tampered_process.stdout_text.find(
+                   "status: error\nerror: Extension payload hash mismatch: " +
+                   sidecar_path.filename().string()) != std::string::npos,
+               "modified executable xAsset companions should use the invariant verification status and localized error");
+        write_text(sidecar_path, original_sidecar_bytes);
+
+        write_manifest(false);
+        const auto missing_digest_process = run_process_capture(
+            deployed_runtime_host.string(),
+            {"--manifest", manifest_path.string()},
+            deployed_root);
+        expect(missing_digest_process.exit_code == 8,
+               "security-enabled form/class/menu startup should reject an undigested companion");
+        expect(missing_digest_process.stdout_text.find(
+                   "status: error\nerror: Packaged asset is missing a verified digest: " +
+                   sidecar_path.filename().string()) != std::string::npos,
+               "undigested executable xAsset companions should preserve machine status and localize the error");
+
+        fs::remove(sidecar_path, ignored);
+        ProcessResult missing_companion_process;
+        if (xasset_case.kind == copperfin::studio::StudioAssetKind::menu) {
+            ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "pt-BR");
+            missing_companion_process = run_process_capture(
+                deployed_runtime_host.string(),
+                {"--manifest", manifest_path.string()},
+                deployed_root);
+        } else {
+            missing_companion_process = run_process_capture(
+                deployed_runtime_host.string(),
+                {"--manifest", manifest_path.string()},
+                deployed_root);
+        }
+        expect(missing_companion_process.exit_code == 8,
+               "security-enabled form/class/menu startup should reject a missing required companion");
+        const std::string expected_missing_companion_error =
+            xasset_case.kind == copperfin::studio::StudioAssetKind::menu
+                ? "status: error\nerro: O asset empacotado esta ausente do pacote: "
+                : "status: error\nerror: Packaged asset is missing from the package: ";
+        expect(missing_companion_process.stdout_text.find(
+                   expected_missing_companion_error + sidecar_path.filename().string()) != std::string::npos,
+               "missing executable xAsset companions should localize text without changing machine status");
+
+        write_text(sidecar_path, original_sidecar_bytes);
+        write_manifest(true);
+        fs::remove(sidecar_path, ignored);
+        const auto missing_staged_companion_process = run_process_capture(
+            deployed_runtime_host.string(),
+            {"--manifest", manifest_path.string()},
+            deployed_root);
+        expect(missing_staged_companion_process.exit_code == 8,
+               "security-enabled form/class/menu packages should reject a deleted staged companion");
+        expect(missing_staged_companion_process.stdout_text.find(
+                   "status: error\nerror: Extension payload is missing from the package: " +
+                   sidecar_path.filename().string()) != std::string::npos,
+               "deleted staged companions should fail through the extension-payload verification contract");
+
+        const fs::path outside_sidecar = temp_root / sidecar_path.filename();
+        write_text(outside_sidecar, original_sidecar_bytes);
+        std::error_code symlink_error;
+        fs::create_symlink(outside_sidecar, sidecar_path, symlink_error);
+        if (!symlink_error) {
+            write_manifest(true);
+            const auto redirected_process = run_process_capture(
+                deployed_runtime_host.string(),
+                {"--manifest", manifest_path.string()},
+                deployed_root);
+            expect(redirected_process.exit_code == 8,
+                   "security-enabled form/class/menu startup should reject redirected companions");
+            expect(redirected_process.stdout_text.find(
+                       "status: error\nerror: Package path failed physical containment validation: " +
+                       sidecar_path.filename().string()) != std::string::npos,
+                   "redirected executable xAsset companions should fail through physical containment verification");
+            fs::remove(sidecar_path, ignored);
+        }
+        write_text(sidecar_path, original_sidecar_bytes);
+
+        if (failures == failures_before_case) {
+            fs::remove_all(temp_root, ignored);
+        }
+    }
+}
+
+void test_app_cfdebug_preserves_external_xasset_source_compatibility(
+    const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+    const int failures_before_test = failures;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_runtime_host_external_xasset_debug";
+    const fs::path deployed_root = temp_root / "deployed";
+    const fs::path source_root = temp_root / "source";
+    const fs::path asset_path = source_root / "external.scx";
+    const fs::path debug_manifest_path = deployed_root / "app.cfdebug";
+    const fs::path deployed_runtime_host = deployed_runtime_host_path(deployed_root, runtime_host_path);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(deployed_root);
+    fs::create_directories(source_root);
+    write_synthetic_form_asset(asset_path);
+    expect(fs::exists(copperfin::studio::infer_sidecar_path(
+               asset_path.string(),
+               copperfin::studio::StudioAssetKind::form)),
+           "external app.cfdebug xAsset fixture should include its source-side memo companion");
+    fs::copy_file(runtime_host_path, deployed_runtime_host, fs::copy_options::overwrite_existing);
+#if defined(__unix__) || defined(__APPLE__)
+    fs::permissions(
+        deployed_runtime_host,
+        fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec,
+        fs::perm_options::add,
+        ignored);
+#endif
+    write_text(
+        debug_manifest_path,
+        "debug_manifest_version=2\n"
+        "project_title=ExternalXAssetDebug\n"
+        "package_root=" + (temp_root / "builder" / "DemoApp").string() + "\n"
+        "content_root=" + (temp_root / "builder" / "DemoApp" / "content").string() + "\n"
+        "working_directory=" + source_root.string() + "\n"
+        "startup_item=external.scx\n"
+        "startup_source=" + asset_path.string() + "\n"
+        "security_enabled=false\n"
+        "security_role=\n"
+        "security_mode=native\n"
+        "dotnet_story=none\n");
+
+    const auto process = run_process_capture(
+        deployed_runtime_host.string(),
+        {
+            "--manifest", debug_manifest_path.string(),
+            "--debug",
+            "--breakpoint", "2",
+            "--debug-command", "continue",
+            "--debug-command", "continue"
+        },
+        deployed_root);
+    if (process.exit_code != 0) {
+        std::cerr << "external xAsset app.cfdebug stdout:\n" << process.stdout_text << "\n";
+        std::cerr << "external xAsset app.cfdebug stderr:\n" << process.stderr_text << "\n";
+    }
+    expect(process.exit_code == 0,
+           "app.cfdebug should continue to run an external xAsset source and companion");
+    expect(process.stdout_text.find("startup.source: " + asset_path.string()) != std::string::npos,
+           "app.cfdebug should preserve the external xAsset source identity");
+    expect(process.stdout_text.find("runtime.mode: xasset-bootstrap") != std::string::npos,
+           "external app.cfdebug xAssets should continue to use bootstrap execution");
+    expect(process.stdout_text.find("debug.reason: event_loop") != std::string::npos,
+           "external app.cfdebug should execute memo-backed xAsset lifecycle methods");
+
+    if (failures == failures_before_test) {
+        fs::remove_all(temp_root, ignored);
     }
 }
 
@@ -3921,6 +4256,8 @@ int main(int argc, char** argv) {
     test_runtime_host_supports_single_breakpoint_removal(argv[1]);
     test_runtime_host_prefers_debug_manifest_for_implicit_debug_launches(argv[1]);
     test_security_enabled_report_and_label_execute_verified_snapshots(argv[1]);
+    test_security_enabled_form_class_and_menu_companion_integrity(argv[1]);
+    test_app_cfdebug_preserves_external_xasset_source_compatibility(argv[1]);
     test_runtime_host_compatibility_launcher_note_reflects_xasset_fallback(argv[1]);
     test_runtime_host_reports_xasset_pause_identity(argv[1]);
     test_runtime_host_supports_xasset_action_breakpoint_commands(argv[1]);

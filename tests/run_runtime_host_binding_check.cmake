@@ -671,6 +671,48 @@ if(NOT indirect_payload_result EQUAL 8 OR
    NOT indirect_payload_output MATCHES "Package path failed physical containment validation: outside\\.prg")
     message(FATAL_ERROR "Runtime host did not fail closed for an indirect security payload.\nstdout:\n${indirect_payload_output}\nstderr:\n${indirect_payload_error}")
 endif()
+
+set(indirect_xasset_companion "${indirection_content_root}/redirected.sct")
+create_directory_indirection(
+    "${indirection_outside_root}"
+    "${indirect_xasset_companion}"
+    indirect_xasset_companion_result
+)
+if(NOT indirect_xasset_companion_result EQUAL 0)
+    message(FATAL_ERROR "Unable to create the xAsset companion symlink or Windows junction required by the runtime-host containment regression.")
+endif()
+set(indirect_xasset_companion_manifest_text
+"manifest_version=1
+project_title=IndirectXAssetCompanionDemo
+package_root=${indirection_builder_root}
+content_root=${indirection_builder_root}/content
+working_directory=${indirection_builder_root}/content
+startup_item=main.prg
+startup_source=${indirection_builder_root}/content/main.prg
+security_enabled=true
+security_role=developer
+security_mode=native
+runtime_host_sha256=${indirection_runtime_host_hash}
+extension_payload=${indirection_builder_root}/content/redirected.sct|0000000000000000000000000000000000000000000000000000000000000000
+dotnet_story=none
+")
+file(WRITE "${indirection_root}/app.cfmanifest" "${indirect_xasset_companion_manifest_text}")
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -E env
+        "COPPERFIN_LOCALE_DIR=${LOCALE_ROOT}"
+        "COPPERFIN_LOCALE=en-US"
+        "${packaged_entrypoint}" --manifest "${indirection_root}/app.cfmanifest"
+    WORKING_DIRECTORY "${test_root}"
+    RESULT_VARIABLE indirect_xasset_companion_run_result
+    OUTPUT_VARIABLE indirect_xasset_companion_output
+    ERROR_VARIABLE indirect_xasset_companion_error
+)
+if(NOT indirect_xasset_companion_run_result EQUAL 8 OR
+   NOT indirect_xasset_companion_output MATCHES "status: error" OR
+   NOT indirect_xasset_companion_output MATCHES "Package path failed physical containment validation: redirected\\.sct")
+    message(FATAL_ERROR "Runtime host did not fail closed for an xAsset companion symlink or Windows junction.\nstdout:\n${indirect_xasset_companion_output}\nstderr:\n${indirect_xasset_companion_error}")
+endif()
+remove_directory_indirection("${indirect_xasset_companion}")
 remove_directory_indirection("${indirection_link}")
 
 file(WRITE "${test_root}/debug-source.prg" "? \"DEBUG_SOURCE_EXECUTED\"\nRETURN\n")

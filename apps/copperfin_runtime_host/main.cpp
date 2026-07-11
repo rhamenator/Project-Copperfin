@@ -892,6 +892,8 @@ using VerifiedPackagePaths = std::vector<VerifiedPackagePath>;
 constexpr int kMinimumSupportedManifestVersion = 1;
 constexpr int kMaximumSupportedManifestVersion = 2;
 
+copperfin::studio::StudioAssetKind xasset_kind_for_path(const std::filesystem::path& path);
+
 enum class PackagePathBindingMode {
     allow_filename_fallback,
     strict_relative_fidelity
@@ -1383,6 +1385,47 @@ bool verify_manifest_hashes(
                 {{"fileName", asset_file_name}});
             return false;
         }
+        // A copied xAsset is not fully verified until its memo table is admitted by the same manifest.
+        const auto asset_kind = xasset_kind_for_path(*bound_asset_path);
+        const std::string sidecar_path = copperfin::studio::infer_sidecar_path(
+            bound_asset_path->string(),
+            asset_kind);
+        if (!sidecar_path.empty()) {
+            std::error_code sidecar_error;
+            const bool sidecar_exists = std::filesystem::exists(sidecar_path, sidecar_error);
+            if (sidecar_error || !sidecar_exists) {
+                error = localized_message(
+                    catalog,
+                    "RuntimeHost.Error.PackagedAssetMissing",
+                    {{"fileName", std::filesystem::path(sidecar_path).filename().string()}});
+                return false;
+            }
+
+            const auto sidecar_containment = copperfin::security::inspect_physical_path_containment(
+                sidecar_path,
+                manifest_directory);
+            if (!sidecar_containment.allowed) {
+                error = localized_message(
+                    catalog,
+                    "RuntimeHost.Error.PackagePathPhysicalContainmentFailed",
+                    {{"fileName", std::filesystem::path(sidecar_path).filename().string()}});
+                return false;
+            }
+            const auto verified_sidecar = std::find_if(
+                verified_paths.begin(),
+                verified_paths.end(),
+                [&](const auto& candidate) {
+                    return !candidate.declared_asset &&
+                        candidate.containment.canonical_path == sidecar_containment.canonical_path;
+                });
+            if (verified_sidecar == verified_paths.end()) {
+                error = localized_message(
+                    catalog,
+                    "RuntimeHost.Error.PackagedAssetDigestMissing",
+                    {{"fileName", std::filesystem::path(sidecar_path).filename().string()}});
+                return false;
+            }
+        }
         verified_paths.push_back({
             .containment = asset_snapshot.containment,
             .sha256 = lowercase_copy(digest.hex_digest),
@@ -1727,6 +1770,13 @@ XAssetFileSnapshotResult materialize_xasset_file_snapshot(
         result.error = localized_message(
             catalog,
             "RuntimeHost.Error.MaterializeVerifiedStartupSnapshotFailed",
+            {{"fileName", std::filesystem::path(sidecar_path).filename().string()}});
+        return result;
+    }
+    if (security_enabled && !sidecar_path.empty() && !sidecar_exists) {
+        result.error = localized_message(
+            catalog,
+            "RuntimeHost.Error.PackagedAssetMissing",
             {{"fileName", std::filesystem::path(sidecar_path).filename().string()}});
         return result;
     }

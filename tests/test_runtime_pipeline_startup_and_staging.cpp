@@ -92,6 +92,11 @@ void run_xasset_startup_companion_stage_smoke(
                startup_type_title + " startup asset should be staged even when marked excluded");
         expect(fs::exists(content_root / companion_path.filename()),
                startup_type_title + " startup companion sidecar should be staged");
+        expect(
+            runtime_manifest.find(
+                "extension_payload=" + (content_root / companion_path.filename()).string() + "|") !=
+                std::string::npos,
+            startup_type_title + " startup companion sidecar should carry a package digest");
         expect_manifest_reports_startup_asset_copied(
             runtime_manifest,
             startup_name,
@@ -432,6 +437,10 @@ void test_uppercase_xasset_companion_assets_are_staged() {
 
     write_text(project_dir / "startup.scx", "synthetic form table");
     write_text(project_dir / "startup.SCT", "synthetic uppercase form memo");
+    write_text(project_dir / "library.vcx", "synthetic class library table");
+    write_text(project_dir / "library.VCT", "synthetic uppercase class library memo");
+    write_text(project_dir / "menu.mnx", "synthetic menu table");
+    write_text(project_dir / "menu.MNT", "synthetic uppercase menu memo");
     write_text(runtime_host, "runtime-host");
 
     copperfin::studio::StudioDocumentModel document;
@@ -448,7 +457,9 @@ void test_uppercase_xasset_companion_assets_are_staged() {
     workspace.build_plan.startup_item = "startup.scx";
     workspace.build_plan.startup_record_index = 1U;
     workspace.entries = {
-        {.record_index = 1U, .name = "startup.scx", .relative_path = "startup.scx", .type_title = "Form", .excluded = true}
+        {.record_index = 1U, .name = "startup.scx", .relative_path = "startup.scx", .type_title = "Form", .excluded = true},
+        {.record_index = 2U, .name = "library.vcx", .relative_path = "library.vcx", .type_title = "Class Library", .excluded = false},
+        {.record_index = 3U, .name = "menu.mnx", .relative_path = "menu.mnx", .type_title = "Menu", .excluded = false}
     };
 
     const auto plan = copperfin::runtime::create_runtime_package_plan(
@@ -472,14 +483,56 @@ void test_uppercase_xasset_companion_assets_are_staged() {
     expect(result.ok, "uppercase xasset companion runtime package should materialize");
     if (result.ok) {
         const fs::path content_root(result.plan.content_root);
+        const std::string runtime_manifest = read_text(result.plan.manifest_path);
         expect(fs::exists(content_root / "startup.scx"), "xasset startup should be staged");
         expect(fs::exists(content_root / "startup.SCT"),
                "#3510: runtime packaging should stage uppercase SCX memo companions with resolved source casing");
         expect(!fs::exists(content_root / "startup.sct"),
                "#3510: runtime packaging should not rewrite uppercase SCX companion names to lowercase during staging");
+        expect(fs::exists(content_root / "library.VCT"),
+               "#3877: runtime packaging should stage uppercase VCX memo companions with resolved source casing");
+        expect(!fs::exists(content_root / "library.vct"),
+               "#3877: runtime packaging should not rewrite uppercase VCX companion names during staging");
+        expect(fs::exists(content_root / "menu.MNT"),
+               "#3877: runtime packaging should stage uppercase MNX memo companions with resolved source casing");
+        expect(!fs::exists(content_root / "menu.mnt"),
+               "#3877: runtime packaging should not rewrite uppercase MNX companion names during staging");
+        expect(
+            runtime_manifest.find(
+                "extension_payload=" + (content_root / "startup.SCT").string() + "|") !=
+                std::string::npos,
+            "#3877: runtime packaging should digest uppercase SCX companions using their staged casing");
+        expect(
+            runtime_manifest.find(
+                "extension_payload=" + (content_root / "library.VCT").string() + "|") !=
+                std::string::npos,
+            "#3877: runtime packaging should digest uppercase VCX companions using their staged casing");
+        expect(
+            runtime_manifest.find(
+                "extension_payload=" + (content_root / "menu.MNT").string() + "|") !=
+                std::string::npos,
+            "#3877: runtime packaging should digest uppercase MNX companions using their staged casing");
     }
 
     fs::remove_all(temp_root, ignored);
+}
+
+void test_form_startup_assets_are_staged() {
+    run_xasset_startup_companion_stage_smoke(
+        "copperfin_runtime_pipeline_form_startup_companions",
+        "startup.scx",
+        "Form",
+        ".sct",
+        "FormStartupDemo");
+}
+
+void test_class_library_startup_assets_are_staged() {
+    run_xasset_startup_companion_stage_smoke(
+        "copperfin_runtime_pipeline_class_startup_companions",
+        "startup.vcx",
+        "Class Library",
+        ".vct",
+        "ClassStartupDemo");
 }
 
 void test_menu_startup_assets_are_staged() {

@@ -115,6 +115,8 @@ void test_runtime_package_license_fields_stay_debug_only();
 void test_materialize_runtime_package();
 void test_materialize_excluded_xasset_startup_package();
 void test_uppercase_xasset_companion_assets_are_staged();
+void test_form_startup_assets_are_staged();
+void test_class_library_startup_assets_are_staged();
 void test_menu_startup_assets_are_staged();
 void test_report_startup_assets_are_staged();
 void test_label_startup_assets_are_staged();
