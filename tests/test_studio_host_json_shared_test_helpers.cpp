@@ -70,6 +70,48 @@ std::string quote_command_argument(const std::string& value) {
     return quoted;
 }
 
+std::string expected_json_shell_quote(const std::string& value) {
+#if defined(_WIN32)
+    std::string quoted = "\\\"";
+    quoted.reserve(value.size() + 4U);
+    for (const char ch : value) {
+        if (ch == '"') {
+            quoted += "\\\"\\\"";
+        } else if (ch == '%') {
+            quoted += "%%";
+        } else if (ch == '\\') {
+            quoted += "\\\\";
+        } else {
+            quoted.push_back(ch);
+        }
+    }
+    quoted += "\\\"";
+    return quoted;
+#else
+    std::string quoted = "'";
+    for (const char ch : value) {
+        if (ch == '\'') {
+            quoted += "'\\''";
+        } else {
+            quoted.push_back(ch);
+        }
+    }
+    quoted.push_back('\'');
+    return quoted;
+#endif
+}
+
+std::string expected_json_shell_command(
+    const std::string& launch_command,
+    std::initializer_list<std::string> arguments) {
+    std::string command = expected_json_shell_quote(launch_command);
+    for (const auto& argument : arguments) {
+        command.push_back(' ');
+        command += expected_json_shell_quote(argument);
+    }
+    return command;
+}
+
 std::string read_text(const std::filesystem::path& path) {
     std::ifstream input(path, std::ios::binary);
     return {

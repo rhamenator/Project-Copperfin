@@ -1513,7 +1513,8 @@ void test_studio_host_json_exposes_builder_execution(const std::string& studio_h
         "#1394: builder execution JSON should summarize empty execution errors");
     expect_contains(admitted_process.stdout_text, "\"launchCommand\": \"" COPPERFIN_TEST_SUCCESS_COMMAND "\"",
         "#1319: builder execution JSON should expose launch commands");
-    expect_contains(admitted_process.stdout_text, "\"executedCommand\": \"'" COPPERFIN_TEST_SUCCESS_COMMAND "'",
+    expect_contains(admitted_process.stdout_text,
+        "\"executedCommand\": \"" + expected_json_shell_command(COPPERFIN_TEST_SUCCESS_COMMAND, {}),
         "#1319: builder execution JSON should expose the shell command");
     expect_contains(admitted_process.stdout_text, "\"observedExitCode\": 0",
         "#1319: successful builder execution JSON should expose zero exit status");

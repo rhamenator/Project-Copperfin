@@ -686,7 +686,8 @@ void test_studio_host_json_exposes_toolbox_execution(const std::string& studio_h
         "#1390: admitted toolbox execution JSON should summarize empty execution errors");
     expect_contains(visual_process.stdout_text, "\"launchCommand\": \"" COPPERFIN_TEST_SUCCESS_COMMAND "\"",
         "#1323: toolbox execution JSON should expose launch commands");
-    expect_contains(visual_process.stdout_text, "\"executedCommand\": \"'" COPPERFIN_TEST_SUCCESS_COMMAND "'",
+    expect_contains(visual_process.stdout_text,
+        "\"executedCommand\": \"" + expected_json_shell_command(COPPERFIN_TEST_SUCCESS_COMMAND, {}),
         "#1323: toolbox execution JSON should expose the shell command");
     expect_contains(visual_process.stdout_text, "\"observedExitCode\": 0",
         "#1323: successful toolbox execution JSON should expose zero exit status");

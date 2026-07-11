@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <initializer_list>
 #include <iostream>
 #include <string>
 #include <string_view>
@@ -32,18 +33,20 @@
 
 namespace cf_test_studio_host_json {
 
+#if !defined(COPPERFIN_TEST_SUCCESS_COMMAND)
 #if defined(__APPLE__)
-
 #define COPPERFIN_TEST_SUCCESS_COMMAND "/usr/bin/true"
-
-#define COPPERFIN_TEST_FAILURE_COMMAND "/usr/bin/false"
-
 #else
-
 #define COPPERFIN_TEST_SUCCESS_COMMAND "/bin/true"
+#endif
+#endif
 
+#if !defined(COPPERFIN_TEST_FAILURE_COMMAND)
+#if defined(__APPLE__)
+#define COPPERFIN_TEST_FAILURE_COMMAND "/usr/bin/false"
+#else
 #define COPPERFIN_TEST_FAILURE_COMMAND "/bin/false"
-
+#endif
 #endif
 
 struct ProcessResult;
@@ -65,6 +68,10 @@ void expect_contains_in_order(
     const std::vector<std::string>& needles,
     const std::string& message);
 std::string quote_command_argument(const std::string& value);
+std::string expected_json_shell_quote(const std::string& value);
+std::string expected_json_shell_command(
+    const std::string& launch_command,
+    std::initializer_list<std::string> arguments);
 std::string read_text(const std::filesystem::path& path);
 ProcessResult run_process_capture(
     const std::string& executable_path,

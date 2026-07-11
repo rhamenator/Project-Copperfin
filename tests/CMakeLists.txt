@@ -120,6 +120,12 @@ add_test(
     COMMAND $<TARGET_FILE:test_licensing_status>
 )
 
+add_executable(test_process_success test_process_exit.cpp)
+target_compile_definitions(test_process_success PRIVATE COPPERFIN_TEST_PROCESS_EXIT_CODE=0)
+
+add_executable(test_process_failure test_process_exit.cpp)
+target_compile_definitions(test_process_failure PRIVATE COPPERFIN_TEST_PROCESS_EXIT_CODE=1)
+
 add_executable(test_studio_host_json
     test_studio_host_json.cpp
     test_studio_host_json_shared_test_helpers.cpp
@@ -162,6 +168,8 @@ add_executable(test_studio_host_json
 )
 target_link_libraries(test_studio_host_json PRIVATE cf_vfp_assets)
 target_compile_definitions(test_studio_host_json PRIVATE
+    COPPERFIN_TEST_SUCCESS_COMMAND="$<TARGET_FILE:test_process_success>"
+    COPPERFIN_TEST_FAILURE_COMMAND="$<TARGET_FILE:test_process_failure>"
     COPPERFIN_OBJECT_LIFECYCLE_SKIP_TOOLBOX_CREATE
     COPPERFIN_OBJECT_LIFECYCLE_SKIP_STABLE_SELECTOR_MUTATION
     COPPERFIN_OBJECT_LIFECYCLE_SKIP_OBJECT_ACTION_LIFECYCLE
@@ -185,6 +193,7 @@ target_compile_definitions(test_studio_host_json PRIVATE
     COPPERFIN_DETAIL_HEADER_FOOTER_SECTION_PREVIEW_BOUNDS_SKIP_HOST_SMOKE
     COPPERFIN_GEOMETRY_PREVIEW_BOUNDS_SKIP_UNRESOLVED_AND_MISSING_HELPERS
 )
+add_dependencies(test_studio_host_json test_process_success test_process_failure)
 
 if(MSVC)
     target_compile_options(test_studio_host_json PRIVATE /W4 /permissive-)

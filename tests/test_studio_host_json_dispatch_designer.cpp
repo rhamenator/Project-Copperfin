@@ -1571,7 +1571,9 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
     expect_contains(visual_process.stdout_text, "\"launched\": true",
         "#1339: designer execution JSON should expose child launch state");
     expect_contains(visual_process.stdout_text,
-        "\"executedCommand\": \"'" COPPERFIN_TEST_SUCCESS_COMMAND "' '--command-token' 'studio.method_editor.open'",
+        "\"executedCommand\": \"" + expected_json_shell_command(
+            COPPERFIN_TEST_SUCCESS_COMMAND,
+            {"--command-token", "studio.method_editor.open"}),
         "#1335: designer execution JSON should expose editor child executed commands");
     expect_contains(visual_process.stdout_text, "\"builderExecutions\": [",
         "#1325: designer execution JSON should expose builder execution results");
@@ -1609,7 +1611,9 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
     expect_contains(visual_process.stdout_text, "\"dispatchArguments\": [\"--command-token\", \"studio.builder.invoke\"",
         "#1338: designer execution JSON should expose builder child dispatch arguments");
     expect_contains(visual_process.stdout_text,
-        "\"executedCommand\": \"'" COPPERFIN_TEST_SUCCESS_COMMAND "' '--command-token' 'studio.builder.invoke'",
+        "\"executedCommand\": \"" + expected_json_shell_command(
+            COPPERFIN_TEST_SUCCESS_COMMAND,
+            {"--command-token", "studio.builder.invoke"}),
         "#1335: designer execution JSON should expose builder child executed commands");
     expect_contains(visual_process.stdout_text, "\"toolboxExecution\": {",
         "#1325: designer execution JSON should expose toolbox execution results");
@@ -1645,7 +1649,9 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
     expect_contains(visual_process.stdout_text, "\"mutatesAsset\": false",
         "#1339: designer execution JSON should expose child mutation state");
     expect_contains(visual_process.stdout_text,
-        "\"executedCommand\": \"'" COPPERFIN_TEST_SUCCESS_COMMAND "' '--command-token' 'studio.toolbox.palette.invoke'",
+        "\"executedCommand\": \"" + expected_json_shell_command(
+            COPPERFIN_TEST_SUCCESS_COMMAND,
+            {"--command-token", "studio.toolbox.palette.invoke"}),
         "#1335: designer execution JSON should expose toolbox child executed commands");
 
     const auto missing_builder_command_process = run_process_capture(
@@ -1756,8 +1762,9 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "\"failedBuilderCommandTokens\": [\"studio.builder.invoke\"",
         "#1353: failed builder execution JSON should summarize failed builder command tokens");
     expect_contains(failed_builder_process.stdout_text,
-        "\"failedBuilderExecutedCommands\": [\"'" COPPERFIN_TEST_FAILURE_COMMAND
-        "' '--command-token' 'studio.builder.invoke'",
+        "\"failedBuilderExecutedCommands\": [\"" + expected_json_shell_command(
+            COPPERFIN_TEST_FAILURE_COMMAND,
+            {"--command-token", "studio.builder.invoke"}),
         "#1354: failed builder execution JSON should summarize failed builder executed commands");
     expect_contains(failed_builder_process.stdout_text, "\"failedBuilderExitCodes\": [1, 1, 1]",
         "#1355: failed builder execution JSON should summarize failed builder exit codes");
@@ -1789,7 +1796,9 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "\"dispatchArguments\": [\"--command-token\", \"studio.builder.invoke\"",
         "#1340: failed designer execution JSON should preserve planned builder dispatch arguments");
     expect_contains(failed_builder_process.stdout_text,
-        "\"executedCommand\": \"'" COPPERFIN_TEST_FAILURE_COMMAND "' '--command-token' 'studio.builder.invoke'",
+        "\"executedCommand\": \"" + expected_json_shell_command(
+            COPPERFIN_TEST_FAILURE_COMMAND,
+            {"--command-token", "studio.builder.invoke"}),
         "#1340: failed designer execution JSON should preserve the failed builder command");
 
     const auto failed_editor_process = run_process_capture(
@@ -1833,8 +1842,9 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "\"failedEditorActionCommandTokens\": [\"studio.property_grid.show\", \"studio.method_editor.open\"",
         "#1353: failed editor action execution JSON should summarize failed editor action command tokens");
     expect_contains(failed_editor_process.stdout_text,
-        "\"failedEditorActionExecutedCommands\": [\"'" COPPERFIN_TEST_FAILURE_COMMAND
-        "' '--command-token' 'studio.property_grid.show'",
+        "\"failedEditorActionExecutedCommands\": [\"" + expected_json_shell_command(
+            COPPERFIN_TEST_FAILURE_COMMAND,
+            {"--command-token", "studio.property_grid.show"}),
         "#1354: failed editor action execution JSON should summarize failed editor action executed commands");
     expect_contains(failed_editor_process.stdout_text, "\"failedEditorActionExitCodes\": [1, 1, 1, 1, 1]",
         "#1355: failed editor action execution JSON should summarize failed editor action exit codes");
@@ -1866,8 +1876,9 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "\"dispatchArguments\": [\"--command-token\", \"studio.property_grid.show\"",
         "#1341: failed editor action execution JSON should preserve planned editor action dispatch arguments");
     expect_contains(failed_editor_process.stdout_text,
-        "\"executedCommand\": \"'" COPPERFIN_TEST_FAILURE_COMMAND
-        "' '--command-token' 'studio.property_grid.show'",
+        "\"executedCommand\": \"" + expected_json_shell_command(
+            COPPERFIN_TEST_FAILURE_COMMAND,
+            {"--command-token", "studio.property_grid.show"}),
         "#1341: failed editor action execution JSON should preserve the failed editor action command");
 
     const auto failed_toolbox_process = run_process_capture(
@@ -1936,8 +1947,9 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
     expect_contains(failed_toolbox_process.stdout_text, "\"toolboxCommandToken\": \"studio.toolbox.palette.invoke\"",
         "#1353: failed toolbox execution JSON should summarize toolbox command tokens");
     expect_contains(failed_toolbox_process.stdout_text,
-        "\"toolboxExecutedCommand\": \"'" COPPERFIN_TEST_FAILURE_COMMAND
-        "' '--command-token' 'studio.toolbox.palette.invoke'",
+        "\"toolboxExecutedCommand\": \"" + expected_json_shell_command(
+            COPPERFIN_TEST_FAILURE_COMMAND,
+            {"--command-token", "studio.toolbox.palette.invoke"}),
         "#1354: failed toolbox execution JSON should summarize toolbox executed commands");
     expect_contains(failed_toolbox_process.stdout_text, "\"toolboxExitCode\": 1",
         "#1355: failed toolbox execution JSON should summarize toolbox exit codes");
@@ -1954,8 +1966,9 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "\"dispatchArguments\": [\"--command-token\", \"studio.toolbox.palette.invoke\"",
         "#1341: failed toolbox execution JSON should preserve planned toolbox dispatch arguments");
     expect_contains(failed_toolbox_process.stdout_text,
-        "\"executedCommand\": \"'" COPPERFIN_TEST_FAILURE_COMMAND
-        "' '--command-token' 'studio.toolbox.palette.invoke'",
+        "\"executedCommand\": \"" + expected_json_shell_command(
+            COPPERFIN_TEST_FAILURE_COMMAND,
+            {"--command-token", "studio.toolbox.palette.invoke"}),
         "#1341: failed toolbox execution JSON should preserve the failed toolbox command");
 
     const auto unknown_context_process = run_process_capture(
