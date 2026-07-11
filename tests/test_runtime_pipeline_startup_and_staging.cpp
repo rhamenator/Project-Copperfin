@@ -111,9 +111,16 @@ void run_xasset_startup_companion_stage_smoke(
                startup_type_title + " startup companion sidecar should be staged");
         expect(
             runtime_manifest.find(
-                "extension_payload=" + (content_root / companion_path.filename()).string() + "|") !=
+                "extension_payload=" +
+                    quote_manifest_value((content_root / companion_path.filename()).string()) + "|") !=
                 std::string::npos,
             startup_type_title + " startup companion sidecar should carry a package digest");
+        expect(
+            debug_manifest.find(
+                "extension_payload=" +
+                    quote_manifest_value((content_root / companion_path.filename()).string()) + "|") !=
+                std::string::npos,
+            startup_type_title + " startup debug manifest should carry the companion digest");
         expect_manifest_reports_startup_asset_copied(
             runtime_manifest,
             startup_name,
@@ -520,7 +527,8 @@ void test_uppercase_xasset_companion_assets_are_staged() {
             expect(!directory_has_exact_filename(content_root, inferred_name),
                    std::string("#3905: package should not stage inferred lowercase xAsset filename: ") + inferred_name);
             const std::string marker =
-                "extension_payload=" + (content_root / actual_name).string() + "|";
+                "extension_payload=" +
+                quote_manifest_value((content_root / actual_name).string()) + "|";
             expect(runtime_manifest.find(marker) != std::string::npos,
                    std::string("#3905: runtime manifest should preserve xAsset companion path: ") + actual_name);
             expect(debug_manifest.find(marker) != std::string::npos,
@@ -608,7 +616,8 @@ void test_ambiguous_casefold_xasset_companions_fail_closed() {
         expect(read_text(content_root / "startup.sct") == "exact memo",
                "#3905: exact-match precedence should copy the exact companion bytes");
         const std::string marker =
-            "extension_payload=" + (content_root / "startup.sct").string() + "|";
+            "extension_payload=" +
+            quote_manifest_value((content_root / "startup.sct").string()) + "|";
         expect(read_text(exact_result.plan.manifest_path).find(marker) != std::string::npos,
                "#3905: exact companion runtime digest should use the exact path");
         expect(read_text(exact_result.plan.debug_manifest_path).find(marker) != std::string::npos,
@@ -904,12 +913,14 @@ void test_startup_dbf_companion_assets_are_staged() {
                    std::string("startup DBF companion should be staged: ") + companion);
             expect(
                 runtime_manifest.find(
-                    "extension_payload=" + (content_root / companion).string() + "|") !=
+                    "extension_payload=" +
+                        quote_manifest_value((content_root / companion).string()) + "|") !=
                     std::string::npos,
                 std::string("runtime manifest should digest the staged startup DBF companion: ") + companion);
             expect(
                 debug_manifest.find(
-                    "extension_payload=" + (content_root / companion).string() + "|") !=
+                    "extension_payload=" +
+                        quote_manifest_value((content_root / companion).string()) + "|") !=
                     std::string::npos,
                 std::string("debug manifest should digest the staged startup DBF companion: ") + companion);
         }
@@ -987,7 +998,8 @@ void test_uppercase_dbf_companion_assets_are_staged() {
             expect(directory_has_exact_filename(content_root, companion),
                    std::string("#3905: runtime packaging should preserve exact DBF companion filename: ") + companion);
             const std::string marker =
-                "extension_payload=" + (content_root / companion).string() + "|";
+                "extension_payload=" +
+                quote_manifest_value((content_root / companion).string()) + "|";
             expect(
                 runtime_manifest.find(marker) != std::string::npos,
                 std::string("#3905: runtime manifest should preserve uppercase startup DBF companion digest path: ") + companion);
@@ -1080,12 +1092,13 @@ void test_writable_dbf_assets_use_data_manifest_surface_and_dbc_stays_immutable(
                "runtime and debug manifests should identify the package-writable data policy");
 
         const std::string data_asset_marker =
-            "data_asset=" + (content_root / "customers.dbf").string() + "|package_writable";
+            "data_asset=" + quote_manifest_value((content_root / "customers.dbf").string()) +
+            "|package_writable";
         expect(runtime_manifest.find(data_asset_marker) != std::string::npos &&
                    debug_manifest.find(data_asset_marker) != std::string::npos,
                "runtime/debug manifests should classify non-startup DBF data as package-writable");
         expect(runtime_manifest.find(
-                   "data_asset=" + (content_root / "catalog.dbc").string() + "|") ==
+                   "data_asset=" + quote_manifest_value((content_root / "catalog.dbc").string()) + "|") ==
                    std::string::npos,
                "DBC executable metadata should remain outside the writable data surface");
         for (const auto& companion : {
@@ -1095,19 +1108,22 @@ void test_writable_dbf_assets_use_data_manifest_surface_and_dbc_stays_immutable(
                  "customers.NDX",
                  "customers.MDX"}) {
             const std::string marker =
-                "data_payload=" + (content_root / companion).string() + "|package_writable|";
+                "data_payload=" + quote_manifest_value((content_root / companion).string()) +
+                "|package_writable|";
             expect(runtime_manifest.find(marker) != std::string::npos,
                    std::string("runtime manifest should record writable data payload ") + companion);
             expect(debug_manifest.find(marker) != std::string::npos,
                    std::string("debug manifest should preserve writable data payload ") + companion);
             expect(runtime_manifest.find(
-                       "extension_payload=" + (content_root / companion).string() + "|") ==
+                       "extension_payload=" +
+                           quote_manifest_value((content_root / companion).string()) + "|") ==
                        std::string::npos,
                    std::string("writable data payload should not enter immutable extension verification: ") + companion);
         }
         for (const auto& companion : {"catalog.DCT", "catalog.DCX"}) {
             const std::string marker =
-                "extension_payload=" + (content_root / companion).string() + "|";
+                "extension_payload=" +
+                quote_manifest_value((content_root / companion).string()) + "|";
             expect(runtime_manifest.find(marker) != std::string::npos,
                    std::string("DBC companion should remain on the immutable extension surface: ") + companion);
             expect(debug_manifest.find(marker) != std::string::npos,
