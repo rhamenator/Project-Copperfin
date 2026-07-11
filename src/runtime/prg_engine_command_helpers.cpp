@@ -244,9 +244,18 @@ std::vector<ReplaceAssignment> parse_replace_assignments(const std::string& text
         if (with_position == std::string::npos) {
             continue;
         }
+        std::string expression = trim_copy(part.substr(with_position + 4U));
+        bool additive = false;
+        const std::size_t additive_position = find_last_keyword_top_level(expression, {"ADDITIVE"});
+        if (additive_position != std::string::npos &&
+            uppercase_copy(trim_copy(expression.substr(additive_position))) == "ADDITIVE") {
+            additive = true;
+            expression = trim_copy(expression.substr(0U, additive_position));
+        }
         assignments.push_back({
             .field_name = trim_copy(part.substr(0U, with_position)),
-            .expression = trim_copy(part.substr(with_position + 4U))
+            .expression = std::move(expression),
+            .additive = additive
         });
     }
     return assignments;

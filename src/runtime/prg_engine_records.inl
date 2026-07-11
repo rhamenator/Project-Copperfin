@@ -647,6 +647,7 @@
             {
                 std::string field_name;
                 std::string serialized_value;
+                bool additive = false;
             };
 
             if (cursor.remote)
@@ -675,9 +676,15 @@
                             {{"fieldName", assignment.field_name}});
                         return false;
                     }
+                    std::string serialized_value = value_as_string(value);
+                    if (assignment.additive && field->field_type == 'M')
+                    {
+                        serialized_value = field->display_value + serialized_value;
+                    }
                     evaluated_assignments.push_back({
                         .field_name = assignment.field_name,
-                        .serialized_value = value_as_string(value)});
+                        .serialized_value = std::move(serialized_value),
+                        .additive = assignment.additive});
                 }
 
                 for (const auto &assignment : evaluated_assignments)
@@ -746,16 +753,23 @@
                 }
                 evaluated_assignments.push_back({
                     .field_name = assignment.field_name,
-                    .serialized_value = std::move(serialized_value)});
+                    .serialized_value = std::move(serialized_value),
+                    .additive = assignment.additive});
             }
 
             for (const auto &assignment : evaluated_assignments)
             {
-                const auto result = vfp::replace_record_field_value(
-                    cursor.source_path,
-                    cursor.recno - 1U,
-                    assignment.field_name,
-                    assignment.serialized_value);
+                const auto result = assignment.additive
+                    ? vfp::replace_record_field_value_additive(
+                          cursor.source_path,
+                          cursor.recno - 1U,
+                          assignment.field_name,
+                          assignment.serialized_value)
+                    : vfp::replace_record_field_value(
+                          cursor.source_path,
+                          cursor.recno - 1U,
+                          assignment.field_name,
+                          assignment.serialized_value);
                 if (!result.ok)
                 {
                     last_error_message = result.error;
@@ -778,53 +792,32 @@
             CursorState &cursor,
             const std::vector<ReplaceAssignment> &assignments,
             const Frame &frame,
+            const std::optional<AggregateScopeClause> &scope,
             const std::string &for_expression,
             const std::string &while_expression)
         {
-            if (trim_copy(for_expression).empty() && trim_copy(while_expression).empty())
+            if (!scope.has_value() &&
+                trim_copy(for_expression).empty() &&
+                trim_copy(while_expression).empty())
             {
                 return replace_current_record_fields(cursor, assignments, frame, true);
             }
 
-            const std::size_t original_recno = cursor.recno;
-            const bool original_found = cursor.found;
-            const bool original_bof = cursor.bof;
-            const bool original_eof = cursor.eof;
-            std::size_t replaced_count = 0U;
-
-            for (std::size_t recno = 1U; recno <= cursor.record_count; ++recno)
+            const AggregateScopeClause effective_scope = scope.value_or(AggregateScopeClause{});
+            const std::vector<std::size_t> target_records = collect_aggregate_scope_records(
+                cursor,
+                frame,
+                effective_scope,
+                for_expression,
+                while_expression,
+                effective_scope.kind != AggregateScopeKind::record);
+            for (const std::size_t recno : target_records)
             {
                 move_cursor_to(cursor, static_cast<long long>(recno));
-                if (cursor.recno == 0U || cursor.eof)
-                {
-                    continue;
-                }
-                if (!while_expression.empty() && !value_as_bool(evaluate_expression(while_expression, frame, &cursor)))
-                {
-                    break;
-                }
-                if (!cursor.filter_expression.empty() && !value_as_bool(evaluate_expression(cursor.filter_expression, frame, &cursor)))
-                {
-                    continue;
-                }
-                if (!value_as_bool(evaluate_expression(for_expression, frame, &cursor)))
-                {
-                    continue;
-                }
-
                 if (!replace_current_record_fields(cursor, assignments, frame, true))
                 {
                     return false;
                 }
-                ++replaced_count;
-            }
-
-            if (replaced_count == 0U)
-            {
-                move_cursor_to(cursor, static_cast<long long>(original_recno));
-                cursor.found = original_found;
-                cursor.bof = original_bof;
-                cursor.eof = original_eof;
             }
             return true;
         }

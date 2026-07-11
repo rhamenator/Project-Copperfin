@@ -1792,11 +1792,12 @@ DbfWriteResult append_blank_record_to_file(const std::string& path) {
     return result;
 }
 
-DbfWriteResult replace_record_field_value(
+static DbfWriteResult replace_record_field_value_impl(
     const std::string& path,
     std::size_t record_index,
     const std::string& field_name,
-    const std::string& value) {
+    const std::string& value,
+    bool additive) {
     std::ifstream input(path, std::ios::binary);
     if (!input) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
@@ -1835,12 +1836,48 @@ DbfWriteResult replace_record_field_value(
         original_memo_bytes = read_binary_file(memo_path);
         had_memo_file = !original_memo_bytes.empty();
         memo_bytes = original_memo_bytes;
-        result = write_memo_field_bytes(
-            bytes,
-            header_result.header.header_length + (record_index * header_result.header.record_length) + field->offset,
-            memo_bytes,
-            value,
-            header_result.header.record_count);
+        const std::size_t field_offset =
+            header_result.header.header_length +
+            (record_index * header_result.header.record_length) +
+            field->offset;
+        if (additive && field->type == 'M') {
+            if (field->length < 4U || field_offset + 4U > bytes.size()) {
+                return {
+                    .ok = false,
+                    .error = dbf_table_text("Vfp.DbfTable.Error.MemoFieldWidthTooSmall"),
+                    .record_count = header_result.header.record_count
+                };
+            }
+            const std::uint32_t block_number = read_le_u32(bytes, field_offset);
+            std::vector<std::uint8_t> appended_payload;
+            if (block_number != 0U) {
+                const MemoReader memo_reader(memo_path);
+                const auto payload = memo_reader.read_block_raw(block_number);
+                if (!payload.has_value()) {
+                    return {
+                        .ok = false,
+                        .error = dbf_table_text("Vfp.DbfTable.Error.ReadMemoPayloadFailed"),
+                        .record_count = header_result.header.record_count
+                    };
+                }
+                appended_payload = *payload;
+            }
+            appended_payload.insert(appended_payload.end(), value.begin(), value.end());
+            result = write_memo_field_bytes(
+                bytes,
+                field_offset,
+                memo_bytes,
+                appended_payload,
+                header_result.header.record_count,
+                block_number != 0U);
+        } else {
+            result = write_memo_field_bytes(
+                bytes,
+                field_offset,
+                memo_bytes,
+                value,
+                header_result.header.record_count);
+        }
     } else {
         result = write_field_bytes(bytes, header_result.header, record_index, *field, value);
     }
@@ -1863,6 +1900,22 @@ DbfWriteResult replace_record_field_value(
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteMemoSidecarFailed"), .record_count = header_result.header.record_count};
     }
     return result;
+}
+
+DbfWriteResult replace_record_field_value(
+    const std::string& path,
+    std::size_t record_index,
+    const std::string& field_name,
+    const std::string& value) {
+    return replace_record_field_value_impl(path, record_index, field_name, value, false);
+}
+
+DbfWriteResult replace_record_field_value_additive(
+    const std::string& path,
+    std::size_t record_index,
+    const std::string& field_name,
+    const std::string& value) {
+    return replace_record_field_value_impl(path, record_index, field_name, value, true);
 }
 
 DbfWriteResult set_record_deleted_flag(

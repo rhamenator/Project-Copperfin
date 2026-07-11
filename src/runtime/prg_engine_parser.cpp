@@ -1871,11 +1871,36 @@ Program parse_program_impl(
         } else if (starts_with_insensitive(line, "REPLACE ")) {
             statement.kind = StatementKind::replace_command;
             const std::string body = trim_copy(line.substr(8U));
-            const std::size_t tail_start = find_first_keyword_top_level(body, {"FOR", "WHILE", "IN"});
-            statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
-            statement.tertiary_expression = extract_command_clause(body, "FOR", {"WHILE", "IN"});
-            statement.quaternary_expression = extract_command_clause(body, "WHILE", {"IN"});
-            statement.secondary_expression = extract_command_clause(body, "IN");
+            const std::size_t tail_start =
+                find_first_keyword_top_level(body, {"FOR", "WHILE", "IN", "NOOPTIMIZE"});
+            const std::string assignments_and_scope =
+                tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
+            const AggregateScopeClause scope =
+                parse_aggregate_scope_clause(assignments_and_scope, statement.expression);
+            if (statement.expression != trim_copy(assignments_and_scope)) {
+                switch (scope.kind) {
+                case AggregateScopeKind::all_records:
+                    statement.identifier = "all";
+                    break;
+                case AggregateScopeKind::rest_records:
+                    statement.identifier = "rest";
+                    break;
+                case AggregateScopeKind::next_records:
+                    statement.identifier = "next";
+                    break;
+                case AggregateScopeKind::record:
+                    statement.identifier = "record";
+                    break;
+                }
+                if (!scope.raw_value.empty()) {
+                    statement.names.push_back(scope.raw_value);
+                }
+            }
+            statement.tertiary_expression =
+                extract_command_clause(body, "FOR", {"WHILE", "IN", "NOOPTIMIZE"});
+            statement.quaternary_expression =
+                extract_command_clause(body, "WHILE", {"IN", "NOOPTIMIZE"});
+            statement.secondary_expression = extract_command_clause(body, "IN", {"NOOPTIMIZE"});
         } else if (starts_with_insensitive(line, "UPDATE ")) {
             statement.kind = StatementKind::update_command;
             const std::string body = trim_copy(line.substr(7U));

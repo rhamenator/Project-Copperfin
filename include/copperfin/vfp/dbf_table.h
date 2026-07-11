@@ -66,6 +66,11 @@ DbfWriteResult replace_record_field_value(
     std::size_t record_index,
     const std::string& field_name,
     const std::string& value);
+DbfWriteResult replace_record_field_value_additive(
+    const std::string& path,
+    std::size_t record_index,
+    const std::string& field_name,
+    const std::string& value);
 DbfWriteResult set_record_deleted_flag(
     const std::string& path,
     std::size_t record_index,

@@ -15,6 +15,7 @@ namespace copperfin::runtime {
 struct ReplaceAssignment {
     std::string field_name;
     std::string expression;
+    bool additive = false;
 };
 
 struct CalculateAssignment {

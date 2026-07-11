@@ -7,11 +7,14 @@
 #include "prg_engine_test_support.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <system_error>
+#include <vector>
 
 namespace {
 
@@ -231,6 +234,218 @@ void test_replace_for_updates_all_matching_records() {
     expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
         return event.category == "runtime.replace" && event.detail.find("FOR AGE < 25") != std::string::npos;
     }), "REPLACE FOR should emit runtime.replace with the FOR filter context");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_replace_scope_clauses_bound_physical_record_ranges() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_replace_scopes";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(
+        table_path,
+        {{"ALPHA", 1}, {"BRAVO", 2}, {"CHARLIE", 3}, {"DELTA", 4}, {"ECHO", 5}});
+
+    const fs::path main_path = temp_root / "replace_scopes.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "GO 1\n"
+        "REPLACE NAME WITH 'CURRENT'\n"
+        "nNext = 2\n"
+        "GO 2\n"
+        "REPLACE AGE WITH AGE + 10 NEXT nNext IN People NOOPTIMIZE\n"
+        "GO 1 IN People\n"
+        "nNext1 = AGE\n"
+        "GO 2 IN People\n"
+        "nNext2 = AGE\n"
+        "GO 3 IN People\n"
+        "nNext3 = AGE\n"
+        "GO 4 IN People\n"
+        "nNext4 = AGE\n"
+        "GO 5 IN People\n"
+        "nNext5 = AGE\n"
+        "REPLACE AGE WITH RECNO() ALL IN People\n"
+        "GO 1 IN People\n"
+        "nAll1 = AGE\n"
+        "GO 2 IN People\n"
+        "nAll2 = AGE\n"
+        "GO 3 IN People\n"
+        "nAll3 = AGE\n"
+        "GO 4 IN People\n"
+        "nAll4 = AGE\n"
+        "GO 5 IN People\n"
+        "nAll5 = AGE\n"
+        "GO 3 IN People\n"
+        "REPLACE AGE WITH AGE + 20 REST FOR RECNO() <> 4 WHILE RECNO() <= 5 IN People\n"
+        "nTarget = 2\n"
+        "REPLACE AGE WITH 99 RECORD nTarget IN People\n"
+        "GO 4 IN People\n"
+        "DELETE IN People\n"
+        "SET DELETED ON\n"
+        "SET FILTER TO AGE >= 2 IN People\n"
+        "REPLACE NAME WITH 'VISIBLE' ALL IN People\n"
+        "REPLACE NAME WITH 'DELETED_RECORD' RECORD 4 IN People\n"
+        "REPLACE NAME WITH 'FILTERED_RECORD' RECORD 1 IN People\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#3927: REPLACE scope-clause script should complete");
+
+    const auto expect_global = [&](const std::string& name, const std::string& expected) {
+        const auto value = state.globals.find(name);
+        expect(value != state.globals.end(), "#3927: scope script should capture " + name);
+        if (value != state.globals.end()) {
+            expect(copperfin::runtime::format_value(value->second) == expected,
+                   "#3927: scope result mismatch for " + name);
+        }
+    };
+    const std::vector<std::string> expected_next{"1", "12", "13", "4", "5"};
+    const std::vector<std::string> expected_all{"1", "2", "3", "4", "5"};
+    for (std::size_t index = 0U; index < 5U; ++index) {
+        expect_global("nnext" + std::to_string(index + 1U), expected_next[index]);
+        expect_global("nall" + std::to_string(index + 1U), expected_all[index]);
+    }
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
+    expect(parse_result.ok && parse_result.table.records.size() == 5U,
+           "#3927: REPLACE scope-clause table should remain readable in record order");
+    if (parse_result.ok && parse_result.table.records.size() == 5U) {
+        const std::vector<std::string> expected_names{
+            "CURRENT", "VISIBLE", "VISIBLE", "DELETED_RE", "VISIBLE"
+        };
+        const std::vector<std::string> expected_ages{"1", "99", "23", "4", "25"};
+        for (std::size_t index = 0U; index < parse_result.table.records.size(); ++index) {
+            expect(parse_result.table.records[index].values[0U].display_value == expected_names[index],
+                   "#3927: REPLACE default/ALL/filter/deleted scope mismatch at record " +
+                       std::to_string(index + 1U) + ": expected '" + expected_names[index] +
+                       "' got '" + parse_result.table.records[index].values[0U].display_value + "'");
+            expect(parse_result.table.records[index].values[1U].display_value == expected_ages[index],
+                   "#3927: REPLACE NEXT/RECORD/REST range mismatch at record " +
+                       std::to_string(index + 1U));
+        }
+        expect(parse_result.table.records[3U].deleted,
+               "#3927: scoped REPLACE should preserve the deleted marker it filtered out");
+    }
+
+    const bool has_next_scope_event = std::any_of(
+        state.events.begin(), state.events.end(), [](const auto& event) {
+            return event.category == "runtime.replace" &&
+                   event.detail.find("NEXT nNext") != std::string::npos;
+        });
+    const bool has_rest_scope_event = std::any_of(
+        state.events.begin(), state.events.end(), [](const auto& event) {
+            return event.category == "runtime.replace" &&
+                   event.detail.find("REST FOR RECNO() <> 4 WHILE RECNO() <= 5") != std::string::npos;
+        });
+    expect(has_next_scope_event && has_rest_scope_event,
+           "#3927: runtime.replace events should retain invariant scope and predicate context");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_replace_additive_appends_only_memo_assignments() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_replace_additive";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "notes.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "NOTE", .type = 'M', .length = 4U}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        table_path.string(), fields, {{"FIRST", "A"}, {"SECOND", "B"}});
+    expect(create_result.ok, "#3927: REPLACE ADDITIVE memo fixture should be created");
+
+    const fs::path main_path = temp_root / "replace_additive.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS Notes IN 0\n"
+        "GO 1\n"
+        "REPLACE NOTE WITH '-one' ADDITIVE\n"
+        "GO 2\n"
+        "REPLACE NOTE WITH '-two' ADDITIVE, NAME WITH 'UPDATED'\n"
+        "GO TOP\n"
+        "REPLACE NOTE WITH '+' ADDITIVE ALL\n"
+        "REPLACE NOTE WITH '-undo' ADDITIVE ALL\n"
+        "UNDO\n"
+        "GO 1\n"
+        "REPLACE NAME WITH 'PLAIN' ADDITIVE\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#3927: REPLACE ADDITIVE script should complete");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 2U);
+    expect(parse_result.ok && parse_result.table.records.size() == 2U,
+           "#3927: REPLACE ADDITIVE table should remain readable");
+    if (parse_result.ok && parse_result.table.records.size() == 2U) {
+        expect(parse_result.table.records[0U].values[0U].display_value == "PLAIN" &&
+                   parse_result.table.records[1U].values[0U].display_value == "UPDATED",
+               "#3927: ADDITIVE should be ignored for non-memo assignments");
+        expect(parse_result.table.records[0U].values[1U].display_value == "A-one+" &&
+                   parse_result.table.records[1U].values[1U].display_value == "B-two+",
+               "#3927: per-assignment ADDITIVE should append memo values across scoped records");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_undo_restores_scoped_additive_replace_bytes() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_replace_additive_undo";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "notes.dbf";
+    const fs::path memo_path = temp_root / "notes.fpt";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "NOTE", .type = 'M', .length = 4U}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        table_path.string(), fields, {{"FIRST", "A"}, {"SECOND", "B"}});
+    expect(create_result.ok, "#3927: scoped additive undo fixture should be created");
+
+    const auto read_bytes = [](const fs::path& path) {
+        std::ifstream input(path, std::ios::binary);
+        return std::vector<std::uint8_t>{
+            std::istreambuf_iterator<char>(input),
+            std::istreambuf_iterator<char>()
+        };
+    };
+    const std::vector<std::uint8_t> original_table_bytes = read_bytes(table_path);
+    const std::vector<std::uint8_t> original_memo_bytes = read_bytes(memo_path);
+
+    const fs::path main_path = temp_root / "replace_additive_undo.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS Notes IN 0\n"
+        "REPLACE NOTE WITH '-pending' ADDITIVE ALL\n"
+        "UNDO\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#3927: scoped additive REPLACE undo script should complete");
+    expect(read_bytes(table_path) == original_table_bytes && read_bytes(memo_path) == original_memo_bytes,
+           "#3927: UNDO should restore exact DBF/FPT bytes after scoped additive REPLACE");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -2725,6 +2940,9 @@ int main() {
     test_local_table_mutation_and_scan_flow();
     test_delete_all_and_recall_all_affect_whole_local_table();
     test_replace_for_updates_all_matching_records();
+    test_replace_scope_clauses_bound_physical_record_ranges();
+    test_replace_additive_appends_only_memo_assignments();
+    test_undo_restores_scoped_additive_replace_bytes();
     test_multi_field_replace_uses_original_values_for_later_expressions();
     test_pack_compacts_deleted_local_records();
     test_pack_is_reverted_by_undo();

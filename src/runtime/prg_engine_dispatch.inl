@@ -2590,9 +2590,37 @@
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
                 }
+                std::optional<AggregateScopeClause> replace_scope;
+                if (!statement.identifier.empty())
+                {
+                    AggregateScopeClause parsed_scope;
+                    if (!statement.names.empty())
+                    {
+                        parsed_scope.raw_value = statement.names.front();
+                    }
+                    if (statement.identifier == "rest")
+                    {
+                        parsed_scope.kind = AggregateScopeKind::rest_records;
+                    }
+                    else if (statement.identifier == "next")
+                    {
+                        parsed_scope.kind = AggregateScopeKind::next_records;
+                    }
+                    else if (statement.identifier == "record")
+                    {
+                        parsed_scope.kind = AggregateScopeKind::record;
+                    }
+                    replace_scope = std::move(parsed_scope);
+                }
                 if (!execute_with_command_undo(cursor->source_path, "REPLACE", [&]
                     {
-                        return replace_records(*cursor, assignments, frame, statement.tertiary_expression, statement.quaternary_expression);
+                        return replace_records(
+                            *cursor,
+                            assignments,
+                            frame,
+                            replace_scope,
+                            statement.tertiary_expression,
+                            statement.quaternary_expression);
                     }))
                 {
                     last_fault_location = statement.location;
@@ -2601,6 +2629,14 @@
                 }
 
                 std::string replace_detail = statement.expression;
+                if (!statement.identifier.empty())
+                {
+                    replace_detail += " " + uppercase_copy(statement.identifier);
+                    if (!statement.names.empty())
+                    {
+                        replace_detail += " " + statement.names.front();
+                    }
+                }
                 if (!trim_copy(statement.tertiary_expression).empty())
                 {
                     replace_detail += " FOR " + statement.tertiary_expression;
@@ -2642,7 +2678,13 @@
                                                        : statement.tertiary_expression;
                 if (!execute_with_command_undo(cursor->source_path, "UPDATE", [&]
                     {
-                        return replace_records(*cursor, assignments, frame, for_expression, statement.quaternary_expression);
+                        return replace_records(
+                            *cursor,
+                            assignments,
+                            frame,
+                            AggregateScopeClause{},
+                            for_expression,
+                            statement.quaternary_expression);
                     }))
                 {
                     last_fault_location = statement.location;

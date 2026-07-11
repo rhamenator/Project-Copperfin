@@ -229,7 +229,8 @@
             const Frame &frame,
             const AggregateScopeClause &scope,
             const std::string &for_expression,
-            const std::string &while_expression)
+            const std::string &while_expression,
+            bool honor_set_deleted = true)
         {
             std::vector<std::size_t> records;
             if (cursor.record_count == 0U)
@@ -286,7 +287,11 @@
                 {
                     break;
                 }
-                if (current_record_matches_visibility(cursor, frame, for_expression))
+                if (current_record_matches_visibility(
+                        cursor,
+                        frame,
+                        for_expression,
+                        honor_set_deleted))
                 {
                     records.push_back(recno);
                 }
