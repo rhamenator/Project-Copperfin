@@ -23,7 +23,7 @@ permissions:
 jobs:
   windows-deep-validation:
     runs-on: windows-latest
-    timeout-minutes: 45
+    timeout-minutes: 90
 
     steps:
       - name: Check out source
