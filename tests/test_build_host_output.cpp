@@ -2915,7 +2915,7 @@ void run_app_build_host_smoke(const std::string& build_host_path) {
         const std::string manifest_text = read_text(manifest_path);
         expect(manifest_text.find("primary_output_materialized=") == std::string::npos,
                "build host runtime manifest should omit the materialized APP primary output state");
-        expect(manifest_text.find("extension_payload=" + expected_output.string() + "|") != std::string::npos,
+        expect(manifest_text.find("extension_payload=" + quote_manifest_value(expected_output.string()) + "|") != std::string::npos,
                "build host manifest should record the APP archive as an extension payload");
     }
 
@@ -2993,7 +2993,7 @@ void run_fxp_build_host_smoke(const std::string& build_host_path) {
         const std::string manifest_text = read_text(manifest_path);
         expect(manifest_text.find("primary_output_materialized=") == std::string::npos,
                "build host runtime manifest should omit the materialized FXP primary output state");
-        expect(manifest_text.find("extension_payload=" + expected_output.string() + "|") != std::string::npos,
+        expect(manifest_text.find("extension_payload=" + quote_manifest_value(expected_output.string()) + "|") != std::string::npos,
                "build host manifest should record the FXP contract as an extension payload");
     }
 
