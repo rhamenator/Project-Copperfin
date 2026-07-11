@@ -101,6 +101,70 @@ bool looks_like_array_declaration_body(const std::string& body) {
     return false;
 }
 
+std::pair<std::string, std::string> split_declare_library_expression(const std::string& text) {
+    const std::string trimmed = trim_copy(text);
+    if (trimmed.empty()) {
+        return {};
+    }
+
+    std::size_t end = 0U;
+    if (trimmed.front() == '\'' || trimmed.front() == '"') {
+        const char delimiter = trimmed.front();
+        end = 1U;
+        while (end < trimmed.size()) {
+            if (trimmed[end] == delimiter) {
+                if ((end + 1U) < trimmed.size() && trimmed[end + 1U] == delimiter) {
+                    end += 2U;
+                    continue;
+                }
+                ++end;
+                break;
+            }
+            ++end;
+        }
+    } else if (trimmed.front() == '[') {
+        const std::size_t close = trimmed.find(']', 1U);
+        end = close == std::string::npos ? trimmed.size() : close + 1U;
+    } else if (trimmed.front() == '(') {
+        char quote_delimiter = '\0';
+        std::size_t depth = 0U;
+        for (; end < trimmed.size(); ++end) {
+            const char ch = trimmed[end];
+            if (quote_delimiter != '\0') {
+                if (ch == quote_delimiter) {
+                    if ((end + 1U) < trimmed.size() && trimmed[end + 1U] == quote_delimiter) {
+                        ++end;
+                    } else {
+                        quote_delimiter = '\0';
+                    }
+                }
+                continue;
+            }
+            if (ch == '\'' || ch == '"') {
+                quote_delimiter = ch;
+            } else if (ch == '(') {
+                ++depth;
+            } else if (ch == ')' && depth > 0U) {
+                --depth;
+                if (depth == 0U) {
+                    ++end;
+                    break;
+                }
+            }
+        }
+    } else {
+        while (end < trimmed.size() &&
+               std::isspace(static_cast<unsigned char>(trimmed[end])) == 0) {
+            ++end;
+        }
+    }
+
+    return {
+        trim_copy(trimmed.substr(0U, end)),
+        trim_copy(trimmed.substr(end))
+    };
+}
+
 std::string extract_scatter_name_target_clause(const std::string& body) {
     std::size_t search_index = 0U;
     while (search_index < body.size()) {
@@ -1229,12 +1293,22 @@ void parse_default_statement(const std::string& line, Statement& statement) {
             } else {
                 statement.identifier = lhs;
             }
-            const std::size_t as_pos = find_keyword_top_level(rhs, "AS");
-            if (as_pos != std::string::npos) {
-                statement.expression = trim_copy(rhs.substr(0U, as_pos));
-                statement.quaternary_expression = trim_copy(rhs.substr(as_pos + 2U));
-            } else {
-                statement.expression = rhs;
+            auto [library_expression, declaration_tail] = split_declare_library_expression(rhs);
+            statement.expression = std::move(library_expression);
+            if (declaration_tail.size() > 2U &&
+                starts_with_insensitive(declaration_tail, "AS") &&
+                std::isspace(static_cast<unsigned char>(declaration_tail[2U])) != 0) {
+                const std::string alias_and_tail = trim_copy(declaration_tail.substr(2U));
+                std::size_t alias_end = 0U;
+                while (alias_end < alias_and_tail.size() &&
+                       std::isspace(static_cast<unsigned char>(alias_and_tail[alias_end])) == 0) {
+                    ++alias_end;
+                }
+                statement.quaternary_expression = alias_and_tail.substr(0U, alias_end);
+                declaration_tail = trim_copy(alias_and_tail.substr(alias_end));
+            }
+            if (statement.tertiary_expression.empty()) {
+                statement.tertiary_expression = trim_copy(declaration_tail);
             }
         } else {
             statement.kind = StatementKind::no_op;

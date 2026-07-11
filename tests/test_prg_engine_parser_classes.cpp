@@ -494,6 +494,53 @@ void test_parse_conditional_preprocessor_branches_and_header_guards() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_parse_declare_dll_preserves_vfp_parameter_contract() {
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_parser_declare_dll";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path program_path = temp_root / "declare_dll.prg";
+    copperfin::test_support::write_text(
+        program_path,
+        "DECLARE DOUBLE Pow IN 'native math.dll' AS\tPowAlias DOUBLE base, DOUBLE exponent\n"
+        "DECLARE INTEGER Legacy(STRING @, STRING) IN 'kernel32.dll' AS CopyText\n"
+        "DECLARE LONG SomeCall IN WIN32API LONG @ value\n"
+        "RETURN\n");
+
+    const copperfin::runtime::Program program = copperfin::runtime::parse_program(program_path.string());
+    copperfin::test_support::expect(program.main.statements.size() == 4U,
+                                    "#3895: DECLARE parser fixture should preserve all statements");
+    if (program.main.statements.size() >= 3U) {
+        const auto& documented = program.main.statements[0];
+        copperfin::test_support::expect(documented.kind == copperfin::runtime::StatementKind::declare_dll,
+                                        "#3895: documented DECLARE syntax should retain statement kind");
+        copperfin::test_support::expect(documented.identifier == "Pow",
+                                        "#3895: documented DECLARE syntax should retain function name");
+        copperfin::test_support::expect(documented.expression == "'native math.dll'",
+                                        "#3895: quoted DECLARE library paths should stop before AS and parameter clauses");
+        copperfin::test_support::expect(documented.secondary_expression == "DOUBLE",
+                                        "#3895: documented DECLARE syntax should retain return type");
+        copperfin::test_support::expect(documented.tertiary_expression == "DOUBLE base, DOUBLE exponent",
+                                        "#3895: documented post-IN parameter declarations should retain names and order");
+        copperfin::test_support::expect(documented.quaternary_expression == "PowAlias",
+                                        "#3895: documented DECLARE AS aliases should stop before parameter declarations");
+
+        const auto& legacy = program.main.statements[1];
+        copperfin::test_support::expect(legacy.expression == "'kernel32.dll'" &&
+                                            legacy.tertiary_expression == "STRING @, STRING" &&
+                                            legacy.quaternary_expression == "CopyText",
+                                        "#3895: existing parenthesized DECLARE syntax should remain stable");
+
+        const auto& bare_library = program.main.statements[2];
+        copperfin::test_support::expect(bare_library.expression == "WIN32API" &&
+                                            bare_library.tertiary_expression == "LONG @ value",
+                                        "#3895: bare DECLARE libraries should retain named by-reference parameter clauses");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -506,6 +553,7 @@ int main() {
     test_parse_declarative_child_external_prg_sources();
     test_parse_include_and_define_constants_expand_before_class_body_parsing();
     test_parse_conditional_preprocessor_branches_and_header_guards();
+    test_parse_declare_dll_preserves_vfp_parameter_contract();
 
     if (copperfin::test_support::test_failures() != 0) {
         std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";

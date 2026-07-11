@@ -122,13 +122,20 @@
                     token = trim_copy(token.substr(0U, token.size() - 1U));
                 }
 
-                const std::size_t marker = token.find('(');
-                if (marker != std::string::npos)
+                std::size_t type_end = 0U;
+                while (type_end < token.size() &&
+                       std::isspace(static_cast<unsigned char>(token[type_end])) == 0 &&
+                       token[type_end] != '@' &&
+                       token[type_end] != '(')
                 {
-                    token = trim_copy(token.substr(0U, marker));
+                    ++type_end;
                 }
 
-                return DeclaredDllParamType{normalize_identifier(token), by_ref};
+                const std::string type = token.substr(0U, type_end);
+                const std::string suffix = trim_copy(token.substr(type_end));
+                by_ref = by_ref || suffix.find('@') != std::string::npos;
+
+                return DeclaredDllParamType{normalize_identifier(type), by_ref};
             };
 
             std::vector<decltype(parse_declared_param_type(std::string{}))> declared_param_types;
