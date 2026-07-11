@@ -2510,13 +2510,13 @@ void test_declared_dll_double_arguments_follow_x64_abi() {
         "DECLARE DOUBLE CopperfinDeclaredDllMultiply IN 'native/" + fixture_name.string() + "' DOUBLE, DOUBLE\n"
         "DECLARE DOUBLE CopperfinDeclaredDllScale IN 'native/" + fixture_name.string() + "' DOUBLE, INTEGER\n"
         "DECLARE DOUBLE CopperfinDeclaredDllSplit IN 'native/" + fixture_name.string() + "' DOUBLE, DOUBLE @\n"
-        "DECLARE INTEGER InterlockedDecrement(INTEGER @) IN 'kernel32.dll'\n"
+        "DECLARE INTEGER CopperfinDeclaredDllDecrement(INTEGER @) IN 'native/" + fixture_name.string() + "'\n"
         "nWhole = 0\n"
         "nCounter = 0\n"
         "nProduct = CopperfinDeclaredDllMultiply(2.5, 4.0)\n"
         "nScaled = CopperfinDeclaredDllScale(1.5, 8)\n"
         "nFraction = CopperfinDeclaredDllSplit(3.75, @nWhole)\n"
-        "nDecremented = InterlockedDecrement(@nCounter)\n"
+        "nDecremented = CopperfinDeclaredDllDecrement(@nCounter)\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(

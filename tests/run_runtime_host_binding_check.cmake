@@ -25,12 +25,12 @@ function(create_directory_indirection target_path link_path result_variable)
         cmake_path(NATIVE_PATH target_path NORMALIZE native_target_path)
         cmake_path(NATIVE_PATH link_path NORMALIZE native_link_path)
         set(indirection_command
-            "mklink /J \"%COPPERFIN_TEST_LINK_PATH%\" \"%COPPERFIN_TEST_TARGET_PATH%\"")
+            "$ErrorActionPreference = 'Stop'; [void](New-Item -ItemType Junction -Path $env:COPPERFIN_TEST_LINK_PATH -Target $env:COPPERFIN_TEST_TARGET_PATH)")
         execute_process(
             COMMAND ${CMAKE_COMMAND} -E env
                 "COPPERFIN_TEST_LINK_PATH=${native_link_path}"
                 "COPPERFIN_TEST_TARGET_PATH=${native_target_path}"
-                cmd.exe /d /v:off /s /c "${indirection_command}"
+                powershell.exe -NoLogo -NoProfile -NonInteractive -Command "${indirection_command}"
             RESULT_VARIABLE indirection_result
             OUTPUT_VARIABLE indirection_output
             ERROR_VARIABLE indirection_error
@@ -57,11 +57,12 @@ endfunction()
 function(remove_directory_indirection link_path)
     if(WIN32)
         cmake_path(NATIVE_PATH link_path NORMALIZE native_link_path)
-        set(removal_command "rmdir \"%COPPERFIN_TEST_LINK_PATH%\"")
+        set(removal_command
+            "$ErrorActionPreference = 'Stop'; [System.IO.Directory]::Delete($env:COPPERFIN_TEST_LINK_PATH, $false)")
         execute_process(
             COMMAND ${CMAKE_COMMAND} -E env
                 "COPPERFIN_TEST_LINK_PATH=${native_link_path}"
-                cmd.exe /d /v:off /s /c "${removal_command}"
+                powershell.exe -NoLogo -NoProfile -NonInteractive -Command "${removal_command}"
             RESULT_VARIABLE removal_result
             OUTPUT_VARIABLE removal_output
             ERROR_VARIABLE removal_error

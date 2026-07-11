@@ -27,3 +27,11 @@ COPPERFIN_TEST_EXPORT double CopperfinDeclaredDllSplit(double value, double* who
     }
     return value - static_cast<double>(integral);
 }
+
+COPPERFIN_TEST_EXPORT int CopperfinDeclaredDllDecrement(int* value) {
+    if (value == nullptr) {
+        return 0;
+    }
+    --(*value);
+    return *value;
+}
