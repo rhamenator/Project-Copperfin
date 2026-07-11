@@ -345,6 +345,10 @@ std::string pseudo_localize_segment(std::string_view segment) {
 
 std::string normalize_locale(std::string_view locale) {
     std::string value = trim_copy(locale);
+    const std::size_t posix_suffix = value.find_first_of(".@");
+    if (posix_suffix != std::string::npos) {
+        value = trim_copy(value.substr(0U, posix_suffix));
+    }
     std::replace(value.begin(), value.end(), '_', '-');
     if (value.empty()) {
         return std::string(default_locale);

@@ -128,6 +128,34 @@ void test_catalog_loading_and_fallback() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_posix_locale_suffixes_normalize_before_catalog_fallback() {
+    expect(
+        copperfin::localization::normalize_locale("pt-BR.UTF-8") == "pt-BR",
+        "#3915: POSIX codeset suffix should not become part of the regional locale identifier");
+    expect(
+        copperfin::localization::normalize_locale("pt_BR@latin") == "pt-BR",
+        "#3915: POSIX modifier suffix should be stripped before underscore normalization");
+    expect(
+        copperfin::localization::normalize_locale(" pt_BR.UTF-8@latin ") == "pt-BR",
+        "#3915: combined POSIX codeset/modifier suffixes should normalize deterministically");
+    expect(
+        copperfin::localization::normalize_locale(".UTF-8") == "en-US" &&
+            copperfin::localization::normalize_locale("@latin") == "en-US",
+        "#3915: suffix-only malformed locale values should fall back to the default locale");
+
+    const auto portuguese_chain = copperfin::localization::locale_fallback_chain("pt_BR.UTF-8@latin");
+    expect(
+        portuguese_chain.size() >= 3U && portuguese_chain[0] == "pt-BR" &&
+            portuguese_chain[1] == "pt" && portuguese_chain.back() == "en-US",
+        "#3915: normalized regional locale should preserve the existing language/default fallback order");
+    const auto spanish_chain = copperfin::localization::locale_fallback_chain("es_MX.UTF-8");
+    expect(
+        spanish_chain.size() >= 4U && spanish_chain[0] == "es-MX" &&
+            spanish_chain[1] == "es-419" && spanish_chain[2] == "es" &&
+            spanish_chain.back() == "en-US",
+        "#3915: POSIX suffix removal should preserve the Spanish regional fallback contract");
+}
+
 void test_placeholders_pseudo_locale_and_unicode() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_format_tests";
@@ -3049,6 +3077,48 @@ void test_inspect_usage_routes_through_localization(const std::string& inspect_p
     fs::remove_all(temp_root, ignored);
 }
 
+void test_inspect_accepts_posix_locale_suffixes(const std::string& inspect_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_posix_suffix_cli_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    seed_test_catalogs(temp_root);
+    write_catalog(
+        temp_root,
+        "pt-BR",
+        "{\n"
+        "  \"Inspect.Usage\": \"Uso-sufixo: {commandName} [{localeOption} {localeValue}] {assetPathArgument}\"\n"
+        "}\n");
+
+    ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR");
+    set_env_value("COPPERFIN_LOCALE_DIR", temp_root.string(), true);
+
+    set_env_value("COPPERFIN_LOCALE", "", false);
+    const std::string explicit_output = run_command_capture(
+        shell_quote(inspect_path) + " --locale pt-BR.UTF-8 2>&1");
+    expect(
+        explicit_output.find("Uso-sufixo:") != std::string::npos &&
+            explicit_output.find("--locale") != std::string::npos,
+        "#3915: explicit dotted POSIX locale should select the regional catalog without changing CLI tokens");
+
+    for (const std::string& selected_locale : {
+             std::string("pt-BR.UTF-8"),
+             std::string("pt_BR@latin"),
+             std::string("pt_BR.UTF-8@latin")}) {
+        set_env_value("COPPERFIN_LOCALE", selected_locale, true);
+        const std::string environment_output = run_command_capture(shell_quote(inspect_path) + " 2>&1");
+        expect(
+            environment_output.find("Uso-sufixo:") != std::string::npos &&
+                environment_output.find("--locale") != std::string::npos,
+            "#3915: COPPERFIN_LOCALE POSIX form '" + selected_locale +
+                "' should select the regional catalog without changing CLI tokens");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_inspect_license_status_preserves_machine_contracts(const std::string& inspect_path) {
     ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
     ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR");
@@ -3072,6 +3142,7 @@ void test_inspect_license_status_preserves_machine_contracts(const std::string& 
 
     expect_license_status_contract("es-419", "#3816");
     expect_license_status_contract("qps-ploc", "#3816");
+    expect_license_status_contract("pt_BR.UTF-8@latin", "#3915");
 }
 
 void test_runtime_package_warnings_pseudo_localize() {
@@ -3181,6 +3252,7 @@ void test_inspect_error_prefix_routes_through_localization(const std::string& in
 
 int main(int argc, char** argv) {
     test_catalog_loading_and_fallback();
+    test_posix_locale_suffixes_normalize_before_catalog_fallback();
     test_placeholders_pseudo_locale_and_unicode();
     test_catalog_json_unicode_escapes_support_surrogate_pairs();
     test_machine_contract_fields_remain_invariant();
@@ -3229,6 +3301,7 @@ int main(int argc, char** argv) {
     test_runtime_package_warnings_pseudo_localize();
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);
+        test_inspect_accepts_posix_locale_suffixes(argv[1]);
         test_inspect_license_status_preserves_machine_contracts(argv[1]);
         test_inspect_error_prefix_routes_through_localization(argv[1]);
     } else {
