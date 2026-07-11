@@ -18,15 +18,19 @@ endif()
 string(REGEX REPLACE "[/\\\\]+$" "" temp_root "${temp_root}")
 
 string(TIMESTAMP timestamp "%Y%m%d%H%M%S" UTC)
-set(test_root "${temp_root}/copperfin_runtime_host_binding_${timestamp}")
+set(test_root "${temp_root}/copperfin runtime host binding % bang!_${timestamp}")
 
 function(create_directory_indirection target_path link_path result_variable)
     if(WIN32)
-        file(TO_NATIVE_PATH "${target_path}" native_target_path)
-        file(TO_NATIVE_PATH "${link_path}" native_link_path)
-        set(indirection_command "mklink /J \"${native_link_path}\" \"${native_target_path}\"")
+        cmake_path(NATIVE_PATH target_path NORMALIZE native_target_path)
+        cmake_path(NATIVE_PATH link_path NORMALIZE native_link_path)
+        set(indirection_command
+            "mklink /J \"%COPPERFIN_TEST_LINK_PATH%\" \"%COPPERFIN_TEST_TARGET_PATH%\"")
         execute_process(
-            COMMAND cmd.exe /d /s /c "${indirection_command}"
+            COMMAND ${CMAKE_COMMAND} -E env
+                "COPPERFIN_TEST_LINK_PATH=${native_link_path}"
+                "COPPERFIN_TEST_TARGET_PATH=${native_target_path}"
+                cmd.exe /d /v:off /s /c "${indirection_command}"
             RESULT_VARIABLE indirection_result
             OUTPUT_VARIABLE indirection_output
             ERROR_VARIABLE indirection_error
@@ -52,17 +56,19 @@ endfunction()
 
 function(remove_directory_indirection link_path)
     if(WIN32)
-        file(TO_NATIVE_PATH "${link_path}" native_link_path)
-        set(removal_command "rmdir \"${native_link_path}\"")
+        cmake_path(NATIVE_PATH link_path NORMALIZE native_link_path)
+        set(removal_command "rmdir \"%COPPERFIN_TEST_LINK_PATH%\"")
         execute_process(
-            COMMAND cmd.exe /d /s /c "${removal_command}"
+            COMMAND ${CMAKE_COMMAND} -E env
+                "COPPERFIN_TEST_LINK_PATH=${native_link_path}"
+                cmd.exe /d /v:off /s /c "${removal_command}"
             RESULT_VARIABLE removal_result
             OUTPUT_VARIABLE removal_output
             ERROR_VARIABLE removal_error
         )
     else()
         execute_process(
-            COMMAND ${CMAKE_COMMAND} -E remove "${link_path}"
+            COMMAND ${CMAKE_COMMAND} -E rm -- "${link_path}"
             RESULT_VARIABLE removal_result
             OUTPUT_VARIABLE removal_output
             ERROR_VARIABLE removal_error
@@ -172,16 +178,23 @@ if(run_output MATCHES "BUILDER_STARTUP_EXECUTED")
 endif()
 
 file(REAL_PATH "${content_root}" canonical_content_root)
-file(TO_NATIVE_PATH "${canonical_content_root}" expected_content_root)
+cmake_path(NATIVE_PATH canonical_content_root NORMALIZE expected_content_root)
 string(FIND "${run_output}" "${expected_content_root}" content_root_position)
 if(content_root_position EQUAL -1)
-    message(FATAL_ERROR "Runtime host binding smoke did not report the rebound package content root.\nstdout:\n${run_output}")
+    message(FATAL_ERROR
+        "Runtime host binding smoke did not report the rebound package content root.\n"
+        "expected: ${expected_content_root}\n"
+        "stdout:\n${run_output}")
 endif()
 
-file(TO_NATIVE_PATH "${deployed_root}/security_audit.log" expected_audit_log_path)
+set(expected_audit_log_path "${deployed_root}/security_audit.log")
+cmake_path(NATIVE_PATH expected_audit_log_path NORMALIZE expected_audit_log_path)
 string(FIND "${run_output}" "${expected_audit_log_path}" audit_log_path_position)
 if(audit_log_path_position EQUAL -1)
-    message(FATAL_ERROR "Runtime host binding smoke did not report the rebound package-local audit log path.\nstdout:\n${run_output}")
+    message(FATAL_ERROR
+        "Runtime host binding smoke did not report the rebound package-local audit log path.\n"
+        "expected: ${expected_audit_log_path}\n"
+        "stdout:\n${run_output}")
 endif()
 
 if(NOT EXISTS "${deployed_root}/security_audit.log")
@@ -223,7 +236,7 @@ if(NOT separator_run_output MATCHES "runtime\\.completed: true")
     message(FATAL_ERROR "Runtime host Windows-separator binding smoke did not complete.\nstdout:\n${separator_run_output}")
 endif()
 file(REAL_PATH "${separator_content_root}/main.prg" separator_canonical_startup)
-file(TO_NATIVE_PATH "${separator_canonical_startup}" separator_expected_startup)
+cmake_path(NATIVE_PATH separator_canonical_startup NORMALIZE separator_expected_startup)
 string(FIND "${separator_run_output}" "${separator_expected_startup}" separator_startup_position)
 if(separator_startup_position EQUAL -1)
     message(FATAL_ERROR "Runtime host did not rebind a serialized Windows startup path into the deployed package.\nstdout:\n${separator_run_output}")
@@ -842,7 +855,8 @@ execute_process(
     OUTPUT_VARIABLE debug_source_output
     ERROR_VARIABLE debug_source_error
 )
-file(TO_NATIVE_PATH "${test_root}/debug-source.prg" expected_debug_source)
+set(expected_debug_source "${test_root}/debug-source.prg")
+cmake_path(NATIVE_PATH expected_debug_source NORMALIZE expected_debug_source)
 string(FIND "${debug_source_output}" "startup.source: ${expected_debug_source}" debug_source_path_position)
 if(NOT debug_source_result EQUAL 0 OR
    debug_source_path_position EQUAL -1 OR
