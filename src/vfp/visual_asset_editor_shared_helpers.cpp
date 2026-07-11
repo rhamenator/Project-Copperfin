@@ -4,7 +4,138 @@
 
 #include "visual_asset_editor_support.h"
 
+#include "copperfin/platform/environment.h"
+
 namespace copperfin::vfp {
+namespace {
+
+struct VisualAssetTransactionFile {
+    std::filesystem::path target;
+    std::filesystem::path staged;
+    std::filesystem::path backup;
+    const std::vector<std::uint8_t>* bytes = nullptr;
+};
+
+VisualAssetTransactionFile transaction_file(
+    const std::string& path,
+    const std::vector<std::uint8_t>* bytes = nullptr) {
+    const std::filesystem::path target(path);
+    return {
+        .target = target,
+        .staged = target.string() + ".cptmp",
+        .backup = target.string() + ".cpbak",
+        .bytes = bytes
+    };
+}
+
+bool transaction_failure_requested(
+    const std::string& table_path,
+    const std::string& memo_path,
+    std::string_view stage) {
+    const auto marker =
+        copperfin::platform::read_environment_variable("COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS");
+    const auto requested_stage =
+        copperfin::platform::read_environment_variable("COPPERFIN_TEST_FAIL_WRITE_STAGE");
+    return marker.has_value() && requested_stage.has_value() &&
+           !marker->empty() && *requested_stage == stage &&
+           (table_path.find(*marker) != std::string::npos ||
+            memo_path.find(*marker) != std::string::npos);
+}
+
+bool remove_transaction_path(const std::filesystem::path& path) {
+    std::error_code error;
+    if (!std::filesystem::exists(path, error)) {
+        return !error;
+    }
+    return std::filesystem::remove(path, error) && !error;
+}
+
+bool rename_transaction_path(
+    const std::filesystem::path& source,
+    const std::filesystem::path& destination) {
+    std::error_code error;
+    std::filesystem::rename(source, destination, error);
+    return !error;
+}
+
+bool stage_transaction_file(const VisualAssetTransactionFile& file) {
+    std::ofstream output(file.staged, std::ios::binary | std::ios::trunc);
+    if (!output || file.bytes == nullptr) {
+        return false;
+    }
+    output.write(
+        reinterpret_cast<const char*>(file.bytes->data()),
+        static_cast<std::streamsize>(file.bytes->size()));
+    output.flush();
+    if (!output) {
+        output.close();
+        remove_transaction_path(file.staged);
+        return false;
+    }
+    output.close();
+    if (!output) {
+        remove_transaction_path(file.staged);
+        return false;
+    }
+    return true;
+}
+
+bool restore_transaction_file(const VisualAssetTransactionFile& file) {
+    std::error_code error;
+    if (std::filesystem::exists(file.backup, error)) {
+        if (error) {
+            return false;
+        }
+        if (std::filesystem::exists(file.target, error) &&
+            (!remove_transaction_path(file.target) || error)) {
+            return false;
+        }
+        if (!rename_transaction_path(file.backup, file.target)) {
+            return false;
+        }
+    }
+    return remove_transaction_path(file.staged);
+}
+
+bool rollback_visual_asset_transaction(
+    const VisualAssetTransactionFile& table,
+    const VisualAssetTransactionFile& memo,
+    const std::filesystem::path& commit_marker,
+    bool inject_failure) {
+    const bool memo_restored = restore_transaction_file(memo);
+    const bool table_restored = restore_transaction_file(table);
+    const bool marker_removed = remove_transaction_path(commit_marker);
+    return memo_restored && table_restored && marker_removed && !inject_failure;
+}
+
+std::string transaction_rollback_error() {
+    return visual_asset_text("VisualAssetEditor.Storage.TableWriteFailed") + " " +
+           visual_asset_text("VisualAssetEditor.Storage.MemoSidecarWriteFailed");
+}
+
+VisualAssetEditResult transaction_failure(
+    std::string error,
+    const VisualAssetTransactionFile& table,
+    const VisualAssetTransactionFile& memo,
+    const std::filesystem::path& commit_marker,
+    bool inject_rollback_failure = false) {
+    if (!rollback_visual_asset_transaction(
+            table,
+            memo,
+            commit_marker,
+            inject_rollback_failure)) {
+        return {
+            .ok = false,
+            .error = visual_asset_rollback_failed_text(
+                std::move(error),
+                transaction_rollback_error())
+        };
+    }
+    return {.ok = false, .error = std::move(error)};
+}
+
+}  // namespace
+
 const copperfin::localization::LocalizedCatalog& visual_asset_editor_catalog() {
     static const copperfin::localization::LocalizedCatalog catalog =
         copperfin::localization::load_catalogs(
@@ -123,6 +254,152 @@ bool write_binary_file(const std::string& path, const std::vector<std::uint8_t>&
 
     output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
     return static_cast<bool>(output);
+}
+
+VisualAssetEditResult recover_visual_asset_file_transaction(
+    const std::string& table_path,
+    const std::string& memo_path) {
+    const auto table = transaction_file(table_path);
+    const auto memo = transaction_file(memo_path);
+    const std::filesystem::path commit_marker = table.target.string() + ".cpcommit";
+
+    if (transaction_failure_requested(table_path, memo_path, "stale-cleanup")) {
+        return {
+            .ok = false,
+            .error = visual_asset_rollback_failed_text(
+                visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed"),
+                transaction_rollback_error())
+        };
+    }
+
+    const std::vector<std::uint8_t> marker_bytes = read_binary_file(commit_marker.string());
+    const std::string marker_text(marker_bytes.begin(), marker_bytes.end());
+    const bool commit_completed = marker_text == "committed\n";
+
+    if (commit_completed) {
+        std::error_code error;
+        const bool targets_exist =
+            std::filesystem::is_regular_file(table.target, error) && !error &&
+            std::filesystem::is_regular_file(memo.target, error) && !error;
+        if (targets_exist) {
+            const bool table_stage_cleaned = remove_transaction_path(table.staged);
+            const bool memo_stage_cleaned = remove_transaction_path(memo.staged);
+            const bool table_backup_cleaned = remove_transaction_path(table.backup);
+            const bool memo_backup_cleaned = remove_transaction_path(memo.backup);
+            const bool marker_cleaned =
+                table_stage_cleaned && memo_stage_cleaned &&
+                table_backup_cleaned && memo_backup_cleaned &&
+                remove_transaction_path(commit_marker);
+            const bool cleaned =
+                table_stage_cleaned && memo_stage_cleaned &&
+                table_backup_cleaned && memo_backup_cleaned && marker_cleaned;
+            if (cleaned) {
+                return {.ok = true, .error = {}};
+            }
+            return {
+                .ok = false,
+                .error = visual_asset_rollback_failed_text(
+                    visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed"),
+                    transaction_rollback_error())
+            };
+        }
+    }
+
+    if (!rollback_visual_asset_transaction(table, memo, commit_marker, false)) {
+        return {
+            .ok = false,
+            .error = visual_asset_rollback_failed_text(
+                visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed"),
+                transaction_rollback_error())
+        };
+    }
+    return {.ok = true, .error = {}};
+}
+
+VisualAssetEditResult write_visual_asset_file_transaction(
+    const std::string& table_path,
+    const std::vector<std::uint8_t>& table_bytes,
+    const std::string& memo_path,
+    const std::vector<std::uint8_t>& memo_bytes) {
+    const auto table = transaction_file(table_path, &table_bytes);
+    const auto memo = transaction_file(memo_path, &memo_bytes);
+    const std::filesystem::path commit_marker = table.target.string() + ".cpcommit";
+
+    if (transaction_failure_requested(table_path, memo_path, "sidecar-stage") ||
+        !stage_transaction_file(memo)) {
+        return transaction_failure(
+            visual_asset_text("VisualAssetEditor.Storage.MemoSidecarWriteFailed"),
+            table,
+            memo,
+            commit_marker);
+    }
+    if (transaction_failure_requested(table_path, memo_path, "primary-stage") ||
+        !stage_transaction_file(table)) {
+        return transaction_failure(
+            visual_asset_text("VisualAssetEditor.Storage.TableWriteFailed"),
+            table,
+            memo,
+            commit_marker);
+    }
+
+    if (!rename_transaction_path(table.target, table.backup)) {
+        return transaction_failure(
+            visual_asset_text("VisualAssetEditor.Storage.TableWriteFailed"),
+            table,
+            memo,
+            commit_marker);
+    }
+    if (!rename_transaction_path(memo.target, memo.backup)) {
+        return transaction_failure(
+            visual_asset_text("VisualAssetEditor.Storage.MemoSidecarWriteFailed"),
+            table,
+            memo,
+            commit_marker);
+    }
+
+    if (transaction_failure_requested(table_path, memo_path, "first-commit") ||
+        !rename_transaction_path(table.staged, table.target)) {
+        return transaction_failure(
+            visual_asset_text("VisualAssetEditor.Storage.TableWriteFailed"),
+            table,
+            memo,
+            commit_marker);
+    }
+
+    const bool inject_rollback_failure =
+        transaction_failure_requested(table_path, memo_path, "rollback");
+    if (transaction_failure_requested(table_path, memo_path, "second-commit") ||
+        inject_rollback_failure ||
+        !rename_transaction_path(memo.staged, memo.target)) {
+        return transaction_failure(
+            visual_asset_text("VisualAssetEditor.Storage.MemoSidecarWriteFailed"),
+            table,
+            memo,
+            commit_marker,
+            inject_rollback_failure);
+    }
+
+    {
+        std::ofstream marker(commit_marker, std::ios::binary | std::ios::trunc);
+        marker << "committed\n";
+        marker.flush();
+        marker.close();
+        if (!marker) {
+            return transaction_failure(
+                visual_asset_text("VisualAssetEditor.Storage.TableWriteFailed"),
+                table,
+                memo,
+                commit_marker);
+        }
+    }
+
+    const bool table_backup_cleaned = remove_transaction_path(table.backup);
+    const bool memo_backup_cleaned = remove_transaction_path(memo.backup);
+    if (table_backup_cleaned && memo_backup_cleaned) {
+        (void)remove_transaction_path(commit_marker);
+    }
+
+    return {.ok = true, .error = {}};
 }
 
 std::string infer_memo_sidecar_path(const std::string& path) {

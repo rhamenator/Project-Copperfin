@@ -787,6 +787,16 @@ VisualAssetEditResult replace_memo_field_value(
     std::size_t record_index,
     const std::string& field_name,
     const std::string& new_value) {
+    const std::string memo_path = infer_memo_sidecar_path(table_path);
+    if (memo_path.empty()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.MemoSidecarPathMissing")};
+    }
+
+    const auto recovery_result = recover_visual_asset_file_transaction(table_path, memo_path);
+    if (!recovery_result.ok) {
+        return recovery_result;
+    }
+
     auto table_bytes = read_binary_file(table_path);
     if (table_bytes.empty()) {
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed")};
@@ -818,11 +828,6 @@ VisualAssetEditResult replace_memo_field_value(
     const std::size_t field_offset = record_offset + field_it->offset;
     if ((field_offset + 4U) > table_bytes.size()) {
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.RecordDataTruncated")};
-    }
-
-    const std::string memo_path = infer_memo_sidecar_path(table_path);
-    if (memo_path.empty()) {
-        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.MemoSidecarPathMissing")};
     }
 
     auto memo_bytes = read_binary_file(memo_path);
@@ -876,14 +881,11 @@ VisualAssetEditResult replace_memo_field_value(
     write_be_u32(memo_bytes, 0U, next_free_block + required_blocks);
     write_le_u32(table_bytes, field_offset, next_free_block);
 
-    if (!write_binary_file(memo_path, memo_bytes)) {
-        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.MemoSidecarWriteFailed")};
-    }
-    if (!write_binary_file(table_path, table_bytes)) {
-        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.TableWriteFailed")};
-    }
-
-    return {.ok = true, .error = {}};
+    return write_visual_asset_file_transaction(
+        table_path,
+        table_bytes,
+        memo_path,
+        memo_bytes);
 }
 
 }  // namespace copperfin::vfp

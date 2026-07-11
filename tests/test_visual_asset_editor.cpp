@@ -13,6 +13,7 @@ int main() {
     test_update_visual_object_properties_rolls_back_failed_batches();
     test_update_visual_object_batch_undoes_report_and_label_batches_in_single_step();
     test_update_visual_object_batch_moves_report_and_label_band_contents();
+    test_visual_asset_memo_writes_are_failure_atomic();
     test_update_visual_object_property_preserves_equals_for_blank_property_values();
     test_update_visual_object_report_settings_property_preserves_comment_lines();
     test_report_settings_bottom_margin_memo_round_trips();

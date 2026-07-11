@@ -753,6 +753,13 @@ VisualAssetEditResult apply_visual_object_property_change(
     if (request.path.empty()) {
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
+    const std::string memo_path = infer_memo_sidecar_path(request.path);
+    if (!memo_path.empty()) {
+        const auto recovery_result = recover_visual_asset_file_transaction(request.path, memo_path);
+        if (!recovery_result.ok) {
+            return recovery_result;
+        }
+    }
     if (trim_both(request.property_name).empty()) {
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.NameRequired")};
     }
@@ -1076,14 +1083,26 @@ bool is_property_blob_asset_path(const std::string& path) {
 }
 
 VisualAssetEditResult update_visual_object_property(const VisualObjectEditRequest& request) {
+    const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
     auto update_result = apply_visual_object_property_change(request, true, false);
     if (update_result.ok) {
         update_result.affected_object_count = 1U;
+    } else {
+        std::string cleanup_error;
+        if (!discard_visual_asset_undo_entries_after_depth(
+                request.path,
+                initial_undo_depth,
+                cleanup_error)) {
+            update_result.error = visual_asset_rollback_failed_text(
+                std::move(update_result.error),
+                std::move(cleanup_error));
+        }
     }
     return update_result;
 }
 
 VisualAssetEditResult clear_visual_object_property(const VisualObjectPropertyClearRequest& request) {
+    const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
     auto clear_result = apply_visual_object_property_change({
         .path = request.path,
         .record_index = request.record_index,
@@ -1094,6 +1113,16 @@ VisualAssetEditResult clear_visual_object_property(const VisualObjectPropertyCle
     }, true, true);
     if (clear_result.ok) {
         clear_result.affected_object_count = 1U;
+    } else {
+        std::string cleanup_error;
+        if (!discard_visual_asset_undo_entries_after_depth(
+                request.path,
+                initial_undo_depth,
+                cleanup_error)) {
+            clear_result.error = visual_asset_rollback_failed_text(
+                std::move(clear_result.error),
+                std::move(cleanup_error));
+        }
     }
     return clear_result;
 }
@@ -1501,6 +1530,7 @@ VisualAssetEditResult rename_visual_object_property(const VisualObjectPropertyRe
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.TargetExistsInObject")};
     }
 
+    const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
     std::string error;
     if (!record_visual_asset_undo_entry(request.path, {
             .record_index = record_index,
@@ -1521,6 +1551,16 @@ VisualAssetEditResult rename_visual_object_property(const VisualObjectPropertyRe
         serialize_visual_property_blob(assignments));
     if (rename_result.ok) {
         rename_result.affected_object_count = 1U;
+    } else {
+        std::string cleanup_error;
+        if (!discard_visual_asset_undo_entries_after_depth(
+                request.path,
+                initial_undo_depth,
+                cleanup_error)) {
+            rename_result.error = visual_asset_rollback_failed_text(
+                std::move(rename_result.error),
+                std::move(cleanup_error));
+        }
     }
     return rename_result;
 }

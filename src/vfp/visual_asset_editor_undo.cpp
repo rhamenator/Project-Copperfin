@@ -38,6 +38,35 @@ std::vector<std::filesystem::path> list_visual_asset_undo_entry_files(const std:
     return files;
 }
 
+bool discard_visual_asset_undo_entries_after_depth(
+    const std::string& path,
+    std::size_t retained_depth,
+    std::string& error) {
+    auto files = list_visual_asset_undo_entry_files(path);
+    while (files.size() > retained_depth) {
+        std::error_code remove_error;
+        std::filesystem::remove(files.back(), remove_error);
+        if (remove_error) {
+            error = visual_asset_text("VisualAssetEditor.Undo.PersistJournalFailed");
+            return false;
+        }
+        files.pop_back();
+    }
+
+    const auto entries_directory = visual_asset_undo_entries_directory(path);
+    std::error_code cleanup_error;
+    if (std::filesystem::exists(entries_directory, cleanup_error) &&
+        std::filesystem::is_empty(entries_directory, cleanup_error)) {
+        std::filesystem::remove(entries_directory, cleanup_error);
+        std::filesystem::remove(visual_asset_undo_root_directory(path), cleanup_error);
+    }
+    if (cleanup_error) {
+        error = visual_asset_text("VisualAssetEditor.Undo.PersistJournalFailed");
+        return false;
+    }
+    return true;
+}
+
 bool write_visual_asset_undo_entry(const std::filesystem::path& path, const VisualAssetUndoEntry& entry) {
     std::ofstream output(path, std::ios::binary | std::ios::trunc);
     if (!output) {

@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "test_visual_asset_editor_support.h"
+#include "test_environment_support.h"
 
 namespace cf_test_visual_asset_editor {
 void test_update_visual_object_property_rewrites_properties_memo() {
@@ -610,6 +611,284 @@ void test_update_visual_object_batch_moves_report_and_label_band_contents() {
 
     exercise_asset("frx", ".frx", ".frt", "Report");
     exercise_asset("lbx", ".lbx", ".lbt", "Label");
+}
+
+void test_visual_asset_memo_writes_are_failure_atomic() {
+    namespace fs = std::filesystem;
+    struct AssetCase {
+        std::string stem;
+        std::string table_extension;
+        std::string memo_extension;
+        bool property_blob = false;
+    };
+    const std::vector<AssetCase> asset_cases{
+        {"scx", ".scx", ".sct", true},
+        {"vcx", ".vcx", ".vct", true},
+        {"frx", ".frx", ".frt", false},
+        {"lbx", ".lbx", ".lbt", false},
+        {"mnx", ".mnx", ".mnt", false}
+    };
+    const std::vector<std::string> failure_stages{
+        "sidecar-stage",
+        "primary-stage",
+        "first-commit",
+        "second-commit",
+        "rollback",
+        "stale-cleanup"
+    };
+
+    const auto create_asset = [&](const fs::path& table_path) {
+        const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+            {.name = "OBJTYPE", .type = 'N', .length = 8U},
+            {.name = "HPOS", .type = 'N', .length = 10U},
+            {.name = "EXPR", .type = 'M', .length = 4U},
+            {.name = "PROPERTIES", .type = 'M', .length = 4U},
+            {.name = "UNIQUEID", .type = 'C', .length = 24U}
+        };
+        return copperfin::vfp::create_dbf_table_file(
+            table_path.string(),
+            fields,
+            {{"8", "10", "original.expr", "Caption = \"Original\"\r\n", "atomic-guid"}});
+    };
+
+    const auto edit_request = [](const fs::path& table_path, bool property_blob) {
+        return copperfin::vfp::VisualObjectEditRequest{
+            .path = table_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "atomic-guid",
+            .property_name = property_blob ? "Caption" : "EXPR",
+            .property_value = property_blob ? "\"Updated\"" : "updated.expr"
+        };
+    };
+    const auto write_bytes = [](const fs::path& path, const std::vector<std::uint8_t>& bytes) {
+        std::ofstream output(path, std::ios::binary | std::ios::trunc);
+        output.write(
+            reinterpret_cast<const char*>(bytes.data()),
+            static_cast<std::streamsize>(bytes.size()));
+        return static_cast<bool>(output);
+    };
+
+    for (const auto& asset_case : asset_cases) {
+        for (const auto& failure_stage : failure_stages) {
+            const fs::path temp_dir = fs::temp_directory_path() /
+                ("copperfin_visual_editor_atomic_" + asset_case.stem + "_" +
+                 failure_stage + "_tests_" + std::to_string(_getpid()));
+            std::error_code ignored;
+            fs::remove_all(temp_dir, ignored);
+            fs::create_directories(temp_dir);
+
+            const std::string file_stem = "atomic_" + asset_case.stem + "_" + failure_stage;
+            const fs::path table_path = temp_dir / (file_stem + asset_case.table_extension);
+            const fs::path memo_path = temp_dir / (file_stem + asset_case.memo_extension);
+            const auto create_result = create_asset(table_path);
+            expect(create_result.ok, "#3890: " + asset_case.stem + " atomic fixture should be writable");
+            expect(fs::exists(memo_path), "#3890: " + asset_case.stem + " atomic fixture should create its memo sidecar");
+
+            const auto prior_edit = copperfin::vfp::update_visual_object_property({
+                .path = table_path.string(),
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "atomic-guid",
+                .property_name = "HPOS",
+                .property_value = "20"
+            });
+            expect(prior_edit.ok,
+                   "#3890: " + asset_case.stem + " fixture should retain earlier undo history");
+            const auto undo_before_failure = copperfin::vfp::query_visual_object_undo(table_path.string());
+
+            const auto original_table_bytes = read_file_bytes(table_path);
+            const auto original_memo_bytes = read_file_bytes(memo_path);
+            const auto update_result = [&]() {
+                copperfin::test_support::ScopedEnvironmentValue fail_path(
+                    "COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS",
+                    file_stem);
+                copperfin::test_support::ScopedEnvironmentValue fail_stage(
+                    "COPPERFIN_TEST_FAIL_WRITE_STAGE",
+                    failure_stage);
+                return copperfin::vfp::update_visual_object_property(
+                    edit_request(table_path, asset_case.property_blob));
+            }();
+
+            expect(!update_result.ok,
+                   "#3890: " + asset_case.stem + " " + failure_stage + " failure should surface");
+            expect(read_file_bytes(table_path) == original_table_bytes &&
+                       read_file_bytes(memo_path) == original_memo_bytes,
+                   "#3890: " + asset_case.stem + " " + failure_stage +
+                       " failure should preserve exact table and memo bytes");
+            const auto undo_after_failure = copperfin::vfp::query_visual_object_undo(table_path.string());
+            expect(undo_after_failure.available == undo_before_failure.available &&
+                       undo_after_failure.label == undo_before_failure.label,
+                   "#3890: failed " + asset_case.stem +
+                       " transaction should discard only its tentative undo entry");
+            expect(!fs::exists(table_path.string() + ".cptmp") &&
+                       !fs::exists(table_path.string() + ".cpbak") &&
+                       !fs::exists(table_path.string() + ".cpcommit") &&
+                       !fs::exists(memo_path.string() + ".cptmp") &&
+                       !fs::exists(memo_path.string() + ".cpbak"),
+                   "#3890: " + asset_case.stem + " " + failure_stage +
+                       " failure should clean transaction artifacts");
+
+            const auto prior_undo = copperfin::vfp::undo_visual_object_property(table_path.string());
+            expect(prior_undo.ok &&
+                       !copperfin::vfp::query_visual_object_undo(table_path.string()).available,
+                   "#3890: " + asset_case.stem + " earlier undo entry should remain usable");
+
+            fs::remove_all(temp_dir, ignored);
+        }
+
+        if (asset_case.property_blob) {
+            const fs::path rename_dir = fs::temp_directory_path() /
+                ("copperfin_visual_editor_atomic_rename_" + asset_case.stem +
+                 "_tests_" + std::to_string(_getpid()));
+            std::error_code ignored;
+            fs::remove_all(rename_dir, ignored);
+            fs::create_directories(rename_dir);
+            const std::string rename_stem = "atomic_rename_" + asset_case.stem;
+            const fs::path table_path = rename_dir / (rename_stem + asset_case.table_extension);
+            const fs::path memo_path = rename_dir / (rename_stem + asset_case.memo_extension);
+            expect(create_asset(table_path).ok,
+                   "#3890: " + asset_case.stem + " rename atomicity fixture should be writable");
+            const auto table_before = read_file_bytes(table_path);
+            const auto memo_before = read_file_bytes(memo_path);
+            const auto rename_result = [&]() {
+                copperfin::test_support::ScopedEnvironmentValue fail_path(
+                    "COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS",
+                    rename_stem);
+                copperfin::test_support::ScopedEnvironmentValue fail_stage(
+                    "COPPERFIN_TEST_FAIL_WRITE_STAGE",
+                    "second-commit");
+                return copperfin::vfp::rename_visual_object_property({
+                    .path = table_path.string(),
+                    .record_index = 0U,
+                    .object_name = {},
+                    .unique_id = "atomic-guid",
+                    .property_name = "Caption",
+                    .new_property_name = "DisplayCaption"
+                });
+            }();
+            expect(!rename_result.ok &&
+                       read_file_bytes(table_path) == table_before &&
+                       read_file_bytes(memo_path) == memo_before,
+                   "#3890: failed " + asset_case.stem + " rename should preserve exact asset bytes");
+            expect(!copperfin::vfp::query_visual_object_undo(table_path.string()).available,
+                   "#3890: failed " + asset_case.stem + " rename should discard its tentative undo entry");
+            fs::remove_all(rename_dir, ignored);
+        }
+
+        const fs::path temp_dir = fs::temp_directory_path() /
+            ("copperfin_visual_editor_atomic_stale_" + asset_case.stem +
+             "_tests_" + std::to_string(_getpid()));
+        std::error_code ignored;
+        fs::remove_all(temp_dir, ignored);
+        fs::create_directories(temp_dir);
+        const fs::path table_path = temp_dir / ("stale" + asset_case.table_extension);
+        const fs::path memo_path = temp_dir / ("stale" + asset_case.memo_extension);
+        expect(create_asset(table_path).ok,
+               "#3890: " + asset_case.stem + " stale-transaction fixture should be writable");
+        fs::rename(table_path, table_path.string() + ".cpbak", ignored);
+        expect(!ignored, "#3890: " + asset_case.stem + " stale table backup should be creatable");
+        ignored.clear();
+        fs::rename(memo_path, memo_path.string() + ".cpbak", ignored);
+        expect(!ignored, "#3890: " + asset_case.stem + " stale memo backup should be creatable");
+        {
+            std::ofstream table_temp(table_path.string() + ".cptmp", std::ios::binary);
+            std::ofstream memo_temp(memo_path.string() + ".cptmp", std::ios::binary);
+            std::ofstream invalid_marker(table_path.string() + ".cpcommit", std::ios::binary);
+            table_temp << "partial-table";
+            memo_temp << "partial-memo";
+            invalid_marker << "partial-commit";
+        }
+
+        const auto recovered_update = copperfin::vfp::update_visual_object_property(
+            edit_request(table_path, asset_case.property_blob));
+        expect(recovered_update.ok,
+               "#3890: " + asset_case.stem + " edit should recover an interrupted staged transaction");
+        const auto query_result = copperfin::vfp::query_visual_object_property({
+            .path = table_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "atomic-guid",
+            .property_name = asset_case.property_blob ? "Caption" : "EXPR"
+        });
+        expect(query_result.ok && query_result.exists &&
+                   query_result.value == (asset_case.property_blob ? "\"Updated\"" : "updated.expr"),
+               "#3890: " + asset_case.stem + " recovered transaction should commit the requested value");
+        expect(!fs::exists(table_path.string() + ".cptmp") &&
+                   !fs::exists(table_path.string() + ".cpbak") &&
+                   !fs::exists(table_path.string() + ".cpcommit") &&
+                   !fs::exists(memo_path.string() + ".cptmp") &&
+                   !fs::exists(memo_path.string() + ".cpbak"),
+               "#3890: " + asset_case.stem + " stale recovery should clean transaction artifacts");
+
+        const auto recovered_undo = copperfin::vfp::undo_visual_object_property(table_path.string());
+        expect(recovered_undo.ok &&
+                   !copperfin::vfp::query_visual_object_undo(table_path.string()).available,
+               "#3890: " + asset_case.stem + " recovered edit should retain ordinary undo semantics");
+
+        fs::remove_all(temp_dir, ignored);
+
+        const fs::path committed_dir = fs::temp_directory_path() /
+            ("copperfin_visual_editor_atomic_committed_" + asset_case.stem +
+             "_tests_" + std::to_string(_getpid()));
+        ignored.clear();
+        fs::remove_all(committed_dir, ignored);
+        fs::create_directories(committed_dir);
+        const fs::path committed_table = committed_dir / ("committed" + asset_case.table_extension);
+        const fs::path committed_memo = committed_dir / ("committed" + asset_case.memo_extension);
+        expect(create_asset(committed_table).ok,
+               "#3890: " + asset_case.stem + " committed-marker fixture should be writable");
+        const auto original_table_bytes = read_file_bytes(committed_table);
+        const auto original_memo_bytes = read_file_bytes(committed_memo);
+        auto committed_request = edit_request(committed_table, asset_case.property_blob);
+        committed_request.property_value = asset_case.property_blob ? "\"Committed\"" : "committed.expr";
+        const auto committed_update = copperfin::vfp::update_visual_object_property(committed_request);
+        expect(committed_update.ok,
+               "#3890: " + asset_case.stem + " committed-marker fixture should establish committed bytes");
+        expect(write_bytes(committed_table.string() + ".cpbak", original_table_bytes) &&
+                   write_bytes(committed_memo.string() + ".cpbak", original_memo_bytes),
+               "#3890: " + asset_case.stem + " committed-marker fixture should preserve old backups");
+        {
+            std::ofstream table_temp(committed_table.string() + ".cptmp", std::ios::binary);
+            std::ofstream memo_temp(committed_memo.string() + ".cptmp", std::ios::binary);
+            std::ofstream marker(committed_table.string() + ".cpcommit", std::ios::binary);
+            table_temp << "stale-table-stage";
+            memo_temp << "stale-memo-stage";
+            marker << "committed\n";
+        }
+
+        const auto post_commit_edit = copperfin::vfp::update_visual_object_property({
+            .path = committed_table.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "atomic-guid",
+            .property_name = "HPOS",
+            .property_value = "25"
+        });
+        expect(post_commit_edit.ok,
+               "#3890: " + asset_case.stem + " marked commit should finish cleanup before the next edit");
+        const auto committed_query = copperfin::vfp::query_visual_object_property({
+            .path = committed_table.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "atomic-guid",
+            .property_name = asset_case.property_blob ? "Caption" : "EXPR"
+        });
+        expect(committed_query.ok && committed_query.exists &&
+                   committed_query.value == (asset_case.property_blob ? "\"Committed\"" : "committed.expr"),
+               "#3890: " + asset_case.stem + " marked cleanup should preserve committed memo bytes");
+        expect(!fs::exists(committed_table.string() + ".cptmp") &&
+                   !fs::exists(committed_table.string() + ".cpbak") &&
+                   !fs::exists(committed_table.string() + ".cpcommit") &&
+                   !fs::exists(committed_memo.string() + ".cptmp") &&
+                   !fs::exists(committed_memo.string() + ".cpbak"),
+               "#3890: " + asset_case.stem + " marked commit should scrub stale transaction artifacts");
+        expect(copperfin::vfp::undo_visual_object_property(committed_table.string()).ok &&
+                   copperfin::vfp::undo_visual_object_property(committed_table.string()).ok &&
+                   !copperfin::vfp::query_visual_object_undo(committed_table.string()).available,
+               "#3890: " + asset_case.stem + " marked cleanup should preserve both committed undo entries");
+        fs::remove_all(committed_dir, ignored);
+    }
 }
 
 void test_update_visual_object_property_skips_noop_writes() {

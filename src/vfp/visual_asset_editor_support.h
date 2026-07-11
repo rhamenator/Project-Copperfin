@@ -89,6 +89,14 @@ std::string trim_both(std::string text);
 std::string read_ascii_name(const std::vector<std::uint8_t>& bytes, std::size_t offset, std::size_t length);
 std::vector<std::uint8_t> read_binary_file(const std::string& path);
 bool write_binary_file(const std::string& path, const std::vector<std::uint8_t>& bytes);
+VisualAssetEditResult recover_visual_asset_file_transaction(
+    const std::string& table_path,
+    const std::string& memo_path);
+VisualAssetEditResult write_visual_asset_file_transaction(
+    const std::string& table_path,
+    const std::vector<std::uint8_t>& table_bytes,
+    const std::string& memo_path,
+    const std::vector<std::uint8_t>& memo_bytes);
 std::string infer_memo_sidecar_path(const std::string& path);
 std::string normalize_visual_object_name(std::string value);
 std::string format_visual_string_property_value(const std::string& value);
@@ -287,6 +295,10 @@ VisualAssetEditResult replace_memo_field_value(
 std::filesystem::path visual_asset_undo_root_directory(const std::string& path);
 std::filesystem::path visual_asset_undo_entries_directory(const std::string& path);
 std::vector<std::filesystem::path> list_visual_asset_undo_entry_files(const std::string& path);
+bool discard_visual_asset_undo_entries_after_depth(
+    const std::string& path,
+    std::size_t retained_depth,
+    std::string& error);
 bool write_visual_asset_undo_entry(const std::filesystem::path& path, const VisualAssetUndoEntry& entry);
 std::optional<VisualAssetUndoEntry> read_visual_asset_undo_entry(const std::filesystem::path& path);
 bool record_visual_asset_undo_entry(const std::string& path, const VisualAssetUndoEntry& entry, std::string& error);
