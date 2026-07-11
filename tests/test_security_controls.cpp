@@ -6,13 +6,16 @@
 #include "copperfin/security/audit_stream.h"
 #include "copperfin/security/authorization.h"
 #include "copperfin/security/external_process_policy.h"
+#include "copperfin/security/physical_path_containment.h"
 #include "copperfin/security/process_hardening.h"
 #include "copperfin/security/secret_provider.h"
 #include "copperfin/security/security_model.h"
 #include "copperfin/security/sha256.h"
 #include "test_environment_support.h"
 
+#include <algorithm>
 #include <cstdlib>
+#include <cwctype>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -426,6 +429,144 @@ void test_audit_stream_append_to_readonly_path_fails_gracefully() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_physical_path_containment_rejects_indirection() {
+    namespace fs = std::filesystem;
+    using copperfin::security::PhysicalPathContainmentFailure;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_physical_path_containment_tests";
+    const fs::path package_root = temp_root / "package";
+    const fs::path content_root = package_root / "content";
+    const fs::path outside_root = temp_root / "outside";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(content_root);
+    fs::create_directories(outside_root);
+
+    const fs::path packaged_file = content_root / "main.prg";
+    const fs::path outside_file = outside_root / "outside.prg";
+    {
+        std::ofstream output(packaged_file, std::ios::binary);
+        output << "RETURN\n";
+    }
+    {
+        std::ofstream output(outside_file, std::ios::binary);
+        output << "RETURN\n";
+    }
+
+    const auto ordinary = copperfin::security::inspect_physical_path_containment(
+        packaged_file,
+        package_root);
+    expect(ordinary.allowed && fs::equivalent(ordinary.canonical_path, packaged_file),
+           "ordinary package files should pass physical containment inspection");
+    const auto ordinary_snapshot = copperfin::security::read_physically_contained_file_snapshot(
+        ordinary,
+        package_root);
+    expect(ordinary_snapshot.ok && ordinary_snapshot.bytes == "RETURN\n",
+           "physical file snapshots should read the same admitted package file object");
+
+#if defined(_WIN32)
+    std::wstring differently_cased_root = package_root.native();
+    std::wstring differently_cased_file = packaged_file.native();
+    std::transform(
+        differently_cased_root.begin(),
+        differently_cased_root.end(),
+        differently_cased_root.begin(),
+        [](const wchar_t ch) { return static_cast<wchar_t>(std::towupper(ch)); });
+    std::transform(
+        differently_cased_file.begin(),
+        differently_cased_file.end(),
+        differently_cased_file.begin(),
+        [](const wchar_t ch) { return static_cast<wchar_t>(std::towupper(ch)); });
+    const auto differently_cased = copperfin::security::inspect_physical_path_containment(
+        fs::path(differently_cased_file),
+        fs::path(differently_cased_root));
+    expect(differently_cased.allowed && fs::equivalent(differently_cased.canonical_path, packaged_file),
+           "Windows package containment should compare existing path components case-insensitively");
+#endif
+
+    {
+        std::ofstream output(packaged_file, std::ios::binary | std::ios::trunc);
+        output << "RETURN\n? 1\n";
+    }
+    const auto replaced = copperfin::security::inspect_physical_path_containment(
+        packaged_file,
+        package_root);
+    expect(replaced.allowed && replaced.identity != ordinary.identity,
+           "physical containment identities should detect an ordinary file replacement or mutation");
+    const auto stale_snapshot = copperfin::security::read_physically_contained_file_snapshot(
+        ordinary,
+        package_root);
+    expect(!stale_snapshot.ok &&
+               stale_snapshot.failure == PhysicalPathContainmentFailure::identity_changed,
+           "physical file snapshots should reject a path changed after admission");
+
+    const auto outside = copperfin::security::inspect_physical_path_containment(
+        outside_file,
+        package_root);
+    expect(!outside.allowed && outside.failure == PhysicalPathContainmentFailure::outside_root,
+           "lexically external package files should fail physical containment inspection");
+
+    const fs::path file_link = content_root / "linked.prg";
+    fs::create_symlink(outside_file, file_link, ignored);
+    if (!ignored) {
+        const auto linked = copperfin::security::inspect_physical_path_containment(
+            file_link,
+            package_root);
+        expect(!linked.allowed && linked.failure == PhysicalPathContainmentFailure::indirect_component,
+               "package file symlinks should fail physical containment inspection");
+    }
+
+    ignored.clear();
+    const fs::path directory_link = content_root / "linked-dir";
+    fs::create_directory_symlink(outside_root, directory_link, ignored);
+    if (!ignored) {
+        const auto linked_child = copperfin::security::inspect_physical_path_containment(
+            directory_link / "outside.prg",
+            package_root);
+        expect(!linked_child.allowed &&
+                   linked_child.failure == PhysicalPathContainmentFailure::indirect_component,
+               "package directory symlinks or reparse points should fail containment inspection");
+    }
+
+    ignored.clear();
+    const fs::path package_alias = temp_root / "package-alias";
+    fs::create_directory_symlink(package_root, package_alias, ignored);
+    if (!ignored) {
+        const auto relocated = copperfin::security::inspect_physical_path_containment(
+            package_alias / "content" / "main.prg",
+            package_alias);
+        expect(relocated.allowed && fs::equivalent(relocated.canonical_path, packaged_file),
+               "a package-root deployment link should preserve physical containment beneath its target");
+
+        fs::remove(package_alias, ignored);
+        ignored.clear();
+        fs::create_directory_symlink(outside_root, package_alias, ignored);
+        if (!ignored) {
+            const auto swapped_root_snapshot =
+                copperfin::security::read_physically_contained_file_snapshot(
+                    relocated,
+                    package_alias);
+            expect(!swapped_root_snapshot.ok &&
+                       swapped_root_snapshot.failure == PhysicalPathContainmentFailure::identity_changed,
+                   "physical snapshots should fail deterministically when an admitted package-root link changes target");
+            fs::remove(package_alias, ignored);
+        }
+    }
+
+    ignored.clear();
+    const fs::path dangling_link = content_root / "dangling.prg";
+    fs::create_symlink(outside_root / "missing.prg", dangling_link, ignored);
+    if (!ignored) {
+        const auto dangling = copperfin::security::inspect_physical_path_containment(
+            dangling_link,
+            package_root);
+        expect(!dangling.allowed && dangling.failure == PhysicalPathContainmentFailure::indirect_component,
+               "dangling package symlinks should fail as indirection instead of being followed");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -444,6 +585,7 @@ int main() {
     test_audit_stream_localized_malformed_line_diagnostic();
     test_audit_stream_append_to_readonly_path_fails_gracefully();
     test_external_process_and_process_hardening_diagnostics();
+    test_physical_path_containment_rejects_indirection();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

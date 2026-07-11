@@ -42,6 +42,7 @@
 #include <optional>
 #include <set>
 #include <sstream>
+#include <stdexcept>
 #include <system_error>
 #include <thread>
 #include <chrono>
@@ -7015,8 +7016,10 @@ namespace copperfin::runtime
             runtime_temp_directory /
             (asset_file.stem().string() + "_copperfin_bootstrap.prg");
 
+        const std::string bootstrap_source =
+            build_xasset_bootstrap_source(model, include_read_events);
         std::ofstream output(bootstrap_path, std::ios::binary);
-        output << build_xasset_bootstrap_source(model, include_read_events);
+        output << bootstrap_source;
         output.close();
         if (!output.good())
         {
@@ -7025,6 +7028,8 @@ namespace copperfin::runtime
                 {{"path", asset_path}});
             return std::nullopt;
         }
+
+        options.source_text_overrides[normalize_path(bootstrap_path.string())] = bootstrap_source;
 
         return bootstrap_path.string();
     }

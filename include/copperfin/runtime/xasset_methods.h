@@ -67,6 +67,9 @@ struct XAssetExecutableModel {
 };
 
 XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocumentModel& document);
-std::string build_xasset_bootstrap_source(const XAssetExecutableModel& model, bool include_read_events);
+std::string build_xasset_bootstrap_source(
+    const XAssetExecutableModel& model,
+    bool include_read_events,
+    const std::string& execution_asset_path = {});
 
 }  // namespace copperfin::runtime

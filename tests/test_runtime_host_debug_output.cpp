@@ -77,6 +77,7 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Bridge.Error.RequestSchemaVersionMismatch\": \"Bridge request schema version mismatch.\",\n"
         "  \"RuntimeHost.Bridge.Error.RequiredArguments\": \"Bridge invocation requires request/response path, media type, and schema version arguments.\",\n"
         "  \"RuntimeHost.Bridge.Error.SourceArtifactNotFound\": \"Bridge routine source artifact not found.\",\n"
+        "  \"RuntimeHost.Bridge.Error.SourceMissingFromPackage\": \"Bridge routine source is missing from the package: {fileName}\",\n"
         "  \"RuntimeHost.Bridge.Error.UnsupportedRoutineExportName\": \"Bridge routine export name is not a supported PRG identifier.\",\n"
         "  \"RuntimeHost.Bridge.Error.WriteResponseArtifactFailed\": \"Unable to write bridge response artifact.\",\n"
         "  \"RuntimeHost.Bridge.Error.WriteRoutineBootstrapFailed\": \"Unable to write bridge routine bootstrap.\",\n"
@@ -95,18 +96,26 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Launch.Note.CompatibilityLauncher\": \"Startup asset is not a PRG file and could not be materialized for xAsset bootstrap. This launch is falling back to compatibility-launcher mode.\",\n"
         "  \"RuntimeHost.Error.BridgeFederationModeConflict\": \"Bridge invocation mode cannot be combined with federation query mode.\",\n"
         "  \"RuntimeHost.Error.FederationRequiredOptions\": \"{federationBackendOption} and {federationQueryOption} are both required in federation mode.\",\n"
+        "  \"RuntimeHost.Error.AssetEntryMalformed\": \"asset entry is malformed in manifest.\",\n"
         "  \"RuntimeHost.Error.ExtensionPayloadMalformed\": \"extension_payload entry is malformed in manifest.\",\n"
         "  \"RuntimeHost.Error.ExtensionPayloadMissingFromPackage\": \"Extension payload is missing from the package: {fileName}\",\n"
         "  \"RuntimeHost.Error.ExtensionPayloadSha256Mismatch\": \"Extension payload hash mismatch: {fileName}\",\n"
+        "  \"RuntimeHost.Error.PackagePathPhysicalContainmentFailed\": \"Package path failed physical containment validation: {fileName}\",\n"
+        "  \"RuntimeHost.Error.PackagedAssetMissing\": \"Packaged asset is missing from the package: {fileName}\",\n"
+        "  \"RuntimeHost.Error.PackagedAssetDigestMissing\": \"Packaged asset is missing a verified digest: {fileName}\",\n"
+        "  \"RuntimeHost.Error.PackagedAssetSha256Mismatch\": \"Packaged asset hash mismatch: {fileName}\",\n"
+        "  \"RuntimeHost.Error.StartupAssetDigestMissing\": \"Security-enabled startup is missing a verified package digest: {fileName}\",\n"
         "  \"RuntimeHost.Error.ManifestEmptyOrInvalid\": \"Manifest is empty or invalid.\",\n"
         "  \"RuntimeHost.Error.ManifestMissingRuntimeHostSha256\": \"Security-enabled manifest is missing runtime_host_sha256.\",\n"
         "  \"RuntimeHost.Error.ManifestNotFound\": \"Manifest file not found.\",\n"
         "  \"RuntimeHost.Error.ManifestVersionMissing\": \"Manifest is missing manifest_version.\",\n"
         "  \"RuntimeHost.Error.ManifestVersionUnsupported\": \"Unsupported manifest_version: {version}. Supported versions: {supportedVersions}.\",\n"
+        "  \"RuntimeHost.Error.MaterializeVerifiedStartupSnapshotFailed\": \"Unable to materialize the verified startup snapshot: {fileName}\",\n"
         "  \"RuntimeHost.Prompt.QuitConfirm\": \"Do you want to quit this application? [{yesToken}/{defaultNoToken}]: \",\n"
         "  \"RuntimeHost.Error.RuntimeHostSha256Mismatch\": \"Runtime host hash does not match manifest digest.\",\n"
         "  \"RuntimeHost.Error.SecurityPolicyDenied\": \"Security policy denied {permission} for role '{role}'.\",\n"
         "  \"RuntimeHost.Error.TrueFalseValueRequired\": \"The {option} value must be true or false.\",\n"
+        "  \"RuntimeHost.Error.VerifiedSourceUnavailable\": \"Verified package source is unavailable: {fileName}\",\n"
         "  \"RuntimeHost.Error.UnknownArgument\": \"Unknown argument: {argument}\",\n"
         "  \"RuntimeHost.Error.UnknownFederationBackend\": \"Unknown federation backend: {backend}\",\n"
         "  \"Platform.FederationExecution.Error.AiPlannerNotImplemented\": \"Planner is not yet implemented for {planMode} AI policy. Deterministic translation failed: {translationError}\",\n"
@@ -140,6 +149,7 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Bridge.Error.RequestSchemaVersionMismatch\": \"La version de esquema de la solicitud bridge no coincide.\",\n"
         "  \"RuntimeHost.Bridge.Error.RequiredArguments\": \"La invocacion bridge requiere argumentos de ruta de solicitud/respuesta, tipo de medio y version de esquema.\",\n"
         "  \"RuntimeHost.Bridge.Error.SourceArtifactNotFound\": \"No se encontro el artefacto fuente de la rutina bridge.\",\n"
+        "  \"RuntimeHost.Bridge.Error.SourceMissingFromPackage\": \"Falta la fuente de la rutina bridge en el paquete: {fileName}\",\n"
         "  \"RuntimeHost.Bridge.Error.UnsupportedRoutineExportName\": \"El nombre de exportacion de la rutina bridge no es un identificador PRG compatible.\",\n"
         "  \"RuntimeHost.Bridge.Error.WriteResponseArtifactFailed\": \"No se pudo escribir el artefacto de respuesta bridge.\",\n"
         "  \"RuntimeHost.Bridge.Error.WriteRoutineBootstrapFailed\": \"No se pudo escribir el bootstrap de la rutina bridge.\",\n"
@@ -157,19 +167,27 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Prefix.Warning\": \"advertencia: \",\n"
         "  \"RuntimeHost.Launch.Note.CompatibilityLauncher\": \"El asset de inicio no es un archivo PRG y no pudo materializarse para xAsset bootstrap. Este inicio esta recurriendo al modo compatibility-launcher.\",\n"
         "  \"RuntimeHost.Error.BridgeFederationModeConflict\": \"El modo de invocacion bridge no puede combinarse con el modo de consulta de federacion.\",\n"
+        "  \"RuntimeHost.Error.AssetEntryMalformed\": \"La entrada asset del manifiesto esta mal formada.\",\n"
         "  \"RuntimeHost.Error.ExtensionPayloadMalformed\": \"La entrada extension_payload del manifiesto esta mal formada.\",\n"
         "  \"RuntimeHost.Error.ExtensionPayloadMissingFromPackage\": \"Falta el payload de extension en el paquete: {fileName}\",\n"
         "  \"RuntimeHost.Error.ExtensionPayloadSha256Mismatch\": \"El hash del payload de extension no coincide: {fileName}\",\n"
+        "  \"RuntimeHost.Error.PackagePathPhysicalContainmentFailed\": \"La ruta del paquete no supero la validacion de contencion fisica: {fileName}\",\n"
+        "  \"RuntimeHost.Error.PackagedAssetMissing\": \"Falta el asset empaquetado en el paquete: {fileName}\",\n"
+        "  \"RuntimeHost.Error.PackagedAssetDigestMissing\": \"Al asset empaquetado le falta un digest verificado: {fileName}\",\n"
+        "  \"RuntimeHost.Error.PackagedAssetSha256Mismatch\": \"El hash del asset empaquetado no coincide: {fileName}\",\n"
+        "  \"RuntimeHost.Error.StartupAssetDigestMissing\": \"Al inicio con seguridad habilitada le falta un digest de paquete verificado: {fileName}\",\n"
         "  \"RuntimeHost.Error.FederationRequiredOptions\": \"{federationBackendOption} y {federationQueryOption} son obligatorios en el modo de federacion.\",\n"
         "  \"RuntimeHost.Error.ManifestEmptyOrInvalid\": \"El manifiesto esta vacio o no es valido.\",\n"
         "  \"RuntimeHost.Error.ManifestMissingRuntimeHostSha256\": \"Al manifiesto con seguridad habilitada le falta runtime_host_sha256.\",\n"
         "  \"RuntimeHost.Error.ManifestNotFound\": \"No se encontro el archivo de manifiesto.\",\n"
         "  \"RuntimeHost.Error.ManifestVersionMissing\": \"Al manifiesto le falta manifest_version.\",\n"
         "  \"RuntimeHost.Error.ManifestVersionUnsupported\": \"manifest_version no es compatible: {version}. Las versiones compatibles son: {supportedVersions}.\",\n"
+        "  \"RuntimeHost.Error.MaterializeVerifiedStartupSnapshotFailed\": \"No se pudo materializar la instantanea de inicio verificada: {fileName}\",\n"
         "  \"RuntimeHost.Prompt.QuitConfirm\": \"Desea salir de esta aplicacion? [{yesToken}/{defaultNoToken}]: \",\n"
         "  \"RuntimeHost.Error.RuntimeHostSha256Mismatch\": \"El hash del runtime host no coincide con el digest del manifiesto.\",\n"
         "  \"RuntimeHost.Error.SecurityPolicyDenied\": \"La politica de seguridad denego {permission} para el rol '{role}'.\",\n"
         "  \"RuntimeHost.Error.TrueFalseValueRequired\": \"El valor de {option} debe ser true o false.\",\n"
+        "  \"RuntimeHost.Error.VerifiedSourceUnavailable\": \"La fuente verificada del paquete no esta disponible: {fileName}\",\n"
         "  \"RuntimeHost.Error.UnknownArgument\": \"Argumento desconocido: {argument}\",\n"
         "  \"RuntimeHost.Error.UnknownFederationBackend\": \"Backend de federacion desconocido: {backend}\",\n"
         "  \"Platform.FederationExecution.Error.AiPlannerNotImplemented\": \"El planner aun no esta implementado para la politica de IA {planMode}. La traduccion deterministica fallo: {translationError}\",\n"
@@ -196,9 +214,15 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Launch.Note.CompatibilityLauncher\": \"O asset de inicializacao nao e um arquivo PRG e nao pode ser materializado para xAsset bootstrap. Esta inicializacao esta recorrendo ao modo compatibility-launcher.\",\n"
         "  \"RuntimeHost.Bridge.Error.CreateResponseDirectoryFailed\": \"Nao foi possivel criar o diretorio de resposta bridge.\",\n"
         "  \"RuntimeHost.Error.BridgeFederationModeConflict\": \"O modo de invocacao bridge nao pode ser combinado com o modo de consulta de federacao.\",\n"
+        "  \"RuntimeHost.Error.AssetEntryMalformed\": \"A entrada asset do manifesto esta malformada.\",\n"
         "  \"RuntimeHost.Error.ExtensionPayloadMalformed\": \"A entrada extension_payload do manifesto esta malformada.\",\n"
         "  \"RuntimeHost.Error.ExtensionPayloadMissingFromPackage\": \"O payload de extensao esta ausente do pacote: {fileName}\",\n"
         "  \"RuntimeHost.Error.ExtensionPayloadSha256Mismatch\": \"O hash do payload de extensao nao corresponde: {fileName}\",\n"
+        "  \"RuntimeHost.Error.PackagePathPhysicalContainmentFailed\": \"O caminho do pacote falhou na validacao de contencao fisica: {fileName}\",\n"
+        "  \"RuntimeHost.Error.PackagedAssetMissing\": \"O asset empacotado esta ausente do pacote: {fileName}\",\n"
+        "  \"RuntimeHost.Error.PackagedAssetDigestMissing\": \"O asset empacotado nao tem um digest verificado: {fileName}\",\n"
+        "  \"RuntimeHost.Error.PackagedAssetSha256Mismatch\": \"O hash do asset empacotado nao corresponde: {fileName}\",\n"
+        "  \"RuntimeHost.Error.StartupAssetDigestMissing\": \"A inicializacao com seguranca habilitada nao tem um digest de pacote verificado: {fileName}\",\n"
         "  \"RuntimeHost.Bridge.Error.PrgStartupRequired\": \"A invocacao bridge atualmente exige uma origem de inicializacao PRG.\",\n"
         "  \"RuntimeHost.Bridge.Error.RequestArtifactNotFound\": \"Artefato de solicitacao bridge nao encontrado.\",\n"
         "  \"RuntimeHost.Bridge.Error.RequestDescriptorMismatch\": \"O descritor da solicitacao bridge nao corresponde.\",\n"
@@ -208,6 +232,7 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Bridge.Error.RequestSchemaVersionMismatch\": \"A versao de esquema da solicitacao bridge nao corresponde.\",\n"
         "  \"RuntimeHost.Bridge.Error.RequiredArguments\": \"A invocacao bridge exige argumentos de caminho de solicitacao/resposta, tipo de midia e versao de esquema.\",\n"
         "  \"RuntimeHost.Bridge.Error.SourceArtifactNotFound\": \"Artefato fonte da rotina bridge nao encontrado.\",\n"
+        "  \"RuntimeHost.Bridge.Error.SourceMissingFromPackage\": \"A origem da rotina bridge esta ausente do pacote: {fileName}\",\n"
         "  \"RuntimeHost.Bridge.Error.UnsupportedRoutineExportName\": \"O nome de exportacao da rotina bridge nao e um identificador PRG suportado.\",\n"
         "  \"RuntimeHost.Bridge.Error.WriteResponseArtifactFailed\": \"Nao foi possivel gravar o artefato de resposta bridge.\",\n"
         "  \"RuntimeHost.Bridge.Error.WriteRoutineBootstrapFailed\": \"Nao foi possivel gravar o bootstrap da rotina bridge.\",\n"
@@ -217,10 +242,12 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Error.ManifestNotFound\": \"Arquivo de manifesto nao encontrado.\",\n"
         "  \"RuntimeHost.Error.ManifestVersionMissing\": \"Falta manifest_version no manifesto.\",\n"
         "  \"RuntimeHost.Error.ManifestVersionUnsupported\": \"manifest_version nao e compativel: {version}. As versoes compativeis sao: {supportedVersions}.\",\n"
+        "  \"RuntimeHost.Error.MaterializeVerifiedStartupSnapshotFailed\": \"Nao foi possivel materializar o snapshot de inicializacao verificado: {fileName}\",\n"
         "  \"RuntimeHost.Prompt.QuitConfirm\": \"Deseja sair deste aplicativo? [{yesToken}/{defaultNoToken}]: \",\n"
         "  \"RuntimeHost.Error.RuntimeHostSha256Mismatch\": \"O hash do runtime host nao corresponde ao digest do manifesto.\",\n"
         "  \"RuntimeHost.Error.SecurityPolicyDenied\": \"A politica de seguranca negou {permission} para a funcao '{role}'.\",\n"
         "  \"RuntimeHost.Error.TrueFalseValueRequired\": \"O valor de {option} deve ser true ou false.\",\n"
+        "  \"RuntimeHost.Error.VerifiedSourceUnavailable\": \"A origem verificada do pacote nao esta disponivel: {fileName}\",\n"
         "  \"RuntimeHost.Error.UnknownArgument\": \"Argumento desconhecido: {argument}\",\n"
         "  \"RuntimeHost.Error.UnknownFederationBackend\": \"Backend de federacao desconhecido: {backend}\",\n"
         "  \"Platform.FederationExecution.Error.AiPlannerNotImplemented\": \"O planner ainda nao esta implementado para a politica de IA {planMode}. A traducao deterministica falhou: {translationError}\",\n"
@@ -479,6 +506,148 @@ void write_synthetic_form_asset(const std::filesystem::path& table_path) {
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
     expect(create_result.ok, "synthetic SCX/SCT debugger fixture should be created");
+}
+
+void write_synthetic_report_asset(const std::filesystem::path& table_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "PLATFORM", .type = 'C', .length = 16U},
+        {.name = "OBJTYPE", .type = 'N', .length = 3U},
+        {.name = "OBJCODE", .type = 'N', .length = 3U},
+        {.name = "EXPR", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"WINDOWS", "1", "0", "ENVIRONMENT = 1"},
+        {"WINDOWS", "9", "4", ""}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        table_path.string(),
+        fields,
+        records);
+    expect(create_result.ok, "synthetic FRX/FRT snapshot fixture should be created");
+}
+
+void test_security_enabled_report_and_label_execute_verified_snapshots(
+    const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    struct LayoutSnapshotCase {
+        const char* file_name;
+        copperfin::studio::StudioAssetKind kind;
+        const char* manifest_kind;
+        const char* fixture_suffix;
+    };
+    const std::vector<LayoutSnapshotCase> cases{
+        {"verified.frx", copperfin::studio::StudioAssetKind::report, "Report", "report"},
+        {"verified.lbx", copperfin::studio::StudioAssetKind::label, "Label", "label"}
+    };
+
+    for (const auto& layout_case : cases) {
+
+    const fs::path temp_root =
+        fs::temp_directory_path() /
+        (std::string("copperfin_runtime_host_verified_") + layout_case.fixture_suffix + "_snapshot");
+    const fs::path content_root = temp_root / "content";
+    const fs::path asset_path = content_root / layout_case.file_name;
+    const fs::path manifest_path = temp_root / "app.cfmanifest";
+    const fs::path locale_root = temp_root / "locales";
+    const fs::path deployed_runtime_host = deployed_runtime_host_path(temp_root, runtime_host_path);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(content_root);
+    write_runtime_host_usage_catalogs(locale_root);
+    write_synthetic_report_asset(asset_path);
+    const fs::path sidecar_path = copperfin::studio::infer_sidecar_path(
+        asset_path.string(),
+        layout_case.kind);
+    expect(fs::exists(sidecar_path), "synthetic layout snapshot fixture should include its memo sidecar");
+    const std::string original_asset_bytes = read_text(asset_path);
+    const std::string original_sidecar_bytes = read_text(sidecar_path);
+
+    fs::copy_file(runtime_host_path, deployed_runtime_host, fs::copy_options::overwrite_existing);
+#if defined(__unix__) || defined(__APPLE__)
+    fs::permissions(
+        deployed_runtime_host,
+        fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec,
+        fs::perm_options::add,
+        ignored);
+#endif
+    const auto runtime_host_hash =
+        copperfin::security::sha256_hex_for_file(deployed_runtime_host.string());
+    const auto asset_hash = copperfin::security::sha256_hex_for_file(asset_path.string());
+    const auto sidecar_hash = copperfin::security::sha256_hex_for_file(sidecar_path.string());
+    expect(runtime_host_hash.ok && asset_hash.ok && sidecar_hash.ok,
+           "verified layout snapshot fixture should hash host, primary, and sidecar payloads");
+    if (!runtime_host_hash.ok || !asset_hash.ok || !sidecar_hash.ok) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    write_text(
+        manifest_path,
+        std::string("manifest_version=1\n"
+        "project_title=VerifiedLayoutSnapshot\n") +
+        "package_root=" + temp_root.string() + "\n"
+        "content_root=" + content_root.string() + "\n"
+        "working_directory=" + content_root.string() + "\n"
+        "startup_item=" + layout_case.file_name + "\n"
+        "startup_source=" + asset_path.string() + "\n"
+        "security_enabled=true\n"
+        "security_role=runtime-operator\n"
+        "security_mode=native\n"
+        "runtime_host_sha256=" + runtime_host_hash.hex_digest + "\n"
+        "asset=1|" + layout_case.file_name + "|" + asset_path.string() +
+            "|" + layout_case.manifest_kind + "|false|true|" + asset_hash.hex_digest + "|true\n"
+        "extension_payload=" + sidecar_path.string() + "|" + sidecar_hash.hex_digest + "\n"
+        "dotnet_story=none\n");
+
+    const std::string mutate_command =
+        "watch:STRTOFILE('corrupt','" + asset_path.generic_string() + "')";
+    const auto process = run_process_capture(
+        deployed_runtime_host.string(),
+        {
+            "--manifest", manifest_path.string(),
+            "--debug",
+            "--breakpoint", "2",
+            "--debug-command", "continue",
+            "--debug-command", mutate_command,
+            "--debug-command", "continue"
+        },
+        temp_root);
+
+    if (process.exit_code != 0) {
+        std::cerr << "verified layout snapshot stdout:\n" << process.stdout_text << "\n";
+        std::cerr << "verified layout snapshot stderr:\n" << process.stderr_text << "\n";
+    }
+    expect(process.exit_code == 0,
+           "security-enabled report/label startup should continue from its verified snapshot after live-file mutation");
+    expect(read_text(asset_path) == "corrupt",
+           "verified layout snapshot smoke should prove the paused watch command mutated the live package file");
+    expect(process.stdout_text.find("debug.reason: event_loop") != std::string::npos,
+           "verified layout snapshot should still reach preview after live-file mutation");
+    expect(process.stdout_text.find(asset_path.string()) != std::string::npos,
+           "verified layout snapshot should preserve the logical package path in debug output");
+    expect(process.stdout_text.find("copperfin_xasset_snapshot_") == std::string::npos,
+           "private xAsset snapshot paths should not leak into runtime debug output");
+
+    write_text(asset_path, original_asset_bytes);
+    write_text(sidecar_path, original_sidecar_bytes + "tampered-sidecar");
+    {
+        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        const auto tampered_sidecar_process = run_process_capture(
+            deployed_runtime_host.string(),
+            {"--manifest", manifest_path.string()},
+            temp_root);
+        expect(tampered_sidecar_process.exit_code == 8,
+               "security-enabled report/label startup should reject a sidecar changed after packaging");
+        expect(tampered_sidecar_process.stdout_text.find(
+                   "error: Extension payload hash mismatch: " + sidecar_path.filename().string()) != std::string::npos,
+               "tampered layout sidecars should fail through the localized extension-payload digest contract");
+    }
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+    }
 }
 
 void test_runtime_host_compatibility_launcher_note_reflects_xasset_fallback(const std::string& runtime_host_path) {
@@ -1440,6 +1609,12 @@ void test_runtime_host_security_denial_audit_details_localize_without_changing_a
         }
 
         write_text(startup_path, "RETURN\n");
+        const auto startup_hash = copperfin::security::sha256_hex_for_file(startup_path.string());
+        expect(startup_hash.ok, "#2592: runtime-admin denial fixture should hash the startup asset");
+        if (!startup_hash.ok) {
+            fs::remove_all(temp_root, ignored);
+            return;
+        }
         const std::string manifest_text =
             std::string("manifest_version=1\n"
             "project_title=RuntimeAdminDeniedLocalization\n"
@@ -1455,6 +1630,8 @@ void test_runtime_host_security_denial_audit_details_localize_without_changing_a
             "security_mode=native\n"
             "audit_log_path=" + audit_log_path.string() + "\n"
             "runtime_host_sha256=" + runtime_host_hash.hex_digest + "\n"
+            "asset=1|main.prg|" + startup_path.string() + "|Program|false|true|" +
+                startup_hash.hex_digest + "|true\n"
             "dotnet_story=none\n";
         write_text(manifest_path, manifest_text);
 
@@ -1822,6 +1999,148 @@ void test_runtime_host_writes_bridge_response_artifact(const std::string& runtim
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_security_enabled_bridge_source_stays_inside_verified_package(
+    const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_secure_bridge_source";
+    const fs::path content_root = temp_root / "content";
+    const fs::path startup_path = content_root / "startup.prg";
+    const fs::path source_path = content_root / "exports" / "exports.prg";
+    const fs::path include_path = content_root / "shared" / "bridge_value.h";
+    const fs::path outside_path = temp_root.parent_path() / "copperfin_external_bridge_source.prg";
+    const fs::path manifest_path = temp_root / "app.cfmanifest";
+    const fs::path request_path = temp_root / "GetAnswer.request.json";
+    const fs::path response_path = temp_root / "GetAnswer.response.json";
+    const fs::path locale_root = temp_root / "locales";
+    const fs::path deployed_runtime_host = deployed_runtime_host_path(temp_root, runtime_host_path);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::remove(outside_path, ignored);
+    fs::create_directories(content_root);
+    fs::create_directories(source_path.parent_path());
+    fs::create_directories(include_path.parent_path());
+    write_runtime_host_usage_catalogs(locale_root);
+    write_text(startup_path, "RETURN\n");
+    write_text(
+        source_path,
+        "#INCLUDE '../shared/BRIDGE_VALUE.H'\n"
+        "PROCEDURE GetAnswer\n"
+        "RETURN BRIDGE_VALUE\n"
+        "ENDPROC\n");
+    write_text(include_path, "#DEFINE BRIDGE_VALUE 42\n");
+    write_text(outside_path, "PROCEDURE GetAnswer\nRETURN 99\nENDPROC\n");
+    fs::copy_file(runtime_host_path, deployed_runtime_host, fs::copy_options::overwrite_existing);
+#if defined(__unix__) || defined(__APPLE__)
+    fs::permissions(
+        deployed_runtime_host,
+        fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec,
+        fs::perm_options::add,
+        ignored);
+#endif
+
+    const auto runtime_host_hash =
+        copperfin::security::sha256_hex_for_file(deployed_runtime_host.string());
+    const auto startup_hash = copperfin::security::sha256_hex_for_file(startup_path.string());
+    const auto source_hash = copperfin::security::sha256_hex_for_file(source_path.string());
+    const auto include_hash = copperfin::security::sha256_hex_for_file(include_path.string());
+    expect(runtime_host_hash.ok && startup_hash.ok && source_hash.ok && include_hash.ok,
+           "secure bridge fixture should hash host, startup, export source, and include");
+    if (!runtime_host_hash.ok || !startup_hash.ok || !source_hash.ok || !include_hash.ok) {
+        fs::remove_all(temp_root, ignored);
+        fs::remove(outside_path, ignored);
+        return;
+    }
+
+    write_text(
+        manifest_path,
+        "manifest_version=1\n"
+        "project_title=SecureBridgeSource\n"
+        "package_root=" + temp_root.string() + "\n"
+        "content_root=" + content_root.string() + "\n"
+        "working_directory=" + content_root.string() + "\n"
+        "startup_item=startup.prg\n"
+        "startup_source=" + startup_path.string() + "\n"
+        "security_enabled=true\n"
+        "security_role=runtime-operator\n"
+        "security_mode=native\n"
+        "runtime_host_sha256=" + runtime_host_hash.hex_digest + "\n"
+        "asset=1|startup.prg|" + startup_path.string() +
+            "|Program|false|true|" + startup_hash.hex_digest + "|true\n"
+        "asset=2|exports.prg|" + source_path.string() +
+            "|Program|false|true|" + source_hash.hex_digest + "|true\n"
+        "extension_payload=" + include_path.string() + "|" + include_hash.hex_digest + "\n"
+        "dotnet_story=none\n");
+
+    const auto write_request = [&](const fs::path& requested_source) {
+        std::string escaped_source_path;
+        for (const char ch : requested_source.string()) {
+            if (ch == '\\' || ch == '"') {
+                escaped_source_path.push_back('\\');
+            }
+            escaped_source_path.push_back(ch);
+        }
+        write_text(
+            request_path,
+            std::string("{\n"
+            "  \"export_name\": \"GetAnswer\",\n"
+            "  \"routine_kind\": \"procedure\",\n"
+            "  \"source_path\": \"") + escaped_source_path + "\",\n"
+            "  \"source_line\": 1,\n"
+            "  \"parameter_declaration\": \"LPARAMETERS\",\n"
+            "  \"parameter_names\": \"\",\n"
+            "  \"parameter_count\": 0,\n"
+            "  \"schema_version\": \"v1\",\n"
+            "  \"request_media_type\": \"application/vnd.copperfin.runtime-bridge-request+json\",\n"
+            "  \"parameters\": []\n"
+            "}\n");
+    };
+    const auto invoke = [&](const fs::path& requested_source) {
+        write_request(requested_source);
+        fs::remove(response_path, ignored);
+        return run_process_capture(
+            deployed_runtime_host.string(),
+            {
+                "--manifest", manifest_path.string(),
+                "--library-export", "GetAnswer",
+                "--routine-kind", "procedure",
+                "--source-path", requested_source.string(),
+                "--source-line", "1",
+                "--parameter-declaration", "LPARAMETERS",
+                "--parameter-names", "",
+                "--parameter-count", "0",
+                "--request-path", request_path.string(),
+                "--response-path", response_path.string(),
+                "--request-media-type", "application/vnd.copperfin.runtime-bridge-request+json",
+                "--response-media-type", "application/vnd.copperfin.runtime-bridge-response+json",
+                "--schema-version", "v1"
+            },
+            temp_root);
+    };
+
+    ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+    const auto packaged_process = invoke(source_path);
+    expect(packaged_process.exit_code == 0,
+           "security-enabled bridge invocation should execute its verified packaged source bytes");
+    expect(packaged_process.stdout_text.find("bridge.return_value: 42") != std::string::npos,
+           "security-enabled bridge invocation should resolve verified includes case-insensitively from memory");
+
+    const auto external_process = invoke(outside_path);
+    expect(external_process.exit_code == 4,
+           "security-enabled bridge invocation should reject an external source path");
+    expect(external_process.stdout_text.find(
+               "error: Bridge routine source is missing from the package: copperfin_external_bridge_source.prg") !=
+               std::string::npos,
+           "external bridge-source rejection should use the localized package-boundary diagnostic");
+    expect(external_process.stdout_text.find("bridge.return_value: 99") == std::string::npos,
+           "security-enabled bridge invocation must not execute external source content");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+        fs::remove(outside_path, ignored);
     }
 }
 
@@ -3601,6 +3920,7 @@ int main(int argc, char** argv) {
     test_runtime_host_supports_breakpoint_management_commands(argv[1]);
     test_runtime_host_supports_single_breakpoint_removal(argv[1]);
     test_runtime_host_prefers_debug_manifest_for_implicit_debug_launches(argv[1]);
+    test_security_enabled_report_and_label_execute_verified_snapshots(argv[1]);
     test_runtime_host_compatibility_launcher_note_reflects_xasset_fallback(argv[1]);
     test_runtime_host_reports_xasset_pause_identity(argv[1]);
     test_runtime_host_supports_xasset_action_breakpoint_commands(argv[1]);
@@ -3612,6 +3932,7 @@ int main(int argc, char** argv) {
     test_runtime_host_security_denial_audit_details_localize_without_changing_audit_contracts(argv[1]);
     test_runtime_host_rejects_ai_federation_planning_without_ai_permission(argv[1]);
     test_runtime_host_writes_bridge_response_artifact(argv[1]);
+    test_security_enabled_bridge_source_stays_inside_verified_package(argv[1]);
     test_runtime_host_invokes_zero_argument_bridge_export(argv[1]);
     test_runtime_host_removes_bridge_routine_bootstrap_after_execution(argv[1]);
     test_runtime_host_unescapes_bridge_descriptor_string_fields(argv[1]);

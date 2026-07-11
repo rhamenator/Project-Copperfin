@@ -16,6 +16,13 @@
 #include <sstream>
 #include <vector>
 
+#if defined(_WIN32)
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#endif
+
 namespace copperfin::runtime {
 
 std::string trim_copy(std::string value) {
@@ -65,6 +72,22 @@ bool starts_with_insensitive(const std::string& value, const std::string& prefix
         }
     }
     return true;
+}
+
+bool paths_equal_insensitive(const std::string& left, const std::string& right) {
+#if defined(_WIN32)
+    const auto left_path = std::filesystem::path(left).lexically_normal().native();
+    const auto right_path = std::filesystem::path(right).lexically_normal().native();
+    return ::CompareStringOrdinal(
+               left_path.data(),
+               static_cast<int>(left_path.size()),
+               right_path.data(),
+               static_cast<int>(right_path.size()),
+               TRUE) == CSTR_EQUAL;
+#else
+    return lowercase_copy(std::filesystem::path(left).lexically_normal().string()) ==
+           lowercase_copy(std::filesystem::path(right).lexically_normal().string());
+#endif
 }
 
 std::string normalize_identifier(std::string value) {

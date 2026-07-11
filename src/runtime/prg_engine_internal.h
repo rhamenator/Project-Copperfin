@@ -197,5 +197,10 @@ struct Program {
 };
 
 Program parse_program(const std::string& path);
+Program parse_program_source(
+    const std::string& logical_path,
+    const std::string& source_text,
+    const std::map<std::string, std::string>& source_text_overrides = {},
+    bool require_source_text_overrides = false);
 
 }  // namespace copperfin::runtime

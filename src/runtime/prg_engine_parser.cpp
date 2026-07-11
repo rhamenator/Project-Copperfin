@@ -7,6 +7,7 @@
 #include "prg_engine_command_helpers.h"
 #include "prg_engine_helpers.h"
 
+#include <algorithm>
 #include <cctype>
 #include <cstdlib>
 #include <filesystem>
@@ -14,6 +15,7 @@
 #include <optional>
 #include <sstream>
 #include <set>
+#include <stdexcept>
 
 namespace copperfin::runtime {
 
@@ -134,12 +136,8 @@ std::string extract_scatter_name_target_clause(const std::string& body) {
     return {};
 }
 
-std::vector<LogicalLine> load_logical_lines(const std::string& path) {
-    std::ifstream input(path, std::ios::binary);
+std::vector<LogicalLine> load_logical_lines(std::istream& input) {
     std::vector<LogicalLine> lines;
-    if (!input) {
-        return lines;
-    }
 
     std::string raw_line;
     std::size_t line_number = 0;
@@ -217,12 +215,18 @@ std::vector<LogicalLine> load_logical_lines(const std::string& path) {
     return lines;
 }
 
-std::vector<std::string> load_source_lines(const std::string& path) {
+std::vector<LogicalLine> load_logical_lines(const std::string& path) {
     std::ifstream input(path, std::ios::binary);
+    return input ? load_logical_lines(input) : std::vector<LogicalLine>{};
+}
+
+std::vector<LogicalLine> load_logical_lines_from_text(const std::string& source_text) {
+    std::istringstream input(source_text);
+    return load_logical_lines(input);
+}
+
+std::vector<std::string> load_source_lines(std::istream& input) {
     std::vector<std::string> lines;
-    if (!input) {
-        return lines;
-    }
 
     std::string raw_line;
     while (std::getline(input, raw_line)) {
@@ -233,6 +237,16 @@ std::vector<std::string> load_source_lines(const std::string& path) {
     }
 
     return lines;
+}
+
+std::vector<std::string> load_source_lines(const std::string& path) {
+    std::ifstream input(path, std::ios::binary);
+    return input ? load_source_lines(input) : std::vector<std::string>{};
+}
+
+std::vector<std::string> load_source_lines_from_text(const std::string& source_text) {
+    std::istringstream input(source_text);
+    return load_source_lines(input);
 }
 
 bool is_preprocessor_identifier_start(const char ch) {
@@ -694,6 +708,7 @@ bool try_parse_include_directive(const std::string& line, std::string& include_p
         return false;
     }
     if ((body.front() == '"' && body.back() == '"') ||
+        (body.front() == '\'' && body.back() == '\'') ||
         (body.front() == '<' && body.back() == '>')) {
         include_path_text = body.substr(1U, body.size() - 2U);
         return !include_path_text.empty();
@@ -728,20 +743,42 @@ fs::path resolve_include_path(const fs::path& owning_path, const std::string& in
             ch = '/';
         }
     }
-    const fs::path candidate = owning_path.parent_path() / fs::path(normalized);
-    std::error_code error;
-    if (fs::exists(candidate, error)) {
-        return candidate.lexically_normal();
+    return (owning_path.parent_path() / fs::path(normalized)).lexically_normal();
+}
+
+const std::string* find_source_text_override(
+    const std::map<std::string, std::string>* source_text_overrides,
+    const std::string& path) {
+    if (source_text_overrides == nullptr) {
+        return nullptr;
     }
-    return {};
+    if (const auto exact = source_text_overrides->find(path);
+        exact != source_text_overrides->end()) {
+        return &exact->second;
+    }
+    const auto insensitive = std::find_if(
+        source_text_overrides->begin(),
+        source_text_overrides->end(),
+        [&](const auto& candidate) {
+            return paths_equal_insensitive(candidate.first, path);
+        });
+    return insensitive == source_text_overrides->end()
+        ? nullptr
+        : &insensitive->second;
 }
 
 void append_preprocessed_logical_lines(
     const fs::path& path,
     PreprocessorState& state,
     const bool emit_non_directive_lines,
-    std::vector<LogicalLine>& output_lines) {
-    for (const auto& logical_line : load_logical_lines(path.string())) {
+    std::vector<LogicalLine>& output_lines,
+    const std::string* source_override = nullptr,
+    const std::map<std::string, std::string>* source_text_overrides = nullptr,
+    const bool require_source_text_overrides = false) {
+    const std::vector<LogicalLine> source_lines = source_override == nullptr
+        ? load_logical_lines(path.string())
+        : load_logical_lines_from_text(*source_override);
+    for (const auto& logical_line : source_lines) {
         const std::string trimmed = trim_copy(logical_line.text);
         if (trimmed.empty()) {
             if (emit_non_directive_lines && is_preprocessor_active(state)) {
@@ -786,12 +823,25 @@ void append_preprocessed_logical_lines(
         std::string include_path_text;
         if (try_parse_include_directive(trimmed, include_path_text)) {
             const fs::path include_path = resolve_include_path(path, include_path_text);
-            if (!include_path.empty()) {
-                const std::string include_key = include_path.string();
+            const std::string include_key = normalize_path(include_path.string());
+            const std::string* include_source =
+                find_source_text_override(source_text_overrides, include_key);
+            std::error_code exists_error;
+            const bool include_exists = fs::exists(include_path, exists_error);
+            if (include_source != nullptr || (!require_source_text_overrides && include_exists)) {
                 if (state.include_stack.insert(include_key).second) {
-                    append_preprocessed_logical_lines(include_path, state, false, output_lines);
+                    append_preprocessed_logical_lines(
+                        include_path,
+                        state,
+                        false,
+                        output_lines,
+                        include_source,
+                        source_text_overrides,
+                        require_source_text_overrides);
                     state.include_stack.erase(include_key);
                 }
+            } else if (require_source_text_overrides) {
+                throw std::runtime_error("verified include source unavailable: " + include_key);
             }
             continue;
         }
@@ -817,6 +867,24 @@ std::vector<LogicalLine> load_preprocessed_logical_lines(const std::string& path
     std::vector<LogicalLine> output_lines;
     PreprocessorState state;
     append_preprocessed_logical_lines(fs::path(path), state, true, output_lines);
+    return output_lines;
+}
+
+std::vector<LogicalLine> load_preprocessed_logical_lines_from_text(
+    const std::string& path,
+    const std::string& source_text,
+    const std::map<std::string, std::string>& source_text_overrides,
+    const bool require_source_text_overrides) {
+    std::vector<LogicalLine> output_lines;
+    PreprocessorState state;
+    append_preprocessed_logical_lines(
+        fs::path(path),
+        state,
+        true,
+        output_lines,
+        &source_text,
+        &source_text_overrides,
+        require_source_text_overrides);
     return output_lines;
 }
 
@@ -1207,10 +1275,16 @@ void parse_default_statement(const std::string& line, Statement& statement) {
 
 }  // namespace
 
-Program parse_program(const std::string& path) {
+Program parse_program_impl(
+    const std::string& path,
+    const std::string* source_override,
+    const std::map<std::string, std::string>* source_text_overrides = nullptr,
+    const bool require_source_text_overrides = false) {
     Program program;
     program.path = normalize_path(path);
-    program.source_lines = load_source_lines(path);
+    program.source_lines = source_override == nullptr
+        ? load_source_lines(path)
+        : load_source_lines_from_text(*source_override);
     program.main.name = "main";
 
     Routine* current = &program.main;
@@ -1222,7 +1296,16 @@ Program parse_program(const std::string& path) {
             current->body_end_line_exclusive = end_line_exclusive;
         }
     };
-    for (const auto& logical_line : load_preprocessed_logical_lines(path)) {
+    const std::vector<LogicalLine> logical_lines = source_override == nullptr
+        ? load_preprocessed_logical_lines(path)
+        : load_preprocessed_logical_lines_from_text(
+              path,
+              *source_override,
+              source_text_overrides == nullptr
+                  ? std::map<std::string, std::string>{}
+                  : *source_text_overrides,
+              require_source_text_overrides);
+    for (const auto& logical_line : logical_lines) {
         const std::size_t line_number = logical_line.line_number;
         const std::string line = trim_copy(logical_line.text);
         if (line.empty()) {
@@ -2283,6 +2366,22 @@ Program parse_program(const std::string& path) {
     finalize_open_routine(program.source_lines.size() + 1U);
 
     return program;
+}
+
+Program parse_program(const std::string& path) {
+    return parse_program_impl(path, nullptr, nullptr, false);
+}
+
+Program parse_program_source(
+    const std::string& logical_path,
+    const std::string& source_text,
+    const std::map<std::string, std::string>& source_text_overrides,
+    const bool require_source_text_overrides) {
+    return parse_program_impl(
+        logical_path,
+        &source_text,
+        &source_text_overrides,
+        require_source_text_overrides);
 }
 
 }  // namespace copperfin::runtime

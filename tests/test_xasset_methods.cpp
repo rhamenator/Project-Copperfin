@@ -889,6 +889,16 @@ void test_build_report_xasset_executable_model() {
     const std::string bootstrap = copperfin::runtime::build_xasset_bootstrap_source(model, true);
     expect(bootstrap.find("REPORT FORM 'E:\\Project-Copperfin\\samples\\invoice.frx' PREVIEW") != std::string::npos, "bootstrap should preview the report asset directly");
     expect(bootstrap.find("READ EVENTS") == std::string::npos, "report preview bootstrap should not append a second event loop");
+    const std::string snapshot_bootstrap = copperfin::runtime::build_xasset_bootstrap_source(
+        model,
+        true,
+        "/private/snapshot/invoice.frx");
+    expect(snapshot_bootstrap.find("REPORT FORM '/private/snapshot/invoice.frx' PREVIEW") != std::string::npos,
+           "verified report bootstraps should execute the immutable snapshot path");
+    expect(snapshot_bootstrap.find("E:\\Project-Copperfin\\samples\\invoice.frx") == std::string::npos,
+           "verified report bootstraps should not reopen the logical package path");
+    expect(model.asset_path == document.path && model.startup_lines[0].find(document.path) != std::string::npos,
+           "snapshot execution overrides should preserve the report model's logical source identity");
 }
 
 void test_build_label_xasset_executable_model() {

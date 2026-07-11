@@ -2,6 +2,44 @@
 // PrgRuntimeSession::Impl method group. Included inside Impl struct in prg_engine.cpp.
 // This file must not be compiled separately.
 
+        std::string display_asset_paths_in_statement(std::string text) const
+        {
+            const std::string trimmed = trim_copy(text);
+            if (!starts_with_insensitive(trimmed, "REPORT FORM ") &&
+                !starts_with_insensitive(trimmed, "LABEL FORM "))
+            {
+                return text;
+            }
+            for (const auto &[source_path, display_path] : options.source_path_display_aliases)
+            {
+                std::size_t position = 0U;
+                while (!source_path.empty() &&
+                       (position = text.find(source_path, position)) != std::string::npos)
+                {
+                    text.replace(position, source_path.size(), display_path);
+                    position += display_path.size();
+                }
+            }
+            return text;
+        }
+
+        std::map<std::string, std::string>::const_iterator find_source_text_override(
+            const std::string &path) const
+        {
+            if (const auto exact = options.source_text_overrides.find(path);
+                exact != options.source_text_overrides.end())
+            {
+                return exact;
+            }
+            return std::find_if(
+                options.source_text_overrides.begin(),
+                options.source_text_overrides.end(),
+                [&](const auto &candidate)
+                {
+                    return paths_equal_insensitive(candidate.first, path);
+                });
+        }
+
         Program &load_program(const std::string &path)
         {
             const std::string normalized = normalize_path(path);
@@ -10,7 +48,31 @@
             {
                 return existing->second;
             }
-            auto [inserted, _] = programs.emplace(normalized, parse_program(normalized));
+            const bool use_startup_source_text =
+                options.startup_source_text.has_value() &&
+                normalized == normalize_path(options.startup_path);
+            const auto source_override = find_source_text_override(normalized);
+            if (!use_startup_source_text &&
+                source_override == options.source_text_overrides.end() &&
+                options.require_source_text_overrides)
+            {
+                throw std::runtime_error("verified source text unavailable: " + normalized);
+            }
+            auto [inserted, _] = programs.emplace(
+                normalized,
+                use_startup_source_text
+                    ? parse_program_source(
+                          normalized,
+                          *options.startup_source_text,
+                          options.source_text_overrides,
+                          options.require_source_text_overrides)
+                    : (source_override != options.source_text_overrides.end()
+                           ? parse_program_source(
+                                 normalized,
+                                 source_override->second,
+                                 options.source_text_overrides,
+                                 options.require_source_text_overrides)
+                           : parse_program(normalized)));
             return inserted->second;
         }
 
@@ -4659,6 +4721,7 @@
                 state.location = statement->location;
                 state.statement_text = statement->text;
             }
+            state.statement_text = display_asset_paths_in_statement(std::move(state.statement_text));
 
             bool assigned_fault_frame_line = false;
             for (auto iterator = stack.rbegin(); iterator != stack.rend(); ++iterator)

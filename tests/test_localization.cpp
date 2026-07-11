@@ -208,6 +208,41 @@ void test_machine_contract_fields_remain_invariant() {
         "#1779: only diagnostic prose should be localized");
 }
 
+void test_product_locale_catalogs_have_key_parity() {
+    namespace fs = std::filesystem;
+    const fs::path catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalog_file(
+        catalog_root / "en-US" / "strings.json");
+    expect(english.ok, "product en-US localization catalog should parse");
+    if (!english.ok) {
+        return;
+    }
+
+    for (const std::string locale : {"es-419", "pt-BR", "qps-ploc"}) {
+        const auto localized = copperfin::localization::load_catalog_file(
+            catalog_root / locale / "strings.json");
+        expect(localized.ok, "product " + locale + " localization catalog should parse");
+        if (!localized.ok) {
+            continue;
+        }
+        expect(
+            localized.entries.size() == english.entries.size(),
+            "product " + locale + " catalog should contain the same number of keys as en-US");
+        for (const auto& entry : english.entries) {
+            const std::string& key = entry.first;
+            expect(
+                localized.entries.contains(key),
+                "product " + locale + " catalog should contain en-US key " + key);
+        }
+        for (const auto& entry : localized.entries) {
+            const std::string& key = entry.first;
+            expect(
+                english.entries.contains(key),
+                "product " + locale + " catalog should not add a key absent from en-US: " + key);
+        }
+    }
+}
+
 void test_catalog_root_resolution_searches_parent_directories() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_parent_catalog_tests";
@@ -3141,6 +3176,7 @@ int main(int argc, char** argv) {
     test_placeholders_pseudo_locale_and_unicode();
     test_catalog_json_unicode_escapes_support_surrogate_pairs();
     test_machine_contract_fields_remain_invariant();
+    test_product_locale_catalogs_have_key_parity();
     test_catalog_root_resolution_searches_parent_directories();
     test_catalog_root_resolution_finds_repo_build_output_layout_from_executable_path();
     test_catalog_root_resolution_finds_repo_build_output_layout_from_path_launched_basename();

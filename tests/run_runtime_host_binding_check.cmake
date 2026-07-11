@@ -19,6 +19,38 @@ string(REGEX REPLACE "[/\\\\]+$" "" temp_root "${temp_root}")
 
 string(TIMESTAMP timestamp "%Y%m%d%H%M%S" UTC)
 set(test_root "${temp_root}/copperfin_runtime_host_binding_${timestamp}")
+
+function(create_directory_indirection target_path link_path result_variable)
+    if(WIN32)
+        execute_process(
+            COMMAND cmd.exe /d /c mklink /J "${link_path}" "${target_path}"
+            RESULT_VARIABLE indirection_result
+            OUTPUT_QUIET
+            ERROR_QUIET
+        )
+    else()
+        execute_process(
+            COMMAND ${CMAKE_COMMAND} -E create_symlink "${target_path}" "${link_path}"
+            RESULT_VARIABLE indirection_result
+            OUTPUT_QUIET
+            ERROR_QUIET
+        )
+    endif()
+    set(${result_variable} "${indirection_result}" PARENT_SCOPE)
+endfunction()
+
+function(remove_directory_indirection link_path)
+    if(WIN32)
+        execute_process(
+            COMMAND cmd.exe /d /c rmdir "${link_path}"
+            OUTPUT_QUIET
+            ERROR_QUIET
+        )
+    else()
+        file(REMOVE "${link_path}")
+    endif()
+endfunction()
+
 set(builder_root "${test_root}/builder/DemoApp")
 set(deployed_root "${test_root}/deployed")
 set(content_root "${deployed_root}/content")
@@ -55,12 +87,21 @@ if(UNIX)
     execute_process(COMMAND chmod +x "${packaged_entrypoint}")
 endif()
 
-file(WRITE "${content_root}/main.prg" "RETURN\n")
+set(packaged_startup_source
+"#INCLUDE 'verified.h'
+PUBLIC snapshotProof
+snapshotProof = SNAPSHOT_PROOF
+RETURN
+")
+file(WRITE "${content_root}/main.prg" "${packaged_startup_source}")
+file(WRITE "${content_root}/verified.h" "#DEFINE SNAPSHOT_PROOF 'VERIFIED_PRG_SNAPSHOT'\n")
 file(WRITE "${plugin_root}/helper.dll" "plugin-payload")
 
 file(SHA256 "${packaged_runtime_host}" runtime_host_hash)
 file(SHA256 "${packaged_entrypoint}" native_entrypoint_hash)
 file(SHA256 "${plugin_root}/helper.dll" helper_payload_hash)
+file(SHA256 "${content_root}/main.prg" startup_asset_hash)
+file(SHA256 "${content_root}/verified.h" startup_include_hash)
 
 set(manifest_text
 "manifest_version=1
@@ -77,9 +118,11 @@ security_role=developer
 security_mode=native
 audit_log_path=${builder_root}/security_audit.log
 runtime_host_sha256=${runtime_host_hash}
+asset=1|main.prg|${builder_root}/content/main.prg|Program|false|true|${startup_asset_hash}|true
 extension_payload=${builder_root}/${runtime_host_file_name}|${runtime_host_hash}
 extension_payload=${builder_root}/DemoApp${runtime_host_extension}|${native_entrypoint_hash}
 extension_payload=${builder_root}/content/plugins/helper.dll|${helper_payload_hash}
+extension_payload=${builder_root}/content/verified.h|${startup_include_hash}
 ")
 file(WRITE "${deployed_root}/app.cfmanifest" "${manifest_text}")
 
@@ -384,6 +427,251 @@ execute_process(
 if(NOT external_root_result EQUAL 4 OR external_root_output MATCHES "EXTERNAL_ROOT_EXECUTED")
     message(FATAL_ERROR "Runtime package host executed startup_item from an external content or working root.\nstdout:\n${external_root_output}\nstderr:\n${external_root_error}")
 endif()
+
+set(package_alias "${test_root}/deployed-alias")
+create_directory_indirection("${deployed_root}" "${package_alias}" package_alias_result)
+if(NOT package_alias_result EQUAL 0)
+    message(FATAL_ERROR "Unable to create the package-root symlink or junction required by the runtime-host containment regression.")
+endif()
+
+execute_process(
+    COMMAND "${package_alias}/DemoApp${runtime_host_extension}" --manifest "${package_alias}/app.cfmanifest"
+    WORKING_DIRECTORY "${test_root}"
+    RESULT_VARIABLE package_alias_run_result
+    OUTPUT_VARIABLE package_alias_run_output
+    ERROR_VARIABLE package_alias_run_error
+)
+if(NOT package_alias_run_result EQUAL 0 OR
+   NOT package_alias_run_output MATCHES "runtime\\.completed: true")
+    message(FATAL_ERROR "Runtime host rejected a valid relocated package reached through its package-root symlink or junction.\nstdout:\n${package_alias_run_output}\nstderr:\n${package_alias_run_error}")
+endif()
+remove_directory_indirection("${package_alias}")
+
+string(REPLACE "security_role=developer" "security_role=runtime-operator" snapshot_manifest_text "${manifest_text}")
+file(WRITE "${deployed_root}/app.cfmanifest" "${snapshot_manifest_text}")
+file(TO_CMAKE_PATH "${content_root}/main.prg" startup_watch_path)
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -E env
+        "COPPERFIN_LOCALE_DIR=${LOCALE_ROOT}"
+        "COPPERFIN_LOCALE=en-US"
+        "${packaged_entrypoint}"
+        --debug
+        --breakpoint 2
+        --debug-command continue
+        --debug-command "watch:STRTOFILE('RETURN','${startup_watch_path}')"
+        --debug-command continue
+    WORKING_DIRECTORY "${test_root}"
+    RESULT_VARIABLE verified_prg_snapshot_result
+    OUTPUT_VARIABLE verified_prg_snapshot_output
+    ERROR_VARIABLE verified_prg_snapshot_error
+)
+file(READ "${content_root}/main.prg" watched_startup_contents)
+if(NOT verified_prg_snapshot_result EQUAL 0 OR
+   NOT watched_startup_contents STREQUAL "RETURN" OR
+   NOT verified_prg_snapshot_output MATCHES "debug\\.global\\.snapshotproof: VERIFIED_PRG_SNAPSHOT")
+    message(FATAL_ERROR "Runtime host did not execute verified PRG bytes after the live package source changed while paused.\nstdout:\n${verified_prg_snapshot_output}\nstderr:\n${verified_prg_snapshot_error}")
+endif()
+file(WRITE "${content_root}/main.prg" "${packaged_startup_source}")
+file(WRITE "${deployed_root}/app.cfmanifest" "${manifest_text}")
+
+file(APPEND "${content_root}/main.prg" "? \"MUTATED_AFTER_PACKAGING\"\n")
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -E env
+        "COPPERFIN_LOCALE_DIR=${LOCALE_ROOT}"
+        "COPPERFIN_LOCALE=en-US"
+        "${packaged_entrypoint}"
+    WORKING_DIRECTORY "${test_root}"
+    RESULT_VARIABLE mutated_asset_result
+    OUTPUT_VARIABLE mutated_asset_output
+    ERROR_VARIABLE mutated_asset_error
+)
+if(NOT mutated_asset_result EQUAL 8 OR
+   NOT mutated_asset_output MATCHES "Packaged asset hash mismatch: main\\.prg" OR
+   mutated_asset_output MATCHES "MUTATED_AFTER_PACKAGING")
+    message(FATAL_ERROR "Runtime host did not reject a packaged startup asset changed after its security digest was recorded.\nstdout:\n${mutated_asset_output}\nstderr:\n${mutated_asset_error}")
+endif()
+file(WRITE "${content_root}/main.prg" "${packaged_startup_source}")
+
+string(
+    REPLACE
+    "asset=1|main.prg|${builder_root}/content/main.prg|Program|false|true|${startup_asset_hash}|true"
+    "asset=1|main.prg|${builder_root}/content/main.prg|Program|false|true|${startup_asset_hash}|false"
+    missing_startup_digest_manifest_text
+    "${manifest_text}"
+)
+string(APPEND missing_startup_digest_manifest_text
+    "extension_payload=${builder_root}/content/main.prg|${startup_asset_hash}\n")
+file(WRITE "${deployed_root}/app.cfmanifest" "${missing_startup_digest_manifest_text}")
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -E env
+        "COPPERFIN_LOCALE_DIR=${LOCALE_ROOT}"
+        "COPPERFIN_LOCALE=en-US"
+        "${packaged_entrypoint}"
+    WORKING_DIRECTORY "${test_root}"
+    RESULT_VARIABLE missing_startup_digest_result
+    OUTPUT_VARIABLE missing_startup_digest_output
+    ERROR_VARIABLE missing_startup_digest_error
+)
+if(NOT missing_startup_digest_result EQUAL 8 OR
+   NOT missing_startup_digest_output MATCHES "Security-enabled startup is missing a verified package digest: main\\.prg")
+    message(FATAL_ERROR "Runtime host did not require a declared copied-asset digest for security startup.\nstdout:\n${missing_startup_digest_output}\nstderr:\n${missing_startup_digest_error}")
+endif()
+file(WRITE "${deployed_root}/app.cfmanifest" "${manifest_text}")
+
+string(
+    REPLACE
+    "extension_payload=${builder_root}/content/verified.h|${startup_include_hash}\n"
+    ""
+    missing_include_digest_manifest_text
+    "${manifest_text}"
+)
+file(WRITE "${deployed_root}/app.cfmanifest" "${missing_include_digest_manifest_text}")
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -E env
+        "COPPERFIN_LOCALE_DIR=${LOCALE_ROOT}"
+        "COPPERFIN_LOCALE=en-US"
+        "${packaged_entrypoint}"
+    WORKING_DIRECTORY "${test_root}"
+    RESULT_VARIABLE missing_include_digest_result
+    OUTPUT_VARIABLE missing_include_digest_output
+    ERROR_VARIABLE missing_include_digest_error
+)
+if(NOT missing_include_digest_result EQUAL 8 OR
+   NOT missing_include_digest_output MATCHES "Verified package source is unavailable: main\\.prg")
+    message(FATAL_ERROR "Runtime host did not fail closed for an unverified packaged PRG include.\nstdout:\n${missing_include_digest_output}\nstderr:\n${missing_include_digest_error}")
+endif()
+file(WRITE "${deployed_root}/app.cfmanifest" "${manifest_text}")
+
+set(indirection_root "${test_root}/indirection-deployed")
+set(indirection_content_root "${indirection_root}/content")
+set(indirection_outside_root "${test_root}/indirection-outside")
+set(indirection_link "${indirection_content_root}/linked-content")
+set(indirection_builder_root "${test_root}/indirection-builder/DemoApp")
+file(MAKE_DIRECTORY "${indirection_content_root}")
+file(MAKE_DIRECTORY "${indirection_outside_root}")
+file(WRITE "${indirection_content_root}/main.prg" "RETURN\n")
+file(WRITE "${indirection_outside_root}/outside.prg" "? \"INDIRECTION_TARGET_EXECUTED\"\nRETURN\n")
+create_directory_indirection("${indirection_outside_root}" "${indirection_link}" interior_indirection_result)
+if(NOT interior_indirection_result EQUAL 0)
+    message(FATAL_ERROR "Unable to create the interior symlink or junction required by the runtime-host containment regression.")
+endif()
+
+set(indirect_startup_manifest_text
+"manifest_version=1
+project_title=IndirectStartupDemo
+package_root=${indirection_builder_root}
+content_root=${indirection_builder_root}/content
+working_directory=${indirection_builder_root}/content
+startup_item=linked-content/outside.prg
+startup_source=${indirection_builder_root}/content/linked-content/outside.prg
+security_enabled=false
+security_role=
+security_mode=native
+dotnet_story=none
+")
+file(WRITE "${indirection_root}/app.cfmanifest" "${indirect_startup_manifest_text}")
+
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -E env
+        "COPPERFIN_LOCALE_DIR=${LOCALE_ROOT}"
+        "COPPERFIN_LOCALE=es-419"
+        "${packaged_entrypoint}" --manifest "${indirection_root}/app.cfmanifest"
+    WORKING_DIRECTORY "${test_root}"
+    RESULT_VARIABLE indirect_startup_result
+    OUTPUT_VARIABLE indirect_startup_output
+    ERROR_VARIABLE indirect_startup_error
+)
+if(NOT indirect_startup_result EQUAL 4 OR
+   NOT indirect_startup_output MATCHES "status: error" OR
+   NOT indirect_startup_output MATCHES "La ruta del paquete no supero la validacion de contencion fisica: outside\\.prg" OR
+   indirect_startup_output MATCHES "INDIRECTION_TARGET_EXECUTED")
+    message(FATAL_ERROR "Runtime host did not fail closed with a localized error for an indirect startup path.\nstdout:\n${indirect_startup_output}\nstderr:\n${indirect_startup_error}")
+endif()
+
+set(final_component_indirection "${indirection_content_root}/final-linked.prg")
+create_directory_indirection(
+    "${indirection_outside_root}"
+    "${final_component_indirection}"
+    final_component_indirection_result
+)
+if(NOT final_component_indirection_result EQUAL 0)
+    message(FATAL_ERROR "Unable to create the final-component symlink or junction required by the runtime-host containment regression.")
+endif()
+set(final_component_manifest_text
+"manifest_version=1
+project_title=FinalComponentIndirectionDemo
+package_root=${indirection_builder_root}
+content_root=${indirection_builder_root}/content
+working_directory=${indirection_builder_root}/content
+startup_item=final-linked.prg
+startup_source=${indirection_builder_root}/content/final-linked.prg
+security_enabled=false
+security_role=
+security_mode=native
+dotnet_story=none
+")
+file(WRITE "${indirection_root}/app.cfmanifest" "${final_component_manifest_text}")
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -E env
+        "COPPERFIN_LOCALE_DIR=${LOCALE_ROOT}"
+        "COPPERFIN_LOCALE=en-US"
+        "${packaged_entrypoint}" --manifest "${indirection_root}/app.cfmanifest"
+    WORKING_DIRECTORY "${test_root}"
+    RESULT_VARIABLE final_component_result
+    OUTPUT_VARIABLE final_component_output
+    ERROR_VARIABLE final_component_error
+)
+if(NOT final_component_result EQUAL 4 OR
+   NOT final_component_output MATCHES "Package path failed physical containment validation: final-linked\\.prg")
+    message(FATAL_ERROR "Runtime host did not reject a final-component symlink or Windows junction.\nstdout:\n${final_component_output}\nstderr:\n${final_component_error}")
+endif()
+remove_directory_indirection("${final_component_indirection}")
+
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -E copy "${RUNTIME_HOST_EXECUTABLE}" "${indirection_root}/${runtime_host_file_name}"
+    RESULT_VARIABLE indirection_host_copy_result
+)
+if(NOT indirection_host_copy_result EQUAL 0)
+    message(FATAL_ERROR "Failed to stage the runtime host for the indirect security-payload regression.")
+endif()
+if(UNIX)
+    execute_process(COMMAND chmod +x "${indirection_root}/${runtime_host_file_name}")
+endif()
+file(SHA256 "${indirection_root}/${runtime_host_file_name}" indirection_runtime_host_hash)
+file(SHA256 "${indirection_outside_root}/outside.prg" indirect_payload_hash)
+set(indirect_payload_manifest_text
+"manifest_version=1
+project_title=IndirectPayloadDemo
+package_root=${indirection_builder_root}
+content_root=${indirection_builder_root}/content
+working_directory=${indirection_builder_root}/content
+startup_item=main.prg
+startup_source=${indirection_builder_root}/content/main.prg
+security_enabled=true
+security_role=developer
+security_mode=native
+runtime_host_sha256=${indirection_runtime_host_hash}
+extension_payload=${indirection_builder_root}/content/linked-content/outside.prg|${indirect_payload_hash}
+dotnet_story=none
+")
+file(WRITE "${indirection_root}/app.cfmanifest" "${indirect_payload_manifest_text}")
+
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -E env
+        "COPPERFIN_LOCALE_DIR=${LOCALE_ROOT}"
+        "COPPERFIN_LOCALE=en-US"
+        "${packaged_entrypoint}" --manifest "${indirection_root}/app.cfmanifest"
+    WORKING_DIRECTORY "${test_root}"
+    RESULT_VARIABLE indirect_payload_result
+    OUTPUT_VARIABLE indirect_payload_output
+    ERROR_VARIABLE indirect_payload_error
+)
+if(NOT indirect_payload_result EQUAL 8 OR
+   NOT indirect_payload_output MATCHES "status: error" OR
+   NOT indirect_payload_output MATCHES "Package path failed physical containment validation: outside\\.prg")
+    message(FATAL_ERROR "Runtime host did not fail closed for an indirect security payload.\nstdout:\n${indirect_payload_output}\nstderr:\n${indirect_payload_error}")
+endif()
+remove_directory_indirection("${indirection_link}")
 
 file(WRITE "${test_root}/debug-source.prg" "? \"DEBUG_SOURCE_EXECUTED\"\nRETURN\n")
 set(debug_manifest_text

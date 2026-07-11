@@ -20,6 +20,7 @@ std::string rtrim_space_copy(std::string value);
 std::string trim_space_copy(std::string value);
 std::string lowercase_copy(std::string value);
 bool starts_with_insensitive(const std::string& value, const std::string& prefix);
+bool paths_equal_insensitive(const std::string& left, const std::string& right);
 std::string normalize_identifier(std::string value);
 std::string normalize_memory_variable_identifier(std::string value);
 std::string normalize_path(const std::string& value);

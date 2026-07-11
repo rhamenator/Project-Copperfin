@@ -22,7 +22,7 @@
         ++executed_statement_count;
 
         events.push_back({.category = "execute",
-                          .detail = statement.text,
+                          .detail = display_asset_paths_in_statement(statement.text),
                           .location = statement.location});
 
         try

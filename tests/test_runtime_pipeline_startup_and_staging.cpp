@@ -747,6 +747,16 @@ void test_startup_dbf_companion_assets_are_staged() {
             runtime_manifest.find("asset=1|startup.dbf|") < runtime_manifest.find("|true|true|") &&
             runtime_manifest.find("|true|true|", runtime_manifest.find("asset=1|startup.dbf|")) != std::string::npos,
             "runtime manifest should report the startup DBF asset as copied");
+        expect(
+            runtime_manifest.find(
+                "extension_payload=" + (content_root / "startup.fpt").string() + "|") !=
+                std::string::npos,
+            "runtime manifest should digest the staged memo companion");
+        expect(
+            runtime_manifest.find(
+                "extension_payload=" + (content_root / "startup.cdx").string() + "|") !=
+                std::string::npos,
+            "runtime manifest should digest the staged index companion");
     }
 
     fs::remove_all(temp_root, ignored);

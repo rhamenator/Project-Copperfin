@@ -791,6 +791,11 @@
         ExecutionOutcome open_report_surface(const Statement &statement, const Frame &frame, const char *extension, const char *category_prefix)
         {
             const std::filesystem::path asset_path = resolve_asset_path(statement.identifier, extension);
+            const std::string normalized_asset_path = asset_path.lexically_normal().string();
+            const auto display_alias = options.source_path_display_aliases.find(normalized_asset_path);
+            const std::string display_asset_path = display_alias == options.source_path_display_aliases.end()
+                ? asset_path.string()
+                : display_alias->second;
             if (!std::filesystem::exists(asset_path))
             {
                 last_error_message = report_asset_resolve_message(asset_path);
@@ -820,7 +825,7 @@
             {
                 waiting_for_events = true;
                 events.push_back({.category = std::string(category_prefix) + ".preview",
-                                  .detail = asset_path.string(),
+                                  .detail = display_asset_path,
                                   .location = statement.location});
                 if (layout.available)
                 {

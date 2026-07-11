@@ -735,11 +735,20 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
     return model;
 }
 
-std::string build_xasset_bootstrap_source(const XAssetExecutableModel& model, bool include_read_events) {
+std::string build_xasset_bootstrap_source(
+    const XAssetExecutableModel& model,
+    bool include_read_events,
+    const std::string& execution_asset_path) {
     std::ostringstream stream;
     stream << "* Copperfin generated xAsset bootstrap\n";
     for (const auto& line : model.startup_lines) {
-        stream << line << "\n";
+        if (!execution_asset_path.empty() && starts_with_insensitive(line, "REPORT FORM ")) {
+            stream << "REPORT FORM '" << execution_asset_path << "' PREVIEW\n";
+        } else if (!execution_asset_path.empty() && starts_with_insensitive(line, "LABEL FORM ")) {
+            stream << "LABEL FORM '" << execution_asset_path << "' PREVIEW\n";
+        } else {
+            stream << line << "\n";
+        }
     }
     if (include_read_events && !model.startup_enters_event_loop) {
         stream << "READ EVENTS\n";

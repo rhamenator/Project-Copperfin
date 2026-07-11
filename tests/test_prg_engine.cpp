@@ -38,6 +38,41 @@ namespace {
 
 using namespace copperfin::test_support;
 
+void test_verified_startup_source_text_overrides_changed_disk_source() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_verified_source";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "verified.prg";
+    const fs::path include_path = temp_root / "VERIFIED.H";
+    write_text(
+        main_path,
+        "#INCLUDE 'verified.h'\n"
+        "PUBLIC sourceValue\n"
+        "sourceValue = SOURCE_VALUE\n");
+    write_text(include_path, "#DEFINE SOURCE_VALUE 'disk'\n");
+
+    auto options = make_runtime_session_options(main_path.string(), temp_root.string());
+    options.startup_source_text =
+        "#INCLUDE 'verified.h'\n"
+        "PUBLIC sourceValue\n"
+        "sourceValue = SOURCE_VALUE\n";
+    options.source_text_overrides.emplace(
+        include_path.lexically_normal().string(),
+        "#DEFINE SOURCE_VALUE 'verified snapshot'\n");
+    options.require_source_text_overrides = true;
+    auto session = copperfin::runtime::PrgRuntimeSession::create(options);
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    const auto source_value = state.globals.find("sourcevalue");
+    expect(source_value != state.globals.end() &&
+               copperfin::runtime::format_value(source_value->second) == "verified snapshot",
+           "runtime startup should case-insensitively parse verified source text without reopening disk source");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_read_events_pause() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_events";
@@ -1668,6 +1703,7 @@ void test_transaction_processing_txnlevel_and_sessions() {
 }  // namespace
 
 int main() {
+    test_verified_startup_source_text_overrides_changed_disk_source();
     test_read_events_pause();
     test_activate_popup_pause();
     test_dispatch_event_handler();

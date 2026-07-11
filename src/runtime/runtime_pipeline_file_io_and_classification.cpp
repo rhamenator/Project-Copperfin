@@ -581,9 +581,10 @@ std::vector<std::filesystem::path> infer_companion_source_paths(const std::files
     return companions;
 }
 
-void copy_companion_files_if_present(
+std::vector<std::filesystem::path> copy_companion_files_if_present(
     const RuntimePackageAsset& asset,
     std::vector<std::string>& warnings) {
+    std::vector<std::filesystem::path> copied_companions;
     const std::filesystem::path source(asset.source_path);
     const std::filesystem::path staged(asset.staged_path);
     for (const auto& companion_source : infer_companion_source_paths(source)) {
@@ -597,8 +598,11 @@ void copy_companion_files_if_present(
         std::string error;
         if (!copy_file_if_exists(*resolved_companion_source, companion_destination, error)) {
             warnings.push_back(error);
+        } else {
+            copied_companions.push_back(companion_destination);
         }
     }
+    return copied_companions;
 }
 
 }  // namespace runtime_pipeline_detail

@@ -91,7 +91,7 @@ bool is_prg_path(const std::string& value);
 bool is_xasset_path(const std::string& value);
 bool should_stage_asset(const RuntimePackageAsset& asset);
 std::vector<std::filesystem::path> infer_companion_source_paths(const std::filesystem::path& source);
-void copy_companion_files_if_present(
+std::vector<std::filesystem::path> copy_companion_files_if_present(
     const RuntimePackageAsset& asset,
     std::vector<std::string>& warnings);
 

@@ -177,6 +177,11 @@ struct RuntimeWatchResult {
 
 struct RuntimeSessionOptions {
     std::string startup_path;
+    // Parses trusted startup bytes under startup_path's logical source identity.
+    std::optional<std::string> startup_source_text;
+    std::map<std::string, std::string> source_text_overrides;
+    bool require_source_text_overrides = false;
+    std::map<std::string, std::string> source_path_display_aliases;
     std::string working_directory;
     bool stop_on_entry = false;
     std::size_t max_call_depth = 1024;

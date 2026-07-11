@@ -841,7 +841,16 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
             materialized_plan.warnings.push_back(error);
             continue;
         }
-        copy_companion_files_if_present(asset, materialized_plan.warnings);
+        const auto copied_companions =
+            copy_companion_files_if_present(asset, materialized_plan.warnings);
+        for (const auto& companion : copied_companions) {
+            if (!append_runtime_artifact_digest(
+                    materialized_plan.extension_payload_digests,
+                    companion.string(),
+                    error)) {
+                return {.ok = false, .error = error};
+            }
+        }
         asset.copied = true;
 
         const auto digest = security::sha256_hex_for_file(destination.string());
