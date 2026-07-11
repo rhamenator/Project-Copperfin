@@ -16,6 +16,16 @@ endif()
 option(COPPERFIN_BUILD_TESTS "Build Copperfin tests" ON)
 set(COPPERFIN_WINDOWS_STACK_RESERVE_BYTES 16777216)
 
+function(copperfin_apply_windows_stack_reserve TARGET_NAME)
+    if(WIN32)
+        if(MSVC)
+            target_link_options(${TARGET_NAME} PRIVATE "/STACK:${COPPERFIN_WINDOWS_STACK_RESERVE_BYTES}")
+        else()
+            target_link_options(${TARGET_NAME} PRIVATE "-Wl,--stack,${COPPERFIN_WINDOWS_STACK_RESERVE_BYTES}")
+        endif()
+    endif()
+endfunction()
+
 add_library(cf_localization
     src/localization/localization.cpp
 )
@@ -346,13 +356,7 @@ add_executable(copperfin_studio_host
 
 target_link_libraries(copperfin_studio_host PRIVATE cf_design_model cf_security cf_platform_profile cf_licensing)
 
-if(WIN32)
-    if(MSVC)
-        target_link_options(copperfin_studio_host PRIVATE "/STACK:${COPPERFIN_WINDOWS_STACK_RESERVE_BYTES}")
-    else()
-        target_link_options(copperfin_studio_host PRIVATE "-Wl,--stack,${COPPERFIN_WINDOWS_STACK_RESERVE_BYTES}")
-    endif()
-endif()
+copperfin_apply_windows_stack_reserve(copperfin_studio_host)
 
 if(MSVC)
     target_compile_options(copperfin_studio_host PRIVATE /W4 /permissive-)

@@ -3846,6 +3846,7 @@ copperfin_add_test(test_studio_host cf_design_model
     test_studio_host_appearance_ole_and_drag.cpp
     test_studio_host_setters_data.cpp
 )
+copperfin_apply_windows_stack_reserve(test_studio_host)
 
 copperfin_add_test(test_dbf_table cf_vfp_assets
     test_dbf_table.cpp
