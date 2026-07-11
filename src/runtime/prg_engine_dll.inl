@@ -738,10 +738,15 @@
                                           : (ret_integer64 ? VT_I8 : VT_I4)));
                     VARIANT native_result;
                     VariantInit(&native_result);
+#if defined(_WIN64)
+                    constexpr CALLCONV native_calling_convention = CC_STDCALL;
+#else
+                    const CALLCONV native_calling_convention = declfn.native_cdecl ? CC_CDECL : CC_STDCALL;
+#endif
                     const HRESULT invoke_result = DispCallFunc(
                         nullptr,
                         reinterpret_cast<ULONG_PTR>(declfn.proc_address),
-                        CC_STDCALL,
+                        native_calling_convention,
                         native_return_type,
                         static_cast<UINT>(nargs),
                         native_argument_types.empty() ? nullptr : native_argument_types.data(),

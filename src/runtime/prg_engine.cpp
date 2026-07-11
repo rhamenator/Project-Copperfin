@@ -561,6 +561,7 @@ namespace copperfin::runtime
 #if defined(_WIN32)
             HMODULE hmodule = nullptr;
             FARPROC proc_address = nullptr;
+            bool native_cdecl = false;
 #endif
             // .NET-specific (assembly!Namespace.Type.Method)
             std::string dotnet_type_name;

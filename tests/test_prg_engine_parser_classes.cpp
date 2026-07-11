@@ -553,6 +553,16 @@ void test_parse_declare_dll_preserves_vfp_parameter_contract() {
             !copperfin::runtime::declared_dll_type_is_single("DOUBLE") &&
             !copperfin::runtime::declared_dll_type_is_single("F"),
         "#3933: documented SINGLE should remain distinct from DOUBLE and existing aliases");
+    copperfin::test_support::expect(
+        copperfin::runtime::declared_dll_x86_stdcall_stack_bytes("") == 0U &&
+            copperfin::runtime::declared_dll_x86_stdcall_stack_bytes("LONG value") == 4U &&
+            copperfin::runtime::declared_dll_x86_stdcall_stack_bytes(
+                "LONG first, DOUBLE second, INTEGER64 third, STRING @ output") == 24U &&
+            copperfin::runtime::declared_dll_x86_stdcall_stack_bytes(
+                "DOUBLE @ first, INTEGER64 @ second") == 8U &&
+            copperfin::runtime::declared_dll_x86_stdcall_stack_bytes(
+                "SINGLE first, SHORT @ second, F third") == 16U,
+        "#3941: Win32 stdcall decoration should use declared widths and pointer-sized by-reference slots");
 
     fs::remove_all(temp_root, ignored);
 }

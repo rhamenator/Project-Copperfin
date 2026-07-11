@@ -2787,7 +2787,7 @@ void test_declared_dll_win32_uses_typed_stdcall_slots() {
     write_text(
         main_path,
         "DECLARE DOUBLE CopperfinDeclaredDllX86Mixed IN 'native/" + fixture_name.string() +
-            "' LONG first, DOUBLE second, INTEGER64 third, INTEGER fourth\n"
+            "' AS X86MixedAlias LONG first, DOUBLE second, INTEGER64 third, INTEGER fourth\n"
         "DECLARE INTEGER64 CopperfinDeclaredDllX86Int64 IN 'native/" + fixture_name.string() + "'\n"
         "DECLARE DOUBLE CopperfinDeclaredDllX86Split IN 'native/" + fixture_name.string() +
             "' DOUBLE value, DOUBLE @ whole\n"
@@ -2799,7 +2799,7 @@ void test_declared_dll_win32_uses_typed_stdcall_slots() {
         "nWhole = 0\n"
         "nLongOut = 0\n"
         "nInteger64Out = 0\n"
-        "nMixed = CopperfinDeclaredDllX86Mixed(1, 2.5, 4294967297, 4)\n"
+        "nMixed = X86MixedAlias(1, 2.5, 4294967297, 4)\n"
         "nInt64 = CopperfinDeclaredDllX86Int64()\n"
         "nFraction = CopperfinDeclaredDllX86Split(3.75, @nWhole)\n"
         "cText = CopperfinDeclaredDllX86Text()\n"
@@ -2846,10 +2846,57 @@ void test_declared_dll_win32_uses_typed_stdcall_slots() {
     const auto declare_event = std::find_if(state.events.begin(), state.events.end(), [](const auto &event)
     {
         return event.category == "runtime.declare_dll" &&
-               event.detail.find("CopperfinDeclaredDllX86Mixed") != std::string::npos;
+               event.detail.find("X86MixedAlias") != std::string::npos;
     });
     expect(declare_event != state.events.end(),
            "#3940: Win32 typed declarations should retain the invariant runtime.declare_dll event");
+
+    fs::remove_all(temp_root, ignored);
+#endif
+}
+
+void test_declared_dll_win32_resolves_no_underscore_stdcall_export() {
+#if defined(_MSC_VER) && defined(_M_IX86)
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_declared_dll_win32_name_at_n";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root / "native");
+
+    const fs::path fixture_name = COPPERFIN_DECLARED_DLL_FIXTURE_NAME;
+    const fs::path fixture_source = declared_dll_fixture_source_path();
+    const fs::path fixture_copy = temp_root / "native" / fixture_name;
+    fs::copy_file(fixture_source, fixture_copy, fs::copy_options::overwrite_existing, ignored);
+    expect(!ignored && fs::exists(fixture_copy),
+           "#3941: no-underscore stdcall fixture should copy under the PRG working directory");
+
+    const fs::path main_path = temp_root / "declared_dll_win32_name_at_n.prg";
+    write_text(
+        main_path,
+        "DECLARE LONG CopperfinDeclaredDllNoUnderscore IN 'native/" + fixture_name.string() + "' LONG value\n"
+        "nResult = CopperfinDeclaredDllNoUnderscore(41)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#3941: Name@N-only stdcall fixture should complete: " + state.message);
+
+    const auto result = state.globals.find("nresult");
+    expect(result != state.globals.end(), "#3941: Name@N-only result should be captured");
+    if (result != state.globals.end())
+    {
+        expect(copperfin::runtime::format_value(result->second) == "42",
+               "#3941: Name@N-only stdcall export should resolve through the final decorated probe");
+    }
+
+    const auto declare_event = std::find_if(state.events.begin(), state.events.end(), [](const auto &event)
+    {
+        return event.category == "runtime.declare_dll" &&
+               event.detail.find("CopperfinDeclaredDllNoUnderscore") != std::string::npos;
+    });
+    expect(declare_event != state.events.end(),
+           "#3941: Name@N-only declaration should retain the invariant runtime.declare_dll event");
 
     fs::remove_all(temp_root, ignored);
 #endif
@@ -3475,6 +3522,7 @@ int main() {
     test_declared_dll_long_uses_vfp_32_bit_width();
     test_declared_dll_single_uses_vfp_32_bit_float_width();
     test_declared_dll_win32_uses_typed_stdcall_slots();
+    test_declared_dll_win32_resolves_no_underscore_stdcall_export();
     test_declare_dll_runtime_errors_localize();
     test_set_exact_affects_comparisons_and_seek();
     test_use_again_and_alias_collision_semantics();

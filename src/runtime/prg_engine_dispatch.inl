@@ -3963,7 +3963,26 @@
                     {
                         // Try decorated name with leading underscore (cdecl x86)
                         declfn.proc_address = GetProcAddress(hmod, ("_" + fn_name).c_str());
+#if !defined(_WIN64)
+                        declfn.native_cdecl = declfn.proc_address != nullptr;
+#endif
                     }
+#if !defined(_WIN64)
+                    if (!declfn.proc_address)
+                    {
+                        const std::string stack_suffix = "@" + std::to_string(
+                            declared_dll_x86_stdcall_stack_bytes(param_types_str));
+                        declfn.proc_address = GetProcAddress(
+                            hmod,
+                            ("_" + fn_name + stack_suffix).c_str());
+                        if (!declfn.proc_address)
+                        {
+                            declfn.proc_address = GetProcAddress(
+                                hmod,
+                                (fn_name + stack_suffix).c_str());
+                        }
+                    }
+#endif
                     if (!declfn.proc_address)
                     {
                         last_error_message = runtime_text(

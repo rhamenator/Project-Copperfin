@@ -13,17 +13,7 @@
 #endif
 
 #if defined(_MSC_VER) && defined(_M_IX86)
-#pragma comment(linker, "/EXPORT:CopperfinDeclaredDllSingleConstant=_CopperfinDeclaredDllSingleConstant@0")
-#pragma comment(linker, "/EXPORT:CopperfinDeclaredDllSingleMixed=_CopperfinDeclaredDllSingleMixed@24")
-#pragma comment(linker, "/EXPORT:CopperfinDeclaredDllSingleToDouble=_CopperfinDeclaredDllSingleToDouble@12")
-#pragma comment(linker, "/EXPORT:CopperfinDeclaredDllSingleSlots=_CopperfinDeclaredDllSingleSlots@32")
-#pragma comment(linker, "/EXPORT:CopperfinDeclaredDllSingleSplit=_CopperfinDeclaredDllSingleSplit@8")
-#pragma comment(linker, "/EXPORT:CopperfinDeclaredDllX86Mixed=_CopperfinDeclaredDllX86Mixed@24")
-#pragma comment(linker, "/EXPORT:CopperfinDeclaredDllX86Int64=_CopperfinDeclaredDllX86Int64@0")
-#pragma comment(linker, "/EXPORT:CopperfinDeclaredDllX86Split=_CopperfinDeclaredDllX86Split@12")
-#pragma comment(linker, "/EXPORT:CopperfinDeclaredDllX86Text=_CopperfinDeclaredDllX86Text@0")
-#pragma comment(linker, "/EXPORT:CopperfinDeclaredDllX86Eight=_CopperfinDeclaredDllX86Eight@32")
-#pragma comment(linker, "/EXPORT:CopperfinDeclaredDllX86NumericByRef=_CopperfinDeclaredDllX86NumericByRef@8")
+#pragma comment(linker, "/EXPORT:CopperfinDeclaredDllNoUnderscore@4=_CopperfinDeclaredDllNoUnderscoreImpl@4")
 #endif
 
 COPPERFIN_TEST_EXPORT int CopperfinDeclaredDllFixtureValue() {
@@ -135,6 +125,10 @@ COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllX86NumericByR
     *long_value = -123456789L;
     *integer64_value = -4294967297LL;
     return -7L;
+}
+
+COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllNoUnderscoreImpl(long value) {
+    return value + 1L;
 }
 
 COPPERFIN_TEST_EXPORT double CopperfinDeclaredDllOneSlot(double first) {

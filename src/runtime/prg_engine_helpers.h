@@ -7,6 +7,7 @@
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/vfp/dbf_table.h"
 
+#include <cstddef>
 #include <ctime>
 #include <optional>
 #include <string>
@@ -24,6 +25,7 @@ bool paths_equal_insensitive(const std::string& left, const std::string& right);
 std::string normalize_identifier(std::string value);
 bool declared_dll_type_uses_64_bit_integer(std::string type_name);
 bool declared_dll_type_is_single(std::string type_name);
+std::size_t declared_dll_x86_stdcall_stack_bytes(const std::string& parameter_types);
 std::string normalize_memory_variable_identifier(std::string value);
 std::string normalize_path(const std::string& value);
 bool is_index_file_path(const std::string& value);

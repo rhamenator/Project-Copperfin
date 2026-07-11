@@ -108,6 +108,35 @@ bool declared_dll_type_is_single(std::string type_name) {
     return normalize_identifier(std::move(type_name)) == "single";
 }
 
+std::size_t declared_dll_x86_stdcall_stack_bytes(const std::string& parameter_types) {
+    std::size_t stack_bytes = 0U;
+    std::istringstream parameters(parameter_types);
+    std::string raw_parameter;
+    while (std::getline(parameters, raw_parameter, ',')) {
+        const std::string parameter = trim_copy(std::move(raw_parameter));
+        if (parameter.empty()) {
+            continue;
+        }
+
+        std::size_t type_end = 0U;
+        while (type_end < parameter.size() &&
+               std::isspace(static_cast<unsigned char>(parameter[type_end])) == 0 &&
+               parameter[type_end] != '@' &&
+               parameter[type_end] != '(') {
+            ++type_end;
+        }
+        const std::string type_name = normalize_identifier(parameter.substr(0U, type_end));
+        const bool by_reference = parameter.find('@') != std::string::npos;
+        const bool uses_eight_bytes = !by_reference &&
+                                      (type_name == "double" ||
+                                       type_name == "d" ||
+                                       type_name == "f" ||
+                                       declared_dll_type_uses_64_bit_integer(type_name));
+        stack_bytes += uses_eight_bytes ? 8U : 4U;
+    }
+    return stack_bytes;
+}
+
 std::string normalize_memory_variable_identifier(std::string value) {
     std::string normalized = normalize_identifier(std::move(value));
     if (starts_with_insensitive(normalized, "m.")) {

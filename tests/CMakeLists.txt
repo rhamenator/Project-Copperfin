@@ -3966,9 +3966,6 @@ if(WIN32)
     add_library(copperfin_declared_dll_fixture SHARED
         fixtures/declared_dll_fixture.cpp
     )
-    if(MINGW AND CMAKE_SIZEOF_VOID_P EQUAL 4)
-        target_link_options(copperfin_declared_dll_fixture PRIVATE "-Wl,--add-stdcall-alias")
-    endif()
     target_compile_definitions(test_prg_engine_seek_index PRIVATE
         COPPERFIN_DECLARED_DLL_FIXTURE_NAME="$<TARGET_FILE_NAME:copperfin_declared_dll_fixture>"
     )
