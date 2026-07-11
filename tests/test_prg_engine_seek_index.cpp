@@ -44,6 +44,22 @@ using namespace copperfin::test_support;
 using copperfin::test_support::ScopedEnvironmentValue;
 using copperfin::test_support::set_env_value;
 
+#if defined(_WIN32) && defined(COPPERFIN_DECLARED_DLL_FIXTURE_NAME)
+std::filesystem::path declared_dll_fixture_source_path() {
+    std::wstring executable_path(32768U, L'\0');
+    const DWORD executable_length = GetModuleFileNameW(
+        nullptr,
+        executable_path.data(),
+        static_cast<DWORD>(executable_path.size()));
+    if (executable_length == 0U || executable_length >= executable_path.size()) {
+        return {};
+    }
+    executable_path.resize(executable_length);
+    return std::filesystem::path(executable_path).parent_path() /
+           std::filesystem::path(COPPERFIN_DECLARED_DLL_FIXTURE_NAME);
+}
+#endif
+
 void test_set_order_and_seek_for_local_tables() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_seek";
@@ -2418,17 +2434,9 @@ void test_declared_dll_explicit_relative_child_path() {
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root / "native");
 
-    std::wstring executable_path(32768U, L'\0');
-    const DWORD executable_length = GetModuleFileNameW(
-        nullptr,
-        executable_path.data(),
-        static_cast<DWORD>(executable_path.size()));
-    expect(executable_length > 0U && executable_length < executable_path.size(),
-           "#3921: test executable path should be available");
-    executable_path.resize(executable_length);
-
     const fs::path fixture_name = COPPERFIN_DECLARED_DLL_FIXTURE_NAME;
-    const fs::path fixture_source = fs::path(executable_path).parent_path() / fixture_name;
+    const fs::path fixture_source = declared_dll_fixture_source_path();
+    expect(!fixture_source.empty(), "#3921: test executable path should be available");
     const fs::path fixture_copy = temp_root / "native" / fixture_name;
     fs::copy_file(fixture_source, fixture_copy, fs::copy_options::overwrite_existing, ignored);
     expect(!ignored && fs::exists(fixture_copy),
@@ -2488,40 +2496,48 @@ void test_declared_dll_double_arguments_follow_x64_abi() {
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
+    const fs::path fixture_name = COPPERFIN_DECLARED_DLL_FIXTURE_NAME;
+    const fs::path fixture_source = declared_dll_fixture_source_path();
+    const fs::path fixture_copy = temp_root / "native" / fixture_name;
+    fs::create_directories(fixture_copy.parent_path());
+    fs::copy_file(fixture_source, fixture_copy, fs::copy_options::overwrite_existing, ignored);
+    expect(!ignored && fs::exists(fixture_copy),
+           "#3895: typed x64 DECLARE fixture should copy under the PRG working directory");
+
     const fs::path main_path = temp_root / "declared_dll_double_abi.prg";
     write_text(
         main_path,
-        "DECLARE DOUBLE pow IN 'msvcrt.dll' DOUBLE, DOUBLE\n"
-        "DECLARE DOUBLE ldexp IN 'msvcrt.dll' DOUBLE, INTEGER\n"
-        "DECLARE DOUBLE modf IN 'msvcrt.dll' DOUBLE, DOUBLE @\n"
+        "DECLARE DOUBLE CopperfinDeclaredDllMultiply IN 'native/" + fixture_name.string() + "' DOUBLE, DOUBLE\n"
+        "DECLARE DOUBLE CopperfinDeclaredDllScale IN 'native/" + fixture_name.string() + "' DOUBLE, INTEGER\n"
+        "DECLARE DOUBLE CopperfinDeclaredDllSplit IN 'native/" + fixture_name.string() + "' DOUBLE, DOUBLE @\n"
         "DECLARE INTEGER InterlockedDecrement(INTEGER @) IN 'kernel32.dll'\n"
         "nWhole = 0\n"
         "nCounter = 0\n"
-        "nPower = pow(2.0, 10.0)\n"
-        "nScaled = ldexp(1.5, 3)\n"
-        "nFraction = modf(3.75, @nWhole)\n"
+        "nProduct = CopperfinDeclaredDllMultiply(2.5, 4.0)\n"
+        "nScaled = CopperfinDeclaredDllScale(1.5, 8)\n"
+        "nFraction = CopperfinDeclaredDllSplit(3.75, @nWhole)\n"
         "nDecremented = InterlockedDecrement(@nCounter)\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
         make_runtime_session_options(main_path.string(), temp_root.string()));
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-    expect(state.completed, "declared DLL double-argument script should complete");
+    expect(state.completed, "declared DLL double-argument script should complete: " + state.message);
 
-    const auto power = state.globals.find("npower");
+    const auto product = state.globals.find("nproduct");
     const auto scaled = state.globals.find("nscaled");
     const auto fraction = state.globals.find("nfraction");
     const auto whole = state.globals.find("nwhole");
     const auto decremented = state.globals.find("ndecremented");
     const auto counter = state.globals.find("ncounter");
-    expect(power != state.globals.end(), "pow result should be captured");
-    expect(scaled != state.globals.end(), "ldexp result should be captured");
-    expect(fraction != state.globals.end(), "modf fractional result should be captured");
-    expect(whole != state.globals.end(), "modf DOUBLE @ output should be captured");
+    expect(product != state.globals.end(), "two-DOUBLE fixture result should be captured");
+    expect(scaled != state.globals.end(), "mixed DOUBLE/INTEGER fixture result should be captured");
+    expect(fraction != state.globals.end(), "DOUBLE @ fixture fractional result should be captured");
+    expect(whole != state.globals.end(), "DOUBLE @ fixture output should be captured");
     expect(decremented != state.globals.end(), "signed 32-bit return should be captured");
     expect(counter != state.globals.end(), "INTEGER @ output should be captured");
-    if (power != state.globals.end()) {
-        expect(copperfin::runtime::format_value(power->second) == "1024", "two DOUBLE arguments should reach XMM0 and XMM1");
+    if (product != state.globals.end()) {
+        expect(copperfin::runtime::format_value(product->second) == "10", "two DOUBLE arguments should reach XMM0 and XMM1");
     }
     if (scaled != state.globals.end()) {
         expect(copperfin::runtime::format_value(scaled->second) == "12", "mixed DOUBLE/INTEGER arguments should preserve x64 register classes");

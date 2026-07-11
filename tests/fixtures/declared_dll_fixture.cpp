@@ -11,3 +11,19 @@
 COPPERFIN_TEST_EXPORT int CopperfinDeclaredDllFixtureValue() {
     return 3921;
 }
+
+COPPERFIN_TEST_EXPORT double CopperfinDeclaredDllMultiply(double left, double right) {
+    return left * right;
+}
+
+COPPERFIN_TEST_EXPORT double CopperfinDeclaredDllScale(double value, int factor) {
+    return value * static_cast<double>(factor);
+}
+
+COPPERFIN_TEST_EXPORT double CopperfinDeclaredDllSplit(double value, double* whole) {
+    const int integral = static_cast<int>(value);
+    if (whole != nullptr) {
+        *whole = static_cast<double>(integral);
+    }
+    return value - static_cast<double>(integral);
+}
