@@ -3525,11 +3525,7 @@
                     std::string textmerge_value = trim_copy(option_value);
                     if (starts_with_insensitive(textmerge_value, "DELIMITERS"))
                     {
-                        textmerge_value = trim_copy(textmerge_value.substr(10U));
-                        if (starts_with_insensitive(textmerge_value, "TO "))
-                        {
-                            textmerge_value = trim_copy(textmerge_value.substr(3U));
-                        }
+                        textmerge_value = strip_set_to_value(textmerge_value.substr(10U));
 
                         std::string left_delimiter = "<<";
                         std::string right_delimiter = ">>";

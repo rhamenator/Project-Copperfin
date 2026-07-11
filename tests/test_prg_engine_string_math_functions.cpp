@@ -643,8 +643,12 @@ namespace
             "cDelimsShared = SET('TEXTMERGE', 1)\n"
             "cMergedShared = TEXTMERGE('Shared=<@3+4<@')\n"
             "SET TEXTMERGE DELIMITERS TO\n"
-            "cDelimsReset = SET('TEXTMERGE', 1)\n"
-            "cMergedReset = TEXTMERGE('Reset=<<2+1>>')\n"
+            "cDelimsResetTo = SET('TEXTMERGE', 1)\n"
+            "cMergedResetTo = TEXTMERGE('ResetTo=<<2+1>>')\n"
+            "SET TEXTMERGE DELIMITERS TO '[', ']'\n"
+            "SET TEXTMERGE DELIMITERS\n"
+            "cDelimsResetBare = SET('TEXTMERGE', 1)\n"
+            "cMergedResetBare = TEXTMERGE('ResetBare=<<4+1>>')\n"
             "RETURN\n");
 
         copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
@@ -674,8 +678,10 @@ namespace
         check("cdelimsrestored", "{|,|}");
         check("cdelimsshared", "<@,<@");
         check("cmergedshared", "Shared=7");
-        check("cdelimsreset", "<<,>>");
-        check("cmergedreset", "Reset=3");
+        check("cdelimsresetto", "<<,>>");
+        check("cmergedresetto", "ResetTo=3");
+        check("cdelimsresetbare", "<<,>>");
+        check("cmergedresetbare", "ResetBare=5");
 
         fs::remove_all(temp_root, ignored);
     }
