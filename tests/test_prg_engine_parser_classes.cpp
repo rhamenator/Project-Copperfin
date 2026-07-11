@@ -554,6 +554,17 @@ void test_parse_declare_dll_preserves_vfp_parameter_contract() {
             !copperfin::runtime::declared_dll_type_is_single("F"),
         "#3933: documented SINGLE should remain distinct from DOUBLE and existing aliases");
     copperfin::test_support::expect(
+        copperfin::runtime::declared_dll_type_is_short("SHORT") &&
+            !copperfin::runtime::declared_dll_type_is_short("INTEGER") &&
+            !copperfin::runtime::declared_dll_type_is_short("LONG"),
+        "#3938: documented SHORT returns should remain distinct from 32-bit integer types");
+    copperfin::test_support::expect(
+        copperfin::runtime::declared_dll_parameter_list_contains_type(
+            "INTEGER first, SHORT @ invalid, DOUBLE third", "SHORT") &&
+            !copperfin::runtime::declared_dll_parameter_list_contains_type(
+                "INTEGER first, SINGLE second, DOUBLE third, LONG fourth, STRING @ fifth", "SHORT"),
+        "#3938: help-grounded SHORT parameter rejection should not affect permitted VFP9 parameter types");
+    copperfin::test_support::expect(
         copperfin::runtime::declared_dll_x86_stdcall_stack_bytes("") == 0U &&
             copperfin::runtime::declared_dll_x86_stdcall_stack_bytes("LONG value") == 4U &&
             copperfin::runtime::declared_dll_x86_stdcall_stack_bytes(

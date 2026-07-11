@@ -2902,6 +2902,114 @@ void test_declared_dll_win32_resolves_no_underscore_stdcall_export() {
 #endif
 }
 
+void test_declared_dll_short_return_uses_signed_16_bit_width() {
+#if defined(_WIN32)
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_declared_dll_short_return";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root / "native");
+
+    const fs::path fixture_name = COPPERFIN_DECLARED_DLL_FIXTURE_NAME;
+    const fs::path fixture_source = declared_dll_fixture_source_path();
+    const fs::path fixture_copy = temp_root / "native" / fixture_name;
+    fs::copy_file(fixture_source, fixture_copy, fs::copy_options::overwrite_existing, ignored);
+    expect(!ignored && fs::exists(fixture_copy),
+           "#3938: controlled SHORT-return fixture should copy under the PRG working directory");
+
+    const fs::path main_path = temp_root / "declared_dll_short_return.prg";
+    write_text(
+        main_path,
+        "DECLARE SHORT CopperfinDeclaredDllShortNegative IN 'native/" + fixture_name.string() + "'\n"
+        "DECLARE SHORT CopperfinDeclaredDllShortInternetShape IN 'native/" + fixture_name.string() +
+            "' INTEGER @ lpdwFlags, INTEGER dwReserved\n"
+        "DECLARE SHORT InternetGetConnectedState IN 'wininet.dll' INTEGER @ lpdwFlags, INTEGER dwReserved\n"
+        "nFlags = 0\n"
+        "nRealFlags = 0\n"
+        "nNegative = CopperfinDeclaredDllShortNegative()\n"
+        "nConnected = CopperfinDeclaredDllShortInternetShape(@nFlags, 0)\n"
+        "nRealConnected = InternetGetConnectedState(@nRealFlags, 0)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#3938: SHORT-return fixture should complete: " + state.message);
+
+    const auto negative = state.globals.find("nnegative");
+    const auto connected = state.globals.find("nconnected");
+    const auto flags = state.globals.find("nflags");
+    const auto real_connected = state.globals.find("nrealconnected");
+    const auto real_flags = state.globals.find("nrealflags");
+    expect(negative != state.globals.end(), "#3938: negative SHORT return should be captured");
+    expect(connected != state.globals.end(), "#3938: WinInet-shaped SHORT return should be captured");
+    expect(flags != state.globals.end(), "#3938: WinInet-shaped INTEGER @ output should be captured");
+    expect(real_connected != state.globals.end(), "#3938: shipped WinInet SHORT return should be captured");
+    expect(real_flags != state.globals.end(), "#3938: shipped WinInet INTEGER @ output should be captured");
+    if (negative != state.globals.end())
+    {
+        expect(copperfin::runtime::format_value(negative->second) == "-12345",
+               "#3938: SHORT returns should preserve signed 16-bit values");
+    }
+    if (connected != state.globals.end())
+    {
+        expect(copperfin::runtime::format_value(connected->second) == "-1",
+               "#3938: Microsoft-shipped WinInet declaration shape should preserve a negative SHORT return");
+    }
+    if (flags != state.globals.end())
+    {
+        expect(copperfin::runtime::format_value(flags->second) == "305419896",
+               "#3938: SHORT return selection should preserve adjacent INTEGER @ writeback");
+    }
+    if (real_connected != state.globals.end())
+    {
+        const std::string actual = copperfin::runtime::format_value(real_connected->second);
+        expect(actual == "0" || actual == "1",
+               "#3938: shipped InternetGetConnectedState SHORT declaration should return a logical status; actual=" + actual);
+    }
+
+    const auto declare_event = std::find_if(state.events.begin(), state.events.end(), [](const auto &event)
+    {
+        return event.category == "runtime.declare_dll" &&
+               event.detail.find("CopperfinDeclaredDllShortInternetShape") != std::string::npos;
+    });
+    expect(declare_event != state.events.end(),
+           "#3938: SHORT declarations should retain the invariant runtime.declare_dll event");
+
+    fs::remove_all(temp_root, ignored);
+#endif
+}
+
+void test_declared_dll_short_parameter_is_rejected_and_localized() {
+#if defined(_WIN32)
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_declared_dll_short_parameter";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+
+    const fs::path main_path = temp_root / "declared_dll_short_parameter.prg";
+    write_text(
+        main_path,
+        "DECLARE SHORT InvalidShortParameter IN 'kernel32.dll' SHORT invalid\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!state.completed, "#3938: help-invalid SHORT parameters should reject the declaration");
+    expect(state.message.find("[!! ") == 0U &&
+               state.message.find("SHORT") != std::string::npos &&
+               state.message.find("parameter type") == std::string::npos,
+           "#3938: SHORT parameter rejection should pseudo-localize prose and preserve the invariant type token");
+
+    fs::remove_all(temp_root, ignored);
+#endif
+}
+
 void test_declare_dll_runtime_errors_localize() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_declare_localization";
@@ -3523,6 +3631,8 @@ int main() {
     test_declared_dll_single_uses_vfp_32_bit_float_width();
     test_declared_dll_win32_uses_typed_stdcall_slots();
     test_declared_dll_win32_resolves_no_underscore_stdcall_export();
+    test_declared_dll_short_return_uses_signed_16_bit_width();
+    test_declared_dll_short_parameter_is_rejected_and_localized();
     test_declare_dll_runtime_errors_localize();
     test_set_exact_affects_comparisons_and_seek();
     test_use_again_and_alias_collision_semantics();

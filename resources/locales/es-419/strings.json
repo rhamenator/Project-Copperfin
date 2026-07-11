@@ -1310,6 +1310,7 @@
   "Runtime.Prg.Dispatch.Error.DeclareDllOnlySupportedOnWindows": "DECLARE DLL solo es compatible con Windows.",
   "Runtime.Prg.Dispatch.Error.DeclareFunctionNotFoundInDll": "DECLARE: no se encontro la funcion '{functionName}' en '{path}'.",
   "Runtime.Prg.Dispatch.Error.DeclareMissingFunctionNameOrDllPath": "DECLARE: falta el nombre de la funcion o la ruta del DLL.",
+  "Runtime.Prg.Dispatch.Error.DeclareUnsupportedParameterType": "DECLARE: el tipo de parametro {parameterType} no es compatible.",
   "Runtime.Prg.Dispatch.Error.AlterTableRequiresSupportedFieldDeclaration": "{command} requiere una declaracion de campo compatible",
   "Runtime.Prg.Dispatch.Error.AlterTableRequiresTargetTableName": "ALTER TABLE requiere un nombre de tabla de destino",
   "Runtime.Prg.Dispatch.Error.AlterTableSupportsAddDropAlterColumnOnly": "ALTER TABLE solo admite ADD COLUMN, DROP COLUMN y ALTER COLUMN actualmente",

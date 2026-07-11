@@ -3863,6 +3863,18 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
+                if (declared_dll_parameter_list_contains_type(param_types_str, "short"))
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.DeclareUnsupportedParameterType",
+                        {{"parameterType", "SHORT"}});
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    if (dispatch_error_handler())
+                        return {.ok = true, .waiting_for_events = false, .frame_returned = false, .message = {}};
+                    return {.ok = false, .message = last_error_message};
+                }
+
                 // Preserve parentless names for the Windows loader search policy. VFP-style
                 // explicit relative paths still resolve from the current default directory.
                 std::filesystem::path dll_fspath(dll_path_raw);

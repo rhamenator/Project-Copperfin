@@ -188,7 +188,7 @@
                 }
                 else
                 {
-                    // Default: INTEGER / SHORT / WORD → VT_I4
+                    // VFP9 parameters permit INTEGER/LONG, not SHORT.
                     var.vt = VT_I4;
                     var.lVal = static_cast<LONG>(value_as_number(v));
                 }
@@ -647,9 +647,10 @@
 
                 // Call the function. We cast to a stdcall prototype (VFP default on x86
                 // for DECLARE; on x64 there is only one calling convention).
-                // Return storage follows the declared integer, SINGLE, DOUBLE, or
-                // STRING contract.
+                // Return storage follows the declared SHORT, integer, SINGLE,
+                // DOUBLE, or STRING contract.
                 const std::string rt = normalize_identifier(declfn.return_type);
+                const bool ret_short = declared_dll_type_is_short(rt);
                 const bool ret_single = declared_dll_type_is_single(rt);
                 const bool ret_double = (rt == "double" || rt == "d" || rt == "f");
                 const bool ret_string = (rt == "c" || rt == "string");
@@ -728,14 +729,17 @@
 #else
                     const VARTYPE pointer_return_type = VT_I4;
 #endif
-                    const VARTYPE native_return_type =
-                        ret_single
-                            ? VT_R4
-                            : (ret_double
-                                   ? VT_R8
-                                   : (ret_string
-                                          ? pointer_return_type
-                                          : (ret_integer64 ? VT_I8 : VT_I4)));
+                    VARTYPE native_return_type = VT_I4;
+                    if (ret_short)
+                        native_return_type = VT_I2;
+                    else if (ret_single)
+                        native_return_type = VT_R4;
+                    else if (ret_double)
+                        native_return_type = VT_R8;
+                    else if (ret_string)
+                        native_return_type = pointer_return_type;
+                    else if (ret_integer64)
+                        native_return_type = VT_I8;
                     VARIANT native_result;
                     VariantInit(&native_result);
 #if defined(_WIN64)
@@ -762,6 +766,10 @@
                             });
                         return make_empty_value();
                     }
+                    if (ret_short)
+                    {
+                        return finalize_integer_result(static_cast<std::int16_t>(native_result.iVal));
+                    }
                     if (ret_single)
                     {
                         return finalize_double_result(static_cast<double>(native_result.fltVal));
@@ -786,7 +794,7 @@
 
 #if defined(_WIN64)
 
-                if (has_single_parameter || ret_single)
+                if (has_single_parameter || ret_single || ret_short)
                 {
                     return invoke_via_disp_call_func();
                 }

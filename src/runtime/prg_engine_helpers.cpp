@@ -108,6 +108,32 @@ bool declared_dll_type_is_single(std::string type_name) {
     return normalize_identifier(std::move(type_name)) == "single";
 }
 
+bool declared_dll_type_is_short(std::string type_name) {
+    return normalize_identifier(std::move(type_name)) == "short";
+}
+
+bool declared_dll_parameter_list_contains_type(
+    const std::string& parameter_types,
+    const std::string& requested_type) {
+    const std::string normalized_requested_type = normalize_identifier(requested_type);
+    std::istringstream parameters(parameter_types);
+    std::string raw_parameter;
+    while (std::getline(parameters, raw_parameter, ',')) {
+        const std::string parameter = trim_copy(std::move(raw_parameter));
+        std::size_t type_end = 0U;
+        while (type_end < parameter.size() &&
+               std::isspace(static_cast<unsigned char>(parameter[type_end])) == 0 &&
+               parameter[type_end] != '@' &&
+               parameter[type_end] != '(') {
+            ++type_end;
+        }
+        if (normalize_identifier(parameter.substr(0U, type_end)) == normalized_requested_type) {
+            return true;
+        }
+    }
+    return false;
+}
+
 std::size_t declared_dll_x86_stdcall_stack_bytes(const std::string& parameter_types) {
     std::size_t stack_bytes = 0U;
     std::istringstream parameters(parameter_types);

@@ -2831,11 +2831,15 @@ void test_runtime_declare_dispatch_errors_route_through_catalog() {
         {"functionName", "MissingSymbol"},
         {"path", "kernel32.dll"}
     };
+    const copperfin::localization::PlaceholderMap parameter_type_placeholders{
+        {"parameterType", "SHORT"}
+    };
     const std::vector<std::string> keys{
         "Runtime.Prg.Dispatch.Error.DeclareCannotLoadDll",
         "Runtime.Prg.Dispatch.Error.DeclareDllOnlySupportedOnWindows",
         "Runtime.Prg.Dispatch.Error.DeclareFunctionNotFoundInDll",
-        "Runtime.Prg.Dispatch.Error.DeclareMissingFunctionNameOrDllPath"
+        "Runtime.Prg.Dispatch.Error.DeclareMissingFunctionNameOrDllPath",
+        "Runtime.Prg.Dispatch.Error.DeclareUnsupportedParameterType"
     };
 
     expect(
@@ -2854,6 +2858,12 @@ void test_runtime_declare_dispatch_errors_route_through_catalog() {
         english.translate("Runtime.Prg.Dispatch.Error.DeclareDllOnlySupportedOnWindows") ==
             "DECLARE DLL is only supported on Windows.",
         "#2715: DECLARE Windows-only guard should localize through the runtime catalog");
+    expect(
+        english.translate(
+            "Runtime.Prg.Dispatch.Error.DeclareUnsupportedParameterType",
+            parameter_type_placeholders) ==
+            "DECLARE: parameter type SHORT is not supported.",
+        "#3938: help-invalid DECLARE parameter types should preserve the invariant type token");
 
     for (const std::string& key : keys) {
         expect(
@@ -2884,6 +2894,14 @@ void test_runtime_declare_dispatch_errors_route_through_catalog() {
             pseudo_load.find("Access is denied.") != std::string::npos &&
             pseudo_load.find("cannot load") == std::string::npos,
         "#2715: qps-ploc DECLARE load-failure error should pseudo-localize prose while preserving path and downstream error text");
+    const std::string pseudo_parameter_type = pseudo.translate(
+        "Runtime.Prg.Dispatch.Error.DeclareUnsupportedParameterType",
+        parameter_type_placeholders);
+    expect(
+        pseudo_parameter_type.find("[!! ") == 0U &&
+            pseudo_parameter_type.find("SHORT") != std::string::npos &&
+            pseudo_parameter_type.find("parameter type") == std::string::npos,
+        "#3938: qps-ploc DECLARE parameter rejection should pseudo-localize prose and preserve the type token");
 }
 
 void test_runtime_residual_command_dispatch_errors_route_through_catalog() {

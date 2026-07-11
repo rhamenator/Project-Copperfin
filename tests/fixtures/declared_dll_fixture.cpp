@@ -131,6 +131,20 @@ COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllNoUnderscoreI
     return value + 1L;
 }
 
+COPPERFIN_TEST_EXPORT short COPPERFIN_TEST_CALL CopperfinDeclaredDllShortNegative() {
+    return static_cast<short>(-12345);
+}
+
+COPPERFIN_TEST_EXPORT short COPPERFIN_TEST_CALL CopperfinDeclaredDllShortInternetShape(
+    std::int32_t* flags,
+    std::int32_t reserved) {
+    if (flags == nullptr || reserved != 0) {
+        return static_cast<short>(-2);
+    }
+    *flags = 0x12345678;
+    return static_cast<short>(-1);
+}
+
 COPPERFIN_TEST_EXPORT double CopperfinDeclaredDllOneSlot(double first) {
     return first;
 }
