@@ -1382,6 +1382,7 @@
   "Runtime.PrgStaticAnalysis.Diagnostic.PRG1002.Message": "O bloco DO WHILE esta sem ENDDO.",
   "Runtime.Prg.Expression.Error.DivisionByZero": "Divisao por zero",
   "Runtime.Prg.Expression.Error.ExpectedFunctionArgument": "Argumento de funcao esperado",
+  "Runtime.Prg.Expression.Error.OperatorOperandTypeMismatch": "Incompatibilidade de tipo entre operador e operando.",
   "Runtime.Prg.Expression.Error.UserRoutineAbortedExecution": "A chamada de rotina definida pelo usuario abortou a pilha de execucao atual durante a avaliacao da expressao",
   "Runtime.Prg.Expression.Error.UserRoutineEnteredEventLoop": "A chamada de rotina definida pelo usuario nao pode entrar em READ EVENTS durante a avaliacao da expressao",
   "Runtime.Prg.Expression.Error.IntegerDivisionByZero": "Divisao por zero em expressao inteira",

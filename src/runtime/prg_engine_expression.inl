@@ -491,7 +491,7 @@
                         {
                             left = make_empty_value();
                         }
-                        else if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string)
+                        else if (left.kind == PrgValueKind::string && right.kind == PrgValueKind::string)
                         {
                             std::string left_text = value_as_string(left);
                             const std::string right_text = value_as_string(right);
@@ -504,6 +504,11 @@
                             left_text.append(right_text);
                             left_text.append(trailing_space_count, ' ');
                             left = make_string_value(std::move(left_text));
+                        }
+                        else if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string)
+                        {
+                            throw std::runtime_error(
+                                runtime_text("Runtime.Prg.Expression.Error.OperatorOperandTypeMismatch"));
                         }
                         else if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
                             (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64))

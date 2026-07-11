@@ -1285,6 +1285,10 @@ void test_runtime_expression_errors_route_through_catalog() {
         english.translate("Runtime.Prg.Expression.Error.ExpectedFunctionArgument") == "Expected function argument",
         "#2541: expected-function-argument error should preserve en-US default output");
     expect(
+        english.translate("Runtime.Prg.Expression.Error.OperatorOperandTypeMismatch") ==
+            "Operator/operand type mismatch.",
+        "#3875: operator/operand mismatch should preserve VFP Error 107 en-US prose");
+    expect(
         spanish.translate("Runtime.Prg.Expression.Error.DivisionByZero") !=
             english.translate("Runtime.Prg.Expression.Error.DivisionByZero"),
         "#2541: es-419 expression division error should not fall back to raw English prose");
@@ -1298,6 +1302,9 @@ void test_runtime_expression_errors_route_through_catalog() {
         pseudo_message.find("[!! ") == 0U &&
             pseudo_message != english.translate("Runtime.Prg.Expression.Error.IntegerDivisionByZero"),
         "#2541: qps-ploc expression error should pseudo-localize prose");
+    expect(
+        pseudo.translate("Runtime.Prg.Expression.Error.OperatorOperandTypeMismatch").find("[!! ") == 0U,
+        "#3875: qps-ploc operator/operand mismatch should pseudo-localize prose");
 }
 
 void test_runtime_record_precondition_errors_route_through_catalog() {

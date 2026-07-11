@@ -1382,6 +1382,7 @@
   "Runtime.PrgStaticAnalysis.Diagnostic.PRG1002.Message": "Al bloque DO WHILE le falta ENDDO.",
   "Runtime.Prg.Expression.Error.DivisionByZero": "Division por cero",
   "Runtime.Prg.Expression.Error.ExpectedFunctionArgument": "Se esperaba un argumento de funcion",
+  "Runtime.Prg.Expression.Error.OperatorOperandTypeMismatch": "Incompatibilidad de tipo entre operador y operando.",
   "Runtime.Prg.Expression.Error.UserRoutineAbortedExecution": "La llamada a la rutina definida por el usuario aborto la pila de ejecucion actual durante la evaluacion de la expresion",
   "Runtime.Prg.Expression.Error.UserRoutineEnteredEventLoop": "La llamada a la rutina definida por el usuario no puede entrar en READ EVENTS durante la evaluacion de la expresion",
   "Runtime.Prg.Expression.Error.IntegerDivisionByZero": "Division por cero en expresion entera",

@@ -979,6 +979,7 @@
   "Runtime.Prg.Dispatch.Error.UnknownTaskHandle": "Unknown task handle: {handle}",
   "Runtime.Prg.Expression.Error.DivisionByZero": "Division by zero",
   "Runtime.Prg.Expression.Error.ExpectedFunctionArgument": "Expected function argument",
+  "Runtime.Prg.Expression.Error.OperatorOperandTypeMismatch": "Operator/operand type mismatch.",
   "Runtime.Prg.Expression.Error.UserRoutineAbortedExecution": "User-defined routine call aborted the current execution stack during expression evaluation",
   "Runtime.Prg.Expression.Error.UserRoutineEnteredEventLoop": "User-defined routine call cannot enter READ EVENTS during expression evaluation",
   "Runtime.Prg.Expression.Error.IntegerDivisionByZero": "Division by zero in integer expression",

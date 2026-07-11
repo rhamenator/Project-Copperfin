@@ -57,11 +57,52 @@ void test_string_minus_uses_vfp_trailing_space_concatenation()
     fs::remove_all(temp_root, ignored);
 }
 
+void test_string_minus_rejects_mixed_operand_types_without_ending_the_session()
+{
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_string_minus_type_mismatch";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "mixed_minus.prg";
+    write_text(
+        main_path,
+        "cLeft = 'abc' - 1\n"
+        "nAfterLeft = 1\n"
+        "cRight = 1 - 'abc'\n"
+        "nAfterRight = 2\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+           "#3875: character-minus-numeric should pause with a runtime error");
+    expect(state.location.line == 1U, "#3875: character-minus-numeric should identify the faulting line");
+    expect(state.message.find("Operator/operand type mismatch.") != std::string::npos,
+           "#3875: mixed string-minus operands should report VFP Error 107 prose");
+
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+           "#3875: numeric-minus-character should also pause with a runtime error");
+    expect(state.location.line == 3U, "#3875: the second mixed-type fault should identify its source line");
+
+    state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#3875: continuing after mixed string-minus faults should keep the session alive");
+    expect(state.globals.contains("nafterleft") && state.globals.contains("nafterright"),
+           "#3875: statements after trapped mixed-type faults should execute");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main()
 {
     test_string_minus_uses_vfp_trailing_space_concatenation();
+    test_string_minus_rejects_mixed_operand_types_without_ending_the_session();
 
     if (copperfin::test_support::test_failures() != 0)
     {

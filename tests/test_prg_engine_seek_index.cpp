@@ -2806,8 +2806,10 @@ void test_runtime_fault_containment() {
         make_runtime_session_options(main_path.string(), temp_root.string()));
 
     auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-    expect(state.reason == copperfin::runtime::DebugPauseReason::error, "broken code should pause with an error instead of killing the host");
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error, "mixed-type code should pause with an error instead of killing the host");
     expect(state.location.line == 1U, "runtime faults should highlight the faulting line");
+    expect(state.message.find("Operator/operand type mismatch.") != std::string::npos,
+        "mixed string-minus operands should report VFP Error 107 prose");
     expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) { return event.category == "runtime.error"; }),
         "runtime faults should emit a runtime.error event");
 
