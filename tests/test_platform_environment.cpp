@@ -65,12 +65,25 @@ void test_scoped_environment_support_uses_shared_platform_helpers() {
            "#3214: scoped test environment helper should restore the original environment value");
 }
 
+void test_shell_command_preparation_preserves_platform_quoting_contract() {
+    const std::string command = "\"C:\\Copperfin Tests\\host.exe\" \"argument value\" > \"output file.txt\"";
+    const std::string prepared = copperfin::test_support::prepare_shell_command_for_system(command);
+#if defined(_WIN32)
+    expect(prepared == "\"" + command + "\"",
+           "#3896: Windows system commands should wrap the complete already-quoted command line");
+#else
+    expect(prepared == command,
+           "#3896: POSIX system commands should preserve their existing shell command line");
+#endif
+}
+
 }  // namespace
 
 int main() {
     test_platform_environment_round_trips_values();
     test_platform_environment_rejects_empty_names();
     test_scoped_environment_support_uses_shared_platform_helpers();
+    test_shell_command_preparation_preserves_platform_quoting_contract();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

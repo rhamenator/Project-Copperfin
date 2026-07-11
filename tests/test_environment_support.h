@@ -31,6 +31,19 @@ inline void set_env_value(const std::string& name, const std::string& value, boo
     }
 }
 
+inline std::string prepare_shell_command_for_system(const std::string& command) {
+#if defined(_WIN32)
+    return "\"" + command + "\"";
+#else
+    return command;
+#endif
+}
+
+inline int run_shell_command(const std::string& command) {
+    const std::string prepared_command = prepare_shell_command_for_system(command);
+    return std::system(prepared_command.c_str());
+}
+
 struct ScopedEnvironmentValue {
     std::string name;
     std::optional<std::string> original_value;

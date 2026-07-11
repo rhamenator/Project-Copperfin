@@ -322,7 +322,7 @@ bool build_native_wrapper_with_cmake(
     const std::string configure_command =
         "cmake -S \"" + source_root.string() + "\" -B \"" + build_root.string() + "\" > \"" +
         configure_log_path.string() + "\" 2>&1";
-    if (std::system(configure_command.c_str()) != 0) {
+    if (copperfin::test_support::run_shell_command(configure_command) != 0) {
         error = "native wrapper CMake configure failed";
         if (fs::exists(configure_log_path)) {
             error += ":\n" + read_text(configure_log_path);
@@ -332,7 +332,7 @@ bool build_native_wrapper_with_cmake(
 
     const std::string build_command =
         "cmake --build \"" + build_root.string() + "\" > \"" + build_log_path.string() + "\" 2>&1";
-    if (std::system(build_command.c_str()) != 0) {
+    if (copperfin::test_support::run_shell_command(build_command) != 0) {
         error = "native wrapper CMake build failed";
         if (fs::exists(build_log_path)) {
             error += ":\n" + read_text(build_log_path);
@@ -365,7 +365,7 @@ bool build_native_wrapper_with_script(
     fs::remove(expected_output_path, ignored);
     const std::string command =
         "sh \"" + script_path.string() + "\" > \"" + log_path.string() + "\" 2>&1";
-    if (std::system(command.c_str()) != 0) {
+    if (copperfin::test_support::run_shell_command(command) != 0) {
         error = "native wrapper build script failed";
         if (fs::exists(log_path)) {
             error += ":\n" + read_text(log_path);
@@ -403,7 +403,7 @@ std::set<std::string> read_native_exported_symbols(const std::filesystem::path& 
     const std::string command =
         "nm -D --defined-only \"" + binary_path.string() + "\" > \"" + log_path.string() + "\" 2>&1";
 #endif
-    if (std::system(command.c_str()) != 0) {
+    if (copperfin::test_support::run_shell_command(command) != 0) {
         error = "native wrapper symbol inspection failed";
         if (fs::exists(log_path)) {
             error += ":\n" + read_text(log_path);

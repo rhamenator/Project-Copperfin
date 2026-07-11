@@ -371,7 +371,7 @@ bool create_directory_indirection(
     const std::string command =
         "cmd.exe /d /c mklink /J " + quote_command_argument(link.string()) + " " +
         quote_command_argument(target.string()) + " > NUL 2>&1";
-    return std::system(command.c_str()) == 0;
+    return copperfin::test_support::run_shell_command(command) == 0;
 #else
     std::error_code error;
     std::filesystem::create_directory_symlink(target, link, error);
@@ -383,7 +383,7 @@ void remove_directory_indirection(const std::filesystem::path& link) {
 #if defined(_WIN32)
     const std::string command =
         "cmd.exe /d /c rmdir " + quote_command_argument(link.string()) + " > NUL 2>&1";
-    (void)std::system(command.c_str());
+    (void)copperfin::test_support::run_shell_command(command);
 #else
     std::error_code ignored;
     std::filesystem::remove(link, ignored);
@@ -424,7 +424,7 @@ ProcessResult run_process_capture(
 
     const fs::path original_directory = fs::current_path();
     fs::current_path(working_directory);
-    const int raw_exit_code = std::system(command.c_str());
+    const int raw_exit_code = copperfin::test_support::run_shell_command(command);
     fs::current_path(original_directory);
 
     ProcessResult result;

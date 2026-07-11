@@ -152,7 +152,7 @@ ProcessResult run_process_capture(
 
     const fs::path original_directory = fs::current_path();
     fs::current_path(working_directory);
-    const int raw_exit_code = std::system(command.c_str());
+    const int raw_exit_code = copperfin::test_support::run_shell_command(command);
     fs::current_path(original_directory);
 
     ProcessResult result;
@@ -199,7 +199,7 @@ std::set<std::string> read_native_exported_symbols(const std::filesystem::path& 
     const std::string command =
         "nm -D --defined-only \"" + binary_path.string() + "\" > \"" + log_path.string() + "\" 2>&1";
 #endif
-    if (std::system(command.c_str()) != 0) {
+    if (copperfin::test_support::run_shell_command(command) != 0) {
         error = "native wrapper symbol inspection failed";
         if (fs::exists(log_path)) {
             error += ":\n" + read_text(log_path);

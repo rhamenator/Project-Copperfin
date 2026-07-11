@@ -142,7 +142,7 @@ ProcessResult run_process_capture(
 
     const fs::path original_directory = fs::current_path();
     fs::current_path(working_directory);
-    const int raw_exit_code = std::system(command.c_str());
+    const int raw_exit_code = copperfin::test_support::run_shell_command(command);
     fs::current_path(original_directory);
 
     ProcessResult result;
