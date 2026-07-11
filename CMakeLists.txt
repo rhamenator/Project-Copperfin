@@ -284,6 +284,10 @@ target_link_libraries(cf_xbase_runtime
         cf_localization
 )
 
+if(WIN32)
+    target_link_libraries(cf_xbase_runtime PRIVATE oleaut32)
+endif()
+
 if(MSVC)
     target_compile_options(cf_xbase_runtime PRIVATE /W4 /permissive-)
 else()

@@ -1270,6 +1270,8 @@
   "Runtime.Prg.Dll.Error.DotNetTypeNotFound": "Type not found: {typeName}",
   "Runtime.Prg.Dll.Error.FoxtoolsNotLoaded": "FOXTOOLS is not loaded",
   "Runtime.Prg.Dll.Error.GetDefaultDomainFailed": "GetDefaultDomain failed: {hresult}",
+  "Runtime.Prg.Dll.Error.NativeArgumentLimitExceeded": "[!! Ñåţïvë DLL çåļļ håš {count} åŕĝüɱëñţš; ţhë ɱåxïɱüɱ ïš {maximum} !!]",
+  "Runtime.Prg.Dll.Error.NativeInvokeFailed": "[!! Ñåţïvë DLL ƒüñçţïøñ {functionName} ƒåïļëð ţø ïñvøkë: {hresult} !!]",
   "Runtime.Prg.Dll.Error.NativeProcAddressMissing": "No proc address for: {functionName}",
   "Runtime.Prg.Dll.Error.RegisteredApiHandleNotFound": "Registered API handle not found: {handle}",
   "Runtime.Prg.Dispatch.Error.AwaitRequiresTaskHandle": "{command} requires a task handle",

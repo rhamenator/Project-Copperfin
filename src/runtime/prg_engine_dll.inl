@@ -578,16 +578,6 @@
                     }
                 };
 
-                // Extract all args as __int64 (works for int, ptr, and bitcast of double)
-                auto iarg = [&](std::size_t i) -> __int64
-                {
-                    if (i >= flat.size())
-                        return 0LL;
-                    return flat[i].is_double
-                               ? *reinterpret_cast<const __int64 *>(&flat[i].d)
-                               : flat[i].i;
-                };
-
                 // Call the function. We cast to a stdcall prototype (VFP default on x86
                 // for DECLARE; on x64 there is only one calling convention).
                 // Return value is either integer or double based on return_type.
@@ -612,83 +602,74 @@
                 };
 
 #if defined(_WIN64)
-                // On x64 Windows, calling convention is unified.
-                typedef __int64 (*FnI_0)();
-                typedef __int64 (*FnI_1)(__int64);
-                typedef __int64 (*FnI_2)(__int64, __int64);
-                typedef __int64 (*FnI_3)(__int64, __int64, __int64);
-                typedef __int64 (*FnI_4)(__int64, __int64, __int64, __int64);
-                typedef __int64 (*FnI_5)(__int64, __int64, __int64, __int64, __int64);
-                typedef __int64 (*FnI_6)(__int64, __int64, __int64, __int64, __int64, __int64);
-                typedef __int64 (*FnI_7)(__int64, __int64, __int64, __int64, __int64, __int64, __int64);
-                typedef __int64 (*FnI_8)(__int64, __int64, __int64, __int64, __int64, __int64, __int64, __int64);
-                typedef double (*FnD_0)();
-                typedef double (*FnD_1)(__int64);
-                typedef double (*FnD_2)(__int64, __int64);
-                typedef double (*FnD_3)(__int64, __int64, __int64);
-                typedef double (*FnD_4)(__int64, __int64, __int64, __int64);
+                if (nargs > 8U)
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dll.Error.NativeArgumentLimitExceeded",
+                        {
+                            {"count", std::to_string(nargs)},
+                            {"maximum", "8"}
+                        });
+                    return make_empty_value();
+                }
 
-                FARPROC fn = declfn.proc_address;
-                __int64 iret = 0;
-                double dret = 0.0;
-                if (ret_double)
+                // Let the Windows Automation dispatcher classify each parameter slot so
+                // DOUBLE values reach XMM registers while integers/pointers use GP slots.
+                std::vector<VARTYPE> native_argument_types(nargs);
+                std::vector<VARIANTARG> native_argument_values(nargs);
+                std::vector<VARIANTARG *> native_argument_pointers(nargs);
+                for (std::size_t index = 0U; index < nargs; ++index)
                 {
-                    switch (nargs)
+                    VariantInit(&native_argument_values[index]);
+                    if (flat[index].is_double)
                     {
-                    case 0:
-                        dret = reinterpret_cast<FnD_0>(fn)();
-                        break;
-                    case 1:
-                        dret = reinterpret_cast<FnD_1>(fn)(iarg(0));
-                        break;
-                    case 2:
-                        dret = reinterpret_cast<FnD_2>(fn)(iarg(0), iarg(1));
-                        break;
-                    case 3:
-                        dret = reinterpret_cast<FnD_3>(fn)(iarg(0), iarg(1), iarg(2));
-                        break;
-                    default:
-                        dret = reinterpret_cast<FnD_4>(fn)(iarg(0), iarg(1), iarg(2), iarg(3));
-                        break;
+                        native_argument_types[index] = VT_R8;
+                        native_argument_values[index].vt = VT_R8;
+                        native_argument_values[index].dblVal = flat[index].d;
                     }
-                    return finalize_double_result(dret);
+                    else
+                    {
+                        native_argument_types[index] = VT_I8;
+                        native_argument_values[index].vt = VT_I8;
+                        native_argument_values[index].llVal = flat[index].i;
+                    }
+                    native_argument_pointers[index] = &native_argument_values[index];
                 }
-                else
+
+                VARIANT native_result;
+                VariantInit(&native_result);
+                const HRESULT invoke_result = DispCallFunc(
+                    nullptr,
+                    reinterpret_cast<ULONG_PTR>(declfn.proc_address),
+                    CC_STDCALL,
+                    ret_double ? VT_R8 : VT_I8,
+                    static_cast<UINT>(nargs),
+                    native_argument_types.empty() ? nullptr : native_argument_types.data(),
+                    native_argument_pointers.empty() ? nullptr : native_argument_pointers.data(),
+                    &native_result);
+                if (FAILED(invoke_result))
                 {
-                    switch (nargs)
-                    {
-                    case 0:
-                        iret = reinterpret_cast<FnI_0>(fn)();
-                        break;
-                    case 1:
-                        iret = reinterpret_cast<FnI_1>(fn)(iarg(0));
-                        break;
-                    case 2:
-                        iret = reinterpret_cast<FnI_2>(fn)(iarg(0), iarg(1));
-                        break;
-                    case 3:
-                        iret = reinterpret_cast<FnI_3>(fn)(iarg(0), iarg(1), iarg(2));
-                        break;
-                    case 4:
-                        iret = reinterpret_cast<FnI_4>(fn)(iarg(0), iarg(1), iarg(2), iarg(3));
-                        break;
-                    case 5:
-                        iret = reinterpret_cast<FnI_5>(fn)(iarg(0), iarg(1), iarg(2), iarg(3), iarg(4));
-                        break;
-                    case 6:
-                        iret = reinterpret_cast<FnI_6>(fn)(iarg(0), iarg(1), iarg(2), iarg(3), iarg(4), iarg(5));
-                        break;
-                    case 7:
-                        iret = reinterpret_cast<FnI_7>(fn)(iarg(0), iarg(1), iarg(2), iarg(3), iarg(4), iarg(5), iarg(6));
-                        break;
-                    default:
-                        iret = reinterpret_cast<FnI_8>(fn)(iarg(0), iarg(1), iarg(2), iarg(3), iarg(4), iarg(5), iarg(6), iarg(7));
-                        break;
-                    }
-                    return finalize_integer_result(iret);
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dll.Error.NativeInvokeFailed",
+                        {
+                            {"functionName", declfn.function_name},
+                            {"hresult", std::to_string(invoke_result)}
+                        });
+                    return make_empty_value();
                 }
+                return ret_double
+                           ? finalize_double_result(native_result.dblVal)
+                           : finalize_integer_result(native_result.llVal);
 #else
                 // x86: use __stdcall by default (VFP DECLARE default)
+                auto iarg = [&](std::size_t i) -> __int64
+                {
+                    if (i >= flat.size())
+                        return 0LL;
+                    return flat[i].is_double
+                               ? *reinterpret_cast<const __int64 *>(&flat[i].d)
+                               : flat[i].i;
+                };
                 typedef __int32(__stdcall * FnSI_0)();
                 typedef __int32(__stdcall * FnSI_1)(__int32);
                 typedef __int32(__stdcall * FnSI_2)(__int32, __int32);

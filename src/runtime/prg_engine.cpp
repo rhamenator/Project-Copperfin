@@ -60,6 +60,7 @@
 #pragma comment(lib, "mscoree.lib")
 #pragma comment(lib, "version.lib")
 #include <comdef.h>
+#include <oleauto.h>
 
 // Minimal COM interface declarations for .NET CLR v4 hosting.
 // We only need _AppDomain::Load_2, _Type::GetMethod_2, _MethodInfo::Invoke_3.

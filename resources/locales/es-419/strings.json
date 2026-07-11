@@ -1270,6 +1270,8 @@
   "Runtime.Prg.Dll.Error.DotNetTypeNotFound": "Tipo no encontrado: {typeName}",
   "Runtime.Prg.Dll.Error.FoxtoolsNotLoaded": "FOXTOOLS no esta cargado",
   "Runtime.Prg.Dll.Error.GetDefaultDomainFailed": "Fallo GetDefaultDomain: {hresult}",
+  "Runtime.Prg.Dll.Error.NativeArgumentLimitExceeded": "La llamada DLL nativa tiene {count} argumentos; el maximo es {maximum}",
+  "Runtime.Prg.Dll.Error.NativeInvokeFailed": "No se pudo invocar la funcion DLL nativa {functionName}: {hresult}",
   "Runtime.Prg.Dll.Error.NativeProcAddressMissing": "No hay direccion de proc para: {functionName}",
   "Runtime.Prg.Dll.Error.RegisteredApiHandleNotFound": "No se encontro el handle de API registrado: {handle}",
   "Runtime.Prg.Dispatch.Error.AwaitRequiresTaskHandle": "{command} requiere un handle de tarea",

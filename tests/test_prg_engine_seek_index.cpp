@@ -2403,6 +2403,43 @@ void test_declared_dll_string_byref_argument_writeback() {
 #endif
 }
 
+void test_declared_dll_double_arguments_follow_x64_abi() {
+#if defined(_WIN64)
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_declared_dll_double_abi";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "declared_dll_double_abi.prg";
+    write_text(
+        main_path,
+        "DECLARE DOUBLE pow IN 'msvcrt.dll' DOUBLE, DOUBLE\n"
+        "DECLARE DOUBLE ldexp IN 'msvcrt.dll' DOUBLE, INTEGER\n"
+        "nPower = pow(2.0, 10.0)\n"
+        "nScaled = ldexp(1.5, 3)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "declared DLL double-argument script should complete");
+
+    const auto power = state.globals.find("npower");
+    const auto scaled = state.globals.find("nscaled");
+    expect(power != state.globals.end(), "pow result should be captured");
+    expect(scaled != state.globals.end(), "ldexp result should be captured");
+    if (power != state.globals.end()) {
+        expect(copperfin::runtime::format_value(power->second) == "1024", "two DOUBLE arguments should reach XMM0 and XMM1");
+    }
+    if (scaled != state.globals.end()) {
+        expect(copperfin::runtime::format_value(scaled->second) == "12", "mixed DOUBLE/INTEGER arguments should preserve x64 register classes");
+    }
+
+    fs::remove_all(temp_root, ignored);
+#endif
+}
+
 void test_declare_dll_runtime_errors_localize() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_declare_localization";
@@ -3018,6 +3055,7 @@ int main() {
     test_foxtools_registration_and_call_bridge();
     test_foxtools_registration_is_scoped_by_data_session();
     test_declared_dll_string_byref_argument_writeback();
+    test_declared_dll_double_arguments_follow_x64_abi();
     test_declare_dll_runtime_errors_localize();
     test_set_exact_affects_comparisons_and_seek();
     test_use_again_and_alias_collision_semantics();
