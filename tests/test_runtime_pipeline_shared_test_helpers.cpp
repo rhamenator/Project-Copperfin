@@ -207,6 +207,14 @@ bool cmake_is_available() {
 #endif
 }
 
+bool ninja_multi_config_is_available() {
+#if defined(_WIN32)
+    return false;
+#else
+    return cmake_is_available() && std::system("command -v ninja >/dev/null 2>&1") == 0;
+#endif
+}
+
 bool shell_is_available() {
 #if defined(_WIN32)
     return false;
@@ -347,6 +355,52 @@ bool build_native_wrapper_with_cmake(
 
     error = "native wrapper CMake build did not produce the expected shared-library artifact";
     return false;
+}
+
+bool build_native_wrapper_with_ninja_multi_config(
+    const std::filesystem::path& cmake_lists_path,
+    const std::filesystem::path& expected_output_path,
+    std::string& error) {
+    namespace fs = std::filesystem;
+    const fs::path source_root = cmake_lists_path.parent_path();
+    const fs::path build_root = source_root / "cmake_ninja_multi_config_check";
+    const fs::path configure_log_path = build_root / "cmake-configure.log";
+    const fs::path build_log_path = build_root / "cmake-build.log";
+    std::error_code ignored;
+    fs::remove_all(build_root, ignored);
+    fs::remove(expected_output_path, ignored);
+    fs::create_directories(build_root);
+
+    const std::string configure_command =
+        "cmake -G \"Ninja Multi-Config\" -S \"" + source_root.string() + "\" -B \"" +
+        build_root.string() + "\" > \"" + configure_log_path.string() + "\" 2>&1";
+    if (copperfin::test_support::run_shell_command(configure_command) != 0) {
+        error = "native wrapper Ninja Multi-Config configure failed";
+        if (fs::exists(configure_log_path)) {
+            error += ":\n" + read_text(configure_log_path);
+        }
+        return false;
+    }
+
+    for (const std::string configuration : {"Debug", "Release"}) {
+        fs::remove(expected_output_path, ignored);
+        const std::string build_command =
+            "cmake --build \"" + build_root.string() + "\" --config " + configuration +
+            " > \"" + build_log_path.string() + "\" 2>&1";
+        if (copperfin::test_support::run_shell_command(build_command) != 0) {
+            error = "native wrapper Ninja Multi-Config " + configuration + " build failed";
+            if (fs::exists(build_log_path)) {
+                error += ":\n" + read_text(build_log_path);
+            }
+            return false;
+        }
+        if (!fs::exists(expected_output_path)) {
+            error = "native wrapper Ninja Multi-Config " + configuration +
+                " build did not produce the requested package-root artifact";
+            return false;
+        }
+    }
+    return true;
 }
 
 bool build_native_wrapper_with_script(

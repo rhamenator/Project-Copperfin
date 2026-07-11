@@ -331,6 +331,50 @@ std::string manifest_value_for_key(const std::string& text, const std::string& k
     return {};
 }
 
+std::string quote_manifest_value(const std::string& value) {
+    std::string escaped;
+    escaped.reserve(value.size());
+    for (const char ch : value) {
+        if (ch == '\\') {
+            escaped += "\\\\";
+        } else if (ch == '\n') {
+            escaped += "\\n";
+        } else if (ch == '\r') {
+            escaped += "\\r";
+        } else {
+            escaped.push_back(ch);
+        }
+    }
+    return escaped;
+}
+
+std::string unquote_manifest_value(const std::string& value) {
+    std::string unescaped;
+    unescaped.reserve(value.size());
+    for (std::size_t index = 0U; index < value.size(); ++index) {
+        if (value[index] != '\\' || index + 1U >= value.size()) {
+            unescaped.push_back(value[index]);
+            continue;
+        }
+        const char escaped = value[++index];
+        if (escaped == '\\') {
+            unescaped.push_back('\\');
+        } else if (escaped == 'n') {
+            unescaped.push_back('\n');
+        } else if (escaped == 'r') {
+            unescaped.push_back('\r');
+        } else {
+            unescaped.push_back('\\');
+            unescaped.push_back(escaped);
+        }
+    }
+    return unescaped;
+}
+
+std::filesystem::path manifest_path_for_key(const std::string& text, const std::string& key) {
+    return unquote_manifest_value(manifest_value_for_key(text, key));
+}
+
 void write_synthetic_project(
     const std::filesystem::path& project_path,
     const std::filesystem::path& project_dir,
@@ -470,9 +514,9 @@ void run_library_build_host_smoke(
                "build host manifest should record the project title for " + extension + " outputs");
         expect(manifest_text.find("project_path=" + project_path.string()) == std::string::npos,
                "build host runtime manifest should omit the project path for " + extension + " outputs");
-        expect(manifest_text.find("package_root=" + (output_dir / "LibraryDemo").string()) != std::string::npos,
+        expect(manifest_text.find("package_root=" + quote_manifest_value((output_dir / "LibraryDemo").string())) != std::string::npos,
                "build host manifest should record the package root for " + extension + " outputs");
-        expect(manifest_text.find("content_root=" + (output_dir / "LibraryDemo" / "content").string()) != std::string::npos,
+        expect(manifest_text.find("content_root=" + quote_manifest_value((output_dir / "LibraryDemo" / "content").string())) != std::string::npos,
                "build host manifest should record the content root for " + extension + " outputs");
         expect(manifest_text.find("ast_manifest_path=" + expected_ast_manifest.string()) == std::string::npos,
                "build host runtime manifest should omit the AST manifest path for " + extension + " outputs");
@@ -496,13 +540,13 @@ void run_library_build_host_smoke(
                "build host manifest should record the debug build configuration for " + extension + " outputs");
         expect(manifest_text.find("security_enabled=false") != std::string::npos,
                "build host manifest should record the disabled security state for " + extension + " outputs");
-        expect(manifest_text.find("audit_log_path=" + expected_audit_log.string()) != std::string::npos,
+        expect(manifest_text.find("audit_log_path=" + quote_manifest_value(expected_audit_log.string())) != std::string::npos,
                "build host manifest should record the audit log path for " + extension + " outputs");
         expect(manifest_text.find("runtime_host_sha256=") != std::string::npos,
                "build host manifest should record the runtime host SHA-256 digest for " + extension + " outputs");
         expect(manifest_text.find("security_roles=") == std::string::npos,
                "build host runtime manifest should omit the security-role count for " + extension + " outputs");
-        expect(manifest_text.find("extension_payload=" + expected_output.string() + "|") != std::string::npos,
+        expect(manifest_text.find("extension_payload=" + quote_manifest_value(expected_output.string()) + "|") != std::string::npos,
                "build host manifest should record the built primary output as an extension payload for " + extension + " outputs");
         if (extension == "dll") {
             expect(manifest_text.find("library_callable_convention=vfp_declare_default") != std::string::npos,
@@ -512,27 +556,27 @@ void run_library_build_host_smoke(
         }
     }
     if (!debug_manifest_path.empty()) {
-        expect(debug_manifest_text.find("primary_output_path=" + expected_output.string()) != std::string::npos,
+        expect(debug_manifest_text.find("primary_output_path=" + quote_manifest_value(expected_output.string())) != std::string::npos,
                "build host debug manifest should record the materialized primary output path for " + extension + " outputs");
         expect(debug_manifest_text.find("project_title=LibraryDemo") != std::string::npos,
                "build host debug manifest should record the project title for " + extension + " outputs");
-        expect(debug_manifest_text.find("project_path=" + project_path.string()) != std::string::npos,
+        expect(debug_manifest_text.find("project_path=" + quote_manifest_value(project_path.string())) != std::string::npos,
                "build host debug manifest should record the project path for " + extension + " outputs");
-        expect(debug_manifest_text.find("package_root=" + (output_dir / "LibraryDemo").string()) != std::string::npos,
+        expect(debug_manifest_text.find("package_root=" + quote_manifest_value((output_dir / "LibraryDemo").string())) != std::string::npos,
                "build host debug manifest should record the package root for " + extension + " outputs");
-        expect(debug_manifest_text.find("content_root=" + (output_dir / "LibraryDemo" / "content").string()) != std::string::npos,
+        expect(debug_manifest_text.find("content_root=" + quote_manifest_value((output_dir / "LibraryDemo" / "content").string())) != std::string::npos,
                "build host debug manifest should record the content root for " + extension + " outputs");
-        expect(debug_manifest_text.find("ast_manifest_path=" + expected_ast_manifest.string()) != std::string::npos,
+        expect(debug_manifest_text.find("ast_manifest_path=" + quote_manifest_value(expected_ast_manifest.string())) != std::string::npos,
                "build host debug manifest should record the AST manifest path for " + extension + " outputs");
-        expect(debug_manifest_text.find("ir_manifest_path=" + expected_ir_manifest.string()) != std::string::npos,
+        expect(debug_manifest_text.find("ir_manifest_path=" + quote_manifest_value(expected_ir_manifest.string())) != std::string::npos,
                "build host debug manifest should record the IR manifest path for " + extension + " outputs");
-        expect(debug_manifest_text.find("transpiled_csharp_path=" + expected_transpiled_csharp.string()) != std::string::npos,
+        expect(debug_manifest_text.find("transpiled_csharp_path=" + quote_manifest_value(expected_transpiled_csharp.string())) != std::string::npos,
                "build host debug manifest should record the transpiled C# path for " + extension + " outputs");
         expect(debug_manifest_text.find("configuration=debug") != std::string::npos,
                "build host debug manifest should record the debug build configuration for " + extension + " outputs");
         expect(debug_manifest_text.find("security_enabled=false") != std::string::npos,
                "build host debug manifest should record the disabled security state for " + extension + " outputs");
-        expect(debug_manifest_text.find("audit_log_path=" + expected_audit_log.string()) != std::string::npos,
+        expect(debug_manifest_text.find("audit_log_path=" + quote_manifest_value(expected_audit_log.string())) != std::string::npos,
                "build host debug manifest should record the audit log path for " + extension + " outputs");
         const std::string security_role = manifest_value_for_key(manifest_text, "security_role");
         const std::string security_mode = manifest_value_for_key(manifest_text, "security_mode");
@@ -643,7 +687,7 @@ void run_library_build_host_smoke(
                "build host debug manifest should preserve feature-flag inventory for " + extension + " outputs");
         expect(debug_manifest_text.find("primary_output_materialized=true") != std::string::npos,
                "build host debug manifest should record a materialized primary output for " + extension + " outputs");
-        expect(debug_manifest_text.find("extension_payload=" + expected_output.string() + "|") != std::string::npos,
+        expect(debug_manifest_text.find("extension_payload=" + quote_manifest_value(expected_output.string()) + "|") != std::string::npos,
                "build host debug manifest should record the built primary output as an extension payload for " + extension + " outputs");
         expect(!manifest_asset_lines.empty(),
                "build host manifest should record staged asset inventory for " + extension + " outputs");
@@ -658,9 +702,9 @@ void run_library_build_host_smoke(
                    "build host DLL debug manifest should record the dedicated API-manifest path");
             const fs::path module_definition_path = value_for_key(process.stdout_text, "module.definition");
             const fs::path library_api_manifest_path = value_for_key(process.stdout_text, "library.api.manifest");
-            expect(debug_manifest_text.find("compiler_contract=" + module_definition_path.string() + "|") != std::string::npos,
+            expect(debug_manifest_text.find("compiler_contract=" + quote_manifest_value(module_definition_path.string()) + "|") != std::string::npos,
                    "build host DLL debug manifest should record the module-definition compiler-contract digest");
-            expect(debug_manifest_text.find("compiler_contract=" + library_api_manifest_path.string() + "|") != std::string::npos,
+            expect(debug_manifest_text.find("compiler_contract=" + quote_manifest_value(library_api_manifest_path.string()) + "|") != std::string::npos,
                    "build host DLL debug manifest should record the API-manifest compiler-contract digest");
             expect(debug_manifest_text.find("feature_flag=build.output.library_contract|true|build_output") != std::string::npos,
                    "build host DLL debug manifest should expose the library-contract feature flag");
@@ -678,9 +722,9 @@ void run_library_build_host_smoke(
                    "build host DLL debug manifest should record InitLibrary routine kind");
             expect(debug_manifest_text.find("library_function_kind=AddNumbers|function") != std::string::npos,
                    "build host DLL debug manifest should record AddNumbers routine kind");
-            expect(debug_manifest_text.find("library_function_source=InitLibrary|" + init_library_source + "|1") != std::string::npos,
+            expect(debug_manifest_text.find("library_function_source=InitLibrary|" + quote_manifest_value(init_library_source) + "|1") != std::string::npos,
                    "build host DLL debug manifest should record InitLibrary source provenance");
-            expect(debug_manifest_text.find("library_function_source=AddNumbers|" + add_numbers_source + "|1") != std::string::npos,
+            expect(debug_manifest_text.find("library_function_source=AddNumbers|" + quote_manifest_value(add_numbers_source) + "|1") != std::string::npos,
                    "build host DLL debug manifest should record AddNumbers source provenance");
             expect(debug_manifest_text.find("library_function_parameters=InitLibrary|tcMode") != std::string::npos,
                    "build host DLL debug manifest should record InitLibrary parameter names");
@@ -702,9 +746,9 @@ void run_library_build_host_smoke(
                    "build host FLL debug manifest should record the dedicated API-manifest path");
             const fs::path module_definition_path = value_for_key(process.stdout_text, "module.definition");
             const fs::path fll_api_manifest_path = value_for_key(process.stdout_text, "fll.api.manifest");
-            expect(debug_manifest_text.find("compiler_contract=" + module_definition_path.string() + "|") != std::string::npos,
+            expect(debug_manifest_text.find("compiler_contract=" + quote_manifest_value(module_definition_path.string()) + "|") != std::string::npos,
                    "build host FLL debug manifest should record the module-definition compiler-contract digest");
-            expect(debug_manifest_text.find("compiler_contract=" + fll_api_manifest_path.string() + "|") != std::string::npos,
+            expect(debug_manifest_text.find("compiler_contract=" + quote_manifest_value(fll_api_manifest_path.string()) + "|") != std::string::npos,
                    "build host FLL debug manifest should record the API-manifest compiler-contract digest");
             expect(debug_manifest_text.find("feature_flag=build.output.library_contract|true|build_output") != std::string::npos,
                    "build host FLL debug manifest should expose the library-contract feature flag");
@@ -720,9 +764,9 @@ void run_library_build_host_smoke(
                    "build host FLL debug manifest should record InitLibrary routine kind");
             expect(debug_manifest_text.find("library_function_kind=AddNumbers|function") != std::string::npos,
                    "build host FLL debug manifest should record AddNumbers routine kind");
-            expect(debug_manifest_text.find("library_function_source=InitLibrary|" + init_library_source + "|1") != std::string::npos,
+            expect(debug_manifest_text.find("library_function_source=InitLibrary|" + quote_manifest_value(init_library_source) + "|1") != std::string::npos,
                    "build host FLL debug manifest should record InitLibrary source provenance");
-            expect(debug_manifest_text.find("library_function_source=AddNumbers|" + add_numbers_source + "|1") != std::string::npos,
+            expect(debug_manifest_text.find("library_function_source=AddNumbers|" + quote_manifest_value(add_numbers_source) + "|1") != std::string::npos,
                    "build host FLL debug manifest should record AddNumbers source provenance");
             expect(debug_manifest_text.find("library_function_parameters=InitLibrary|tcMode") != std::string::npos,
                    "build host FLL debug manifest should record InitLibrary parameter names");
@@ -761,9 +805,9 @@ void run_library_build_host_smoke(
                    "build host DLL runtime manifest should omit the native-wrapper source path");
             expect(manifest_value_for_key(manifest_text, "native_wrapper_cmake_path").empty(),
                    "build host DLL runtime manifest should omit the native-wrapper CMake path");
-            const fs::path wrapper_source_path = manifest_value_for_key(debug_manifest_text, "native_wrapper_source_path");
+            const fs::path wrapper_source_path = manifest_path_for_key(debug_manifest_text, "native_wrapper_source_path");
             const std::string wrapper_source = wrapper_source_path.empty() ? std::string{} : read_text(wrapper_source_path);
-            const fs::path wrapper_cmake_path = manifest_value_for_key(debug_manifest_text, "native_wrapper_cmake_path");
+            const fs::path wrapper_cmake_path = manifest_path_for_key(debug_manifest_text, "native_wrapper_cmake_path");
             const std::string wrapper_cmake = wrapper_cmake_path.empty() ? std::string{} : read_text(wrapper_cmake_path);
             expect(api_manifest.find("output_kind=dll") != std::string::npos,
                    "build host DLL API manifest should declare the DLL output kind");
@@ -1796,9 +1840,9 @@ void run_library_build_host_smoke(
                    "build host FLL runtime manifest should omit the native-wrapper source path");
             expect(manifest_value_for_key(manifest_text, "native_wrapper_cmake_path").empty(),
                    "build host FLL runtime manifest should omit the native-wrapper CMake path");
-            const fs::path wrapper_source_path = manifest_value_for_key(debug_manifest_text, "native_wrapper_source_path");
+            const fs::path wrapper_source_path = manifest_path_for_key(debug_manifest_text, "native_wrapper_source_path");
             const std::string wrapper_source = wrapper_source_path.empty() ? std::string{} : read_text(wrapper_source_path);
-            const fs::path wrapper_cmake_path = manifest_value_for_key(debug_manifest_text, "native_wrapper_cmake_path");
+            const fs::path wrapper_cmake_path = manifest_path_for_key(debug_manifest_text, "native_wrapper_cmake_path");
             const std::string wrapper_cmake = wrapper_cmake_path.empty() ? std::string{} : read_text(wrapper_cmake_path);
             expect(api_manifest.find("registration_symbol=_FoxTable") != std::string::npos,
                    "build host FLL manifest should declare the FoxTable registration symbol");
@@ -2358,9 +2402,9 @@ void run_library_build_host_smoke(
                    "build host FLL wrapper should record parameter-declaration fields in the FoxInfo table");
             expect(wrapper_source.find("const char* parameter_names;") != std::string::npos,
                    "build host FLL wrapper should record parameter-name fields in the FoxInfo table");
-            expect(wrapper_source.find("{\"InitLibrary\", &InitLibrary, \"procedure\", \"" + init_library_source + "\", 1U, \"lparameters\", \"tcMode\", 1U}") != std::string::npos,
+            expect(wrapper_source.find("{\"InitLibrary\", &InitLibrary, \"procedure\", \"" + quote_manifest_value(init_library_source) + "\", 1U, \"lparameters\", \"tcMode\", 1U}") != std::string::npos,
                    "build host FLL wrapper should record InitLibrary metadata in the FoxInfo table");
-            expect(wrapper_source.find("{\"AddNumbers\", &AddNumbers, \"function\", \"" + add_numbers_source + "\", 1U, \"parameters\", \"tnLeft|tnRight\", 2U}") != std::string::npos,
+            expect(wrapper_source.find("{\"AddNumbers\", &AddNumbers, \"function\", \"" + quote_manifest_value(add_numbers_source) + "\", 1U, \"parameters\", \"tnLeft|tnRight\", 2U}") != std::string::npos,
                    "build host FLL wrapper should record AddNumbers metadata in the FoxInfo table");
             expect(wrapper_source.find("const auto descriptor = copperfin_build_runtime_bridge_descriptor(\"InitLibrary\"") != std::string::npos,
                    "build host FLL wrapper should build a bridge descriptor for InitLibrary");
@@ -2809,9 +2853,9 @@ void run_library_build_host_smoke(
                    "build host FLL manifest should declare InitLibrary routine kind");
             expect(api_manifest.find("function_kind=AddNumbers|function") != std::string::npos,
                    "build host FLL manifest should declare AddNumbers routine kind");
-            expect(api_manifest.find("function_source=InitLibrary|" + init_library_source + "|1") != std::string::npos,
+            expect(api_manifest.find("function_source=InitLibrary|" + quote_manifest_value(init_library_source) + "|1") != std::string::npos,
                    "build host FLL manifest should declare InitLibrary source provenance");
-            expect(api_manifest.find("function_source=AddNumbers|" + add_numbers_source + "|1") != std::string::npos,
+            expect(api_manifest.find("function_source=AddNumbers|" + quote_manifest_value(add_numbers_source) + "|1") != std::string::npos,
                    "build host FLL manifest should declare AddNumbers source provenance");
             expect(api_manifest.find("function_parameters=InitLibrary|tcMode") != std::string::npos,
                    "build host FLL manifest should declare InitLibrary parameter names");

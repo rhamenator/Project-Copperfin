@@ -1148,6 +1148,14 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output wrapper CMake should route built libraries to the package root");
         expect(wrapper_cmake.find("RUNTIME_OUTPUT_DIRECTORY \"${CMAKE_CURRENT_SOURCE_DIR}/..\"") != std::string::npos,
                "library-output wrapper CMake should route built runtime artifacts to the package root");
+        expect(wrapper_cmake.find("foreach(COPPERFIN_CONFIGURATION IN LISTS CMAKE_CONFIGURATION_TYPES)") != std::string::npos,
+               "library-output wrapper CMake should enumerate multi-config generator configurations");
+        expect(wrapper_cmake.find("\"LIBRARY_OUTPUT_DIRECTORY_${COPPERFIN_CONFIGURATION_UPPER}\" \"${CMAKE_CURRENT_SOURCE_DIR}/..\"") != std::string::npos,
+               "library-output wrapper CMake should route every configured library artifact to the package root");
+        expect(wrapper_cmake.find("\"RUNTIME_OUTPUT_DIRECTORY_${COPPERFIN_CONFIGURATION_UPPER}\" \"${CMAKE_CURRENT_SOURCE_DIR}/..\"") != std::string::npos,
+               "library-output wrapper CMake should route every configured runtime artifact to the package root");
+        expect(wrapper_cmake.find("\"ARCHIVE_OUTPUT_DIRECTORY_${COPPERFIN_CONFIGURATION_UPPER}\" \"${CMAKE_CURRENT_SOURCE_DIR}/..\"") != std::string::npos,
+               "library-output wrapper CMake should route every configured archive artifact to the package root");
         expect(wrapper_cmake.find("/DEF:${CMAKE_CURRENT_SOURCE_DIR}/../LibraryDemo.def") != std::string::npos,
                "library-output wrapper CMake should forward the module-definition file on MSVC");
         const std::string wrapper_shell_script = read_text(result.plan.native_wrapper_build_script_path);
@@ -1233,6 +1241,18 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                        "library-output generated-CMake artifact exports should stay synchronized with the DLL API-manifest contract");
             }
         }
+        if (ninja_multi_config_is_available()) {
+            std::string multi_config_error;
+            const bool multi_config_built = build_native_wrapper_with_ninja_multi_config(
+                result.plan.native_wrapper_cmake_path,
+                result.plan.launcher_output_path,
+                multi_config_error);
+            if (!multi_config_built && !multi_config_error.empty()) {
+                std::cerr << "FAIL: " << multi_config_error << "\n";
+            }
+            expect(multi_config_built,
+                   "library-output wrapper should materialize the requested DLL for Debug and Release multi-config builds");
+        }
 
         const std::string library_api_manifest = read_text(result.plan.library_api_manifest_path);
         expect(library_api_manifest.find("output_kind=dll") != std::string::npos,
@@ -1247,9 +1267,9 @@ void test_library_output_package_emits_module_definition_from_prg_routines() {
                "library-output DLL API manifest should record InitLibrary routine kind");
         expect(library_api_manifest.find("function_kind=AddNumbers|function") != std::string::npos,
                "library-output DLL API manifest should record AddNumbers routine kind");
-        expect(library_api_manifest.find("function_source=InitLibrary|" + (project_dir / "librarymain.prg").string() + "|1") != std::string::npos,
+        expect(library_api_manifest.find("function_source=InitLibrary|" + quote_manifest_value((project_dir / "librarymain.prg").string()) + "|1") != std::string::npos,
                "library-output DLL API manifest should record InitLibrary source provenance");
-        expect(library_api_manifest.find("function_source=AddNumbers|" + (project_dir / "helper.prg").string() + "|1") != std::string::npos,
+        expect(library_api_manifest.find("function_source=AddNumbers|" + quote_manifest_value((project_dir / "helper.prg").string()) + "|1") != std::string::npos,
                "library-output DLL API manifest should record AddNumbers source provenance");
         expect(library_api_manifest.find("function_parameters=InitLibrary|tcMode") != std::string::npos,
                "library-output DLL API manifest should record InitLibrary parameter names");
@@ -2768,9 +2788,9 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper source should record parameter-name fields in the FoxInfo table");
         expect(wrapper_source.find("const CopperfinFoxTableRecord _FoxTable") != std::string::npos,
                "fll-output wrapper source should export the FoxTable registration symbol");
-        expect(wrapper_source.find("{\"InitLibrary\", &InitLibrary, \"procedure\", \"" + (project_dir / "librarymain.prg").string() + "\", 1U, \"lparameters\", \"tcMode\", 1U}") != std::string::npos,
+        expect(wrapper_source.find("{\"InitLibrary\", &InitLibrary, \"procedure\", \"" + quote_manifest_value((project_dir / "librarymain.prg").string()) + "\", 1U, \"lparameters\", \"tcMode\", 1U}") != std::string::npos,
                "fll-output wrapper source should record InitLibrary metadata in the FoxInfo table");
-        expect(wrapper_source.find("{\"AddNumbers\", &AddNumbers, \"function\", \"" + (project_dir / "helper.prg").string() + "\", 1U, \"parameters\", \"tnLeft|tnRight\", 2U}") != std::string::npos,
+        expect(wrapper_source.find("{\"AddNumbers\", &AddNumbers, \"function\", \"" + quote_manifest_value((project_dir / "helper.prg").string()) + "\", 1U, \"parameters\", \"tnLeft|tnRight\", 2U}") != std::string::npos,
                "fll-output wrapper source should record AddNumbers metadata in the FoxInfo table");
         expect(wrapper_source.find("const CopperfinFoxTableRecord* FoxInfo()") != std::string::npos,
                "fll-output wrapper source should scaffold the FoxInfo entrypoint");
@@ -2785,6 +2805,14 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output wrapper CMake should route built libraries to the package root");
         expect(wrapper_cmake.find("RUNTIME_OUTPUT_DIRECTORY \"${CMAKE_CURRENT_SOURCE_DIR}/..\"") != std::string::npos,
                "fll-output wrapper CMake should route built runtime artifacts to the package root");
+        expect(wrapper_cmake.find("foreach(COPPERFIN_CONFIGURATION IN LISTS CMAKE_CONFIGURATION_TYPES)") != std::string::npos,
+               "fll-output wrapper CMake should enumerate multi-config generator configurations");
+        expect(wrapper_cmake.find("\"LIBRARY_OUTPUT_DIRECTORY_${COPPERFIN_CONFIGURATION_UPPER}\" \"${CMAKE_CURRENT_SOURCE_DIR}/..\"") != std::string::npos,
+               "fll-output wrapper CMake should route every configured library artifact to the package root");
+        expect(wrapper_cmake.find("\"RUNTIME_OUTPUT_DIRECTORY_${COPPERFIN_CONFIGURATION_UPPER}\" \"${CMAKE_CURRENT_SOURCE_DIR}/..\"") != std::string::npos,
+               "fll-output wrapper CMake should route every configured runtime artifact to the package root");
+        expect(wrapper_cmake.find("\"ARCHIVE_OUTPUT_DIRECTORY_${COPPERFIN_CONFIGURATION_UPPER}\" \"${CMAKE_CURRENT_SOURCE_DIR}/..\"") != std::string::npos,
+               "fll-output wrapper CMake should route every configured archive artifact to the package root");
         expect(wrapper_cmake.find("/DEF:${CMAKE_CURRENT_SOURCE_DIR}/../LibraryDemo.def") != std::string::npos,
                "fll-output wrapper CMake should forward the module-definition file on MSVC");
         const std::string wrapper_shell_script = read_text(result.plan.native_wrapper_build_script_path);
@@ -2874,6 +2902,18 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                        "fll-output generated-CMake artifact exports should stay synchronized with the API manifest contract");
             }
         }
+        if (ninja_multi_config_is_available()) {
+            std::string multi_config_error;
+            const bool multi_config_built = build_native_wrapper_with_ninja_multi_config(
+                result.plan.native_wrapper_cmake_path,
+                result.plan.launcher_output_path,
+                multi_config_error);
+            if (!multi_config_built && !multi_config_error.empty()) {
+                std::cerr << "FAIL: " << multi_config_error << "\n";
+            }
+            expect(multi_config_built,
+                   "fll-output wrapper should materialize the requested FLL for Debug and Release multi-config builds");
+        }
 
         const std::string api_manifest = read_text(result.plan.fll_api_manifest_path);
         expect(api_manifest.find("output_kind=fll") != std::string::npos,
@@ -2908,9 +2948,9 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output API manifest should record InitLibrary routine kind");
         expect(api_manifest.find("function_kind=AddNumbers|function") != std::string::npos,
                "fll-output API manifest should record AddNumbers routine kind");
-        expect(api_manifest.find("function_source=InitLibrary|" + (project_dir / "librarymain.prg").string() + "|1") != std::string::npos,
+        expect(api_manifest.find("function_source=InitLibrary|" + quote_manifest_value((project_dir / "librarymain.prg").string()) + "|1") != std::string::npos,
                "fll-output API manifest should record InitLibrary source provenance");
-        expect(api_manifest.find("function_source=AddNumbers|" + (project_dir / "helper.prg").string() + "|1") != std::string::npos,
+        expect(api_manifest.find("function_source=AddNumbers|" + quote_manifest_value((project_dir / "helper.prg").string()) + "|1") != std::string::npos,
                "fll-output API manifest should record AddNumbers source provenance");
         expect(api_manifest.find("function_parameters=InitLibrary|tcMode") != std::string::npos,
                "fll-output API manifest should record InitLibrary parameter names");
@@ -3123,9 +3163,9 @@ void test_fll_output_package_emits_api_manifest_from_prg_routines() {
                "fll-output debug manifest should mirror InitLibrary routine kind");
         expect(debug_manifest.find("library_function_kind=AddNumbers|function") != std::string::npos,
                "fll-output debug manifest should mirror AddNumbers routine kind");
-        expect(debug_manifest.find("library_function_source=InitLibrary|" + (project_dir / "librarymain.prg").string() + "|1") != std::string::npos,
+        expect(debug_manifest.find("library_function_source=InitLibrary|" + quote_manifest_value((project_dir / "librarymain.prg").string()) + "|1") != std::string::npos,
                "fll-output debug manifest should mirror InitLibrary source provenance");
-        expect(debug_manifest.find("library_function_source=AddNumbers|" + (project_dir / "helper.prg").string() + "|1") != std::string::npos,
+        expect(debug_manifest.find("library_function_source=AddNumbers|" + quote_manifest_value((project_dir / "helper.prg").string()) + "|1") != std::string::npos,
                "fll-output debug manifest should mirror AddNumbers source provenance");
         expect(debug_manifest.find("library_function_parameters=InitLibrary|tcMode") != std::string::npos,
                "fll-output debug manifest should mirror InitLibrary parameter names");

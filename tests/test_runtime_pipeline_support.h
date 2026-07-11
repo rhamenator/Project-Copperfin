@@ -60,6 +60,7 @@ std::string native_cxx_command();
 bool native_cxx_is_available();
 bool native_symbol_dump_is_available();
 bool cmake_is_available();
+bool ninja_multi_config_is_available();
 bool shell_is_available();
 bool compile_native_wrapper_scaffold(
     const std::filesystem::path& source_path,
@@ -69,6 +70,10 @@ bool build_native_wrapper_with_cmake(
     const std::filesystem::path& cmake_lists_path,
     const std::filesystem::path& expected_output_path,
     std::filesystem::path& output_path,
+    std::string& error);
+bool build_native_wrapper_with_ninja_multi_config(
+    const std::filesystem::path& cmake_lists_path,
+    const std::filesystem::path& expected_output_path,
     std::string& error);
 bool build_native_wrapper_with_script(
     const std::filesystem::path& script_path,

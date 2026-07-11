@@ -2676,6 +2676,16 @@ std::string build_native_wrapper_cmake_source(const RuntimePackagePlan& plan) {
            << "\" LIBRARY_OUTPUT_DIRECTORY \"${CMAKE_CURRENT_SOURCE_DIR}/" << output_directory
            << "\" RUNTIME_OUTPUT_DIRECTORY \"${CMAKE_CURRENT_SOURCE_DIR}/" << output_directory
            << "\" ARCHIVE_OUTPUT_DIRECTORY \"${CMAKE_CURRENT_SOURCE_DIR}/" << output_directory << "\")\n";
+    stream << "foreach(COPPERFIN_CONFIGURATION IN LISTS CMAKE_CONFIGURATION_TYPES)\n";
+    stream << "  string(TOUPPER \"${COPPERFIN_CONFIGURATION}\" COPPERFIN_CONFIGURATION_UPPER)\n";
+    stream << "  set_target_properties(" << output_stem << " PROPERTIES\n";
+    stream << "    \"LIBRARY_OUTPUT_DIRECTORY_${COPPERFIN_CONFIGURATION_UPPER}\" \"${CMAKE_CURRENT_SOURCE_DIR}/"
+           << output_directory << "\"\n";
+    stream << "    \"RUNTIME_OUTPUT_DIRECTORY_${COPPERFIN_CONFIGURATION_UPPER}\" \"${CMAKE_CURRENT_SOURCE_DIR}/"
+           << output_directory << "\"\n";
+    stream << "    \"ARCHIVE_OUTPUT_DIRECTORY_${COPPERFIN_CONFIGURATION_UPPER}\" \"${CMAKE_CURRENT_SOURCE_DIR}/"
+           << output_directory << "\")\n";
+    stream << "endforeach()\n";
     stream << "if(MSVC)\n";
     stream << "  target_link_options(" << output_stem
            << " PRIVATE \"/DEF:${CMAKE_CURRENT_SOURCE_DIR}/../" << module_definition_file_name << "\")\n";
