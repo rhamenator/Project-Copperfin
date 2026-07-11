@@ -45,6 +45,8 @@ namespace
             "cWinFullPath = FULLPATH(cWinPath)\n"
             "cUncFullPath = FULLPATH(cUncPath)\n"
             "cPosixFullPath = FULLPATH(cPosixPath)\n"
+            "cPosixDotFullPath = FULLPATH('/opt/copperfin/../shared/main.prg')\n"
+            "cPosixMixedFullPath = FULLPATH('/opt\\copperfin\\main.prg')\n"
             "cRelativeWinFullPath = FULLPATH('forms\\main.prg')\n"
             "cRelativePosixFullPath = FULLPATH('forms/report.prg')\n"
             "cForcedExt = FORCEEXT(cWinPath, 'h')\n"
@@ -74,6 +76,8 @@ namespace
         const auto win_full_path = state.globals.find("cwinfullpath");
         const auto unc_full_path = state.globals.find("cuncfullpath");
         const auto posix_full_path = state.globals.find("cposixfullpath");
+        const auto posix_dot_full_path = state.globals.find("cposixdotfullpath");
+        const auto posix_mixed_full_path = state.globals.find("cposixmixedfullpath");
         const auto relative_win_full_path = state.globals.find("crelativewinfullpath");
         const auto relative_posix_full_path = state.globals.find("crelativeposixfullpath");
         const auto forced_ext = state.globals.find("cforcedext");
@@ -96,6 +100,8 @@ namespace
         expect(win_full_path != state.globals.end(), "Windows FULLPATH result should be captured");
         expect(unc_full_path != state.globals.end(), "UNC FULLPATH result should be captured");
         expect(posix_full_path != state.globals.end(), "POSIX FULLPATH result should be captured");
+        expect(posix_dot_full_path != state.globals.end(), "POSIX dot-segment FULLPATH result should be captured");
+        expect(posix_mixed_full_path != state.globals.end(), "POSIX mixed-separator FULLPATH result should be captured");
         expect(relative_win_full_path != state.globals.end(), "relative Windows-style FULLPATH result should be captured");
         expect(relative_posix_full_path != state.globals.end(), "relative POSIX FULLPATH result should be captured");
         expect(forced_ext != state.globals.end(), "FORCEEXT result should be captured");
@@ -164,6 +170,16 @@ namespace
         {
             expect(copperfin::runtime::format_value(posix_full_path->second) == "/home/rich/dev/Project-Copperfin/src/runtime/prg_engine.cpp",
                    "FULLPATH should preserve POSIX absolute paths");
+        }
+        if (posix_dot_full_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(posix_dot_full_path->second) == "/opt/shared/main.prg",
+                   "FULLPATH should normalize POSIX absolute dot segments on every host");
+        }
+        if (posix_mixed_full_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(posix_mixed_full_path->second) == "/opt/copperfin/main.prg",
+                   "FULLPATH should normalize VFP backslashes inside POSIX absolute paths on every host");
         }
         if (relative_win_full_path != state.globals.end())
         {

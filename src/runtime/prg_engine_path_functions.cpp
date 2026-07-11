@@ -26,6 +26,15 @@ bool is_unc_path(const std::string& value) {
         ((value[0] == '\\' && value[1] == '\\') || (value[0] == '/' && value[1] == '/'));
 }
 
+bool is_posix_absolute_path(const std::string& value) {
+    return !value.empty() && value.front() == '/';
+}
+
+std::string normalize_posix_absolute_path(std::string value) {
+    std::replace(value.begin(), value.end(), '\\', '/');
+    return std::filesystem::path(value).lexically_normal().generic_string();
+}
+
 std::string normalize_relative_path_separators(std::string value) {
     std::replace(
         value.begin(),
@@ -38,6 +47,9 @@ std::string normalize_relative_path_separators(std::string value) {
 std::string portable_full_path(const std::string& raw_path, const std::string& default_directory) {
     if (is_windows_drive_absolute_path(raw_path) || is_unc_path(raw_path)) {
         return raw_path;
+    }
+    if (is_posix_absolute_path(raw_path)) {
+        return normalize_posix_absolute_path(raw_path);
     }
 
     std::filesystem::path path(normalize_relative_path_separators(raw_path));
