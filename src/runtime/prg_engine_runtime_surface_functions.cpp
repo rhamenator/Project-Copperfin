@@ -87,7 +87,11 @@ bool is_unc_path(const std::string& value) {
 }
 
 std::string normalize_relative_path_separators(std::string value) {
-    std::replace(value.begin(), value.end(), '\\', std::filesystem::path::preferred_separator);
+    std::replace(
+        value.begin(),
+        value.end(),
+        '\\',
+        static_cast<char>(std::filesystem::path::preferred_separator));
     return value;
 }
 
