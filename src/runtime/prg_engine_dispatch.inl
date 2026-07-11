@@ -3951,6 +3951,13 @@
 
                 const auto retain_loaded_module_identity = [&](HMODULE module, const std::wstring &fallback_name)
                 {
+                    const auto retain_utf8_path = [&](const std::wstring &path)
+                    {
+                        const std::u8string utf8_path = std::filesystem::path(path).u8string();
+                        declfn.loaded_module_path.assign(
+                            reinterpret_cast<const char *>(utf8_path.data()),
+                            utf8_path.size());
+                    };
                     std::wstring module_path(32768U, L'\0');
                     const DWORD length = GetModuleFileNameW(
                         module,
@@ -3959,11 +3966,11 @@
                     if (length > 0U && length < module_path.size())
                     {
                         module_path.resize(length);
-                        declfn.loaded_module_path = std::filesystem::path(module_path).string();
+                        retain_utf8_path(module_path);
                     }
                     else
                     {
-                        declfn.loaded_module_path = std::filesystem::path(fallback_name).string();
+                        retain_utf8_path(fallback_name);
                     }
                 };
 
@@ -4096,7 +4103,7 @@
                     else
                     {
                         declfn.hmodule = hmod;
-                        declfn.proc_address = resolve_native_export(hmod, false);
+                        declfn.proc_address = resolve_native_export(hmod, true);
                         if (declfn.proc_address == nullptr)
                         {
                             last_error_message = runtime_text(
@@ -4112,6 +4119,7 @@
                                 return {.ok = true, .waiting_for_events = false, .frame_returned = false, .message = {}};
                             return {.ok = false, .message = last_error_message};
                         }
+                        retain_loaded_module_identity(hmod, dll_wpath);
                     }
                 }
 

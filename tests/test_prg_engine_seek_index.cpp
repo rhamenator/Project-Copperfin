@@ -3181,6 +3181,138 @@ void test_declared_dll_module_ownership_and_failed_redeclare_rollback() {
 #endif
 }
 
+void test_declared_dll_explicit_ansi_fallback_and_exact_precedence() {
+#if defined(_WIN32) && defined(COPPERFIN_DECLARED_DLL_FIXTURE_NAME)
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_declared_dll_ansi_fallback";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root / "native");
+
+    const fs::path fixture_name = COPPERFIN_DECLARED_DLL_FIXTURE_NAME;
+    const fs::path fixture_source = declared_dll_fixture_source_path();
+    const fs::path fixture_copy = temp_root / "native" / fixture_name;
+    fs::copy_file(fixture_source, fixture_copy, fs::copy_options::overwrite_existing, ignored);
+    expect(!ignored && fs::exists(fixture_copy),
+           "#3942: explicit ANSI-fallback fixture should copy under the PRG working directory");
+
+    const fs::path main_path = temp_root / "declared_dll_ansi_fallback.prg";
+    write_text(
+        main_path,
+        "DECLARE LONG CopperfinDeclaredDllAnsiOnly IN '" + fixture_name.string() +
+            "' AS ParentlessAnsiAlias LONG value\n"
+        "DECLARE LONG CopperfinDeclaredDllModulePath IN '" + fixture_name.string() +
+            "' AS ParentlessModulePathAlias STRING @ buffer, LONG capacity\n"
+        "DECLARE LONG CopperfinDeclaredDllAnsiOnly IN 'native/" + fixture_name.string() +
+            "' AS RelativeAnsiAlias LONG value\n"
+        "DECLARE LONG CopperfinDeclaredDllAnsiCdeclOnly IN 'native/" + fixture_name.string() +
+            "' AS RelativeCdeclAnsiAlias LONG value\n"
+        "DECLARE LONG CopperfinDeclaredDllModulePath IN 'native/" + fixture_name.string() +
+            "' AS RelativeModulePathAlias STRING @ buffer, LONG capacity\n"
+        "DECLARE LONG CopperfinDeclaredDllExactPrecedence IN 'native/" + fixture_name.string() +
+            "' AS ExactPrecedenceAlias LONG value\n"
+        "DECLARE INTEGER GetSystemDirectory IN 'kernel32.dll' STRING @ buffer, INTEGER size\n"
+        "cParentlessModulePath = SPACE(32768)\n"
+        "cRelativeModulePath = SPACE(32768)\n"
+        "cSystemDirectory = SPACE(32768)\n"
+        "nParentlessAnsi = ParentlessAnsiAlias(3)\n"
+        "nParentlessModulePathLength = ParentlessModulePathAlias(@cParentlessModulePath, 32768)\n"
+        "nRelativeAnsi = RelativeAnsiAlias(2)\n"
+        "nRelativeCdeclAnsi = RelativeCdeclAnsiAlias(2)\n"
+        "nRelativeModulePathLength = RelativeModulePathAlias(@cRelativeModulePath, 32768)\n"
+        "nExact = ExactPrecedenceAlias(41)\n"
+        "nSystemDirectoryLength = GetSystemDirectory(@cSystemDirectory, 32768)\n"
+        "RETURN\n");
+
+    {
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "#3942: explicit ANSI-fallback declarations should complete: " + state.message);
+
+        const auto relative_ansi = state.globals.find("nrelativeansi");
+        const auto relative_cdecl_ansi = state.globals.find("nrelativecdeclansi");
+        const auto parentless_ansi = state.globals.find("nparentlessansi");
+        const auto parentless_module_path = state.globals.find("cparentlessmodulepath");
+        const auto relative_module_path = state.globals.find("crelativemodulepath");
+        const auto parentless_module_path_length = state.globals.find("nparentlessmodulepathlength");
+        const auto relative_module_path_length = state.globals.find("nrelativemodulepathlength");
+        const auto exact = state.globals.find("nexact");
+        const auto system_directory = state.globals.find("csystemdirectory");
+        const auto system_directory_length = state.globals.find("nsystemdirectorylength");
+        expect(relative_ansi != state.globals.end() &&
+                   copperfin::runtime::format_value(relative_ansi->second) == "3944",
+               "#3942: quoted relative lookup should bind the A-suffixed export");
+        expect(relative_cdecl_ansi != state.globals.end() &&
+                   copperfin::runtime::format_value(relative_cdecl_ansi->second) == "4002",
+               "#3942: quoted relative lookup should bind the cdecl A-suffixed export");
+        expect(parentless_ansi != state.globals.end() &&
+                   copperfin::runtime::format_value(parentless_ansi->second) == "3945",
+               "#3942: parentless loader lookup should bind the A-suffixed export");
+        expect(parentless_module_path != state.globals.end() &&
+                   fs::equivalent(
+                       fs::path(copperfin::runtime::format_value(parentless_module_path->second)),
+                       fixture_source,
+                       ignored) &&
+                   !ignored,
+               "#3942: parentless lookup should bind the fixture beside the test executable");
+        ignored.clear();
+        expect(relative_module_path != state.globals.end() &&
+                   fs::equivalent(
+                       fs::path(copperfin::runtime::format_value(relative_module_path->second)),
+                       fixture_copy,
+                       ignored) &&
+                   !ignored,
+               "#3942: explicit relative lookup should bind the copied fixture path");
+        ignored.clear();
+        expect(parentless_module_path_length != state.globals.end() &&
+                   parentless_module_path_length->second.kind == copperfin::runtime::PrgValueKind::number &&
+                   parentless_module_path_length->second.number_value > 0.0,
+               "#3942: parentless module-path fallback should return a positive path length");
+        expect(relative_module_path_length != state.globals.end() &&
+                   relative_module_path_length->second.kind == copperfin::runtime::PrgValueKind::number &&
+                   relative_module_path_length->second.number_value > 0.0,
+               "#3942: relative module-path fallback should return a positive path length");
+        expect(exact != state.globals.end() &&
+                   copperfin::runtime::format_value(exact->second) == "42",
+               "#3942: exact export should take precedence over its A-suffixed sibling");
+        expect(system_directory != state.globals.end() &&
+                   !copperfin::runtime::format_value(system_directory->second).empty(),
+               "#3942: shipped GetSystemDirectory declaration should write back a path");
+        expect(system_directory_length != state.globals.end() &&
+                   system_directory_length->second.kind == copperfin::runtime::PrgValueKind::number &&
+                   system_directory_length->second.number_value > 0.0,
+               "#3942: shipped GetSystemDirectory declaration should return a positive path length");
+
+        const auto has_declare_event = [&](const std::string &detail)
+        {
+            return std::any_of(state.events.begin(), state.events.end(), [&](const auto &event)
+            {
+                return event.category == "runtime.declare_dll" && event.detail == detail;
+            });
+        };
+        expect(has_declare_event("RelativeAnsiAlias IN native/" + fixture_name.string()),
+               "#3942: relative fallback event should preserve source alias and library designator");
+        expect(has_declare_event("ParentlessAnsiAlias IN " + fixture_name.string()),
+               "#3942: parentless fallback event should preserve source alias and library designator");
+        expect(has_declare_event("ExactPrecedenceAlias IN native/" + fixture_name.string()),
+               "#3942: exact-precedence event should preserve source export identity");
+        expect(has_declare_event("GetSystemDirectory IN kernel32.dll"),
+               "#3942: shipped explicit-DLL event should preserve its unsuffixed source function name");
+        expect(GetModuleHandleW(fixture_copy.wstring().c_str()) != nullptr,
+               "#3942: relative fixture module should remain loaded during the session");
+        expect(GetModuleHandleW(fixture_source.wstring().c_str()) != nullptr,
+               "#3942: parentless fixture module should remain loaded during the session");
+    }
+
+    expect(GetModuleHandleW(fixture_copy.wstring().c_str()) == nullptr,
+           "#3942: explicit fallback module references should unload with the session");
+    expect(GetModuleHandleW(fixture_source.wstring().c_str()) == nullptr,
+           "#3942: parentless fallback module references should unload with the session");
+    fs::remove_all(temp_root, ignored);
+#endif
+}
+
 void test_declare_dll_runtime_errors_localize() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_declare_localization";
@@ -3807,6 +3939,7 @@ int main() {
     test_declared_dll_win32api_search_and_ansi_fallback();
     test_declared_dll_win32api_missing_symbol_localizes();
     test_declared_dll_module_ownership_and_failed_redeclare_rollback();
+    test_declared_dll_explicit_ansi_fallback_and_exact_precedence();
     test_declare_dll_runtime_errors_localize();
     test_set_exact_affects_comparisons_and_seek();
     test_use_again_and_alias_collision_semantics();

@@ -5,12 +5,25 @@
 #include <cstdint>
 
 #if defined(_WIN32)
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
 #define COPPERFIN_TEST_EXPORT extern "C" __declspec(dllexport)
 #define COPPERFIN_TEST_CALL __stdcall
 #else
 #define COPPERFIN_TEST_EXPORT extern "C"
 #define COPPERFIN_TEST_CALL
 #endif
+
+namespace {
+#if defined(_WIN32)
+int declared_dll_fixture_module_anchor = 0;
+#endif
+}
 
 #if defined(_MSC_VER) && defined(_M_IX86)
 #pragma comment(linker, "/EXPORT:CopperfinDeclaredDllNoUnderscore@4=_CopperfinDeclaredDllNoUnderscoreImpl@4")
@@ -129,6 +142,42 @@ COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllX86NumericByR
 
 COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllNoUnderscoreImpl(long value) {
     return value + 1L;
+}
+
+COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllAnsiOnlyA(long value) {
+    return value + 3942L;
+}
+
+COPPERFIN_TEST_EXPORT long CopperfinDeclaredDllAnsiCdeclOnlyA(long value) {
+    return value + 4000L;
+}
+
+COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllModulePathA(char* buffer, long capacity) {
+#if defined(_WIN32)
+    if (buffer == nullptr || capacity <= 0L) {
+        return 0L;
+    }
+    HMODULE module = nullptr;
+    if (GetModuleHandleExA(
+            GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+            reinterpret_cast<LPCSTR>(&declared_dll_fixture_module_anchor),
+            &module) == 0) {
+        return 0L;
+    }
+    return static_cast<long>(GetModuleFileNameA(module, buffer, static_cast<DWORD>(capacity)));
+#else
+    (void)buffer;
+    (void)capacity;
+    return 0L;
+#endif
+}
+
+COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllExactPrecedence(long value) {
+    return value + 1L;
+}
+
+COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllExactPrecedenceA(long value) {
+    return value + 1000L;
 }
 
 COPPERFIN_TEST_EXPORT short COPPERFIN_TEST_CALL CopperfinDeclaredDllShortNegative() {
