@@ -41,6 +41,23 @@ void write_text(const std::filesystem::path& path, const std::string& text) {
     output << text;
 }
 
+std::string quote_manifest_value(const std::string& value) {
+    std::string escaped;
+    escaped.reserve(value.size());
+    for (const char ch : value) {
+        if (ch == '\\') {
+            escaped += "\\\\";
+        } else if (ch == '\n') {
+            escaped += "\\n";
+        } else if (ch == '\r') {
+            escaped += "\\r";
+        } else {
+            escaped.push_back(ch);
+        }
+    }
+    return escaped;
+}
+
 void write_synthetic_database_index(const std::filesystem::path& path) {
     std::vector<std::uint8_t> bytes(16U * 512U, 0U);
     const auto write_le_u16 = [&](std::size_t offset, std::uint16_t value) {
@@ -1626,13 +1643,16 @@ void test_runtime_host_prefers_debug_manifest_for_implicit_debug_launches(const 
         "LOCAL cMode\n"
         "cMode = 'debug'\n"
         "RETURN\n");
+    expect(
+        quote_manifest_value("C:\\fixture\\release_main.prg") == "C:\\\\fixture\\\\release_main.prg",
+        "#3669: manual manifest fixtures should escape Windows path separators before release filenames");
     write_text(
         manifest_path,
         "manifest_version=1\n"
         "project_title=ImplicitReleaseManifest\n"
         "startup_item=release_main.prg\n"
-        "startup_source=" + release_startup_path.string() + "\n"
-        "working_directory=" + temp_root.string() + "\n"
+        "startup_source=" + quote_manifest_value(release_startup_path.string()) + "\n"
+        "working_directory=" + quote_manifest_value(temp_root.string()) + "\n"
         "security_enabled=false\n"
         "security_role=\n"
         "security_mode=native\n"
@@ -1642,8 +1662,8 @@ void test_runtime_host_prefers_debug_manifest_for_implicit_debug_launches(const 
         "debug_manifest_version=2\n"
         "project_title=ImplicitDebugManifest\n"
         "startup_item=debug_main.prg\n"
-        "startup_source=" + debug_startup_path.string() + "\n"
-        "working_directory=" + temp_root.string() + "\n"
+        "startup_source=" + quote_manifest_value(debug_startup_path.string()) + "\n"
+        "working_directory=" + quote_manifest_value(temp_root.string()) + "\n"
         "security_enabled=false\n"
         "security_role=\n"
         "security_mode=native\n"
