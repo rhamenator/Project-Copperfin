@@ -54,10 +54,11 @@ std::string shell_quote(const std::string& value) {
 
 std::string run_command_capture(const std::string& command) {
     std::string output;
+    const std::string prepared_command = copperfin::test_support::prepare_shell_command_for_system(command);
 #ifdef _WIN32
-    FILE* pipe = _popen(command.c_str(), "r");
+    FILE* pipe = _popen(prepared_command.c_str(), "r");
 #else
-    FILE* pipe = popen(command.c_str(), "r");
+    FILE* pipe = popen(prepared_command.c_str(), "r");
 #endif
     if (pipe == nullptr) {
         return output;
