@@ -3281,6 +3281,477 @@
             return empty_session;
         }
 
+        std::string portable_database_path_text(std::string value) const
+        {
+#if !defined(_WIN32)
+            std::replace(value.begin(), value.end(), '\\', '/');
+#endif
+            return value;
+        }
+
+        std::optional<std::filesystem::path> resolve_existing_database_component(
+            const std::filesystem::path &candidate) const
+        {
+            std::error_code ignored;
+            if (std::filesystem::is_regular_file(candidate, ignored) && !ignored)
+            {
+                return candidate.lexically_normal();
+            }
+
+            const std::filesystem::path parent =
+                candidate.parent_path().empty() ? std::filesystem::path{"."} : candidate.parent_path();
+            if (!std::filesystem::is_directory(parent, ignored) || ignored)
+            {
+                return std::nullopt;
+            }
+
+            const std::string expected_name = lowercase_copy(candidate.filename().string());
+            const std::string expected_stem = candidate.stem().string();
+            std::optional<std::filesystem::path> exact_stem_match;
+            std::optional<std::filesystem::path> folded_match;
+            bool folded_match_ambiguous = false;
+            for (const auto &entry : std::filesystem::directory_iterator(parent, ignored))
+            {
+                if (ignored)
+                {
+                    return std::nullopt;
+                }
+                if (lowercase_copy(entry.path().filename().string()) != expected_name)
+                {
+                    continue;
+                }
+                std::error_code type_error;
+                if (!entry.is_regular_file(type_error) || type_error)
+                {
+                    continue;
+                }
+                if (entry.path().stem().string() == expected_stem)
+                {
+                    if (exact_stem_match.has_value())
+                    {
+                        return std::nullopt;
+                    }
+                    exact_stem_match = entry.path().lexically_normal();
+                    continue;
+                }
+                folded_match_ambiguous = folded_match.has_value();
+                folded_match = entry.path().lexically_normal();
+            }
+            if (exact_stem_match.has_value())
+            {
+                return exact_stem_match;
+            }
+            return folded_match_ambiguous ? std::nullopt : folded_match;
+        }
+
+        std::vector<std::filesystem::path> database_search_directories() const
+        {
+            std::vector<std::filesystem::path> directories{
+                std::filesystem::path(current_default_directory())};
+            const auto found_path = current_set_state().find("path");
+            if (found_path == current_set_state().end())
+            {
+                return directories;
+            }
+
+            std::string remaining = found_path->second;
+            std::replace(remaining.begin(), remaining.end(), ';', ',');
+            while (!remaining.empty())
+            {
+                const std::size_t comma = remaining.find(',');
+                std::string entry = trim_copy(
+                    comma == std::string::npos ? remaining : remaining.substr(0U, comma));
+                entry = portable_database_path_text(unquote_string(entry));
+                if (!entry.empty())
+                {
+                    std::filesystem::path directory(entry);
+                    if (directory.is_relative())
+                    {
+                        directory = std::filesystem::path(current_default_directory()) / directory;
+                    }
+                    directories.push_back(directory.lexically_normal());
+                }
+                if (comma == std::string::npos)
+                {
+                    break;
+                }
+                remaining = remaining.substr(comma + 1U);
+            }
+            return directories;
+        }
+
+        std::optional<std::filesystem::path> resolve_database_path(const std::string &raw_path) const
+        {
+            std::string path_text = portable_database_path_text(unquote_string(trim_copy(raw_path)));
+            if (path_text.empty() || path_text == "?")
+            {
+                return std::nullopt;
+            }
+
+            std::filesystem::path requested(path_text);
+            if (requested.extension().empty())
+            {
+                requested += ".dbc";
+            }
+            if (requested.is_absolute())
+            {
+                return resolve_existing_database_component(requested.lexically_normal());
+            }
+
+            for (const auto &directory : database_search_directories())
+            {
+                if (const auto resolved = resolve_existing_database_component(
+                        (directory / requested).lexically_normal()))
+                {
+                    return resolved;
+                }
+            }
+            return std::nullopt;
+        }
+
+        std::map<std::string, std::string>::const_iterator find_verified_file_byte_override(
+            const std::filesystem::path &path) const
+        {
+            const std::string normalized = path.lexically_normal().string();
+            if (const auto exact = options.verified_file_byte_overrides.find(normalized);
+                exact != options.verified_file_byte_overrides.end())
+            {
+                return exact;
+            }
+#if defined(_WIN32)
+            return std::find_if(
+                options.verified_file_byte_overrides.begin(),
+                options.verified_file_byte_overrides.end(),
+                [&](const auto &candidate)
+                {
+                    return paths_equal_insensitive(candidate.first, normalized);
+                });
+#else
+            return options.verified_file_byte_overrides.end();
+#endif
+        }
+
+        bool database_paths_equal(const std::string &left, const std::string &right) const
+        {
+#if defined(_WIN32)
+            return paths_equal_insensitive(left, right);
+#else
+            return std::filesystem::path(left).lexically_normal() ==
+                std::filesystem::path(right).lexically_normal();
+#endif
+        }
+
+        RuntimeDatabaseState *find_open_database_by_path(
+            DataSessionState &session,
+            const std::string &path)
+        {
+            const auto found = std::find_if(
+                session.databases.begin(),
+                session.databases.end(),
+                [&](const auto &database)
+                {
+                    return database_paths_equal(database.path, path);
+                });
+            return found == session.databases.end() ? nullptr : &(*found);
+        }
+
+        const RuntimeDatabaseState *find_open_database_by_path(
+            const DataSessionState &session,
+            const std::string &path) const
+        {
+            const auto found = std::find_if(
+                session.databases.begin(),
+                session.databases.end(),
+                [&](const auto &database)
+                {
+                    return database_paths_equal(database.path, path);
+                });
+            return found == session.databases.end() ? nullptr : &(*found);
+        }
+
+        bool read_database_component_bytes(
+            const std::filesystem::path &path,
+            std::string &bytes)
+        {
+            const auto verified = find_verified_file_byte_override(path);
+            if (verified != options.verified_file_byte_overrides.end())
+            {
+                bytes = verified->second;
+                if (bytes.empty())
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Database.Error.ComponentMalformed",
+                        {{"path", path.string()}});
+                    return false;
+                }
+                return true;
+            }
+            if (options.require_verified_file_byte_overrides)
+            {
+                last_error_message = runtime_text(
+                    "Runtime.Prg.Database.Error.VerifiedBytesUnavailable",
+                    {{"path", path.string()}});
+                return false;
+            }
+
+            std::ifstream input(path, std::ios::binary);
+            if (!input.good())
+            {
+                last_error_message = runtime_text(
+                    "Runtime.Prg.Database.Error.ComponentReadFailed",
+                    {{"path", path.string()}});
+                return false;
+            }
+            std::ostringstream stream;
+            stream << input.rdbuf();
+            bytes = stream.str();
+            if (bytes.empty())
+            {
+                last_error_message = runtime_text(
+                    "Runtime.Prg.Database.Error.ComponentMalformed",
+                    {{"path", path.string()}});
+                return false;
+            }
+            return true;
+        }
+
+        RuntimeDatabaseState *find_open_database(
+            DataSessionState &session,
+            const std::string &designator)
+        {
+            const std::string designator_text =
+                portable_database_path_text(unquote_string(trim_copy(designator)));
+            const std::string normalized_designator = normalize_identifier(designator_text);
+            if (normalized_designator.empty())
+            {
+                return nullptr;
+            }
+            if (RuntimeDatabaseState *exact_path =
+                    find_open_database_by_path(session, designator_text))
+            {
+                return exact_path;
+            }
+            const std::string designator_stem =
+                normalize_identifier(portable_path_stem(normalized_designator));
+            RuntimeDatabaseState *match = nullptr;
+            for (auto &database : session.databases)
+            {
+                if (normalize_identifier(database.name) != normalized_designator &&
+                    normalize_identifier(database.name) != designator_stem &&
+                    normalize_identifier(portable_path_stem(database.path)) != designator_stem)
+                {
+                    continue;
+                }
+                if (match != nullptr)
+                {
+                    return nullptr;
+                }
+                match = &database;
+            }
+            return match;
+        }
+
+        const RuntimeDatabaseState *find_open_database(
+            const DataSessionState &session,
+            const std::string &designator) const
+        {
+            const std::string designator_text =
+                portable_database_path_text(unquote_string(trim_copy(designator)));
+            const std::string normalized_designator = normalize_identifier(designator_text);
+            if (normalized_designator.empty())
+            {
+                return nullptr;
+            }
+            if (const RuntimeDatabaseState *exact_path =
+                    find_open_database_by_path(session, designator_text))
+            {
+                return exact_path;
+            }
+            const std::string designator_stem =
+                normalize_identifier(portable_path_stem(normalized_designator));
+            const RuntimeDatabaseState *match = nullptr;
+            for (const auto &database : session.databases)
+            {
+                if (normalize_identifier(database.name) != normalized_designator &&
+                    normalize_identifier(database.name) != designator_stem &&
+                    normalize_identifier(portable_path_stem(database.path)) != designator_stem)
+                {
+                    continue;
+                }
+                if (match != nullptr)
+                {
+                    return nullptr;
+                }
+                match = &database;
+            }
+            return match;
+        }
+
+        bool database_is_open(const std::string &designator, int data_session = 0) const
+        {
+            const int effective_session = data_session > 0 ? data_session : current_data_session;
+            const auto found_session = data_sessions.find(effective_session);
+            if (found_session == data_sessions.end())
+            {
+                return false;
+            }
+            if (trim_copy(designator).empty())
+            {
+                return !found_session->second.current_database_path.empty();
+            }
+            return find_open_database(found_session->second, designator) != nullptr;
+        }
+
+        std::string current_database_path() const
+        {
+            return current_session_state().current_database_path;
+        }
+
+        bool set_current_database(const std::string &designator)
+        {
+            DataSessionState &session = current_session_state();
+            if (trim_copy(designator).empty())
+            {
+                session.current_database_path.clear();
+                for (auto &database : session.databases)
+                {
+                    database.current = false;
+                }
+                return true;
+            }
+
+            RuntimeDatabaseState *database = find_open_database(session, designator);
+            if (database == nullptr)
+            {
+                last_error_message = runtime_text(
+                    "Runtime.Prg.Database.Error.NotOpen",
+                    {{"database", unquote_string(trim_copy(designator))}});
+                return false;
+            }
+            session.current_database_path = database->path;
+            for (auto &candidate : session.databases)
+            {
+                candidate.current = database_paths_equal(candidate.path, database->path);
+            }
+            return true;
+        }
+
+        bool open_database(
+            const std::string &raw_path,
+            std::optional<bool> exclusive_override,
+            bool read_only)
+        {
+            const auto database_path = resolve_database_path(raw_path);
+            if (!database_path.has_value())
+            {
+                last_error_message = runtime_text(
+                    trim_copy(raw_path).empty() || trim_copy(raw_path) == "?"
+                        ? "Runtime.Prg.Database.Error.PathRequired"
+                        : "Runtime.Prg.Database.Error.NotFound",
+                    {{"path", unquote_string(trim_copy(raw_path))}});
+                return false;
+            }
+
+            DataSessionState &session = current_session_state();
+            if (RuntimeDatabaseState *existing =
+                    find_open_database_by_path(session, database_path->string()))
+            {
+                return set_current_database(existing->path);
+            }
+
+            const bool exclusive =
+                exclusive_override.value_or(is_set_enabled_or_default("exclusive", true));
+            for (const auto &[session_id, candidate_session] : data_sessions)
+            {
+                if (session_id == current_data_session)
+                {
+                    continue;
+                }
+                const RuntimeDatabaseState *existing =
+                    find_open_database_by_path(candidate_session, database_path->string());
+                if (existing != nullptr && (existing->exclusive || exclusive))
+                {
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Database.Error.ExclusiveConflict",
+                        {{"path", database_path->string()}});
+                    return false;
+                }
+            }
+
+            const auto dct_path =
+                resolve_existing_database_component(std::filesystem::path(*database_path).replace_extension(".dct"));
+            const auto dcx_path =
+                resolve_existing_database_component(std::filesystem::path(*database_path).replace_extension(".dcx"));
+            if (!dct_path.has_value() || !dcx_path.has_value())
+            {
+                const std::filesystem::path missing_path = !dct_path.has_value()
+                    ? std::filesystem::path(*database_path).replace_extension(".dct")
+                    : std::filesystem::path(*database_path).replace_extension(".dcx");
+                last_error_message = runtime_text(
+                    "Runtime.Prg.Database.Error.CompanionMissing",
+                    {{"path", missing_path.string()}});
+                return false;
+            }
+
+            std::string dbc_bytes;
+            std::string dct_bytes;
+            std::string dcx_bytes;
+            if (!read_database_component_bytes(*database_path, dbc_bytes) ||
+                !read_database_component_bytes(*dct_path, dct_bytes) ||
+                !read_database_component_bytes(*dcx_path, dcx_bytes))
+            {
+                return false;
+            }
+            const std::vector<std::uint8_t> dbc_binary(dbc_bytes.begin(), dbc_bytes.end());
+            const auto header = vfp::parse_dbf_header(dbc_binary);
+            if (!header.ok)
+            {
+                last_error_message = runtime_text(
+                    "Runtime.Prg.Database.Error.ContainerMalformed",
+                    {{"path", database_path->string()}, {"errorMessage", header.error}});
+                return false;
+            }
+            const auto read_be_u16 = [](const std::string &bytes, std::size_t offset)
+            {
+                return static_cast<std::uint16_t>(
+                    (static_cast<std::uint16_t>(static_cast<unsigned char>(bytes[offset])) << 8U) |
+                    static_cast<std::uint16_t>(static_cast<unsigned char>(bytes[offset + 1U])));
+            };
+            if (dct_bytes.size() < 512U || read_be_u16(dct_bytes, 6U) == 0U)
+            {
+                last_error_message = runtime_text(
+                    "Runtime.Prg.Database.Error.ComponentMalformed",
+                    {{"path", dct_path->string()}});
+                return false;
+            }
+            const std::vector<std::uint8_t> dcx_binary(dcx_bytes.begin(), dcx_bytes.end());
+            const auto index_probe = vfp::parse_index_probe(
+                dcx_binary,
+                static_cast<std::uint64_t>(dcx_binary.size()),
+                vfp::IndexKind::dcx);
+            if (!index_probe.ok)
+            {
+                last_error_message = runtime_text(
+                    "Runtime.Prg.Database.Error.ComponentMalformed",
+                    {{"path", dcx_path->string()}});
+                return false;
+            }
+
+            RuntimeDatabaseState database{
+                .path = database_path->lexically_normal().string(),
+                .name = database_path->stem().string(),
+                .exclusive = exclusive,
+                .read_only = read_only,
+                .current = true};
+            for (auto &candidate : session.databases)
+            {
+                candidate.current = false;
+            }
+            session.current_database_path = database.path;
+            session.databases.push_back(std::move(database));
+            return true;
+        }
+
         int current_selected_work_area() const
         {
             return current_session_state().selected_work_area;
@@ -4454,6 +4925,8 @@
                 session.aliases.clear();
                 session.table_locks.clear();
                 session.record_locks.clear();
+                session.databases.clear();
+                session.current_database_path.clear();
                 session.selected_work_area = 1;
                 session.next_work_area = 1;
             }
@@ -4502,8 +4975,43 @@
                 close_cursor(std::to_string(area));
             }
 
-            const auto [scope_name, _scope_tail] = split_first_word(scope);
+            const auto [scope_name, scope_tail] = split_first_word(scope);
             const std::string close_scope = normalize_identifier(scope_name.empty() ? scope : scope_name);
+            const bool close_all_databases =
+                close_scope == "all" || normalize_identifier(scope_tail) == "all";
+            if (close_scope == "database" || close_scope == "databases")
+            {
+                if (close_all_databases)
+                {
+                    session.databases.clear();
+                    session.current_database_path.clear();
+                }
+                else if (!session.current_database_path.empty())
+                {
+                    const std::string closing_path = session.current_database_path;
+                    std::erase_if(
+                        session.databases,
+                        [&](const auto &database)
+                        {
+                            return database_paths_equal(database.path, closing_path);
+                        });
+                    session.current_database_path.clear();
+                }
+                events.push_back({.category = "runtime.database.close",
+                                  .detail = close_all_databases ? "ALL" : "CURRENT",
+                                  .location = location});
+            }
+            else if (close_scope == "all")
+            {
+                for (auto &[_, candidate_session] : data_sessions)
+                {
+                    candidate_session.databases.clear();
+                    candidate_session.current_database_path.clear();
+                }
+                events.push_back({.category = "runtime.database.close",
+                                  .detail = "ALL",
+                                  .location = location});
+            }
             if (close_scope == "all" || close_scope == "databases" || close_scope == "database")
             {
                 current_sql_connections().clear();
@@ -4687,6 +5195,7 @@
                                          .bof = cursor.bof,
                                          .eof = cursor.eof});
             }
+            state.databases = session.databases;
             for (const auto &[_, connection] : current_sql_connections())
             {
                 state.sql_connections.push_back(connection);

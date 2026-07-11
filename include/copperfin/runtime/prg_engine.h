@@ -113,6 +113,14 @@ struct RuntimeCursorState {
     bool eof = true;
 };
 
+struct RuntimeDatabaseState {
+    std::string path;
+    std::string name;
+    bool exclusive = false;
+    bool read_only = false;
+    bool current = false;
+};
+
 struct RuntimeSqlConnectionState {
     int handle = 0;
     std::string target{};
@@ -163,6 +171,7 @@ struct RuntimePauseState {
     std::vector<RuntimeEvent> events;
     RuntimeWorkAreaState work_area{};
     std::vector<RuntimeCursorState> cursors;
+    std::vector<RuntimeDatabaseState> databases;
     std::vector<RuntimeSqlConnectionState> sql_connections;
     std::vector<RuntimeOleObjectState> ole_objects;
     std::size_t executed_statement_count = 0;
@@ -181,6 +190,9 @@ struct RuntimeSessionOptions {
     std::optional<std::string> startup_source_text;
     std::map<std::string, std::string> source_text_overrides;
     bool require_source_text_overrides = false;
+    // Immutable non-source package bytes admitted by the runtime host.
+    std::map<std::string, std::string> verified_file_byte_overrides;
+    bool require_verified_file_byte_overrides = false;
     std::map<std::string, std::string> source_path_display_aliases;
     std::string working_directory;
     bool stop_on_entry = false;

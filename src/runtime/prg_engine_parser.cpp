@@ -2264,6 +2264,23 @@ Program parse_program_impl(
                     statement.quaternary_expression = "shared";
                 }
             }
+        } else if (starts_with_insensitive(line, "OPEN DATABASE")) {
+            statement.kind = StatementKind::open_database;
+            const std::string body = trim_copy(line.substr(13U));
+            const std::size_t tail_start = find_first_keyword_top_level(
+                body,
+                {"EXCLUSIVE", "SHARED", "NOUPDATE", "VALIDATE"});
+            statement.expression =
+                tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
+            if (has_keyword(body, "EXCLUSIVE")) {
+                statement.secondary_expression = "exclusive";
+            } else if (has_keyword(body, "SHARED")) {
+                statement.secondary_expression = "shared";
+            }
+            statement.tertiary_expression =
+                has_keyword(body, "NOUPDATE") ? "noupdate" : std::string{};
+            statement.quaternary_expression =
+                has_keyword(body, "VALIDATE") ? "validate" : std::string{};
         } else if (starts_with_insensitive(line, "SET DATASESSION TO ")) {
             statement.kind = StatementKind::set_datasession;
             statement.expression = trim_copy(line.substr(19U));

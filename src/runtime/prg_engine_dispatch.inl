@@ -3226,6 +3226,43 @@
                                   .location = statement.location});
                 return {};
             }
+            case StatementKind::open_database:
+            {
+                if (normalize_identifier(statement.quaternary_expression) == "validate")
+                {
+                    last_error_message = runtime_text("Runtime.Prg.Database.Error.ValidateUnsupported");
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+
+                std::string target = value_as_string(evaluate_expression(statement.expression, frame));
+                if (target.empty())
+                {
+                    target = unquote_string(trim_copy(statement.expression));
+                }
+                std::optional<bool> exclusive_override;
+                const std::string mode = normalize_identifier(statement.secondary_expression);
+                if (mode == "exclusive")
+                {
+                    exclusive_override = true;
+                }
+                else if (mode == "shared")
+                {
+                    exclusive_override = false;
+                }
+                const bool read_only = normalize_identifier(statement.tertiary_expression) == "noupdate";
+                if (!open_database(target, exclusive_override, read_only))
+                {
+                    last_fault_location = statement.location;
+                    last_fault_statement = statement.text;
+                    return {.ok = false, .message = last_error_message};
+                }
+                events.push_back({.category = "runtime.database.open",
+                                  .detail = current_database_path(),
+                                  .location = statement.location});
+                return {};
+            }
             case StatementKind::set_command:
             {
                 const auto [option_name, option_value] = split_first_word(statement.expression);
@@ -3233,6 +3270,10 @@
                 const auto strip_set_to_value = [](const std::string &raw_value) -> std::string
                 {
                     std::string candidate = trim_copy(raw_value);
+                    if (normalize_identifier(candidate) == "to")
+                    {
+                        return {};
+                    }
                     if (starts_with_insensitive(candidate, "TO "))
                     {
                         candidate = trim_copy(candidate.substr(3U));
@@ -3246,6 +3287,11 @@
                         return false;
                     }
                     if (candidate.front() == '&')
+                    {
+                        return true;
+                    }
+                    if (candidate.size() >= 2U &&
+                        candidate.front() == '(' && candidate.back() == ')')
                     {
                         return true;
                     }
@@ -3394,6 +3440,21 @@
 
                     return raw_value;
                 };
+
+                if (normalized_name == "database")
+                {
+                    const std::string target = evaluate_set_string_value(option_value, {});
+                    if (!set_current_database(target))
+                    {
+                        last_fault_location = statement.location;
+                        last_fault_statement = statement.text;
+                        return {.ok = false, .message = last_error_message};
+                    }
+                    events.push_back({.category = "runtime.database.current",
+                                      .detail = current_database_path(),
+                                      .location = statement.location});
+                    return {};
+                }
 
                 if (normalized_name == "filter")
                 {

@@ -652,6 +652,7 @@ int run_runtime_bridge_invocation(
     const std::optional<std::string>& verified_bridge_source_text,
     const std::optional<std::string>& verified_bridge_source_path,
     const std::map<std::string, std::string>& verified_source_texts,
+    const std::map<std::string, std::string>& verified_file_bytes,
     const bool require_verified_source_texts) {
     if (trim_copy(options.request_path).empty() ||
         trim_copy(options.response_path).empty() ||
@@ -777,6 +778,8 @@ int run_runtime_bridge_invocation(
         }
     }
     session_options.require_source_text_overrides = require_verified_source_texts;
+    session_options.verified_file_byte_overrides = verified_file_bytes;
+    session_options.require_verified_file_byte_overrides = require_verified_source_texts;
     session_options.working_directory = working_directory;
     session_options.stop_on_entry = false;
     session_options.quit_confirm_callback = []() -> bool {
@@ -1108,6 +1111,11 @@ bool packaged_source_text_extension(const std::filesystem::path& path) {
     return extension == ".prg" || extension == ".mpr" || extension == ".qpr" ||
            extension == ".h" || extension == ".inc" || extension == ".ch" ||
            extension == ".txt";
+}
+
+bool packaged_database_component_extension(const std::filesystem::path& path) {
+    const std::string extension = lowercase_copy(path.extension().string());
+    return extension == ".dbc" || extension == ".dct" || extension == ".dcx";
 }
 
 std::optional<std::filesystem::path> bind_packaged_path(
@@ -1850,6 +1858,14 @@ void print_pause_state(
         std::cout << "debug.cursor[" << cursor.work_area << "].recno: " << cursor.recno << "\n";
         std::cout << "debug.cursor[" << cursor.work_area << "].bof: " << (cursor.bof ? "true" : "false") << "\n";
         std::cout << "debug.cursor[" << cursor.work_area << "].eof: " << (cursor.eof ? "true" : "false") << "\n";
+    }
+    for (std::size_t index = 0; index < state.databases.size(); ++index) {
+        const auto& database = state.databases[index];
+        std::cout << "debug.database[" << index << "].path: " << database.path << "\n";
+        std::cout << "debug.database[" << index << "].name: " << database.name << "\n";
+        std::cout << "debug.database[" << index << "].exclusive: " << (database.exclusive ? "true" : "false") << "\n";
+        std::cout << "debug.database[" << index << "].readonly: " << (database.read_only ? "true" : "false") << "\n";
+        std::cout << "debug.database[" << index << "].current: " << (database.current ? "true" : "false") << "\n";
     }
     for (const auto& connection : state.sql_connections) {
         std::cout << "debug.sql[" << connection.handle << "].target: " << connection.target << "\n";
@@ -2810,6 +2826,7 @@ int main(int argc, char** argv) {
 
     std::optional<std::string> verified_startup_bytes;
     std::map<std::string, std::string> verified_source_texts;
+    std::map<std::string, std::string> verified_file_bytes;
     if (!debug_manifest_contract) {
         const auto current_identity = copperfin::security::inspect_physical_path_containment(
             startup_source,
@@ -2882,8 +2899,11 @@ int main(int argc, char** argv) {
         if (security_enabled) {
             for (const auto& verified_path : verified_package_paths) {
                 const auto& source_path = verified_path.containment.canonical_path;
-                if (!packaged_source_text_extension(source_path) ||
-                    verified_source_texts.contains(source_path.string())) {
+                const bool source_text = packaged_source_text_extension(source_path);
+                const bool database_component = packaged_database_component_extension(source_path);
+                if ((!source_text && !database_component) ||
+                    (source_text && verified_source_texts.contains(source_path.string())) ||
+                    (database_component && verified_file_bytes.contains(source_path.string()))) {
                     continue;
                 }
                 const auto source_snapshot =
@@ -2905,7 +2925,12 @@ int main(int argc, char** argv) {
                             {{"fileName", source_path.filename().string()}}));
                     return 8;
                 }
-                verified_source_texts.emplace(source_path.string(), source_snapshot.bytes);
+                if (source_text) {
+                    verified_source_texts.emplace(source_path.string(), source_snapshot.bytes);
+                }
+                if (database_component) {
+                    verified_file_bytes.emplace(source_path.string(), source_snapshot.bytes);
+                }
             }
         }
     }
@@ -2981,6 +3006,7 @@ int main(int argc, char** argv) {
             verified_bridge_source_text,
             verified_bridge_source_path,
             verified_source_texts,
+            verified_file_bytes,
             security_enabled && !debug_manifest_contract);
     }
 
@@ -3079,6 +3105,8 @@ int main(int argc, char** argv) {
     } else if (!xasset_bootstrap_source.empty()) {
         session_options.startup_source_text = xasset_bootstrap_source;
     }
+    session_options.verified_file_byte_overrides = verified_file_bytes;
+    session_options.require_verified_file_byte_overrides = security_enabled && !debug_manifest_contract;
     if (!xasset_execution_asset_path.empty()) {
         session_options.source_path_display_aliases.emplace(
             std::filesystem::path(xasset_execution_asset_path).lexically_normal().string(),

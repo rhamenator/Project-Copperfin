@@ -41,6 +41,35 @@ void write_text(const std::filesystem::path& path, const std::string& text) {
     output << text;
 }
 
+void write_synthetic_database_index(const std::filesystem::path& path) {
+    std::vector<std::uint8_t> bytes(16U * 512U, 0U);
+    const auto write_le_u16 = [&](std::size_t offset, std::uint16_t value) {
+        bytes[offset] = static_cast<std::uint8_t>(value & 0xFFU);
+        bytes[offset + 1U] = static_cast<std::uint8_t>((value >> 8U) & 0xFFU);
+    };
+    const auto write_le_u32 = [&](std::size_t offset, std::uint32_t value) {
+        bytes[offset] = static_cast<std::uint8_t>(value & 0xFFU);
+        bytes[offset + 1U] = static_cast<std::uint8_t>((value >> 8U) & 0xFFU);
+        bytes[offset + 2U] = static_cast<std::uint8_t>((value >> 16U) & 0xFFU);
+        bytes[offset + 3U] = static_cast<std::uint8_t>((value >> 24U) & 0xFFU);
+    };
+    bytes[0] = 0x00U;
+    bytes[1] = 0x04U;
+    bytes[12] = 0x0AU;
+    bytes[14] = 0xE0U;
+    bytes[15] = 0x01U;
+    bytes[1024U] = 0x03U;
+    write_le_u16(1026U, 1U);
+    write_le_u32(1028U, 4U * 512U);
+    write_le_u16(4U * 512U, 0x0003U);
+    write_le_u16((4U * 512U) + 2U, 1U);
+    const std::string tag_name = "NAME";
+    std::copy(tag_name.begin(), tag_name.end(), bytes.begin() + static_cast<std::ptrdiff_t>((3U * 512U) - 10U));
+    const std::string expression = "UPPER(NAME)";
+    std::copy(expression.begin(), expression.end(), bytes.begin() + static_cast<std::ptrdiff_t>((4U * 512U) + 24U));
+    write_text(path, std::string(bytes.begin(), bytes.end()));
+}
+
 std::filesystem::path deployed_runtime_host_path(
     const std::filesystem::path& deployed_root,
     const std::string& runtime_host_path) {
@@ -1031,14 +1060,29 @@ void test_security_enabled_writable_package_data_contract(
     write_runtime_host_usage_catalogs(locale_root);
     write_text(
         startup_path,
+        "OPEN DATABASE 'catalog.dbc' SHARED NOUPDATE\n"
         "USE 'customers.dbf' ALIAS MutableData IN 0\n"
         "REPLACE NOTE WITH 'runtime-change'\n"
         "USE IN MutableData\n"
+        "CLOSE DATABASE\n"
         "RETURN\n");
     write_synthetic_writable_data_asset(table_path);
-    write_text(database_path, "synthetic database seed");
-    write_text(database_memo_path, "synthetic database memo seed");
-    write_text(database_index_path, "synthetic database index seed");
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> database_fields{
+        {.name = "OBJECTTYPE", .type = 'C', .length = 12U},
+        {.name = "OBJECTNAME", .type = 'C', .length = 40U},
+        {.name = "PARENTNAME", .type = 'C', .length = 40U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U},
+        {.name = "CODE", .type = 'M', .length = 4U},
+    };
+    const auto database_create = copperfin::vfp::create_dbf_table_file(
+        database_path.string(),
+        database_fields,
+        {{"Database", "catalog", "", "Packaged database fixture", "PUBLIC gDbcStoredCode\ngDbcStoredCode = .T."}});
+    expect(database_create.ok, "writable package-data fixture should create a real DBC/DCT pair");
+    write_synthetic_database_index(database_index_path);
+    const std::string original_database_contents = read_text(database_path);
+    const std::string original_database_memo_contents = read_text(database_memo_path);
+    const std::string original_database_index_contents = read_text(database_index_path);
     fs::copy_file(runtime_host_path, deployed_runtime_host, fs::copy_options::overwrite_existing);
 #if defined(__unix__) || defined(__APPLE__)
     fs::permissions(
@@ -1126,7 +1170,7 @@ void test_security_enabled_writable_package_data_contract(
         std::cerr << "writable package-data first stderr:\n" << first_process.stderr_text << "\n";
     }
     expect(first_process.exit_code == 0,
-           "security startup should accept direct contained DBF/FPT data changed from seed digests");
+           "security startup should open verified DBC/DCT/DCX bytes and accept writable DBF/FPT data");
     expect(first_process.stdout_text.find("data.policy: package_writable") != std::string::npos &&
                first_process.stdout_text.find("data.asset_count: 1") != std::string::npos &&
                first_process.stdout_text.find("data.payload_count: 1") != std::string::npos,
@@ -1186,11 +1230,11 @@ void test_security_enabled_writable_package_data_contract(
         {"--manifest", manifest_path.string()},
         deployed_root);
     expect(database_tamper_process.exit_code == 8,
-           "DBC metadata should remain immutable until OPEN DATABASE trust semantics are implemented");
+           "OPEN DATABASE package execution should retain immutable DBC digest enforcement");
     expect(database_tamper_process.stdout_text.find(
                "error: Packaged asset hash mismatch: catalog.dbc") != std::string::npos,
            "DBC tamper should retain the localized immutable packaged-asset digest error");
-    write_text(database_path, "synthetic database seed");
+    write_text(database_path, original_database_contents);
 
     const std::string startup_source = read_text(startup_path);
     write_text(startup_path, startup_source + "* immutable tamper\n");
@@ -1241,7 +1285,31 @@ void test_security_enabled_writable_package_data_contract(
     expect(missing_payload_process.stdout_text.find(
                "error: Extension payload is missing from the package: catalog.dct") != std::string::npos,
            "missing immutable DBC companions should retain localized payload-missing diagnostics");
-    write_text(database_memo_path, "synthetic database memo seed");
+    write_text(database_memo_path, original_database_memo_contents);
+
+    fs::remove(database_index_path, ignored);
+    const auto missing_index_process = run_process_capture(
+        deployed_runtime_host.string(),
+        {"--manifest", manifest_path.string()},
+        deployed_root);
+    expect(missing_index_process.exit_code == 8,
+           "security startup should reject a missing declared immutable DCX companion");
+    expect(missing_index_process.stdout_text.find(
+               "error: Extension payload is missing from the package: catalog.dcx") != std::string::npos,
+           "missing immutable DCX companions should retain localized payload-missing diagnostics");
+    write_text(database_index_path, original_database_index_contents);
+
+    fs::remove(database_path, ignored);
+    const auto missing_database_process = run_process_capture(
+        deployed_runtime_host.string(),
+        {"--manifest", manifest_path.string()},
+        deployed_root);
+    expect(missing_database_process.exit_code == 8,
+           "security startup should reject a missing declared immutable DBC primary");
+    expect(missing_database_process.stdout_text.find(
+               "error: Packaged asset is missing from the package: catalog.dbc") != std::string::npos,
+           "missing immutable DBC primaries should retain localized asset-missing diagnostics");
+    write_text(database_path, original_database_contents);
 
     write_manifest(true, "unsupported");
     {

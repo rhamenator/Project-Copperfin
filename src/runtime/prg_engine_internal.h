@@ -67,6 +67,7 @@ enum class StatementKind {
     browse_command,
     select_command,
     use_command,
+    open_database,
     set_order,
     set_command,
     set_procedure,

@@ -118,6 +118,8 @@ const char* statement_kind_name(const StatementKind kind) {
             return "select_command";
         case StatementKind::use_command:
             return "use_command";
+        case StatementKind::open_database:
+            return "open_database";
         case StatementKind::set_order:
             return "set_order";
         case StatementKind::set_command:

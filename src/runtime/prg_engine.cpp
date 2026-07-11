@@ -18,6 +18,7 @@
 #include "copperfin/studio/report_layout.h"
 #include "copperfin/vfp/asset_inspector.h"
 #include "copperfin/vfp/dbf_table.h"
+#include "copperfin/vfp/index_probe.h"
 
 #include <algorithm>
 #include <atomic>
@@ -573,6 +574,8 @@ namespace copperfin::runtime
             std::vector<std::string> key_stack;
             std::vector<std::string> menu_stack;
             std::vector<std::string> popup_stack;
+            std::vector<RuntimeDatabaseState> databases;
+            std::string current_database_path;
         };
 
         struct RuntimeArray
@@ -1605,6 +1608,12 @@ namespace copperfin::runtime
             [this](const std::string &option_name)
             {
                 const std::string trimmed_option_name = trim_copy(option_name);
+                constexpr std::string_view dbused_prefix = "__dbused__\x1f";
+                if (trimmed_option_name.starts_with(dbused_prefix))
+                {
+                    const std::string designator = trimmed_option_name.substr(dbused_prefix.size());
+                    return database_is_open(designator) ? std::string{"1"} : std::string{"0"};
+                }
                 if (trimmed_option_name == "__textmerge_delimiters__")
                 {
                     const auto [left_delimiter, right_delimiter] = current_textmerge_delimiters();
@@ -1637,6 +1646,10 @@ namespace copperfin::runtime
                 if (normalized_name == "default")
                 {
                     return current_default_directory();
+                }
+                if (normalized_name == "database")
+                {
+                    return current_database_path();
                 }
                 if (normalized_name == "memowidth")
                 {

@@ -3983,6 +3983,18 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         return file_io_result;
     }
 
+    if (function == "dbc") {
+        return make_string_value(set_callback("DATABASE"));
+    }
+    if (function == "dbused") {
+        if (arguments.empty()) {
+            return make_boolean_value(false);
+        }
+        const std::string designator = value_as_string(arguments[0]);
+        return make_boolean_value(
+            set_callback("__dbused__\x1f" + designator) == "1");
+    }
+
     auto safe_int_argument = [&](std::size_t index, int default_value) {
         if (index >= arguments.size()) {
             return default_value;

@@ -696,9 +696,11 @@ The native runtime/parser currently has first-pass support for these command fam
 - `SELECT`
 - `USE`, `USE IN`, `USE AGAIN`
 - `SET DATASESSION TO`
+- `OPEN DATABASE`, `SET DATABASE TO`, `CLOSE DATABASE(S) [ALL]` — first-pass immutable DBC lifecycle parity now tracks open/current database identity per data session, preserves first-open `EXCLUSIVE` / `SHARED` plus `NOUPDATE` state, resolves omitted `.dbc` extensions through the default directory and `SET PATH`, and resolves DBC/DCT/DCX casing deterministically on case-sensitive hosts; `CLOSE DATABASE(S)` closes the current database, `CLOSE DATABASES ALL` closes databases in the current data session, and `CLOSE ALL` releases database state across data sessions
+- `DBC()` / `DBUSED(cDatabaseName)` — first-pass current-database path and current-data-session open-database lookup; no undocumented `DATABASE()` alias is exposed
 - `SET DEFAULT TO`
 - `SET` — first-pass runtime-state surface now includes second-hop holder macro value coverage across ordinary string/numeric/logical options in addition to the earlier direct-variable paths; focused regressions now lock down representative forms such as `SET PATH TO &cPathTargetDeepHolder`, `SET MARK TO &cMarkTargetDeepHolder`, `SET DECIMALS TO &cDecimalsTargetDeepHolder`, `SET COLLATE TO &cCollateTargetDeepHolder`, `SET NULL TO &cNullTargetDeepHolder`, and `SET ANSI TO &cAnsiTargetDeepHolder`
-- `CLOSE ALL` / `CLOSE TABLES` / `CLOSE DATABASES` — first-pass close semantics now cover both open work-area cursors and non-DBF runtime handles for `ALL`/`DATABASES` scopes (SQL connection state, tracked OLE handles, and outstanding low-level `FOPEN` handles)
+- `CLOSE ALL` / `CLOSE TABLES` / `CLOSE DATABASES` — first-pass close semantics now cover open work-area cursors, session-scoped DBC lifecycle state, and non-DBF runtime handles for `ALL`/`DATABASES` scopes (SQL connection state, tracked OLE handles, and outstanding low-level `FOPEN` handles)
 - `ON ERROR`
 - `ON SHUTDOWN` — first-pass shutdown-handler semantics for `ON SHUTDOWN DO <routine> [WITH ...]` plus common inline compatibility forms including `ON SHUTDOWN CLEAR EVENTS` and close-style cleanup commands such as `ON SHUTDOWN CLOSE DATABASES ALL`; shutdown routines run before final `QUIT` completion and nested `QUIT` inside the shutdown routine is treated as the terminal quit rather than recursing indefinitely
 - `PUBLIC` — first-pass public identity declaration for memory variables and arrays
