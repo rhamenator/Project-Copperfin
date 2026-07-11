@@ -104,6 +104,10 @@ bool declared_dll_type_uses_64_bit_integer(std::string type_name) {
            normalized == "i64";
 }
 
+bool declared_dll_type_is_single(std::string type_name) {
+    return normalize_identifier(std::move(type_name)) == "single";
+}
+
 std::string normalize_memory_variable_identifier(std::string value) {
     std::string normalized = normalize_identifier(std::move(value));
     if (starts_with_insensitive(normalized, "m.")) {

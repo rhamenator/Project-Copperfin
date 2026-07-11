@@ -2697,6 +2697,77 @@ void test_declared_dll_long_uses_vfp_32_bit_width() {
 #endif
 }
 
+void test_declared_dll_single_uses_vfp_32_bit_float_width() {
+#if defined(_WIN32)
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_declared_dll_single_width";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root / "native");
+
+    const fs::path fixture_name = COPPERFIN_DECLARED_DLL_FIXTURE_NAME;
+    const fs::path fixture_source = declared_dll_fixture_source_path();
+    const fs::path fixture_copy = temp_root / "native" / fixture_name;
+    fs::copy_file(fixture_source, fixture_copy, fs::copy_options::overwrite_existing, ignored);
+    expect(!ignored && fs::exists(fixture_copy),
+           "#3933: controlled SINGLE fixture should copy under the PRG working directory");
+
+    const fs::path main_path = temp_root / "declared_dll_single_width.prg";
+    write_text(
+        main_path,
+        "DECLARE SINGLE CopperfinDeclaredDllSingleConstant IN 'native/" + fixture_name.string() + "'\n"
+        "DECLARE SINGLE CopperfinDeclaredDllSingleMixed IN 'native/" + fixture_name.string() +
+            "' INTEGER first, SINGLE second, DOUBLE third, SINGLE fourth, SINGLE fifth\n"
+        "DECLARE DOUBLE CopperfinDeclaredDllSingleToDouble IN 'native/" + fixture_name.string() +
+            "' SINGLE value, DOUBLE multiplier\n"
+        "DECLARE SINGLE CopperfinDeclaredDllSingleSlots IN 'native/" + fixture_name.string() +
+            "' SINGLE first, SINGLE second, SINGLE third, SINGLE fourth, SINGLE fifth, SINGLE sixth, SINGLE seventh, SINGLE eighth\n"
+        "DECLARE SINGLE CopperfinDeclaredDllSingleSplit IN 'native/" + fixture_name.string() +
+            "' SINGLE value, SINGLE @ whole\n"
+        "nWhole = 0\n"
+        "nConstant = CopperfinDeclaredDllSingleConstant()\n"
+        "nMixed = CopperfinDeclaredDllSingleMixed(1, 2.25, 3.5, 4.25, 5.0)\n"
+        "nDouble = CopperfinDeclaredDllSingleToDouble(2.25, 1.5)\n"
+        "nSlots = CopperfinDeclaredDllSingleSlots(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0)\n"
+        "nFraction = CopperfinDeclaredDllSingleSplit(3.75, @nWhole)\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#3933: SINGLE fixture should complete: " + state.message);
+
+    const auto expect_numeric = [&](const std::string &name,
+                                    const std::string &expected,
+                                    const std::string &label)
+    {
+        const auto value = state.globals.find(name);
+        expect(value != state.globals.end(), label + " should be captured");
+        if (value != state.globals.end())
+        {
+            const std::string actual = copperfin::runtime::format_value(value->second);
+            expect(actual == expected, label + "; actual=" + actual);
+        }
+    };
+    expect_numeric("nconstant", "0.625", "#3933: zero-argument SINGLE return");
+    expect_numeric("nmixed", "16", "#3933: mixed INTEGER/SINGLE/DOUBLE register and stack call");
+    expect_numeric("ndouble", "3.375", "#3933: DOUBLE return through a SINGLE signature");
+    expect_numeric("nslots", "36", "#3933: eight-position SINGLE call");
+    expect_numeric("nfraction", "0.75", "#3933: SINGLE return with by-reference input");
+    expect_numeric("nwhole", "3", "#3933: SINGLE @ writeback");
+
+    const auto declare_event = std::find_if(state.events.begin(), state.events.end(), [](const auto &event)
+    {
+        return event.category == "runtime.declare_dll" &&
+               event.detail.find("CopperfinDeclaredDllSingleSlots") != std::string::npos;
+    });
+    expect(declare_event != state.events.end(),
+           "#3933: SINGLE declarations should retain the invariant runtime.declare_dll event");
+
+    fs::remove_all(temp_root, ignored);
+#endif
+}
+
 void test_declare_dll_runtime_errors_localize() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_declare_localization";
@@ -3315,6 +3386,7 @@ int main() {
     test_declared_dll_explicit_relative_child_path();
     test_declared_dll_double_arguments_follow_x64_abi();
     test_declared_dll_long_uses_vfp_32_bit_width();
+    test_declared_dll_single_uses_vfp_32_bit_float_width();
     test_declare_dll_runtime_errors_localize();
     test_set_exact_affects_comparisons_and_seek();
     test_use_again_and_alias_collision_semantics();

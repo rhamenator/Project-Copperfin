@@ -6,8 +6,18 @@
 
 #if defined(_WIN32)
 #define COPPERFIN_TEST_EXPORT extern "C" __declspec(dllexport)
+#define COPPERFIN_TEST_CALL __stdcall
 #else
 #define COPPERFIN_TEST_EXPORT extern "C"
+#define COPPERFIN_TEST_CALL
+#endif
+
+#if defined(_MSC_VER) && defined(_M_IX86)
+#pragma comment(linker, "/EXPORT:CopperfinDeclaredDllSingleConstant=_CopperfinDeclaredDllSingleConstant@0")
+#pragma comment(linker, "/EXPORT:CopperfinDeclaredDllSingleMixed=_CopperfinDeclaredDllSingleMixed@24")
+#pragma comment(linker, "/EXPORT:CopperfinDeclaredDllSingleToDouble=_CopperfinDeclaredDllSingleToDouble@12")
+#pragma comment(linker, "/EXPORT:CopperfinDeclaredDllSingleSlots=_CopperfinDeclaredDllSingleSlots@32")
+#pragma comment(linker, "/EXPORT:CopperfinDeclaredDllSingleSplit=_CopperfinDeclaredDllSingleSplit@8")
 #endif
 
 COPPERFIN_TEST_EXPORT int CopperfinDeclaredDllFixtureValue() {
@@ -35,6 +45,43 @@ COPPERFIN_TEST_EXPORT std::int32_t CopperfinDeclaredDllLongWidth(
     }
     *output = -123456789;
     return -2147483000;
+}
+
+COPPERFIN_TEST_EXPORT float COPPERFIN_TEST_CALL CopperfinDeclaredDllSingleConstant() {
+    return 0.625F;
+}
+
+COPPERFIN_TEST_EXPORT float COPPERFIN_TEST_CALL CopperfinDeclaredDllSingleMixed(
+    std::int32_t first,
+    float second,
+    double third,
+    float fourth,
+    float fifth) {
+    return static_cast<float>(first) + second + static_cast<float>(third) + fourth + fifth;
+}
+
+COPPERFIN_TEST_EXPORT double COPPERFIN_TEST_CALL CopperfinDeclaredDllSingleToDouble(float value, double multiplier) {
+    return static_cast<double>(value) * multiplier;
+}
+
+COPPERFIN_TEST_EXPORT float COPPERFIN_TEST_CALL CopperfinDeclaredDllSingleSlots(
+    float first,
+    float second,
+    float third,
+    float fourth,
+    float fifth,
+    float sixth,
+    float seventh,
+    float eighth) {
+    return first + second + third + fourth + fifth + sixth + seventh + eighth;
+}
+
+COPPERFIN_TEST_EXPORT float COPPERFIN_TEST_CALL CopperfinDeclaredDllSingleSplit(float value, float* whole) {
+    const int integral = static_cast<int>(value);
+    if (whole != nullptr) {
+        *whole = static_cast<float>(integral);
+    }
+    return value - static_cast<float>(integral);
 }
 
 COPPERFIN_TEST_EXPORT double CopperfinDeclaredDllOneSlot(double first) {

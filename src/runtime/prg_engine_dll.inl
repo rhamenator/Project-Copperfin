@@ -176,6 +176,11 @@
                     var.vt = VT_R8;
                     var.dblVal = value_as_number(v);
                 }
+                else if (declared_dll_type_is_single(base))
+                {
+                    var.vt = VT_R4;
+                    var.fltVal = static_cast<float>(value_as_number(v));
+                }
                 else if (declared_dll_type_uses_64_bit_integer(base))
                 {
                     var.vt = VT_I8;
@@ -463,27 +468,29 @@
                     return make_empty_value();
                 }
 
-                // Build integer/double argument lists for common calling conventions.
+                // Build typed argument storage for common calling conventions.
                 // We support the same limited set as VFP's DECLARE: up to 8 args,
-                // typed as INTEGER/LONG/DOUBLE/STRING.
+                // typed as INTEGER/LONG/SINGLE/DOUBLE/STRING.
                 // For STRING params we pass a pointer to the UTF-8 buffer.
                 // We do not attempt to pack varargs generically; instead we use a
                 // dispatch table keyed on arg count (0-8), which covers the vast
                 // majority of real-world DLL calls.
 
-                // Convert args to a flat array of 64-bit values (integers/pointers)
-                // and a parallel doubles array.
+                // Convert arguments into stable integer/pointer and floating-point
+                // backing storage before selecting the bounded native dispatcher.
                 struct ByRefBinding
                 {
                     std::optional<std::string> reference_name;
                     std::string base_type;
                     bool by_ref = false;
+                    bool is_single = false;
                     bool is_double = false;
                     bool is_string = false;
                     bool is_integer64 = false;
                     std::string string_buffer;
                     std::int32_t int32_value = 0;
                     std::int64_t int64_value = 0;
+                    float single_value = 0.0F;
                     double double_value = 0.0;
                 };
 
@@ -493,12 +500,22 @@
                 struct Arg64
                 {
                     __int64 i = 0;
+                    float single_value = 0.0F;
                     double d = 0.0;
+                    bool is_single = false;
                     bool is_double = false;
                     bool is_integer32 = false;
+                    bool is_pointer = false;
                 };
                 std::vector<Arg64> flat;
                 flat.reserve(args.size());
+                const bool has_single_parameter = std::any_of(
+                    declared_param_types.begin(),
+                    declared_param_types.end(),
+                    [](const auto &parameter)
+                    {
+                        return declared_dll_type_is_single(parameter.type);
+                    });
                 for (std::size_t idx = 0; idx < args.size(); ++idx)
                 {
                     const std::string ptype = normalize_identifier(param_type_at(idx));
@@ -514,13 +531,29 @@
                     binding.is_integer64 = is_integer64;
 
                     Arg64 a{};
-                    if (base_pt == "double" || base_pt == "d" || base_pt == "f")
+                    if (declared_dll_type_is_single(base_pt))
+                    {
+                        if (binding.by_ref)
+                        {
+                            binding.is_single = true;
+                            binding.single_value = static_cast<float>(value_as_number(args[idx]));
+                            a.i = reinterpret_cast<__int64>(&binding.single_value);
+                            a.is_pointer = true;
+                        }
+                        else
+                        {
+                            a.single_value = static_cast<float>(value_as_number(args[idx]));
+                            a.is_single = true;
+                        }
+                    }
+                    else if (base_pt == "double" || base_pt == "d" || base_pt == "f")
                     {
                         if (binding.by_ref)
                         {
                             binding.is_double = true;
                             binding.double_value = value_as_number(args[idx]);
                             a.i = reinterpret_cast<__int64>(&binding.double_value);
+                            a.is_pointer = true;
                         }
                         else
                         {
@@ -536,11 +569,13 @@
                             binding.string_buffer = value_as_string(args[idx]);
                             binding.string_buffer.push_back('\0');
                             a.i = reinterpret_cast<__int64>(binding.string_buffer.data());
+                            a.is_pointer = true;
                         }
                         else
                         {
                             string_buffers.push_back(value_as_string(args[idx]));
                             a.i = reinterpret_cast<__int64>(string_buffers.back().c_str());
+                            a.is_pointer = true;
                         }
                     }
                     else
@@ -552,11 +587,13 @@
                             {
                                 binding.int64_value = a.i;
                                 a.i = reinterpret_cast<__int64>(&binding.int64_value);
+                                a.is_pointer = true;
                             }
                             else
                             {
                                 binding.int32_value = static_cast<std::int32_t>(a.i);
                                 a.i = reinterpret_cast<__int64>(&binding.int32_value);
+                                a.is_pointer = true;
                             }
                         }
                         else
@@ -589,6 +626,10 @@
                         {
                             value = make_string_value(binding.string_buffer.c_str());
                         }
+                        else if (binding.is_single)
+                        {
+                            value = make_number_value(static_cast<double>(binding.single_value));
+                        }
                         else if (binding.is_double)
                         {
                             value = make_number_value(binding.double_value);
@@ -606,8 +647,10 @@
 
                 // Call the function. We cast to a stdcall prototype (VFP default on x86
                 // for DECLARE; on x64 there is only one calling convention).
-                // Return value is either integer or double based on return_type.
+                // Return storage follows the declared integer, SINGLE, DOUBLE, or
+                // STRING contract.
                 const std::string rt = normalize_identifier(declfn.return_type);
+                const bool ret_single = declared_dll_type_is_single(rt);
                 const bool ret_double = (rt == "double" || rt == "d" || rt == "f");
                 const bool ret_string = (rt == "c" || rt == "string");
                 const bool ret_integer64 = declared_dll_type_uses_64_bit_integer(rt);
@@ -628,7 +671,6 @@
                     return make_number_value(result);
                 };
 
-#if defined(_WIN64)
                 if (nargs > 8U)
                 {
                     last_error_message = runtime_text(
@@ -639,6 +681,105 @@
                         });
                     return make_empty_value();
                 }
+
+                if (has_single_parameter || ret_single)
+                {
+                    std::vector<VARTYPE> native_argument_types(nargs);
+                    std::vector<VARIANTARG> native_argument_values(nargs);
+                    std::vector<VARIANTARG *> native_argument_pointers(nargs);
+                    for (std::size_t index = 0U; index < nargs; ++index)
+                    {
+                        VariantInit(&native_argument_values[index]);
+                        if (flat[index].is_single)
+                        {
+                            native_argument_types[index] = VT_R4;
+                            native_argument_values[index].vt = VT_R4;
+                            native_argument_values[index].fltVal = flat[index].single_value;
+                        }
+                        else if (flat[index].is_double)
+                        {
+                            native_argument_types[index] = VT_R8;
+                            native_argument_values[index].vt = VT_R8;
+                            native_argument_values[index].dblVal = flat[index].d;
+                        }
+                        else
+                        {
+#if defined(_WIN64)
+                            const bool use_integer32 = flat[index].is_integer32;
+#else
+                            const bool use_integer32 = flat[index].is_integer32 || flat[index].is_pointer;
+#endif
+                            native_argument_types[index] = use_integer32 ? VT_I4 : VT_I8;
+                            native_argument_values[index].vt = native_argument_types[index];
+                            if (use_integer32)
+                            {
+                                native_argument_values[index].lVal = static_cast<LONG>(flat[index].i);
+                            }
+                            else
+                            {
+                                native_argument_values[index].llVal = flat[index].i;
+                            }
+                        }
+                        native_argument_pointers[index] = &native_argument_values[index];
+                    }
+
+#if defined(_WIN64)
+                    const VARTYPE pointer_return_type = VT_I8;
+#else
+                    const VARTYPE pointer_return_type = VT_I4;
+#endif
+                    const VARTYPE native_return_type =
+                        ret_single
+                            ? VT_R4
+                            : (ret_double
+                                   ? VT_R8
+                                   : (ret_string
+                                          ? pointer_return_type
+                                          : (ret_integer64 ? VT_I8 : VT_I4)));
+                    VARIANT native_result;
+                    VariantInit(&native_result);
+                    const HRESULT invoke_result = DispCallFunc(
+                        nullptr,
+                        reinterpret_cast<ULONG_PTR>(declfn.proc_address),
+                        CC_STDCALL,
+                        native_return_type,
+                        static_cast<UINT>(nargs),
+                        native_argument_types.empty() ? nullptr : native_argument_types.data(),
+                        native_argument_pointers.empty() ? nullptr : native_argument_pointers.data(),
+                        &native_result);
+                    if (FAILED(invoke_result))
+                    {
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dll.Error.NativeInvokeFailed",
+                            {
+                                {"functionName", declfn.function_name},
+                                {"hresult", std::to_string(invoke_result)}
+                            });
+                        return make_empty_value();
+                    }
+                    if (ret_single)
+                    {
+                        return finalize_double_result(static_cast<double>(native_result.fltVal));
+                    }
+                    if (ret_double)
+                    {
+                        return finalize_double_result(native_result.dblVal);
+                    }
+                    if (ret_string)
+                    {
+#if defined(_WIN64)
+                        return finalize_integer_result(static_cast<std::uintptr_t>(native_result.llVal));
+#else
+                        return finalize_integer_result(static_cast<std::uintptr_t>(
+                            static_cast<std::uint32_t>(native_result.lVal)));
+#endif
+                    }
+                    return ret_integer64
+                               ? finalize_integer_result(native_result.llVal)
+                               : finalize_integer_result(native_result.lVal);
+                }
+
+#if defined(_WIN64)
 
                 std::vector<detail::Win64NativeCallArgument> native_arguments(nargs);
                 for (std::size_t index = 0U; index < nargs; ++index)

@@ -548,6 +548,11 @@ void test_parse_declare_dll_preserves_vfp_parameter_contract() {
             copperfin::runtime::declared_dll_type_uses_64_bit_integer("Integer64") &&
             copperfin::runtime::declared_dll_type_uses_64_bit_integer("i64"),
         "#3932: explicitly named Copperfin 64-bit declaration aliases should remain distinct from VFP LONG");
+    copperfin::test_support::expect(
+        copperfin::runtime::declared_dll_type_is_single("Single") &&
+            !copperfin::runtime::declared_dll_type_is_single("DOUBLE") &&
+            !copperfin::runtime::declared_dll_type_is_single("F"),
+        "#3933: documented SINGLE should remain distinct from DOUBLE and existing aliases");
 
     fs::remove_all(temp_root, ignored);
 }
