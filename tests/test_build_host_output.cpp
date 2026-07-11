@@ -309,11 +309,22 @@ std::string value_for_key(const std::string& text, const std::string& key) {
     std::string line;
     const std::string prefix = key + ": ";
     while (std::getline(input, line)) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
         if (line.rfind(prefix, 0U) == 0U) {
             return line.substr(prefix.size());
         }
     }
     return {};
+}
+
+void test_value_for_key_accepts_crlf_output() {
+    const std::string output =
+        "status: ok\r\n"
+        "manifest.path: C:\\packages\\app.cfmanifest\r\n";
+    expect(value_for_key(output, "manifest.path") == "C:\\packages\\app.cfmanifest",
+           "build-host stdout parser should remove CRLF framing from machine-readable values");
 }
 
 std::string manifest_value_for_key(const std::string& text, const std::string& key) {
@@ -3369,6 +3380,7 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
+    test_value_for_key_accepts_crlf_output();
     run_library_build_host_smoke(argv[1], "dll");
     run_library_build_host_smoke(argv[1], "fll");
     run_app_build_host_smoke(argv[1]);
