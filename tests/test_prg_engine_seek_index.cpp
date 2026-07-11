@@ -2824,7 +2824,16 @@ void test_declared_dll_win32_uses_typed_stdcall_slots() {
             expect(actual == expected, label + "; actual=" + actual);
         }
     };
-    expect_value("nmixed", "4294967304.5", "#3940: mixed LONG/DOUBLE/INTEGER64/INTEGER call");
+    const auto mixed = state.globals.find("nmixed");
+    expect(mixed != state.globals.end(),
+           "#3940: mixed LONG/DOUBLE/INTEGER64/INTEGER call should be captured");
+    if (mixed != state.globals.end())
+    {
+        expect(mixed->second.kind == copperfin::runtime::PrgValueKind::number &&
+                   mixed->second.number_value == 4294967304.5,
+               "#3940: mixed LONG/DOUBLE/INTEGER64/INTEGER call should preserve its exact numeric payload; actual=" +
+                   std::to_string(mixed->second.number_value));
+    }
     expect_value("nint64", "-4294967297", "#3940: signed 64-bit return");
     expect_value("nfraction", "0.75", "#3940: DOUBLE return with by-reference input");
     expect_value("nwhole", "3", "#3940: DOUBLE @ writeback");
