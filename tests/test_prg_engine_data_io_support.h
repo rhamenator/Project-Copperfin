@@ -48,6 +48,7 @@ using ScopedEnvironmentValue = copperfin::test_support::ScopedEnvironmentValue;
 // ==== SCATTER/GATHER tests (memvar/array/name targets, field filters) ====
 void test_scatter_memvar_from_current_record();
 void test_scatter_gather_memvar_fields_blank_and_for_semantics();
+void test_gather_memvar_preserves_fields_without_matching_variables();
 void test_scatter_gather_memvar_single_name_field_filter_semantics();
 void test_scatter_to_array_and_gather_from_array_round_trip();
 void test_scatter_and_gather_array_preserve_explicit_fields_order();

@@ -137,6 +137,56 @@ void test_scatter_gather_memvar_fields_blank_and_for_semantics() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_gather_memvar_preserves_fields_without_matching_variables() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_gather_missing_memvars";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "AGE", .type = 'N', .length = 3U},
+        {.name = "NOTE", .type = 'C', .length = 10U},
+        {.name = "ACTIVE", .type = 'L', .length = 1U},
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        table_path.string(), fields, {{"Alice", "42", "Keep", "true"}});
+    expect(create_result.ok, "GATHER MEMVAR missing-variable fixture should be created");
+
+    const fs::path main_path = temp_root / "gather_missing_memvars.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "'\n"
+        "GO 1\n"
+        "LOCAL NOTE\n"
+        "m.NAME = 'Updated'\n"
+        "GATHER MEMVAR\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "GATHER MEMVAR missing-variable script should complete: " + state.message);
+
+    const auto persisted = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 10U);
+    expect(persisted.ok, "GATHER MEMVAR missing-variable destination table should remain readable");
+    if (persisted.ok && !persisted.table.records.empty() && persisted.table.records[0U].values.size() == 4U) {
+        const auto& values = persisted.table.records[0U].values;
+        expect(values[0U].display_value == "Updated",
+            "GATHER MEMVAR should update a field with a matching memvar");
+        expect(values[1U].display_value == "42",
+            "GATHER MEMVAR should preserve a numeric field with no matching memvar");
+        expect(values[2U].display_value.empty(),
+            "GATHER MEMVAR should write a matching memvar whose value is genuinely empty");
+        expect(values[3U].display_value == "true",
+            "GATHER MEMVAR should preserve a logical field with no matching memvar");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_scatter_gather_memvar_single_name_field_filter_semantics() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_scatter_gather_memvar_name_field";

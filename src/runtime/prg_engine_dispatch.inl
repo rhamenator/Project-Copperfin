@@ -7327,7 +7327,12 @@
                             {
                                 continue;
                             }
-                            val = lookup_variable(frame, "m." + field->field_name);
+                            const PrgValue *memvar = find_variable(frame, "m." + field->field_name);
+                            if (memvar == nullptr)
+                            {
+                                continue;
+                            }
+                            val = *memvar;
                         }
                         else if (use_name_object)
                         {

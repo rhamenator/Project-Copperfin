@@ -13,18 +13,24 @@
             globals[normalized] = value;
         }
 
-        PrgValue lookup_variable(const Frame &frame, const std::string &name) const
+        const PrgValue *find_variable(const Frame &frame, const std::string &name) const
         {
             const std::string normalized = normalize_memory_variable_identifier(name);
             if (const auto local = frame.locals.find(normalized); local != frame.locals.end())
             {
-                return local->second;
+                return &local->second;
             }
             if (const auto global = globals.find(normalized); global != globals.end())
             {
-                return global->second;
+                return &global->second;
             }
-            return {};
+            return nullptr;
+        }
+
+        PrgValue lookup_variable(const Frame &frame, const std::string &name) const
+        {
+            const PrgValue *value = find_variable(frame, name);
+            return value == nullptr ? PrgValue{} : *value;
         }
 
         std::string canonical_array_name(const std::string &name, const Frame &frame) const

@@ -9,6 +9,7 @@ using namespace cf_test_prg_engine_data_io;
 int main() {
     test_scatter_memvar_from_current_record();
     test_scatter_gather_memvar_fields_blank_and_for_semantics();
+    test_gather_memvar_preserves_fields_without_matching_variables();
     test_scatter_gather_memvar_single_name_field_filter_semantics();
     test_scatter_to_array_and_gather_from_array_round_trip();
     test_scatter_and_gather_array_preserve_explicit_fields_order();
