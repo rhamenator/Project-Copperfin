@@ -163,10 +163,25 @@ void test_open_document_infers_read_only_from_asset_family_writability() {
 void test_open_document_uses_vfp_filename_for_display_name() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() / "copperfin_studio_host_vfp_filename_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
     fs::create_directories(temp_dir);
 
+#if defined(_WIN32)
+    const fs::path asset_dir = temp_dir / "E" / "Forms";
+    fs::create_directories(asset_dir);
+    const fs::path form_path = asset_dir / "customer.scx";
+    const fs::path sidecar_path = asset_dir / "customer.sct";
+    expect(form_path.string().find('\\') != std::string::npos,
+           "#3906: Windows host fixture should exercise native backslash path text");
+    expect(copperfin::studio::infer_sidecar_path(
+               R"(E:\Forms\customer.scx)", copperfin::studio::StudioAssetKind::form) ==
+               R"(E:\Forms\customer.sct)",
+           "#3906: Windows logical VFP paths should infer sidecars without requiring host-file lookup");
+#else
     const fs::path form_path = temp_dir / R"(E:\Forms\customer.scx)";
     const fs::path sidecar_path = temp_dir / R"(E:\Forms\customer.sct)";
+#endif
 
     {
         const auto bytes = make_vfp_header();
@@ -191,10 +206,7 @@ void test_open_document_uses_vfp_filename_for_display_name() {
     expect(result.document.sidecar_path == sidecar_path.string(),
            "#702: inferred sidecar path should still replace the extension in the host path");
 
-    std::error_code ignored;
-    fs::remove(form_path, ignored);
-    fs::remove(sidecar_path, ignored);
-    fs::remove(temp_dir, ignored);
+    fs::remove_all(temp_dir, ignored);
 }
 
 void test_open_document_attaches_default_designer_contexts() {
