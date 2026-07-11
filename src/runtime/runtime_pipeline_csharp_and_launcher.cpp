@@ -374,7 +374,8 @@ std::string build_csharp_transpilation_source(const RuntimePackagePlan& plan) {
     stream << "    {\n";
 
     for (const auto& asset : plan.assets) {
-        if (lowercase_copy(trim_copy(std::filesystem::path(asset.source_path).extension().string())) != ".prg") {
+        if (!should_stage_asset(asset) ||
+            lowercase_copy(trim_copy(std::filesystem::path(asset.source_path).extension().string())) != ".prg") {
             continue;
         }
         const Program program = parse_program(asset.source_path);
@@ -406,6 +407,9 @@ std::string build_csharp_transpilation_source(const RuntimePackagePlan& plan) {
     stream << "    }\n\n";
 
     for (const auto& asset : plan.assets) {
+        if (!should_stage_asset(asset)) {
+            continue;
+        }
         const std::string extension = lowercase_copy(trim_copy(std::filesystem::path(asset.source_path).extension().string()));
         if (extension != ".scx" && extension != ".vcx") {
             continue;

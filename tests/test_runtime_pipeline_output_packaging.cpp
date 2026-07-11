@@ -3376,6 +3376,9 @@ void test_fxp_output_package_emits_token_manifest_from_prg_statements() {
                "WAIT WINDOW 'hello'\n"
                "RETURN\n"
                "ENDPROC\n");
+    write_text(project_dir / "excluded_helper.prg",
+               "WAIT WINDOW 'excluded-leak-marker'\n"
+               "RETURN\n");
     write_text(runtime_host, "runtime-host");
 
     copperfin::studio::StudioDocumentModel document;
@@ -3394,7 +3397,8 @@ void test_fxp_output_package_emits_token_manifest_from_prg_statements() {
     workspace.build_plan.startup_item = "main.prg";
     workspace.build_plan.startup_record_index = 1U;
     workspace.entries = {
-        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"}
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program", .excluded = true},
+        {.record_index = 2U, .name = "excluded_helper.prg", .relative_path = "excluded_helper.prg", .type_title = "Program", .excluded = true}
     };
 
     const auto plan = copperfin::runtime::create_runtime_package_plan(
@@ -3437,6 +3441,21 @@ void test_fxp_output_package_emits_token_manifest_from_prg_statements() {
                "fxp-output package should not bundle an executable runtime host into the FXP output slot");
         expect(result.plan.primary_output_materialized,
                "fxp-output package should report that the FXP contract file is materialized");
+        const auto main_asset = std::find_if(result.plan.assets.begin(), result.plan.assets.end(), [](const auto& asset) {
+            return asset.relative_path == "main.prg";
+        });
+        const auto excluded_asset = std::find_if(result.plan.assets.begin(), result.plan.assets.end(), [](const auto& asset) {
+            return asset.relative_path == "excluded_helper.prg";
+        });
+        expect(main_asset != result.plan.assets.end() && main_asset->excluded &&
+                   main_asset->required_for_runtime && main_asset->copied,
+               "#3881: excluded startup PRG should remain admitted and staged");
+        expect(excluded_asset != result.plan.assets.end() && excluded_asset->excluded &&
+                   !excluded_asset->required_for_runtime && !excluded_asset->copied,
+               "#3881: excluded non-runtime PRG should remain outside staged content");
+        expect(fs::exists(fs::path(result.plan.content_root) / "main.prg") &&
+                   !fs::exists(fs::path(result.plan.content_root) / "excluded_helper.prg"),
+               "#3881: staged content should follow the shared package admission rule");
 
         const std::string token_manifest = read_text(result.plan.fxp_token_manifest_path);
         expect(token_manifest.find("output_kind=fxp") != std::string::npos,
@@ -3455,6 +3474,29 @@ void test_fxp_output_package_emits_token_manifest_from_prg_statements() {
                "fxp-output token manifest should include routine-scope statements");
         expect(token_manifest.find("WAIT WINDOW 'hello'") != std::string::npos,
                "fxp-output token manifest should preserve routine statement text");
+        expect(token_manifest.find("excluded_helper.prg") == std::string::npos &&
+                   token_manifest.find("excluded-leak-marker") == std::string::npos,
+               "#3881: FXP token manifest should omit excluded non-runtime PRG source");
+
+        const std::string ast_manifest = read_text(result.plan.ast_manifest_path);
+        const std::string ir_manifest = read_text(result.plan.ir_manifest_path);
+        const std::string transpiled_csharp = read_text(result.plan.transpiled_csharp_path);
+        expect(ast_manifest.find("\"relative_path\": \"main.prg\"") != std::string::npos &&
+                   ast_manifest.find("WAIT WINDOW 'hello'") != std::string::npos,
+               "#3881: AST manifest should retain the required excluded startup PRG");
+        expect(ir_manifest.find("\"relative_path\": \"main.prg\"") != std::string::npos &&
+                   ir_manifest.find("WAIT WINDOW 'hello'") != std::string::npos,
+               "#3881: IR manifest should retain the required excluded startup PRG");
+        expect(transpiled_csharp.find("Console.WriteLine(\"hello\");") != std::string::npos,
+               "#3881: generated C# should retain the required excluded startup PRG");
+        expect(ast_manifest.find("excluded_helper.prg") == std::string::npos &&
+                   ast_manifest.find("excluded-leak-marker") == std::string::npos,
+               "#3881: AST manifest should omit excluded non-runtime PRG source");
+        expect(ir_manifest.find("excluded_helper.prg") == std::string::npos &&
+                   ir_manifest.find("excluded-leak-marker") == std::string::npos,
+               "#3881: IR manifest should omit excluded non-runtime PRG source");
+        expect(transpiled_csharp.find("excluded-leak-marker") == std::string::npos,
+               "#3881: generated C# should omit excluded non-runtime PRG source");
 
         const std::string fxp_contract = read_text(result.plan.launcher_output_path);
         expect(fxp_contract.find("copperfin_fxp_contract_version=1") != std::string::npos,
@@ -3469,6 +3511,9 @@ void test_fxp_output_package_emits_token_manifest_from_prg_statements() {
                "fxp-output primary output should preserve main-scope logical statements");
         expect(fxp_contract.find("statement=worker|") != std::string::npos,
                "fxp-output primary output should preserve routine-scope logical statements");
+        expect(fxp_contract.find("excluded_helper.prg") == std::string::npos &&
+                   fxp_contract.find("excluded-leak-marker") == std::string::npos,
+               "#3881: embedded FXP contract should omit excluded non-runtime PRG source");
 
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
         const std::string debug_manifest = read_text(result.plan.debug_manifest_path);

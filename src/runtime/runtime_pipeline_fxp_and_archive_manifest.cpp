@@ -90,7 +90,8 @@ std::string build_fxp_token_manifest_source(const RuntimePackagePlan& plan) {
     stream << "primary_output=" << quote_manifest_value(std::filesystem::path(plan.launcher_output_path).filename().string()) << "\n";
     stream << "startup_item=" << quote_manifest_value(plan.startup_item) << "\n";
     for (const auto& asset : plan.assets) {
-        if (lowercase_copy(trim_copy(std::filesystem::path(asset.source_path).extension().string())) != ".prg") {
+        if (!should_stage_asset(asset) ||
+            lowercase_copy(trim_copy(std::filesystem::path(asset.source_path).extension().string())) != ".prg") {
             continue;
         }
         const Program program = parse_program(asset.source_path);
