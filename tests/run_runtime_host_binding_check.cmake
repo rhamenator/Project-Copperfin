@@ -22,32 +22,58 @@ set(test_root "${temp_root}/copperfin_runtime_host_binding_${timestamp}")
 
 function(create_directory_indirection target_path link_path result_variable)
     if(WIN32)
+        file(TO_NATIVE_PATH "${target_path}" native_target_path)
+        file(TO_NATIVE_PATH "${link_path}" native_link_path)
+        set(indirection_command "mklink /J \"${native_link_path}\" \"${native_target_path}\"")
         execute_process(
-            COMMAND cmd.exe /d /c mklink /J "${link_path}" "${target_path}"
+            COMMAND cmd.exe /d /s /c "${indirection_command}"
             RESULT_VARIABLE indirection_result
-            OUTPUT_QUIET
-            ERROR_QUIET
+            OUTPUT_VARIABLE indirection_output
+            ERROR_VARIABLE indirection_error
         )
     else()
         execute_process(
             COMMAND ${CMAKE_COMMAND} -E create_symlink "${target_path}" "${link_path}"
             RESULT_VARIABLE indirection_result
-            OUTPUT_QUIET
-            ERROR_QUIET
+            OUTPUT_VARIABLE indirection_output
+            ERROR_VARIABLE indirection_error
         )
+    endif()
+    if(NOT indirection_result EQUAL 0)
+        message(STATUS
+            "Directory indirection creation failed.\n"
+            "target: ${target_path}\n"
+            "link: ${link_path}\n"
+            "stdout:\n${indirection_output}\n"
+            "stderr:\n${indirection_error}")
     endif()
     set(${result_variable} "${indirection_result}" PARENT_SCOPE)
 endfunction()
 
 function(remove_directory_indirection link_path)
     if(WIN32)
+        file(TO_NATIVE_PATH "${link_path}" native_link_path)
+        set(removal_command "rmdir \"${native_link_path}\"")
         execute_process(
-            COMMAND cmd.exe /d /c rmdir "${link_path}"
-            OUTPUT_QUIET
-            ERROR_QUIET
+            COMMAND cmd.exe /d /s /c "${removal_command}"
+            RESULT_VARIABLE removal_result
+            OUTPUT_VARIABLE removal_output
+            ERROR_VARIABLE removal_error
         )
     else()
-        file(REMOVE "${link_path}")
+        execute_process(
+            COMMAND ${CMAKE_COMMAND} -E remove "${link_path}"
+            RESULT_VARIABLE removal_result
+            OUTPUT_VARIABLE removal_output
+            ERROR_VARIABLE removal_error
+        )
+    endif()
+    if(NOT removal_result EQUAL 0)
+        message(FATAL_ERROR
+            "Directory indirection removal failed.\n"
+            "link: ${link_path}\n"
+            "stdout:\n${removal_output}\n"
+            "stderr:\n${removal_error}")
     endif()
 endfunction()
 
