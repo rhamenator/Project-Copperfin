@@ -1236,20 +1236,163 @@ DbfTableParseResult parse_dbf_table_from_file(const std::string& path, std::size
     return {.ok = true, .table = std::move(table), .error = {}};
 }
 
+using DbfCellByteOverrides =
+    std::vector<std::vector<std::optional<std::vector<std::uint8_t>>>>;
+
+struct DbfCreateOverrides {
+    const DbfCellByteOverrides* memo_payloads = nullptr;
+    const DbfCellByteOverrides* raw_field_bytes = nullptr;
+    const std::vector<bool>* preserved_raw_fields = nullptr;
+    const std::vector<bool>* deleted_flags = nullptr;
+};
+
+struct DbfRewriteRowsResult {
+    bool ok = false;
+    std::string error;
+    std::vector<std::vector<std::string>> records;
+    DbfCellByteOverrides memo_payloads;
+    DbfCellByteOverrides raw_field_bytes;
+    std::vector<bool> preserved_raw_fields;
+    std::vector<bool> deleted_flags;
+};
+
+static DbfRewriteRowsResult collect_dbf_rewrite_rows(
+    const std::string& path,
+    const DbfTable& table,
+    const std::vector<DbfFieldDescriptor>& output_fields,
+    const std::vector<std::optional<std::size_t>>& source_field_indices,
+    const std::vector<bool>& preserve_raw_source_fields) {
+    DbfRewriteRowsResult result;
+    if (output_fields.size() != source_field_indices.size() ||
+        output_fields.size() != preserve_raw_source_fields.size()) {
+        result.error = dbf_table_text("Vfp.DbfTable.Error.RecordFieldCountMismatch");
+        return result;
+    }
+
+    const std::vector<std::uint8_t> table_bytes = read_binary_file(path);
+    if (table_bytes.empty()) {
+        result.error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed");
+        return result;
+    }
+
+    const MemoReader memo_reader(infer_memo_sidecar_path(path));
+    result.records.reserve(table.records.size());
+    result.memo_payloads.reserve(table.records.size());
+    result.raw_field_bytes.reserve(table.records.size());
+    result.deleted_flags.reserve(table.records.size());
+    result.preserved_raw_fields.assign(output_fields.size(), false);
+
+    for (std::size_t output_index = 0U; output_index < output_fields.size(); ++output_index) {
+        if (!source_field_indices[output_index].has_value()) {
+            continue;
+        }
+        const std::size_t source_index = *source_field_indices[output_index];
+        if (source_index >= table.fields.size()) {
+            result.error = dbf_table_text("Vfp.DbfTable.Error.RecordFieldCountMismatch");
+            return result;
+        }
+        const auto& source_field = table.fields[source_index];
+        result.preserved_raw_fields[output_index] =
+            preserve_raw_source_fields[output_index] &&
+            !is_memo_pointer_field(source_field.type) &&
+            source_field.type == output_fields[output_index].type &&
+            source_field.length == output_fields[output_index].length;
+    }
+
+    for (std::size_t record_index = 0U; record_index < table.records.size(); ++record_index) {
+        const auto& record = table.records[record_index];
+        if (record.values.size() != table.fields.size()) {
+            result.error = dbf_table_text("Vfp.DbfTable.Error.RecordFieldCountMismatch");
+            return result;
+        }
+
+        std::vector<std::string> output_record;
+        DbfCellByteOverrides::value_type output_memo_payloads;
+        DbfCellByteOverrides::value_type output_raw_field_bytes;
+        output_record.reserve(output_fields.size());
+        output_memo_payloads.reserve(output_fields.size());
+        output_raw_field_bytes.reserve(output_fields.size());
+
+        for (std::size_t output_index = 0U; output_index < output_fields.size(); ++output_index) {
+            const auto source_index = source_field_indices[output_index];
+            if (!source_index.has_value()) {
+                output_record.push_back({});
+                output_memo_payloads.push_back(std::nullopt);
+                output_raw_field_bytes.push_back(std::nullopt);
+                continue;
+            }
+
+            const auto& source_field = table.fields[*source_index];
+            const auto& source_value = record.values[*source_index];
+            output_record.push_back(source_value.display_value);
+
+            if (is_memo_pointer_field(source_field.type) &&
+                is_memo_pointer_field(output_fields[output_index].type) &&
+                source_value.memo_block_number != 0U) {
+                const auto payload = memo_reader.read_block_raw(source_value.memo_block_number);
+                if (!payload.has_value()) {
+                    result.error = dbf_table_text("Vfp.DbfTable.Error.ReadMemoPayloadFailed");
+                    return result;
+                }
+                output_memo_payloads.push_back(*payload);
+            } else {
+                output_memo_payloads.push_back(std::nullopt);
+            }
+
+            if (result.preserved_raw_fields[output_index]) {
+                const std::size_t record_offset =
+                    table.header.header_length + (record_index * table.header.record_length);
+                const std::size_t field_offset = record_offset + source_field.offset;
+                const std::size_t field_end = field_offset + source_field.length;
+                if (field_end > table_bytes.size()) {
+                    result.error = dbf_table_text("Vfp.DbfTable.Error.RecordDataTruncated");
+                    return result;
+                }
+                output_raw_field_bytes.emplace_back(std::vector<std::uint8_t>{
+                    table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset),
+                    table_bytes.begin() + static_cast<std::ptrdiff_t>(field_end)
+                });
+            } else {
+                output_raw_field_bytes.push_back(std::nullopt);
+            }
+        }
+
+        result.records.push_back(std::move(output_record));
+        result.memo_payloads.push_back(std::move(output_memo_payloads));
+        result.raw_field_bytes.push_back(std::move(output_raw_field_bytes));
+        result.deleted_flags.push_back(record.deleted);
+    }
+
+    result.ok = true;
+    return result;
+}
+
 static DbfWriteResult create_dbf_table_file_with_memo_payloads(
     const std::string& path,
     const std::vector<DbfFieldDescriptor>& fields,
     const std::vector<std::vector<std::string>>& records,
-    const std::vector<std::vector<std::optional<std::vector<std::uint8_t>>>>* memo_payloads) {
+    const DbfCreateOverrides* overrides) {
     if (fields.empty()) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.CreateFieldRequired")};
+    }
+    if (overrides != nullptr &&
+        ((overrides->memo_payloads != nullptr && overrides->memo_payloads->size() != records.size()) ||
+         (overrides->raw_field_bytes != nullptr && overrides->raw_field_bytes->size() != records.size()) ||
+         (overrides->preserved_raw_fields != nullptr && overrides->preserved_raw_fields->size() != fields.size()) ||
+         (overrides->deleted_flags != nullptr && overrides->deleted_flags->size() != records.size()))) {
+        return {
+            .ok = false,
+            .error = dbf_table_text("Vfp.DbfTable.Error.RecordFieldCountMismatch"),
+            .record_count = records.size()
+        };
     }
 
     std::vector<RawFieldDescriptor> raw_fields;
     raw_fields.reserve(fields.size());
     std::uint32_t next_offset = 1U;
     bool has_memo_fields = false;
-    for (const auto& field : fields) {
+    for (std::size_t field_index = 0U; field_index < fields.size(); ++field_index) {
+        const auto& field = fields[field_index];
         const std::string trimmed_name = trim_both(field.name);
         if (trimmed_name.empty()) {
             return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.FieldNameRequired")};
@@ -1267,7 +1410,11 @@ static DbfWriteResult create_dbf_table_file_with_memo_payloads(
         if (field.length == 0U) {
             return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.FieldLengthRequired")};
         }
-        if (!supports_table_field_storage(field.type)) {
+        const bool preserves_opaque_field =
+            overrides != nullptr && overrides->preserved_raw_fields != nullptr &&
+            field_index < overrides->preserved_raw_fields->size() &&
+            (*overrides->preserved_raw_fields)[field_index];
+        if (!supports_table_field_storage(field.type) && !preserves_opaque_field) {
             return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.CreateUnsupportedFieldType")};
         }
         if (is_memo_pointer_field(field.type)) {
@@ -1342,24 +1489,53 @@ static DbfWriteResult create_dbf_table_file_with_memo_payloads(
         if (records[record_index].size() != raw_fields.size()) {
             return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordFieldCountMismatch"), .record_count = records.size()};
         }
-        if (memo_payloads != nullptr &&
-            (record_index >= memo_payloads->size() || (*memo_payloads)[record_index].size() != raw_fields.size())) {
+        if (overrides != nullptr && overrides->memo_payloads != nullptr &&
+            (record_index >= overrides->memo_payloads->size() ||
+             (*overrides->memo_payloads)[record_index].size() != raw_fields.size())) {
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordFieldCountMismatch"), .record_count = records.size()};
+        }
+        if (overrides != nullptr && overrides->raw_field_bytes != nullptr &&
+            (record_index >= overrides->raw_field_bytes->size() ||
+             (*overrides->raw_field_bytes)[record_index].size() != raw_fields.size())) {
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordFieldCountMismatch"), .record_count = records.size()};
+        }
+        if (overrides != nullptr && overrides->deleted_flags != nullptr &&
+            record_index >= overrides->deleted_flags->size()) {
             return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordFieldCountMismatch"), .record_count = records.size()};
         }
 
         const std::size_t record_offset = header.header_length + (record_index * header.record_length);
-        bytes[record_offset] = 0x20U;
+        bytes[record_offset] =
+            overrides != nullptr && overrides->deleted_flags != nullptr &&
+                    (*overrides->deleted_flags)[record_index]
+                ? 0x2AU
+                : 0x20U;
         for (std::size_t field_index = 0; field_index < raw_fields.size(); ++field_index) {
             DbfWriteResult write_result;
-            if (is_memo_pointer_field(raw_fields[field_index].type)) {
+            const bool has_raw_field_override =
+                overrides != nullptr && overrides->raw_field_bytes != nullptr &&
+                (*overrides->raw_field_bytes)[record_index][field_index].has_value();
+            if (has_raw_field_override) {
+                const auto& raw_bytes = *(*overrides->raw_field_bytes)[record_index][field_index];
+                if (raw_bytes.size() != raw_fields[field_index].length ||
+                    is_memo_pointer_field(raw_fields[field_index].type)) {
+                    return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordFieldCountMismatch"), .record_count = records.size()};
+                }
+                std::copy(
+                    raw_bytes.begin(),
+                    raw_bytes.end(),
+                    bytes.begin() + static_cast<std::ptrdiff_t>(record_offset + raw_fields[field_index].offset));
+                write_result = {.ok = true, .error = {}, .record_count = records.size()};
+            } else if (is_memo_pointer_field(raw_fields[field_index].type)) {
                 const bool has_raw_payload_override =
-                    memo_payloads != nullptr && (*memo_payloads)[record_index][field_index].has_value();
+                    overrides != nullptr && overrides->memo_payloads != nullptr &&
+                    (*overrides->memo_payloads)[record_index][field_index].has_value();
                 if (has_raw_payload_override) {
                     write_result = write_memo_field_bytes(
                         bytes,
                         record_offset + raw_fields[field_index].offset,
                         memo_bytes,
-                        *(*memo_payloads)[record_index][field_index],
+                        *(*overrides->memo_payloads)[record_index][field_index],
                         records.size(),
                         true);
                 } else {
@@ -1415,6 +1591,35 @@ static DbfWriteResult create_dbf_table_file_with_memo_payloads(
     return {.ok = true, .error = {}, .record_count = records.size()};
 }
 
+static DbfWriteResult rewrite_dbf_table_schema(
+    const std::string& path,
+    const DbfTable& table,
+    const std::vector<DbfFieldDescriptor>& fields,
+    const std::vector<std::optional<std::size_t>>& source_field_indices,
+    const std::vector<bool>& preserve_raw_source_fields) {
+    DbfRewriteRowsResult rewrite_rows = collect_dbf_rewrite_rows(
+        path,
+        table,
+        fields,
+        source_field_indices,
+        preserve_raw_source_fields);
+    if (!rewrite_rows.ok) {
+        return {
+            .ok = false,
+            .error = rewrite_rows.error,
+            .record_count = table.records.size()
+        };
+    }
+
+    const DbfCreateOverrides overrides{
+        .memo_payloads = &rewrite_rows.memo_payloads,
+        .raw_field_bytes = &rewrite_rows.raw_field_bytes,
+        .preserved_raw_fields = &rewrite_rows.preserved_raw_fields,
+        .deleted_flags = &rewrite_rows.deleted_flags
+    };
+    return create_dbf_table_file_with_memo_payloads(path, fields, rewrite_rows.records, &overrides);
+}
+
 DbfWriteResult create_dbf_table_file(
     const std::string& path,
     const std::vector<DbfFieldDescriptor>& fields,
@@ -1450,37 +1655,23 @@ DbfWriteResult add_dbf_table_field(const std::string& path, const DbfFieldDescri
     std::vector<DbfFieldDescriptor> fields = table_result.table.fields;
     fields.push_back(field);
 
-    std::vector<std::vector<std::string>> records;
-    records.reserve(table_result.table.records.size());
-    std::vector<bool> deleted_flags;
-    deleted_flags.reserve(table_result.table.records.size());
-    for (const auto& record : table_result.table.records) {
-        std::vector<std::string> output_record;
-        output_record.reserve(record.values.size() + 1U);
-        for (const auto& value : record.values) {
-            output_record.push_back(value.display_value);
-        }
-        output_record.push_back({});
-        deleted_flags.push_back(record.deleted);
-        records.push_back(std::move(output_record));
+    std::vector<std::optional<std::size_t>> source_field_indices;
+    source_field_indices.reserve(fields.size());
+    std::vector<bool> preserve_raw_source_fields;
+    preserve_raw_source_fields.reserve(fields.size());
+    for (std::size_t index = 0U; index < table_result.table.fields.size(); ++index) {
+        source_field_indices.push_back(index);
+        preserve_raw_source_fields.push_back(true);
     }
+    source_field_indices.push_back(std::nullopt);
+    preserve_raw_source_fields.push_back(false);
 
-    const DbfWriteResult create_result = create_dbf_table_file(path, fields, records);
-    if (!create_result.ok) {
-        return create_result;
-    }
-
-    for (std::size_t index = 0U; index < deleted_flags.size(); ++index) {
-        if (!deleted_flags[index]) {
-            continue;
-        }
-        const DbfWriteResult delete_result = set_record_deleted_flag(path, index, true);
-        if (!delete_result.ok) {
-            return delete_result;
-        }
-    }
-
-    return {.ok = true, .error = {}, .record_count = records.size()};
+    return rewrite_dbf_table_schema(
+        path,
+        table_result.table,
+        fields,
+        source_field_indices,
+        preserve_raw_source_fields);
 }
 
 DbfWriteResult drop_dbf_table_field(const std::string& path, const std::string& field_name) {
@@ -1511,44 +1702,24 @@ DbfWriteResult drop_dbf_table_field(const std::string& path, const std::string& 
     const std::size_t field_index = static_cast<std::size_t>(std::distance(table_result.table.fields.begin(), field));
     std::vector<DbfFieldDescriptor> fields;
     fields.reserve(table_result.table.fields.size() - 1U);
+    std::vector<std::optional<std::size_t>> source_field_indices;
+    source_field_indices.reserve(table_result.table.fields.size() - 1U);
+    std::vector<bool> preserve_raw_source_fields;
+    preserve_raw_source_fields.reserve(table_result.table.fields.size() - 1U);
     for (std::size_t index = 0U; index < table_result.table.fields.size(); ++index) {
         if (index != field_index) {
             fields.push_back(table_result.table.fields[index]);
+            source_field_indices.push_back(index);
+            preserve_raw_source_fields.push_back(true);
         }
     }
 
-    std::vector<std::vector<std::string>> records;
-    records.reserve(table_result.table.records.size());
-    std::vector<bool> deleted_flags;
-    deleted_flags.reserve(table_result.table.records.size());
-    for (const auto& record : table_result.table.records) {
-        std::vector<std::string> output_record;
-        output_record.reserve(fields.size());
-        for (std::size_t index = 0U; index < record.values.size(); ++index) {
-            if (index != field_index) {
-                output_record.push_back(record.values[index].display_value);
-            }
-        }
-        deleted_flags.push_back(record.deleted);
-        records.push_back(std::move(output_record));
-    }
-
-    const DbfWriteResult create_result = create_dbf_table_file(path, fields, records);
-    if (!create_result.ok) {
-        return create_result;
-    }
-
-    for (std::size_t index = 0U; index < deleted_flags.size(); ++index) {
-        if (!deleted_flags[index]) {
-            continue;
-        }
-        const DbfWriteResult delete_result = set_record_deleted_flag(path, index, true);
-        if (!delete_result.ok) {
-            return delete_result;
-        }
-    }
-
-    return {.ok = true, .error = {}, .record_count = records.size()};
+    return rewrite_dbf_table_schema(
+        path,
+        table_result.table,
+        fields,
+        source_field_indices,
+        preserve_raw_source_fields);
 }
 
 DbfWriteResult alter_dbf_table_field(const std::string& path, const DbfFieldDescriptor& field) {
@@ -1577,36 +1748,21 @@ DbfWriteResult alter_dbf_table_field(const std::string& path, const DbfFieldDesc
     const std::size_t field_index = static_cast<std::size_t>(std::distance(table_result.table.fields.begin(), existing));
     fields[field_index] = field;
 
-    std::vector<std::vector<std::string>> records;
-    records.reserve(table_result.table.records.size());
-    std::vector<bool> deleted_flags;
-    deleted_flags.reserve(table_result.table.records.size());
-    for (const auto& record : table_result.table.records) {
-        std::vector<std::string> output_record;
-        output_record.reserve(record.values.size());
-        for (const auto& value : record.values) {
-            output_record.push_back(value.display_value);
-        }
-        deleted_flags.push_back(record.deleted);
-        records.push_back(std::move(output_record));
+    std::vector<std::optional<std::size_t>> source_field_indices;
+    source_field_indices.reserve(fields.size());
+    std::vector<bool> preserve_raw_source_fields;
+    preserve_raw_source_fields.reserve(fields.size());
+    for (std::size_t index = 0U; index < fields.size(); ++index) {
+        source_field_indices.push_back(index);
+        preserve_raw_source_fields.push_back(index != field_index);
     }
 
-    const DbfWriteResult create_result = create_dbf_table_file(path, fields, records);
-    if (!create_result.ok) {
-        return create_result;
-    }
-
-    for (std::size_t index = 0U; index < deleted_flags.size(); ++index) {
-        if (!deleted_flags[index]) {
-            continue;
-        }
-        const DbfWriteResult delete_result = set_record_deleted_flag(path, index, true);
-        if (!delete_result.ok) {
-            return delete_result;
-        }
-    }
-
-    return {.ok = true, .error = {}, .record_count = records.size()};
+    return rewrite_dbf_table_schema(
+        path,
+        table_result.table,
+        fields,
+        source_field_indices,
+        preserve_raw_source_fields);
 }
 
 DbfWriteResult append_blank_record_to_file(const std::string& path) {
@@ -1846,53 +2002,21 @@ DbfWriteResult pack_dbf_memo_file(const std::string& path) {
         return {.ok = true, .error = {}, .record_count = table_result.table.records.size()};
     }
 
-    const std::string memo_path = infer_memo_sidecar_path(path);
-    const MemoReader memo_reader(memo_path);
-    std::vector<std::vector<std::string>> records;
-    records.reserve(table_result.table.records.size());
-    std::vector<std::vector<std::optional<std::vector<std::uint8_t>>>> memo_payloads;
-    memo_payloads.reserve(table_result.table.records.size());
-    std::vector<bool> deleted_flags;
-    deleted_flags.reserve(table_result.table.records.size());
-    for (const auto& record : table_result.table.records) {
-        std::vector<std::string> output_record;
-        output_record.reserve(record.values.size());
-        std::vector<std::optional<std::vector<std::uint8_t>>> output_payloads;
-        output_payloads.reserve(record.values.size());
-        for (const auto& value : record.values) {
-            output_record.push_back(value.display_value);
-            if (is_memo_pointer_field(value.field_type) && value.memo_block_number != 0U) {
-                const auto payload = memo_reader.read_block_raw(value.memo_block_number);
-                if (!payload.has_value()) {
-                    return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.ReadMemoPayloadFailed"), .record_count = table_result.table.records.size()};
-                }
-                output_payloads.push_back(*payload);
-            } else {
-                output_payloads.push_back(std::nullopt);
-            }
-        }
-        deleted_flags.push_back(record.deleted);
-        records.push_back(std::move(output_record));
-        memo_payloads.push_back(std::move(output_payloads));
+    std::vector<std::optional<std::size_t>> source_field_indices;
+    source_field_indices.reserve(table_result.table.fields.size());
+    std::vector<bool> preserve_raw_source_fields;
+    preserve_raw_source_fields.reserve(table_result.table.fields.size());
+    for (std::size_t index = 0U; index < table_result.table.fields.size(); ++index) {
+        source_field_indices.push_back(index);
+        preserve_raw_source_fields.push_back(true);
     }
 
-    const DbfWriteResult create_result =
-        create_dbf_table_file_with_memo_payloads(path, table_result.table.fields, records, &memo_payloads);
-    if (!create_result.ok) {
-        return create_result;
-    }
-
-    for (std::size_t index = 0U; index < deleted_flags.size(); ++index) {
-        if (!deleted_flags[index]) {
-            continue;
-        }
-        const DbfWriteResult delete_result = set_record_deleted_flag(path, index, true);
-        if (!delete_result.ok) {
-            return delete_result;
-        }
-    }
-
-    return {.ok = true, .error = {}, .record_count = records.size()};
+    return rewrite_dbf_table_schema(
+        path,
+        table_result.table,
+        table_result.table.fields,
+        source_field_indices,
+        preserve_raw_source_fields);
 }
 
 DbfWriteResult zap_dbf_table_file(const std::string& path) {
