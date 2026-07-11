@@ -5892,6 +5892,7 @@ internal static class Program
         runner.Run(nameof(SmokePseudoLocalizedAssetEditorChrome), SmokePseudoLocalizedAssetEditorChrome);
         runner.Run(nameof(SmokeLocalizedHostModeChromeCompaction), SmokeLocalizedHostModeChromeCompaction);
         runner.Run(nameof(SmokeProjectWorkflowWarningParsingLocalization), SmokeProjectWorkflowWarningParsingLocalization);
+        runner.Run(nameof(SmokeManagedProjectProcessLaunchContracts), SmokeManagedProjectProcessLaunchContracts);
         runner.Run(nameof(SmokeLocalizedProjectWorkspaceChrome), SmokeLocalizedProjectWorkspaceChrome);
         runner.Run(nameof(SmokeLocalizedProjectCommandDebuggerChrome), SmokeLocalizedProjectCommandDebuggerChrome);
         runner.Run(nameof(SmokeLocalizedProjectWorkspacePlaceholders), SmokeLocalizedProjectWorkspacePlaceholders);
@@ -34765,6 +34766,173 @@ internal static class Program
         Expect(pseudoWarnings.Count == 1 &&
                string.Equals(pseudoWarnings[0], "Pseudo invariant warning", StringComparison.Ordinal),
             "project workflow warning parsing smoke should keep the invariant native warning prefix under qps-ploc");
+    }
+
+    private static void SmokeManagedProjectProcessLaunchContracts()
+    {
+        var quotedProject = "\"C:\\work dir\\sample.pjx\"";
+        var launchArguments = new[] { "build", "--project", quotedProject, "--empty", string.Empty };
+        void ExpectArgumentEcho(CopperfinProcessExecutionResult result, string description)
+        {
+            var status = result.Values.TryGetValue("status", out var parsedStatus) ? parsedStatus : string.Empty;
+            var first = result.Values.TryGetValue("first", out var parsedFirst) ? parsedFirst : string.Empty;
+            var spaced = result.Values.TryGetValue("spaced", out var parsedSpaced) ? parsedSpaced : string.Empty;
+            var empty = result.Values.TryGetValue("empty", out var parsedEmpty) ? parsedEmpty : string.Empty;
+            Expect(result.ExitCode == 0 &&
+                   string.Equals(status, "ok", StringComparison.OrdinalIgnoreCase) &&
+                   string.Equals(first, "build", StringComparison.Ordinal) &&
+                   string.Equals(spaced, "space value", StringComparison.Ordinal) &&
+                   string.Equals(empty, "[]", StringComparison.Ordinal),
+                description);
+        }
+
+        foreach (var directPath in new[] { @"C:\tools\copperfin_build_host.exe", @"C:\tools\copperfin_build_host" })
+        {
+            var directStartInfo = CopperfinProjectWorkflow.CreateProcessStartInfo(
+                directPath,
+                launchArguments,
+                localization: new CopperfinLocalization("es-419"),
+                redirectOutput: true,
+                createNoWindow: true,
+                isWindowsOverride: true);
+            Expect(string.Equals(directStartInfo.FileName, directPath, StringComparison.Ordinal) &&
+                   directStartInfo.Arguments.IndexOf(quotedProject, StringComparison.Ordinal) >= 0 &&
+                   directStartInfo.Arguments.EndsWith("--empty \"\"", StringComparison.Ordinal) &&
+                   !directStartInfo.UseShellExecute &&
+                   directStartInfo.RedirectStandardOutput &&
+                   directStartInfo.RedirectStandardError &&
+                   directStartInfo.CreateNoWindow,
+                $"managed project workflow should launch direct Windows host path without a command-shell wrapper: {directPath}");
+            Expect(string.Equals(directStartInfo.EnvironmentVariables["COPPERFIN_LOCALE"], "es-419", StringComparison.Ordinal) &&
+                   string.Equals(directStartInfo.EnvironmentVariables["COPPERFIN_UI_LOCALE"], "es-419", StringComparison.Ordinal),
+                "managed project workflow should preserve invariant locale environment-variable names");
+        }
+
+        var expectedCommandInterpreter = Environment.GetEnvironmentVariable("COMSPEC");
+        if (string.IsNullOrWhiteSpace(expectedCommandInterpreter))
+        {
+            expectedCommandInterpreter = "cmd.exe";
+        }
+        foreach (var extension in new[] { ".cmd", ".bat" })
+        {
+            var wrapperPath = @"C:\tools\build host" + extension;
+            var wrapperStartInfo = CopperfinProjectWorkflow.CreateProcessStartInfo(
+                wrapperPath,
+                launchArguments,
+                redirectOutput: true,
+                createNoWindow: true,
+                isWindowsOverride: true);
+            Expect(string.Equals(wrapperStartInfo.FileName, expectedCommandInterpreter, StringComparison.OrdinalIgnoreCase) &&
+                   wrapperStartInfo.Arguments.StartsWith("/d /c \"", StringComparison.OrdinalIgnoreCase) &&
+                   wrapperStartInfo.Arguments.IndexOf("\"" + wrapperPath + "\"", StringComparison.Ordinal) >= 0 &&
+                   wrapperStartInfo.Arguments.IndexOf(quotedProject, StringComparison.Ordinal) >= 0 &&
+                   wrapperStartInfo.Arguments.IndexOf("--empty \"\"", StringComparison.Ordinal) >= 0,
+                $"managed project workflow should route Windows {extension} hosts through COMSPEC without dropping spaced or empty arguments");
+
+            var posixStartInfo = CopperfinProjectWorkflow.CreateProcessStartInfo(
+                wrapperPath,
+                launchArguments,
+                isWindowsOverride: false);
+            Expect(string.Equals(posixStartInfo.FileName, wrapperPath, StringComparison.Ordinal) &&
+                   string.Equals(posixStartInfo.Arguments, string.Join(" ", launchArguments.Take(launchArguments.Length - 1)) + " \"\"", StringComparison.Ordinal),
+                $"managed project workflow should preserve direct-executable behavior for {extension} paths off Windows");
+        }
+
+        var tempRoot = Path.Combine(Path.GetTempPath(), "copperfin-managed-process-launch-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        var previousBuildHostPath = Environment.GetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH");
+        try
+        {
+            foreach (var configuredFileName in new[]
+                     {
+                         "configured-build-host.exe",
+                         "configured-build-host",
+                         "configured build host.cmd",
+                         "configured build host.bat"
+                     })
+            {
+                var configuredHostPath = Path.Combine(tempRoot, configuredFileName);
+                File.WriteAllText(configuredHostPath, "@echo off\r\nexit /b 0\r\n");
+                Environment.SetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH", configuredHostPath);
+                Expect(string.Equals(CopperfinProjectWorkflow.ResolveBuildHostPath(tempRoot), configuredHostPath, StringComparison.Ordinal),
+                    $"managed project workflow should preserve an explicitly configured host path: {configuredFileName}");
+            }
+
+            var missingHostPath = Path.Combine(
+                tempRoot,
+                "missing-build-host-" + Guid.NewGuid().ToString("N") + (IsWindowsPlatform() ? ".exe" : string.Empty));
+            var capturedFailure = CopperfinProcessRunner.Run(new ProcessStartInfo
+            {
+                FileName = missingHostPath,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            });
+            Expect(!capturedFailure.Started &&
+                   capturedFailure.ExitCode == -1 &&
+                   !string.IsNullOrWhiteSpace(capturedFailure.StandardError),
+                "managed process runner should contain process-start exceptions and retain the host diagnostic");
+
+            var localizedFailure = CopperfinProjectWorkflow.RunProcess(
+                missingHostPath,
+                Array.Empty<string>(),
+                localization: new CopperfinLocalization("es-419"));
+            Expect(localizedFailure.ExitCode == -1 &&
+                   localizedFailure.StandardError.StartsWith("No se pudo iniciar el proceso de Copperfin:", StringComparison.Ordinal) &&
+                   localizedFailure.StandardError.Length > "No se pudo iniciar el proceso de Copperfin:".Length,
+                "managed project workflow should localize process-start failures without discarding diagnostic detail");
+            Expect(new CopperfinLocalization("qps-ploc")
+                    .Format("AssetEditor.Project.Workflow.ProcessCouldNotStartWithMessage", "detail")
+                    .IndexOf("detail", StringComparison.Ordinal) >= 0,
+                "managed project workflow process-start detail should survive pseudo-localization");
+            Expect(new CopperfinLocalization("pt-BR")
+                    .Format("AssetEditor.Project.Workflow.ProcessCouldNotStartWithMessage", "detalhe")
+                    .StartsWith("Não foi possível iniciar o processo do Copperfin:", StringComparison.Ordinal),
+                "managed project workflow process-start detail should route through the Portuguese catalog");
+
+            if (IsWindowsPlatform())
+            {
+                var batchHostPath = Path.Combine(tempRoot, "working build host.cmd");
+                File.WriteAllText(
+                    batchHostPath,
+                    "@echo off\r\n" +
+                    "echo status: ok\r\n" +
+                    "echo first: %~1\r\n" +
+                    "echo spaced: %~3\r\n" +
+                    "echo empty: [%~4]\r\n" +
+                    "exit /b 0\r\n");
+                var batchResult = CopperfinProjectWorkflow.RunProcess(
+                    batchHostPath,
+                    new[] { "build", "--value", "\"space value\"", string.Empty });
+                ExpectArgumentEcho(
+                    batchResult,
+                    "managed project workflow should execute configured Windows batch hosts with spaced and empty arguments intact");
+            }
+            else
+            {
+                var posixHostPath = Path.Combine(tempRoot, "working build host");
+                File.WriteAllText(
+                    posixHostPath,
+                    "#!/bin/sh\n" +
+                    "printf 'status: ok\\n'\n" +
+                    "printf 'first: %s\\n' \"$1\"\n" +
+                    "printf 'spaced: %s\\n' \"$3\"\n" +
+                    "printf 'empty: [%s]\\n' \"$4\"\n");
+                MakeExecutable(posixHostPath);
+                var posixResult = CopperfinProjectWorkflow.RunProcess(
+                    posixHostPath,
+                    new[] { "build", "--value", "\"space value\"", string.Empty });
+                ExpectArgumentEcho(
+                    posixResult,
+                    "managed project workflow should execute extensionless POSIX hosts with spaced and empty arguments intact");
+            }
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_BUILD_HOST_PATH", previousBuildHostPath);
+            Directory.Delete(tempRoot, recursive: true);
+        }
     }
 
     private static void SmokeProjectRunWorkflowWithRealAsset(string? path)

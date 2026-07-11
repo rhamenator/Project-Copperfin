@@ -261,38 +261,33 @@ internal static class CopperfinProjectWorkflow
         return result;
     }
 
-    private static CopperfinProcessExecutionResult RunProcess(
+    internal static CopperfinProcessExecutionResult RunProcess(
         string fileName,
         IEnumerable<string> arguments,
         IReadOnlyDictionary<string, string>? environmentVariables = null,
         CopperfinLocalization? localization = null)
     {
         localization ??= CopperfinLocalization.FromEnvironment();
-        var startInfo = new ProcessStartInfo
-        {
-            FileName = fileName,
-            Arguments = string.Join(" ", arguments),
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true
-        };
-        if (environmentVariables is not null)
-        {
-            foreach (var kvp in environmentVariables)
-            {
-                startInfo.EnvironmentVariables[kvp.Key] = kvp.Value;
-            }
-        }
-        CopperfinStudioHostBridge.ApplyLocalizationEnvironment(startInfo, localization);
+        var startInfo = CreateProcessStartInfo(
+            fileName,
+            arguments,
+            environmentVariables,
+            localization,
+            redirectOutput: true,
+            createNoWindow: true);
 
         var processResult = CopperfinProcessRunner.Run(startInfo);
         if (!processResult.Started)
         {
+            var failureMessage = string.IsNullOrWhiteSpace(processResult.StandardError)
+                ? localization.Text("AssetEditor.Project.Workflow.ProcessCouldNotStart")
+                : localization.Format(
+                    "AssetEditor.Project.Workflow.ProcessCouldNotStartWithMessage",
+                    processResult.StandardError.Trim());
             return new CopperfinProcessExecutionResult
             {
                 ExitCode = -1,
-                StandardError = localization.Text("AssetEditor.Project.Workflow.ProcessCouldNotStart")
+                StandardError = failureMessage
             };
         }
 
@@ -314,20 +309,44 @@ internal static class CopperfinProjectWorkflow
         return result;
     }
 
+    internal static ProcessStartInfo CreateProcessStartInfo(
+        string fileName,
+        IEnumerable<string> arguments,
+        IReadOnlyDictionary<string, string>? environmentVariables = null,
+        CopperfinLocalization? localization = null,
+        bool redirectOutput = false,
+        bool createNoWindow = false,
+        bool? isWindowsOverride = null)
+    {
+        localization ??= CopperfinLocalization.FromEnvironment();
+        var startInfo = CopperfinStudioHostBridge.CreateProcessStartInfo(
+            fileName,
+            JoinProcessArguments(arguments),
+            localization,
+            redirectOutput,
+            createNoWindow,
+            isWindowsOverride);
+        if (environmentVariables is not null)
+        {
+            foreach (var kvp in environmentVariables)
+            {
+                startInfo.EnvironmentVariables[kvp.Key] = kvp.Value;
+            }
+        }
+        return startInfo;
+    }
+
     private static CopperfinProjectExecutionResult StartProcess(
         string fileName,
         IEnumerable<string> arguments,
         CopperfinLocalization? localization = null)
     {
         localization ??= CopperfinLocalization.FromEnvironment();
-        var startInfo = new ProcessStartInfo
-        {
-            FileName = fileName,
-            Arguments = string.Join(" ", arguments),
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        CopperfinStudioHostBridge.ApplyLocalizationEnvironment(startInfo, localization);
+        var startInfo = CreateProcessStartInfo(
+            fileName,
+            arguments,
+            localization: localization,
+            createNoWindow: true);
 
         try
         {
@@ -477,6 +496,11 @@ internal static class CopperfinProjectWorkflow
     private static string Quote(string value)
     {
         return "\"" + value.Replace("\"", "\"\"") + "\"";
+    }
+
+    private static string JoinProcessArguments(IEnumerable<string> arguments)
+    {
+        return string.Join(" ", arguments.Select(argument => string.IsNullOrEmpty(argument) ? "\"\"" : argument));
     }
 
     private static bool ShouldEmitDotNetLauncher()

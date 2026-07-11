@@ -24,11 +24,22 @@ internal static class CopperfinProcessRunner
     public static CopperfinCapturedProcessResult Run(ProcessStartInfo startInfo, int? timeoutMilliseconds = null)
     {
         using var process = new Process { StartInfo = startInfo };
-        if (!process.Start())
+        try
+        {
+            if (!process.Start())
+            {
+                return new CopperfinCapturedProcessResult
+                {
+                    Started = false
+                };
+            }
+        }
+        catch (Exception ex)
         {
             return new CopperfinCapturedProcessResult
             {
-                Started = false
+                Started = false,
+                StandardError = ex.Message
             };
         }
 
