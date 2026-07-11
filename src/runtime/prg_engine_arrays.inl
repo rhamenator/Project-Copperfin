@@ -5,7 +5,8 @@
         PrgValue mutate_array_function(
             const std::string &function,
             const std::vector<std::string> &raw_arguments,
-            const std::vector<PrgValue> &arguments)
+            const std::vector<PrgValue> &arguments,
+            const Frame &frame)
         {
             if (raw_arguments.empty())
             {
@@ -24,9 +25,8 @@
                         candidate = evaluated_name;
                     }
                 }
-                if (is_bare_identifier_text(candidate) && !stack.empty())
+                if (is_bare_identifier_text(candidate))
                 {
-                    Frame &frame = stack.back();
                     constexpr std::size_t max_array_name_depth = 16U;
                     std::vector<std::string> visited_identifiers;
                     visited_identifiers.reserve(8U);
@@ -54,7 +54,7 @@
                         candidate = next;
                     }
                 }
-                return candidate;
+                return canonical_array_name(candidate, frame);
             };
             const std::string array_name = resolve_array_argument_name(0U);
             const std::string normalized_function = normalize_identifier(function);

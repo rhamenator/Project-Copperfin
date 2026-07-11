@@ -2105,9 +2105,14 @@
                             position_ = as_start;
                         }
                     }
+                    const std::string raw_argument =
+                        trim_copy(text_.substr(argument_start, argument_end - argument_start));
+                    if (is_bare_identifier_text(raw_argument) && array_exists_callback_(raw_argument))
+                    {
+                        invocation.arguments.back() = array_value_callback_(raw_argument, 1U, 1U);
+                    }
                     invocation.argument_references.push_back(std::nullopt);
-                    invocation.raw_arguments.push_back(
-                        trim_copy(text_.substr(argument_start, argument_end - argument_start)));
+                    invocation.raw_arguments.push_back(raw_argument);
                     skip_whitespace();
                     if (match(")"))
                     {
@@ -2346,6 +2351,10 @@
                     visited_identifiers.reserve(8U);
                     for (std::size_t depth = 0U; depth < max_array_name_depth; ++depth)
                     {
+                        if (array_exists_callback_(candidate))
+                        {
+                            break;
+                        }
                         const std::string normalized = normalize_memory_variable_identifier(candidate);
                         if (std::find(visited_identifiers.begin(), visited_identifiers.end(), normalized) != visited_identifiers.end())
                         {

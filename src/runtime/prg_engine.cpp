@@ -438,6 +438,7 @@ namespace copperfin::runtime
             std::vector<PrgValue> call_arguments;
             std::vector<std::optional<std::string>> call_argument_references;
             std::map<std::string, std::string> parameter_reference_bindings;
+            std::map<std::string, std::string> array_reference_bindings;
             std::set<std::string> local_names;
             std::map<std::string, std::optional<PrgValue>> private_saved_values;
             std::vector<LoopState> loops;
@@ -1058,25 +1059,25 @@ namespace copperfin::runtime
                 const CursorState *current_cursor = preferred_cursor == nullptr ? resolve_cursor_target({}) : preferred_cursor;
                 return resolve_field_value(identifier, current_cursor);
             },
-            [this](const std::string &name)
+            [this, &frame](const std::string &name)
             {
-                return has_array(name);
+                return has_array(name, frame);
             },
-            [this](const std::string &name, int dimension)
+            [this, &frame](const std::string &name, int dimension)
             {
-                return array_length(name, dimension);
+                return array_length(name, dimension, frame);
             },
-            [this](const std::string &name, std::size_t row, std::size_t column)
+            [this, &frame](const std::string &name, std::size_t row, std::size_t column)
             {
-                return array_value(name, row, column);
+                return array_value(name, row, column, frame);
             },
-            [this](const std::string &function, const std::vector<std::string> &raw_arguments, const std::vector<PrgValue> &arguments)
+            [this, &frame](const std::string &function, const std::vector<std::string> &raw_arguments, const std::vector<PrgValue> &arguments)
             {
-                return mutate_array_function(function, raw_arguments, arguments);
+                return mutate_array_function(function, raw_arguments, arguments, frame);
             },
-            [this](const std::string &name)
+            [this, &frame](const std::string &name)
             {
-                return populate_error_array(name);
+                return populate_error_array(canonical_array_name(name, frame));
             },
             [this, &frame](const std::string &function_name, const std::vector<std::string> &raw_arguments)
             {

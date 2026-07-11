@@ -58,6 +58,8 @@ int main() {
     test_expression_level_function_call_assigns_return_value();
     test_expression_level_procedure_call_assigns_return_value();
     test_expression_level_function_call_supports_by_reference_arguments();
+    test_array_parameters_alias_caller_storage_across_nested_function_calls();
+    test_do_and_call_array_parameters_alias_caller_storage();
     test_expression_level_function_call_works_in_if_predicates();
     test_expression_level_function_call_can_chain_nested_user_routines();
     test_set_procedure_registers_external_function_for_expression_calls();

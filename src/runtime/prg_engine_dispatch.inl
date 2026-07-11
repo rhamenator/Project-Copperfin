@@ -1113,6 +1113,14 @@
                                     continue;
                                 }
                             }
+                            if (is_bare_identifier_text(argument_expression) &&
+                                (std::isalpha(static_cast<unsigned char>(argument_expression.front())) != 0 ||
+                                 argument_expression.front() == '_'))
+                            {
+                                call_arguments.push_back(lookup_variable(frame, argument_expression));
+                                call_argument_references.push_back(argument_expression);
+                                continue;
+                            }
                             call_arguments.push_back(evaluate_expression(argument_expression, frame));
                             call_argument_references.push_back(std::nullopt);
                         }
@@ -1479,6 +1487,14 @@
                                         call_argument_references.push_back(reference_name);
                                         continue;
                                     }
+                                }
+                                if (is_bare_identifier_text(argument_expression) &&
+                                    (std::isalpha(static_cast<unsigned char>(argument_expression.front())) != 0 ||
+                                     argument_expression.front() == '_'))
+                                {
+                                    call_arguments.push_back(lookup_variable(frame, argument_expression));
+                                    call_argument_references.push_back(argument_expression);
+                                    continue;
                                 }
                                 call_arguments.push_back(evaluate_expression(argument_expression, frame));
                                 call_argument_references.push_back(std::nullopt);
@@ -4100,7 +4116,16 @@
                     }
                     if (index < frame.call_argument_references.size() && frame.call_argument_references[index].has_value())
                     {
-                        frame.parameter_reference_bindings[normalized] = *frame.call_argument_references[index];
+                        const std::string &reference_name = *frame.call_argument_references[index];
+                        Frame *caller = stack.size() >= 2U ? &stack[stack.size() - 2U] : nullptr;
+                        if (caller != nullptr && find_array(reference_name, *caller) != nullptr)
+                        {
+                            frame.array_reference_bindings[normalized] = canonical_array_name(reference_name, *caller);
+                        }
+                        else
+                        {
+                            frame.parameter_reference_bindings[normalized] = reference_name;
+                        }
                     }
                 }
                 return {};
@@ -5029,7 +5054,7 @@
                             values.push_back(parse_memvar_value(element_type, element_text));
                         }
                         values.resize(rows * columns);
-                        arrays[name] = RuntimeArray{.rows = rows, .columns = columns, .values = std::move(values)};
+                        assign_array(name, std::move(values), columns);
                     }
                     else
                     {

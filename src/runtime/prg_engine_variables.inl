@@ -27,21 +27,52 @@
             return {};
         }
 
+        std::string canonical_array_name(const std::string &name, const Frame &frame) const
+        {
+            const std::string normalized = normalize_memory_variable_identifier(name);
+            const auto binding = frame.array_reference_bindings.find(normalized);
+            return binding == frame.array_reference_bindings.end() ? normalized : binding->second;
+        }
+
+        std::string canonical_array_name(const std::string &name) const
+        {
+            return stack.empty()
+                       ? normalize_memory_variable_identifier(name)
+                       : canonical_array_name(name, stack.back());
+        }
+
         RuntimeArray *find_array(const std::string &name)
         {
-            const auto found = arrays.find(normalize_memory_variable_identifier(name));
+            const auto found = arrays.find(canonical_array_name(name));
             return found == arrays.end() ? nullptr : &found->second;
         }
 
         const RuntimeArray *find_array(const std::string &name) const
         {
-            const auto found = arrays.find(normalize_memory_variable_identifier(name));
+            const auto found = arrays.find(canonical_array_name(name));
+            return found == arrays.end() ? nullptr : &found->second;
+        }
+
+        RuntimeArray *find_array(const std::string &name, const Frame &frame)
+        {
+            const auto found = arrays.find(canonical_array_name(name, frame));
+            return found == arrays.end() ? nullptr : &found->second;
+        }
+
+        const RuntimeArray *find_array(const std::string &name, const Frame &frame) const
+        {
+            const auto found = arrays.find(canonical_array_name(name, frame));
             return found == arrays.end() ? nullptr : &found->second;
         }
 
         bool has_array(const std::string &name) const
         {
             return find_array(name) != nullptr;
+        }
+
+        bool has_array(const std::string &name, const Frame &frame) const
+        {
+            return find_array(name, frame) != nullptr;
         }
 
         std::size_t array_length(const std::string &name, int dimension) const
@@ -62,9 +93,42 @@
             return array->values.size();
         }
 
+        std::size_t array_length(const std::string &name, int dimension, const Frame &frame) const
+        {
+            const RuntimeArray *array = find_array(name, frame);
+            if (array == nullptr)
+            {
+                return 0U;
+            }
+            if (dimension == 1)
+            {
+                return array->rows;
+            }
+            if (dimension == 2)
+            {
+                return array->columns;
+            }
+            return array->values.size();
+        }
+
         PrgValue array_value(const std::string &name, std::size_t row, std::size_t column = 1U) const
         {
             const RuntimeArray *array = find_array(name);
+            if (array == nullptr || row == 0U || column == 0U || row > array->rows || column > array->columns)
+            {
+                return make_empty_value();
+            }
+            const std::size_t index = ((row - 1U) * array->columns) + (column - 1U);
+            return index < array->values.size() ? array->values[index] : make_empty_value();
+        }
+
+        PrgValue array_value(
+            const std::string &name,
+            std::size_t row,
+            std::size_t column,
+            const Frame &frame) const
+        {
+            const RuntimeArray *array = find_array(name, frame);
             if (array == nullptr || row == 0U || column == 0U || row > array->rows || column > array->columns)
             {
                 return make_empty_value();
@@ -108,7 +172,7 @@
             array.rows = values.empty() ? 0U : ((values.size() + columns - 1U) / columns);
             array.values = std::move(values);
             array.values.resize(array.rows * array.columns);
-            arrays[normalize_memory_variable_identifier(name)] = std::move(array);
+            arrays[canonical_array_name(name)] = std::move(array);
         }
 
         bool parse_array_reference(
