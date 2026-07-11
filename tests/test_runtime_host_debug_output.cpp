@@ -58,6 +58,12 @@ std::string quote_manifest_value(const std::string& value) {
     return escaped;
 }
 
+std::string canonical_existing_path_string(const std::filesystem::path& path) {
+    std::error_code error;
+    const std::filesystem::path canonical_path = std::filesystem::canonical(path, error);
+    return error ? path.lexically_normal().string() : canonical_path.string();
+}
+
 void write_synthetic_database_index(const std::filesystem::path& path) {
     std::vector<std::uint8_t> bytes(16U * 512U, 0U);
     const auto write_le_u16 = [&](std::size_t offset, std::uint16_t value) {
@@ -1486,13 +1492,14 @@ void test_runtime_host_supports_breakpoint_management_commands(const std::string
         "nValue = 1\n"
         "nValue = 2\n"
         "RETURN\n");
+    const std::string expected_startup_path = canonical_existing_path_string(startup_path);
     write_text(
         manifest_path,
         "manifest_version=1\n"
         "project_title=BreakpointDemo\n"
         "startup_item=main.prg\n"
-        "startup_source=" + startup_path.string() + "\n"
-        "working_directory=" + temp_root.string() + "\n"
+        "startup_source=" + quote_manifest_value(startup_path.string()) + "\n"
+        "working_directory=" + quote_manifest_value(temp_root.string()) + "\n"
         "security_enabled=false\n"
         "security_role=\n"
         "security_mode=native\n"
@@ -1527,7 +1534,7 @@ void test_runtime_host_supports_breakpoint_management_commands(const std::string
            "runtime host should report breakpoint clear commands");
     expect(process.stdout_text.find("debug.breakpoint.count: 1") != std::string::npos,
            "runtime host should report one active breakpoint after add");
-    expect(process.stdout_text.find("debug.breakpoint[0]: " + startup_path.string() + ":2") != std::string::npos,
+    expect(process.stdout_text.find("debug.breakpoint[0]: " + expected_startup_path + ":2") != std::string::npos,
            "runtime host should list the added breakpoint against the startup source");
     expect(process.stdout_text.find("debug.breakpoint.count: 0") != std::string::npos,
            "runtime host should report an empty breakpoint inventory after clear");
@@ -1535,7 +1542,7 @@ void test_runtime_host_supports_breakpoint_management_commands(const std::string
            "runtime host should continue after breakpoint management commands");
     expect(process.stdout_text.find("debug.reason: breakpoint") != std::string::npos,
            "runtime host should still pause on the live managed breakpoint");
-    expect(process.stdout_text.find("debug.location: " + startup_path.string() + ":3") != std::string::npos,
+    expect(process.stdout_text.find("debug.location: " + expected_startup_path + ":3") != std::string::npos,
            "runtime host should break on the breakpoint added after clear");
 
     if (failures == 0) {
@@ -1559,13 +1566,14 @@ void test_runtime_host_supports_single_breakpoint_removal(const std::string& run
         "nValue = 1\n"
         "nValue = 2\n"
         "RETURN\n");
+    const std::string expected_startup_path = canonical_existing_path_string(startup_path);
     write_text(
         manifest_path,
         "manifest_version=1\n"
         "project_title=BreakpointRemoveDemo\n"
         "startup_item=main.prg\n"
-        "startup_source=" + startup_path.string() + "\n"
-        "working_directory=" + temp_root.string() + "\n"
+        "startup_source=" + quote_manifest_value(startup_path.string()) + "\n"
+        "working_directory=" + quote_manifest_value(temp_root.string()) + "\n"
         "security_enabled=false\n"
         "security_role=\n"
         "security_mode=native\n"
@@ -1595,15 +1603,15 @@ void test_runtime_host_supports_single_breakpoint_removal(const std::string& run
            "runtime host should report breakpoint remove commands");
     expect(process.stdout_text.find("debug.command[3]: break:list") != std::string::npos,
            "runtime host should report breakpoint list after removal");
-    expect(process.stdout_text.find("debug.breakpoint[0]: " + startup_path.string() + ":2") != std::string::npos,
+    expect(process.stdout_text.find("debug.breakpoint[0]: " + expected_startup_path + ":2") != std::string::npos,
            "runtime host should initially register the first breakpoint before removal");
-    expect(process.stdout_text.find("debug.breakpoint[1]: " + startup_path.string() + ":3") != std::string::npos,
+    expect(process.stdout_text.find("debug.breakpoint[1]: " + expected_startup_path + ":3") != std::string::npos,
            "runtime host should initially register the second breakpoint before removal");
-    expect(process.stdout_text.find("debug.breakpoint[0]: " + startup_path.string() + ":3") != std::string::npos,
+    expect(process.stdout_text.find("debug.breakpoint[0]: " + expected_startup_path + ":3") != std::string::npos,
            "runtime host should retain the unrelated breakpoint after single removal");
     expect(process.stdout_text.find("debug.reason: breakpoint") != std::string::npos,
            "runtime host should still pause on the remaining breakpoint");
-    expect(process.stdout_text.find("debug.location: " + startup_path.string() + ":3") != std::string::npos,
+    expect(process.stdout_text.find("debug.location: " + expected_startup_path + ":3") != std::string::npos,
            "runtime host should pause on the surviving breakpoint after removing the earlier line");
 
     if (failures == 0) {
