@@ -3372,17 +3372,17 @@ VisualAssetEditResult update_visual_object_properties(const VisualObjectMultiEdi
         return {.ok = true, .error = {}, .affected_object_count = 1U};
     }
 
-    return apply_visual_object_batch_update(
-        request.path,
-        {
+    return update_visual_object_batch({
+        .path = request.path,
+        .objects = {
             {
                 .record_index = request.record_index,
                 .object_name = request.object_name,
                 .unique_id = request.unique_id,
                 .properties = request.properties
             }
-        },
-        1U);
+        }
+    });
 }
 
 VisualAssetEditResult update_visual_object_batch(const VisualObjectBatchEditRequest& request) {
@@ -3433,7 +3433,19 @@ VisualAssetEditResult update_visual_object_batch(const VisualObjectBatchEditRequ
         return {.ok = true, .error = {}, .affected_object_count = request.objects.size()};
     }
 
-    return apply_visual_object_batch_update(request.path, request.objects, request.objects.size());
+    std::vector<VisualObjectBatchEditItem> expanded_objects;
+    const auto expansion_result = expand_report_section_top_batch_updates(
+        request.path,
+        request.objects,
+        expanded_objects);
+    if (!expansion_result.ok) {
+        return expansion_result;
+    }
+
+    return apply_visual_object_batch_update(
+        request.path,
+        expanded_objects,
+        request.objects.size());
 }
 
 }  // namespace copperfin::vfp

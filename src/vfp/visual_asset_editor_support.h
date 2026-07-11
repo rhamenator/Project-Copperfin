@@ -160,6 +160,10 @@ VisualAssetEditResult apply_visual_object_property_change(
     const VisualObjectEditRequest& request,
     bool record_undo_entry,
     bool remove_property_if_missing);
+VisualAssetEditResult expand_report_section_top_batch_updates(
+    const std::string& path,
+    const std::vector<VisualObjectBatchEditItem>& objects,
+    std::vector<VisualObjectBatchEditItem>& expanded_objects);
 VisualAssetEditResult set_visual_object_text_property(
     const std::string& path,
     const std::vector<VisualObjectAlignmentTarget>& objects,

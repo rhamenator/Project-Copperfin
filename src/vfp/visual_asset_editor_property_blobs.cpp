@@ -5,6 +5,7 @@
 #include "visual_asset_editor_support.h"
 
 #include <limits>
+#include <set>
 
 namespace copperfin::vfp {
 namespace {
@@ -383,6 +384,109 @@ std::optional<VisualObjectBatchEditRequest> build_section_top_batch_update(
 }
 
 }  // namespace
+
+VisualAssetEditResult expand_report_section_top_batch_updates(
+    const std::string& path,
+    const std::vector<VisualObjectBatchEditItem>& objects,
+    std::vector<VisualObjectBatchEditItem>& expanded_objects) {
+    expanded_objects = objects;
+    if (!is_report_layout_asset_path(path)) {
+        return {.ok = true, .error = {}};
+    }
+
+    const auto table_result = parse_dbf_table_from_file(
+        path,
+        std::numeric_limits<std::size_t>::max());
+    if (!table_result.ok) {
+        return {.ok = false, .error = table_result.error};
+    }
+
+    struct ResolvedBatchProperty {
+        std::size_t record_index = 0U;
+        VisualObjectEditRequest request;
+    };
+
+    using PropertyKey = std::pair<std::size_t, std::string>;
+    std::vector<ResolvedBatchProperty> resolved_properties;
+    std::set<PropertyKey> explicitly_requested_properties;
+    for (const auto& object : objects) {
+        for (const auto& property : object.properties) {
+            VisualObjectEditRequest edit_request{
+                .path = path,
+                .record_index = object.record_index,
+                .object_name = object.object_name,
+                .unique_id = object.unique_id,
+                .property_name = property.property_name,
+                .property_value = property.property_value
+            };
+            std::size_t record_index = 0U;
+            const auto resolution = resolve_visual_object_record_index(edit_request, record_index);
+            if (!resolution.ok) {
+                return resolution;
+            }
+
+            resolved_properties.push_back({record_index, std::move(edit_request)});
+            explicitly_requested_properties.emplace(
+                record_index,
+                normalize_visual_property_name(property.property_name));
+        }
+    }
+
+    std::vector<VisualObjectBatchEditItem> generated_updates;
+    std::set<PropertyKey> generated_properties;
+    std::set<PropertyKey> processed_section_properties;
+    for (auto it = resolved_properties.rbegin(); it != resolved_properties.rend(); ++it) {
+        const std::string normalized_property_name =
+            normalize_visual_property_name(it->request.property_name);
+        const PropertyKey section_key{it->record_index, normalized_property_name};
+        if (normalized_property_name != "vpos" ||
+            it->record_index >= table_result.table.records.size() ||
+            !is_report_band_record(table_result.table.records[it->record_index]) ||
+            !processed_section_properties.insert(section_key).second) {
+            continue;
+        }
+
+        const auto section_batch = build_section_top_batch_update(
+            it->request,
+            table_result.table,
+            it->record_index);
+        if (!section_batch.has_value()) {
+            continue;
+        }
+
+        for (const auto& generated_object : section_batch->objects) {
+            for (const auto& generated_property : generated_object.properties) {
+                const PropertyKey generated_key{
+                    generated_object.record_index,
+                    normalize_visual_property_name(generated_property.property_name)
+                };
+                if (explicitly_requested_properties.contains(generated_key) ||
+                    !generated_properties.insert(generated_key).second) {
+                    continue;
+                }
+
+                generated_updates.push_back({
+                    .record_index = generated_object.record_index,
+                    .object_name = {},
+                    .unique_id = {},
+                    .properties = {generated_property}
+                });
+            }
+        }
+    }
+
+    if (!generated_updates.empty()) {
+        expanded_objects.clear();
+        expanded_objects.reserve(generated_updates.size() + objects.size());
+        expanded_objects.insert(
+            expanded_objects.end(),
+            std::make_move_iterator(generated_updates.begin()),
+            std::make_move_iterator(generated_updates.end()));
+        expanded_objects.insert(expanded_objects.end(), objects.begin(), objects.end());
+    }
+
+    return {.ok = true, .error = {}};
+}
 
 VisualAssetEditResult find_unique_visual_property_assignment_index(
     const std::vector<VisualPropertyAssignment>& assignments,
