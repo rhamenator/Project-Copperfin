@@ -38,6 +38,61 @@ namespace {
 
 using namespace copperfin::test_support;
 
+void test_runtime_session_options_contain_temporary_files() {
+    namespace fs = std::filesystem;
+    const fs::path fixture_root = fs::absolute(fs::temp_directory_path() / "copperfin_prg_engine_options");
+    std::error_code ignored;
+    fs::remove_all(fixture_root, ignored);
+    fs::create_directories(fixture_root / "process-working-directory");
+    const fs::path startup_path = fixture_root / "main.prg";
+
+    const auto implicit_options = make_runtime_session_options(startup_path, fs::path{});
+    expect(implicit_options.working_directory.empty(),
+           "empty working directory should remain empty in runtime session options");
+    expect(fs::path(implicit_options.temp_directory) == fixture_root / "runtime-temp",
+           "empty working directory should keep runtime temp files under the absolute startup fixture root");
+    expect(fs::path(implicit_options.temp_directory).is_absolute(),
+           "empty working directory should never produce a process-relative runtime temp path");
+
+    const auto fallback_options = make_runtime_session_options(fs::path("main.prg"), fs::path{});
+    const fs::path expected_fallback = fs::absolute(fs::temp_directory_path()) /
+        "copperfin-prg-engine-tests" / "runtime-temp";
+    expect(fs::path(fallback_options.temp_directory) == expected_fallback,
+           "relative startup path should use the named Copperfin test area under the absolute OS temp directory");
+
+    const fs::path explicit_working_directory = "relative-test-working-directory";
+    const auto explicit_options = make_runtime_session_options(startup_path, explicit_working_directory);
+    expect(fs::path(explicit_options.working_directory) == explicit_working_directory,
+           "explicit working directory should remain unchanged in runtime session options");
+    expect(fs::path(explicit_options.temp_directory) == explicit_working_directory / "runtime-temp",
+           "explicit working directory should retain its existing runtime temp path behavior");
+
+    const fs::path table_path = fixture_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}});
+    write_text(
+        startup_path,
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "REPLACE NAME WITH 'CHANGED'\n"
+        "UNDO\n"
+        "RETURN\n");
+
+    const fs::path original_process_directory = fs::current_path();
+    const fs::path simulated_process_directory = fixture_root / "process-working-directory";
+    fs::current_path(simulated_process_directory);
+    {
+        auto session = copperfin::runtime::PrgRuntimeSession::create(implicit_options);
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "empty-working-directory command-undo fixture should complete");
+        expect(has_runtime_event(state.events, "runtime.command_undo", "LATEST"),
+               "empty-working-directory fixture should exercise command-undo journal creation and replay");
+    }
+    fs::current_path(original_process_directory);
+
+    expect(!fs::exists(simulated_process_directory / "runtime-temp"),
+           "empty working directory should not create runtime-temp under the process working directory");
+    fs::remove_all(fixture_root, ignored);
+}
+
 void test_verified_startup_source_text_overrides_changed_disk_source() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_verified_source";
@@ -1703,6 +1758,7 @@ void test_transaction_processing_txnlevel_and_sessions() {
 }  // namespace
 
 int main() {
+    test_runtime_session_options_contain_temporary_files();
     test_verified_startup_source_text_overrides_changed_disk_source();
     test_read_events_pause();
     test_activate_popup_pause();

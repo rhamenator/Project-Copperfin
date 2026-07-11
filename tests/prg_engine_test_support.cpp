@@ -264,7 +264,14 @@ copperfin::runtime::RuntimeSessionOptions make_runtime_session_options(
     options.startup_path = startup_path.string();
     options.working_directory = working_directory.string();
     options.stop_on_entry = stop_on_entry;
-    options.temp_directory = (working_directory / "runtime-temp").string();
+    std::filesystem::path temp_owner = working_directory;
+    if (temp_owner.empty()) {
+        const std::filesystem::path startup_parent = startup_path.parent_path();
+        temp_owner = startup_parent.is_absolute()
+            ? startup_parent
+            : std::filesystem::absolute(std::filesystem::temp_directory_path()) / "copperfin-prg-engine-tests";
+    }
+    options.temp_directory = (temp_owner / "runtime-temp").string();
     return options;
 }
 
