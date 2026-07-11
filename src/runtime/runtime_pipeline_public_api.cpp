@@ -847,9 +847,12 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
             materialized_plan.warnings.push_back(error);
             continue;
         }
-        const auto copied_companions =
+        const auto companion_copy_result =
             copy_companion_files_if_present(asset, materialized_plan.warnings);
-        for (const auto& companion : copied_companions) {
+        if (!companion_copy_result.ok) {
+            return {.ok = false, .error = companion_copy_result.error};
+        }
+        for (const auto& companion : companion_copy_result.copied_paths) {
             auto& digest_surface = asset.package_writable
                 ? materialized_plan.writable_data_payload_digests
                 : materialized_plan.extension_payload_digests;

@@ -20,6 +20,23 @@ void expect_manifest_reports_startup_asset_copied(
         message);
 }
 
+bool directory_has_exact_filename(
+    const std::filesystem::path& directory,
+    const std::string& file_name) {
+    std::error_code error;
+    for (std::filesystem::directory_iterator it(directory, error), end;
+         it != end;
+         it.increment(error)) {
+        if (error) {
+            return false;
+        }
+        if (it->path().filename().string() == file_name) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void run_xasset_startup_companion_stage_smoke(
     const std::string& temp_name,
     const std::string& startup_name,
@@ -441,6 +458,10 @@ void test_uppercase_xasset_companion_assets_are_staged() {
     write_text(project_dir / "library.VCT", "synthetic uppercase class library memo");
     write_text(project_dir / "menu.mnx", "synthetic menu table");
     write_text(project_dir / "menu.MNT", "synthetic uppercase menu memo");
+    write_text(project_dir / "report.frx", "synthetic report table");
+    write_text(project_dir / "Report.FRT", "synthetic uppercase report memo");
+    write_text(project_dir / "label.lbx", "synthetic label table");
+    write_text(project_dir / "Label.LBT", "synthetic uppercase label memo");
     write_text(runtime_host, "runtime-host");
 
     copperfin::studio::StudioDocumentModel document;
@@ -459,7 +480,9 @@ void test_uppercase_xasset_companion_assets_are_staged() {
     workspace.entries = {
         {.record_index = 1U, .name = "startup.scx", .relative_path = "startup.scx", .type_title = "Form", .excluded = true},
         {.record_index = 2U, .name = "library.vcx", .relative_path = "library.vcx", .type_title = "Class Library", .excluded = false},
-        {.record_index = 3U, .name = "menu.mnx", .relative_path = "menu.mnx", .type_title = "Menu", .excluded = false}
+        {.record_index = 3U, .name = "menu.mnx", .relative_path = "menu.mnx", .type_title = "Menu", .excluded = false},
+        {.record_index = 4U, .name = "report.frx", .relative_path = "report.frx", .type_title = "Report", .excluded = false},
+        {.record_index = 5U, .name = "label.lbx", .relative_path = "label.lbx", .type_title = "Label", .excluded = false}
     };
 
     const auto plan = copperfin::runtime::create_runtime_package_plan(
@@ -484,34 +507,112 @@ void test_uppercase_xasset_companion_assets_are_staged() {
     if (result.ok) {
         const fs::path content_root(result.plan.content_root);
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
+        const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
         expect(fs::exists(content_root / "startup.scx"), "xasset startup should be staged");
-        expect(fs::exists(content_root / "startup.SCT"),
-               "#3510: runtime packaging should stage uppercase SCX memo companions with resolved source casing");
-        expect(!fs::exists(content_root / "startup.sct"),
-               "#3510: runtime packaging should not rewrite uppercase SCX companion names to lowercase during staging");
-        expect(fs::exists(content_root / "library.VCT"),
-               "#3877: runtime packaging should stage uppercase VCX memo companions with resolved source casing");
-        expect(!fs::exists(content_root / "library.vct"),
-               "#3877: runtime packaging should not rewrite uppercase VCX companion names during staging");
-        expect(fs::exists(content_root / "menu.MNT"),
-               "#3877: runtime packaging should stage uppercase MNX memo companions with resolved source casing");
-        expect(!fs::exists(content_root / "menu.mnt"),
-               "#3877: runtime packaging should not rewrite uppercase MNX companion names during staging");
-        expect(
-            runtime_manifest.find(
-                "extension_payload=" + (content_root / "startup.SCT").string() + "|") !=
-                std::string::npos,
-            "#3877: runtime packaging should digest uppercase SCX companions using their staged casing");
-        expect(
-            runtime_manifest.find(
-                "extension_payload=" + (content_root / "library.VCT").string() + "|") !=
-                std::string::npos,
-            "#3877: runtime packaging should digest uppercase VCX companions using their staged casing");
-        expect(
-            runtime_manifest.find(
-                "extension_payload=" + (content_root / "menu.MNT").string() + "|") !=
-                std::string::npos,
-            "#3877: runtime packaging should digest uppercase MNX companions using their staged casing");
+        for (const auto& [actual_name, inferred_name] : {
+                 std::pair{"startup.SCT", "startup.sct"},
+                 std::pair{"library.VCT", "library.vct"},
+                 std::pair{"menu.MNT", "menu.mnt"},
+                 std::pair{"Report.FRT", "report.frt"},
+                 std::pair{"Label.LBT", "label.lbt"}}) {
+            expect(directory_has_exact_filename(content_root, actual_name),
+                   std::string("#3905: package should preserve exact xAsset companion filename: ") + actual_name);
+            expect(!directory_has_exact_filename(content_root, inferred_name),
+                   std::string("#3905: package should not stage inferred lowercase xAsset filename: ") + inferred_name);
+            const std::string marker =
+                "extension_payload=" + (content_root / actual_name).string() + "|";
+            expect(runtime_manifest.find(marker) != std::string::npos,
+                   std::string("#3905: runtime manifest should preserve xAsset companion path: ") + actual_name);
+            expect(debug_manifest.find(marker) != std::string::npos,
+                   std::string("#3905: debug manifest should preserve xAsset companion path: ") + actual_name);
+        }
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_ambiguous_casefold_xasset_companions_fail_closed() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_runtime_pipeline_ambiguous_xasset_companions";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    write_text(project_dir / "startup.scx", "synthetic form table");
+    write_text(project_dir / "startup.SCT", "first ambiguous memo");
+    write_text(project_dir / "startup.ScT", "second ambiguous memo");
+    write_text(runtime_host, "runtime-host");
+    if (!directory_has_exact_filename(project_dir, "startup.SCT") ||
+        !directory_has_exact_filename(project_dir, "startup.ScT")) {
+        fs::remove_all(temp_root, ignored);
+        return;
+    }
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "ambiguous_form_demo.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "AmbiguousFormCompanionDemo";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "AmbiguousFormCompanionDemo";
+    workspace.build_plan.output_path = (output_dir / "AmbiguousFormCompanionDemo.exe").string();
+    workspace.build_plan.startup_item = "startup.scx";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "startup.scx", .relative_path = "startup.scx", .type_title = "Form", .excluded = true}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false);
+    expect(plan.ok, "ambiguous xAsset companion runtime package plan should be created");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+    const fs::path inferred_path = project_dir / "startup.sct";
+    expect(!result.ok, "#3905: ambiguous casefold companion matches should fail package materialization");
+    expect(
+        result.error == runtime_pipeline_english_catalog().translate(
+            "Runtime.Package.Error.AmbiguousCompanionPath",
+            {{"path", inferred_path.string()}}),
+        "#3905: ambiguous casefold companion failures should use the localized package diagnostic");
+
+    write_text(project_dir / "startup.sct", "exact memo");
+    const auto exact_result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+    expect(exact_result.ok,
+           "#3905: an exact companion filename should win over coexisting casefold matches");
+    if (exact_result.ok) {
+        const fs::path content_root(exact_result.plan.content_root);
+        expect(directory_has_exact_filename(content_root, "startup.sct"),
+               "#3905: exact-match precedence should preserve the exact companion filename");
+        expect(read_text(content_root / "startup.sct") == "exact memo",
+               "#3905: exact-match precedence should copy the exact companion bytes");
+        const std::string marker =
+            "extension_payload=" + (content_root / "startup.sct").string() + "|";
+        expect(read_text(exact_result.plan.manifest_path).find(marker) != std::string::npos,
+               "#3905: exact companion runtime digest should use the exact path");
+        expect(read_text(exact_result.plan.debug_manifest_path).find(marker) != std::string::npos,
+               "#3905: exact companion debug digest should use the exact path");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -750,7 +851,10 @@ void test_startup_dbf_companion_assets_are_staged() {
 
     write_text(project_dir / "startup.dbf", "synthetic dbf");
     write_text(project_dir / "startup.fpt", "synthetic memo");
-    write_text(project_dir / "startup.cdx", "synthetic index");
+    write_text(project_dir / "startup.cdx", "synthetic structural index");
+    write_text(project_dir / "startup.idx", "synthetic compact index");
+    write_text(project_dir / "startup.ndx", "synthetic single-tag index");
+    write_text(project_dir / "startup.mdx", "synthetic multiple-tag index");
     write_text(runtime_host, "runtime-host");
 
     copperfin::studio::StudioDocumentModel document;
@@ -792,24 +896,28 @@ void test_startup_dbf_companion_assets_are_staged() {
     if (result.ok) {
         const std::filesystem::path content_root(result.plan.content_root);
         const std::string runtime_manifest = read_text(result.plan.manifest_path);
+        const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
         expect(fs::exists(content_root / "startup.dbf"), "startup DBF should be staged even when marked excluded");
-        expect(fs::exists(content_root / "startup.fpt"), "startup DBF memo companion should be staged");
-        expect(fs::exists(content_root / "startup.cdx"), "startup DBF index companion should be staged");
+        for (const auto* companion : {
+                 "startup.fpt", "startup.cdx", "startup.idx", "startup.ndx", "startup.mdx"}) {
+            expect(fs::exists(content_root / companion),
+                   std::string("startup DBF companion should be staged: ") + companion);
+            expect(
+                runtime_manifest.find(
+                    "extension_payload=" + (content_root / companion).string() + "|") !=
+                    std::string::npos,
+                std::string("runtime manifest should digest the staged startup DBF companion: ") + companion);
+            expect(
+                debug_manifest.find(
+                    "extension_payload=" + (content_root / companion).string() + "|") !=
+                    std::string::npos,
+                std::string("debug manifest should digest the staged startup DBF companion: ") + companion);
+        }
         expect(
             runtime_manifest.find("asset=1|startup.dbf|") != std::string::npos &&
             runtime_manifest.find("asset=1|startup.dbf|") < runtime_manifest.find("|true|true|") &&
             runtime_manifest.find("|true|true|", runtime_manifest.find("asset=1|startup.dbf|")) != std::string::npos,
             "runtime manifest should report the startup DBF asset as copied");
-        expect(
-            runtime_manifest.find(
-                "extension_payload=" + (content_root / "startup.fpt").string() + "|") !=
-                std::string::npos,
-            "runtime manifest should digest the staged memo companion");
-        expect(
-            runtime_manifest.find(
-                "extension_payload=" + (content_root / "startup.cdx").string() + "|") !=
-                std::string::npos,
-            "runtime manifest should digest the staged index companion");
     }
 
     fs::remove_all(temp_root, ignored);
@@ -827,7 +935,10 @@ void test_uppercase_dbf_companion_assets_are_staged() {
 
     write_text(project_dir / "startup.dbf", "synthetic dbf");
     write_text(project_dir / "startup.FPT", "synthetic uppercase memo");
-    write_text(project_dir / "startup.CDX", "synthetic uppercase index");
+    write_text(project_dir / "startup.CDX", "synthetic uppercase structural index");
+    write_text(project_dir / "startup.IDX", "synthetic uppercase compact index");
+    write_text(project_dir / "startup.NDX", "synthetic uppercase single-tag index");
+    write_text(project_dir / "startup.MDX", "synthetic uppercase multiple-tag index");
     write_text(runtime_host, "runtime-host");
 
     copperfin::studio::StudioDocumentModel document;
@@ -868,15 +979,31 @@ void test_uppercase_dbf_companion_assets_are_staged() {
     expect(result.ok, "uppercase dbf companion runtime package should materialize");
     if (result.ok) {
         const fs::path content_root(result.plan.content_root);
+        const std::string runtime_manifest = read_text(result.plan.manifest_path);
+        const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
         expect(fs::exists(content_root / "startup.dbf"), "startup DBF should be staged");
-        expect(fs::exists(content_root / "startup.FPT"),
-               "#3510: runtime packaging should stage uppercase DBF memo companions with resolved source casing");
-        expect(fs::exists(content_root / "startup.CDX"),
-               "#3510: runtime packaging should stage uppercase DBF index companions with resolved source casing");
-        expect(!fs::exists(content_root / "startup.fpt"),
-               "#3510: runtime packaging should not rewrite uppercase DBF memo companion names to lowercase during staging");
-        expect(!fs::exists(content_root / "startup.cdx"),
-               "#3510: runtime packaging should not rewrite uppercase DBF index companion names to lowercase during staging");
+        for (const auto* companion : {
+                 "startup.FPT", "startup.CDX", "startup.IDX", "startup.NDX", "startup.MDX"}) {
+            expect(directory_has_exact_filename(content_root, companion),
+                   std::string("#3905: runtime packaging should preserve exact DBF companion filename: ") + companion);
+            const std::string marker =
+                "extension_payload=" + (content_root / companion).string() + "|";
+            expect(
+                runtime_manifest.find(marker) != std::string::npos,
+                std::string("#3905: runtime manifest should preserve uppercase startup DBF companion digest path: ") + companion);
+            expect(
+                debug_manifest.find(marker) != std::string::npos,
+                std::string("#3905: debug manifest should preserve uppercase startup DBF companion digest path: ") + companion);
+
+            std::string lowercase_companion = companion;
+            std::transform(
+                lowercase_companion.begin(),
+                lowercase_companion.end(),
+                lowercase_companion.begin(),
+                [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+            expect(!directory_has_exact_filename(content_root, lowercase_companion),
+                   std::string("#3905: runtime packaging should not lowercase DBF companion: ") + companion);
+        }
     }
 
     fs::remove_all(temp_root, ignored);
@@ -983,6 +1110,8 @@ void test_writable_dbf_assets_use_data_manifest_surface_and_dbc_stays_immutable(
                 "extension_payload=" + (content_root / companion).string() + "|";
             expect(runtime_manifest.find(marker) != std::string::npos,
                    std::string("DBC companion should remain on the immutable extension surface: ") + companion);
+            expect(debug_manifest.find(marker) != std::string::npos,
+                   std::string("debug manifest should preserve immutable DBC companion path: ") + companion);
         }
         expect(result.plan.writable_data_payload_digests.size() == 5U,
                "writable DBF companions should remain separate from immutable DBC extension digests");

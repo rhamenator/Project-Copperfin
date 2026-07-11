@@ -511,6 +511,7 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
         "Runtime.Package.Launcher.Error.RuntimeHostStartFailed",
         "Runtime.Package.Transpilation.Error.ManualPortRequiredForXAssetMethod",
         "Runtime.Package.Transpilation.Error.UnsupportedFoxProStatement",
+        "Runtime.Package.Error.AmbiguousCompanionPath",
         "Runtime.Package.Error.CopyFileFailed",
         "Runtime.Package.Error.CreateContentRootFailed",
         "Runtime.Package.Error.CreateDirectoryFailed",
@@ -601,6 +602,12 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
             "Source file does not exist: missing.prg",
         "#2390: runtime package diagnostics should preserve path placeholders");
     expect(
+        english_catalog.translate(
+            "Runtime.Package.Error.AmbiguousCompanionPath",
+            {{"path", "forms/customer.sct"}}) ==
+            "Multiple case-insensitive companion files match: forms/customer.sct",
+        "#3905: ambiguous companion diagnostics should preserve path placeholders");
+    expect(
         spanish_catalog.translate("Runtime.Package.Error.PlanInvalid") ==
             "El plan del paquete no es valido.",
         "#2606: runtime package invalid-plan diagnostics should resolve through the es-419 catalog");
@@ -616,6 +623,14 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
         pseudo_catalog.translate("Runtime.Package.Error.PlanInvalid") !=
             english_catalog.translate("Runtime.Package.Error.PlanInvalid"),
         "#2390: runtime package diagnostics should be pseudo-localizable");
+    expect(
+        pseudo_catalog.translate(
+            "Runtime.Package.Error.AmbiguousCompanionPath",
+            {{"path", "forms/customer.sct"}}) !=
+            english_catalog.translate(
+                "Runtime.Package.Error.AmbiguousCompanionPath",
+                {{"path", "forms/customer.sct"}}),
+        "#3905: ambiguous companion diagnostics should be pseudo-localizable");
     expect(
         pseudo_catalog.translate("Runtime.Package.Error.PlanInvalid") ==
             copperfin::localization::pseudo_localize("Package plan is not valid."),

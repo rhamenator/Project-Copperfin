@@ -11,6 +11,7 @@ int main() {
     test_generated_launcher_forwards_manifest_and_debug_flag();
     test_materialize_excluded_xasset_startup_package();
     test_uppercase_xasset_companion_assets_are_staged();
+    test_ambiguous_casefold_xasset_companions_fail_closed();
     test_form_startup_assets_are_staged();
     test_class_library_startup_assets_are_staged();
     test_menu_startup_assets_are_staged();
