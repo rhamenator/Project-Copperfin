@@ -2507,14 +2507,36 @@ void test_declared_dll_double_arguments_follow_x64_abi() {
     const fs::path main_path = temp_root / "declared_dll_double_abi.prg";
     write_text(
         main_path,
+        "DECLARE DOUBLE CopperfinDeclaredDllFraction IN 'native/" + fixture_name.string() + "'\n"
+        "DECLARE STRING CopperfinDeclaredDllText IN 'native/" + fixture_name.string() + "'\n"
+        "DECLARE INTEGER64 CopperfinDeclaredDllInt64 IN 'native/" + fixture_name.string() + "'\n"
+        "DECLARE DOUBLE CopperfinDeclaredDllOneSlot IN 'native/" + fixture_name.string() + "' DOUBLE\n"
         "DECLARE DOUBLE CopperfinDeclaredDllMultiply IN 'native/" + fixture_name.string() + "' DOUBLE, DOUBLE\n"
+        "DECLARE DOUBLE CopperfinDeclaredDllAffine IN 'native/" + fixture_name.string() + "' DOUBLE, DOUBLE\n"
         "DECLARE DOUBLE CopperfinDeclaredDllScale IN 'native/" + fixture_name.string() + "' DOUBLE, INTEGER\n"
+        "DECLARE DOUBLE CopperfinDeclaredDllThreeSlots IN 'native/" + fixture_name.string() + "' DOUBLE, INTEGER, DOUBLE\n"
+        "DECLARE DOUBLE CopperfinDeclaredDllFourSlots IN 'native/" + fixture_name.string() + "' DOUBLE, INTEGER, DOUBLE, INTEGER\n"
+        "DECLARE DOUBLE CopperfinDeclaredDllFiveSlots IN 'native/" + fixture_name.string() + "' DOUBLE, INTEGER, DOUBLE, INTEGER, DOUBLE\n"
+        "DECLARE DOUBLE CopperfinDeclaredDllSixSlots IN 'native/" + fixture_name.string() + "' DOUBLE, INTEGER, DOUBLE, INTEGER, DOUBLE, INTEGER\n"
+        "DECLARE DOUBLE CopperfinDeclaredDllSevenSlots IN 'native/" + fixture_name.string() + "' DOUBLE, INTEGER, DOUBLE, INTEGER, DOUBLE, INTEGER, DOUBLE\n"
+        "DECLARE DOUBLE CopperfinDeclaredDllEightSlots IN 'native/" + fixture_name.string() + "' DOUBLE, INTEGER, DOUBLE, INTEGER, DOUBLE, INTEGER, DOUBLE, INTEGER\n"
         "DECLARE DOUBLE CopperfinDeclaredDllSplit IN 'native/" + fixture_name.string() + "' DOUBLE, DOUBLE @\n"
         "DECLARE INTEGER CopperfinDeclaredDllDecrement(INTEGER @) IN 'native/" + fixture_name.string() + "'\n"
         "nWhole = 0\n"
         "nCounter = 0\n"
+        "nConstant = CopperfinDeclaredDllFraction()\n"
+        "cText = CopperfinDeclaredDllText()\n"
+        "nInt64 = CopperfinDeclaredDllInt64()\n"
+        "nOneSlot = CopperfinDeclaredDllOneSlot(1.0)\n"
         "nProduct = CopperfinDeclaredDllMultiply(2.5, 4.0)\n"
+        "nAffine = CopperfinDeclaredDllAffine(2.5, 4.0)\n"
         "nScaled = CopperfinDeclaredDllScale(1.5, 8)\n"
+        "nThreeSlots = CopperfinDeclaredDllThreeSlots(1.0, 2, 3.0)\n"
+        "nFourSlots = CopperfinDeclaredDllFourSlots(1.0, 2, 3.0, 4)\n"
+        "nFiveSlots = CopperfinDeclaredDllFiveSlots(1.0, 2, 3.0, 4, 5.0)\n"
+        "nSixSlots = CopperfinDeclaredDllSixSlots(1.0, 2, 3.0, 4, 5.0, 6)\n"
+        "nSevenSlots = CopperfinDeclaredDllSevenSlots(1.0, 2, 3.0, 4, 5.0, 6, 7.0)\n"
+        "nEightSlots = CopperfinDeclaredDllEightSlots(1.0, 2, 3.0, 4, 5.0, 6, 7.0, 8)\n"
         "nFraction = CopperfinDeclaredDllSplit(3.75, @nWhole)\n"
         "nDecremented = CopperfinDeclaredDllDecrement(@nCounter)\n"
         "RETURN\n");
@@ -2524,36 +2546,106 @@ void test_declared_dll_double_arguments_follow_x64_abi() {
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.completed, "declared DLL double-argument script should complete: " + state.message);
 
+    const auto constant = state.globals.find("nconstant");
+    const auto text = state.globals.find("ctext");
+    const auto int64_value = state.globals.find("nint64");
+    const auto one_slot = state.globals.find("noneslot");
     const auto product = state.globals.find("nproduct");
+    const auto affine = state.globals.find("naffine");
     const auto scaled = state.globals.find("nscaled");
+    const auto three_slots = state.globals.find("nthreeslots");
+    const auto four_slots = state.globals.find("nfourslots");
+    const auto five_slots = state.globals.find("nfiveslots");
+    const auto six_slots = state.globals.find("nsixslots");
+    const auto seven_slots = state.globals.find("nsevenslots");
+    const auto eight_slots = state.globals.find("neightslots");
     const auto fraction = state.globals.find("nfraction");
     const auto whole = state.globals.find("nwhole");
     const auto decremented = state.globals.find("ndecremented");
     const auto counter = state.globals.find("ncounter");
+    expect(constant != state.globals.end(), "zero-argument DOUBLE fixture result should be captured");
+    expect(text != state.globals.end(), "pointer-shaped STRING fixture result should be captured");
+    expect(int64_value != state.globals.end(), "signed 64-bit fixture result should be captured");
+    expect(one_slot != state.globals.end(), "one-slot fixture result should be captured");
     expect(product != state.globals.end(), "two-DOUBLE fixture result should be captured");
+    expect(affine != state.globals.end(), "ordered DOUBLE fixture result should be captured");
     expect(scaled != state.globals.end(), "mixed DOUBLE/INTEGER fixture result should be captured");
+    expect(three_slots != state.globals.end(), "three-slot fixture result should be captured");
+    expect(four_slots != state.globals.end(), "four-slot fixture result should be captured");
+    expect(five_slots != state.globals.end(), "five-slot fixture result should be captured");
+    expect(six_slots != state.globals.end(), "six-slot fixture result should be captured");
+    expect(seven_slots != state.globals.end(), "seven-slot fixture result should be captured");
+    expect(eight_slots != state.globals.end(), "eight-slot fixture result should be captured");
     expect(fraction != state.globals.end(), "DOUBLE @ fixture fractional result should be captured");
     expect(whole != state.globals.end(), "DOUBLE @ fixture output should be captured");
     expect(decremented != state.globals.end(), "signed 32-bit return should be captured");
     expect(counter != state.globals.end(), "INTEGER @ output should be captured");
+    if (constant != state.globals.end()) {
+        const std::string actual = copperfin::runtime::format_value(constant->second);
+        expect(actual == "0.625", "zero-argument DOUBLE return should preserve fractional precision; actual=" + actual);
+    }
+    if (text != state.globals.end()) {
+        const std::string actual = copperfin::runtime::format_value(text->second);
+        expect(actual == "copperfin", "pointer-shaped STRING returns should preserve the native address; actual=" + actual);
+    }
+    if (int64_value != state.globals.end()) {
+        const std::string actual = copperfin::runtime::format_value(int64_value->second);
+        expect(actual == "-4294967297", "signed 64-bit native returns should retain their sign and width; actual=" + actual);
+    }
+    if (one_slot != state.globals.end()) {
+        const std::string actual = copperfin::runtime::format_value(one_slot->second);
+        expect(actual == "1", "one-argument typed dispatch should preserve its DOUBLE slot; actual=" + actual);
+    }
     if (product != state.globals.end()) {
-        expect(copperfin::runtime::format_value(product->second) == "10", "two DOUBLE arguments should reach XMM0 and XMM1");
+        const std::string actual = copperfin::runtime::format_value(product->second);
+        expect(actual == "10", "two DOUBLE arguments should reach XMM0 and XMM1; actual=" + actual);
+    }
+    if (affine != state.globals.end()) {
+        const std::string actual = copperfin::runtime::format_value(affine->second);
+        expect(actual == "29", "DOUBLE arguments should retain their declared positions; actual=" + actual);
     }
     if (scaled != state.globals.end()) {
-        expect(copperfin::runtime::format_value(scaled->second) == "12", "mixed DOUBLE/INTEGER arguments should preserve x64 register classes");
+        const std::string actual = copperfin::runtime::format_value(scaled->second);
+        expect(actual == "12", "mixed DOUBLE/INTEGER arguments should preserve x64 register classes; actual=" + actual);
+    }
+    const auto expect_slot_sum = [&](const auto iterator, const std::string &expected, const std::string &label) {
+        if (iterator == state.globals.end()) {
+            return;
+        }
+        const std::string actual = copperfin::runtime::format_value(iterator->second);
+        expect(actual == expected, label + "; actual=" + actual);
+    };
+    expect_slot_sum(three_slots, "6", "three-argument typed dispatch should preserve all slots");
+    expect_slot_sum(four_slots, "10", "four-argument typed dispatch should preserve all register slots");
+    expect_slot_sum(five_slots, "15", "five-argument typed dispatch should cross into stack slots");
+    expect_slot_sum(six_slots, "21", "six-argument typed dispatch should preserve register and stack slots");
+    expect_slot_sum(seven_slots, "28", "seven-argument typed dispatch should preserve register and stack slots");
+    if (eight_slots != state.globals.end()) {
+        const std::string actual = copperfin::runtime::format_value(eight_slots->second);
+        expect(actual == "36", "all eight x64 argument slots should preserve declared register and stack classes; actual=" + actual);
     }
     if (fraction != state.globals.end()) {
-        expect(copperfin::runtime::format_value(fraction->second) == "0.75", "DOUBLE return values should preserve fractional precision");
+        const std::string actual = copperfin::runtime::format_value(fraction->second);
+        expect(actual == "0.75", "DOUBLE return values should preserve fractional precision; actual=" + actual);
     }
     if (whole != state.globals.end()) {
-        expect(copperfin::runtime::format_value(whole->second) == "3", "DOUBLE @ arguments should write native changes back to the caller");
+        const std::string actual = copperfin::runtime::format_value(whole->second);
+        expect(actual == "3", "DOUBLE @ arguments should write native changes back to the caller; actual=" + actual);
     }
     if (decremented != state.globals.end()) {
-        expect(copperfin::runtime::format_value(decremented->second) == "-1", "signed 32-bit native returns should remain negative");
+        const std::string actual = copperfin::runtime::format_value(decremented->second);
+        expect(actual == "-1", "signed 32-bit native returns should remain negative; actual=" + actual);
     }
     if (counter != state.globals.end()) {
-        expect(copperfin::runtime::format_value(counter->second) == "-1", "INTEGER @ arguments should use signed 32-bit backing storage");
+        const std::string actual = copperfin::runtime::format_value(counter->second);
+        expect(actual == "-1", "INTEGER @ arguments should use signed 32-bit backing storage; actual=" + actual);
     }
+
+    const auto declare_event = std::find_if(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.declare_dll" &&
+               event.detail.find("CopperfinDeclaredDllEightSlots") != std::string::npos;
+    });
+    expect(declare_event != state.events.end(), "typed native declarations should retain the invariant runtime.declare_dll event");
 
     fs::remove_all(temp_root, ignored);
 #endif

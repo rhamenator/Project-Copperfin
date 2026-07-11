@@ -12,12 +12,82 @@ COPPERFIN_TEST_EXPORT int CopperfinDeclaredDllFixtureValue() {
     return 3921;
 }
 
+COPPERFIN_TEST_EXPORT double CopperfinDeclaredDllFraction() {
+    return 0.625;
+}
+
+COPPERFIN_TEST_EXPORT const char* CopperfinDeclaredDllText() {
+    return "copperfin";
+}
+
+COPPERFIN_TEST_EXPORT long long CopperfinDeclaredDllInt64() {
+    return -4294967297LL;
+}
+
+COPPERFIN_TEST_EXPORT double CopperfinDeclaredDllOneSlot(double first) {
+    return first;
+}
+
 COPPERFIN_TEST_EXPORT double CopperfinDeclaredDllMultiply(double left, double right) {
     return left * right;
 }
 
+COPPERFIN_TEST_EXPORT double CopperfinDeclaredDllAffine(double left, double right) {
+    return (left * 10.0) + right;
+}
+
 COPPERFIN_TEST_EXPORT double CopperfinDeclaredDllScale(double value, int factor) {
     return value * static_cast<double>(factor);
+}
+
+COPPERFIN_TEST_EXPORT double CopperfinDeclaredDllThreeSlots(double first, int second, double third) {
+    return first + second + third;
+}
+
+COPPERFIN_TEST_EXPORT double CopperfinDeclaredDllFourSlots(double first, int second, double third, int fourth) {
+    return first + second + third + fourth;
+}
+
+COPPERFIN_TEST_EXPORT double CopperfinDeclaredDllFiveSlots(
+    double first,
+    int second,
+    double third,
+    int fourth,
+    double fifth) {
+    return first + second + third + fourth + fifth;
+}
+
+COPPERFIN_TEST_EXPORT double CopperfinDeclaredDllSixSlots(
+    double first,
+    int second,
+    double third,
+    int fourth,
+    double fifth,
+    int sixth) {
+    return first + second + third + fourth + fifth + sixth;
+}
+
+COPPERFIN_TEST_EXPORT double CopperfinDeclaredDllSevenSlots(
+    double first,
+    int second,
+    double third,
+    int fourth,
+    double fifth,
+    int sixth,
+    double seventh) {
+    return first + second + third + fourth + fifth + sixth + seventh;
+}
+
+COPPERFIN_TEST_EXPORT double CopperfinDeclaredDllEightSlots(
+    double first,
+    int second,
+    double third,
+    int fourth,
+    double fifth,
+    int sixth,
+    double seventh,
+    int eighth) {
+    return first + second + third + fourth + fifth + sixth + seventh + eighth;
 }
 
 COPPERFIN_TEST_EXPORT double CopperfinDeclaredDllSplit(double value, double* whole) {

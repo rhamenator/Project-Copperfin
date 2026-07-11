@@ -13,6 +13,7 @@
 #include "prg_engine_runtime_config.h"
 #include "prg_engine_runtime_surface_functions.h"
 #include "prg_engine_table_structure_helpers.h"
+#include "win64_native_call.h"
 #include "copperfin/runtime/xasset_methods.h"
 #include "copperfin/studio/document_model.h"
 #include "copperfin/studio/report_layout.h"

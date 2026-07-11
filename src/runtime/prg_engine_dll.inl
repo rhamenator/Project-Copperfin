@@ -607,7 +607,7 @@
                 const bool ret_double = (rt == "double" || rt == "d" || rt == "f");
                 const bool ret_string = (rt == "c" || rt == "string");
                 const bool ret_integer64 =
-                    ret_string || rt == "long" || rt == "longlong" ||
+                    rt == "long" || rt == "longlong" ||
                     rt == "integer64" || rt == "i64";
                 const std::size_t nargs = flat.size();
                 const auto finalize_integer_result = [&](const auto result) -> PrgValue
@@ -638,62 +638,37 @@
                     return make_empty_value();
                 }
 
-                // Let the Windows Automation dispatcher classify each parameter slot so
-                // DOUBLE values reach XMM registers while integers/pointers use GP slots.
-                std::vector<VARTYPE> native_argument_types(nargs);
-                std::vector<VARIANTARG> native_argument_values(nargs);
-                std::vector<VARIANTARG *> native_argument_pointers(nargs);
+                std::vector<detail::Win64NativeCallArgument> native_arguments(nargs);
                 for (std::size_t index = 0U; index < nargs; ++index)
                 {
-                    VariantInit(&native_argument_values[index]);
                     if (flat[index].is_double)
                     {
-                        native_argument_types[index] = VT_R8;
-                        native_argument_values[index].vt = VT_R8;
-                        native_argument_values[index].dblVal = flat[index].d;
+                        native_arguments[index].double_value = flat[index].d;
+                        native_arguments[index].is_double = true;
                     }
                     else
                     {
-                        native_argument_types[index] = flat[index].is_integer32 ? VT_I4 : VT_I8;
-                        native_argument_values[index].vt = native_argument_types[index];
-                        if (flat[index].is_integer32)
-                        {
-                            native_argument_values[index].lVal = static_cast<LONG>(flat[index].i);
-                        }
-                        else
-                        {
-                            native_argument_values[index].llVal = flat[index].i;
-                        }
+                        native_arguments[index].integer_value = static_cast<std::uint64_t>(flat[index].i);
                     }
-                    native_argument_pointers[index] = &native_argument_values[index];
                 }
 
-                VARIANT native_result;
-                VariantInit(&native_result);
-                const HRESULT invoke_result = DispCallFunc(
-                    nullptr,
+                const detail::Win64NativeCallResult native_result = detail::invoke_win64_native_function(
                     reinterpret_cast<ULONG_PTR>(declfn.proc_address),
-                    CC_STDCALL,
-                    ret_double ? VT_R8 : (ret_integer64 ? VT_I8 : VT_I4),
-                    static_cast<UINT>(nargs),
-                    native_argument_types.empty() ? nullptr : native_argument_types.data(),
-                    native_argument_pointers.empty() ? nullptr : native_argument_pointers.data(),
-                    &native_result);
-                if (FAILED(invoke_result))
-                {
-                    last_error_message = runtime_text(
-                        "Runtime.Prg.Dll.Error.NativeInvokeFailed",
-                        {
-                            {"functionName", declfn.function_name},
-                            {"hresult", std::to_string(invoke_result)}
-                        });
-                    return make_empty_value();
-                }
+                    native_arguments,
+                    ret_double
+                        ? detail::Win64NativeReturnKind::floating64
+                        : (ret_string
+                               ? detail::Win64NativeReturnKind::string_pointer
+                               : (ret_integer64
+                                      ? detail::Win64NativeReturnKind::integer64
+                                      : detail::Win64NativeReturnKind::integer32)));
                 return ret_double
-                           ? finalize_double_result(native_result.dblVal)
-                           : (ret_integer64
-                                  ? finalize_integer_result(native_result.llVal)
-                                  : finalize_integer_result(native_result.lVal));
+                           ? finalize_double_result(native_result.double_value)
+                           : (ret_string
+                                  ? finalize_integer_result(reinterpret_cast<std::uintptr_t>(native_result.string_pointer))
+                                  : (ret_integer64
+                                         ? finalize_integer_result(static_cast<std::int64_t>(native_result.integer_value))
+                                         : finalize_integer_result(static_cast<std::int32_t>(native_result.integer_value))));
 #else
                 // x86: use __stdcall by default (VFP DECLARE default)
                 auto iarg = [&](std::size_t i) -> __int64
