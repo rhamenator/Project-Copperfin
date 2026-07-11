@@ -552,11 +552,13 @@ namespace copperfin::runtime
 
         struct DeclaredDllFunction
         {
-            std::string alias;         // Name used in PRG code (may equal function_name)
-            std::string function_name; // Actual export name in DLL
-            std::string dll_path;      // Path to DLL/FLL/.NET assembly
-            std::string return_type;   // e.g. "INTEGER", "STRING", "DOUBLE", etc.
-            std::string param_types;   // Comma-separated param types
+            std::string alias;                  // Name used in PRG code (may equal function_name)
+            std::string function_name;          // Export name written in the source declaration
+            std::string dll_path;               // Source-facing DLL/FLL/.NET assembly designator
+            std::string loaded_module_path;     // Actual native module selected by the loader
+            std::string resolved_function_name; // Actual native export, including A fallback
+            std::string return_type;            // e.g. "INTEGER", "STRING", "DOUBLE", etc.
+            std::string param_types;            // Comma-separated param types
             bool is_dotnet = false;
 #if defined(_WIN32)
             HMODULE hmodule = nullptr;
@@ -956,6 +958,11 @@ namespace copperfin::runtime
         RuntimeWatchResult evaluate_watch_expression(const std::string &expression);
         ExecutionOutcome execute_current_statement();
         RuntimePauseState run(DebugResumeAction action);
+
+        ~Impl()
+        {
+            release_declared_dll_functions();
+        }
     };
 
 #include "prg_engine_expression.inl"

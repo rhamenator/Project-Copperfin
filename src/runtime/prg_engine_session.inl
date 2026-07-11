@@ -4916,6 +4916,22 @@
             return empty_registered_functions;
         }
 
+        void release_declared_dll_functions() noexcept
+        {
+#if defined(_WIN32)
+            for (auto &[_, declfn] : declared_dll_functions)
+            {
+                if (declfn.hmodule != nullptr)
+                {
+                    FreeLibrary(declfn.hmodule);
+                }
+                declfn.hmodule = nullptr;
+                declfn.proc_address = nullptr;
+            }
+#endif
+            declared_dll_functions.clear();
+        }
+
         void cleanup_runtime_resources_for_shutdown()
         {
             // Release open work areas/cursors across all data sessions.
@@ -4942,21 +4958,7 @@
             // Ensure FOPEN handles are closed so files are not left locked.
             close_all_file_io_handles();
 
-#if defined(_WIN32)
-            // Release any DLL handles loaded through DECLARE ... IN.
-            std::set<HMODULE> released_modules;
-            for (auto &[_, declfn] : declared_dll_functions)
-            {
-                if (declfn.hmodule != nullptr && !released_modules.contains(declfn.hmodule))
-                {
-                    FreeLibrary(declfn.hmodule);
-                    released_modules.insert(declfn.hmodule);
-                }
-                declfn.hmodule = nullptr;
-                declfn.proc_address = nullptr;
-            }
-#endif
-            declared_dll_functions.clear();
+            release_declared_dll_functions();
             loaded_libraries.clear();
             procedure_program_paths.clear();
         }

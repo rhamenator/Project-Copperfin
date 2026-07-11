@@ -3010,6 +3010,177 @@ void test_declared_dll_short_parameter_is_rejected_and_localized() {
 #endif
 }
 
+void test_declared_dll_win32api_search_and_ansi_fallback() {
+#if defined(_WIN32)
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_declared_dll_win32api";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "declared_dll_win32api.prg";
+    write_text(
+        main_path,
+        "DECLARE INTEGER GetCurrentProcessId IN WIN32API\n"
+        "DECLARE INTEGER GetSystemMetrics IN WIN32API INTEGER index\n"
+        "DECLARE INTEGER GetUserName IN WIN32API STRING @ buffer, INTEGER @ size\n"
+        "cUserBuffer = SPACE(256)\n"
+        "nUserSize = 256\n"
+        "nProcessId = GetCurrentProcessId()\n"
+        "nScreenWidth = GetSystemMetrics(0)\n"
+        "nUserResult = GetUserName(@cUserBuffer, @nUserSize)\n"
+        "cUserName = cUserBuffer\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#3939: bare WIN32API declarations should complete: " + state.message);
+
+    const auto process_id = state.globals.find("nprocessid");
+    const auto screen_width = state.globals.find("nscreenwidth");
+    const auto user_result = state.globals.find("nuserresult");
+    const auto user_size = state.globals.find("nusersize");
+    const auto user_name = state.globals.find("cusername");
+    expect(process_id != state.globals.end(), "#3939: Kernel32 result should be captured");
+    expect(screen_width != state.globals.end(), "#3939: User32 result should be captured");
+    expect(user_result != state.globals.end(), "#3939: Advapi32 ANSI-fallback result should be captured");
+    expect(user_size != state.globals.end(), "#3939: GetUserName size writeback should be captured");
+    expect(user_name != state.globals.end(), "#3939: GetUserName buffer writeback should be captured");
+    if (process_id != state.globals.end())
+    {
+        expect(copperfin::runtime::format_value(process_id->second) != "0",
+               "#3939: GetCurrentProcessId should return a nonzero process id");
+    }
+    if (user_result != state.globals.end())
+    {
+        expect(copperfin::runtime::format_value(user_result->second) == "1",
+               "#3939: GetUserName should resolve through GetUserNameA");
+    }
+    if (user_size != state.globals.end())
+    {
+        expect(copperfin::runtime::format_value(user_size->second) != "256",
+               "#3939: GetUserNameA should update its size argument");
+    }
+    if (user_name != state.globals.end())
+    {
+        expect(!copperfin::runtime::format_value(user_name->second).empty(),
+               "#3939: GetUserNameA should write back a nonempty user name");
+    }
+
+    const auto has_declare_event = [&](const std::string &function_name)
+    {
+        return std::any_of(state.events.begin(), state.events.end(), [&](const auto &event)
+        {
+            return event.category == "runtime.declare_dll" &&
+                   event.detail == function_name + " IN WIN32API";
+        });
+    };
+    expect(has_declare_event("GetCurrentProcessId"),
+           "#3939: Kernel32 declaration event should preserve the WIN32API designator");
+    expect(has_declare_event("GetSystemMetrics"),
+           "#3939: User32 declaration event should preserve the WIN32API designator");
+    expect(has_declare_event("GetUserName"),
+           "#3939: ANSI-fallback declaration event should preserve the source export name");
+
+    fs::remove_all(temp_root, ignored);
+#endif
+}
+
+void test_declared_dll_win32api_missing_symbol_localizes() {
+#if defined(_WIN32)
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_declared_dll_win32api_missing";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+
+    const fs::path main_path = temp_root / "declared_dll_win32api_missing.prg";
+    write_text(
+        main_path,
+        "DECLARE INTEGER CopperfinMissingWin32ApiSymbol IN WIN32API\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!state.completed, "#3939: a missing WIN32API symbol should fail the declaration");
+    expect(state.message.find("[!! ") == 0U &&
+               state.message.find("CopperfinMissingWin32ApiSymbol") != std::string::npos &&
+               state.message.find("WIN32API") != std::string::npos &&
+               state.message.find("function 'CopperfinMissingWin32ApiSymbol' not found") == std::string::npos,
+           "#3939: WIN32API failure should pseudo-localize prose and preserve machine identifiers");
+
+    fs::remove_all(temp_root, ignored);
+#endif
+}
+
+void test_declared_dll_module_ownership_and_failed_redeclare_rollback() {
+#if defined(_WIN32) && defined(COPPERFIN_DECLARED_DLL_FIXTURE_NAME)
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_declared_dll_ownership";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root / "native");
+
+    const fs::path fixture_name = COPPERFIN_DECLARED_DLL_FIXTURE_NAME;
+    const fs::path fixture_copy = temp_root / "native" / fixture_name;
+    fs::copy_file(declared_dll_fixture_source_path(), fixture_copy, fs::copy_options::overwrite_existing, ignored);
+    expect(!ignored && fs::exists(fixture_copy),
+           "#3939: module-ownership fixture should copy under the PRG working directory");
+
+    const fs::path main_path = temp_root / "declared_dll_ownership.prg";
+    write_text(
+        main_path,
+        "PUBLIC nDeclareErrors\n"
+        "nDeclareErrors = 0\n"
+        "DECLARE INTEGER CopperfinDeclaredDllFixtureValue IN 'native/" + fixture_name.string() +
+            "' AS FirstAlias\n"
+        "DECLARE INTEGER CopperfinDeclaredDllFixtureValue IN 'native/" + fixture_name.string() +
+            "' AS SecondAlias\n"
+        "ON ERROR DO HandleDeclareError\n"
+        "DECLARE INTEGER CopperfinMissingDeclaredDllExport IN 'native/" + fixture_name.string() +
+            "' AS FirstAlias\n"
+        "ON ERROR\n"
+        "nFirstValue = FirstAlias()\n"
+        "nSecondValue = SecondAlias()\n"
+        "RETURN\n"
+        "PROCEDURE HandleDeclareError\n"
+        "nDeclareErrors = nDeclareErrors + 1\n"
+        "RETURN\n"
+        "ENDPROC\n");
+
+    {
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "#3939: failed redeclaration should roll back to the old binding: " + state.message);
+
+        const auto first_value = state.globals.find("nfirstvalue");
+        const auto second_value = state.globals.find("nsecondvalue");
+        const auto error_count = state.globals.find("ndeclareerrors");
+        expect(first_value != state.globals.end() &&
+                   copperfin::runtime::format_value(first_value->second) == "3921",
+               "#3939: failed redeclaration should retain the first alias binding");
+        expect(second_value != state.globals.end() &&
+                   copperfin::runtime::format_value(second_value->second) == "3921",
+               "#3939: a second alias should retain its independently owned module reference");
+        expect(error_count != state.globals.end() &&
+                   copperfin::runtime::format_value(error_count->second) == "1",
+               "#3939: failed redeclaration should dispatch exactly one recoverable error");
+        expect(GetModuleHandleW(fixture_copy.wstring().c_str()) != nullptr,
+               "#3939: the owned fixture module should remain loaded while aliases are callable");
+    }
+
+    expect(GetModuleHandleW(fixture_copy.wstring().c_str()) == nullptr,
+           "#3939: session cleanup should release every owned module reference");
+    fs::remove_all(temp_root, ignored);
+#endif
+}
+
 void test_declare_dll_runtime_errors_localize() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_declare_localization";
@@ -3633,6 +3804,9 @@ int main() {
     test_declared_dll_win32_resolves_no_underscore_stdcall_export();
     test_declared_dll_short_return_uses_signed_16_bit_width();
     test_declared_dll_short_parameter_is_rejected_and_localized();
+    test_declared_dll_win32api_search_and_ansi_fallback();
+    test_declared_dll_win32api_missing_symbol_localizes();
+    test_declared_dll_module_ownership_and_failed_redeclare_rollback();
     test_declare_dll_runtime_errors_localize();
     test_set_exact_affects_comparisons_and_seek();
     test_use_again_and_alias_collision_semantics();
