@@ -2416,8 +2416,14 @@ void test_declared_dll_double_arguments_follow_x64_abi() {
         main_path,
         "DECLARE DOUBLE pow IN 'msvcrt.dll' DOUBLE, DOUBLE\n"
         "DECLARE DOUBLE ldexp IN 'msvcrt.dll' DOUBLE, INTEGER\n"
+        "DECLARE DOUBLE modf IN 'msvcrt.dll' DOUBLE, DOUBLE @\n"
+        "DECLARE INTEGER InterlockedDecrement(INTEGER @) IN 'kernel32.dll'\n"
+        "nWhole = 0\n"
+        "nCounter = 0\n"
         "nPower = pow(2.0, 10.0)\n"
         "nScaled = ldexp(1.5, 3)\n"
+        "nFraction = modf(3.75, @nWhole)\n"
+        "nDecremented = InterlockedDecrement(@nCounter)\n"
         "RETURN\n");
 
     copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
@@ -2427,13 +2433,33 @@ void test_declared_dll_double_arguments_follow_x64_abi() {
 
     const auto power = state.globals.find("npower");
     const auto scaled = state.globals.find("nscaled");
+    const auto fraction = state.globals.find("nfraction");
+    const auto whole = state.globals.find("nwhole");
+    const auto decremented = state.globals.find("ndecremented");
+    const auto counter = state.globals.find("ncounter");
     expect(power != state.globals.end(), "pow result should be captured");
     expect(scaled != state.globals.end(), "ldexp result should be captured");
+    expect(fraction != state.globals.end(), "modf fractional result should be captured");
+    expect(whole != state.globals.end(), "modf DOUBLE @ output should be captured");
+    expect(decremented != state.globals.end(), "signed 32-bit return should be captured");
+    expect(counter != state.globals.end(), "INTEGER @ output should be captured");
     if (power != state.globals.end()) {
         expect(copperfin::runtime::format_value(power->second) == "1024", "two DOUBLE arguments should reach XMM0 and XMM1");
     }
     if (scaled != state.globals.end()) {
         expect(copperfin::runtime::format_value(scaled->second) == "12", "mixed DOUBLE/INTEGER arguments should preserve x64 register classes");
+    }
+    if (fraction != state.globals.end()) {
+        expect(copperfin::runtime::format_value(fraction->second) == "0.75", "DOUBLE return values should preserve fractional precision");
+    }
+    if (whole != state.globals.end()) {
+        expect(copperfin::runtime::format_value(whole->second) == "3", "DOUBLE @ arguments should write native changes back to the caller");
+    }
+    if (decremented != state.globals.end()) {
+        expect(copperfin::runtime::format_value(decremented->second) == "-1", "signed 32-bit native returns should remain negative");
+    }
+    if (counter != state.globals.end()) {
+        expect(copperfin::runtime::format_value(counter->second) == "-1", "INTEGER @ arguments should use signed 32-bit backing storage");
     }
 
     fs::remove_all(temp_root, ignored);

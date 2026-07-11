@@ -474,8 +474,10 @@
                     bool by_ref = false;
                     bool is_double = false;
                     bool is_string = false;
+                    bool is_integer64 = false;
                     std::string string_buffer;
-                    std::int64_t int_value = 0;
+                    std::int32_t int32_value = 0;
+                    std::int64_t int64_value = 0;
                     double double_value = 0.0;
                 };
 
@@ -487,6 +489,7 @@
                     __int64 i = 0;
                     double d = 0.0;
                     bool is_double = false;
+                    bool is_integer32 = false;
                 };
                 std::vector<Arg64> flat;
                 flat.reserve(args.size());
@@ -497,10 +500,14 @@
                                              idx < argument_references.size() &&
                                              argument_references[idx].has_value();
                     const std::string base_pt = ptype;
+                    const bool is_integer64 =
+                        base_pt == "long" || base_pt == "longlong" ||
+                        base_pt == "integer64" || base_pt == "i64";
                     ByRefBinding &binding = byref_bindings[idx];
                     binding.base_type = base_pt;
                     binding.reference_name = by_ref_param ? argument_references[idx] : std::nullopt;
                     binding.by_ref = by_ref_param;
+                    binding.is_integer64 = is_integer64;
 
                     Arg64 a{};
                     if (base_pt == "double" || base_pt == "d" || base_pt == "f")
@@ -537,8 +544,20 @@
                         a.i = static_cast<__int64>(value_as_number(args[idx]));
                         if (binding.by_ref)
                         {
-                            binding.int_value = a.i;
-                            a.i = reinterpret_cast<__int64>(&binding.int_value);
+                            if (binding.is_integer64)
+                            {
+                                binding.int64_value = a.i;
+                                a.i = reinterpret_cast<__int64>(&binding.int64_value);
+                            }
+                            else
+                            {
+                                binding.int32_value = static_cast<std::int32_t>(a.i);
+                                a.i = reinterpret_cast<__int64>(&binding.int32_value);
+                            }
+                        }
+                        else
+                        {
+                            a.is_integer32 = !is_integer64;
                         }
                     }
                     flat.push_back(a);
@@ -572,7 +591,10 @@
                         }
                         else
                         {
-                            value = make_number_value(static_cast<double>(binding.int_value));
+                            value = make_number_value(
+                                binding.is_integer64
+                                    ? static_cast<double>(binding.int64_value)
+                                    : static_cast<double>(binding.int32_value));
                         }
                         assign_variable(stack.back(), binding.reference_name.value(), value);
                     }
@@ -584,6 +606,9 @@
                 const std::string rt = normalize_identifier(declfn.return_type);
                 const bool ret_double = (rt == "double" || rt == "d" || rt == "f");
                 const bool ret_string = (rt == "c" || rt == "string");
+                const bool ret_integer64 =
+                    ret_string || rt == "long" || rt == "longlong" ||
+                    rt == "integer64" || rt == "i64";
                 const std::size_t nargs = flat.size();
                 const auto finalize_integer_result = [&](const auto result) -> PrgValue
                 {
@@ -629,9 +654,16 @@
                     }
                     else
                     {
-                        native_argument_types[index] = VT_I8;
-                        native_argument_values[index].vt = VT_I8;
-                        native_argument_values[index].llVal = flat[index].i;
+                        native_argument_types[index] = flat[index].is_integer32 ? VT_I4 : VT_I8;
+                        native_argument_values[index].vt = native_argument_types[index];
+                        if (flat[index].is_integer32)
+                        {
+                            native_argument_values[index].lVal = static_cast<LONG>(flat[index].i);
+                        }
+                        else
+                        {
+                            native_argument_values[index].llVal = flat[index].i;
+                        }
                     }
                     native_argument_pointers[index] = &native_argument_values[index];
                 }
@@ -642,7 +674,7 @@
                     nullptr,
                     reinterpret_cast<ULONG_PTR>(declfn.proc_address),
                     CC_STDCALL,
-                    ret_double ? VT_R8 : VT_I8,
+                    ret_double ? VT_R8 : (ret_integer64 ? VT_I8 : VT_I4),
                     static_cast<UINT>(nargs),
                     native_argument_types.empty() ? nullptr : native_argument_types.data(),
                     native_argument_pointers.empty() ? nullptr : native_argument_pointers.data(),
@@ -659,7 +691,9 @@
                 }
                 return ret_double
                            ? finalize_double_result(native_result.dblVal)
-                           : finalize_integer_result(native_result.llVal);
+                           : (ret_integer64
+                                  ? finalize_integer_result(native_result.llVal)
+                                  : finalize_integer_result(native_result.lVal));
 #else
                 // x86: use __stdcall by default (VFP DECLARE default)
                 auto iarg = [&](std::size_t i) -> __int64

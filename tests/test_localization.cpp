@@ -1459,6 +1459,7 @@ void test_runtime_dll_errors_route_through_catalog() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
     const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
     const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
     const copperfin::localization::PlaceholderMap handle_placeholders{{"handle", "42"}};
     const copperfin::localization::PlaceholderMap hresult_placeholders{{"hresult", "-2146232576"}};
@@ -1468,6 +1469,18 @@ void test_runtime_dll_errors_route_through_catalog() {
     };
     const copperfin::localization::PlaceholderMap type_placeholders{{"typeName", "Copperfin.Tools.Loader"}};
     const copperfin::localization::PlaceholderMap function_placeholders{{"functionName", "GetVersion"}};
+    const copperfin::localization::PlaceholderMap native_limit_placeholders{
+        {"count", "9"},
+        {"maximum", "8"}
+    };
+    const copperfin::localization::PlaceholderMap native_invoke_placeholders{
+        {"functionName", "pow"},
+        {"hresult", "-2147352568"}
+    };
+    const std::vector<std::string> native_keys{
+        "Runtime.Prg.Dll.Error.NativeArgumentLimitExceeded",
+        "Runtime.Prg.Dll.Error.NativeInvokeFailed"
+    };
 
     expect(
         english.translate("Runtime.Prg.Dll.Error.FoxtoolsNotLoaded") == "FOXTOOLS is not loaded",
@@ -1492,6 +1505,25 @@ void test_runtime_dll_errors_route_through_catalog() {
         english.translate("Runtime.Prg.Dll.Error.NativeProcAddressMissing", function_placeholders) ==
             "No proc address for: GetVersion",
         "#2550: native proc-address error should preserve function-name placeholder");
+    expect(
+        english.translate("Runtime.Prg.Dll.Error.NativeArgumentLimitExceeded", native_limit_placeholders) ==
+            "Native DLL call has 9 arguments; the maximum is 8",
+        "#3895: native argument-limit error should preserve count placeholders");
+    expect(
+        english.translate("Runtime.Prg.Dll.Error.NativeInvokeFailed", native_invoke_placeholders) ==
+            "Native DLL function pow failed to invoke: -2147352568",
+        "#3895: native invocation error should preserve function and HRESULT placeholders");
+    for (const std::string &native_key : native_keys) {
+        expect(
+            spanish.catalogs.contains("es-419") && spanish.catalogs.at("es-419").contains(native_key),
+            "#3895: es-419 should define every native invocation key");
+        expect(
+            portuguese.catalogs.contains("pt-BR") && portuguese.catalogs.at("pt-BR").contains(native_key),
+            "#3895: pt-BR should define every native invocation key");
+        expect(
+            pseudo.catalogs.contains("qps-ploc") && pseudo.catalogs.at("qps-ploc").contains(native_key),
+            "#3895: qps-ploc should define every native invocation key");
+    }
     expect(
         spanish.translate("Runtime.Prg.Dll.Error.FoxtoolsNotLoaded").find("FOXTOOLS") != std::string::npos &&
             spanish.translate("Runtime.Prg.Dll.Error.FoxtoolsNotLoaded").find("is not loaded") == std::string::npos,
@@ -1526,6 +1558,24 @@ void test_runtime_dll_errors_route_through_catalog() {
             pseudo_function.find("GetVersion") != std::string::npos &&
             pseudo_function.find("{functionName}") == std::string::npos,
         "#2550: qps-ploc native proc-address error should pseudo-localize prose while preserving function name");
+    const std::string pseudo_limit =
+        pseudo.translate("Runtime.Prg.Dll.Error.NativeArgumentLimitExceeded", native_limit_placeholders);
+    expect(
+        pseudo_limit.find("[!! ") == 0U &&
+            pseudo_limit.find("9") != std::string::npos &&
+            pseudo_limit.find("8") != std::string::npos &&
+            pseudo_limit.find("{count}") == std::string::npos &&
+            pseudo_limit.find("{maximum}") == std::string::npos,
+        "#3895: qps-ploc native argument-limit error should preserve replaced counts");
+    const std::string pseudo_invoke =
+        pseudo.translate("Runtime.Prg.Dll.Error.NativeInvokeFailed", native_invoke_placeholders);
+    expect(
+        pseudo_invoke.find("[!! ") == 0U &&
+            pseudo_invoke.find("pow") != std::string::npos &&
+            pseudo_invoke.find("-2147352568") != std::string::npos &&
+            pseudo_invoke.find("{functionName}") == std::string::npos &&
+            pseudo_invoke.find("{hresult}") == std::string::npos,
+        "#3895: qps-ploc native invocation error should preserve replaced identifiers");
 }
 
 void test_runtime_core_errors_route_through_catalog() {
