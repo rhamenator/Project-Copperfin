@@ -3821,9 +3821,10 @@
                     return {.ok = false, .message = last_error_message};
                 }
 
-                // Resolve path relative to current default directory
+                // Preserve parentless names for the Windows loader search policy. VFP-style
+                // explicit relative paths still resolve from the current default directory.
                 std::filesystem::path dll_fspath(dll_path_raw);
-                if (dll_fspath.is_relative())
+                if (dll_fspath.is_relative() && dll_fspath.has_parent_path())
                 {
                     dll_fspath = std::filesystem::path(current_default_directory()) / dll_fspath;
                 }

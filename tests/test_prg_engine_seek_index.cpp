@@ -17,6 +17,13 @@
 #include <iostream>
 #if defined(_WIN32)
 #include <process.h>
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
 #else
 #include <sys/wait.h>
 #include <unistd.h>
@@ -2373,7 +2380,7 @@ void test_declared_dll_string_byref_argument_writeback() {
         make_runtime_session_options(main_path.string(), temp_root.string()));
 
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
-    expect(state.completed, "declared DLL by-ref script should complete");
+    expect(state.completed, "declared DLL by-ref script should complete: " + state.message);
 
     const auto result = state.globals.find("nresult");
     const auto buffer = state.globals.find("cbuffer");
@@ -2398,6 +2405,76 @@ void test_declared_dll_string_byref_argument_writeback() {
                event.detail.find("lstrcpyA") != std::string::npos;
     });
     expect(declare_event != state.events.end(), "declared DLL by-ref script should emit the DECLARE event");
+
+    fs::remove_all(temp_root, ignored);
+#endif
+}
+
+void test_declared_dll_explicit_relative_child_path() {
+#if defined(_WIN32) && defined(COPPERFIN_DECLARED_DLL_FIXTURE_NAME)
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_declared_dll_relative";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root / "native");
+
+    std::wstring executable_path(32768U, L'\0');
+    const DWORD executable_length = GetModuleFileNameW(
+        nullptr,
+        executable_path.data(),
+        static_cast<DWORD>(executable_path.size()));
+    expect(executable_length > 0U && executable_length < executable_path.size(),
+           "#3921: test executable path should be available");
+    executable_path.resize(executable_length);
+
+    const fs::path fixture_name = COPPERFIN_DECLARED_DLL_FIXTURE_NAME;
+    const fs::path fixture_source = fs::path(executable_path).parent_path() / fixture_name;
+    const fs::path fixture_copy = temp_root / "native" / fixture_name;
+    fs::copy_file(fixture_source, fixture_copy, fs::copy_options::overwrite_existing, ignored);
+    expect(!ignored && fs::exists(fixture_copy),
+           "#3921: explicit-relative DECLARE fixture should copy beside the PRG working directory");
+
+    const fs::path main_path = temp_root / "declared_dll_relative.prg";
+    write_text(
+        main_path,
+        "DECLARE INTEGER CopperfinDeclaredDllFixtureValue() IN 'native/" +
+            fixture_name.string() + "'\n"
+        "nValue = CopperfinDeclaredDllFixtureValue()\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#3921: explicit-relative DECLARE script should complete: " + state.message);
+
+    const auto value = state.globals.find("nvalue");
+    expect(value != state.globals.end(), "#3921: explicit-relative DECLARE result should be captured");
+    if (value != state.globals.end()) {
+        expect(copperfin::runtime::format_value(value->second) == "3921",
+               "#3921: explicit-relative DECLARE should invoke the child DLL");
+    }
+
+    const auto declare_event = std::find_if(state.events.begin(), state.events.end(), [](const auto& event) {
+        return event.category == "runtime.declare_dll" &&
+               event.detail.find("CopperfinDeclaredDllFixtureValue") != std::string::npos;
+    });
+    expect(declare_event != state.events.end(),
+           "#3921: explicit-relative DECLARE should emit the stable machine event");
+
+    const std::string missing_library_name = "copperfin_missing_declared_dll_3921.dll";
+    const fs::path missing_path = temp_root / "declared_dll_missing.prg";
+    write_text(
+        missing_path,
+        "DECLARE INTEGER MissingExport() IN '" + missing_library_name + "'\n"
+        "RETURN\n");
+    copperfin::runtime::PrgRuntimeSession missing_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(missing_path.string(), temp_root.string()));
+    const auto missing_state = missing_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!missing_state.completed, "#3921: a missing parentless DLL should retain the load failure");
+    expect(missing_state.message.find(missing_library_name) != std::string::npos,
+           "#3921: a missing parentless DLL diagnostic should retain its invariant designator");
+    expect(missing_state.message.find(temp_root.string()) == std::string::npos,
+           "#3921: a missing parentless DLL should not be rewritten under the PRG working directory");
 
     fs::remove_all(temp_root, ignored);
 #endif
@@ -3081,6 +3158,7 @@ int main() {
     test_foxtools_registration_and_call_bridge();
     test_foxtools_registration_is_scoped_by_data_session();
     test_declared_dll_string_byref_argument_writeback();
+    test_declared_dll_explicit_relative_child_path();
     test_declared_dll_double_arguments_follow_x64_abi();
     test_declare_dll_runtime_errors_localize();
     test_set_exact_affects_comparisons_and_seek();

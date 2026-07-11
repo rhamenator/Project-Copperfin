@@ -3962,6 +3962,15 @@ copperfin_add_test(test_prg_engine_seek_index cf_xbase_runtime
     test_prg_engine_seek_index.cpp
     prg_engine_test_support.cpp
 )
+if(WIN32)
+    add_library(copperfin_declared_dll_fixture SHARED
+        fixtures/declared_dll_fixture.cpp
+    )
+    target_compile_definitions(test_prg_engine_seek_index PRIVATE
+        COPPERFIN_DECLARED_DLL_FIXTURE_NAME="$<TARGET_FILE_NAME:copperfin_declared_dll_fixture>"
+    )
+    add_dependencies(test_prg_engine_seek_index copperfin_declared_dll_fixture)
+endif()
 
 copperfin_add_test(test_prg_engine_index_seek_optimization cf_xbase_runtime
     test_prg_engine_index_seek_optimization.cpp
