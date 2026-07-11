@@ -340,6 +340,28 @@
 
             std::string rewritten;
             rewritten.reserve(text.size() + binding_name.size() * 2U);
+            const auto starts_reserved_dotted_token = [&](std::size_t offset)
+            {
+                static constexpr std::array<std::string_view, 6U> tokens{
+                    ".T.", ".F.", ".NULL.", ".NOT.", ".AND.", ".OR."
+                };
+                return std::any_of(tokens.begin(), tokens.end(), [&](std::string_view token)
+                {
+                    if (offset + token.size() > text.size())
+                    {
+                        return false;
+                    }
+                    for (std::size_t token_index = 0U; token_index < token.size(); ++token_index)
+                    {
+                        if (std::tolower(static_cast<unsigned char>(text[offset + token_index])) !=
+                            std::tolower(static_cast<unsigned char>(token[token_index])))
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                });
+            };
             bool in_string = false;
             for (std::size_t index = 0U; index < text.size(); ++index)
             {
@@ -351,6 +373,11 @@
                     continue;
                 }
                 if (in_string || ch != '.' || (index + 1U) >= text.size())
+                {
+                    rewritten.push_back(ch);
+                    continue;
+                }
+                if (starts_reserved_dotted_token(index))
                 {
                     rewritten.push_back(ch);
                     continue;

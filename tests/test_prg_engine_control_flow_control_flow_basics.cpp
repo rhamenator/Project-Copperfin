@@ -1117,6 +1117,67 @@ void test_with_endwith_resolves_leading_dot_member_access() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_with_endwith_preserves_reserved_dotted_logical_tokens() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_with_dotted_tokens";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path main_path = temp_root / "with_dotted_tokens.prg";
+    write_text(
+        main_path,
+        "obj = CREATEOBJECT('Sample.Object')\n"
+        "lFound = .T.\n"
+        "WITH obj\n"
+        "  start_true = .T.\n"
+        "  start_false = .F.\n"
+        "  start_not = .NOT. lFound\n"
+        "  grouped_and = (.T.) .AND. (.T.)\n"
+        "  grouped_or = (.F.) .OR. (.T.)\n"
+        "  comma_tokens = IIF(.F., .F., .T.)\n"
+        "  null_token = ISNULL(.NULL.)\n"
+        "  mixed_case = .nOt. .f.\n"
+        "  .Caption = 'Updated'\n"
+        "  .TrueValue = 7\n"
+        "  .NotValue = 8\n"
+        "  member_caption = .Caption\n"
+        "  member_true_value = .TrueValue\n"
+        "  member_not_value = .NotValue\n"
+        "ENDWITH\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string(), false));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed,
+           "#3928: WITH should preserve reserved dotted logical and NULL tokens");
+
+    const auto expect_value = [&](const std::string& name, const std::string& expected) {
+        const auto value = state.globals.find(name);
+        expect(value != state.globals.end(), "#3928: WITH dotted-token script should assign " + name);
+        if (value != state.globals.end()) {
+            expect(copperfin::runtime::format_value(value->second) == expected,
+                   "#3928: WITH dotted-token result mismatch for " + name);
+        }
+    };
+
+    expect_value("start_true", "true");
+    expect_value("start_false", "false");
+    expect_value("start_not", "false");
+    expect_value("grouped_and", "true");
+    expect_value("grouped_or", "true");
+    expect_value("comma_tokens", "true");
+    expect_value("null_token", "true");
+    expect_value("mixed_case", "true");
+    expect_value("member_caption", "Updated");
+    expect_value("member_true_value", "7");
+    expect_value("member_not_value", "8");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_loop_and_exit_unwind_with_bindings_before_jump() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_with_loop_unwind";

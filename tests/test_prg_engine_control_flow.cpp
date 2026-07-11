@@ -78,6 +78,7 @@ int main() {
     test_nested_routine_faults_report_faulting_stack_frame_line();
     test_repeated_nested_faults_refresh_stack_frame_and_statement_metadata();
     test_with_endwith_resolves_leading_dot_member_access();
+    test_with_endwith_preserves_reserved_dotted_logical_tokens();
     test_loop_and_exit_unwind_with_bindings_before_jump();
     test_try_catch_finally_handles_runtime_errors();
     test_try_catch_unwinds_leaked_with_binding_before_catch();
