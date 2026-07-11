@@ -728,12 +728,55 @@ PrgValue make_string_value(std::string value) {
 PrgValue make_date_value(std::string value) {
     PrgValue result = make_string_value(std::move(value));
     result.string_flavor = PrgStringFlavor::date;
+    // Flavored strings retain a timeline scalar in their otherwise-unused integer payload.
+    int year = 0;
+    int month = 0;
+    int day = 0;
+    if (parse_runtime_date_string(result.string_value, year, month, day)) {
+        constexpr std::int64_t seconds_per_day = 24LL * 60LL * 60LL;
+        result.int64_value = static_cast<std::int64_t>(date_to_julian(year, month, day)) * seconds_per_day;
+    }
+    return result;
+}
+
+PrgValue make_date_value(std::string value, int year, int month, int day) {
+    PrgValue result = make_string_value(std::move(value));
+    result.string_flavor = PrgStringFlavor::date;
+    constexpr std::int64_t seconds_per_day = 24LL * 60LL * 60LL;
+    result.int64_value = static_cast<std::int64_t>(date_to_julian(year, month, day)) * seconds_per_day;
     return result;
 }
 
 PrgValue make_datetime_value(std::string value) {
     PrgValue result = make_string_value(std::move(value));
     result.string_flavor = PrgStringFlavor::datetime;
+    int year = 0;
+    int month = 0;
+    int day = 0;
+    int hour = 0;
+    int minute = 0;
+    int second = 0;
+    if (parse_runtime_datetime_string(result.string_value, year, month, day, hour, minute, second)) {
+        constexpr std::int64_t seconds_per_day = 24LL * 60LL * 60LL;
+        result.int64_value = (static_cast<std::int64_t>(date_to_julian(year, month, day)) * seconds_per_day) +
+                             (hour * 3600LL) + (minute * 60LL) + second;
+    }
+    return result;
+}
+
+PrgValue make_datetime_value(
+    std::string value,
+    int year,
+    int month,
+    int day,
+    int hour,
+    int minute,
+    int second) {
+    PrgValue result = make_string_value(std::move(value));
+    result.string_flavor = PrgStringFlavor::datetime;
+    constexpr std::int64_t seconds_per_day = 24LL * 60LL * 60LL;
+    result.int64_value = (static_cast<std::int64_t>(date_to_julian(year, month, day)) * seconds_per_day) +
+                         (hour * 3600LL) + (minute * 60LL) + second;
     return result;
 }
 

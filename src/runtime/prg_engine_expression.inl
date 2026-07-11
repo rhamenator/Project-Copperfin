@@ -12,6 +12,10 @@
         const PrgValue& right,
         bool subtract,
         const std::function<std::string(const std::string&)>& set_callback);
+    std::optional<int> compare_date_time_values(
+        const PrgValue& left,
+        const PrgValue& right,
+        const std::function<std::string(const std::string&)>& set_callback);
     std::optional<PrgValue> evaluate_string_function(
         const std::string& function,
         const std::vector<PrgValue>& arguments,
@@ -345,19 +349,9 @@
                         {
                             left = make_boolean_value(false);
                         }
-                        else if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string)
-                        {
-                            left = make_boolean_value(value_as_string(left) <= value_as_string(right));
-                        }
-                        else if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
-                            (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64))
-                        {
-                            left = make_boolean_value(static_cast<std::int64_t>(value_as_number(left)) <=
-                                                      static_cast<std::int64_t>(value_as_number(right)));
-                        }
                         else
                         {
-                            left = make_boolean_value(value_as_number(left) <= value_as_number(right));
+                            left = make_boolean_value(compare_ordered_values(left, right) <= 0);
                         }
                     }
                     else if (match(">="))
@@ -367,19 +361,9 @@
                         {
                             left = make_boolean_value(false);
                         }
-                        else if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string)
-                        {
-                            left = make_boolean_value(value_as_string(left) >= value_as_string(right));
-                        }
-                        else if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
-                            (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64))
-                        {
-                            left = make_boolean_value(static_cast<std::int64_t>(value_as_number(left)) >=
-                                                      static_cast<std::int64_t>(value_as_number(right)));
-                        }
                         else
                         {
-                            left = make_boolean_value(value_as_number(left) >= value_as_number(right));
+                            left = make_boolean_value(compare_ordered_values(left, right) >= 0);
                         }
                     }
                     else if (match("==") || match("="))
@@ -415,19 +399,9 @@
                         {
                             left = make_boolean_value(false);
                         }
-                        else if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string)
-                        {
-                            left = make_boolean_value(value_as_string(left) < value_as_string(right));
-                        }
-                        else if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
-                            (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64))
-                        {
-                            left = make_boolean_value(static_cast<std::int64_t>(value_as_number(left)) <
-                                                      static_cast<std::int64_t>(value_as_number(right)));
-                        }
                         else
                         {
-                            left = make_boolean_value(value_as_number(left) < value_as_number(right));
+                            left = make_boolean_value(compare_ordered_values(left, right) < 0);
                         }
                     }
                     else if (match(">"))
@@ -437,19 +411,9 @@
                         {
                             left = make_boolean_value(false);
                         }
-                        else if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string)
-                        {
-                            left = make_boolean_value(value_as_string(left) > value_as_string(right));
-                        }
-                        else if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
-                            (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64))
-                        {
-                            left = make_boolean_value(static_cast<std::int64_t>(value_as_number(left)) >
-                                                      static_cast<std::int64_t>(value_as_number(right)));
-                        }
                         else
                         {
-                            left = make_boolean_value(value_as_number(left) > value_as_number(right));
+                            left = make_boolean_value(compare_ordered_values(left, right) > 0);
                         }
                     }
                     else
@@ -3123,6 +3087,37 @@
                 {
                     ++position_;
                 }
+            }
+
+            int compare_ordered_values(const PrgValue &left, const PrgValue &right) const
+            {
+                if (left.string_flavor != PrgStringFlavor::none ||
+                    right.string_flavor != PrgStringFlavor::none)
+                {
+                    const auto comparison = compare_date_time_values(left, right, set_callback_);
+                    if (!comparison.has_value())
+                    {
+                        throw std::runtime_error(
+                            runtime_text("Runtime.Prg.Expression.Error.OperatorOperandTypeMismatch"));
+                    }
+                    return *comparison;
+                }
+                if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string)
+                {
+                    const std::string left_value = value_as_string(left);
+                    const std::string right_value = value_as_string(right);
+                    return left_value < right_value ? -1 : (left_value > right_value ? 1 : 0);
+                }
+                if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
+                    (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64))
+                {
+                    const std::int64_t left_value = static_cast<std::int64_t>(value_as_number(left));
+                    const std::int64_t right_value = static_cast<std::int64_t>(value_as_number(right));
+                    return left_value < right_value ? -1 : (left_value > right_value ? 1 : 0);
+                }
+                const double left_value = value_as_number(left);
+                const double right_value = value_as_number(right);
+                return left_value < right_value ? -1 : (left_value > right_value ? 1 : 0);
             }
 
             bool values_equal(const PrgValue &left, const PrgValue &right) const

@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/runtime/prg_engine.h"
+#include "copperfin/vfp/dbf_table.h"
 #include "prg_engine_test_support.h"
 
 #include <cstdlib>
@@ -478,6 +479,163 @@ namespace
         fs::remove_all(temp_root, ignored);
     }
 
+    void test_date_time_ordering_uses_chronological_values()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_date_time_ordering";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path table_path = temp_root / "empty_dates.dbf";
+        const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+            {.name = "EMPTYD", .type = 'D', .length = 8U},
+            {.name = "EMPTYT", .type = 'T', .length = 8U},
+        };
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            table_path.string(), fields, {{"", ""}});
+        expect(create_result.ok, "date ordering empty-value DBF fixture should be created");
+
+        const fs::path main_path = temp_root / "date_time_ordering.prg";
+        write_text(
+            main_path,
+            "lDateLess = DATE(2020, 12, 1) < DATE(2021, 1, 15)\n"
+            "lDateGreater = DATE(2021, 1, 15) > DATE(2020, 12, 1)\n"
+            "lDateLessEqual = DATE(2020, 12, 1) <= DATE(2020, 12, 1)\n"
+            "lDateGreaterEqual = DATE(2020, 12, 1) >= DATE(2020, 12, 1)\n"
+            "lDateReverseLess = DATE(2021, 1, 15) < DATE(2020, 12, 1)\n"
+            "lDateReverseGreater = DATE(2020, 12, 1) > DATE(2021, 1, 15)\n"
+            "lDateTimeAcrossYear = DATETIME(2020, 12, 31, 23, 59, 59) < DATETIME(2021, 1, 1, 0, 0, 0)\n"
+            "lDateTimeSameDay = DATETIME(2021, 1, 1, 1, 0, 0) < DATETIME(2021, 1, 1, 2, 0, 0)\n"
+            "lDateBeforeDateTime = DATE(2021, 1, 1) < DATETIME(2021, 1, 1, 0, 0, 1)\n"
+            "lDateTimeAfterDate = DATETIME(2021, 1, 1, 0, 0, 1) > DATE(2021, 1, 1)\n"
+            "lDateBeforeMidnight = DATE(2021, 1, 1) < DATETIME(2021, 1, 1, 0, 0, 0)\n"
+            "lDateAtOrBeforeMidnight = DATE(2021, 1, 1) <= DATETIME(2021, 1, 1, 0, 0, 0)\n"
+            "SET DATE TO DMY\n"
+            "lDateDmyLess = DATE(2020, 12, 1) < DATE(2021, 1, 15)\n"
+            "SET CENTURY OFF\n"
+            "SET MARK TO '.'\n"
+            "lDateCustomPresentationLess = DATE(2020, 12, 1) < DATE(2021, 1, 15)\n"
+            "SET EPOCH TO 1950\n"
+            "lHistoricalDateLess = DATE(1940, 12, 1) < DATE(2021, 1, 15)\n"
+            "lFutureDateGreater = DATE(2050, 1, 15) > DATE(2021, 1, 15)\n"
+            "lHistoricalDateArithmeticLess = DATE(1940, 12, 1) + 0 < DATE(2021, 1, 15)\n"
+            "lHistoricalEomonthLess = EOMONTH(DATE(1940, 12, 1)) < DATE(2021, 1, 15)\n"
+            "lHistoricalGomonthLess = GOMONTH(DATE(1940, 12, 1), 0) < DATE(2021, 1, 15)\n"
+            "lHistoricalDtotLess = DTOT(DATE(1940, 12, 1)) < DATETIME(2021, 1, 15, 0, 0, 0)\n"
+            "lHistoricalYearPreserved = YEAR(DATE(1940, 12, 1)) = 1940\n"
+            "lHistoricalDtocPreserved = DTOC(DATE(1940, 12, 1), 1) = '19401201'\n"
+            "SET HOURS TO 12\n"
+            "SET SECONDS OFF\n"
+            "lDateTimeCustomPresentationLess = DATETIME(2021, 1, 1, 13, 59, 30) < DATETIME(2021, 1, 1, 14, 0, 0)\n"
+            "lHistoricalDateTimeLess = DATETIME(1940, 12, 1, 23, 59, 59) < DATETIME(2021, 1, 1, 0, 0, 0)\n"
+            "lFutureDateTimeGreater = DATETIME(2050, 1, 1, 0, 0, 0) > DATETIME(2021, 1, 1, 0, 0, 0)\n"
+            "lHistoricalDateTimeArithmeticLess = DATETIME(1940, 12, 1, 23, 59, 59) + 0 < DATETIME(2021, 1, 1, 0, 0, 0)\n"
+            "lHistoricalTtodLess = TTOD(DATETIME(1940, 12, 1, 23, 59, 59)) < DATE(2021, 1, 1)\n"
+            "lPlainStringLess = '12/01/2020' < '01/15/2021'\n"
+            "USE '" + table_path.string() + "'\n"
+            "lEmptyDateLess = EMPTYD < DATE(2021, 1, 1)\n"
+            "lValueAfterEmptyDate = DATE(2021, 1, 1) > EMPTYD\n"
+            "lEmptyDateTimeLess = EMPTYT < DATETIME(2021, 1, 1, 0, 0, 0)\n"
+            "lEmptyDateBeforeEmptyDateTime = EMPTYD <= EMPTYT\n"
+            "RETURN\n");
+
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path, temp_root));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "date/time ordering script should complete: " + state.message);
+
+        const auto check = [&](const std::string& name, bool expected)
+        {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end(), name + " ordering result should be captured");
+            if (found != state.globals.end())
+            {
+                expect(copperfin::runtime::format_value(found->second) == (expected ? "true" : "false"),
+                       name + " should match mounted VFP9 chronological ordering");
+            }
+        };
+
+        check("ldateless", true);
+        check("ldategreater", true);
+        check("ldatelessequal", true);
+        check("ldategreaterequal", true);
+        check("ldatereverseless", false);
+        check("ldatereversegreater", false);
+        check("ldatetimeacrossyear", true);
+        check("ldatetimesameday", true);
+        check("ldatebeforedatetime", true);
+        check("ldatetimeafterdate", true);
+        check("ldatebeforemidnight", false);
+        check("ldateatorbeforemidnight", true);
+        check("ldatedmyless", true);
+        check("ldatecustompresentationless", true);
+        check("lhistoricaldateless", true);
+        check("lfuturedategreater", true);
+        check("lhistoricaldatearithmeticless", true);
+        check("lhistoricaleomonthless", true);
+        check("lhistoricalgomonthless", true);
+        check("lhistoricaldtotless", true);
+        check("lhistoricalyearpreserved", true);
+        check("lhistoricaldtocpreserved", true);
+        check("ldatetimecustompresentationless", true);
+        check("lhistoricaldatetimeless", true);
+        check("lfuturedatetimegreater", true);
+        check("lhistoricaldatetimearithmeticless", true);
+        check("lhistoricalttodless", true);
+        check("lplainstringless", false);
+        check("lemptydateless", true);
+        check("lvalueafteremptydate", true);
+        check("lemptydatetimeless", true);
+        check("lemptydatebeforeemptydatetime", true);
+
+        fs::remove_all(temp_root, ignored);
+    }
+
+    void test_date_time_ordering_rejects_incompatible_operands_without_ending_the_session()
+    {
+        namespace fs = std::filesystem;
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_date_time_ordering_fault";
+        std::error_code ignored;
+        fs::remove_all(temp_root, ignored);
+        fs::create_directories(temp_root);
+
+        const fs::path main_path = temp_root / "date_time_ordering_fault.prg";
+        write_text(
+            main_path,
+            "lDateCharacter = DATE(2021, 1, 1) < '01/02/2021'\n"
+            "nAfterCharacter = 1\n"
+            "lDateNumeric = DATE(2021, 1, 1) < 1\n"
+            "nAfterNumeric = 1\n"
+            "RETURN\n");
+
+        auto session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path, temp_root));
+        auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+               "date-versus-character ordering should pause with Error 107");
+        expect(state.location.line == 1U,
+               "date-versus-character ordering should identify the exact faulting statement");
+        expect(state.message.find("Operator/operand type mismatch.") != std::string::npos,
+               "date-versus-character ordering should retain localized VFP Error 107 prose");
+
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+               "date-versus-numeric ordering should pause with Error 107");
+        expect(state.location.line == 3U,
+               "date-versus-numeric ordering should identify the exact faulting statement");
+        expect(state.globals.contains("naftercharacter"),
+               "continuing after the first ordering fault should execute later statements");
+
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "continuing after incompatible date ordering faults should keep the session alive");
+        expect(state.globals.contains("nafternumeric"),
+               "statements after the second ordering fault should execute");
+
+        fs::remove_all(temp_root, ignored);
+    }
+
 
 } // namespace
 
@@ -485,6 +643,8 @@ int main()
 {
     test_date_time_expression_functions();
     test_date_time_arithmetic_rejects_unsupported_operands_without_ending_the_session();
+    test_date_time_ordering_uses_chronological_values();
+    test_date_time_ordering_rejects_incompatible_operands_without_ending_the_session();
 
     if (test_failures() != 0)
     {

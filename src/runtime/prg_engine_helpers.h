@@ -50,7 +50,16 @@ PrgValue make_boolean_value(bool value);
 PrgValue make_number_value(double value);
 PrgValue make_string_value(std::string value);
 PrgValue make_date_value(std::string value);
+PrgValue make_date_value(std::string value, int year, int month, int day);
 PrgValue make_datetime_value(std::string value);
+PrgValue make_datetime_value(
+    std::string value,
+    int year,
+    int month,
+    int day,
+    int hour,
+    int minute,
+    int second);
 PrgValue make_int64_value(std::int64_t value);
 PrgValue make_uint64_value(std::uint64_t value);
 bool value_as_bool(const PrgValue& value);

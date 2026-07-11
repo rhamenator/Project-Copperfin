@@ -1474,7 +1474,7 @@
                 int day = 0;
                 if (parse_runtime_or_storage_date_string(field.display_value, year, month, day))
                 {
-                    return make_date_value(format_runtime_date_string(year, month, day));
+                    return make_date_value(format_runtime_date_string(year, month, day), year, month, day);
                 }
             }
             if (field_type == 'T')
@@ -1504,7 +1504,14 @@
                         const int second = total_seconds % 60;
                         if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59 && second >= 0 && second <= 59)
                         {
-                            return make_datetime_value(format_runtime_datetime_string(year, month, day, hour, minute, second));
+                            return make_datetime_value(
+                                format_runtime_datetime_string(year, month, day, hour, minute, second),
+                                year,
+                                month,
+                                day,
+                                hour,
+                                minute,
+                                second);
                         }
                     }
                 }
@@ -1517,7 +1524,14 @@
                 int second = 0;
                 if (parse_runtime_or_storage_datetime_string(field.display_value, year, month, day, hour, minute, second))
                 {
-                    return make_datetime_value(format_runtime_datetime_string(year, month, day, hour, minute, second));
+                    return make_datetime_value(
+                        format_runtime_datetime_string(year, month, day, hour, minute, second),
+                        year,
+                        month,
+                        day,
+                        hour,
+                        minute,
+                        second);
                 }
             }
             return make_string_value(field.display_value);

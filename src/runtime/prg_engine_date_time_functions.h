@@ -24,4 +24,9 @@ std::optional<PrgValue> evaluate_date_time_additive(
     bool subtract,
     const std::function<std::string(const std::string&)>& set_callback);
 
+std::optional<int> compare_date_time_values(
+    const PrgValue& left,
+    const PrgValue& right,
+    const std::function<std::string(const std::string&)>& set_callback);
+
 }  // namespace copperfin::runtime
