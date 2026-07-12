@@ -192,6 +192,19 @@ void write_deleted_unsupported_sort_settings_fixture(
     expect(delete_result.ok, "#3099: deleted unsupported TAG sort-settings fixture should mark the root record deleted");
 }
 
+void expect_sort_settings_page_summary(const std::string& text, const std::string& issue_prefix) {
+    expect_contains(text, "\"pageSetupAvailable\": true",
+                    issue_prefix + " should expose effective page setup availability");
+    expect_contains(text, "\"orientationAvailable\": true",
+                    issue_prefix + " should expose orientation availability");
+    expect_contains(text, "\"orientationCode\": 1",
+                    issue_prefix + " should preserve memo-derived orientation");
+    expect_contains(text, "\"paperSizeAvailable\": true",
+                    issue_prefix + " should expose paper-size availability");
+    expect_contains(text, "\"paperSizeCode\": 9",
+                    issue_prefix + " should preserve memo-derived paper size");
+}
+
 void expect_live_sort_setting_json(
     const std::string& text,
     const std::string& title,
@@ -208,16 +221,21 @@ void expect_live_sort_setting_json(
                     issue_prefix + " should preserve selected-settings availability");
     expect_contains(text, "\"selectedReportSelectionKind\": \"settings\"",
                     issue_prefix + " should preserve settings selection kind");
-    expect_contains(text, "\"pageSetupAvailable\": true",
-                    issue_prefix + " should preserve page setup availability");
-    expect_contains(text, "\"orientationCode\": 1",
-                    issue_prefix + " should preserve memo-derived orientation");
-    expect_contains(text, "\"paperSizeCode\": 9",
-                    issue_prefix + " should preserve memo-derived paper size");
+    expect_sort_settings_page_summary(text, issue_prefix);
     expect_contains(text, "\"settingCount\": 3",
                     issue_prefix + " should expose the TAG direct setting in live counts");
     expect_contains(text, "\"deletedSettingCount\": 0",
                     issue_prefix + " should keep deleted setting counts empty");
+    expect_contains_in_order(
+        text,
+        {
+            "\"settings\": [",
+            "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+            "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+            "\"name\": \"TAG\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null",
+            "\"value\": \"" + expected_tag + "\""
+        },
+        issue_prefix + " should expose refreshed TAG provenance in live settings");
     expect_contains_in_order(
         text,
         {
@@ -246,12 +264,21 @@ void expect_deleted_sort_setting_json(
                     issue_prefix + " should preserve selected-settings availability");
     expect_contains(text, "\"selectedReportSelectionKind\": \"settings\"",
                     issue_prefix + " should preserve settings selection kind");
-    expect_contains(text, "\"pageSetupAvailable\": false",
-                    issue_prefix + " should not fabricate live page setup for deleted roots");
+    expect_sort_settings_page_summary(text, issue_prefix);
     expect_contains(text, "\"settingCount\": 0",
                     issue_prefix + " should keep live setting counts empty");
     expect_contains(text, "\"deletedSettingCount\": 3",
                     issue_prefix + " should expose deleted TAG settings in deleted counts");
+    expect_contains_in_order(
+        text,
+        {
+            "\"deletedSettings\": [",
+            "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+            "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+            "\"name\": \"TAG\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null",
+            "\"value\": \"" + expected_tag + "\""
+        },
+        issue_prefix + " should expose refreshed TAG provenance in deleted settings");
     expect_contains_in_order(
         text,
         {
@@ -280,12 +307,7 @@ void expect_live_unsupported_sort_setting_json(
                     issue_prefix + " should preserve selected-settings availability");
     expect_contains(text, "\"selectedReportSelectionKind\": \"settings\"",
                     issue_prefix + " should preserve settings selection kind");
-    expect_contains(text, "\"pageSetupAvailable\": true",
-                    issue_prefix + " should preserve memo-derived page setup");
-    expect_contains(text, "\"orientationCode\": 1",
-                    issue_prefix + " should preserve memo-derived orientation");
-    expect_contains(text, "\"paperSizeCode\": 9",
-                    issue_prefix + " should preserve memo-derived paper size");
+    expect_sort_settings_page_summary(text, issue_prefix);
     expect_contains(text, "\"settingCount\": 4",
                     issue_prefix + " should expose supported settings plus the TAG direct field");
     expect_contains(text, "\"deletedSettingCount\": 0",
@@ -333,8 +355,7 @@ void expect_deleted_unsupported_sort_setting_json(
                     issue_prefix + " should preserve selected-settings availability");
     expect_contains(text, "\"selectedReportSelectionKind\": \"settings\"",
                     issue_prefix + " should preserve settings selection kind");
-    expect_contains(text, "\"pageSetupAvailable\": false",
-                    issue_prefix + " should not fabricate live page setup for deleted roots");
+    expect_sort_settings_page_summary(text, issue_prefix);
     expect_contains(text, "\"settingCount\": 0",
                     issue_prefix + " should keep live setting counts empty");
     expect_contains(text, "\"deletedSettingCount\": 4",
@@ -477,8 +498,9 @@ void test_clears_report_sort_settings_by_stable_selection(const std::string& stu
                         "#2909: report/label stable TAG clear reopen JSON should preserve selected-settings availability");
         expect_contains(reopen_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
                         "#2909: report/label stable TAG clear reopen JSON should preserve settings selection kind");
-        expect_contains(reopen_process.stdout_text, "\"pageSetupAvailable\": true",
-                        "#2909: report/label stable TAG clear reopen JSON should preserve memo-derived page setup");
+        expect_sort_settings_page_summary(
+            reopen_process.stdout_text,
+            "#2909: report/label stable TAG clear reopen JSON");
         expect_contains(reopen_process.stdout_text, "\"settingCount\": 2",
                         "#2909: report/label stable TAG clear reopen JSON should remove TAG from live setting counts");
         expect_contains(reopen_process.stdout_text, "\"deletedSettingCount\": 0",
@@ -621,8 +643,9 @@ void test_clears_deleted_report_sort_settings_by_stable_selection(const std::str
                         "#2909: report/label stable deleted TAG clear reopen JSON should preserve selected-settings availability");
         expect_contains(reopen_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
                         "#2909: report/label stable deleted TAG clear reopen JSON should preserve settings selection kind");
-        expect_contains(reopen_process.stdout_text, "\"pageSetupAvailable\": false",
-                        "#2909: report/label stable deleted TAG clear reopen JSON should not fabricate live page setup");
+        expect_sort_settings_page_summary(
+            reopen_process.stdout_text,
+            "#2909: report/label stable deleted TAG clear reopen JSON");
         expect_contains(reopen_process.stdout_text, "\"settingCount\": 0",
                         "#2909: report/label stable deleted TAG clear reopen JSON should keep live setting counts empty");
         expect_contains(reopen_process.stdout_text, "\"deletedSettingCount\": 2",
@@ -834,6 +857,10 @@ void test_clears_report_sort_settings_preserve_unsupported_expr_lines_by_stable_
             temp_root);
         expect(reopen_process.exit_code == 0,
                "#3099: stable TAG clear reopen should exit successfully with unsupported EXPR lines");
+        expect_contains(reopen_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#3099: stable TAG clear reopen JSON should preserve selected-settings availability");
+        expect_contains(reopen_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#3099: stable TAG clear reopen JSON should preserve settings selection kind");
         if (deleted) {
             expect_contains(reopen_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                             "#3099: stable deleted TAG clear reopen JSON should preserve document titles");
@@ -841,8 +868,9 @@ void test_clears_report_sort_settings_preserve_unsupported_expr_lines_by_stable_
                 expect_contains(reopen_process.stdout_text, "\"isLabel\": true",
                                 "#3099: label stable deleted TAG clear reopen JSON should retain label identity");
             }
-            expect_contains(reopen_process.stdout_text, "\"pageSetupAvailable\": false",
-                            "#3099: stable deleted TAG clear reopen JSON should not fabricate live page setup");
+            expect_sort_settings_page_summary(
+                reopen_process.stdout_text,
+                "#3099: stable deleted TAG clear reopen JSON");
             expect_contains(reopen_process.stdout_text, "\"settingCount\": 0",
                             "#3099: stable deleted TAG clear reopen JSON should keep live setting counts empty");
             expect_contains(reopen_process.stdout_text, "\"deletedSettingCount\": 3",
@@ -872,8 +900,9 @@ void test_clears_report_sort_settings_preserve_unsupported_expr_lines_by_stable_
                 expect_contains(reopen_process.stdout_text, "\"isLabel\": true",
                                 "#3099: label stable TAG clear reopen JSON should retain label identity");
             }
-            expect_contains(reopen_process.stdout_text, "\"pageSetupAvailable\": true",
-                            "#3099: stable TAG clear reopen JSON should preserve memo-derived page setup");
+            expect_sort_settings_page_summary(
+                reopen_process.stdout_text,
+                "#3099: stable TAG clear reopen JSON");
             expect_contains(reopen_process.stdout_text, "\"settingCount\": 3",
                             "#3099: stable TAG clear reopen JSON should preserve supported live settings");
             expect_contains(reopen_process.stdout_text, "\"deletedSettingCount\": 0",
