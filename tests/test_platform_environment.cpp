@@ -11,6 +11,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <string>
 #include <utility>
 #include <vector>
@@ -188,7 +189,8 @@ void test_default_locale_environment_falls_back_for_invalid_or_missing_override(
     fs::remove_all(root, ignored);
 }
 
-void test_locale_catalog_root_preserves_non_ascii_environment_paths() {
+void test_locale_catalog_root_preserves_non_ascii_environment_paths(
+    const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
 
 #if defined(_WIN32)
@@ -202,7 +204,8 @@ void test_locale_catalog_root_preserves_non_ascii_environment_paths() {
     const fs::path prior_value = root / "prior-locale-root";
     fs::create_directories(locale_root / "en-US");
     std::ofstream(locale_root / "en-US" / "strings.json")
-        << "{\"Test.NonAsciiLocaleRoot\":\"loaded\"}\n";
+        << "{\"Test.NonAsciiLocaleRoot\":\"loaded\","
+           "\"RuntimeHost.Usage.Manifest\":\"UNICODE_LOCALE_ROOT {commandName}\"}\n";
 
     copperfin::test_support::ScopedEnvironmentPath original_locale_dir("COPPERFIN_LOCALE_DIR");
     expect(copperfin::platform::write_environment_path("COPPERFIN_LOCALE_DIR", prior_value),
@@ -233,6 +236,25 @@ void test_locale_catalog_root_preserves_non_ascii_environment_paths() {
         }
         expect(copperfin::platform::read_environment_path("COPPERFIN_LOCALE_DIR") == locale_root,
                "#4005: default locale scope should restore the exact non-ASCII path value");
+
+        if (!runtime_host_path.empty()) {
+            copperfin::test_support::ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "en-US");
+            const fs::path output_path = fs::temp_directory_path() /
+                ("copperfin_unicode_locale_host_" +
+                 std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) +
+                 ".log");
+            const std::string command =
+                "\"" + runtime_host_path + "\" > \"" + output_path.string() + "\" 2>&1";
+            (void)copperfin::test_support::run_shell_command(command);
+            std::ifstream output_stream(output_path, std::ios::binary);
+            const std::string output{
+                std::istreambuf_iterator<char>(output_stream),
+                std::istreambuf_iterator<char>()};
+            expect(output.find("UNICODE_LOCALE_ROOT copperfin_runtime_host") != std::string::npos,
+                   "#4005: runtime host should load usage text from the non-ASCII catalog root");
+            std::error_code remove_error;
+            fs::remove(output_path, remove_error);
+        }
     }
     expect(copperfin::platform::read_environment_path("COPPERFIN_LOCALE_DIR") == prior_value,
            "#4005: filesystem environment scope should restore a present prior path exactly");
@@ -255,14 +277,14 @@ void test_locale_catalog_root_preserves_non_ascii_environment_paths() {
 
 }  // namespace
 
-int main() {
+int main(int argc, char** argv) {
     test_platform_environment_round_trips_values();
     test_platform_environment_rejects_empty_names();
     test_scoped_environment_support_uses_shared_platform_helpers();
     test_shell_command_preparation_preserves_platform_quoting_contract();
     test_default_locale_environment_preserves_valid_override_and_restores_values();
     test_default_locale_environment_falls_back_for_invalid_or_missing_override();
-    test_locale_catalog_root_preserves_non_ascii_environment_paths();
+    test_locale_catalog_root_preserves_non_ascii_environment_paths(argc > 1 ? argv[1] : std::string());
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

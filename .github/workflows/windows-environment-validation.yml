@@ -42,7 +42,7 @@ jobs:
         run: cmake -S . -B build -DCOPPERFIN_BUILD_TESTS=ON
 
       - name: Build environment path regressions
-        run: cmake --build build --config Release --parallel 2 --target test_platform_environment test_runtime_host_debug_output
+        run: cmake --build build --config Release --parallel 2 --target test_platform_environment
 
       - name: Run environment path regressions
-        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_platform_environment|test_runtime_host_debug_output)$"
+        run: ctest --test-dir build -C Release --output-on-failure -R "^test_platform_environment$"

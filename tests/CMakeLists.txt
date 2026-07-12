@@ -3941,8 +3941,21 @@ copperfin_add_test(test_platform_models "cf_security;cf_platform_profile"
     test_platform_models.cpp
 )
 
-copperfin_add_test(test_platform_environment cf_localization
+add_executable(test_platform_environment
     test_platform_environment.cpp
+)
+target_link_libraries(test_platform_environment PRIVATE cf_localization)
+add_dependencies(test_platform_environment copperfin_runtime_host)
+
+if(MSVC)
+    target_compile_options(test_platform_environment PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_platform_environment PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_platform_environment
+    COMMAND $<TARGET_FILE:test_platform_environment> $<TARGET_FILE:copperfin_runtime_host>
 )
 
 copperfin_add_test(test_query_translator cf_platform_profile
