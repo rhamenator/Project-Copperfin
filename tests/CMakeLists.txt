@@ -4284,3 +4284,20 @@ target_include_directories(test_prg_engine_table_structure PRIVATE
 copperfin_add_test(test_xasset_methods cf_xbase_runtime
     test_xasset_methods.cpp
 )
+
+# Studio-host tests launch this executable out of process. A TARGET_FILE generator
+# expression in add_test() does not make narrow test-target builds rebuild the host.
+get_property(copperfin_test_directory_targets DIRECTORY PROPERTY BUILDSYSTEM_TARGETS)
+set(copperfin_self_contained_studio_host_tests
+    test_studio_host
+    test_studio_host_shell_command
+)
+foreach(copperfin_test_target IN LISTS copperfin_test_directory_targets)
+    if(copperfin_test_target MATCHES "^test_studio_host($|_)" AND
+       NOT copperfin_test_target IN_LIST copperfin_self_contained_studio_host_tests)
+        get_target_property(copperfin_test_target_type ${copperfin_test_target} TYPE)
+        if(copperfin_test_target_type STREQUAL "EXECUTABLE")
+            add_dependencies(${copperfin_test_target} copperfin_studio_host)
+        endif()
+    endif()
+endforeach()
