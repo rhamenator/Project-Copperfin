@@ -150,7 +150,11 @@ internal static partial class Program
                        string.Equals(
                            (string?)itemButton.Element(commandNamespace + "Parent")?.Attribute("id"),
                            "CopperfinItemGroup",
-                           StringComparison.Ordinal),
+                           StringComparison.Ordinal) &&
+                       string.Equals(
+                           (string?)itemButton.Attribute("priority"),
+                           "0x0100",
+                           StringComparison.OrdinalIgnoreCase),
                     "Solution Explorer should use a distinct selected-item command placement");
                 var itemGroup = commandTable
                     .Descendants(commandNamespace + "Group")
@@ -164,26 +168,30 @@ internal static partial class Program
                            "0x0100",
                            StringComparison.OrdinalIgnoreCase),
                     "the Copperfin item group should retain the original context-menu position");
-                foreach (var commandId in new[]
+                foreach (var command in new[]
                          {
-                             "BuildCopperfinProjectCommand",
-                             "RunCopperfinProjectCommand",
-                             "DebugCopperfinProjectCommand"
+                             (Id: "BuildCopperfinProjectCommand", Priority: "0x0110"),
+                             (Id: "RunCopperfinProjectCommand", Priority: "0x0120"),
+                             (Id: "DebugCopperfinProjectCommand", Priority: "0x0130")
                          })
                 {
                     Expect(commandTable
                             .Descendants(commandNamespace + "CommandPlacement")
                             .Any(element => string.Equals(
                                                 (string?)element.Attribute("id"),
-                                                commandId,
+                                                command.Id,
                                                 StringComparison.Ordinal) &&
+                                            string.Equals(
+                                                (string?)element.Attribute("priority"),
+                                                command.Priority,
+                                                StringComparison.OrdinalIgnoreCase) &&
                                             string.Equals(
                                                 (string?)element
                                                     .Element(commandNamespace + "Parent")
                                                     ?.Attribute("id"),
                                                 "CopperfinItemGroup",
                                                 StringComparison.Ordinal)),
-                        $"{commandId} should remain grouped with the item-node Open command");
+                        $"{command.Id} should retain its priority after the item-node Open command");
                 }
                 Expect(!commandTable
                         .Descendants(commandNamespace + "CommandPlacement")

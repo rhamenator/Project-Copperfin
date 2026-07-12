@@ -84,6 +84,14 @@ Invoke-Step -Name "Verify localized command resources" -Action {
     & $vsixLocalizationTest -VsixPath $vsixArtifact
 }
 
+Invoke-Step -Name "Run managed VSIX behavior tests" -Action {
+    Invoke-Checked -FilePath "dotnet" -ArgumentList @(
+        "run",
+        "--project", (Join-Path $vsixDir "Copperfin.LanguageServiceTests\Copperfin.LanguageServiceTests.csproj"),
+        "--configuration", "Release"
+    )
+}
+
 Invoke-Step -Name "Build standalone Studio shell" -Action {
     Invoke-Checked -FilePath $msbuild -ArgumentList @($studioProject, "/restore", "/t:Rebuild", "/p:Configuration=Release")
 }

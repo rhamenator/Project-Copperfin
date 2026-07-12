@@ -12,6 +12,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
 
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v3
 
@@ -21,6 +26,9 @@ jobs:
       - name: Verify localized command resources
         shell: pwsh
         run: ./scripts/test-vsix-command-localization.ps1 -VsixPath vsix/Copperfin.VisualStudio/bin/Release/net472/Copperfin.VisualStudio.vsix
+
+      - name: Run managed VSIX behavior tests
+        run: dotnet run --project vsix/Copperfin.LanguageServiceTests/Copperfin.LanguageServiceTests.csproj --configuration Release
 
       - name: Upload VSIX artifact
         uses: actions/upload-artifact@v7.0.1
