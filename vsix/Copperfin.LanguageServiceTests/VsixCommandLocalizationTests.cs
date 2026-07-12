@@ -176,7 +176,6 @@ internal static partial class Program
                 "CommandResources*.resx",
                 StringComparison.Ordinal));
         Expect(resourceAnchor?.Element("MergeWithCTO")?.Value == "true" &&
-               resourceAnchor.Element("ManifestResourceName")?.Value == "CopperfinCommandResources" &&
                new[] { "", ".es", ".pt", ".qps-ploc" }.All(suffix =>
                    File.Exists(Path.Combine(
                        repositoryRoot,

@@ -45,7 +45,6 @@
     </VSCTCompile>
     <EmbeddedResource Update="CommandResources*.resx">
       <MergeWithCTO>true</MergeWithCTO>
-      <ManifestResourceName>CopperfinCommandResources</ManifestResourceName>
       <GenerateSource>false</GenerateSource>
     </EmbeddedResource>
   </ItemGroup>
