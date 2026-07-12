@@ -6,6 +6,7 @@
 
 namespace cf_test_runtime_pipeline {
 void test_absolute_project_item_paths_never_rebind_to_project_decoys();
+void test_file_valued_home_directory_falls_back_to_project_directory();
 }
 
 using namespace cf_test_runtime_pipeline;
@@ -17,6 +18,7 @@ int main() {
     test_ambiguous_casefold_startup_path_fails_closed();
     test_startup_resolution_preserves_parent_tail_and_name_fallbacks();
     test_absolute_project_item_paths_never_rebind_to_project_decoys();
+    test_file_valued_home_directory_falls_back_to_project_directory();
     test_missing_startup_primary_fails_for_all_mvp_families();
     test_missing_required_startup_sidecar_fails_for_all_xasset_families();
     test_generated_launcher_forwards_manifest_and_debug_flag();

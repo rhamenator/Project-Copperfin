@@ -620,7 +620,8 @@ std::string resolve_working_directory(
     const std::filesystem::path document_dir = std::filesystem::path(document.path).parent_path();
     if (!workspace.home_directory.empty()) {
         const std::filesystem::path home_directory(workspace.home_directory);
-        if (std::filesystem::exists(home_directory)) {
+        std::error_code directory_error;
+        if (std::filesystem::is_directory(home_directory, directory_error) && !directory_error) {
             return home_directory.lexically_normal().string();
         }
     }

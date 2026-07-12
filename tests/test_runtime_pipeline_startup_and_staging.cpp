@@ -140,6 +140,76 @@ void run_xasset_startup_companion_stage_smoke(
 
 }  // namespace
 
+void test_file_valued_home_directory_falls_back_to_project_directory() {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_runtime_pipeline_file_home_directory";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    const fs::path home_file = temp_root / "not-a-directory.txt";
+    const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+    write_text(project_dir / "main.prg", "RETURN\n");
+    write_text(home_file, "file-valued workspace home");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "file_home.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "FileHome";
+    workspace.home_directory = home_file.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "FileHome";
+    workspace.build_plan.output_path = (output_dir / "FileHome.exe").string();
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 1U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "main.prg", .relative_path = "main.prg", .type_title = "Program"}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false);
+
+    expect(plan.ok, "#3989: a file-valued project home should not prevent package planning");
+    expect(plan.debug_plan.working_directory == project_dir.string(),
+           "#3989: package debug planning should fall back from a file-valued home to the project directory");
+    expect(std::find(
+               plan.debug_plan.source_roots.begin(),
+               plan.debug_plan.source_roots.end(),
+               home_file.string()) == plan.debug_plan.source_roots.end(),
+           "#3989: a file-valued home must not enter debug source roots");
+
+    const auto result = copperfin::runtime::materialize_runtime_package(
+        plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        runtime_host.string());
+    expect(result.ok, "#3989: a package with a file-valued project home should materialize through fallback");
+    if (result.ok) {
+        const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
+        expect(manifest_value_for_key(debug_manifest, "working_directory") ==
+                   quote_manifest_value(project_dir.string()),
+               "#3989: app.cfdebug should record the fallback project directory without changing its key");
+        expect(debug_manifest.find(home_file.string()) == std::string::npos,
+               "#3989: app.cfdebug must not serialize the file-valued project home");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_materialize_runtime_package() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_pipeline_tests";

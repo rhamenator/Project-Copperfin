@@ -899,8 +899,19 @@ copperfin::studio::StudioAssetKind xasset_kind_for_path(const std::filesystem::p
 
 enum class PackagePathBindingMode {
     allow_filename_fallback,
+    allow_external_fidelity,
     strict_relative_fidelity
 };
+
+bool is_existing_directory(const std::filesystem::path& path) {
+    std::error_code error;
+    return std::filesystem::is_directory(path, error) && !error;
+}
+
+bool path_exists_without_error(const std::filesystem::path& path) {
+    std::error_code error;
+    return std::filesystem::exists(path, error) && !error;
+}
 
 ManifestMap load_manifest(const std::string& path) {
     ManifestMap values;
@@ -1219,7 +1230,7 @@ std::optional<std::filesystem::path> bind_packaged_path(
         if (relative.empty() ||
             relative == recorded_path ||
             relative_path_escapes_root(relative) ||
-            !std::filesystem::exists(recorded_path)) {
+            !path_exists_without_error(recorded_path)) {
             return std::nullopt;
         }
         return admit_existing_packaged_path(
@@ -1229,7 +1240,7 @@ std::optional<std::filesystem::path> bind_packaged_path(
             containment_failure);
     }
 
-    if (recorded_path_is_absolute && std::filesystem::exists(recorded_path)) {
+    if (recorded_path_is_absolute && path_exists_without_error(recorded_path)) {
         return admit_existing_packaged_path(
             recorded_path,
             manifest_directory,
@@ -2334,9 +2345,9 @@ std::string resolve_effective_working_directory(
             first_value(manifest, "package_root"),
             manifest_directory,
             allow_external_debug_directory
-                ? PackagePathBindingMode::allow_filename_fallback
+                ? PackagePathBindingMode::allow_external_fidelity
                 : PackagePathBindingMode::strict_relative_fidelity);
-        if (bound.has_value()) {
+        if (bound.has_value() && is_existing_directory(*bound)) {
             return bound->string();
         }
     }
@@ -2385,10 +2396,13 @@ std::optional<std::string> resolve_startup_root(
     const std::filesystem::path& manifest_directory,
     const std::filesystem::path& empty_value_fallback,
     const bool allow_external_debug_directory,
-    copperfin::security::PhysicalPathContainmentFailure* containment_failure) {
+    copperfin::security::PhysicalPathContainmentFailure* containment_failure,
+    const bool require_directory = false) {
+    const std::filesystem::path fallback =
+        (manifest_directory / empty_value_fallback).lexically_normal();
     const std::string recorded_root = first_value(manifest, key);
     if (trim_copy(recorded_root).empty()) {
-        return (manifest_directory / empty_value_fallback).lexically_normal().string();
+        return fallback.string();
     }
 
     const auto bound = bind_packaged_path(
@@ -2396,12 +2410,18 @@ std::optional<std::string> resolve_startup_root(
         first_value(manifest, "package_root"),
         manifest_directory,
         allow_external_debug_directory
-            ? PackagePathBindingMode::allow_filename_fallback
+            ? (require_directory
+                ? PackagePathBindingMode::allow_external_fidelity
+                : PackagePathBindingMode::allow_filename_fallback)
             : PackagePathBindingMode::strict_relative_fidelity,
         containment_failure);
-    return bound.has_value()
-        ? std::optional<std::string>(bound->string())
-        : std::nullopt;
+    if (bound.has_value() && (!require_directory || is_existing_directory(*bound))) {
+        return bound->string();
+    }
+    if (require_directory && is_existing_directory(fallback)) {
+        return fallback.string();
+    }
+    return std::nullopt;
 }
 
 std::optional<std::string> resolve_startup_source(
@@ -2463,7 +2483,8 @@ std::optional<std::string> resolve_startup_source(
         manifest_directory,
         "content",
         allow_external_debug_source,
-        containment_failure);
+        containment_failure,
+        true);
     if (working_directory.has_value()) {
         if (const auto candidate = bind_relative_startup_item(
                 startup_item,

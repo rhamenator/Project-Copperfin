@@ -1062,6 +1062,157 @@ void test_app_cfdebug_preserves_external_xasset_source_compatibility(
     }
 }
 
+void test_app_cfdebug_rejects_file_valued_working_directory(
+    const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_runtime_host_file_working_directory";
+    const fs::path deployed_root = temp_root / "deployed";
+    const fs::path content_root = deployed_root / "content";
+    const fs::path startup_path = content_root / "main.prg";
+    const fs::path working_directory_file = temp_root / "not-a-directory.txt";
+    const fs::path debug_manifest_path = deployed_root / "app.cfdebug";
+    const fs::path deployed_runtime_host = deployed_runtime_host_path(deployed_root, runtime_host_path);
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(content_root);
+    write_text(startup_path, "RETURN\n");
+    write_text(working_directory_file, "file-valued debug working directory");
+    fs::copy_file(runtime_host_path, deployed_runtime_host, fs::copy_options::overwrite_existing);
+#if defined(__unix__) || defined(__APPLE__)
+    fs::permissions(
+        deployed_runtime_host,
+        fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec,
+        fs::perm_options::add,
+        ignored);
+#endif
+
+    write_text(
+        debug_manifest_path,
+        "debug_manifest_version=2\n"
+        "project_title=FileWorkingDirectory\n"
+        "package_root=" + deployed_root.string() + "\n"
+        "content_root=" + content_root.string() + "\n"
+        "working_directory=" + working_directory_file.string() + "\n"
+        "startup_item=main.prg\n"
+        "startup_source=" + startup_path.string() + "\n"
+        "security_enabled=false\n"
+        "security_role=\n"
+        "security_mode=native\n"
+        "dotnet_story=none\n");
+
+    const auto process = run_process_capture(
+        deployed_runtime_host.string(),
+        {"--manifest", debug_manifest_path.string(), "--debug"},
+        deployed_root);
+    expect(process.exit_code == 0,
+           "#3989: app.cfdebug should launch after rejecting a file-valued working directory");
+    expect(process.stdout_text.find("working.directory: " + content_root.string()) !=
+               std::string::npos,
+           "#3989: runtime host should fall back from a file-valued debug working directory to package content");
+    expect(process.stdout_text.find("working.directory: " + working_directory_file.string()) ==
+               std::string::npos,
+           "#3989: runtime host must not publish a file as the effective working directory");
+
+    const fs::path missing_working_directory =
+        temp_root / "missing" / "basename-directory-decoy";
+    const fs::path basename_directory_decoy =
+        deployed_root / missing_working_directory.filename();
+    fs::create_directories(basename_directory_decoy);
+    write_text(
+        debug_manifest_path,
+        "debug_manifest_version=2\n"
+        "project_title=MissingWorkingDirectory\n"
+        "package_root=" + deployed_root.string() + "\n"
+        "content_root=" + content_root.string() + "\n"
+        "working_directory=" + missing_working_directory.string() + "\n"
+        "startup_item=main.prg\n"
+        "startup_source=" + startup_path.string() + "\n"
+        "security_enabled=false\n"
+        "security_role=\n"
+        "security_mode=native\n"
+        "dotnet_story=none\n");
+    const auto missing_process = run_process_capture(
+        deployed_runtime_host.string(),
+        {"--manifest", debug_manifest_path.string(), "--debug"},
+        deployed_root);
+    expect(missing_process.exit_code == 0,
+           "#3989: app.cfdebug should launch after rejecting a missing working directory");
+    expect(missing_process.stdout_text.find("working.directory: " + content_root.string()) !=
+               std::string::npos,
+           "#3989: a missing debug working directory should retain the package-content fallback");
+    expect(missing_process.stdout_text.find(
+               "working.directory: " + basename_directory_decoy.string()) == std::string::npos,
+           "#3989: debug working-directory resolution must not bind an unrelated basename directory");
+
+#if !defined(_WIN32)
+    const fs::path inaccessible_parent = temp_root / "inaccessible";
+    const fs::path inaccessible_working_directory = inaccessible_parent / "working";
+    fs::create_directories(inaccessible_working_directory);
+    fs::permissions(inaccessible_parent, fs::perms::none, fs::perm_options::replace, ignored);
+    std::error_code inaccessible_probe_error;
+    (void)fs::status(inaccessible_working_directory, inaccessible_probe_error);
+    if (inaccessible_probe_error) {
+        write_text(
+            debug_manifest_path,
+            "debug_manifest_version=2\n"
+            "project_title=InaccessibleWorkingDirectory\n"
+            "package_root=" + deployed_root.string() + "\n"
+            "content_root=" + content_root.string() + "\n"
+            "working_directory=" + inaccessible_working_directory.string() + "\n"
+            "startup_item=main.prg\n"
+            "startup_source=" + startup_path.string() + "\n"
+            "security_enabled=false\n"
+            "security_role=\n"
+            "security_mode=native\n"
+            "dotnet_story=none\n");
+        const auto inaccessible_process = run_process_capture(
+            deployed_runtime_host.string(),
+            {"--manifest", debug_manifest_path.string(), "--debug"},
+            deployed_root);
+        expect(inaccessible_process.exit_code == 0,
+               "#3989: an unstatable debug working directory should fall back without throwing");
+        expect(inaccessible_process.stdout_text.find(
+                   "working.directory: " + content_root.string()) != std::string::npos,
+               "#3989: an unstatable debug working directory should retain the package-content fallback");
+    }
+    fs::permissions(
+        inaccessible_parent,
+        fs::perms::owner_all,
+        fs::perm_options::replace,
+        ignored);
+#endif
+
+    write_text(
+        debug_manifest_path,
+        "debug_manifest_version=2\n"
+        "project_title=StartupFallbackWorkingDirectory\n"
+        "package_root=" + deployed_root.string() + "\n"
+        "content_root=" + (temp_root / "missing-content-root").string() + "\n"
+        "working_directory=" + working_directory_file.string() + "\n"
+        "startup_item=main.prg\n"
+        "startup_source=\n"
+        "security_enabled=false\n"
+        "security_role=\n"
+        "security_mode=native\n"
+        "dotnet_story=none\n");
+    const auto startup_fallback_process = run_process_capture(
+        deployed_runtime_host.string(),
+        {"--manifest", debug_manifest_path.string(), "--debug"},
+        deployed_root);
+    expect(startup_fallback_process.exit_code == 0,
+           "#3989: legacy startup_item lookup should survive a file-valued working-directory root");
+    expect(startup_fallback_process.stdout_text.find(
+               "startup.source: " + startup_path.string()) != std::string::npos,
+           "#3989: legacy startup_item lookup should fall back to package content");
+    expect(startup_fallback_process.stdout_text.find(
+               "working.directory: " + content_root.string()) != std::string::npos,
+           "#3989: startup lookup and session setup should share the package-content directory fallback");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_security_enabled_writable_package_data_contract(
     const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
@@ -4935,6 +5086,7 @@ int main(int argc, char** argv) {
     test_security_enabled_report_and_label_execute_verified_snapshots(argv[1]);
     test_security_enabled_form_class_and_menu_companion_integrity(argv[1]);
     test_app_cfdebug_preserves_external_xasset_source_compatibility(argv[1]);
+    test_app_cfdebug_rejects_file_valued_working_directory(argv[1]);
     test_security_enabled_writable_package_data_contract(argv[1]);
     test_runtime_host_compatibility_launcher_note_reflects_xasset_fallback(argv[1]);
     test_runtime_host_reports_xasset_pause_identity(argv[1]);
