@@ -39,6 +39,7 @@ internal static partial class Program
         TestRuntimeDebugClientThreadsExplicitLocaleToRuntimeHostOnPosix();
         TestRuntimeDebugClientCleansTransientReplayManifestOnPosix();
         TestProcessRunnerCapturesLargeConcurrentOutput();
+        TestProcessRunnerPreservesSuccessfulExitWhenDescendantHoldsPipe();
         TestProcessRunnerEnforcesTimeoutWithoutPipeDeadlock();
         TestDottedClassMemberResolvesToLongestProjectSymbolPrefix();
         TestDottedMemberFallsBackToTrailingProcedureName();
@@ -941,8 +942,14 @@ internal static partial class Program
     {
         var root = Path.Combine(Path.GetTempPath(), "copperfin_language_service_tests", "process_runner_timeout", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
+        var childPidPath = Path.Combine(root, "child.pid");
+        var grandchildPidPath = Path.Combine(root, "grandchild.pid");
+        var childPid = 0;
+        var grandchildPid = 0;
         try
         {
+            var escapedPowerShellChildPidPath = childPidPath.Replace("'", "''", StringComparison.Ordinal);
+            var escapedPowerShellGrandchildPidPath = grandchildPidPath.Replace("'", "''", StringComparison.Ordinal);
             var startInfo = CreateTestScriptStartInfo(
                 root,
                 "timeout_output",
@@ -951,7 +958,7 @@ internal static partial class Program
                     "@echo off",
                     "echo before-timeout-stdout",
                     "echo before-timeout-stderr 1>&2",
-                    "timeout /t 5 /nobreak >nul",
+                    "powershell.exe -NoProfile -Command \"$grandchild = Start-Process -FilePath 'powershell.exe' -ArgumentList '-NoProfile -Command Start-Sleep -Seconds 30' -NoNewWindow -PassThru; Set-Content -LiteralPath '" + escapedPowerShellChildPidPath + "' -Value $PID; Set-Content -LiteralPath '" + escapedPowerShellGrandchildPidPath + "' -Value $grandchild.Id; Wait-Process -Id $grandchild.Id\"",
                     "exit /b 0"
                 ],
                 unixBody:
@@ -959,19 +966,98 @@ internal static partial class Program
                     "#!/bin/sh",
                     "echo before-timeout-stdout",
                     "echo before-timeout-stderr 1>&2",
-                    "sleep 5"
+                    "(",
+                    "  sleep 30 &",
+                    "  grandchild_pid=$!",
+                    "  printf '%s\\n' \"$grandchild_pid\" > \"" + grandchildPidPath + "\"",
+                    "  wait \"$grandchild_pid\"",
+                    ") &",
+                    "child_pid=$!",
+                    "printf '%s\\n' \"$child_pid\" > \"" + childPidPath + "\"",
+                    "wait \"$child_pid\""
                 ]);
 
-            var result = CopperfinProcessRunner.Run(startInfo, timeoutMilliseconds: 200);
+            var timeoutMilliseconds = OperatingSystem.IsWindows() ? 1500 : 300;
+            var stopwatch = Stopwatch.StartNew();
+            var result = CopperfinProcessRunner.Run(startInfo, timeoutMilliseconds);
+            stopwatch.Stop();
             Expect(result.Started, "process runner should start the timeout script");
             Expect(result.TimedOut, "process runner should report timeout when the child outlives the configured limit");
+            Expect(stopwatch.ElapsedMilliseconds < timeoutMilliseconds + 5000,
+                "process runner should return within the bounded timeout cleanup grace period");
             Expect(result.StandardOutput.Contains("before-timeout-stdout", StringComparison.Ordinal),
                 "process runner should retain stdout produced before the timeout cut-off");
             Expect(result.StandardError.Contains("before-timeout-stderr", StringComparison.Ordinal),
                 "process runner should retain stderr produced before the timeout cut-off");
+            Expect(TryReadProcessId(childPidPath, out childPid),
+                "process runner timeout fixture should record the child PID");
+            Expect(TryReadProcessId(grandchildPidPath, out grandchildPid),
+                "process runner timeout fixture should record the grandchild PID");
+            if (childPid > 0)
+            {
+                Expect(WaitForProcessExit(childPid, timeoutMilliseconds: 2000),
+                    "process runner timeout cleanup should terminate the child process");
+            }
+            if (grandchildPid > 0)
+            {
+                Expect(WaitForProcessExit(grandchildPid, timeoutMilliseconds: 2000),
+                    "process runner timeout cleanup should terminate the grandchild process");
+            }
         }
         finally
         {
+            TryTerminateProcess(grandchildPid);
+            TryTerminateProcess(childPid);
+            TryDelete(root);
+        }
+    }
+
+    private static void TestProcessRunnerPreservesSuccessfulExitWhenDescendantHoldsPipe()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "copperfin_language_service_tests", "process_runner_success", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        var descendantPidPath = Path.Combine(root, "descendant.pid");
+        var descendantPid = 0;
+        try
+        {
+            var escapedPowerShellPidPath = descendantPidPath.Replace("'", "''", StringComparison.Ordinal);
+            var startInfo = CreateTestScriptStartInfo(
+                root,
+                "successful_output_holder",
+                windowsBody:
+                [
+                    "@echo off",
+                    "echo successful-stdout",
+                    "powershell.exe -NoProfile -Command \"$child = Start-Process -FilePath 'powershell.exe' -ArgumentList '-NoProfile -Command Start-Sleep -Seconds 30' -NoNewWindow -PassThru; Set-Content -LiteralPath '" + escapedPowerShellPidPath + "' -Value $child.Id\"",
+                    "exit /b 0"
+                ],
+                unixBody:
+                [
+                    "#!/bin/sh",
+                    "echo successful-stdout",
+                    "sleep 30 &",
+                    "printf '%s\\n' \"$!\" > \"" + descendantPidPath + "\"",
+                    "exit 0"
+                ]);
+
+            var stopwatch = Stopwatch.StartNew();
+            var result = CopperfinProcessRunner.Run(startInfo, timeoutMilliseconds: 5000);
+            stopwatch.Stop();
+            Expect(result.Started, "process runner should start the successful descendant fixture");
+            Expect(!result.TimedOut,
+                "process runner should preserve successful completion when only a descendant retains output handles");
+            Expect(result.ExitCode == 0,
+                "process runner should preserve the root exit code when a descendant retains output handles");
+            Expect(result.StandardOutput.Contains("successful-stdout", StringComparison.Ordinal),
+                "process runner should retain output captured before successful root completion");
+            Expect(stopwatch.ElapsedMilliseconds < 5000,
+                "process runner should bound post-exit output draining without converting success into a timeout");
+            Expect(TryReadProcessId(descendantPidPath, out descendantPid),
+                "successful descendant fixture should record its PID");
+        }
+        finally
+        {
+            TryTerminateProcess(descendantPid);
             TryDelete(root);
         }
     }
@@ -1718,6 +1804,54 @@ internal static partial class Program
             }
         }
         catch
+        {
+        }
+    }
+
+    private static bool WaitForProcessExit(int processId, int timeoutMilliseconds)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        while (stopwatch.ElapsedMilliseconds < timeoutMilliseconds)
+        {
+            try
+            {
+                using var process = Process.GetProcessById(processId);
+                if (process.HasExited)
+                {
+                    return true;
+                }
+            }
+            catch (ArgumentException)
+            {
+                return true;
+            }
+            Thread.Sleep(50);
+        }
+        return false;
+    }
+
+    private static bool TryReadProcessId(string path, out int processId)
+    {
+        processId = 0;
+        return File.Exists(path) && int.TryParse(File.ReadAllText(path).Trim(), out processId);
+    }
+
+    private static void TryTerminateProcess(int processId)
+    {
+        if (processId <= 0)
+        {
+            return;
+        }
+        try
+        {
+            using var process = Process.GetProcessById(processId);
+            process.Kill(entireProcessTree: true);
+            _ = process.WaitForExit(1000);
+        }
+        catch (ArgumentException)
+        {
+        }
+        catch (InvalidOperationException)
         {
         }
     }

@@ -92,6 +92,22 @@ Invoke-Step -Name "Run managed VSIX behavior tests" -Action {
     )
 }
 
+Invoke-Step -Name "Run managed language-service tests" -Action {
+    Invoke-Checked -FilePath "dotnet" -ArgumentList @(
+        "run",
+        "--project", (Join-Path $vsixDir "Copperfin.LanguageServiceTests\Copperfin.LanguageServiceTests.csproj"),
+        "--configuration", "Release"
+    )
+}
+
+Invoke-Step -Name "Run .NET Framework process-runner tests" -Action {
+    Invoke-Checked -FilePath "dotnet" -ArgumentList @(
+        "run",
+        "--project", (Join-Path $vsixDir "Copperfin.ProcessRunnerNetFrameworkTests\Copperfin.ProcessRunnerNetFrameworkTests.csproj"),
+        "--configuration", "Release"
+    )
+}
+
 Invoke-Step -Name "Build standalone Studio shell" -Action {
     Invoke-Checked -FilePath $msbuild -ArgumentList @($studioProject, "/restore", "/t:Rebuild", "/p:Configuration=Release")
 }

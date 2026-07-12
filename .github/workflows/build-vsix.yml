@@ -30,6 +30,12 @@ jobs:
       - name: Run managed VSIX behavior tests
         run: dotnet run --project vsix/Copperfin.LanguageServiceTests/Copperfin.StudioTargetSelectionTests.csproj --configuration Release
 
+      - name: Run managed language-service tests
+        run: dotnet run --project vsix/Copperfin.LanguageServiceTests/Copperfin.LanguageServiceTests.csproj --configuration Release
+
+      - name: Run .NET Framework process-runner tests
+        run: dotnet run --project vsix/Copperfin.ProcessRunnerNetFrameworkTests/Copperfin.ProcessRunnerNetFrameworkTests.csproj --configuration Release
+
       - name: Upload VSIX artifact
         uses: actions/upload-artifact@v7.0.1
         with:

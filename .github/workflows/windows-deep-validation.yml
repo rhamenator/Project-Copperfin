@@ -56,6 +56,12 @@ jobs:
       - name: Run managed VSIX behavior tests
         run: dotnet run --project vsix/Copperfin.LanguageServiceTests/Copperfin.StudioTargetSelectionTests.csproj --configuration ${{ inputs.build_configuration }}
 
+      - name: Run managed language-service tests
+        run: dotnet run --project vsix/Copperfin.LanguageServiceTests/Copperfin.LanguageServiceTests.csproj --configuration ${{ inputs.build_configuration }}
+
+      - name: Run .NET Framework process-runner tests
+        run: dotnet run --project vsix/Copperfin.ProcessRunnerNetFrameworkTests/Copperfin.ProcessRunnerNetFrameworkTests.csproj --configuration ${{ inputs.build_configuration }}
+
       - name: Build standalone Studio shell
         run: msbuild vsix/Copperfin.Studio/Copperfin.Studio.csproj /restore /t:Rebuild /p:Configuration=${{ inputs.build_configuration }}
 

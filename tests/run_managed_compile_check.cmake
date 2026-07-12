@@ -46,5 +46,6 @@ run_managed_build("vsix/Copperfin.LanguageServiceTests/Copperfin.StudioTargetSel
 run_managed_test("vsix/Copperfin.LanguageServiceTests/Copperfin.StudioTargetSelectionTests.csproj")
 run_managed_build("vsix/Copperfin.LanguageServiceTests/Copperfin.LanguageServiceTests.csproj")
 run_managed_test("vsix/Copperfin.LanguageServiceTests/Copperfin.LanguageServiceTests.csproj")
+run_managed_build("vsix/Copperfin.ProcessRunnerNetFrameworkTests/Copperfin.ProcessRunnerNetFrameworkTests.csproj")
 run_managed_build("vsix/Copperfin.Studio/Copperfin.Studio.csproj")
 run_managed_build("vsix/Copperfin.DesignerSmokeTests/Copperfin.DesignerSmokeTests.csproj")

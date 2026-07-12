@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 using System.Threading;
 
@@ -21,6 +22,9 @@ internal sealed class CopperfinCapturedProcessResult
 
 internal static class CopperfinProcessRunner
 {
+    private const int CleanupGraceMilliseconds = 1000;
+    private const int ProcessTreeDiscoveryGraceMilliseconds = 2000;
+
     public static CopperfinCapturedProcessResult Run(ProcessStartInfo startInfo, int? timeoutMilliseconds = null)
     {
         using var process = new Process { StartInfo = startInfo };
@@ -47,8 +51,8 @@ internal static class CopperfinProcessRunner
         var stderrBuilder = new StringBuilder();
         using var stdoutCompleted = new ManualResetEventSlim(!startInfo.RedirectStandardOutput);
         using var stderrCompleted = new ManualResetEventSlim(!startInfo.RedirectStandardError);
-        using var stdoutLock = new ReaderWriterLockSlim();
-        using var stderrLock = new ReaderWriterLockSlim();
+        var stdoutLock = new object();
+        var stderrLock = new object();
 
         if (startInfo.RedirectStandardOutput)
         {
@@ -56,18 +60,13 @@ internal static class CopperfinProcessRunner
             {
                 if (args.Data is null)
                 {
-                    stdoutCompleted.Set();
+                    TrySetCompleted(stdoutCompleted);
                     return;
                 }
 
-                stdoutLock.EnterWriteLock();
-                try
+                lock (stdoutLock)
                 {
                     stdoutBuilder.AppendLine(args.Data);
-                }
-                finally
-                {
-                    stdoutLock.ExitWriteLock();
                 }
             };
         }
@@ -78,18 +77,13 @@ internal static class CopperfinProcessRunner
             {
                 if (args.Data is null)
                 {
-                    stderrCompleted.Set();
+                    TrySetCompleted(stderrCompleted);
                     return;
                 }
 
-                stderrLock.EnterWriteLock();
-                try
+                lock (stderrLock)
                 {
                     stderrBuilder.AppendLine(args.Data);
-                }
-                finally
-                {
-                    stderrLock.ExitWriteLock();
                 }
             };
         }
@@ -106,18 +100,34 @@ internal static class CopperfinProcessRunner
         var exited = timeoutMilliseconds.HasValue
             ? process.WaitForExit(timeoutMilliseconds.Value)
             : WaitForExitWithoutTimeout(process);
+        var timedOut = !exited;
         if (!exited)
         {
-            TryKill(process);
+            TryKillProcessTree(process);
+            if (!TryWaitForExit(process, CleanupGraceMilliseconds))
+            {
+                TryKill(process);
+                _ = TryWaitForExit(process, CleanupGraceMilliseconds);
+            }
+        }
+        else if (!timeoutMilliseconds.HasValue)
+        {
             process.WaitForExit();
         }
-        process.WaitForExit();
-        WaitForCapturedOutput(stdoutCompleted, stderrCompleted);
+
+        var captured = WaitForCapturedOutput(
+            stdoutCompleted,
+            stderrCompleted,
+            timeoutMilliseconds.HasValue ? CleanupGraceMilliseconds : Timeout.Infinite);
+        if (!captured)
+        {
+            TryCancelOutputRead(process, startInfo);
+        }
 
         return new CopperfinCapturedProcessResult
         {
             Started = true,
-            TimedOut = !exited,
+            TimedOut = timedOut,
             ExitCode = exited ? process.ExitCode : -1,
             StandardOutput = ReadCapturedOutput(stdoutBuilder, stdoutLock),
             StandardError = ReadCapturedOutput(stderrBuilder, stderrLock)
@@ -141,28 +151,262 @@ internal static class CopperfinProcessRunner
         }
     }
 
-    private static void WaitForCapturedOutput(
-        ManualResetEventSlim stdoutCompleted,
-        ManualResetEventSlim stderrCompleted)
+    private static void TryKillProcessTree(Process process)
     {
-        WaitHandle.WaitAll(
-            new WaitHandle[]
+        if (TryInvokeProcessTreeKill(process))
+        {
+            return;
+        }
+
+        if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+        {
+            if (!TryTaskKill(process.Id))
             {
-                stdoutCompleted.WaitHandle,
-                stderrCompleted.WaitHandle
-            });
+                TryKill(process);
+            }
+        }
+        else
+        {
+            TryKillPosixDescendants(process.Id);
+            TryKill(process);
+        }
     }
 
-    private static string ReadCapturedOutput(StringBuilder output, ReaderWriterLockSlim outputLock)
+    private static bool TryInvokeProcessTreeKill(Process process)
     {
-        outputLock.EnterReadLock();
+        var killTree = typeof(Process).GetMethod("Kill", new[] { typeof(bool) });
+        if (killTree is null)
+        {
+            return false;
+        }
+
         try
         {
-            return output.ToString();
+            killTree.Invoke(process, new object[] { true });
+            return true;
         }
-        finally
+        catch (Exception)
         {
-            outputLock.ExitReadLock();
+            return false;
+        }
+    }
+
+    private static bool TryTaskKill(int processId)
+    {
+        try
+        {
+            var systemDirectory = Environment.GetFolderPath(Environment.SpecialFolder.System);
+            if (string.IsNullOrWhiteSpace(systemDirectory))
+            {
+                return false;
+            }
+            var taskKillPath = Path.Combine(systemDirectory, "taskkill.exe");
+            if (!File.Exists(taskKillPath))
+            {
+                return false;
+            }
+
+            using var taskKill = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = taskKillPath,
+                    Arguments = $"/PID {processId} /T /F",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+            if (!taskKill.Start())
+            {
+                return false;
+            }
+            if (!taskKill.WaitForExit(CleanupGraceMilliseconds))
+            {
+                TryKill(taskKill);
+                _ = TryWaitForExit(taskKill, CleanupGraceMilliseconds);
+                return false;
+            }
+            return taskKill.ExitCode == 0;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    private static void TryKillPosixDescendants(int processId)
+    {
+        foreach (var descendantId in FindPosixDescendants(processId))
+        {
+            try
+            {
+                using var descendant = Process.GetProcessById(descendantId);
+                descendant.Kill();
+            }
+            catch (Exception)
+            {
+            }
+        }
+    }
+
+    private static IReadOnlyList<int> FindPosixDescendants(int rootProcessId)
+    {
+        var children = new Dictionary<int, List<int>>();
+        try
+        {
+            using var ps = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "ps",
+                    Arguments = "-eo pid=,ppid=",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true
+                }
+            };
+            if (!ps.Start())
+            {
+                return Array.Empty<int>();
+            }
+
+            var outputTask = ps.StandardOutput.ReadToEndAsync();
+            var snapshotStopwatch = Stopwatch.StartNew();
+            if (!ps.WaitForExit(ProcessTreeDiscoveryGraceMilliseconds))
+            {
+                TryKill(ps);
+                _ = TryWaitForExit(ps, CleanupGraceMilliseconds);
+                return Array.Empty<int>();
+            }
+            var outputWaitMilliseconds = Math.Max(
+                0,
+                ProcessTreeDiscoveryGraceMilliseconds - (int)snapshotStopwatch.ElapsedMilliseconds);
+            if (!outputTask.Wait(outputWaitMilliseconds))
+            {
+                return Array.Empty<int>();
+            }
+            var output = outputTask.Result;
+
+            foreach (var line in output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var fields = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (fields.Length != 2 ||
+                    !int.TryParse(fields[0], out var childId) ||
+                    !int.TryParse(fields[1], out var parentId))
+                {
+                    continue;
+                }
+                if (!children.TryGetValue(parentId, out var childIds))
+                {
+                    childIds = new List<int>();
+                    children[parentId] = childIds;
+                }
+                childIds.Add(childId);
+            }
+        }
+        catch (Exception)
+        {
+            return Array.Empty<int>();
+        }
+
+        var descendants = new List<int>();
+        CollectDescendants(rootProcessId, children, descendants, new HashSet<int>());
+        descendants.Reverse();
+        return descendants;
+    }
+
+    private static void CollectDescendants(
+        int processId,
+        IReadOnlyDictionary<int, List<int>> children,
+        ICollection<int> descendants,
+        ISet<int> visited)
+    {
+        if (!visited.Add(processId) || !children.TryGetValue(processId, out var childIds))
+        {
+            return;
+        }
+        foreach (var childId in childIds)
+        {
+            descendants.Add(childId);
+            CollectDescendants(childId, children, descendants, visited);
+        }
+    }
+
+    private static bool TryWaitForExit(Process process, int timeoutMilliseconds)
+    {
+        try
+        {
+            return process.WaitForExit(timeoutMilliseconds);
+        }
+        catch (InvalidOperationException)
+        {
+            return true;
+        }
+    }
+
+    private static bool WaitForCapturedOutput(
+        ManualResetEventSlim stdoutCompleted,
+        ManualResetEventSlim stderrCompleted,
+        int timeoutMilliseconds)
+    {
+        if (timeoutMilliseconds == Timeout.Infinite)
+        {
+            stdoutCompleted.Wait();
+            stderrCompleted.Wait();
+            return true;
+        }
+
+        var stopwatch = Stopwatch.StartNew();
+        if (!stdoutCompleted.Wait(timeoutMilliseconds))
+        {
+            return false;
+        }
+        var remainingMilliseconds = Math.Max(
+            0,
+            timeoutMilliseconds - (int)stopwatch.ElapsedMilliseconds);
+        return stderrCompleted.Wait(remainingMilliseconds);
+    }
+
+    private static void TryCancelOutputRead(Process process, ProcessStartInfo startInfo)
+    {
+        try
+        {
+            if (startInfo.RedirectStandardOutput)
+            {
+                process.CancelOutputRead();
+            }
+        }
+        catch (InvalidOperationException)
+        {
+        }
+        try
+        {
+            if (startInfo.RedirectStandardError)
+            {
+                process.CancelErrorRead();
+            }
+        }
+        catch (InvalidOperationException)
+        {
+        }
+    }
+
+    private static void TrySetCompleted(ManualResetEventSlim completed)
+    {
+        try
+        {
+            completed.Set();
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+    }
+
+    private static string ReadCapturedOutput(StringBuilder output, object outputLock)
+    {
+        lock (outputLock)
+        {
+            return output.ToString();
         }
     }
 }
