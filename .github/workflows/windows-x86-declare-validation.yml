@@ -80,5 +80,8 @@ jobs:
       - name: Build DECLARE regression target
         run: cmake --build build-${{ matrix.platform }} --config Release --parallel --target test_prg_engine_seek_index test_prg_engine_dotnet_dispatch test_prg_engine_parser_classes test_localization
 
-      - name: Run DECLARE regression target
-        run: ctest --test-dir build-${{ matrix.platform }} -C Release --output-on-failure -R "^(test_prg_engine_seek_index|test_prg_engine_dotnet_dispatch|test_prg_engine_parser_classes|test_localization)$"
+      - name: Run managed DECLARE regression target
+        run: ctest --test-dir build-${{ matrix.platform }} -C Release --verbose --timeout 180 -R "^test_prg_engine_dotnet_dispatch$"
+
+      - name: Run adjacent DECLARE regression targets
+        run: ctest --test-dir build-${{ matrix.platform }} -C Release --output-on-failure -R "^(test_prg_engine_seek_index|test_prg_engine_parser_classes|test_localization)$"

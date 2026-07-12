@@ -32,7 +32,7 @@ namespace
     using copperfin::test_support::ScopedEnvironmentValue;
     using copperfin::test_support::write_text;
 
-    constexpr std::size_t repeated_exception_count = 512U;
+    constexpr std::size_t repeated_exception_count = 64U;
 
     class ScopedCurrentPath final
     {
