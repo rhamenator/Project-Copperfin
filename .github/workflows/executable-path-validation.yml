@@ -1,0 +1,74 @@
+name: Executable Path Validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/executable-path-validation.yml"
+      - "CMakeLists.txt"
+      - "apps/copperfin_runtime_host/main.cpp"
+      - "include/copperfin/platform/environment.h"
+      - "include/copperfin/platform/executable_path.h"
+      - "src/localization/localization.cpp"
+      - "src/platform/executable_path.cpp"
+      - "tests/CMakeLists.txt"
+      - "tests/test_environment_support.h"
+      - "tests/test_localization.cpp"
+      - "tests/test_platform_environment.cpp"
+      - "tests/test_runtime_host_implicit_path_launch.cpp"
+  pull_request:
+    paths:
+      - ".github/workflows/executable-path-validation.yml"
+      - "CMakeLists.txt"
+      - "apps/copperfin_runtime_host/main.cpp"
+      - "include/copperfin/platform/environment.h"
+      - "include/copperfin/platform/executable_path.h"
+      - "src/localization/localization.cpp"
+      - "src/platform/executable_path.cpp"
+      - "tests/CMakeLists.txt"
+      - "tests/test_environment_support.h"
+      - "tests/test_localization.cpp"
+      - "tests/test_platform_environment.cpp"
+      - "tests/test_runtime_host_implicit_path_launch.cpp"
+
+permissions:
+  contents: read
+
+jobs:
+  executable-paths:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: GCC
+            c: gcc
+            cxx: g++
+          - name: Clang
+            c: clang
+            cxx: clang++
+
+    name: executable-paths-${{ matrix.name }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6.0.2
+
+      - name: Configure focused build
+        run: >-
+          cmake -S . -B build
+          -DCOPPERFIN_BUILD_TESTS=ON
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_C_COMPILER=${{ matrix.c }}
+          -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+
+      - name: Build executable path regressions
+        run: >-
+          cmake --build build --parallel 2 --target
+          test_platform_environment
+          test_localization
+          test_runtime_host_implicit_path_launch
+
+      - name: Run executable path regressions
+        run: >-
+          ctest --test-dir build --output-on-failure
+          -R "^(test_platform_environment|test_localization|test_runtime_host_implicit_path_launch)$"
