@@ -3759,10 +3759,18 @@ void test_set_exact_affects_comparisons_and_seek() {
         "USE '" + table_path.string() + "' ALIAS People IN 0\n"
         "SET ORDER TO TAG NAME\n"
         "lEqOff = 'CHARLIE' = 'CHAR'\n"
+        "lEqOffReverse = 'CHAR' = 'CHARLIE'\n"
         "lSeekOff = SEEK('BR')\n"
         "nRecOff = RECNO()\n"
         "SET EXACT ON\n"
         "lEqOn = 'CHARLIE' = 'CHAR'\n"
+        "lExactLeadingDiff = ' CHARLIE' = 'CHARLIE'\n"
+        "lExactLeadingSame = ' CHARLIE' = ' CHARLIE'\n"
+        "lExactTrailingSpaces = 'CHARLIE  ' = 'CHARLIE'\n"
+        "lExactAllSpaces = '   ' = ''\n"
+        "lExactDifferentLength = 'CHARLIE' = 'CHAR'\n"
+        "lExactTrailingTab = ('CHARLIE' + CHR(9)) = 'CHARLIE'\n"
+        "lExactTrailingNul = ('CHARLIE' + CHR(0)) = 'CHARLIE'\n"
         "lSeekOn = SEEK('BR')\n"
         "lEofOn = EOF()\n"
         "SET DATASESSION TO 2\n"
@@ -3778,6 +3786,7 @@ void test_set_exact_affects_comparisons_and_seek() {
     expect(state.completed, "SET EXACT script should complete");
 
     const auto eq_off = state.globals.find("leqoff");
+    const auto eq_off_reverse = state.globals.find("leqoffreverse");
     const auto seek_off = state.globals.find("lseekoff");
     const auto rec_off = state.globals.find("nrecoff");
     const auto eq_on = state.globals.find("leqon");
@@ -3787,6 +3796,7 @@ void test_set_exact_affects_comparisons_and_seek() {
     const auto eq_back = state.globals.find("leqback");
 
     expect(eq_off != state.globals.end(), "SET EXACT OFF comparison result should be captured");
+    expect(eq_off_reverse != state.globals.end(), "SET EXACT OFF reverse comparison result should be captured");
     expect(seek_off != state.globals.end(), "SET EXACT OFF seek result should be captured");
     expect(rec_off != state.globals.end(), "SET EXACT OFF RECNO() should be captured");
     expect(eq_on != state.globals.end(), "SET EXACT ON comparison result should be captured");
@@ -3797,6 +3807,10 @@ void test_set_exact_affects_comparisons_and_seek() {
 
     if (eq_off != state.globals.end()) {
         expect(copperfin::runtime::format_value(eq_off->second) == "true", "SET EXACT OFF should allow right-side prefix string comparison");
+    }
+    if (eq_off_reverse != state.globals.end()) {
+        expect(copperfin::runtime::format_value(eq_off_reverse->second) == "false",
+               "SET EXACT OFF should preserve documented right-operand-length comparison");
     }
     if (seek_off != state.globals.end()) {
         expect(copperfin::runtime::format_value(seek_off->second) == "true", "SET EXACT OFF should allow prefix seeks");
@@ -3819,6 +3833,21 @@ void test_set_exact_affects_comparisons_and_seek() {
     if (eq_back != state.globals.end()) {
         expect(copperfin::runtime::format_value(eq_back->second) == "false", "restoring the original data session should restore its SET EXACT state");
     }
+
+    const auto check_exact = [&](const std::string& name, const std::string& expected, const std::string& message) {
+        const auto value = state.globals.find(name);
+        expect(value != state.globals.end(), name + " SET EXACT ON result should be captured");
+        if (value != state.globals.end()) {
+            expect(copperfin::runtime::format_value(value->second) == expected, message);
+        }
+    };
+    check_exact("lexactleadingdiff", "false", "#3963: SET EXACT ON must preserve significant leading spaces");
+    check_exact("lexactleadingsame", "true", "#3963: equal leading spaces should still compare equal");
+    check_exact("lexacttrailingspaces", "true", "#3963: SET EXACT ON should disregard trailing spaces");
+    check_exact("lexactallspaces", "true", "#3963: all-space and empty strings should compare equal after right padding");
+    check_exact("lexactdifferentlength", "false", "#3963: non-space length differences should remain significant");
+    check_exact("lexacttrailingtab", "false", "#3963: SET EXACT ON should not discard trailing tabs");
+    check_exact("lexacttrailingnul", "false", "#3963: SET EXACT ON should not discard trailing NUL bytes");
 
     fs::remove_all(temp_root, ignored);
 }

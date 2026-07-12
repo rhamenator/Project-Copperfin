@@ -3133,7 +3133,7 @@
                     const std::string right_value = value_as_string(right);
                     if (exact_string_compare_)
                     {
-                        return trim_copy(left_value) == trim_copy(right_value);
+                        return rtrim_space_copy(left_value) == rtrim_space_copy(right_value);
                     }
                     return left_value.rfind(right_value, 0U) == 0U;
                 }

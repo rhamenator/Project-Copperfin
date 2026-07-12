@@ -141,6 +141,16 @@ namespace
             "like_miss = LIKE('A?D*', 'abc legacy')\n"
             "inlist_hit = INLIST('beta', 'alpha', 'beta', 'gamma')\n"
             "inlist_miss = INLIST(4, 1, 2, 3)\n"
+            "SET EXACT ON\n"
+            "inlist_exact_leading_miss = INLIST(' beta', 'beta')\n"
+            "inlist_exact_leading_hit = INLIST(' beta', ' beta')\n"
+            "inlist_exact_trailing_hit = INLIST('beta  ', 'beta')\n"
+            "inlist_exact_all_space_hit = INLIST('   ', '')\n"
+            "inlist_exact_tab_miss = INLIST('beta' + CHR(9), 'beta')\n"
+            "inlist_exact_nul_miss = INLIST('beta' + CHR(0), 'beta')\n"
+            "SET EXACT OFF\n"
+            "inlist_off_prefix_hit = INLIST('alphabet', 'alpha')\n"
+            "inlist_off_reverse_miss = INLIST('alpha', 'alphabet')\n"
             "getwordcount_1 = GETWORDCOUNT('one two three')\n"
             "getwordcount_2 = GETWORDCOUNT('a,b,c', ',')\n"
             "getwordcount_multi_delim = GETWORDCOUNT('a,b;c', ',;')\n"
@@ -348,6 +358,14 @@ namespace
         check("like_miss", "false");
         check("inlist_hit", "true");
         check("inlist_miss", "false");
+        check("inlist_exact_leading_miss", "false");
+        check("inlist_exact_leading_hit", "true");
+        check("inlist_exact_trailing_hit", "true");
+        check("inlist_exact_all_space_hit", "true");
+        check("inlist_exact_tab_miss", "false");
+        check("inlist_exact_nul_miss", "false");
+        check("inlist_off_prefix_hit", "true");
+        check("inlist_off_reverse_miss", "false");
         check("getwordcount_1", "3");
         check("getwordcount_2", "3");
         check("getwordcount_multi_delim", "3");

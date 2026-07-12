@@ -53,7 +53,7 @@ bool expression_values_equal(const PrgValue& left, const PrgValue& right, bool e
         const std::string left_value = value_as_string(left);
         const std::string right_value = value_as_string(right);
         if (exact_string_compare) {
-            return trim_copy(left_value) == trim_copy(right_value);
+            return rtrim_space_copy(left_value) == rtrim_space_copy(right_value);
         }
         return left_value.rfind(right_value, 0U) == 0U;
     }
