@@ -269,6 +269,17 @@
                 if (FAILED(invocation.hresult))
                 {
                     VariantClear(&return_value);
+                    if (!stack.empty() && stack.back().routine != nullptr && stack.back().pc > 0U)
+                    {
+                        const std::size_t statement_index = stack.back().pc - 1U;
+                        if (statement_index < stack.back().routine->statements.size())
+                        {
+                            const Statement &statement =
+                                stack.back().routine->statements[statement_index];
+                            last_fault_location = statement.location;
+                            last_fault_statement = statement.text;
+                        }
+                    }
                     const long compatible_hresult =
                         invocation.stage == ManagedInvocationStage::load_assembly ||
                                 invocation.stage == ManagedInvocationStage::invoke_method

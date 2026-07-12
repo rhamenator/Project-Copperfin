@@ -629,6 +629,9 @@ namespace
             "DECLARE INTEGER Copperfin.ManagedDeclareFixture.Methods.ReturnFortyTwo IN "
             "'managed/removed-managed.dll' AS ManagedMissing\n"
             "nIgnored = ManagedMissing()\n"
+            "nErrorRows = AERROR(aFailure)\n"
+            "nFaultLine = aFailure[1,5]\n"
+            "cFaultStatement = aFailure[1,7]\n"
             "cFailureMessage = MESSAGE()\n"
             "RETURN\n");
 
@@ -675,16 +678,20 @@ namespace
             expect(actual == expected,
                    "#3945: missing load should preserve localized path and HRESULT placeholders; "
                    "expected=[" + expected + "] actual=[" + actual + "]");
-            expect(
-                std::any_of(state.events.begin(), state.events.end(), [&](const auto &event)
-                {
-                    return event.category == "runtime.error" &&
-                           event.detail == expected &&
-                           event.location.file_path == program_path.string() &&
-                           event.location.line == 2U;
-                }),
-                "#3945: managed load failure should preserve the call-site source diagnostic");
         }
+        const auto error_rows = state.globals.find("nerrorrows");
+        const auto fault_line = state.globals.find("nfaultline");
+        const auto fault_statement = state.globals.find("cfaultstatement");
+        expect(error_rows != state.globals.end() &&
+                   copperfin::runtime::format_value(error_rows->second) == "1",
+               "#3945: managed load failure should populate one AERROR row");
+        expect(fault_line != state.globals.end() &&
+                   copperfin::runtime::format_value(fault_line->second) == "2",
+               "#3945: managed load failure should preserve the call-site source line");
+        expect(fault_statement != state.globals.end() &&
+                   copperfin::runtime::format_value(fault_statement->second) ==
+                       "nIgnored = ManagedMissing()",
+               "#3945: managed load failure should preserve the call-site statement");
 
         fs::remove_all(temp_root, ignored);
     }
