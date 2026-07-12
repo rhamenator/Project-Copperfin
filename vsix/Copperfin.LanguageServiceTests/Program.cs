@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace Copperfin.VisualStudio;
 
-internal static class Program
+internal static partial class Program
 {
     private static int failures;
 
@@ -20,6 +20,7 @@ internal static class Program
         TestLocalizationCatalogSupportsPseudoLocale();
         TestLocalizationCatalogFallsBackToEnglish();
         TestLocalizationCatalogKeepsSupportedLocaleKeysAligned();
+        TestVsixCommandTableLocalizesCommandCaptions();
         TestSelectIntelliSenseDescriptionsLocalizeWithoutChangingIdentity();
         TestLocalizationCatalogFormatsWithInvariantCulture();
         TestLocalizationCatalogLocalizesCommandBootstrapErrors();

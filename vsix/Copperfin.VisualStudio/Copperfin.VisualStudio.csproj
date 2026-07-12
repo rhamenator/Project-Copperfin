@@ -59,4 +59,46 @@
 
   <Import Project="$(NuGetPackageRoot)microsoft.vssdk.buildtools\17.14.2120\tools\vssdk\Microsoft.VsSDK.targets"
           Condition="Exists('$(NuGetPackageRoot)microsoft.vssdk.buildtools\17.14.2120\tools\vssdk\Microsoft.VsSDK.targets')" />
+
+  <ItemGroup>
+    <_CopperfinVsctCulture Include="en-US">
+      <Language>en-US</Language>
+      <OutputFile>Copperfin.cto</OutputFile>
+    </_CopperfinVsctCulture>
+    <_CopperfinVsctCulture Include="es">
+      <Language>es-419</Language>
+      <OutputFile>Copperfin.es.cto</OutputFile>
+    </_CopperfinVsctCulture>
+    <_CopperfinVsctCulture Include="pt">
+      <Language>pt-BR</Language>
+      <OutputFile>Copperfin.pt.cto</OutputFile>
+    </_CopperfinVsctCulture>
+    <_CopperfinVsctCulture Include="qps-ploc">
+      <Language>qps-ploc</Language>
+      <OutputFile>Copperfin.qps-ploc.cto</OutputFile>
+    </_CopperfinVsctCulture>
+  </ItemGroup>
+
+  <Target Name="CompileLocalizedCopperfinVsct"
+          BeforeTargets="GenerateListOfCTO"
+          DependsOnTargets="VSCTCompile"
+          Condition="'$(BuildingProject)' != 'false' And '@(VSCTCompile)' != ''">
+    <VSCTCompiler AdditionalIncludeDirectories="@(_InternalVSCTIncludePath)"
+                  IntermediateDirectory="$(IntermediateOutputPath)"
+                  Definitions="$(__internal_VSCTDefinitions)"
+                  NoLogo="true"
+                  OutputFile="%(_CopperfinVsctCulture.OutputFile)"
+                  Source="$(MSBuildProjectDirectory)\Copperfin.vsct"
+                  Culture="%(_CopperfinVsctCulture.Language)"
+                  Verbose="$(VsctVerboseOutput)">
+      <Output TaskParameter="TemporaryFiles" ItemName="_CopperfinLocalizedVsctTemporaryFiles" />
+    </VSCTCompiler>
+    <ItemGroup>
+      <_GeneratedCTOFiles Include="$(IntermediateOutputPath)Copperfin.es.cto" />
+      <_GeneratedCTOFiles Include="$(IntermediateOutputPath)Copperfin.pt.cto" />
+      <_GeneratedCTOFiles Include="$(IntermediateOutputPath)Copperfin.qps-ploc.cto" />
+      <FileWrites Include="@(_CopperfinVsctCulture->'$(IntermediateOutputPath)%(OutputFile)')" />
+      <FileWrites Include="@(_CopperfinLocalizedVsctTemporaryFiles)" />
+    </ItemGroup>
+  </Target>
 </Project>

@@ -13,29 +13,77 @@
     <Buttons>
       <Button guid="guidCopperfinCommandSet" id="OpenInCopperfinStudioCommand" priority="0x0100" type="Button">
         <Parent guid="guidCopperfinCommandSet" id="CopperfinGroup" />
-        <Strings>
+        <Strings Language="en-US">
           <ButtonText>Open In Copperfin Studio</ButtonText>
+          <LocCanonicalName>.Copperfin.OpenInStudio</LocCanonicalName>
+        </Strings>
+        <Strings Language="es-419">
+          <ButtonText>Abrir en Copperfin Studio</ButtonText>
+          <LocCanonicalName>.Copperfin.OpenInStudio</LocCanonicalName>
+        </Strings>
+        <Strings Language="pt-BR">
+          <ButtonText>Abrir no Copperfin Studio</ButtonText>
+          <LocCanonicalName>.Copperfin.OpenInStudio</LocCanonicalName>
+        </Strings>
+        <Strings Language="qps-ploc">
+          <ButtonText>[!! Óþéñ Íñ Çóþþéŕƒíñ Šťúðíó !!]</ButtonText>
           <LocCanonicalName>.Copperfin.OpenInStudio</LocCanonicalName>
         </Strings>
       </Button>
       <Button guid="guidCopperfinCommandSet" id="BuildCopperfinProjectCommand" priority="0x0110" type="Button">
         <Parent guid="guidCopperfinCommandSet" id="CopperfinGroup" />
-        <Strings>
+        <Strings Language="en-US">
           <ButtonText>Build Copperfin Project</ButtonText>
+          <LocCanonicalName>.Copperfin.BuildProject</LocCanonicalName>
+        </Strings>
+        <Strings Language="es-419">
+          <ButtonText>Compilar proyecto Copperfin</ButtonText>
+          <LocCanonicalName>.Copperfin.BuildProject</LocCanonicalName>
+        </Strings>
+        <Strings Language="pt-BR">
+          <ButtonText>Compilar projeto Copperfin</ButtonText>
+          <LocCanonicalName>.Copperfin.BuildProject</LocCanonicalName>
+        </Strings>
+        <Strings Language="qps-ploc">
+          <ButtonText>[!! ßúíĺð Çóþþéŕƒíñ Þŕóĵéçť !!]</ButtonText>
           <LocCanonicalName>.Copperfin.BuildProject</LocCanonicalName>
         </Strings>
       </Button>
       <Button guid="guidCopperfinCommandSet" id="RunCopperfinProjectCommand" priority="0x0120" type="Button">
         <Parent guid="guidCopperfinCommandSet" id="CopperfinGroup" />
-        <Strings>
+        <Strings Language="en-US">
           <ButtonText>Run Copperfin Project</ButtonText>
+          <LocCanonicalName>.Copperfin.RunProject</LocCanonicalName>
+        </Strings>
+        <Strings Language="es-419">
+          <ButtonText>Ejecutar proyecto Copperfin</ButtonText>
+          <LocCanonicalName>.Copperfin.RunProject</LocCanonicalName>
+        </Strings>
+        <Strings Language="pt-BR">
+          <ButtonText>Executar projeto Copperfin</ButtonText>
+          <LocCanonicalName>.Copperfin.RunProject</LocCanonicalName>
+        </Strings>
+        <Strings Language="qps-ploc">
+          <ButtonText>[!! Ŕúñ Çóþþéŕƒíñ Þŕóĵéçť !!]</ButtonText>
           <LocCanonicalName>.Copperfin.RunProject</LocCanonicalName>
         </Strings>
       </Button>
       <Button guid="guidCopperfinCommandSet" id="DebugCopperfinProjectCommand" priority="0x0130" type="Button">
         <Parent guid="guidCopperfinCommandSet" id="CopperfinGroup" />
-        <Strings>
+        <Strings Language="en-US">
           <ButtonText>Debug Copperfin Project</ButtonText>
+          <LocCanonicalName>.Copperfin.DebugProject</LocCanonicalName>
+        </Strings>
+        <Strings Language="es-419">
+          <ButtonText>Depurar proyecto Copperfin</ButtonText>
+          <LocCanonicalName>.Copperfin.DebugProject</LocCanonicalName>
+        </Strings>
+        <Strings Language="pt-BR">
+          <ButtonText>Depurar projeto Copperfin</ButtonText>
+          <LocCanonicalName>.Copperfin.DebugProject</LocCanonicalName>
+        </Strings>
+        <Strings Language="qps-ploc">
+          <ButtonText>[!! Ðéƀúĝ Çóþþéŕƒíñ Þŕóĵéçť !!]</ButtonText>
           <LocCanonicalName>.Copperfin.DebugProject</LocCanonicalName>
         </Strings>
       </Button>

@@ -26,9 +26,9 @@ internal sealed class CopperfinProjectCommands
         ThreadHelper.ThrowIfNotOnUIThread();
         this.package = package;
 
-        AddCommand(commandService, BuildCommandId, Localization.Text("AssetEditor.Project.BuildButton"), CopperfinProjectOperation.Build);
-        AddCommand(commandService, RunCommandId, Localization.Text("AssetEditor.Project.RunButton"), CopperfinProjectOperation.Run);
-        AddCommand(commandService, DebugCommandId, Localization.Text("AssetEditor.Project.DebugButton"), CopperfinProjectOperation.Debug);
+        AddCommand(commandService, BuildCommandId, Localization.Text("VSIX.Command.BuildProject"), CopperfinProjectOperation.Build);
+        AddCommand(commandService, RunCommandId, Localization.Text("VSIX.Command.RunProject"), CopperfinProjectOperation.Run);
+        AddCommand(commandService, DebugCommandId, Localization.Text("VSIX.Command.DebugProject"), CopperfinProjectOperation.Debug);
     }
 
     public static async Task InitializeAsync(AsyncPackage package)

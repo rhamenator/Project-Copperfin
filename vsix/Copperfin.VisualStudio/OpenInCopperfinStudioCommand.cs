@@ -26,7 +26,10 @@ internal sealed class OpenInCopperfinStudioCommand
         this.package = package;
 
         var menuCommandId = new CommandID(CommandSet, CommandId);
-        var menuItem = new MenuCommand((_, _) => { _ = package.JoinableTaskFactory.RunAsync(ExecuteAsync); }, menuCommandId);
+        var menuItem = new OleMenuCommand((_, _) => { _ = package.JoinableTaskFactory.RunAsync(ExecuteAsync); }, menuCommandId)
+        {
+            Text = Localization.Text("VSIX.Command.OpenInStudio")
+        };
         commandService.AddCommand(menuItem);
     }
 

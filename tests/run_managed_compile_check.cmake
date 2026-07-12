@@ -25,6 +25,24 @@ function(run_managed_build project_relative_path)
     endif()
 endfunction()
 
+function(run_managed_test project_relative_path)
+    set(project_path "${SOURCE_DIR}/${project_relative_path}")
+    execute_process(
+        COMMAND "${DOTNET_EXECUTABLE}" run
+            --project "${project_path}"
+            --configuration "${test_configuration}"
+            --no-build
+        WORKING_DIRECTORY "${SOURCE_DIR}"
+        COMMAND_ECHO STDOUT
+        RESULT_VARIABLE test_result
+    )
+
+    if(NOT test_result EQUAL 0)
+        message(FATAL_ERROR "Managed test failed for ${project_relative_path}")
+    endif()
+endfunction()
+
 run_managed_build("vsix/Copperfin.LanguageServiceTests/Copperfin.LanguageServiceTests.csproj")
+run_managed_test("vsix/Copperfin.LanguageServiceTests/Copperfin.LanguageServiceTests.csproj")
 run_managed_build("vsix/Copperfin.Studio/Copperfin.Studio.csproj")
 run_managed_build("vsix/Copperfin.DesignerSmokeTests/Copperfin.DesignerSmokeTests.csproj")
