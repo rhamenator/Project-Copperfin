@@ -42,21 +42,39 @@ bool peek_is(Cursor& cursor, char expected) {
     return cursor.pos < cursor.text.size() && cursor.text[cursor.pos] == expected;
 }
 
-void append_utf8(std::string& out, unsigned int code_point) {
+bool is_high_surrogate(unsigned int code_unit) {
+    return code_unit >= 0xD800U && code_unit <= 0xDBFFU;
+}
+
+bool is_low_surrogate(unsigned int code_unit) {
+    return code_unit >= 0xDC00U && code_unit <= 0xDFFFU;
+}
+
+bool append_utf8(std::string& out, unsigned int code_point) {
+    if (code_point > 0x10FFFFU || is_high_surrogate(code_point) || is_low_surrogate(code_point)) {
+        return false;
+    }
+
     if (code_point < 0x80U) {
         out.push_back(static_cast<char>(code_point));
     } else if (code_point < 0x800U) {
         out.push_back(static_cast<char>(0xC0U | (code_point >> 6U)));
         out.push_back(static_cast<char>(0x80U | (code_point & 0x3FU)));
-    } else {
+    } else if (code_point < 0x10000U) {
         out.push_back(static_cast<char>(0xE0U | (code_point >> 12U)));
         out.push_back(static_cast<char>(0x80U | ((code_point >> 6U) & 0x3FU)));
         out.push_back(static_cast<char>(0x80U | (code_point & 0x3FU)));
+    } else {
+        out.push_back(static_cast<char>(0xF0U | (code_point >> 18U)));
+        out.push_back(static_cast<char>(0x80U | ((code_point >> 12U) & 0x3FU)));
+        out.push_back(static_cast<char>(0x80U | ((code_point >> 6U) & 0x3FU)));
+        out.push_back(static_cast<char>(0x80U | (code_point & 0x3FU)));
     }
+    return true;
 }
 
 bool parse_hex4(Cursor& cursor, unsigned int& value) {
-    if (cursor.pos + 4U > cursor.text.size()) {
+    if (cursor.pos > cursor.text.size() || (cursor.text.size() - cursor.pos) < 4U) {
         return false;
     }
     value = 0U;
@@ -139,7 +157,29 @@ bool parse_json_string(Cursor& cursor, std::string& out) {
                     if (!parse_hex4(cursor, code_point)) {
                         return false;
                     }
-                    append_utf8(out, code_point);
+                    if (is_high_surrogate(code_point)) {
+                        if (cursor.pos >= cursor.text.size() || cursor.text[cursor.pos] != '\\') {
+                            return false;
+                        }
+                        ++cursor.pos;
+                        if (cursor.pos >= cursor.text.size() || cursor.text[cursor.pos] != 'u') {
+                            return false;
+                        }
+                        ++cursor.pos;
+
+                        unsigned int low_surrogate = 0U;
+                        if (!parse_hex4(cursor, low_surrogate) || !is_low_surrogate(low_surrogate)) {
+                            return false;
+                        }
+                        code_point = 0x10000U +
+                            ((code_point - 0xD800U) << 10U) +
+                            (low_surrogate - 0xDC00U);
+                    } else if (is_low_surrogate(code_point)) {
+                        return false;
+                    }
+                    if (!append_utf8(out, code_point)) {
+                        return false;
+                    }
                     break;
                 }
                 default:

@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/licensing/license_status.h"
+#include "canonical_payload_serializer.h"
 #include "license_classifier.h"
 #include "license_payload_parser.h"
 #include "license_payload_value.h"
@@ -26,6 +27,7 @@ using copperfin::licensing::PayloadFields;
 using copperfin::licensing::PayloadValue;
 using copperfin::licensing::ParsedLicenseFile;
 using copperfin::licensing::SignerPublicKey;
+using copperfin::licensing::canonicalize_payload;
 using copperfin::licensing::classify_verified_payload;
 using copperfin::licensing::license_state_name;
 using copperfin::licensing::load_license_status;
@@ -112,6 +114,68 @@ ParsedLicenseFile parse_test_integer(const std::string& number) {
     return parse_license_file(
         R"({"payload":{"test_integer":)" + number +
         R"(},"signature_algorithm":"ed25519","signature":"test"})");
+}
+
+ParsedLicenseFile parse_test_string(const std::string& json_string_literal) {
+    return parse_license_file(
+        R"({"payload":{"test_string":)" + json_string_literal +
+        R"(},"signature_algorithm":"ed25519","signature":"test"})");
+}
+
+void expect_parsed_string(
+    const std::string& json_string_literal,
+    const std::string& expected,
+    const std::string& description) {
+    const auto parsed = parse_test_string(json_string_literal);
+    expect(parsed.ok, description + " should parse");
+    const auto value = parsed.payload_fields.find("test_string");
+    expect(value != parsed.payload_fields.end(), description + " should retain the payload field");
+    if (value != parsed.payload_fields.end()) {
+        expect(value->second.kind == PayloadValue::Kind::string_value, description + " should remain a string");
+        expect(value->second.as_string == expected, description + " should preserve the expected UTF-8 bytes");
+    }
+}
+
+void test_parser_unicode_escape_boundaries() {
+    expect_parsed_string(R"("\u0000")", std::string(1U, '\0'), "escaped NUL");
+    expect_parsed_string(R"("\u00e9")", "\xC3\xA9", "representative two-byte BMP escape");
+    expect_parsed_string(R"("\u20AC")", "\xE2\x82\xAC", "representative three-byte BMP escape");
+    expect_parsed_string(R"("\uD7FF")", "\xED\x9F\xBF", "BMP scalar below the surrogate range");
+    expect_parsed_string(R"("\uE000")", "\xEE\x80\x80", "BMP scalar above the surrogate range");
+    expect_parsed_string(R"("\uD800\uDC00")", "\xF0\x90\x80\x80", "lowest surrogate pair");
+    expect_parsed_string(R"("\uD83D\uDE00")", "\xF0\x9F\x98\x80", "representative surrogate pair");
+    expect_parsed_string(R"("\uDBFF\uDFFF")", "\xF4\x8F\xBF\xBF", "highest surrogate pair");
+}
+
+void test_parser_preserves_simple_escapes_and_raw_utf8() {
+    expect_parsed_string(
+        R"("\b\f\n\r\t\"\\\/")",
+        std::string("\b\f\n\r\t\"\\/", 8U),
+        "simple JSON escapes");
+
+    const std::string raw_utf8 = "\xC3\xA9\xF0\x9F\x98\x80";
+    expect_parsed_string("\"" + raw_utf8 + "\"", raw_utf8, "raw valid UTF-8");
+
+    const auto escaped = parse_test_string(R"("\u00e9\uD83D\uDE00")");
+    const auto raw = parse_test_string("\"" + raw_utf8 + "\"");
+    expect(escaped.ok && raw.ok, "equivalent escaped and raw UTF-8 payloads should parse");
+    if (escaped.ok && raw.ok) {
+        expect(
+            canonicalize_payload(escaped.payload_fields) == canonicalize_payload(raw.payload_fields),
+            "equivalent escaped and raw UTF-8 payloads should canonicalize identically");
+    }
+}
+
+void test_parser_rejects_malformed_surrogates() {
+    expect(!parse_test_string(R"("\uD800")").ok, "a lone high surrogate should be rejected");
+    expect(!parse_test_string(R"("\uDC00")").ok, "a lone low surrogate should be rejected");
+    expect(!parse_test_string(R"("\uD800x")").ok, "a high surrogate followed by text should be rejected");
+    expect(!parse_test_string(R"("\uD800\n")").ok, "a high surrogate followed by a simple escape should be rejected");
+    expect(!parse_test_string(R"("\uD800\u0041")").ok, "a high surrogate followed by a BMP escape should be rejected");
+    expect(!parse_test_string(R"("\uD800\uD800")").ok, "two high surrogates should be rejected");
+    expect(!parse_test_string(R"("\uD800\uDC0")").ok, "a truncated low surrogate should be rejected");
+    expect(!parse_test_string(R"("\uD800\uZZZZ")").ok, "a malformed low surrogate should be rejected");
+    expect(!parse_test_string(R"("\uD80")").ok, "a truncated Unicode escape should be rejected");
 }
 
 void expect_parsed_integer(const std::string& number, long long expected, const std::string& description) {
@@ -375,6 +439,16 @@ void test_malformed_json_is_malformed() {
     expect(status.state == LicenseState::malformed, "truncated/invalid JSON should be malformed");
 }
 
+void test_malformed_surrogate_json_is_malformed() {
+    const fs::path path = test_root() / "malformed_surrogate.cflicense";
+    write_text_file(
+        path,
+        R"({"payload":{"license_type":"subscription","licensee_name":"\uD800"},"signature_algorithm":"ed25519","signature":"test"})");
+
+    const auto status = load_license_status(test_root() / "app.exe", path);
+    expect(status.state == LicenseState::malformed, "an invalid surrogate in a license string should be malformed");
+}
+
 void test_missing_file_with_no_explicit_path_is_free() {
     const fs::path isolated_dir = test_root() / "no_license_here";
     std::error_code ignored;
@@ -473,6 +547,9 @@ int main() {
     test_classifier_unknown_license_type_is_malformed();
     test_classifier_missing_license_type_is_malformed();
     test_parser_checked_integer_boundaries();
+    test_parser_unicode_escape_boundaries();
+    test_parser_preserves_simple_escapes_and_raw_utf8();
+    test_parser_rejects_malformed_surrogates();
     test_classifier_integer_boundaries();
     test_classifier_rejects_out_of_range_integers_without_partial_values();
 
@@ -481,6 +558,7 @@ int main() {
     test_tampered_payload_fails_verification();
     test_tampered_signature_fails_verification();
     test_malformed_json_is_malformed();
+    test_malformed_surrogate_json_is_malformed();
     test_missing_file_with_no_explicit_path_is_free();
     test_missing_file_with_explicit_path_is_unreadable();
     test_directory_as_explicit_path_is_unreadable();
