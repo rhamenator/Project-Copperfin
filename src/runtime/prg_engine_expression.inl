@@ -447,9 +447,14 @@
                             }
                             left = *result;
                         }
-                        else if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string)
+                        else if (left.kind == PrgValueKind::string && right.kind == PrgValueKind::string)
                         {
                             left = make_string_value(value_as_string(left) + value_as_string(right));
+                        }
+                        else if (left.kind == PrgValueKind::string || right.kind == PrgValueKind::string)
+                        {
+                            throw std::runtime_error(
+                                runtime_text("Runtime.Prg.Expression.Error.OperatorOperandTypeMismatch"));
                         }
                         else if ((left.kind == PrgValueKind::int64 || left.kind == PrgValueKind::uint64) &&
                                  (right.kind == PrgValueKind::int64 || right.kind == PrgValueKind::uint64))
