@@ -83,6 +83,65 @@ void expect_full_report_layout_preview_bounds(const std::string& text, const std
                     prefix + " should preserve deleted preview heights");
 }
 
+
+void expect_updated_settings_page_summary(const std::string& text, const std::string& prefix) {
+    expect_contains(text, "\"pageSetupAvailable\": true",
+                    prefix + " should expose effective page setup availability");
+    expect_contains(text, "\"orientationAvailable\": true",
+                    prefix + " should expose orientation availability");
+    expect_contains(text, "\"orientationCode\": 1",
+                    prefix + " should expose the orientation code");
+    expect_contains(text, "\"paperSizeAvailable\": true",
+                    prefix + " should expose paper-size availability");
+    expect_contains(text, "\"paperSizeCode\": 9",
+                    prefix + " should expose the paper-size code");
+    expect_contains(text, "\"topMarginAvailable\": true",
+                    prefix + " should expose top-margin availability");
+    expect_contains(text, "\"topMargin\": 14",
+                    prefix + " should expose the top margin");
+    expect_contains(text, "\"bottomMarginAvailable\": true",
+                    prefix + " should expose bottom-margin availability");
+    expect_contains(text, "\"bottomMargin\": 32",
+                    prefix + " should expose the bottom margin");
+    expect_contains(text, "\"gridVerticalAvailable\": true",
+                    prefix + " should expose vertical-grid availability");
+    expect_contains(text, "\"gridVertical\": 6",
+                    prefix + " should expose vertical grid spacing");
+    expect_contains(text, "\"gridHorizontalAvailable\": true",
+                    prefix + " should expose horizontal-grid availability");
+    expect_contains(text, "\"gridHorizontal\": 10",
+                    prefix + " should expose horizontal grid spacing");
+}
+
+void expect_cleared_settings_page_summary(const std::string& text, const std::string& prefix) {
+    expect_contains(text, "\"pageSetupAvailable\": true",
+                    prefix + " should preserve effective direct-field page setup");
+    expect_contains(text, "\"orientationAvailable\": false",
+                    prefix + " should clear orientation availability");
+    expect_contains(text, "\"orientationCode\": 0",
+                    prefix + " should reset the orientation code");
+    expect_contains(text, "\"paperSizeAvailable\": false",
+                    prefix + " should clear paper-size availability");
+    expect_contains(text, "\"paperSizeCode\": 0",
+                    prefix + " should reset the paper-size code");
+    expect_contains(text, "\"topMarginAvailable\": true",
+                    prefix + " should preserve direct top-margin availability");
+    expect_contains(text, "\"topMargin\": 10",
+                    prefix + " should preserve the direct top margin");
+    expect_contains(text, "\"bottomMarginAvailable\": false",
+                    prefix + " should clear bottom-margin availability");
+    expect_contains(text, "\"bottomMargin\": 0",
+                    prefix + " should reset the bottom margin");
+    expect_contains(text, "\"gridVerticalAvailable\": false",
+                    prefix + " should clear vertical-grid availability");
+    expect_contains(text, "\"gridVertical\": 0",
+                    prefix + " should reset vertical grid spacing");
+    expect_contains(text, "\"gridHorizontalAvailable\": false",
+                    prefix + " should clear horizontal-grid availability");
+    expect_contains(text, "\"gridHorizontal\": 0",
+                    prefix + " should reset horizontal grid spacing");
+}
+
 std::string quote_command_argument(const std::string& value) {
     std::string quoted = "\"";
     quoted.reserve(value.size() + 2U);
@@ -369,22 +428,8 @@ void run_settings_memo_update_case(
                         issue_prefix + " update should retain label identity");
     }
     expect_full_report_layout_preview_bounds(update_process.stdout_text, issue_prefix + " update");
-    expect_contains(update_process.stdout_text,
-                    deleted ? "\"pageSetupAvailable\": false" : "\"pageSetupAvailable\": true",
-                    issue_prefix + " update should preserve page setup availability");
+    expect_updated_settings_page_summary(update_process.stdout_text, issue_prefix + " update");
     if (!deleted) {
-        expect_contains(update_process.stdout_text, "\"orientationCode\": 1",
-                        issue_prefix + " update should refresh orientation codes");
-        expect_contains(update_process.stdout_text, "\"paperSizeCode\": 9",
-                        issue_prefix + " update should refresh paper-size codes");
-        expect_contains(update_process.stdout_text, "\"topMargin\": 14",
-                        issue_prefix + " update should refresh top margins");
-        expect_contains(update_process.stdout_text, "\"bottomMargin\": 32",
-                        issue_prefix + " update should refresh bottom margins");
-        expect_contains(update_process.stdout_text, "\"gridVertical\": 6",
-                        issue_prefix + " update should refresh vertical grid spacing");
-        expect_contains(update_process.stdout_text, "\"gridHorizontal\": 10",
-                        issue_prefix + " update should refresh horizontal grid spacing");
         expect_contains(update_process.stdout_text, "\"settingCount\": 7",
                         issue_prefix + " update should preserve memo and field setting counts");
     } else {
@@ -477,24 +522,8 @@ void run_settings_memo_clear_case(
                         issue_prefix + " clear should retain label identity");
     }
     expect_full_report_layout_preview_bounds(clear_process.stdout_text, issue_prefix + " clear");
-    expect_contains(clear_process.stdout_text,
-                    deleted ? "\"pageSetupAvailable\": false" : "\"pageSetupAvailable\": true",
-                    issue_prefix + " clear should preserve page setup availability");
+    expect_cleared_settings_page_summary(clear_process.stdout_text, issue_prefix + " clear");
     if (!deleted) {
-        expect_contains(clear_process.stdout_text, "\"orientationAvailable\": false",
-                        issue_prefix + " clear should clear orientation availability");
-        expect_contains(clear_process.stdout_text, "\"paperSizeAvailable\": false",
-                        issue_prefix + " clear should clear paper-size availability");
-        expect_contains(clear_process.stdout_text, "\"topMarginAvailable\": true",
-                        issue_prefix + " clear should preserve direct top-margin availability");
-        expect_contains(clear_process.stdout_text, "\"topMargin\": 10",
-                        issue_prefix + " clear should preserve direct top margins");
-        expect_contains(clear_process.stdout_text, "\"bottomMarginAvailable\": false",
-                        issue_prefix + " clear should clear bottom-margin availability");
-        expect_contains(clear_process.stdout_text, "\"gridVerticalAvailable\": false",
-                        issue_prefix + " clear should clear vertical-grid availability");
-        expect_contains(clear_process.stdout_text, "\"gridHorizontalAvailable\": false",
-                        issue_prefix + " clear should clear horizontal-grid availability");
         expect_contains(clear_process.stdout_text, "\"settingCount\": 1",
                         issue_prefix + " clear should remove memo-derived settings from counts");
     } else {
@@ -574,6 +603,7 @@ void run_unsupported_settings_memo_update_case(
            issue_prefix + " update should leave the EXPR memo queryable");
     expect(normalize_line_endings(expr_property.value) == updated_settings,
            issue_prefix + " update should preserve the raw unsupported EXPR text");
+    expect_updated_settings_page_summary(update_process.stdout_text, issue_prefix + " update");
     if (!deleted) {
         expect_contains(update_process.stdout_text, "\"settingCount\": 8",
                         issue_prefix + " update should expose parsed key/value settings only");
@@ -679,6 +709,7 @@ void run_unsupported_settings_memo_clear_case(
     });
     expect(expr_property.ok && expr_property.exists && expr_property.direct_field,
            issue_prefix + " clear should preserve the direct EXPR field carrier");
+    expect_cleared_settings_page_summary(clear_process.stdout_text, issue_prefix + " clear");
     if (!deleted) {
         expect_contains(clear_process.stdout_text, "\"settingCount\": 1",
                         issue_prefix + " clear should remove memo-derived settings after unsupported input");
