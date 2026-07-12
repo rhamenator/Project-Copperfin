@@ -716,11 +716,14 @@ void validate_expected_companions(
     AssetInspectionResult& result,
     const std::string& path,
     AssetFamily family,
-    const DbfHeader& header) {
+    const DbfHeader& header,
+    const std::string& memo_sidecar_path) {
     const std::filesystem::path file_path(path);
 
     if (asset_expects_memo_sidecar(family, header)) {
-        const std::string memo_path = memo_sidecar_path_for(file_path, family);
+        const std::string memo_path = memo_sidecar_path.empty()
+            ? memo_sidecar_path_for(file_path, family)
+            : memo_sidecar_path;
         if (!memo_path.empty()) {
             if (!resolve_existing_path_casefold(memo_path).has_value()) {
                 append_validation_issue(
@@ -756,12 +759,15 @@ void validate_memo_sidecar(
     const std::string& table_path,
     AssetFamily family,
     const DbfHeader& header,
-    const std::vector<std::uint8_t>& table_bytes) {
+    const std::vector<std::uint8_t>& table_bytes,
+    const std::string& memo_sidecar_path) {
     if (!asset_expects_memo_sidecar(family, header)) {
         return;
     }
 
-    const std::string memo_path = memo_sidecar_path_for(std::filesystem::path(table_path), family);
+    const std::string memo_path = memo_sidecar_path.empty()
+        ? memo_sidecar_path_for(std::filesystem::path(table_path), family)
+        : memo_sidecar_path;
     if (memo_path.empty()) {
         return;
     }
@@ -967,7 +973,7 @@ const char* asset_validation_severity_name(AssetValidationSeverity severity) {
     return "warning";
 }
 
-AssetInspectionResult inspect_asset(const std::string& path) {
+AssetInspectionResult inspect_asset(const std::string& path, const std::string& memo_sidecar_path) {
     AssetInspectionResult result;
     result.path = path;
     result.family = asset_family_from_path(path);
@@ -1011,8 +1017,8 @@ AssetInspectionResult inspect_asset(const std::string& path) {
 
     validate_dbf_storage(result, path, result.header, file_size);
     validate_dbf_field_descriptors(result, path, result.header, table_bytes);
-    validate_expected_companions(result, path, result.family, result.header);
-    validate_memo_sidecar(result, path, result.family, result.header, table_bytes);
+    validate_expected_companions(result, path, result.family, result.header, memo_sidecar_path);
+    validate_memo_sidecar(result, path, result.family, result.header, table_bytes, memo_sidecar_path);
 
     if (result.family == AssetFamily::database_container) {
         extract_database_container_metadata(result, path, result.header);

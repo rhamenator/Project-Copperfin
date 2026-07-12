@@ -158,38 +158,87 @@ std::string lowercase_ascii(std::string_view value) {
     return lowered;
 }
 
-std::optional<std::filesystem::path> resolve_existing_path_casefold(const std::filesystem::path& candidate) {
+struct ExistingPathResolution {
+    std::optional<std::filesystem::path> path{};
+    bool ambiguous = false;
+};
+
+ExistingPathResolution resolve_unique_existing_path_casefold(
+    const std::filesystem::path& candidate,
+    bool require_regular_file = false) {
     std::error_code ignored;
-    const bool candidate_exists = std::filesystem::exists(candidate, ignored);
+    const auto admissible = [&](const std::filesystem::path& path) {
+        ignored.clear();
+        return !require_regular_file || std::filesystem::is_regular_file(path, ignored);
+    };
+    const bool candidate_exists = std::filesystem::exists(candidate, ignored) && admissible(candidate);
     ignored.clear();
 
     const std::filesystem::path directory =
         candidate.has_parent_path() ? candidate.parent_path() : std::filesystem::current_path(ignored);
     if (directory.empty() || !std::filesystem::exists(directory, ignored)) {
-        return candidate_exists ? std::optional<std::filesystem::path>(candidate) : std::nullopt;
+        return {.path = candidate_exists ? std::optional<std::filesystem::path>(candidate) : std::nullopt};
     }
 
     const std::string requested_name = candidate.filename().string();
     const std::string target_name = lowercase_ascii(requested_name);
     std::optional<std::filesystem::path> folded_match;
+    std::size_t folded_match_count = 0U;
     for (const auto& entry : std::filesystem::directory_iterator(directory, ignored)) {
         if (ignored) {
             break;
         }
+        if (!admissible(entry.path())) {
+            continue;
+        }
 
         const std::string entry_name = entry.path().filename().string();
         if (entry_name == requested_name) {
-            return entry.path();
+            return {.path = entry.path()};
         }
-        if (!folded_match.has_value() && lowercase_ascii(entry_name) == target_name) {
-            folded_match = entry.path();
+        if (lowercase_ascii(entry_name) == target_name) {
+            if (!folded_match.has_value()) {
+                folded_match = entry.path();
+            }
+            ++folded_match_count;
         }
     }
 
-    if (folded_match.has_value()) {
-        return folded_match;
+    if (folded_match_count > 1U) {
+        return {.path = folded_match, .ambiguous = true};
     }
-    return candidate_exists ? std::optional<std::filesystem::path>(candidate) : std::nullopt;
+    if (folded_match.has_value()) {
+        return {.path = folded_match};
+    }
+    return {.path = candidate_exists ? std::optional<std::filesystem::path>(candidate) : std::nullopt};
+}
+
+std::optional<std::filesystem::path> resolve_existing_path_casefold(const std::filesystem::path& candidate) {
+    const ExistingPathResolution resolution = resolve_unique_existing_path_casefold(candidate);
+    return resolution.path;
+}
+
+std::optional<std::string_view> primary_extension_for_sidecar(const std::filesystem::path& path) {
+    const std::string extension = lowercase_ascii(path.extension().string());
+    if (extension == ".pjt") {
+        return ".pjx";
+    }
+    if (extension == ".sct") {
+        return ".scx";
+    }
+    if (extension == ".vct") {
+        return ".vcx";
+    }
+    if (extension == ".frt") {
+        return ".frx";
+    }
+    if (extension == ".lbt") {
+        return ".lbx";
+    }
+    if (extension == ".mnt") {
+        return ".mnx";
+    }
+    return std::nullopt;
 }
 
 std::string first_non_empty(const vfp::DbfRecord& record, std::initializer_list<std::string_view> field_names) {
@@ -883,20 +932,65 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
         return {.ok = false, .error = document_text("Studio.DocumentOpen.Error.PathRequired")};
     }
 
-    const vfp::AssetInspectionResult inspection = vfp::inspect_asset(request.path);
+    std::string document_path = request.path;
+    std::optional<std::string> opened_sidecar_path;
+    const std::filesystem::path requested_path(request.path);
+    if (const auto primary_extension = primary_extension_for_sidecar(requested_path);
+        primary_extension.has_value()) {
+        const ExistingPathResolution sidecar_resolution =
+            resolve_unique_existing_path_casefold(requested_path, true);
+        if (sidecar_resolution.ambiguous) {
+            return {
+                .ok = false,
+                .error = document_text(
+                    "Studio.DocumentOpen.Error.SidecarPathAmbiguous",
+                    {{"path", request.path}})
+            };
+        }
+        if (sidecar_resolution.path.has_value()) {
+            const std::filesystem::path actual_sidecar_path =
+                *sidecar_resolution.path;
+            opened_sidecar_path = actual_sidecar_path.string();
+            std::filesystem::path primary_candidate = actual_sidecar_path;
+            primary_candidate.replace_extension(*primary_extension);
+            const ExistingPathResolution primary_resolution =
+                resolve_unique_existing_path_casefold(primary_candidate, true);
+            if (primary_resolution.ambiguous) {
+                return {
+                    .ok = false,
+                    .error = document_text(
+                        "Studio.DocumentOpen.Error.SidecarPrimaryAmbiguous",
+                        {{"path", request.path}})
+                };
+            }
+            if (!primary_resolution.path.has_value()) {
+                return {
+                    .ok = false,
+                    .error = document_text(
+                        "Studio.DocumentOpen.Error.SidecarPrimaryMissing",
+                        {{"path", request.path}})
+                };
+            }
+            document_path = primary_resolution.path->string();
+        }
+    }
+
+    const std::string memo_sidecar_path = opened_sidecar_path.value_or(std::string{});
+    const vfp::AssetInspectionResult inspection =
+        vfp::inspect_asset(document_path, memo_sidecar_path);
     if (!inspection.ok) {
         return {.ok = false, .error = inspection.error};
     }
 
     StudioDocumentModel document;
-    document.path = request.path;
-    document.display_name = filename_of(request.path);
+    document.path = document_path;
+    document.display_name = filename_of(document_path);
     document.selection_symbol = request.symbol;
     document.kind = studio_asset_kind_from_vfp_family(inspection.family);
-    document.sidecar_path = infer_sidecar_path(request.path, document.kind);
+    document.sidecar_path = opened_sidecar_path.value_or(infer_sidecar_path(document_path, document.kind));
     document.has_sidecar = !document.sidecar_path.empty() && std::filesystem::exists(document.sidecar_path);
     document.read_only = request.read_only ||
-        !asset_family_is_writable(request.path, document.sidecar_path, document.has_sidecar);
+        !asset_family_is_writable(document_path, document.sidecar_path, document.has_sidecar);
     document.launched_from_visual_studio = request.launched_from_visual_studio;
     document.selection_record_available = request.selection_record_available;
     document.selection_line = request.line;
@@ -904,7 +998,7 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
     document.selection_record_index = request.record_index;
     document.inspection = inspection;
     if (document.kind == StudioAssetKind::program) {
-        document.static_diagnostics = runtime::analyze_prg_file(request.path);
+        document.static_diagnostics = runtime::analyze_prg_file(document_path);
     }
 
     if (inspection.header_available) {
@@ -923,7 +1017,8 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
                     : request.record_index + 1U;
             max_records = std::min(record_count, std::max<std::size_t>(8U, requested_record_count));
         }
-        const auto table_result = vfp::parse_dbf_table_from_file(request.path, max_records);
+        const auto table_result =
+            vfp::parse_dbf_table_from_file(document_path, max_records, memo_sidecar_path);
         if (table_result.ok) {
             document.table_preview_available = true;
             document.table_preview = std::move(table_result.table);

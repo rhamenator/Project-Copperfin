@@ -1167,7 +1167,10 @@ std::vector<std::uint8_t> read_memo_block_raw(const std::string& sidecar_path, s
             bytes.begin() + static_cast<std::ptrdiff_t>(payload_end)};
 }
 
-DbfTableParseResult parse_dbf_table_from_file(const std::string& path, std::size_t max_records) {
+DbfTableParseResult parse_dbf_table_from_file(
+    const std::string& path,
+    std::size_t max_records,
+    const std::string& memo_sidecar_path) {
     std::ifstream input(path, std::ios::binary);
     if (!input) {
         return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
@@ -1205,7 +1208,8 @@ DbfTableParseResult parse_dbf_table_from_file(const std::string& path, std::size
         field_offset += 32U;
     }
 
-    const MemoReader memo_reader(infer_memo_sidecar_path(path));
+    const MemoReader memo_reader(
+        memo_sidecar_path.empty() ? infer_memo_sidecar_path(path) : memo_sidecar_path);
     const std::size_t record_count = std::min<std::size_t>(table.header.record_count, max_records);
     const std::size_t data_offset = table.header.header_length;
     const std::size_t record_length = table.header.record_length;

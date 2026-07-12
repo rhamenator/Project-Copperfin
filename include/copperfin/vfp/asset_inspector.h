@@ -84,7 +84,9 @@ struct AssetInspectionResult {
 [[nodiscard]] AssetFamily asset_family_from_path(const std::string& path);
 [[nodiscard]] const char* asset_family_name(AssetFamily family);
 [[nodiscard]] const char* asset_validation_severity_name(AssetValidationSeverity severity);
-AssetInspectionResult inspect_asset(const std::string& path);
+AssetInspectionResult inspect_asset(
+    const std::string& path,
+    const std::string& memo_sidecar_path = {});
 
 // ---- Whole-database JSON export ----
 

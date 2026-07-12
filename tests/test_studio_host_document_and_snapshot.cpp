@@ -146,6 +146,258 @@ void test_open_document_casefold_preserves_utf8_filename_bytes() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_open_document_canonicalizes_direct_sidecar_paths() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir =
+        fs::temp_directory_path() / "copperfin_studio_host_direct_sidecar_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto write_primary = [](const fs::path& path) {
+        const auto bytes = make_vfp_header();
+        std::ofstream output(path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    };
+    const auto write_sidecar = [](const fs::path& path) {
+        std::ofstream output(path, std::ios::binary);
+        output << "memo-sidecar";
+    };
+
+    struct DirectSidecarCase {
+        std::string_view stem;
+        std::string_view primary_extension;
+        std::string_view sidecar_extension;
+        copperfin::studio::StudioAssetKind kind;
+    };
+    const DirectSidecarCase cases[]{
+        {"project", ".pjx", ".PJT", copperfin::studio::StudioAssetKind::project},
+        {"form", ".scx", ".SCT", copperfin::studio::StudioAssetKind::form},
+        {"classes", ".vcx", ".VCT", copperfin::studio::StudioAssetKind::class_library},
+        {"report", ".frx", ".FRT", copperfin::studio::StudioAssetKind::report},
+        {"label", ".lbx", ".LBT", copperfin::studio::StudioAssetKind::label},
+        {"menu", ".mnx", ".MNT", copperfin::studio::StudioAssetKind::menu}
+    };
+
+    for (const auto& direct_case : cases) {
+        const fs::path primary_path =
+            temp_dir / (std::string(direct_case.stem) + std::string(direct_case.primary_extension));
+        const fs::path sidecar_path =
+            temp_dir / (std::string(direct_case.stem) + std::string(direct_case.sidecar_extension));
+        write_primary(primary_path);
+        write_sidecar(sidecar_path);
+
+        const auto result = copperfin::studio::open_document({
+            .path = sidecar_path.string(),
+            .symbol = "selectedSymbol",
+            .line = 17U,
+            .column = 4U,
+            .launched_from_visual_studio = true
+        });
+        const std::string label =
+            std::string(direct_case.primary_extension) + "/" + std::string(direct_case.sidecar_extension);
+        expect(result.ok, "#3990: direct " + label + " sidecar open should canonicalize to its primary");
+        if (!result.ok) {
+            continue;
+        }
+        expect(result.document.kind == direct_case.kind,
+               "#3990: direct " + label + " open should preserve the document family");
+        expect(result.document.path == primary_path.string() &&
+                   result.document.inspection.path == primary_path.string(),
+               "#3990: direct " + label + " open should expose the actual primary path");
+        expect(result.document.sidecar_path == sidecar_path.string() && result.document.has_sidecar,
+               "#3990: direct " + label + " open should retain the actual sidecar spelling");
+        expect(result.document.path != result.document.sidecar_path,
+               "#3990: direct " + label + " open must never create a self-sidecar document");
+        expect(result.document.display_name == primary_path.filename().string(),
+               "#3990: direct " + label + " display name should follow the canonical primary");
+        expect(result.document.selection_symbol == "selectedSymbol" &&
+                   result.document.selection_line == 17U &&
+                   result.document.selection_column == 4U &&
+                   result.document.launched_from_visual_studio,
+               "#3990: direct " + label + " canonicalization should preserve launch metadata");
+    }
+
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const std::vector<std::string_view> diagnostic_keys{
+        "Studio.DocumentOpen.Error.SidecarPathAmbiguous",
+        "Studio.DocumentOpen.Error.SidecarPrimaryAmbiguous",
+        "Studio.DocumentOpen.Error.SidecarPrimaryMissing"
+    };
+    expect(count_missing_locale_keys(english_catalog, "en-US", diagnostic_keys) == 0U &&
+               count_missing_locale_keys(
+                   copperfin::localization::load_catalogs(catalog_root, "es-419"),
+                   "es-419",
+                   diagnostic_keys) == 0U &&
+               count_missing_locale_keys(
+                   copperfin::localization::load_catalogs(catalog_root, "pt-BR"),
+                   "pt-BR",
+                   diagnostic_keys) == 0U &&
+               count_missing_locale_keys(pseudo_catalog, "qps-ploc", diagnostic_keys) == 0U,
+           "#3990: direct-sidecar diagnostics should have four-catalog key parity");
+    expect(pseudo_catalog.translate(diagnostic_keys[0U]) != english_catalog.translate(diagnostic_keys[0U]) &&
+               pseudo_catalog.translate(diagnostic_keys[1U]) != english_catalog.translate(diagnostic_keys[1U]) &&
+               pseudo_catalog.translate(diagnostic_keys[2U]) != english_catalog.translate(diagnostic_keys[2U]),
+           "#3990: direct-sidecar diagnostics should remain pseudo-localizable");
+
+    const fs::path missing_sidecar = temp_dir / "missing.PJT";
+    write_sidecar(missing_sidecar);
+    const auto missing_result = copperfin::studio::open_document({.path = missing_sidecar.string()});
+    expect(!missing_result.ok &&
+               missing_result.error == english_catalog.translate(
+                   "Studio.DocumentOpen.Error.SidecarPrimaryMissing",
+                   {{"path", missing_sidecar.string()}}),
+           "#3990: a direct sidecar without a primary should fail through the localized diagnostic");
+
+    const fs::path case_primary = temp_dir / "CaseProject.PJX";
+    const fs::path case_sidecar = temp_dir / "caseproject.PJT";
+    write_primary(case_primary);
+    write_sidecar(case_sidecar);
+    const auto case_result = copperfin::studio::open_document({.path = case_sidecar.string()});
+    expect(case_result.ok && case_result.document.path == case_primary.string() &&
+               case_result.document.sidecar_path == case_sidecar.string(),
+           "#3990: unique case-fold recovery should preserve actual primary and sidecar spelling");
+
+    const fs::path input_case_primary = temp_dir / "InputCase.PJX";
+    const fs::path input_case_sidecar = temp_dir / "InputCase.PJT";
+    const fs::path input_case_request = temp_dir / "inputcase.pjt";
+    write_primary(input_case_primary);
+    write_sidecar(input_case_sidecar);
+    const auto input_case_result =
+        copperfin::studio::open_document({.path = input_case_request.string()});
+    expect(input_case_result.ok &&
+               input_case_result.document.path == input_case_primary.string() &&
+               input_case_result.document.sidecar_path == input_case_sidecar.string(),
+           "#3990: direct sidecar inputs should recover one unique case-fold path and actual spelling");
+
+    const fs::path ordinary_primary = temp_dir / "ordinary.PJX";
+    const fs::path ordinary_sidecar = temp_dir / "ordinary.PJT";
+    write_primary(ordinary_primary);
+    write_sidecar(ordinary_sidecar);
+    const auto ordinary_result = copperfin::studio::open_document({.path = ordinary_primary.string()});
+    expect(ordinary_result.ok && ordinary_result.document.path == ordinary_primary.string() &&
+               ordinary_result.document.sidecar_path == ordinary_sidecar.string() &&
+               ordinary_result.document.has_sidecar,
+           "#3990: ordinary PJX/PJT primary opens should remain unchanged");
+
+    const fs::path ambiguous_sidecar = temp_dir / "ambiguous.PJT";
+    const fs::path ambiguous_primary_one = temp_dir / "Ambiguous.PJX";
+    const fs::path ambiguous_primary_two = temp_dir / "AMBIGUOUS.pjx";
+    write_sidecar(ambiguous_sidecar);
+    write_primary(ambiguous_primary_one);
+    write_primary(ambiguous_primary_two);
+    const auto has_exact_entry = [&](std::string_view filename) {
+        for (const auto& entry : fs::directory_iterator(temp_dir)) {
+            if (entry.path().filename().string() == filename) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    const fs::path payload_primary = temp_dir / "payload.pjx";
+    const fs::path inferred_payload_sidecar = temp_dir / "payload.pjt";
+    const fs::path opened_payload_sidecar = temp_dir / "payload.PJT";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> payload_fields{
+        {.name = "BODY", .type = 'M', .length = 4U}
+    };
+    const auto payload_create_result = copperfin::vfp::create_dbf_table_file(
+        payload_primary.string(), payload_fields, {{"chosen-payload"}});
+    expect(payload_create_result.ok,
+           "#3990: exact-sidecar payload fixture should create its primary and inferred memo");
+    fs::copy_file(
+        inferred_payload_sidecar,
+        opened_payload_sidecar,
+        fs::copy_options::overwrite_existing,
+        ignored);
+    {
+        std::ofstream corrupt_inferred_sidecar(
+            inferred_payload_sidecar,
+            std::ios::binary | std::ios::trunc);
+        corrupt_inferred_sidecar << "bad";
+    }
+    if (has_exact_entry("payload.pjt") && has_exact_entry("payload.PJT")) {
+        const auto payload_result =
+            copperfin::studio::open_document({.path = opened_payload_sidecar.string()});
+        expect(payload_result.ok && payload_result.document.table_preview_available &&
+                   payload_result.document.table_preview.records.size() == 1U,
+               "#3990: direct exact-sidecar open should parse through the selected memo file");
+        if (payload_result.ok && payload_result.document.table_preview_available &&
+            payload_result.document.table_preview.records.size() == 1U &&
+            !payload_result.document.table_preview.records[0U].values.empty()) {
+            expect(payload_result.document.table_preview.records[0U].values[0U].display_value ==
+                       "chosen-payload",
+                   "#3990: table preview should consume the exact opened sidecar, not an inferred decoy");
+        }
+        expect(std::none_of(
+                   payload_result.document.inspection.validation_issues.begin(),
+                   payload_result.document.inspection.validation_issues.end(),
+                   [](const copperfin::vfp::AssetValidationIssue& issue) {
+                       return issue.code == "memo.sidecar_header_truncated";
+                   }),
+               "#3990: inspection should validate the exact opened sidecar, not an inferred decoy");
+    }
+
+    const fs::path sidecar_ambiguous_primary = temp_dir / "sidecar.pjx";
+    const fs::path sidecar_ambiguous_one = temp_dir / "Sidecar.PJT";
+    const fs::path sidecar_ambiguous_two = temp_dir / "SIDECAR.pjt";
+    const fs::path sidecar_ambiguous_request = temp_dir / "sidecar.pjt";
+    write_primary(sidecar_ambiguous_primary);
+    write_sidecar(sidecar_ambiguous_one);
+    write_sidecar(sidecar_ambiguous_two);
+    if (has_exact_entry("Sidecar.PJT") && has_exact_entry("SIDECAR.pjt")) {
+        const auto sidecar_ambiguous_result =
+            copperfin::studio::open_document({.path = sidecar_ambiguous_request.string()});
+        expect(!sidecar_ambiguous_result.ok &&
+                   sidecar_ambiguous_result.error == english_catalog.translate(
+                       "Studio.DocumentOpen.Error.SidecarPathAmbiguous",
+                       {{"path", sidecar_ambiguous_request.string()}}),
+               "#3990: multiple case-fold sidecar inputs should fail through the localized diagnostic");
+
+        write_sidecar(sidecar_ambiguous_request);
+        const auto sidecar_exact_result =
+            copperfin::studio::open_document({.path = sidecar_ambiguous_request.string()});
+        expect(sidecar_exact_result.ok &&
+                   sidecar_exact_result.document.path == sidecar_ambiguous_primary.string() &&
+                   sidecar_exact_result.document.sidecar_path == sidecar_ambiguous_request.string(),
+               "#3990: an exact sidecar filename should win over case-fold siblings");
+    }
+
+    const fs::path legacy_primary = temp_dir / "legacy.pjx";
+    const fs::path legacy_sidecar_one = temp_dir / "Legacy.PJT";
+    const fs::path legacy_sidecar_two = temp_dir / "LEGACY.pjt";
+    write_primary(legacy_primary);
+    write_sidecar(legacy_sidecar_one);
+    write_sidecar(legacy_sidecar_two);
+    if (has_exact_entry("Legacy.PJT") && has_exact_entry("LEGACY.pjt")) {
+        const auto legacy_result = copperfin::studio::open_document({.path = legacy_primary.string()});
+        expect(legacy_result.ok && legacy_result.document.has_sidecar &&
+                   (legacy_result.document.sidecar_path == legacy_sidecar_one.string() ||
+                    legacy_result.document.sidecar_path == legacy_sidecar_two.string()),
+               "#3990: ordinary primary opens should retain existing ambiguous-sidecar handling");
+    }
+
+    if (has_exact_entry("Ambiguous.PJX") && has_exact_entry("AMBIGUOUS.pjx")) {
+        const auto ambiguous_result =
+            copperfin::studio::open_document({.path = ambiguous_sidecar.string()});
+        expect(!ambiguous_result.ok &&
+                   ambiguous_result.error == english_catalog.translate(
+                       "Studio.DocumentOpen.Error.SidecarPrimaryAmbiguous",
+                       {{"path", ambiguous_sidecar.string()}}),
+               "#3990: multiple case-fold primary matches should fail through the localized diagnostic");
+
+        const fs::path exact_primary = temp_dir / "ambiguous.pjx";
+        write_primary(exact_primary);
+        const auto exact_result = copperfin::studio::open_document({.path = ambiguous_sidecar.string()});
+        expect(exact_result.ok && exact_result.document.path == exact_primary.string(),
+               "#3990: an exact primary filename should win over case-fold siblings");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_open_document_infers_read_only_from_asset_family_writability() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() / "copperfin_studio_host_read_only_document_tests";
@@ -264,6 +516,22 @@ void test_open_document_uses_vfp_filename_for_display_name() {
     expect(result.document.has_sidecar, "#702: sidecar inference should remain compatible with VFP-style path text");
     expect(result.document.sidecar_path == sidecar_path.string(),
            "#702: inferred sidecar path should still replace the extension in the host path");
+
+    const auto direct_sidecar_result = copperfin::studio::open_document({
+        .path = sidecar_path.string(),
+        .launched_from_visual_studio = true
+    });
+    expect(direct_sidecar_result.ok,
+           "#3990: direct Windows-style sidecar paths should canonicalize to their primary");
+    if (direct_sidecar_result.ok) {
+        expect(direct_sidecar_result.document.path == form_path.string() &&
+                   direct_sidecar_result.document.sidecar_path == sidecar_path.string() &&
+                   direct_sidecar_result.document.has_sidecar,
+               "#3990: direct Windows-style sidecar canonicalization should preserve path identities");
+        expect(direct_sidecar_result.document.display_name == "customer.scx" &&
+                   direct_sidecar_result.document.launched_from_visual_studio,
+               "#3990: direct Windows-style sidecar canonicalization should preserve display and launch metadata");
+    }
 
     fs::remove_all(temp_dir, ignored);
 }
