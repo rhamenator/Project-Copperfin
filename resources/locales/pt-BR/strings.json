@@ -416,6 +416,7 @@
   "RuntimeHost.Error.ManifestEmptyOrInvalid": "O manifesto esta vazio ou e invalido.",
   "RuntimeHost.Error.ManifestMissingRuntimeHostSha256": "Falta runtime_host_sha256 no manifesto com seguranca habilitada.",
   "RuntimeHost.Error.ManifestNotFound": "Arquivo de manifesto nao encontrado.",
+  "RuntimeHost.Error.ManifestVersionContractAmbiguous": "O manifesto deve conter exatamente um de manifest_version ou debug_manifest_version.",
   "RuntimeHost.Error.ManifestVersionMissing": "Falta manifest_version no manifesto.",
   "RuntimeHost.Error.ManifestVersionUnsupported": "manifest_version nao e compativel: {version}. As versoes compativeis sao: {supportedVersions}.",
   "RuntimeHost.Error.MaterializeVerifiedStartupSnapshotFailed": "Nao foi possivel materializar o snapshot de inicializacao verificado: {fileName}",

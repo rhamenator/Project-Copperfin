@@ -951,21 +951,56 @@ std::optional<int> parse_manifest_version_value(const std::string& value) {
     }
 }
 
-bool is_debug_manifest_contract(const std::string& manifest_path) {
+enum class ManifestDocumentKind {
+    missing,
+    runtime_package,
+    debug,
+    ambiguous
+};
+
+struct ManifestVersionContract {
+    ManifestDocumentKind kind = ManifestDocumentKind::missing;
+    std::string raw_version;
+};
+
+ManifestVersionContract inspect_manifest_version_contract(const ManifestMap& manifest) {
+    const auto runtime_versions = all_values(manifest, "manifest_version");
+    const auto debug_versions = all_values(manifest, "debug_manifest_version");
+    if ((runtime_versions.size() + debug_versions.size()) > 1U) {
+        return {
+            .kind = ManifestDocumentKind::ambiguous,
+            .raw_version = {}
+        };
+    }
+    if (runtime_versions.size() == 1U) {
+        return {
+            .kind = ManifestDocumentKind::runtime_package,
+            .raw_version = runtime_versions.front()
+        };
+    }
+    if (debug_versions.size() == 1U) {
+        return {
+            .kind = ManifestDocumentKind::debug,
+            .raw_version = debug_versions.front()
+        };
+    }
+    return {};
+}
+
+bool has_debug_manifest_path_identity(const std::string& manifest_path) {
     const std::filesystem::path normalized_manifest_path =
         std::filesystem::path(manifest_path).lexically_normal();
     return equals_insensitive(normalized_manifest_path.filename().string(), "app.cfdebug") ||
            equals_insensitive(normalized_manifest_path.extension().string(), ".cfdebug");
 }
 
-std::optional<int> resolved_manifest_version(
-    const ManifestMap& manifest,
-    const std::string& manifest_path) {
-    std::string raw_version = first_value(manifest, "manifest_version");
-    if (trim_copy(raw_version).empty() && is_debug_manifest_contract(manifest_path)) {
-        raw_version = first_value(manifest, "debug_manifest_version");
+std::optional<int> resolved_manifest_version(const ManifestMap& manifest) {
+    const ManifestVersionContract contract = inspect_manifest_version_contract(manifest);
+    if (contract.kind != ManifestDocumentKind::runtime_package &&
+        contract.kind != ManifestDocumentKind::debug) {
+        return std::nullopt;
     }
-    return parse_manifest_version_value(raw_version);
+    return parse_manifest_version_value(contract.raw_version);
 }
 
 bool is_sha256_hex(const std::string& value) {
@@ -977,19 +1012,22 @@ bool is_sha256_hex(const std::string& value) {
 
 bool validate_manifest_version(
     const ManifestMap& manifest,
-    const std::string& manifest_path,
+    ManifestDocumentKind& document_kind,
     const copperfin::localization::LocalizedCatalog& catalog,
     std::string& error) {
-    std::string raw_version = first_value(manifest, "manifest_version");
-    if (trim_copy(raw_version).empty() && is_debug_manifest_contract(manifest_path)) {
-        raw_version = first_value(manifest, "debug_manifest_version");
+    const ManifestVersionContract contract = inspect_manifest_version_contract(manifest);
+    document_kind = contract.kind;
+    if (contract.kind == ManifestDocumentKind::ambiguous) {
+        error = localized_message(catalog, "RuntimeHost.Error.ManifestVersionContractAmbiguous");
+        return false;
     }
-    if (trim_copy(raw_version).empty()) {
+    if (contract.kind == ManifestDocumentKind::missing ||
+        trim_copy(contract.raw_version).empty()) {
         error = localized_message(catalog, "RuntimeHost.Error.ManifestVersionMissing");
         return false;
     }
 
-    const auto parsed_version = resolved_manifest_version(manifest, manifest_path);
+    const auto parsed_version = parse_manifest_version_value(contract.raw_version);
     if (!parsed_version.has_value() ||
         *parsed_version < kMinimumSupportedManifestVersion ||
         *parsed_version > kMaximumSupportedManifestVersion) {
@@ -998,7 +1036,7 @@ bool validate_manifest_version(
             "RuntimeHost.Error.ManifestVersionUnsupported",
             {
                 {"supportedVersions", "1, 2, 3"},
-                {"version", raw_version}
+                {"version", contract.raw_version}
             });
         return false;
     }
@@ -1008,10 +1046,9 @@ bool validate_manifest_version(
 
 bool validate_manifest_data_contract_header(
     const ManifestMap& manifest,
-    const std::string& manifest_path,
     const copperfin::localization::LocalizedCatalog& catalog,
     std::string& error) {
-    const int manifest_version = resolved_manifest_version(manifest, manifest_path).value_or(0);
+    const int manifest_version = resolved_manifest_version(manifest).value_or(0);
     const auto data_policies = all_values(manifest, "data_policy");
     const std::string data_policy = data_policies.empty() ? std::string{} : data_policies.front();
     const bool has_data_entries =
@@ -1248,7 +1285,6 @@ std::string resolve_manifest_bound_directory(
 
 bool verify_manifest_hashes(
     const ManifestMap& manifest,
-    const std::string& manifest_path,
     const std::filesystem::path& manifest_directory,
     const copperfin::localization::LocalizedCatalog& catalog,
     std::string& error,
@@ -1299,9 +1335,7 @@ bool verify_manifest_hashes(
         .sha256 = lowercase_copy(runtime_host_hash.hex_digest)
     });
 
-    const int manifest_version = resolved_manifest_version(
-        manifest,
-        manifest_path).value_or(0);
+    const int manifest_version = resolved_manifest_version(manifest).value_or(0);
     const auto data_asset_values = all_values(manifest, "data_asset");
     const auto data_payload_values = all_values(manifest, "data_payload");
     const std::string data_policy = first_value(manifest, "data_policy");
@@ -2697,8 +2731,13 @@ int main(int argc, char** argv) {
         print_error_line(catalog, localized_message(catalog, "RuntimeHost.Error.ManifestEmptyOrInvalid"));
         return 4;
     }
+    ManifestDocumentKind manifest_document_kind = ManifestDocumentKind::missing;
     std::string manifest_version_error;
-    if (!validate_manifest_version(manifest, manifest_path, catalog, manifest_version_error)) {
+    if (!validate_manifest_version(
+            manifest,
+            manifest_document_kind,
+            catalog,
+            manifest_version_error)) {
         std::cout << "status: error\n";
         print_error_line(catalog, manifest_version_error);
         return 4;
@@ -2706,7 +2745,6 @@ int main(int argc, char** argv) {
     std::string data_contract_error;
     if (!validate_manifest_data_contract_header(
             manifest,
-            manifest_path,
             catalog,
             data_contract_error)) {
         std::cout << "status: error\n";
@@ -2765,7 +2803,6 @@ int main(int argc, char** argv) {
         std::string verification_error;
         if (!verify_manifest_hashes(
                 manifest,
-                manifest_path,
                 manifest_directory,
                 catalog,
                 verification_error,
@@ -2789,14 +2826,17 @@ int main(int argc, char** argv) {
         }
     }
 
-    const bool debug_manifest_contract = is_debug_manifest_contract(manifest_path);
+    const bool debug_manifest_privileges =
+        debug_mode &&
+        manifest_document_kind == ManifestDocumentKind::debug &&
+        has_debug_manifest_path_identity(manifest_path);
     copperfin::security::PhysicalPathContainmentFailure startup_containment_failure =
         copperfin::security::PhysicalPathContainmentFailure::none;
     const std::optional<std::string> resolved_startup_source =
         resolve_startup_source(
             manifest,
             manifest_directory,
-            debug_manifest_contract,
+            debug_manifest_privileges,
             &startup_containment_failure);
     if (!resolved_startup_source.has_value()) {
         const std::string recorded_startup_source = first_value(manifest, "startup_source");
@@ -2822,12 +2862,12 @@ int main(int argc, char** argv) {
         resolve_effective_working_directory(
             manifest,
             manifest_directory,
-            debug_manifest_contract);
+            debug_manifest_privileges);
 
     std::optional<std::string> verified_startup_bytes;
     std::map<std::string, std::string> verified_source_texts;
     std::map<std::string, std::string> verified_file_bytes;
-    if (!debug_manifest_contract) {
+    if (!debug_manifest_privileges) {
         const auto current_identity = copperfin::security::inspect_physical_path_containment(
             startup_source,
             manifest_directory);
@@ -2938,7 +2978,7 @@ int main(int argc, char** argv) {
     if (runtime_bridge_mode_requested(bridge_options)) {
         std::optional<std::string> verified_bridge_source_text;
         std::optional<std::string> verified_bridge_source_path;
-        if (!trim_copy(bridge_options.source_path).empty() && !debug_manifest_contract) {
+        if (!trim_copy(bridge_options.source_path).empty() && !debug_manifest_privileges) {
             copperfin::security::PhysicalPathContainmentFailure bridge_containment_failure =
                 copperfin::security::PhysicalPathContainmentFailure::none;
             const auto bound_bridge_source = bind_packaged_path(
@@ -3007,7 +3047,7 @@ int main(int argc, char** argv) {
             verified_bridge_source_path,
             verified_source_texts,
             verified_file_bytes,
-            security_enabled && !debug_manifest_contract);
+            security_enabled && !debug_manifest_privileges);
     }
 
     const std::string startup_extension = lowercase_copy(std::filesystem::path(startup_source).extension().string());
@@ -3101,12 +3141,12 @@ int main(int argc, char** argv) {
     if (prg_startup) {
         session_options.startup_source_text = verified_startup_bytes;
         session_options.source_text_overrides = verified_source_texts;
-        session_options.require_source_text_overrides = security_enabled && !debug_manifest_contract;
+        session_options.require_source_text_overrides = security_enabled && !debug_manifest_privileges;
     } else if (!xasset_bootstrap_source.empty()) {
         session_options.startup_source_text = xasset_bootstrap_source;
     }
     session_options.verified_file_byte_overrides = verified_file_bytes;
-    session_options.require_verified_file_byte_overrides = security_enabled && !debug_manifest_contract;
+    session_options.require_verified_file_byte_overrides = security_enabled && !debug_manifest_privileges;
     if (!xasset_execution_asset_path.empty()) {
         session_options.source_path_display_aliases.emplace(
             std::filesystem::path(xasset_execution_asset_path).lexically_normal().string(),

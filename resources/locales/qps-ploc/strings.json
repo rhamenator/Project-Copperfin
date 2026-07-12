@@ -416,6 +416,7 @@
   "RuntimeHost.Error.ManifestEmptyOrInvalid": "Manifest is empty or invalid.",
   "RuntimeHost.Error.ManifestMissingRuntimeHostSha256": "Security-enabled manifest is missing runtime_host_sha256.",
   "RuntimeHost.Error.ManifestNotFound": "Manifest file not found.",
+  "RuntimeHost.Error.ManifestVersionContractAmbiguous": "Manifest must contain exactly one of manifest_version or debug_manifest_version.",
   "RuntimeHost.Error.ManifestVersionMissing": "Manifest is missing manifest_version.",
   "RuntimeHost.Error.ManifestVersionUnsupported": "Unsupported manifest_version: {version}. Supported versions: {supportedVersions}.",
   "RuntimeHost.Error.MaterializeVerifiedStartupSnapshotFailed": "Unable to materialize the verified startup snapshot: {fileName}",

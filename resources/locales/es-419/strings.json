@@ -416,6 +416,7 @@
   "RuntimeHost.Error.ManifestEmptyOrInvalid": "El manifiesto esta vacio o no es valido.",
   "RuntimeHost.Error.ManifestMissingRuntimeHostSha256": "Al manifiesto con seguridad habilitada le falta runtime_host_sha256.",
   "RuntimeHost.Error.ManifestNotFound": "No se encontro el archivo de manifiesto.",
+  "RuntimeHost.Error.ManifestVersionContractAmbiguous": "El manifiesto debe contener exactamente uno de manifest_version o debug_manifest_version.",
   "RuntimeHost.Error.ManifestVersionMissing": "Al manifiesto le falta manifest_version.",
   "RuntimeHost.Error.ManifestVersionUnsupported": "manifest_version no es compatible: {version}. Las versiones compatibles son: {supportedVersions}.",
   "RuntimeHost.Error.MaterializeVerifiedStartupSnapshotFailed": "No se pudo materializar la instantanea de inicio verificada: {fileName}",

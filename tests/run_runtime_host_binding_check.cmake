@@ -850,7 +850,7 @@ dotnet_story=none
 file(WRITE "${collision_root}/app.cfdebug" "${debug_manifest_text}")
 
 execute_process(
-    COMMAND "${packaged_entrypoint}" --manifest "${collision_root}/app.cfdebug"
+    COMMAND "${packaged_entrypoint}" --manifest "${collision_root}/app.cfdebug" --debug
     WORKING_DIRECTORY "${test_root}"
     RESULT_VARIABLE debug_source_result
     OUTPUT_VARIABLE debug_source_output
@@ -861,8 +861,8 @@ cmake_path(NATIVE_PATH expected_debug_source NORMALIZE expected_debug_source)
 string(FIND "${debug_source_output}" "startup.source: ${expected_debug_source}" debug_source_path_position)
 if(NOT debug_source_result EQUAL 0 OR
    debug_source_path_position EQUAL -1 OR
-   NOT debug_source_output MATCHES "runtime\\.completed: true")
-    message(FATAL_ERROR "Runtime host did not preserve the app.cfdebug external source-path contract.\nstdout:\n${debug_source_output}\nstderr:\n${debug_source_error}")
+   NOT debug_source_output MATCHES "debug\\.reason: completed")
+    message(FATAL_ERROR "Runtime host did not preserve the explicitly authorized app.cfdebug external source-path contract.\nstdout:\n${debug_source_output}\nstderr:\n${debug_source_error}")
 endif()
 
 file(REMOVE_RECURSE "${test_root}")
