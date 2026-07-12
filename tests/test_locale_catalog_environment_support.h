@@ -8,15 +8,38 @@
 #include "test_environment_support.h"
 
 #include <filesystem>
+#include <fstream>
 #include <string>
 
 namespace copperfin::test_support {
 
+inline bool can_supply_default_locale_catalog(const std::filesystem::path& locale_dir) {
+    if (locale_dir.empty()) {
+        return false;
+    }
+
+    const std::filesystem::path catalog_path = locale_dir / "en-US" / "strings.json";
+    std::error_code error;
+    if (!std::filesystem::is_regular_file(catalog_path, error)) {
+        return false;
+    }
+    std::ifstream input(catalog_path, std::ios::binary);
+    return input.good();
+}
+
 inline std::string find_locale_catalog_dir_from_cwd() {
-    std::filesystem::path ancestor = std::filesystem::absolute(std::filesystem::current_path());
+    std::error_code error;
+    std::filesystem::path ancestor = std::filesystem::current_path(error);
+    if (error) {
+        return (std::filesystem::path("resources") / "locales").lexically_normal().string();
+    }
+    ancestor = std::filesystem::absolute(ancestor, error);
+    if (error) {
+        return (std::filesystem::path("resources") / "locales").lexically_normal().string();
+    }
     for (;;) {
         const auto candidate = ancestor / "resources" / "locales";
-        if (std::filesystem::exists(candidate)) {
+        if (can_supply_default_locale_catalog(candidate)) {
             return candidate.lexically_normal().string();
         }
         const auto parent = ancestor.parent_path();
@@ -32,10 +55,12 @@ struct ScopedDefaultLocaleCatalogEnvironment {
     ScopedEnvironmentValue locale_dir;
 
     ScopedDefaultLocaleCatalogEnvironment()
-        : locale("COPPERFIN_LOCALE"),
-          locale_dir("COPPERFIN_LOCALE_DIR") {
-        set_env_value("COPPERFIN_LOCALE", "en-US", true);
-        set_env_value("COPPERFIN_LOCALE_DIR", find_locale_catalog_dir_from_cwd(), true);
+        : locale("COPPERFIN_LOCALE", false),
+          locale_dir("COPPERFIN_LOCALE_DIR", false) {
+        locale.set("en-US");
+        if (!can_supply_default_locale_catalog(getenv_value("COPPERFIN_LOCALE_DIR"))) {
+            locale_dir.set(find_locale_catalog_dir_from_cwd());
+        }
     }
 };
 
