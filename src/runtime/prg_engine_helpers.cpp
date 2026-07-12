@@ -1080,8 +1080,28 @@ std::string portable_force_path(const std::string& path, std::string directory) 
     if (directory.empty()) {
         return filename;
     }
-    const char separator = directory.find('\\') != std::string::npos ? '\\' : '/';
-    if (directory.back() != '\\' && directory.back() != '/') {
+
+    const bool drive_path =
+        directory.size() >= 2U &&
+        std::isalpha(static_cast<unsigned char>(directory[0])) != 0 &&
+        directory[1] == ':';
+    const bool unc_path =
+        directory.size() >= 2U &&
+        (directory[0] == '\\' || directory[0] == '/') &&
+        directory[1] == directory[0];
+    char separator = '/';
+    if (drive_path || unc_path) {
+        separator = '\\';
+    } else if (directory.front() != '/') {
+        const std::size_t first_separator = directory.find_first_of("\\/");
+        if (first_separator != std::string::npos) {
+            separator = directory[first_separator];
+        }
+    }
+
+    const char alternate_separator = separator == '\\' ? '/' : '\\';
+    std::replace(directory.begin(), directory.end(), alternate_separator, separator);
+    if (directory.back() != separator) {
         directory += separator;
     }
     return directory + filename;

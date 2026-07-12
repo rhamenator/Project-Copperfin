@@ -78,6 +78,27 @@ namespace
             "cDefaultExtKept = DEFAULTEXT('D:\\generated\\report.frx', 'bak')\n"
             "cForcedPath = FORCEPATH(cWinPath, 'D:\\generated')\n"
             "cForcedPosixPath = FORCEPATH(cPosixPath, '/tmp/generated')\n"
+            "cForcedUncPath = FORCEPATH('foo.txt', '\\\\server\\share\\generated')\n"
+            "cForcedMixedDrivePath = FORCEPATH('foo.txt', 'D:/generated\\subdir')\n"
+            "cForcedMixedUncPath = FORCEPATH('foo.txt', '//server/share\\generated')\n"
+            "cForcedMixedPosixPath = FORCEPATH('foo.txt', '/tmp\\generated/subdir')\n"
+            "cForcedMixedRelativeBackslashPath = FORCEPATH('foo.txt', 'generated\\subdir/leaf')\n"
+            "cForcedMixedRelativeSlashPath = FORCEPATH('foo.txt', 'generated/subdir\\leaf')\n"
+            "cForcedRelativeBackslashPath = FORCEPATH('foo.txt', 'generated\\subdir')\n"
+            "cForcedRelativeSlashPath = FORCEPATH('foo.txt', 'generated/subdir')\n"
+            "cForcedRelativeNoSeparatorPath = FORCEPATH('foo.txt', 'generated')\n"
+            "cForcedTrailingDrivePath = FORCEPATH('foo.txt', 'D:/generated/')\n"
+            "cForcedTrailingPosixPath = FORCEPATH('foo.txt', '/tmp\\generated\\')\n"
+            "cForcedDriveRelativePath = FORCEPATH('foo.txt', 'D:generated/subdir')\n"
+            "cForcedDriveRootPath = FORCEPATH('foo.txt', 'D:')\n"
+            "cForcedPosixRootPath = FORCEPATH('foo.txt', '/')\n"
+            "cForcedWindowsRootPath = FORCEPATH('foo.txt', '\\')\n"
+            "cForcedNamespaceDrivePath = FORCEPATH('foo.txt', '\\\\?\\E:/generated')\n"
+            "cForcedNamespaceUncPath = FORCEPATH('foo.txt', '\\\\?\\UNC\\server/share\\generated')\n"
+            "cForcedRepeatedSeparatorPath = FORCEPATH('foo.txt', 'D:\\generated\\\\subdir')\n"
+            "cForcedEmptyDirectoryPath = FORCEPATH('folder\\foo.txt', '')\n"
+            "cForcedEmptySourcePath = FORCEPATH('', 'D:/generated')\n"
+            "cForcedBothEmptyPath = FORCEPATH('', '')\n"
             "cCurrentDir = CURDIR()\n"
             "RETURN\n");
 
@@ -132,6 +153,27 @@ namespace
         const auto default_ext_kept = state.globals.find("cdefaultextkept");
         const auto forced_path = state.globals.find("cforcedpath");
         const auto forced_posix_path = state.globals.find("cforcedposixpath");
+        const auto forced_unc_path = state.globals.find("cforceduncpath");
+        const auto forced_mixed_drive_path = state.globals.find("cforcedmixeddrivepath");
+        const auto forced_mixed_unc_path = state.globals.find("cforcedmixeduncpath");
+        const auto forced_mixed_posix_path = state.globals.find("cforcedmixedposixpath");
+        const auto forced_mixed_relative_backslash_path = state.globals.find("cforcedmixedrelativebackslashpath");
+        const auto forced_mixed_relative_slash_path = state.globals.find("cforcedmixedrelativeslashpath");
+        const auto forced_relative_backslash_path = state.globals.find("cforcedrelativebackslashpath");
+        const auto forced_relative_slash_path = state.globals.find("cforcedrelativeslashpath");
+        const auto forced_relative_no_separator_path = state.globals.find("cforcedrelativenoseparatorpath");
+        const auto forced_trailing_drive_path = state.globals.find("cforcedtrailingdrivepath");
+        const auto forced_trailing_posix_path = state.globals.find("cforcedtrailingposixpath");
+        const auto forced_drive_relative_path = state.globals.find("cforceddriverelativepath");
+        const auto forced_drive_root_path = state.globals.find("cforceddriverootpath");
+        const auto forced_posix_root_path = state.globals.find("cforcedposixrootpath");
+        const auto forced_windows_root_path = state.globals.find("cforcedwindowsrootpath");
+        const auto forced_namespace_drive_path = state.globals.find("cforcednamespacedrivepath");
+        const auto forced_namespace_unc_path = state.globals.find("cforcednamespaceuncpath");
+        const auto forced_repeated_separator_path = state.globals.find("cforcedrepeatedseparatorpath");
+        const auto forced_empty_directory_path = state.globals.find("cforcedemptydirectorypath");
+        const auto forced_empty_source_path = state.globals.find("cforcedemptysourcepath");
+        const auto forced_both_empty_path = state.globals.find("cforcedbothemptypath");
         const auto current_dir = state.globals.find("ccurrentdir");
 
         expect(drive != state.globals.end(), "JUSTDRIVE result should be captured");
@@ -179,6 +221,27 @@ namespace
         expect(default_ext_kept != state.globals.end(), "DEFAULTEXT keep result should be captured");
         expect(forced_path != state.globals.end(), "FORCEPATH Windows result should be captured");
         expect(forced_posix_path != state.globals.end(), "FORCEPATH POSIX result should be captured");
+        expect(forced_unc_path != state.globals.end(), "FORCEPATH UNC result should be captured");
+        expect(forced_mixed_drive_path != state.globals.end(), "mixed drive FORCEPATH result should be captured");
+        expect(forced_mixed_unc_path != state.globals.end(), "mixed UNC FORCEPATH result should be captured");
+        expect(forced_mixed_posix_path != state.globals.end(), "mixed POSIX FORCEPATH result should be captured");
+        expect(forced_mixed_relative_backslash_path != state.globals.end(), "backslash-first mixed relative FORCEPATH result should be captured");
+        expect(forced_mixed_relative_slash_path != state.globals.end(), "slash-first mixed relative FORCEPATH result should be captured");
+        expect(forced_relative_backslash_path != state.globals.end(), "clean backslash-relative FORCEPATH result should be captured");
+        expect(forced_relative_slash_path != state.globals.end(), "clean slash-relative FORCEPATH result should be captured");
+        expect(forced_relative_no_separator_path != state.globals.end(), "separator-free relative FORCEPATH result should be captured");
+        expect(forced_trailing_drive_path != state.globals.end(), "trailing drive FORCEPATH result should be captured");
+        expect(forced_trailing_posix_path != state.globals.end(), "trailing POSIX FORCEPATH result should be captured");
+        expect(forced_drive_relative_path != state.globals.end(), "drive-relative FORCEPATH result should be captured");
+        expect(forced_drive_root_path != state.globals.end(), "drive-root FORCEPATH result should be captured");
+        expect(forced_posix_root_path != state.globals.end(), "POSIX-root FORCEPATH result should be captured");
+        expect(forced_windows_root_path != state.globals.end(), "Windows-root FORCEPATH result should be captured");
+        expect(forced_namespace_drive_path != state.globals.end(), "namespace-drive FORCEPATH result should be captured");
+        expect(forced_namespace_unc_path != state.globals.end(), "namespace-UNC FORCEPATH result should be captured");
+        expect(forced_repeated_separator_path != state.globals.end(), "repeated-separator FORCEPATH result should be captured");
+        expect(forced_empty_directory_path != state.globals.end(), "empty-directory FORCEPATH result should be captured");
+        expect(forced_empty_source_path != state.globals.end(), "empty-source FORCEPATH result should be captured");
+        expect(forced_both_empty_path != state.globals.end(), "fully empty FORCEPATH result should be captured");
         expect(current_dir != state.globals.end(), "CURDIR result should be captured");
 
         if (drive != state.globals.end())
@@ -405,6 +468,119 @@ namespace
         {
             expect(copperfin::runtime::format_value(forced_posix_path->second) == "/tmp/generated/prg_engine.cpp",
                    "FORCEPATH should replace a POSIX-style directory");
+        }
+        if (forced_unc_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(forced_unc_path->second) == "\\\\server\\share\\generated\\foo.txt",
+                   "#3965: FORCEPATH should preserve a clean UNC directory style");
+        }
+        if (forced_mixed_drive_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(forced_mixed_drive_path->second) == "D:\\generated\\subdir\\foo.txt",
+                   "#3965: FORCEPATH should normalize mixed drive paths to Windows separators");
+        }
+        if (forced_mixed_unc_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(forced_mixed_unc_path->second) == "\\\\server\\share\\generated\\foo.txt",
+                   "#3965: FORCEPATH should normalize mixed UNC paths to Windows separators");
+        }
+        if (forced_mixed_posix_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(forced_mixed_posix_path->second) == "/tmp/generated/subdir/foo.txt",
+                   "#3965: FORCEPATH should normalize mixed POSIX paths to slash separators");
+        }
+        if (forced_mixed_relative_backslash_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(forced_mixed_relative_backslash_path->second) ==
+                       "generated\\subdir\\leaf\\foo.txt",
+                   "#3965: FORCEPATH should use the first relative separator when it is a backslash");
+        }
+        if (forced_mixed_relative_slash_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(forced_mixed_relative_slash_path->second) ==
+                       "generated/subdir/leaf/foo.txt",
+                   "#3965: FORCEPATH should use the first relative separator when it is a slash");
+        }
+        if (forced_relative_backslash_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(forced_relative_backslash_path->second) ==
+                       "generated\\subdir\\foo.txt",
+                   "#3965: FORCEPATH should preserve clean backslash-relative paths");
+        }
+        if (forced_relative_slash_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(forced_relative_slash_path->second) ==
+                       "generated/subdir/foo.txt",
+                   "#3965: FORCEPATH should preserve clean slash-relative paths");
+        }
+        if (forced_relative_no_separator_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(forced_relative_no_separator_path->second) == "generated/foo.txt",
+                   "#3965: FORCEPATH should preserve the existing separator-free relative join");
+        }
+        if (forced_trailing_drive_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(forced_trailing_drive_path->second) == "D:\\generated\\foo.txt",
+                   "#3965: FORCEPATH should normalize an existing trailing drive separator without duplication");
+        }
+        if (forced_trailing_posix_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(forced_trailing_posix_path->second) == "/tmp/generated/foo.txt",
+                   "#3965: FORCEPATH should normalize an existing trailing POSIX separator without duplication");
+        }
+        if (forced_drive_relative_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(forced_drive_relative_path->second) ==
+                       "D:generated\\subdir\\foo.txt",
+                   "#3965: FORCEPATH should preserve drive-relative semantics while normalizing separators");
+        }
+        if (forced_drive_root_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(forced_drive_root_path->second) == "D:\\foo.txt",
+                   "#3965: FORCEPATH should join a drive root with one Windows separator");
+        }
+        if (forced_posix_root_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(forced_posix_root_path->second) == "/foo.txt",
+                   "#3965: FORCEPATH should join a POSIX root without duplicating its separator");
+        }
+        if (forced_windows_root_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(forced_windows_root_path->second) == "\\foo.txt",
+                   "#3965: FORCEPATH should join a Windows current-drive root without duplicating its separator");
+        }
+        if (forced_namespace_drive_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(forced_namespace_drive_path->second) ==
+                       "\\\\?\\E:\\generated\\foo.txt",
+                   "#3965: FORCEPATH should normalize namespace drive directories as Windows paths");
+        }
+        if (forced_namespace_unc_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(forced_namespace_unc_path->second) ==
+                       "\\\\?\\UNC\\server\\share\\generated\\foo.txt",
+                   "#3965: FORCEPATH should normalize namespace UNC directories as Windows paths");
+        }
+        if (forced_repeated_separator_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(forced_repeated_separator_path->second) ==
+                       "D:\\generated\\\\subdir\\foo.txt",
+                   "#3965: FORCEPATH should normalize style without collapsing repeated separators");
+        }
+        if (forced_empty_directory_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(forced_empty_directory_path->second) == "foo.txt",
+                   "#3965: FORCEPATH should preserve filename-only behavior for an empty directory");
+        }
+        if (forced_empty_source_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(forced_empty_source_path->second) == "D:\\generated\\",
+                   "#3965: FORCEPATH should preserve the normalized directory for an empty source path");
+        }
+        if (forced_both_empty_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(forced_both_empty_path->second).empty(),
+                   "#3965: FORCEPATH should preserve the fully empty input result");
         }
         if (current_dir != state.globals.end())
         {
