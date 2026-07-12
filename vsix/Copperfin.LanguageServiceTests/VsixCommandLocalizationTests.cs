@@ -169,20 +169,35 @@ internal static partial class Program
                }),
             "VSIX build should compile the multilingual command table once per declared culture before CTO resource merging");
 
-        var resourceAnchor = projectRoot?
+        var resourceAnchors = projectRoot?
             .Descendants("EmbeddedResource")
-            .SingleOrDefault(element => string.Equals(
-                (string?)element.Attribute("Update"),
-                "CommandResources*.resx",
-                StringComparison.Ordinal));
-        Expect(resourceAnchor?.Element("MergeWithCTO")?.Value == "true" &&
-               new[] { "", ".es", ".pt", ".qps-ploc" }.All(suffix =>
-                   File.Exists(Path.Combine(
-                       repositoryRoot,
-                       "vsix",
-                       "Copperfin.VisualStudio",
-                       $"CommandResources{suffix}.resx"))),
-            "VSIX build should provide neutral and culture resource anchors for CTO satellite merging");
+            .Where(element => ((string?)element.Attribute("Update") ?? string.Empty)
+                .StartsWith("CommandResources", StringComparison.Ordinal))
+            .ToDictionary(
+                element => (string?)element.Attribute("Update") ?? string.Empty,
+                element => (
+                    Culture: element.Element("Culture")?.Value ?? string.Empty,
+                    WithCulture: element.Element("WithCulture")?.Value ?? string.Empty,
+                    ManifestResourceName: element.Element("ManifestResourceName")?.Value ?? string.Empty,
+                    MergeWithCto: element.Element("MergeWithCTO")?.Value ?? string.Empty),
+                StringComparer.Ordinal) ??
+            new Dictionary<string, (string Culture, string WithCulture, string ManifestResourceName, string MergeWithCto)>();
+        Expect(projectRoot?.Element("PropertyGroup")?.Element("RespectAlreadyAssignedItemCulture")?.Value == "true" &&
+               resourceAnchors.Count == 4 &&
+               resourceAnchors.TryGetValue("CommandResources.resx", out var neutralAnchor) &&
+                   neutralAnchor == ("", "false", "CopperfinCommandResources", "true") &&
+               resourceAnchors.TryGetValue("CommandResources.es.resx", out var spanishAnchor) &&
+                   spanishAnchor == ("es", "true", "CopperfinCommandResources", "true") &&
+               resourceAnchors.TryGetValue("CommandResources.pt.resx", out var portugueseAnchor) &&
+                   portugueseAnchor == ("pt", "true", "CopperfinCommandResources", "true") &&
+               resourceAnchors.TryGetValue("CommandResources.qps-ploc.resx", out var pseudoAnchor) &&
+                   pseudoAnchor == ("qps-ploc", "true", "CopperfinCommandResources", "true") &&
+               resourceAnchors.Keys.All(fileName => File.Exists(Path.Combine(
+                   repositoryRoot,
+                   "vsix",
+                   "Copperfin.VisualStudio",
+                   fileName))),
+            "VSIX build should provide explicit neutral and culture resource anchors for CTO satellite merging");
     }
 
     private static string? FindRepositoryRoot()
