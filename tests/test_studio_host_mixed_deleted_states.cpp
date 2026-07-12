@@ -295,16 +295,16 @@ void run_mixed_deleted_states_delete_case(
                     issue_prefix + " delete should preserve live preview availability");
     expect_contains(delete_process.stdout_text, "\"previewBoundsLeft\": 0",
                     issue_prefix + " delete should preserve live preview left bounds");
-    expect_contains(delete_process.stdout_text, "\"previewBoundsTop\": 2000",
-                    issue_prefix + " delete should refresh live preview top bounds");
-    expect_contains(delete_process.stdout_text, "\"previewBoundsRight\": 150",
-                    issue_prefix + " delete should refresh live preview right bounds");
+    expect_contains(delete_process.stdout_text, "\"previewBoundsTop\": 100",
+                    issue_prefix + " delete should preserve retained live-object top bounds");
+    expect_contains(delete_process.stdout_text, "\"previewBoundsRight\": 2700",
+                    issue_prefix + " delete should preserve retained live-object right bounds");
     expect_contains(delete_process.stdout_text, "\"previewBoundsBottom\": 8100",
                     issue_prefix + " delete should preserve live preview bottom bounds");
-    expect_contains(delete_process.stdout_text, "\"previewBoundsWidth\": 150",
-                    issue_prefix + " delete should refresh live preview width");
-    expect_contains(delete_process.stdout_text, "\"previewBoundsHeight\": 6100",
-                    issue_prefix + " delete should refresh live preview height");
+    expect_contains(delete_process.stdout_text, "\"previewBoundsWidth\": 2700",
+                    issue_prefix + " delete should preserve retained live-object preview width");
+    expect_contains(delete_process.stdout_text, "\"previewBoundsHeight\": 8000",
+                    issue_prefix + " delete should preserve retained live-object preview height");
     expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
                     issue_prefix + " delete should expose deleted preview availability");
     expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
@@ -323,6 +323,32 @@ void run_mixed_deleted_states_delete_case(
                     issue_prefix + " delete should remove live settings");
     expect_contains(delete_process.stdout_text, "\"deletedSettingCount\": 6",
                     issue_prefix + " delete should expose deleted settings");
+    expect_contains(delete_process.stdout_text, "\"pageSetupAvailable\": true",
+                    issue_prefix + " delete should expose effective deleted-root page setup");
+    expect_contains(delete_process.stdout_text, "\"orientationAvailable\": true",
+                    issue_prefix + " delete should expose deleted-root orientation availability");
+    expect_contains(delete_process.stdout_text, "\"orientationCode\": 0",
+                    issue_prefix + " delete should expose deleted-root orientation");
+    expect_contains(delete_process.stdout_text, "\"paperSizeAvailable\": true",
+                    issue_prefix + " delete should expose deleted-root paper-size availability");
+    expect_contains(delete_process.stdout_text, "\"paperSizeCode\": 1",
+                    issue_prefix + " delete should expose deleted-root paper size");
+    expect_contains(delete_process.stdout_text, "\"topMarginAvailable\": true",
+                    issue_prefix + " delete should expose deleted-root top-margin availability");
+    expect_contains(delete_process.stdout_text, "\"topMargin\": 10",
+                    issue_prefix + " delete should expose deleted-root top margin");
+    expect_contains(delete_process.stdout_text, "\"bottomMarginAvailable\": true",
+                    issue_prefix + " delete should expose deleted-root bottom-margin availability");
+    expect_contains(delete_process.stdout_text, "\"bottomMargin\": 20",
+                    issue_prefix + " delete should expose deleted-root bottom margin");
+    expect_contains(delete_process.stdout_text, "\"gridVerticalAvailable\": true",
+                    issue_prefix + " delete should expose deleted-root vertical-grid availability");
+    expect_contains(delete_process.stdout_text, "\"gridVertical\": 4",
+                    issue_prefix + " delete should expose deleted-root vertical grid");
+    expect_contains(delete_process.stdout_text, "\"gridHorizontalAvailable\": true",
+                    issue_prefix + " delete should expose deleted-root horizontal-grid availability");
+    expect_contains(delete_process.stdout_text, "\"gridHorizontal\": 8",
+                    issue_prefix + " delete should expose deleted-root horizontal grid");
     expect_contains(delete_process.stdout_text, "\"sectionCount\": 1",
                     issue_prefix + " delete should remove the selected section from live counts");
     expect_contains(delete_process.stdout_text, "\"deletedSectionCount\": 1",

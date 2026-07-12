@@ -631,16 +631,16 @@ void test_studio_host_json_applies_report_deleted_states_by_stable_selection(
                         "#2042: stable report/label settings+section deleted-states batch delete JSON should expose live preview availability");
         expect_contains(delete_process.stdout_text, "\"previewBoundsLeft\": 0",
                         "#2042: stable report/label settings+section deleted-states batch delete JSON should preserve live preview left bounds");
-        expect_contains(delete_process.stdout_text, "\"previewBoundsTop\": 2000",
-                        "#2042: stable report/label settings+section deleted-states batch delete JSON should refresh live preview top bounds");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsTop\": 100",
+                        "#2042: stable report/label settings+section deleted-states batch delete JSON should preserve retained live-object top bounds");
         expect_contains(delete_process.stdout_text, "\"previewBoundsRight\": 5200",
                         "#2042: stable report/label settings+section deleted-states batch delete JSON should preserve live preview right bounds");
         expect_contains(delete_process.stdout_text, "\"previewBoundsBottom\": 8100",
                         "#2042: stable report/label settings+section deleted-states batch delete JSON should preserve live preview bottom bounds");
         expect_contains(delete_process.stdout_text, "\"previewBoundsWidth\": 5200",
                         "#2042: stable report/label settings+section deleted-states batch delete JSON should preserve live preview width");
-        expect_contains(delete_process.stdout_text, "\"previewBoundsHeight\": 6100",
-                        "#2042: stable report/label settings+section deleted-states batch delete JSON should refresh live preview height");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsHeight\": 8000",
+                        "#2042: stable report/label settings+section deleted-states batch delete JSON should preserve retained live-object preview height");
         expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
                         "#2042: stable report/label settings+section deleted-states batch delete JSON should expose deleted preview availability");
         expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
@@ -659,8 +659,32 @@ void test_studio_host_json_applies_report_deleted_states_by_stable_selection(
                         "#1839: report/label stable deleted-states batch delete should remove live settings");
         expect_contains(delete_process.stdout_text, "\"deletedSettingCount\": 6",
                         "#1839: report/label stable deleted-states batch delete should expose deleted settings");
-        expect_contains(delete_process.stdout_text, "\"pageSetupAvailable\": false",
-                        "#1839: report/label stable deleted-states batch delete should clear live page setup");
+        expect_contains(delete_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#1839: report/label stable deleted-states batch delete should expose effective deleted-root page setup");
+        expect_contains(delete_process.stdout_text, "\"orientationAvailable\": true",
+                        "#1839: report/label stable deleted-states batch delete should expose deleted-root orientation availability");
+        expect_contains(delete_process.stdout_text, "\"orientationCode\": 0",
+                        "#1839: report/label stable deleted-states batch delete should expose deleted-root orientation");
+        expect_contains(delete_process.stdout_text, "\"paperSizeAvailable\": true",
+                        "#1839: report/label stable deleted-states batch delete should expose deleted-root paper-size availability");
+        expect_contains(delete_process.stdout_text, "\"paperSizeCode\": 1",
+                        "#1839: report/label stable deleted-states batch delete should expose deleted-root paper size");
+        expect_contains(delete_process.stdout_text, "\"topMarginAvailable\": true",
+                        "#1839: report/label stable deleted-states batch delete should expose deleted-root top-margin availability");
+        expect_contains(delete_process.stdout_text, "\"topMargin\": 10",
+                        "#1839: report/label stable deleted-states batch delete should expose deleted-root top margin");
+        expect_contains(delete_process.stdout_text, "\"bottomMarginAvailable\": true",
+                        "#1839: report/label stable deleted-states batch delete should expose deleted-root bottom-margin availability");
+        expect_contains(delete_process.stdout_text, "\"bottomMargin\": 20",
+                        "#1839: report/label stable deleted-states batch delete should expose deleted-root bottom margin");
+        expect_contains(delete_process.stdout_text, "\"gridVerticalAvailable\": true",
+                        "#1839: report/label stable deleted-states batch delete should expose deleted-root vertical-grid availability");
+        expect_contains(delete_process.stdout_text, "\"gridVertical\": 4",
+                        "#1839: report/label stable deleted-states batch delete should expose deleted-root vertical grid");
+        expect_contains(delete_process.stdout_text, "\"gridHorizontalAvailable\": true",
+                        "#1839: report/label stable deleted-states batch delete should expose deleted-root horizontal-grid availability");
+        expect_contains(delete_process.stdout_text, "\"gridHorizontal\": 8",
+                        "#1839: report/label stable deleted-states batch delete should expose deleted-root horizontal grid");
         expect_contains(delete_process.stdout_text, "\"sectionCount\": 1",
                         "#1839: report/label stable deleted-states batch delete should remove the section from live counts");
         expect_contains(delete_process.stdout_text, "\"deletedSectionCount\": 1",
@@ -1361,16 +1385,16 @@ void test_studio_host_json_applies_mixed_report_deleted_states_by_stable_selecti
                         "#2044: stable report/label mixed deleted-states batch delete JSON should preserve live preview availability");
         expect_contains(delete_process.stdout_text, "\"previewBoundsLeft\": 0",
                         "#2044: stable report/label mixed deleted-states batch delete JSON should preserve live preview left bounds");
-        expect_contains(delete_process.stdout_text, "\"previewBoundsTop\": 2000",
-                        "#2044: stable report/label mixed deleted-states batch delete JSON should refresh live preview top bounds");
-        expect_contains(delete_process.stdout_text, "\"previewBoundsRight\": 150",
-                        "#2044: stable report/label mixed deleted-states batch delete JSON should refresh live preview right bounds");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsTop\": 100",
+                        "#2044: stable report/label mixed deleted-states batch delete JSON should preserve retained live-object top bounds");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsRight\": 2700",
+                        "#2044: stable report/label mixed deleted-states batch delete JSON should preserve retained live-object right bounds");
         expect_contains(delete_process.stdout_text, "\"previewBoundsBottom\": 8100",
                         "#2044: stable report/label mixed deleted-states batch delete JSON should preserve live preview bottom bounds");
-        expect_contains(delete_process.stdout_text, "\"previewBoundsWidth\": 150",
-                        "#2044: stable report/label mixed deleted-states batch delete JSON should refresh live preview width");
-        expect_contains(delete_process.stdout_text, "\"previewBoundsHeight\": 6100",
-                        "#2044: stable report/label mixed deleted-states batch delete JSON should refresh live preview height");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsWidth\": 2700",
+                        "#2044: stable report/label mixed deleted-states batch delete JSON should preserve retained live-object preview width");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsHeight\": 8000",
+                        "#2044: stable report/label mixed deleted-states batch delete JSON should preserve retained live-object preview height");
         expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
                         "#2044: stable report/label mixed deleted-states batch delete JSON should expose deleted preview availability");
         expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
@@ -1389,6 +1413,32 @@ void test_studio_host_json_applies_mixed_report_deleted_states_by_stable_selecti
                         "#1841: report/label stable mixed deleted-states batch delete should remove live settings");
         expect_contains(delete_process.stdout_text, "\"deletedSettingCount\": 6",
                         "#1841: report/label stable mixed deleted-states batch delete should expose deleted settings");
+        expect_contains(delete_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#1841: report/label stable mixed deleted-states batch delete should expose effective deleted-root page setup");
+        expect_contains(delete_process.stdout_text, "\"orientationAvailable\": true",
+                        "#1841: report/label stable mixed deleted-states batch delete should expose deleted-root orientation availability");
+        expect_contains(delete_process.stdout_text, "\"orientationCode\": 0",
+                        "#1841: report/label stable mixed deleted-states batch delete should expose deleted-root orientation");
+        expect_contains(delete_process.stdout_text, "\"paperSizeAvailable\": true",
+                        "#1841: report/label stable mixed deleted-states batch delete should expose deleted-root paper-size availability");
+        expect_contains(delete_process.stdout_text, "\"paperSizeCode\": 1",
+                        "#1841: report/label stable mixed deleted-states batch delete should expose deleted-root paper size");
+        expect_contains(delete_process.stdout_text, "\"topMarginAvailable\": true",
+                        "#1841: report/label stable mixed deleted-states batch delete should expose deleted-root top-margin availability");
+        expect_contains(delete_process.stdout_text, "\"topMargin\": 10",
+                        "#1841: report/label stable mixed deleted-states batch delete should expose deleted-root top margin");
+        expect_contains(delete_process.stdout_text, "\"bottomMarginAvailable\": true",
+                        "#1841: report/label stable mixed deleted-states batch delete should expose deleted-root bottom-margin availability");
+        expect_contains(delete_process.stdout_text, "\"bottomMargin\": 20",
+                        "#1841: report/label stable mixed deleted-states batch delete should expose deleted-root bottom margin");
+        expect_contains(delete_process.stdout_text, "\"gridVerticalAvailable\": true",
+                        "#1841: report/label stable mixed deleted-states batch delete should expose deleted-root vertical-grid availability");
+        expect_contains(delete_process.stdout_text, "\"gridVertical\": 4",
+                        "#1841: report/label stable mixed deleted-states batch delete should expose deleted-root vertical grid");
+        expect_contains(delete_process.stdout_text, "\"gridHorizontalAvailable\": true",
+                        "#1841: report/label stable mixed deleted-states batch delete should expose deleted-root horizontal-grid availability");
+        expect_contains(delete_process.stdout_text, "\"gridHorizontal\": 8",
+                        "#1841: report/label stable mixed deleted-states batch delete should expose deleted-root horizontal grid");
         expect_contains(delete_process.stdout_text, "\"sectionCount\": 1",
                         "#1841: report/label stable mixed deleted-states batch delete should remove the selected section from live counts");
         expect_contains(delete_process.stdout_text, "\"deletedSectionCount\": 1",
