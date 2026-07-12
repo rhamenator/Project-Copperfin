@@ -4,6 +4,8 @@
 
 #include "license_classifier.h"
 
+#include <limits>
+
 namespace copperfin::licensing {
 
 namespace {
@@ -25,12 +27,21 @@ bool get_string_required(const PayloadFields& fields, const std::string& key, st
     return true;
 }
 
-long long get_integer(const PayloadFields& fields, const std::string& key, long long fallback) {
+bool get_integer_as_int(const PayloadFields& fields, const std::string& key, int fallback, int& out) {
     const auto it = fields.find(key);
     if (it == fields.end() || it->second.kind != PayloadValue::Kind::integer_value) {
-        return fallback;
+        out = fallback;
+        return true;
     }
-    return it->second.as_integer;
+
+    const long long value = it->second.as_integer;
+    if (value < static_cast<long long>(std::numeric_limits<int>::min()) ||
+        value > static_cast<long long>(std::numeric_limits<int>::max())) {
+        return false;
+    }
+
+    out = static_cast<int>(value);
+    return true;
 }
 
 }  // namespace
@@ -55,8 +66,21 @@ LicenseStatus classify_verified_payload(
     status.licensee_email = get_string(fields, "licensee_email", "");
     status.issued_date = get_string(fields, "issued_date", "");
     status.subscription_expires = get_string(fields, "subscription_expires", "");
-    status.seats = static_cast<int>(get_integer(fields, "seats", 0));
-    status.perpetual_max_major_version = static_cast<int>(get_integer(fields, "perpetual_max_major_version", 0));
+
+    int seats = 0;
+    int perpetual_max_major_version = 0;
+    if (!get_integer_as_int(fields, "seats", 0, seats)) {
+        status.state = LicenseState::malformed;
+        status.diagnostic = "integer field out of range: seats";
+        return status;
+    }
+    if (!get_integer_as_int(fields, "perpetual_max_major_version", 0, perpetual_max_major_version)) {
+        status.state = LicenseState::malformed;
+        status.diagnostic = "integer field out of range: perpetual_max_major_version";
+        return status;
+    }
+    status.seats = seats;
+    status.perpetual_max_major_version = perpetual_max_major_version;
 
     if (license_type == "perpetual") {
         if (status.perpetual_max_major_version <= 0) {

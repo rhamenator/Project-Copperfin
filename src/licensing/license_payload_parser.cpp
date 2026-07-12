@@ -6,6 +6,7 @@
 
 #include <cctype>
 #include <cstddef>
+#include <limits>
 
 namespace copperfin::licensing {
 
@@ -166,9 +167,16 @@ bool parse_json_integer(Cursor& cursor, long long& out) {
         return false;
     }
 
-    long long value = 0;
+    const auto positive_limit = static_cast<unsigned long long>(std::numeric_limits<long long>::max());
+    const unsigned long long magnitude_limit = negative ? positive_limit + 1ULL : positive_limit;
+    unsigned long long magnitude = 0ULL;
     while (cursor.pos < cursor.text.size() && (std::isdigit(static_cast<unsigned char>(cursor.text[cursor.pos])) != 0)) {
-        value = (value * 10) + (cursor.text[cursor.pos] - '0');
+        const auto digit = static_cast<unsigned long long>(cursor.text[cursor.pos] - '0');
+        if (magnitude > (magnitude_limit - digit) / 10ULL) {
+            cursor.pos = start;
+            return false;
+        }
+        magnitude = (magnitude * 10ULL) + digit;
         ++cursor.pos;
     }
 
@@ -178,7 +186,12 @@ bool parse_json_integer(Cursor& cursor, long long& out) {
         return false;
     }
 
-    out = negative ? -value : value;
+    if (negative && magnitude == magnitude_limit) {
+        out = std::numeric_limits<long long>::min();
+    } else {
+        const auto signed_magnitude = static_cast<long long>(magnitude);
+        out = negative ? -signed_magnitude : signed_magnitude;
+    }
     return true;
 }
 

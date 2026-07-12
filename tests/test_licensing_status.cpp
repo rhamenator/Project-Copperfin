@@ -4,6 +4,7 @@
 
 #include "copperfin/licensing/license_status.h"
 #include "license_classifier.h"
+#include "license_payload_parser.h"
 #include "license_payload_value.h"
 #include "test_environment_support.h"
 
@@ -11,6 +12,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <string>
 
 namespace {
@@ -22,10 +24,12 @@ using copperfin::licensing::LicenseState;
 using copperfin::licensing::LicenseStatus;
 using copperfin::licensing::PayloadFields;
 using copperfin::licensing::PayloadValue;
+using copperfin::licensing::ParsedLicenseFile;
 using copperfin::licensing::SignerPublicKey;
 using copperfin::licensing::classify_verified_payload;
 using copperfin::licensing::license_state_name;
 using copperfin::licensing::load_license_status;
+using copperfin::licensing::parse_license_file;
 
 int failures = 0;
 
@@ -102,6 +106,80 @@ PayloadFields make_subscription_fields(const std::string& expires) {
     fields["seats"] = PayloadValue::make_integer(2);
     fields["subscription_expires"] = PayloadValue::make_string(expires);
     return fields;
+}
+
+ParsedLicenseFile parse_test_integer(const std::string& number) {
+    return parse_license_file(
+        R"({"payload":{"test_integer":)" + number +
+        R"(},"signature_algorithm":"ed25519","signature":"test"})");
+}
+
+void expect_parsed_integer(const std::string& number, long long expected, const std::string& description) {
+    const auto parsed = parse_test_integer(number);
+    expect(parsed.ok, description + " should parse");
+    const auto value = parsed.payload_fields.find("test_integer");
+    expect(value != parsed.payload_fields.end(), description + " should retain the payload field");
+    if (value != parsed.payload_fields.end()) {
+        expect(value->second.kind == PayloadValue::Kind::integer_value, description + " should remain an integer");
+        expect(value->second.as_integer == expected, description + " should preserve its exact value");
+    }
+}
+
+void test_parser_checked_integer_boundaries() {
+    expect_parsed_integer("9223372036854775807", std::numeric_limits<long long>::max(), "LLONG_MAX");
+    expect_parsed_integer("-9223372036854775808", std::numeric_limits<long long>::min(), "LLONG_MIN");
+    expect_parsed_integer("42", 42, "ordinary positive integer");
+    expect_parsed_integer("-17", -17, "ordinary negative integer");
+    expect_parsed_integer("-0", 0, "negative zero");
+
+    expect(!parse_test_integer("9223372036854775808").ok, "one past LLONG_MAX should be rejected");
+    expect(!parse_test_integer("-9223372036854775809").ok, "one below LLONG_MIN should be rejected");
+    expect(!parse_test_integer(std::string(4096U, '9')).ok, "a very long decimal integer should be rejected");
+}
+
+void test_classifier_integer_boundaries() {
+    auto fields = make_subscription_fields("2026-06-01");
+    fields["seats"] = PayloadValue::make_integer(std::numeric_limits<int>::max());
+    auto status = classify_verified_payload(fields, 1, "2026-01-01");
+    expect(status.state == LicenseState::subscription_active, "INT_MAX seats should remain representable");
+    expect(status.seats == std::numeric_limits<int>::max(), "INT_MAX seats should remain exact");
+
+    fields["seats"] = PayloadValue::make_integer(std::numeric_limits<int>::min());
+    status = classify_verified_payload(fields, 1, "2026-01-01");
+    expect(status.state == LicenseState::subscription_active, "negative representable seats should preserve existing classification");
+    expect(status.seats == std::numeric_limits<int>::min(), "INT_MIN seats should remain exact");
+
+    auto perpetual_fields = make_perpetual_fields(std::numeric_limits<int>::max());
+    status = classify_verified_payload(perpetual_fields, 1, "2026-01-01");
+    expect(status.state == LicenseState::perpetual_current, "INT_MAX major version should remain representable");
+    expect(
+        status.perpetual_max_major_version == std::numeric_limits<int>::max(),
+        "INT_MAX major version should remain exact");
+}
+
+void test_classifier_rejects_out_of_range_integers_without_partial_values() {
+    if constexpr (std::numeric_limits<int>::max() < std::numeric_limits<long long>::max()) {
+        auto fields = make_subscription_fields("2026-06-01");
+        fields["seats"] = PayloadValue::make_integer(
+            static_cast<long long>(std::numeric_limits<int>::max()) + 1LL);
+        auto status = classify_verified_payload(fields, 1, "2026-01-01");
+        expect(status.state == LicenseState::malformed, "one past INT_MAX seats should be malformed");
+        expect(status.seats == 0, "out-of-range seats should not expose a wrapped value");
+        expect(status.perpetual_max_major_version == 0, "an invalid integer payload should not publish partial limits");
+
+        fields["seats"] = PayloadValue::make_integer(
+            static_cast<long long>(std::numeric_limits<int>::min()) - 1LL);
+        status = classify_verified_payload(fields, 1, "2026-01-01");
+        expect(status.state == LicenseState::malformed, "one below INT_MIN seats should be malformed");
+        expect(status.seats == 0, "underflowing seats should not expose a wrapped value");
+
+        auto perpetual_fields = make_perpetual_fields(
+            static_cast<long long>(std::numeric_limits<int>::max()) + 1LL);
+        status = classify_verified_payload(perpetual_fields, 1, "2026-01-01");
+        expect(status.state == LicenseState::malformed, "one past INT_MAX major version should be malformed");
+        expect(status.seats == 0, "an invalid major version should not publish otherwise-valid seats");
+        expect(status.perpetual_max_major_version == 0, "an out-of-range major version should not be narrowed");
+    }
 }
 
 void test_classifier_perpetual_current() {
@@ -327,6 +405,9 @@ int main() {
     test_classifier_subscription_missing_expiry_is_malformed();
     test_classifier_unknown_license_type_is_malformed();
     test_classifier_missing_license_type_is_malformed();
+    test_parser_checked_integer_boundaries();
+    test_classifier_integer_boundaries();
+    test_classifier_rejects_out_of_range_integers_without_partial_values();
 
     test_valid_perpetual_fixture_end_to_end();
     test_valid_subscription_fixture_end_to_end();
