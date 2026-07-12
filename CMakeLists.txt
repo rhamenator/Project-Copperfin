@@ -294,6 +294,11 @@ target_link_libraries(cf_xbase_runtime
         cf_localization
 )
 
+if(NOT WIN32)
+    find_package(Iconv REQUIRED)
+    target_link_libraries(cf_xbase_runtime PRIVATE Iconv::Iconv)
+endif()
+
 if(WIN32)
     target_sources(cf_xbase_runtime PRIVATE
         src/runtime/dispatch_exception_info.cpp

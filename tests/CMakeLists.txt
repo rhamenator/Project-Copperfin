@@ -4190,6 +4190,9 @@ copperfin_add_test(test_prg_engine_runtime_surface_functions cf_xbase_runtime
     test_prg_engine_runtime_surface_functions.cpp
     prg_engine_test_support.cpp
 )
+if(NOT WIN32)
+    target_link_libraries(test_prg_engine_runtime_surface_functions PRIVATE Iconv::Iconv)
+endif()
 target_include_directories(test_prg_engine_runtime_surface_functions PRIVATE
     ${CMAKE_SOURCE_DIR}/src/runtime
 )
