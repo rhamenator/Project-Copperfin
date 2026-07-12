@@ -77,6 +77,25 @@ add_test(
     COMMAND $<TARGET_FILE:test_runtime_host_debug_output> $<TARGET_FILE:copperfin_runtime_host>
 )
 
+add_executable(test_runtime_host_implicit_path_launch
+    test_runtime_host_implicit_path_launch.cpp
+)
+target_link_libraries(test_runtime_host_implicit_path_launch PRIVATE cf_platform_support)
+add_dependencies(test_runtime_host_implicit_path_launch copperfin_runtime_host)
+
+if(MSVC)
+    target_compile_options(test_runtime_host_implicit_path_launch PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_runtime_host_implicit_path_launch PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_runtime_host_implicit_path_launch
+    COMMAND
+        $<TARGET_FILE:test_runtime_host_implicit_path_launch>
+        $<TARGET_FILE:copperfin_runtime_host>
+)
+
 add_executable(test_build_host_output
     test_build_host_output.cpp
 )
