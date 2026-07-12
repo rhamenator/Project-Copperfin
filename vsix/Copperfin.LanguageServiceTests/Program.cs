@@ -20,6 +20,7 @@ internal static class Program
         TestLocalizationCatalogSupportsPseudoLocale();
         TestLocalizationCatalogFallsBackToEnglish();
         TestLocalizationCatalogKeepsSupportedLocaleKeysAligned();
+        TestSelectIntelliSenseDescriptionsLocalizeWithoutChangingIdentity();
         TestLocalizationCatalogFormatsWithInvariantCulture();
         TestLocalizationCatalogLocalizesCommandBootstrapErrors();
         TestLocalizationCatalogLocalizesStudioAssetKinds();
@@ -124,6 +125,7 @@ internal static class Program
     private static void TestLocalizationCatalogKeepsSupportedLocaleKeysAligned()
     {
         var englishKeys = new HashSet<string>(CopperfinLocalization.CatalogKeys(CopperfinLocalization.DefaultLocale));
+        var english = new CopperfinLocalization(CopperfinLocalization.DefaultLocale);
         foreach (var locale in CopperfinLocalization.SupportedLocales)
         {
             var keys = new HashSet<string>(CopperfinLocalization.CatalogKeys(locale));
@@ -132,9 +134,104 @@ internal static class Program
             var localization = new CopperfinLocalization(locale);
             foreach (var key in englishKeys)
             {
-                Expect(!string.IsNullOrWhiteSpace(localization.Text(key)), $"{locale} catalog value for {key} should not be blank");
+                var localizedText = localization.Text(key);
+                Expect(!string.IsNullOrWhiteSpace(localizedText), $"{locale} catalog value for {key} should not be blank");
+                Expect(
+                    CompositeFormatPlaceholders(localizedText).SequenceEqual(
+                        CompositeFormatPlaceholders(english.Text(key))),
+                    $"{locale} catalog value for {key} should preserve the English placeholder set");
             }
         }
+    }
+
+    private static void TestSelectIntelliSenseDescriptionsLocalizeWithoutChangingIdentity()
+    {
+        const string key = "LanguageService.IntelliSense.Keyword.Select";
+        const string englishText =
+            "Command: selects a work area or evaluates a SELECT() call depending on context.";
+        const string spanishText =
+            "Comando: selecciona un área de trabajo o evalúa una llamada a SELECT() según el contexto.";
+        const string portugueseText =
+            "Comando: seleciona uma área de trabalho ou avalia uma chamada a SELECT() conforme o contexto.";
+
+        var english = new CopperfinLocalization("en-US");
+        var spanish = new CopperfinLocalization("es-419");
+        var portuguese = new CopperfinLocalization("pt-BR");
+        var pseudo = new CopperfinLocalization("qps-ploc");
+        Expect(english.Text(key) == englishText,
+            "English SELECT IntelliSense description should remain unchanged");
+        Expect(spanish.Text(key) == spanishText && spanish.Text(key) != englishText,
+            "es-419 SELECT IntelliSense description should be translated");
+        Expect(portuguese.Text(key) == portugueseText && portuguese.Text(key) != englishText,
+            "pt-BR SELECT IntelliSense description should be translated");
+        Expect(pseudo.Text(key) != englishText && pseudo.Text(key).StartsWith("[!! ", StringComparison.Ordinal),
+            "qps-ploc SELECT IntelliSense description should remain distinct from English");
+
+        var previousLocale = Environment.GetEnvironmentVariable("COPPERFIN_UI_LOCALE");
+        try
+        {
+            foreach (var localeCase in new[]
+            {
+                (Locale: "es-419", Description: spanishText),
+                (Locale: "pt-BR", Description: portugueseText),
+                (Locale: "qps-ploc", Description: pseudo.Text(key))
+            })
+            {
+                Environment.SetEnvironmentVariable("COPPERFIN_UI_LOCALE", localeCase.Locale);
+                var selectCompletion = FoxProIntelliSenseCatalog
+                    .BuildEntries(null, string.Empty, "SEL")
+                    .SingleOrDefault(entry => entry.DisplayText == "SELECT");
+                Expect(selectCompletion is not null,
+                    $"{localeCase.Locale} completion catalog should retain the invariant SELECT entry");
+                if (selectCompletion is not null)
+                {
+                    Expect(selectCompletion.Description == localeCase.Description,
+                        $"{localeCase.Locale} SELECT completion should consume the shared catalog description");
+                    Expect(selectCompletion.Kind == "keyword",
+                        $"{localeCase.Locale} SELECT completion kind should remain invariant");
+                }
+
+                Expect(FoxProIntelliSenseCatalog.DescribeToken("SELECT") == localeCase.Description,
+                    $"{localeCase.Locale} SELECT Quick Info should consume the shared catalog description");
+            }
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("COPPERFIN_UI_LOCALE", previousLocale);
+        }
+    }
+
+    private static IReadOnlyList<string> CompositeFormatPlaceholders(string text)
+    {
+        var placeholders = new List<string>();
+        for (var index = 0; index < text.Length; index++)
+        {
+            if (text[index] != '{')
+            {
+                continue;
+            }
+            if (index + 1 < text.Length && text[index + 1] == '{')
+            {
+                index++;
+                continue;
+            }
+
+            var end = text.IndexOf('}', index + 1);
+            if (end < 0)
+            {
+                break;
+            }
+
+            var token = text.Substring(index + 1, end - index - 1);
+            var delimiter = token.IndexOfAny(new[] { ',', ':' });
+            var argumentIndex = (delimiter >= 0 ? token.Substring(0, delimiter) : token).Trim();
+            if (argumentIndex.Length > 0 && argumentIndex.All(char.IsDigit))
+            {
+                placeholders.Add(argumentIndex);
+            }
+            index = end;
+        }
+        return placeholders.OrderBy(value => value, StringComparer.Ordinal).ToList();
     }
 
     private static void TestLocalizationCatalogFormatsWithInvariantCulture()
