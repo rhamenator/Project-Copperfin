@@ -173,6 +173,57 @@ namespace
                    "#3947: PE32/PE32+ image with an empty CLR directory should classify as native");
         }
 
+        for (const auto &[source_path, output_stem] :
+             std::array<std::pair<fs::path, std::string>, 2U>{
+                 std::pair<fs::path, std::string>{pe32_path, "pe32"},
+                 std::pair<fs::path, std::string>{pe64_path, "pe64"},
+             })
+        {
+            std::vector<char> undersized = read_binary(source_path);
+            IMAGE_DOS_HEADER dos_header{};
+            std::memcpy(&dos_header, undersized.data(), sizeof(dos_header));
+            const std::size_t file_header_offset =
+                static_cast<std::size_t>(dos_header.e_lfanew) + sizeof(DWORD);
+            IMAGE_FILE_HEADER file_header{};
+            std::memcpy(
+                &file_header,
+                undersized.data() + file_header_offset,
+                sizeof(file_header));
+            file_header.SizeOfOptionalHeader = sizeof(WORD);
+            std::memcpy(
+                undersized.data() + file_header_offset,
+                &file_header,
+                sizeof(file_header));
+            const fs::path undersized_path = temp_root / (output_stem + "-undersized-optional.dll");
+            write_binary(undersized_path, undersized);
+            expect(inspect_portable_executable(undersized_path) == PortableExecutableKind::invalid,
+                   "#3947: readable PE image with an undersized optional header should fail closed");
+
+            std::vector<char> missing_directory = read_binary(source_path);
+            const std::size_t optional_offset = file_header_offset + sizeof(IMAGE_FILE_HEADER);
+            WORD optional_magic = 0U;
+            std::memcpy(
+                &optional_magic,
+                missing_directory.data() + optional_offset,
+                sizeof(optional_magic));
+            const std::size_t directory_count_offset =
+                optional_offset +
+                (optional_magic == IMAGE_NT_OPTIONAL_HDR32_MAGIC
+                     ? offsetof(IMAGE_OPTIONAL_HEADER32, NumberOfRvaAndSizes)
+                     : offsetof(IMAGE_OPTIONAL_HEADER64, NumberOfRvaAndSizes));
+            const DWORD directory_count = IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR;
+            std::memcpy(
+                missing_directory.data() + directory_count_offset,
+                &directory_count,
+                sizeof(directory_count));
+            const fs::path missing_directory_path =
+                temp_root / (output_stem + "-missing-clr-directory.dll");
+            write_binary(missing_directory_path, missing_directory);
+            expect(inspect_portable_executable(missing_directory_path) ==
+                       PortableExecutableKind::invalid,
+                   "#3947: PE image without a declared CLR directory slot should fail closed");
+        }
+
         std::vector<char> truncated = read_binary(pe32_path);
         truncated.resize((std::min)(truncated.size(), sizeof(IMAGE_DOS_HEADER) / 2U));
         const fs::path truncated_path = temp_root / "truncated.dll";
@@ -284,10 +335,16 @@ namespace
                 fixture_path() + "' AS ManagedLong INTEGER value\n"
             "DECLARE DOUBLE Copperfin.ManagedDeclareFixture.Methods.WidenDouble IN '" +
                 fixture_path() + "' AS ManagedDouble INTEGER value\n"
+            "DECLARE STRING Copperfin.ManagedDeclareFixture.Methods.Echo IN '" +
+                fixture_path() + "' AS ManagedEcho STRING value\n"
             "nResult = ManagedSuccess()\n"
             "nSum = ManagedAdd(19, 23)\n"
             "nLong = ManagedLong(41)\n"
             "nDouble = ManagedDouble(42)\n"
+            "cEcho = ManagedEcho('Copperfin')\n"
+            "FOR nCall = 1 TO 128\n"
+            "  nRepeated = ManagedSuccess()\n"
+            "ENDFOR\n"
             "RETURN\n");
 
         copperfin::runtime::reset_dispatch_exception_cleanup_stats();
@@ -318,6 +375,14 @@ namespace
         expect(widened_double != state.globals.end() &&
                    copperfin::runtime::format_value(widened_double->second) == "42.5",
                "#3945: CLR binder should widen INTEGER arguments to System.Double");
+        const auto echoed = state.globals.find("cecho");
+        expect(echoed != state.globals.end() &&
+                   copperfin::runtime::format_value(echoed->second) == "Copperfin",
+               "#3945: managed dispatch should preserve STRING argument and return marshalling");
+        const auto repeated = state.globals.find("nrepeated");
+        expect(repeated != state.globals.end() &&
+                   copperfin::runtime::format_value(repeated->second) == "42",
+               "#3945: repeated managed success should remain stack-frugal and stable");
         expect(
             std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
             {
@@ -603,6 +668,15 @@ namespace
                 });
             expect(copperfin::runtime::format_value(failure_message->second) == expected,
                    "#3945: missing load should preserve localized path and HRESULT placeholders");
+            expect(
+                std::any_of(state.events.begin(), state.events.end(), [&](const auto &event)
+                {
+                    return event.category == "runtime.error" &&
+                           event.detail == expected &&
+                           event.location.file_path == program_path.string() &&
+                           event.location.line == 2U;
+                }),
+                "#3945: managed load failure should preserve the call-site source diagnostic");
         }
 
         fs::remove_all(temp_root, ignored);

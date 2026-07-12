@@ -319,7 +319,9 @@ namespace copperfin::runtime
         {
             *found = false;
             constexpr auto flags = static_cast<mscorlib::BindingFlags>(
-                mscorlib::BindingFlags_Public | mscorlib::BindingFlags_Static);
+                mscorlib::BindingFlags_Public |
+                mscorlib::BindingFlags_Static |
+                mscorlib::BindingFlags_FlattenHierarchy);
             SAFEARRAY *methods = nullptr;
             HRESULT hr = type->GetMethods(flags, &methods);
             SafeArrayOwner method_array(methods);
@@ -613,7 +615,8 @@ namespace copperfin::runtime
         constexpr auto flags = static_cast<mscorlib::BindingFlags>(
             mscorlib::BindingFlags_InvokeMethod |
             mscorlib::BindingFlags_Public |
-            mscorlib::BindingFlags_Static);
+            mscorlib::BindingFlags_Static |
+            mscorlib::BindingFlags_FlattenHierarchy);
         hr = type.get()->InvokeMember_3(
             method_name_bstr.get(),
             flags,

@@ -28,6 +28,11 @@ namespace Copperfin.ManagedDeclareFixture
             return value + 0.5;
         }
 
+        public static string Echo(string value)
+        {
+            return value;
+        }
+
         public static int ReturnDependencyValue()
         {
             return Copperfin.ManagedDeclareDependency.Values.Expected;
