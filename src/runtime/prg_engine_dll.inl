@@ -94,7 +94,7 @@
         // invoke_declared_dll_function
         // Called from ExpressionParser when declared_dll_invoke_callback_ is set.
         // ---------------------------------------------------------------------------
-        PrgValue invoke_declared_dll_function(
+        std::optional<PrgValue> invoke_declared_dll_function(
             const std::string &fn_key,
             const std::vector<PrgValue> &args,
             const std::vector<std::optional<std::string>> &argument_references)
@@ -102,7 +102,7 @@
             const std::string key = normalize_identifier(fn_key);
             const auto found = declared_dll_functions.find(key);
             if (found == declared_dll_functions.end())
-                return make_empty_value();
+                return std::nullopt;
             const DeclaredDllFunction &declfn = found->second;
 
 #if defined(_WIN32)

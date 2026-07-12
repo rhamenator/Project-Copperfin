@@ -146,7 +146,7 @@
                 std::function<std::size_t()> memowidth_callback,
                 std::function<std::optional<PrgValue>(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> base_method_invoke_callback,
                 std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> user_routine_invoke_callback,
-                std::function<PrgValue(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> declared_dll_invoke_callback)
+                std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> declared_dll_invoke_callback)
                 : current_work_area_(current_work_area),
                   next_free_work_area_callback_(std::move(next_free_work_area_callback)),
                   resolve_work_area_callback_(std::move(resolve_work_area_callback)),
@@ -1657,12 +1657,12 @@
                 // --- Declared DLL function invocation ---
                 if (declared_dll_invoke_callback_)
                 {
-                    PrgValue dll_result = declared_dll_invoke_callback_(function, arguments, argument_references);
-                    if (dll_result.kind != PrgValueKind::empty)
+                    const std::optional<PrgValue> dll_result =
+                        declared_dll_invoke_callback_(function, arguments, argument_references);
+                    if (dll_result.has_value())
                     {
-                        return dll_result;
+                        return *dll_result;
                     }
-                    // If result is empty the callback may mean "not found", fall through.
                 }
                 if (user_routine_invoke_callback_)
                 {
@@ -3220,7 +3220,7 @@
             std::function<std::size_t()> memowidth_callback_;
             std::function<std::optional<PrgValue>(const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> base_method_invoke_callback_;
             std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> user_routine_invoke_callback_;
-            std::function<PrgValue(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> declared_dll_invoke_callback_;
+            std::function<std::optional<PrgValue>(const std::string &, const std::vector<PrgValue> &, const std::vector<std::optional<std::string>> &)> declared_dll_invoke_callback_;
             const std::string &text_;
             const Frame &frame_;
             const std::map<std::string, PrgValue> &globals_;

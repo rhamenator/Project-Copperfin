@@ -2225,7 +2225,8 @@ namespace copperfin::runtime
             [this](
                 const std::string &fn_key,
                 const std::vector<PrgValue> &fn_args,
-                const std::vector<std::optional<std::string>> &fn_argument_references) -> PrgValue
+                const std::vector<std::optional<std::string>> &fn_argument_references)
+                -> std::optional<PrgValue>
             {
                 return invoke_declared_dll_function(fn_key, fn_args, fn_argument_references);
             });

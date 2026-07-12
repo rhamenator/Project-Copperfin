@@ -3891,6 +3891,7 @@
                     {
                         dll_fspath = std::filesystem::path(current_default_directory()) / dll_fspath;
                     }
+                    dll_fspath.make_preferred();
                 }
                 const std::wstring dll_wpath = dll_fspath.wstring();
 

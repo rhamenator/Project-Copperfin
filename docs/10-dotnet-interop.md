@@ -11,9 +11,11 @@ Copperfin must fit into the .NET ecosystem well enough that teams can:
 
 Current maturity:
 
-- The implemented path is not yet a general managed-runtime execution surface. The build pipeline can generate a C# launcher/stub that is invoked as a child process by the native runtime pipeline in `src/runtime/runtime_pipeline.cpp`.
+- Windows builds provide a bounded in-process .NET Framework v4 `DECLARE ... IN <assembly>` path for public static methods named as `Namespace.Type.Method`. The native host loads the exact resolved assembly through `Assembly.LoadFrom`, resolves overloads through the CLR binder, and currently marshals the supported scalar `DECLARE` values through `VARIANT`/`SAFEARRAY` boundaries.
+- The managed `DECLARE` path is tested on Win32 and x64 for absolute, explicit-relative, and parentless loader-resolved paths, sibling dependency resolution, integer/floating/string values, repeat success/failure, localized failures, and mixed-mode assemblies whose native export must take precedence. It is not a general managed object, event, callback, or by-reference interop surface.
+- The build pipeline can also generate a C# launcher/stub that is invoked as a child process by the native runtime pipeline in `src/runtime/runtime_pipeline.cpp`.
 - Generated C# transpilation output is currently an emitted artifact, not code executed by the runtime host.
-- Copperfin should expose .NET behavior only when a user explicitly chooses a modernization target that needs it, until CLR hosting, managed wrappers, and runtime invocation are implemented and tested as first-class surfaces.
+- macOS and Linux builds do not compile or host this Windows .NET Framework `DECLARE` path; their native runtime and packaging paths remain guarded from the Windows-only implementation. Broader cross-platform CLR/.NET hosting, managed wrappers, object lifetime, callbacks, policy enforcement, and generated strongly typed bindings remain v1 work.
 
 ## Why This Matters
 
