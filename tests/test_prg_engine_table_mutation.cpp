@@ -404,6 +404,67 @@ void test_replace_additive_appends_only_memo_assignments() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_replace_matches_local_field_names_case_insensitively() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_prg_engine_replace_field_case";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "mixed_case.dbf";
+    const std::string narrow_high_byte_field =
+        std::string(1U, static_cast<char>(0xC4U)) + "CODE";
+    const std::string wide_high_byte_field =
+        std::string(1U, static_cast<char>(0xD6U)) + "CODE";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "CuStOmEr", .type = 'C', .length = 10U},
+        {.name = "NoTeS", .type = 'M', .length = 4U},
+        {.name = narrow_high_byte_field, .type = 'C', .length = 3U},
+        {.name = wide_high_byte_field, .type = 'C', .length = 10U}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        table_path.string(), fields, {{"ALPHA", "First", "ONE", "TWO"}});
+    expect(create_result.ok, "#3984: runtime mixed-case descriptor fixture should be created");
+
+    const fs::path main_path = temp_root / "replace_field_case.prg";
+    write_text(
+        main_path,
+        "USE '" + table_path.string() + "' ALIAS MixedCase IN 0\n"
+        "REPLACE customer WITH 'BRAVO'\n"
+        "REPLACE CUSTOMER WITH 'CHARLIE'\n"
+        "REPLACE cUsToMeR WITH 'DELTA'\n"
+        "REPLACE nOtEs WITH '-second' ADDITIVE\n"
+        "UPDATE MixedCase SET CUstOMer = 'ECHO'\n"
+        "REPLACE " + wide_high_byte_field + " WITH 'LONGVALUE'\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session =
+        copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(main_path.string(), temp_root.string()));
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.completed, "#3984: local REPLACE should ignore descriptor-name case");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+    expect(parse_result.ok && parse_result.table.fields.size() == 4U &&
+               parse_result.table.records.size() == 1U,
+           "#3984: runtime-updated mixed-case table should remain readable");
+    if (parse_result.ok && parse_result.table.fields.size() == 4U &&
+        parse_result.table.records.size() == 1U) {
+        expect(parse_result.table.fields[0U].name == "CuStOmEr" &&
+                   parse_result.table.fields[1U].name == "NoTeS",
+               "#3984: runtime REPLACE should preserve descriptor spelling");
+        expect(parse_result.table.records[0U].values[0U].display_value == "ECHO" &&
+                   parse_result.table.records[0U].values[1U].display_value == "First-second",
+               "#3984: runtime REPLACE and UPDATE should persist mixed-case field updates");
+        expect(parse_result.table.records[0U].values[2U].display_value == "ONE" &&
+                   parse_result.table.records[0U].values[3U].display_value == "LONGVALUE",
+               "#3984: runtime field lookup should preserve distinct high-byte identifiers");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_undo_restores_scoped_additive_replace_bytes() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_replace_additive_undo";
@@ -2942,6 +3003,7 @@ int main() {
     test_replace_for_updates_all_matching_records();
     test_replace_scope_clauses_bound_physical_record_ranges();
     test_replace_additive_appends_only_memo_assignments();
+    test_replace_matches_local_field_names_case_insensitively();
     test_undo_restores_scoped_additive_replace_bytes();
     test_multi_field_replace_uses_original_values_for_later_expressions();
     test_pack_compacts_deleted_local_records();

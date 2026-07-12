@@ -3862,6 +3862,15 @@ copperfin_apply_windows_stack_reserve(test_studio_host)
 copperfin_add_test(test_dbf_table cf_vfp_assets
     test_dbf_table.cpp
 )
+add_test(
+    NAME test_dbf_table_active_locale
+    COMMAND $<TARGET_FILE:test_dbf_table> --active-locale-missing-field
+)
+set_tests_properties(
+    test_dbf_table_active_locale
+    PROPERTIES ENVIRONMENT
+        "COPPERFIN_LOCALE=qps-ploc;COPPERFIN_LOCALE_DIR=${PROJECT_SOURCE_DIR}/resources/locales"
+)
 
 copperfin_add_test(test_visual_asset_editor cf_vfp_assets
     test_visual_asset_editor.cpp

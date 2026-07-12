@@ -478,6 +478,144 @@ void test_create_dbf_table_file_rejects_duplicate_field_names() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_record_field_updates_match_descriptor_names_case_insensitively() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_table_field_case_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "mixed_case.dbf";
+    const fs::path memo_path = temp_dir / "mixed_case.fpt";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "CuStOmEr", .type = 'C', .length = 10U},
+        {.name = "NoTeS", .type = 'M', .length = 4U}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(
+        table_path.string(), fields, {{"ALPHA", "First"}});
+    expect(create_result.ok, "#3984: mixed-case descriptor fixture should be created");
+
+    const std::vector<std::uint8_t> original_table_bytes = read_binary_file(table_path);
+    expect(copperfin::vfp::replace_record_field_value(
+               table_path.string(), 0U, "customer", "BRAVO").ok,
+           "#3984: lowercase API field names should match mixed-case descriptors");
+    expect(copperfin::vfp::replace_record_field_value(
+               table_path.string(), 0U, "CUSTOMER", "CHARLIE").ok,
+           "#3984: uppercase API field names should match mixed-case descriptors");
+    expect(copperfin::vfp::replace_record_field_value(
+               table_path.string(), 0U, "cUsToMeR", "DELTA").ok,
+           "#3984: mixed-case API field names should match differently cased descriptors");
+    expect(copperfin::vfp::replace_record_field_value_additive(
+               table_path.string(), 0U, "nOtEs", "-second").ok,
+           "#3984: additive memo updates should match descriptor names case-insensitively");
+
+    const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
+    expect(parse_result.ok && parse_result.table.fields.size() == 2U &&
+               parse_result.table.records.size() == 1U,
+           "#3984: case-insensitively updated table should remain readable");
+    if (parse_result.ok && parse_result.table.fields.size() == 2U &&
+        parse_result.table.records.size() == 1U) {
+        expect(parse_result.table.fields[0U].name == "CuStOmEr" &&
+                   parse_result.table.fields[1U].name == "NoTeS",
+               "#3984: updates should preserve on-disk descriptor spelling");
+        expect(parse_result.table.records[0U].values[0U].display_value == "DELTA" &&
+                   parse_result.table.records[0U].values[1U].display_value == "First-second",
+               "#3984: case-insensitive ordinary and additive updates should persist values");
+    }
+
+    const std::vector<std::uint8_t> updated_table_bytes = read_binary_file(table_path);
+    const std::size_t descriptor_begin = 32U;
+    const std::size_t descriptor_end = descriptor_begin + (fields.size() * 32U);
+    expect(original_table_bytes.size() >= descriptor_end && updated_table_bytes.size() >= descriptor_end &&
+               std::equal(
+                   original_table_bytes.begin() + static_cast<std::ptrdiff_t>(descriptor_begin),
+                   original_table_bytes.begin() + static_cast<std::ptrdiff_t>(descriptor_end),
+                   updated_table_bytes.begin() + static_cast<std::ptrdiff_t>(descriptor_begin)),
+           "#3984: field updates should leave descriptor bytes unchanged");
+
+    const std::vector<std::uint8_t> table_before_unknown = read_binary_file(table_path);
+    const std::vector<std::uint8_t> memo_before_unknown = read_binary_file(memo_path);
+    const auto unknown_result = copperfin::vfp::replace_record_field_value(
+        table_path.string(), 0U, "missing", "DELTA");
+    const auto active_catalog = copperfin::localization::load_catalogs(
+        copperfin::localization::resolve_catalog_root(),
+        copperfin::localization::select_locale());
+    expect(!unknown_result.ok &&
+               unknown_result.error == active_catalog.translate(
+                   "Vfp.DbfTable.Error.TargetFieldNotFoundInTable"),
+           "#3984: unknown fields should retain the localized diagnostic contract");
+    expect(read_binary_file(table_path) == table_before_unknown &&
+               read_binary_file(memo_path) == memo_before_unknown,
+           "#3984: unknown-field rejection should leave DBF/FPT bytes unchanged");
+
+    const fs::path ambiguous_path = temp_dir / "ambiguous.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> ambiguous_fields{
+        {.name = "NAME", .type = 'C', .length = 10U},
+        {.name = "OTHER", .type = 'C', .length = 10U}
+    };
+    expect(copperfin::vfp::create_dbf_table_file(
+               ambiguous_path.string(), ambiguous_fields, {{"ALPHA", "BRAVO"}}).ok,
+           "#3984: ambiguous-descriptor fixture should start as a valid DBF");
+    std::vector<std::uint8_t> ambiguous_bytes = read_binary_file(ambiguous_path);
+    expect(ambiguous_bytes.size() >= 75U,
+           "#3984: ambiguous-descriptor fixture should contain two complete descriptors");
+    if (ambiguous_bytes.size() >= 75U) {
+        std::fill(
+            ambiguous_bytes.begin() + 64,
+            ambiguous_bytes.begin() + 75,
+            static_cast<std::uint8_t>(0U));
+        write_ascii(ambiguous_bytes, 64U, "name");
+        expect(write_binary_file(ambiguous_path, ambiguous_bytes),
+               "#3984: fixture should install a case-fold-ambiguous descriptor name");
+    }
+    const std::vector<std::uint8_t> ambiguous_before_write = read_binary_file(ambiguous_path);
+    const auto ambiguous_result = copperfin::vfp::replace_record_field_value(
+        ambiguous_path.string(), 0U, "NaMe", "DELTA");
+    expect(!ambiguous_result.ok,
+           "#3984: writes should fail closed when multiple descriptors case-fold to the target");
+    expect(read_binary_file(ambiguous_path) == ambiguous_before_write,
+           "#3984: ambiguous descriptor rejection should preserve every DBF byte");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_missing_field_diagnostic_uses_active_locale() {
+    namespace fs = std::filesystem;
+    expect(copperfin::localization::select_locale() == "qps-ploc",
+           "#3984: isolated diagnostic probe should start in the pseudo-locale");
+
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_table_active_locale_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "localized_missing_field.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .length = 10U}
+    };
+    expect(copperfin::vfp::create_dbf_table_file(
+               table_path.string(), fields, {{"ALPHA"}}).ok,
+           "#3984: isolated diagnostic probe should create its DBF fixture");
+
+    const auto result = copperfin::vfp::replace_record_field_value(
+        table_path.string(), 0U, "missing", "BRAVO");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(
+        copperfin::localization::resolve_catalog_root(), "qps-ploc");
+    const auto english_catalog = copperfin::localization::load_catalogs(
+        copperfin::localization::resolve_catalog_root(), "en-US");
+    expect(!result.ok &&
+               result.error == pseudo_catalog.translate(
+                   "Vfp.DbfTable.Error.TargetFieldNotFoundInTable"),
+           "#3984: missing-field writes should use the active pseudo-locale catalog");
+    expect(result.error != english_catalog.translate(
+               "Vfp.DbfTable.Error.TargetFieldNotFoundInTable"),
+           "#3984: pseudo-locale diagnostic probe should not fall back to English");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_memo_field_create_replace_and_append_round_trip() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -2527,13 +2665,24 @@ void test_staged_write_temp_artifacts_are_cleaned_up() {
 
 }  // namespace
 
-int main() {
+int main(int argc, char* argv[]) {
+    if (argc == 2 && std::string(argv[1]) == "--active-locale-missing-field") {
+        test_missing_field_diagnostic_uses_active_locale();
+        if (failures != 0) {
+            std::cerr << failures << " test(s) failed.\n";
+            return EXIT_FAILURE;
+        }
+        std::cout << "All tests passed.\n";
+        return EXIT_SUCCESS;
+    }
+
     test_parse_dbf_table_with_memo_sidecar();
     test_mutate_and_append_dbf_table();
     test_create_dbf_table_file_round_trips();
     test_character_and_varchar_fields_preserve_leading_whitespace_on_write();
     test_string_fields_store_literal_null_text();
     test_create_dbf_table_file_rejects_duplicate_field_names();
+    test_record_field_updates_match_descriptor_names_case_insensitively();
     test_memo_field_create_replace_and_append_round_trip();
     test_general_and_picture_memo_fields_round_trip();
     test_memo_payload_that_decodes_empty_stays_empty();

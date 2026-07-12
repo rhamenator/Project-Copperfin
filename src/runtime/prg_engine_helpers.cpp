@@ -279,10 +279,13 @@ std::string collapse_identifier(const std::string& value) {
 
     for (char ch : value) {
         const auto raw = static_cast<unsigned char>(ch);
-        if (std::isalnum(raw) == 0) {
-            continue;
+        if (raw >= static_cast<unsigned char>('a') && raw <= static_cast<unsigned char>('z')) {
+            normalized.push_back(static_cast<char>(raw - ('a' - 'A')));
+        } else if ((raw >= static_cast<unsigned char>('A') && raw <= static_cast<unsigned char>('Z')) ||
+                   (raw >= static_cast<unsigned char>('0') && raw <= static_cast<unsigned char>('9')) ||
+                   raw >= 0x80U) {
+            normalized.push_back(ch);
         }
-        normalized.push_back(static_cast<char>(std::toupper(raw)));
     }
 
     return normalized;

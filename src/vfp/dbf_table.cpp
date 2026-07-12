@@ -117,6 +117,15 @@ std::string lowercase_copy(std::string text) {
     return text;
 }
 
+std::string ascii_lowercase_copy(std::string text) {
+    for (char& ch : text) {
+        if (ch >= 'A' && ch <= 'Z') {
+            ch = static_cast<char>(ch + ('a' - 'A'));
+        }
+    }
+    return text;
+}
+
 std::optional<std::filesystem::path> resolve_existing_path_casefold(const std::filesystem::path& candidate) {
     std::error_code ignored;
     if (std::filesystem::exists(candidate, ignored)) {
@@ -339,14 +348,18 @@ std::optional<char> normalize_logical_value(std::string value) {
 std::optional<RawFieldDescriptor> find_raw_field(
     const std::vector<RawFieldDescriptor>& fields,
     const std::string& field_name) {
-    const std::string normalized = trim_both(field_name);
-    const auto found = std::find_if(fields.begin(), fields.end(), [&](const RawFieldDescriptor& field) {
-        return trim_both(field.name) == normalized;
-    });
-    if (found == fields.end()) {
-        return std::nullopt;
+    const std::string normalized = ascii_lowercase_copy(trim_both(field_name));
+    std::optional<RawFieldDescriptor> match;
+    for (const auto& field : fields) {
+        if (ascii_lowercase_copy(trim_both(field.name)) != normalized) {
+            continue;
+        }
+        if (match.has_value()) {
+            return std::nullopt;
+        }
+        match = field;
     }
-    return *found;
+    return match;
 }
 
 bool supports_direct_field_writes(char field_type) {
