@@ -290,6 +290,11 @@ if(WIN32)
         src/runtime/dispatch_exception_info.cpp
     )
     target_link_libraries(cf_xbase_runtime PRIVATE oleaut32)
+    if(COPPERFIN_BUILD_TESTS)
+        target_compile_definitions(cf_xbase_runtime PRIVATE
+            COPPERFIN_ENABLE_DISPATCH_TEST_HOOKS=1
+        )
+    endif()
 endif()
 
 if(MSVC)

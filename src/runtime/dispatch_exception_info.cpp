@@ -6,44 +6,54 @@
 
 #if defined(_WIN32)
 
-#include <atomic>
 #include <oleauto.h>
 
 namespace copperfin::runtime
 {
     namespace
     {
-        std::atomic<std::uint64_t> invoke_results{0U};
-        std::atomic<std::uint64_t> exception_results{0U};
-        std::atomic<std::uint64_t> deferred_fill_calls{0U};
-        std::atomic<std::uint64_t> bstrs_released{0U};
+#if defined(COPPERFIN_ENABLE_DISPATCH_TEST_HOOKS)
+        thread_local DispatchExceptionCleanupStats cleanup_stats;
+#endif
 
-        void release_bstr(BSTR &value) noexcept
+        bool release_bstr(BSTR &value) noexcept
         {
             if (value == nullptr)
             {
-                return;
+                return false;
             }
 
             SysFreeString(value);
             value = nullptr;
-            bstrs_released.fetch_add(1U, std::memory_order_relaxed);
+            return true;
         }
     }
 
     DispatchExceptionInfo::~DispatchExceptionInfo() noexcept
     {
-        if (exception_info_.pfnDeferredFillIn != nullptr)
+        if (result_recorded_ && result_ == DISP_E_EXCEPTION &&
+            exception_info_.pfnDeferredFillIn != nullptr)
         {
             const auto deferred_fill = exception_info_.pfnDeferredFillIn;
             exception_info_.pfnDeferredFillIn = nullptr;
             (void)deferred_fill(&exception_info_);
-            deferred_fill_calls.fetch_add(1U, std::memory_order_relaxed);
+#if defined(COPPERFIN_ENABLE_DISPATCH_TEST_HOOKS)
+            ++cleanup_stats.deferred_fill_calls;
+#endif
         }
 
-        release_bstr(exception_info_.bstrSource);
-        release_bstr(exception_info_.bstrDescription);
-        release_bstr(exception_info_.bstrHelpFile);
+        const bool source_released = release_bstr(exception_info_.bstrSource);
+        const bool description_released = release_bstr(exception_info_.bstrDescription);
+        const bool help_file_released = release_bstr(exception_info_.bstrHelpFile);
+#if defined(COPPERFIN_ENABLE_DISPATCH_TEST_HOOKS)
+        cleanup_stats.source_bstrs_released += source_released ? 1U : 0U;
+        cleanup_stats.description_bstrs_released += description_released ? 1U : 0U;
+        cleanup_stats.help_file_bstrs_released += help_file_released ? 1U : 0U;
+        cleanup_stats.bstrs_released +=
+            (source_released ? 1U : 0U) +
+            (description_released ? 1U : 0U) +
+            (help_file_released ? 1U : 0U);
+#endif
     }
 
     EXCEPINFO *DispatchExceptionInfo::output() noexcept
@@ -53,30 +63,28 @@ namespace copperfin::runtime
 
     void DispatchExceptionInfo::record_result(HRESULT result) noexcept
     {
-        invoke_results.fetch_add(1U, std::memory_order_relaxed);
+        result_ = result;
+        result_recorded_ = true;
+#if defined(COPPERFIN_ENABLE_DISPATCH_TEST_HOOKS)
+        ++cleanup_stats.invoke_results;
         if (result == DISP_E_EXCEPTION)
         {
-            exception_results.fetch_add(1U, std::memory_order_relaxed);
+            ++cleanup_stats.exception_results;
         }
+#endif
     }
 
+#if defined(COPPERFIN_ENABLE_DISPATCH_TEST_HOOKS)
     void reset_dispatch_exception_cleanup_stats() noexcept
     {
-        invoke_results.store(0U, std::memory_order_relaxed);
-        exception_results.store(0U, std::memory_order_relaxed);
-        deferred_fill_calls.store(0U, std::memory_order_relaxed);
-        bstrs_released.store(0U, std::memory_order_relaxed);
+        cleanup_stats = {};
     }
 
     DispatchExceptionCleanupStats dispatch_exception_cleanup_stats() noexcept
     {
-        return {
-            .invoke_results = invoke_results.load(std::memory_order_relaxed),
-            .exception_results = exception_results.load(std::memory_order_relaxed),
-            .deferred_fill_calls = deferred_fill_calls.load(std::memory_order_relaxed),
-            .bstrs_released = bstrs_released.load(std::memory_order_relaxed),
-        };
+        return cleanup_stats;
     }
+#endif
 }
 
 #endif

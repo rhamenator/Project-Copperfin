@@ -3974,37 +3974,42 @@ if(WIN32)
 
     find_program(COPPERFIN_FRAMEWORK_CSC
         NAMES csc.exe
-        HINTS "$ENV{WINDIR}/Microsoft.NET/Framework/v4.0.30319"
-        REQUIRED
-        NO_DEFAULT_PATH
+        HINTS
+            "$ENV{WINDIR}/Microsoft.NET/Framework/v4.0.30319"
+            "$ENV{WINDIR}/Microsoft.NET/Framework64/v4.0.30319"
     )
-    set(COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH
-        "${CMAKE_CURRENT_BINARY_DIR}/fixtures/Copperfin.ManagedDeclareFixture.dll")
-    add_custom_command(
-        OUTPUT "${COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH}"
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/fixtures"
-        COMMAND "${COPPERFIN_FRAMEWORK_CSC}"
-            /nologo
-            /target:library
-            /out:${COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH}
-            "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/managed_declare_fixture.cs"
-        DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/managed_declare_fixture.cs"
-        VERBATIM
-    )
-    add_custom_target(copperfin_managed_declare_fixture
-        DEPENDS "${COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH}"
-    )
-    copperfin_add_test(test_prg_engine_dotnet_dispatch cf_xbase_runtime
-        test_prg_engine_dotnet_dispatch.cpp
-        prg_engine_test_support.cpp
-    )
-    target_include_directories(test_prg_engine_dotnet_dispatch PRIVATE
-        "${CMAKE_SOURCE_DIR}/src/runtime"
-    )
-    target_compile_definitions(test_prg_engine_dotnet_dispatch PRIVATE
-        COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH="${COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH}"
-    )
-    add_dependencies(test_prg_engine_dotnet_dispatch copperfin_managed_declare_fixture)
+    if(COPPERFIN_FRAMEWORK_CSC)
+        set(COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH
+            "${CMAKE_CURRENT_BINARY_DIR}/fixtures/Copperfin.ManagedDeclareFixture.dll")
+        add_custom_command(
+            OUTPUT "${COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH}"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/fixtures"
+            COMMAND "${COPPERFIN_FRAMEWORK_CSC}"
+                /nologo
+                /target:library
+                /out:${COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH}
+                "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/managed_declare_fixture.cs"
+            DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/managed_declare_fixture.cs"
+            VERBATIM
+        )
+        add_custom_target(copperfin_managed_declare_fixture
+            DEPENDS "${COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH}"
+        )
+        copperfin_add_test(test_prg_engine_dotnet_dispatch cf_xbase_runtime
+            test_prg_engine_dotnet_dispatch.cpp
+            prg_engine_test_support.cpp
+        )
+        target_include_directories(test_prg_engine_dotnet_dispatch PRIVATE
+            "${CMAKE_SOURCE_DIR}/src/runtime"
+        )
+        target_compile_definitions(test_prg_engine_dotnet_dispatch PRIVATE
+            COPPERFIN_ENABLE_DISPATCH_TEST_HOOKS=1
+            COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH="${COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH}"
+        )
+        add_dependencies(test_prg_engine_dotnet_dispatch copperfin_managed_declare_fixture)
+    else()
+        message(STATUS "Legacy .NET Framework csc.exe not found; managed DECLARE runtime test is unavailable")
+    endif()
 endif()
 
 copperfin_add_test(test_prg_engine_index_seek_optimization cf_xbase_runtime

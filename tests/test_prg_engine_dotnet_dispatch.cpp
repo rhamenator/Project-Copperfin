@@ -2,6 +2,7 @@
 // Licensed under the Project Copperfin Source-Available License or
 // Commercial License. See LICENSE.md in the repository root.
 
+#include "copperfin/localization/localization.h"
 #include "copperfin/runtime/prg_engine.h"
 #include "dispatch_exception_info.h"
 #include "test_environment_support.h"
@@ -55,6 +56,22 @@ namespace
                "#3943: cleanup should invoke deferred fill-in exactly once");
         expect(stats.bstrs_released == 3U,
                "#3943: cleanup should release source, description, and help BSTRs");
+        expect(stats.source_bstrs_released == 1U &&
+                   stats.description_bstrs_released == 1U &&
+                   stats.help_file_bstrs_released == 1U,
+               "#3943: cleanup should release each populated EXCEPINFO BSTR field exactly once");
+
+        copperfin::runtime::reset_dispatch_exception_cleanup_stats();
+        {
+            copperfin::runtime::DispatchExceptionInfo exception_info;
+            exception_info.output()->pfnDeferredFillIn = &fill_deferred_exception;
+            exception_info.record_result(S_OK);
+        }
+        const auto success_stats = copperfin::runtime::dispatch_exception_cleanup_stats();
+        expect(success_stats.invoke_results == 1U && success_stats.exception_results == 0U,
+               "#3943: controlled success should retain a non-exception Invoke result");
+        expect(success_stats.deferred_fill_calls == 0U && success_stats.bstrs_released == 0U,
+               "#3943: non-exception results must not execute a deferred exception callback");
     }
 
     void test_managed_declare_success_contract()
@@ -137,6 +154,11 @@ namespace
                "#3943: every controlled managed throw should retain DISP_E_EXCEPTION identity");
         expect(stats.bstrs_released >= repeated_exception_count,
                "#3943: every managed exception should release at least one COM-owned BSTR");
+        expect(stats.bstrs_released ==
+                   stats.source_bstrs_released +
+                       stats.description_bstrs_released +
+                       stats.help_file_bstrs_released,
+               "#3943: managed cleanup should account for every populated EXCEPINFO BSTR field");
 
         const auto failure_message = state.globals.find("cfailuremessage");
         expect(failure_message != state.globals.end(),
@@ -144,11 +166,14 @@ namespace
         if (failure_message != state.globals.end())
         {
             const std::string text = copperfin::runtime::format_value(failure_message->second);
-            expect(text.find("Method invoke failed:") != std::string::npos,
-                   "#3943: managed failure should resolve the existing localized diagnostic");
-            expect(text.find("{hresult}") == std::string::npos &&
-                       text.find("Runtime.Prg.Dll.Error") == std::string::npos,
-                   "#3943: managed failure should preserve the substituted HRESULT machine value");
+            const auto catalog = copperfin::localization::load_catalogs(
+                copperfin::localization::resolve_catalog_root(),
+                "qps-ploc");
+            const std::string expected = catalog.translate(
+                "Runtime.Prg.Dll.Error.DotNetMethodInvokeFailed",
+                {{"hresult", std::to_string(static_cast<long>(DISP_E_EXCEPTION))}});
+            expect(text == expected,
+                   "#3943: managed failure should preserve the localized diagnostic and HRESULT value");
         }
 
         fs::remove_all(temp_root, ignored);

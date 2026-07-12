@@ -11,13 +11,18 @@
 
 namespace copperfin::runtime
 {
+#if defined(COPPERFIN_ENABLE_DISPATCH_TEST_HOOKS)
     struct DispatchExceptionCleanupStats
     {
         std::uint64_t invoke_results = 0U;
         std::uint64_t exception_results = 0U;
         std::uint64_t deferred_fill_calls = 0U;
         std::uint64_t bstrs_released = 0U;
+        std::uint64_t source_bstrs_released = 0U;
+        std::uint64_t description_bstrs_released = 0U;
+        std::uint64_t help_file_bstrs_released = 0U;
     };
+#endif
 
     class DispatchExceptionInfo final
     {
@@ -35,10 +40,14 @@ namespace copperfin::runtime
 
     private:
         EXCEPINFO exception_info_{};
+        HRESULT result_ = S_OK;
+        bool result_recorded_ = false;
     };
 
+#if defined(COPPERFIN_ENABLE_DISPATCH_TEST_HOOKS)
     void reset_dispatch_exception_cleanup_stats() noexcept;
     [[nodiscard]] DispatchExceptionCleanupStats dispatch_exception_cleanup_stats() noexcept;
+#endif
 }
 
 #endif
