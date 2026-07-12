@@ -261,8 +261,10 @@ void test_studio_host_json_preserves_selected_report_sections(const std::string&
                     "#2830: selected report section JSON should expose the selected section record index");
     expect_contains(section_process.stdout_text, "\"sectionIndex\": 0",
                     "#2830: selected report section JSON should expose section order");
-    expect_contains(section_process.stdout_text, "\"sectionCount\": 2",
-                    "#2830: selected report section JSON should expose live section counts");
+    expect_contains(
+        section_process.stdout_text,
+        "\"sectionCount\": 2,\n      \"deletedSectionCount\": 0",
+        "#2830: selected report section JSON should expose top-level live and deleted section counts");
     expect_contains(section_process.stdout_text, "\"objectCode\": 1",
                     "#2830: selected report section JSON should preserve raw section object codes");
     expect_contains(section_process.stdout_text, "\"bottom\": 2000",
@@ -307,24 +309,24 @@ void test_studio_host_json_preserves_selected_report_sections(const std::string&
                     "#2830: selected deleted report sections should not advertise selected-settings availability");
     expect_contains(deleted_section_process.stdout_text, "\"selectedReportSettings\": null",
                     "#2830: selected deleted report sections should serialize null selected settings");
-    expect_contains(deleted_section_process.stdout_text, "\"sectionCount\": 0",
-                    "#2830: deleted selected report section JSON should not expose live sections");
-    expect_contains(deleted_section_process.stdout_text, "\"deletedSectionCount\": 1",
-                    "#2830: deleted selected report section JSON should expose deleted section counts");
-    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsAvailable\": false",
-                    "#2830: deleted selected report section JSON should suppress live preview availability");
-    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsLeft\": 0",
-                    "#2830: deleted selected report section JSON should zero live preview left bounds");
-    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsTop\": 0",
-                    "#2830: deleted selected report section JSON should zero live preview top bounds");
-    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsRight\": 0",
-                    "#2830: deleted selected report section JSON should zero live preview right bounds");
-    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsBottom\": 0",
-                    "#2830: deleted selected report section JSON should zero live preview bottom bounds");
-    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsWidth\": 0",
-                    "#2830: deleted selected report section JSON should zero live preview widths");
-    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsHeight\": 0",
-                    "#2830: deleted selected report section JSON should zero live preview heights");
+    expect_contains(
+        deleted_section_process.stdout_text,
+        "\"sectionCount\": 0,\n      \"deletedSectionCount\": 1",
+        "#2830: deleted selected report section JSON should expose top-level live and deleted section counts");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsAvailable\": true",
+                    "#2830: deleted selected report section JSON should preserve retained live-object preview availability");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsLeft\": 100",
+                    "#2830: deleted selected report section JSON should preserve retained live-object left bounds");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsTop\": 2600",
+                    "#2830: deleted selected report section JSON should preserve retained live-object top bounds");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsRight\": 150",
+                    "#2830: deleted selected report section JSON should preserve retained live-object right bounds");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsBottom\": 2800",
+                    "#2830: deleted selected report section JSON should preserve retained live-object bottom bounds");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsWidth\": 50",
+                    "#2830: deleted selected report section JSON should preserve retained live-object preview width");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsHeight\": 200",
+                    "#2830: deleted selected report section JSON should preserve retained live-object preview height");
     expect_contains(deleted_section_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
                     "#2830: deleted selected report section JSON should expose deleted preview bounds availability");
     expect_contains(deleted_section_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",

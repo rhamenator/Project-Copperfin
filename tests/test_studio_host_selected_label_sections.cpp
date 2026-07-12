@@ -286,24 +286,24 @@ void test_studio_host_json_preserves_selected_label_sections(const std::string& 
                     "#1963: selected deleted label sections should not advertise selected-settings availability");
     expect_contains(deleted_section_process.stdout_text, "\"selectedReportSettings\": null",
                     "#1963: selected deleted label sections should serialize null selected settings");
-    expect_contains(deleted_section_process.stdout_text, "\"sectionCount\": 0",
-                    "#1498: deleted selected label section JSON should not expose live sections");
-    expect_contains(deleted_section_process.stdout_text, "\"deletedSectionCount\": 1",
-                    "#1498: deleted selected label section JSON should expose deleted section counts");
-    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsAvailable\": false",
-                    "#1963: deleted selected label section JSON should suppress live preview availability");
-    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsLeft\": 0",
-                    "#1963: deleted selected label section JSON should zero live preview left bounds");
-    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsTop\": 0",
-                    "#1963: deleted selected label section JSON should zero live preview top bounds");
-    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsRight\": 0",
-                    "#1963: deleted selected label section JSON should zero live preview right bounds");
-    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsBottom\": 0",
-                    "#1963: deleted selected label section JSON should zero live preview bottom bounds");
-    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsWidth\": 0",
-                    "#1963: deleted selected label section JSON should zero live preview widths");
-    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsHeight\": 0",
-                    "#1963: deleted selected label section JSON should zero live preview heights");
+    expect_contains(
+        deleted_section_process.stdout_text,
+        "\"sectionCount\": 0,\n      \"deletedSectionCount\": 1",
+        "#1498: deleted selected label section JSON should expose top-level live and deleted section counts");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsAvailable\": true",
+                    "#1963: deleted selected label section JSON should preserve retained live-object preview availability");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsLeft\": 100",
+                    "#1963: deleted selected label section JSON should preserve retained live-object left bounds");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsTop\": 2600",
+                    "#1963: deleted selected label section JSON should preserve retained live-object top bounds");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsRight\": 150",
+                    "#1963: deleted selected label section JSON should preserve retained live-object right bounds");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsBottom\": 2800",
+                    "#1963: deleted selected label section JSON should preserve retained live-object bottom bounds");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsWidth\": 50",
+                    "#1963: deleted selected label section JSON should preserve retained live-object preview width");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsHeight\": 200",
+                    "#1963: deleted selected label section JSON should preserve retained live-object preview height");
     expect_contains(deleted_section_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
                     "#1963: deleted selected label section JSON should expose deleted preview availability");
     expect_contains(deleted_section_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
