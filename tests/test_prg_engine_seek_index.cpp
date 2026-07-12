@@ -3472,9 +3472,9 @@ void test_declared_dll_argument_count_is_validated_before_native_entry() {
                "#3946: " + arity_case.label + " must not enter the native target");
         expect(std::any_of(state.events.begin(), state.events.end(), [&](const auto &event) {
                    return event.category == "runtime.declare_dll" &&
-                          event.detail.find(arity_case.export_name) != std::string::npos;
+                          event.detail == "ArityTarget IN " + module;
                }),
-               "#3946: " + arity_case.label + " should retain the invariant DECLARE event");
+               "#3946: " + arity_case.label + " should retain the invariant source alias/path DECLARE event");
         expect(std::any_of(state.events.begin(), state.events.end(), [&](const auto &event) {
                    return event.category == "runtime.error" && event.detail == expected_message;
                }),
