@@ -942,6 +942,43 @@ void test_build_project_workspace_with_app_output() {
            "build plan should label .app outputs as Visual FoxPro application archives");
 }
 
+void test_project_workspace_ascii_folding_preserves_utf8_metadata() {
+    const std::string utf8_stem = "caf\xC3\xA9";
+    copperfin::studio::StudioDocumentModel document;
+    document.path = "C:/projects/" + utf8_stem + ".pjx";
+    document.kind = copperfin::studio::StudioAssetKind::project;
+    document.table_preview_available = true;
+    document.table_preview.records = {
+        make_record(0, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "h"},
+            {.field_name = "KEY", .field_type = 'C', .display_value = utf8_stem},
+            {.field_name = "OUTFILE", .field_type = 'M', .display_value = "C:/build/" + utf8_stem + ".EXE"}
+        }),
+        make_record(1, {
+            {.field_name = "TYPE", .field_type = 'C', .display_value = "k"},
+            {.field_name = "NAME", .field_type = 'M', .display_value = "forms/" + utf8_stem + ".SCX"},
+            {.field_name = "MAINPROG", .field_type = 'L', .display_value = ".t."}
+        })
+    };
+
+    const auto workspace = copperfin::studio::build_project_workspace(document);
+    expect(workspace.available, "#3973: UTF-8 project metadata should remain classifiable");
+    expect(workspace.project_key == utf8_stem,
+           "#3973: project-key bytes should survive ASCII type normalization");
+    expect(workspace.entries.size() == 2U,
+           "#3973: UTF-8 project metadata should preserve both project records");
+    if (workspace.entries.size() == 2U) {
+        expect(workspace.entries[1].group_id == "forms",
+               "#3973: uppercase ASCII SCX extensions should still classify as forms");
+        expect(workspace.entries[1].relative_path == "forms/" + utf8_stem + ".SCX",
+               "#3973: project-item path folding should preserve UTF-8 filename bytes");
+    }
+    expect(workspace.build_plan.output_kind == "executable",
+           "#3973: uppercase ASCII output extensions should retain existing classification");
+    expect(workspace.build_plan.startup_item == "forms/" + utf8_stem + ".SCX",
+           "#3973: startup-item selection should preserve UTF-8 path bytes");
+}
+
 }  // namespace
 
 int main() {
@@ -960,6 +997,7 @@ int main() {
     test_build_project_workspace_with_fll_output();
     test_build_project_workspace_with_fxp_output();
     test_build_project_workspace_with_app_output();
+    test_project_workspace_ascii_folding_preserves_utf8_metadata();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

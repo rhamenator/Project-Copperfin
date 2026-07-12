@@ -7,7 +7,6 @@
 #include "copperfin/localization/localization.h"
 
 #include <algorithm>
-#include <cctype>
 #include <filesystem>
 #include <optional>
 #include <string_view>
@@ -15,6 +14,10 @@
 namespace copperfin::studio {
 
 namespace {
+
+bool is_ascii_space(unsigned char ch) {
+    return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' || ch == '\f' || ch == '\v';
+}
 
 const localization::LocalizedCatalog& project_workspace_catalog() {
     static const localization::LocalizedCatalog catalog =
@@ -66,24 +69,40 @@ std::string value_or_empty(const vfp::DbfRecord& record, std::string_view field_
 
 std::string trim_copy(std::string value) {
     value.erase(value.begin(), std::find_if(value.begin(), value.end(), [](unsigned char ch) {
-        return std::isspace(ch) == 0;
+        return !is_ascii_space(ch);
     }));
-    while (!value.empty() && std::isspace(static_cast<unsigned char>(value.back())) != 0) {
+    while (!value.empty() && is_ascii_space(static_cast<unsigned char>(value.back()))) {
         value.pop_back();
     }
     return value;
 }
 
+char lowercase_ascii_byte(unsigned char ch) {
+    return ch >= 'A' && ch <= 'Z'
+        ? static_cast<char>(ch - 'A' + 'a')
+        : static_cast<char>(ch);
+}
+
+char uppercase_ascii_byte(unsigned char ch) {
+    return ch >= 'a' && ch <= 'z'
+        ? static_cast<char>(ch - 'a' + 'A')
+        : static_cast<char>(ch);
+}
+
+bool is_ascii_alpha(unsigned char ch) {
+    return (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z');
+}
+
 std::string lowercase_copy(std::string value) {
     std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
-        return static_cast<char>(std::tolower(ch));
+        return lowercase_ascii_byte(ch);
     });
     return value;
 }
 
 std::string uppercase_copy(std::string value) {
     std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
-        return static_cast<char>(std::toupper(ch));
+        return uppercase_ascii_byte(ch);
     });
     return value;
 }
@@ -128,7 +147,7 @@ std::string slash_normalized_copy(std::string value) {
 
 bool is_windows_drive_absolute_path(const std::string& value) {
     return value.size() >= 3U &&
-        std::isalpha(static_cast<unsigned char>(value[0])) != 0 &&
+        is_ascii_alpha(static_cast<unsigned char>(value[0])) &&
         value[1] == ':' &&
         (value[2] == '\\' || value[2] == '/');
 }

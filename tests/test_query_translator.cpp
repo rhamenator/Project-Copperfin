@@ -134,6 +134,38 @@ void test_case_variants_and_whitespace_variants() {
     }
 }
 
+void test_ascii_case_matching_preserves_utf8_query_bytes() {
+    const std::string utf8_identifier = "caf\xC3\xA9";
+    const std::string sql =
+        "select alltrim(" + utf8_identifier + ") AS display_name FROM customer "
+        "WHERE note = '" + utf8_identifier + "'";
+    const auto translated = copperfin::platform::translate_fox_sql_to_backend(
+        copperfin::platform::FederationBackend::sqlite,
+        sql);
+
+    expect(translated.ok, "#3973: UTF-8 query bytes should survive ASCII keyword matching");
+    if (!translated.ok) {
+        return;
+    }
+    expect(
+        translated.translated_sql.find("TRIM(" + utf8_identifier + ")") != std::string::npos,
+        "#3973: ASCII function translation should preserve UTF-8 identifier bytes");
+    expect(
+        translated.translated_sql.find("'" + utf8_identifier + "'") != std::string::npos,
+        "#3973: ASCII case scanning should preserve UTF-8 literal bytes");
+
+    const auto suffixed_select = copperfin::platform::translate_fox_sql_to_backend(
+        copperfin::platform::FederationBackend::sqlite,
+        "SELECT" + utf8_identifier + " * FROM customer");
+    expect(!suffixed_select.ok,
+           "#3973: SELECT should not match inside a UTF-8-suffixed identifier token");
+    const auto suffixed_from = copperfin::platform::translate_fox_sql_to_backend(
+        copperfin::platform::FederationBackend::sqlite,
+        "SELECT * FROM" + utf8_identifier + " customer");
+    expect(!suffixed_from.ok,
+           "#3973: FROM should not match inside a UTF-8-suffixed identifier token");
+}
+
 void test_iif_is_translated_to_case_when() {
     const auto translated = copperfin::platform::translate_fox_sql_to_backend(
         copperfin::platform::FederationBackend::sqlite,
@@ -299,6 +331,7 @@ int main() {
     test_platform_query_diagnostics_resolve_through_localization_catalog();
     test_platform_query_diagnostics_refresh_when_locale_changes();
     test_case_variants_and_whitespace_variants();
+    test_ascii_case_matching_preserves_utf8_query_bytes();
     test_iif_is_translated_to_case_when();
     test_nested_iif_is_translated_recursively();
     test_literals_and_functions_are_not_rewritten_in_string_literals();

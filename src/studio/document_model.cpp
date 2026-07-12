@@ -9,7 +9,6 @@
 
 #include <algorithm>
 #include <charconv>
-#include <cctype>
 #include <filesystem>
 #include <fstream>
 #include <optional>
@@ -18,6 +17,10 @@
 namespace copperfin::studio {
 
 namespace {
+
+bool is_ascii_space(unsigned char ch) {
+    return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' || ch == '\f' || ch == '\v';
+}
 
 std::string document_text(
     const localization::LocalizedCatalog& catalog,
@@ -89,12 +92,18 @@ std::string usable_display_value(const vfp::DbfRecordValue& value) {
 
 std::string trim_copy(std::string text) {
     text.erase(text.begin(), std::find_if(text.begin(), text.end(), [](unsigned char ch) {
-        return std::isspace(ch) == 0;
+        return !is_ascii_space(ch);
     }));
-    while (!text.empty() && std::isspace(static_cast<unsigned char>(text.back())) != 0) {
+    while (!text.empty() && is_ascii_space(static_cast<unsigned char>(text.back()))) {
         text.pop_back();
     }
     return text;
+}
+
+char lowercase_ascii_byte(unsigned char ch) {
+    return ch >= 'A' && ch <= 'Z'
+        ? static_cast<char>(ch - 'A' + 'a')
+        : static_cast<char>(ch);
 }
 
 std::string value_or_empty(const vfp::DbfRecord& record, std::string_view field_name) {
@@ -144,35 +153,43 @@ std::string lowercase_ascii(std::string_view value) {
     std::string lowered;
     lowered.reserve(value.size());
     for (const unsigned char ch : value) {
-        lowered.push_back(static_cast<char>(std::tolower(ch)));
+        lowered.push_back(lowercase_ascii_byte(ch));
     }
     return lowered;
 }
 
 std::optional<std::filesystem::path> resolve_existing_path_casefold(const std::filesystem::path& candidate) {
     std::error_code ignored;
-    if (std::filesystem::exists(candidate, ignored)) {
-        return candidate;
-    }
+    const bool candidate_exists = std::filesystem::exists(candidate, ignored);
+    ignored.clear();
 
     const std::filesystem::path directory =
         candidate.has_parent_path() ? candidate.parent_path() : std::filesystem::current_path(ignored);
     if (directory.empty() || !std::filesystem::exists(directory, ignored)) {
-        return std::nullopt;
+        return candidate_exists ? std::optional<std::filesystem::path>(candidate) : std::nullopt;
     }
 
-    const std::string target_name = lowercase_ascii(candidate.filename().string());
+    const std::string requested_name = candidate.filename().string();
+    const std::string target_name = lowercase_ascii(requested_name);
+    std::optional<std::filesystem::path> folded_match;
     for (const auto& entry : std::filesystem::directory_iterator(directory, ignored)) {
         if (ignored) {
             break;
         }
 
-        if (lowercase_ascii(entry.path().filename().string()) == target_name) {
+        const std::string entry_name = entry.path().filename().string();
+        if (entry_name == requested_name) {
             return entry.path();
+        }
+        if (!folded_match.has_value() && lowercase_ascii(entry_name) == target_name) {
+            folded_match = entry.path();
         }
     }
 
-    return std::nullopt;
+    if (folded_match.has_value()) {
+        return folded_match;
+    }
+    return candidate_exists ? std::optional<std::filesystem::path>(candidate) : std::nullopt;
 }
 
 std::string first_non_empty(const vfp::DbfRecord& record, std::initializer_list<std::string_view> field_names) {
@@ -220,7 +237,7 @@ bool has_method_like_symbol(std::string_view symbol) {
 std::string lowercase_copy(std::string_view text) {
     std::string lowered(text);
     std::transform(lowered.begin(), lowered.end(), lowered.begin(), [](unsigned char ch) {
-        return static_cast<char>(std::tolower(ch));
+        return lowercase_ascii_byte(ch);
     });
     return lowered;
 }

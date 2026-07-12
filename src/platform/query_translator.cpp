@@ -8,7 +8,6 @@
 
 #include <array>
 #include <algorithm>
-#include <cctype>
 #include <sstream>
 #include <string_view>
 #include <vector>
@@ -17,19 +16,45 @@ namespace copperfin::platform {
 
 namespace {
 
+bool is_ascii_alpha(unsigned char ch) {
+    return (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z');
+}
+
+bool is_ascii_digit(unsigned char ch) {
+    return ch >= '0' && ch <= '9';
+}
+
+bool is_ascii_alnum(unsigned char ch) {
+    return is_ascii_alpha(ch) || is_ascii_digit(ch);
+}
+
+bool is_identifier_byte(unsigned char ch) {
+    return is_ascii_alnum(ch) || ch == '_' || ch >= 0x80U;
+}
+
+bool is_ascii_space(unsigned char ch) {
+    return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' || ch == '\f' || ch == '\v';
+}
+
+char uppercase_ascii_byte(unsigned char ch) {
+    return ch >= 'a' && ch <= 'z'
+        ? static_cast<char>(ch - 'a' + 'A')
+        : static_cast<char>(ch);
+}
+
 std::string uppercase_copy(std::string value) {
     std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
-        return static_cast<char>(std::toupper(ch));
+        return uppercase_ascii_byte(ch);
     });
     return value;
 }
 
 bool is_word_char(char ch) {
-    return std::isalnum(static_cast<unsigned char>(ch)) != 0 || ch == '_';
+    return is_identifier_byte(static_cast<unsigned char>(ch));
 }
 
 std::string trim_copy(std::string_view text) {
-    const auto is_space = [](unsigned char ch) { return std::isspace(ch) != 0; };
+    const auto is_space = [](unsigned char ch) { return is_ascii_space(ch); };
 
     const auto start = std::find_if_not(text.begin(), text.end(), is_space);
     if (start == text.end())
@@ -133,12 +158,13 @@ bool is_projection_identifier(std::string_view value) {
     {
         return false;
     }
-    if (!(std::isalpha(static_cast<unsigned char>(value.front())) != 0 || value.front() == '_'))
+    const auto first = static_cast<unsigned char>(value.front());
+    if (!(is_ascii_alpha(first) || first == '_' || first >= 0x80U))
     {
         return false;
     }
     return std::all_of(value.begin(), value.end(), [](char ch) {
-        return std::isalnum(static_cast<unsigned char>(ch)) != 0 || ch == '_';
+        return is_identifier_byte(static_cast<unsigned char>(ch));
     });
 }
 
@@ -241,19 +267,19 @@ std::vector<QueryProjectionField> extract_projection_fields_from_sql(std::string
             else
             {
                 std::size_t alias_end = field_text.size();
-                while (alias_end > 0U && std::isspace(static_cast<unsigned char>(field_text[alias_end - 1U])) != 0)
+                while (alias_end > 0U && is_ascii_space(static_cast<unsigned char>(field_text[alias_end - 1U])))
                 {
                     --alias_end;
                 }
                 std::size_t alias_start = alias_end;
-                while (alias_start > 0U && (std::isalnum(static_cast<unsigned char>(field_text[alias_start - 1U])) != 0 ||
-                                           field_text[alias_start - 1U] == '_'))
+                while (alias_start > 0U &&
+                       is_identifier_byte(static_cast<unsigned char>(field_text[alias_start - 1U])))
                 {
                     --alias_start;
                 }
 
                 if (alias_start > 0U && alias_end > alias_start &&
-                    std::isspace(static_cast<unsigned char>(field_text[alias_start - 1U])) != 0 &&
+                    is_ascii_space(static_cast<unsigned char>(field_text[alias_start - 1U])) &&
                     is_projection_identifier(field_text.substr(alias_start, alias_end - alias_start)))
                 {
                     field.alias = trim_copy(field_text.substr(alias_start, alias_end - alias_start));
@@ -275,7 +301,8 @@ std::vector<QueryProjectionField> extract_projection_fields_from_sql(std::string
 bool equal_ignore_case(std::string_view left, std::string_view right) {
     return left.size() == right.size() &&
            std::equal(left.begin(), left.end(), right.begin(), right.end(), [](char lhs, char rhs) {
-               return std::toupper(static_cast<unsigned char>(lhs)) == std::toupper(static_cast<unsigned char>(rhs));
+               return uppercase_ascii_byte(static_cast<unsigned char>(lhs)) ==
+                   uppercase_ascii_byte(static_cast<unsigned char>(rhs));
            });
 }
 
@@ -284,7 +311,7 @@ bool starts_with_ignore_case(std::string_view text, std::size_t offset, std::str
 }
 
 bool is_identifier_boundary(char ch) {
-    return !std::isalnum(static_cast<unsigned char>(ch)) && ch != '_' && ch != '.';
+    return !is_identifier_byte(static_cast<unsigned char>(ch)) && ch != '.';
 }
 
 bool match_identifier_at(std::string_view text, std::size_t offset, std::string_view identifier) {
@@ -426,7 +453,7 @@ void replace_keyword_function_in_sql(std::string& text, std::string_view functio
         if (match_identifier_at(text, index, function_name))
         {
             std::size_t open = index + function_name.size();
-            while (open < text.size() && std::isspace(static_cast<unsigned char>(text[open])))
+            while (open < text.size() && is_ascii_space(static_cast<unsigned char>(text[open])))
             {
                 ++open;
             }
@@ -586,7 +613,7 @@ bool replace_iif_with_case(std::string& text) {
         }
 
         std::size_t open_paren = i + 3U;
-        while (open_paren < text.size() && std::isspace(static_cast<unsigned char>(text[open_paren])))
+        while (open_paren < text.size() && is_ascii_space(static_cast<unsigned char>(text[open_paren])))
         {
             ++open_paren;
         }

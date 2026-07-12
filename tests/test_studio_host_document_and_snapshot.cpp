@@ -87,6 +87,65 @@ void test_open_document_infers_form_sidecar() {
     fs::remove(temp_dir, ignored);
 }
 
+void test_open_document_casefold_preserves_utf8_filename_bytes() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir =
+        fs::temp_directory_path() / "copperfin_studio_host_utf8_casefold_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    struct SidecarCase {
+        copperfin::studio::StudioAssetKind kind;
+        std::u8string_view primary_name;
+        std::u8string_view sidecar_name;
+        std::string_view label;
+    };
+    const SidecarCase cases[]{
+        {copperfin::studio::StudioAssetKind::project, u8"caf\u00E9.pjx", u8"caf\u00E9.PJT", "PJX/PJT"},
+        {copperfin::studio::StudioAssetKind::form, u8"caf\u00E9.scx", u8"caf\u00E9.SCT", "SCX/SCT"},
+        {copperfin::studio::StudioAssetKind::class_library, u8"caf\u00E9.vcx", u8"caf\u00E9.VCT", "VCX/VCT"},
+        {copperfin::studio::StudioAssetKind::report, u8"caf\u00E9.frx", u8"caf\u00E9.FRT", "FRX/FRT"},
+        {copperfin::studio::StudioAssetKind::label, u8"caf\u00E9.lbx", u8"caf\u00E9.LBT", "LBX/LBT"},
+        {copperfin::studio::StudioAssetKind::menu, u8"caf\u00E9.mnx", u8"caf\u00E9.MNT", "MNX/MNT"}
+    };
+
+    for (const auto& sidecar_case : cases) {
+        const fs::path primary_path = temp_dir / fs::path(sidecar_case.primary_name);
+        const fs::path sidecar_path = temp_dir / fs::path(sidecar_case.sidecar_name);
+        const auto bytes = make_vfp_header();
+        {
+            std::ofstream output(primary_path, std::ios::binary);
+            output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+        }
+        {
+            std::ofstream output(sidecar_path, std::ios::binary);
+            output << "memo-sidecar";
+        }
+
+        const std::string inferred = copperfin::studio::infer_sidecar_path(
+            primary_path.string(),
+            sidecar_case.kind);
+        expect(inferred == sidecar_path.string(),
+               "#3973: " + std::string(sidecar_case.label) +
+                   " recovery should preserve UTF-8 bytes and actual entry spelling");
+
+        const auto result = copperfin::studio::open_document({.path = primary_path.string()});
+        expect(result.ok,
+               "#3973: UTF-8 " + std::string(sidecar_case.label) + " paths should remain openable");
+        expect(result.document.kind == sidecar_case.kind,
+               "#3973: UTF-8 " + std::string(sidecar_case.label) + " assets should retain their family");
+        expect(result.document.has_sidecar,
+               "#3973: UTF-8 " + std::string(sidecar_case.label) +
+                   " paths should discover case-variant sidecars");
+        expect(result.document.sidecar_path == sidecar_path.string(),
+               "#3973: opened UTF-8 " + std::string(sidecar_case.label) +
+                   " documents should retain actual sidecar filename spelling");
+    }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_open_document_infers_read_only_from_asset_family_writability() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() / "copperfin_studio_host_read_only_document_tests";
