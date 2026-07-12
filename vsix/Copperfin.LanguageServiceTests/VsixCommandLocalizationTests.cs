@@ -168,6 +168,22 @@ internal static partial class Program
                    "$(IntermediateOutputPath)Copperfin.qps-ploc.cto"
                }),
             "VSIX build should compile the multilingual command table once per declared culture before CTO resource merging");
+
+        var resourceAnchor = projectRoot?
+            .Descendants("EmbeddedResource")
+            .SingleOrDefault(element => string.Equals(
+                (string?)element.Attribute("Update"),
+                "CommandResources*.resx",
+                StringComparison.Ordinal));
+        Expect(resourceAnchor?.Element("MergeWithCTO")?.Value == "true" &&
+               resourceAnchor.Element("ManifestResourceName")?.Value == "CopperfinCommandResources" &&
+               new[] { "", ".es", ".pt", ".qps-ploc" }.All(suffix =>
+                   File.Exists(Path.Combine(
+                       repositoryRoot,
+                       "vsix",
+                       "Copperfin.VisualStudio",
+                       $"CommandResources{suffix}.resx"))),
+            "VSIX build should provide neutral and culture resource anchors for CTO satellite merging");
     }
 
     private static string? FindRepositoryRoot()

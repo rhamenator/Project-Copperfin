@@ -43,6 +43,11 @@
     <VSCTCompile Include="Copperfin.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
     </VSCTCompile>
+    <EmbeddedResource Update="CommandResources*.resx">
+      <MergeWithCTO>true</MergeWithCTO>
+      <ManifestResourceName>CopperfinCommandResources</ManifestResourceName>
+      <GenerateSource>false</GenerateSource>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
