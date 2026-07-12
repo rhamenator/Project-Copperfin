@@ -1263,6 +1263,7 @@
   "Runtime.Prg.Dll.Error.AssemblyNotDispatch": "El assembly no es IDispatch",
   "Runtime.Prg.Dll.Error.ClrCreateInstanceFailed": "Fallo CLRCreateInstance: {hresult}",
   "Runtime.Prg.Dll.Error.ClrRuntimeNotFound": "No se encontro un runtime CLR",
+  "Runtime.Prg.Dll.Error.ClrRuntimeStartFailed": "No se pudo iniciar el runtime CLR: {hresult}",
   "Runtime.Prg.Dll.Error.CorRuntimeHostGetFailed": "No se pudo obtener ICorRuntimeHost: {hresult}",
   "Runtime.Prg.Dll.Error.DotNetAssemblyLoadFailed": "No se pudo cargar el assembly .NET: {path} hr={hresult}",
   "Runtime.Prg.Dll.Error.DotNetMethodInvokeFailed": "Fallo la invocacion del metodo: {hresult}",

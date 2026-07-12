@@ -243,357 +243,92 @@
 
             if (declfn.is_dotnet)
             {
-                // ---------------------------------------------------------------
-                // .NET CLR hosting via COM (ICLRMetaHost / ICorRuntimeHost)
-                // ---------------------------------------------------------------
-                // Single-init static COM state (process-wide, non-thread-safe for
-                // simplicity; adequate for VFP-style single-threaded programs).
-                static ICorRuntimeHost *s_runtime_host = nullptr;
-                static bool s_clr_started = false;
-                if (!s_clr_started)
+                std::vector<VARIANT> managed_arguments;
+                managed_arguments.reserve(args.size());
+                for (std::size_t index = 0U; index < args.size(); ++index)
                 {
-                    ICLRMetaHost *metahost = nullptr;
-                    HRESULT hr2 = CLRCreateInstance(CLSID_CLRMetaHost, IID_ICLRMetaHost, reinterpret_cast<void **>(&metahost));
-                    if (FAILED(hr2))
-                    {
-                        last_error_message = runtime_text(
-                            "Runtime.Prg.Dll.Error.ClrCreateInstanceFailed",
-                            {{"hresult", std::to_string(hr2)}});
-                        return make_empty_value();
-                    }
-                    ICLRRuntimeInfo *runtime_info = nullptr;
-                    hr2 = metahost->GetRuntime(L"v4.0.30319", IID_ICLRRuntimeInfo, reinterpret_cast<void **>(&runtime_info));
-                    if (FAILED(hr2))
-                    {
-                        IEnumUnknown *enumerator = nullptr;
-                        metahost->EnumerateInstalledRuntimes(&enumerator);
-                        if (enumerator)
-                        {
-                            IUnknown *rt_unk = nullptr;
-                            ULONG fetched = 0;
-                            while (enumerator->Next(1, &rt_unk, &fetched) == S_OK && fetched > 0)
-                            {
-                                if (runtime_info)
-                                    runtime_info->Release();
-                                rt_unk->QueryInterface(IID_ICLRRuntimeInfo, reinterpret_cast<void **>(&runtime_info));
-                                rt_unk->Release();
-                            }
-                            enumerator->Release();
-                        }
-                    }
-                    if (runtime_info == nullptr)
-                    {
-                        metahost->Release();
-                        last_error_message = runtime_text("Runtime.Prg.Dll.Error.ClrRuntimeNotFound");
-                        return make_empty_value();
-                    }
-                    hr2 = runtime_info->GetInterface(CLSID_CorRuntimeHost, IID_ICorRuntimeHost, reinterpret_cast<void **>(&s_runtime_host));
-                    runtime_info->Release();
-                    metahost->Release();
-                    if (FAILED(hr2) || s_runtime_host == nullptr)
-                    {
-                        last_error_message = runtime_text(
-                            "Runtime.Prg.Dll.Error.CorRuntimeHostGetFailed",
-                            {{"hresult", std::to_string(hr2)}});
-                        return make_empty_value();
-                    }
-                    s_runtime_host->Start();
-                    s_clr_started = true;
+                    managed_arguments.push_back(to_variant(args[index], param_type_at(index)));
                 }
 
-                // IDispatch late-binding helper: call a named method on a COM object
-                auto dispatch_call = [](IDispatch *obj, const wchar_t *method_name,
-                                        std::vector<VARIANT> args, VARIANT *ret_out) -> HRESULT
-                {
-                    BSTR bname = SysAllocString(method_name);
-                    DISPID dispid = DISPID_UNKNOWN;
-                    HRESULT hr = obj->GetIDsOfNames(IID_NULL, &bname, 1, LOCALE_USER_DEFAULT, &dispid);
-                    SysFreeString(bname);
-                    if (FAILED(hr))
-                        return hr;
-                    // IDispatch args must be in reverse order
-                    std::reverse(args.begin(), args.end());
-                    DISPPARAMS dp{};
-                    dp.rgvarg = args.empty() ? nullptr : args.data();
-                    dp.cArgs = static_cast<UINT>(args.size());
-                    DispatchExceptionInfo exception_info;
-                    hr = obj->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD,
-                                     &dp, ret_out, exception_info.output(), nullptr);
-                    exception_info.record_result(hr);
-                    return hr;
-                };
-
-                auto take_dispatch = [](VARIANT &value) -> IDispatch *
-                {
-                    IDispatch *dispatch = nullptr;
-                    if (value.vt == VT_DISPATCH)
-                    {
-                        dispatch = value.pdispVal;
-                        if (dispatch != nullptr)
-                        {
-                            dispatch->AddRef();
-                        }
-                    }
-                    else if (value.vt == (VT_DISPATCH | VT_BYREF) && value.ppdispVal != nullptr)
-                    {
-                        dispatch = *value.ppdispVal;
-                        if (dispatch != nullptr)
-                        {
-                            dispatch->AddRef();
-                        }
-                    }
-                    else if (value.vt == VT_UNKNOWN && value.punkVal != nullptr)
-                    {
-                        (void)value.punkVal->QueryInterface(
-                            IID_IDispatch,
-                            reinterpret_cast<void **>(&dispatch));
-                    }
-                    else if (value.vt == (VT_UNKNOWN | VT_BYREF) && value.ppunkVal != nullptr &&
-                             *value.ppunkVal != nullptr)
-                    {
-                        (void)(*value.ppunkVal)->QueryInterface(
-                            IID_IDispatch,
-                            reinterpret_cast<void **>(&dispatch));
-                    }
-                    VariantClear(&value);
-                    return dispatch;
-                };
-
-                // Get default AppDomain as IDispatch
-                IUnknown *app_domain_unk = nullptr;
-                HRESULT hr = s_runtime_host->GetDefaultDomain(&app_domain_unk);
-                if (FAILED(hr) || app_domain_unk == nullptr)
-                {
-                    last_error_message = runtime_text(
-                        "Runtime.Prg.Dll.Error.GetDefaultDomainFailed",
-                        {{"hresult", std::to_string(hr)}});
-                    return make_empty_value();
-                }
-                IDispatch *app_domain_disp = nullptr;
-                hr = app_domain_unk->QueryInterface(IID_IDispatch, reinterpret_cast<void **>(&app_domain_disp));
-                app_domain_unk->Release();
-                if (FAILED(hr) || app_domain_disp == nullptr)
-                {
-                    last_error_message = runtime_text("Runtime.Prg.Dll.Error.AppDomainDispatchQueryFailed");
-                    return make_empty_value();
-                }
-
-                // Bootstrap Assembly.LoadFrom(path) through mscorlib reflection. AppDomain.Load(String)
-                // accepts an assembly display name, so the source path must not be sent to it directly.
-                VARIANT v_mscorlib_name;
-                VariantInit(&v_mscorlib_name);
-                v_mscorlib_name.vt = VT_BSTR;
-                v_mscorlib_name.bstrVal = SysAllocString(L"mscorlib");
-                VARIANT v_mscorlib_assembly;
-                VariantInit(&v_mscorlib_assembly);
-                hr = dispatch_call(app_domain_disp, L"Load", {v_mscorlib_name}, &v_mscorlib_assembly);
-                VariantClear(&v_mscorlib_name);
-                app_domain_disp->Release();
-                IDispatch *mscorlib_assembly_disp = SUCCEEDED(hr)
-                                                          ? take_dispatch(v_mscorlib_assembly)
-                                                          : nullptr;
-                if (mscorlib_assembly_disp == nullptr)
-                {
-                    VariantClear(&v_mscorlib_assembly);
-                    last_error_message = runtime_text(
-                        "Runtime.Prg.Dll.Error.DotNetAssemblyLoadFailed",
-                        {
-                            {"hresult", std::to_string(hr)},
-                            {"path", declfn.dll_path}
-                        });
-                    return make_empty_value();
-                }
-
-                VARIANT v_assembly_type_name;
-                VariantInit(&v_assembly_type_name);
-                v_assembly_type_name.vt = VT_BSTR;
-                v_assembly_type_name.bstrVal = SysAllocString(L"System.Reflection.Assembly");
-                VARIANT v_assembly_type;
-                VariantInit(&v_assembly_type);
-                hr = dispatch_call(
-                    mscorlib_assembly_disp,
-                    L"GetType",
-                    {v_assembly_type_name},
-                    &v_assembly_type);
-                VariantClear(&v_assembly_type_name);
-                mscorlib_assembly_disp->Release();
-                IDispatch *assembly_type_disp = SUCCEEDED(hr) ? take_dispatch(v_assembly_type) : nullptr;
-                if (assembly_type_disp == nullptr)
-                {
-                    VariantClear(&v_assembly_type);
-                    last_error_message = runtime_text(
-                        "Runtime.Prg.Dll.Error.DotNetAssemblyLoadFailed",
-                        {
-                            {"hresult", std::to_string(hr)},
-                            {"path", declfn.dll_path}
-                        });
-                    return make_empty_value();
-                }
-
+                VARIANT return_value;
+                VariantInit(&return_value);
                 const std::string &managed_load_path = declfn.loaded_module_path.empty()
                                                            ? declfn.dll_path
                                                            : declfn.loaded_module_path;
-                std::wstring asm_path_w(managed_load_path.begin(), managed_load_path.end());
-                SAFEARRAY *load_from_args = SafeArrayCreateVector(VT_VARIANT, 0, 1U);
-                if (load_from_args == nullptr)
+                const ManagedInvocationResult invocation = invoke_managed_declared_method(
+                    managed_load_path,
+                    declfn.dotnet_type_name,
+                    declfn.dotnet_method_name,
+                    managed_arguments,
+                    &return_value);
+                for (VARIANT &argument : managed_arguments)
                 {
-                    assembly_type_disp->Release();
-                    last_error_message = runtime_text(
-                        "Runtime.Prg.Dll.Error.DotNetAssemblyLoadFailed",
-                        {
-                            {"hresult", std::to_string(E_OUTOFMEMORY)},
-                            {"path", declfn.dll_path}
-                        });
-                    return make_empty_value();
-                }
-                VARIANT v_load_path;
-                VariantInit(&v_load_path);
-                v_load_path.vt = VT_BSTR;
-                v_load_path.bstrVal = SysAllocString(asm_path_w.c_str());
-                LONG load_argument_index = 0;
-                hr = SafeArrayPutElement(load_from_args, &load_argument_index, &v_load_path);
-                VariantClear(&v_load_path);
-                if (FAILED(hr))
-                {
-                    SafeArrayDestroy(load_from_args);
-                    assembly_type_disp->Release();
-                    last_error_message = runtime_text(
-                        "Runtime.Prg.Dll.Error.DotNetAssemblyLoadFailed",
-                        {
-                            {"hresult", std::to_string(hr)},
-                            {"path", declfn.dll_path}
-                        });
-                    return make_empty_value();
+                    VariantClear(&argument);
                 }
 
-                VARIANT v_member_name;
-                VariantInit(&v_member_name);
-                v_member_name.vt = VT_BSTR;
-                v_member_name.bstrVal = SysAllocString(L"LoadFrom");
-                VARIANT v_binding_flags;
-                VariantInit(&v_binding_flags);
-                v_binding_flags.vt = VT_I4;
-                v_binding_flags.lVal = 0x118L; // Public | Static | InvokeMethod
-                VARIANT v_binder;
-                VariantInit(&v_binder);
-                v_binder.vt = VT_NULL;
-                VARIANT v_target;
-                VariantInit(&v_target);
-                v_target.vt = VT_NULL;
-                VARIANT v_load_from_args;
-                VariantInit(&v_load_from_args);
-                v_load_from_args.vt = VT_ARRAY | VT_VARIANT;
-                v_load_from_args.parray = load_from_args;
-                VARIANT v_assembly;
-                VariantInit(&v_assembly);
-                hr = dispatch_call(
-                    assembly_type_disp,
-                    L"InvokeMember",
-                    {v_member_name, v_binding_flags, v_binder, v_target, v_load_from_args},
-                    &v_assembly);
-                VariantClear(&v_member_name);
-                VariantClear(&v_binding_flags);
-                VariantClear(&v_binder);
-                VariantClear(&v_target);
-                VariantClear(&v_load_from_args);
-                assembly_type_disp->Release();
-
-                if (FAILED(hr) || v_assembly.vt == VT_EMPTY || v_assembly.vt == VT_NULL)
+                if (FAILED(invocation.hresult))
                 {
-                    // We couldn't load: return a graceful empty
-                    VariantClear(&v_assembly);
-                    last_error_message = runtime_text(
-                        "Runtime.Prg.Dll.Error.DotNetAssemblyLoadFailed",
-                        {
-                            {"hresult", std::to_string(hr)},
-                            {"path", declfn.dll_path}
-                        });
+                    VariantClear(&return_value);
+                    const long compatible_hresult =
+                        invocation.stage == ManagedInvocationStage::load_assembly ||
+                                invocation.stage == ManagedInvocationStage::invoke_method
+                            ? static_cast<long>(DISP_E_EXCEPTION)
+                            : static_cast<long>(invocation.hresult);
+                    switch (invocation.stage)
+                    {
+                    case ManagedInvocationStage::create_runtime:
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dll.Error.ClrCreateInstanceFailed",
+                            {{"hresult", std::to_string(compatible_hresult)}});
+                        break;
+                    case ManagedInvocationStage::locate_runtime:
+                        last_error_message = runtime_text("Runtime.Prg.Dll.Error.ClrRuntimeNotFound");
+                        break;
+                    case ManagedInvocationStage::acquire_runtime_host:
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dll.Error.CorRuntimeHostGetFailed",
+                            {{"hresult", std::to_string(compatible_hresult)}});
+                        break;
+                    case ManagedInvocationStage::start_runtime:
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dll.Error.ClrRuntimeStartFailed",
+                            {{"hresult", std::to_string(compatible_hresult)}});
+                        break;
+                    case ManagedInvocationStage::acquire_app_domain:
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dll.Error.GetDefaultDomainFailed",
+                            {{"hresult", std::to_string(compatible_hresult)}});
+                        break;
+                    case ManagedInvocationStage::load_assembly:
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dll.Error.DotNetAssemblyLoadFailed",
+                            {
+                                {"hresult", std::to_string(compatible_hresult)},
+                                {"path", declfn.dll_path},
+                            });
+                        break;
+                    case ManagedInvocationStage::find_type:
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dll.Error.DotNetTypeNotFound",
+                            {{"typeName", declfn.dotnet_type_name}});
+                        break;
+                    case ManagedInvocationStage::find_method:
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dll.Error.DotNetMethodNotFound",
+                            {{"methodName", declfn.dotnet_method_name}});
+                        break;
+                    case ManagedInvocationStage::none:
+                    case ManagedInvocationStage::invoke_method:
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dll.Error.DotNetMethodInvokeFailed",
+                            {{"hresult", std::to_string(compatible_hresult)}});
+                        break;
+                    }
                     return make_empty_value();
                 }
 
-                IDispatch *assembly_disp = take_dispatch(v_assembly);
-                if (!assembly_disp)
-                {
-                    last_error_message = runtime_text("Runtime.Prg.Dll.Error.AssemblyNotDispatch");
-                    return make_empty_value();
-                }
-
-                // GetType(type_name)
-                std::wstring type_name_w(declfn.dotnet_type_name.begin(), declfn.dotnet_type_name.end());
-                VARIANT vtn;
-                VariantInit(&vtn);
-                vtn.vt = VT_BSTR;
-                vtn.bstrVal = SysAllocString(type_name_w.c_str());
-                VARIANT v_type;
-                VariantInit(&v_type);
-                hr = dispatch_call(assembly_disp, L"GetType", {vtn}, &v_type);
-                VariantClear(&vtn);
-                assembly_disp->Release();
-                IDispatch *type_disp = SUCCEEDED(hr) ? take_dispatch(v_type) : nullptr;
-                if (!type_disp)
-                {
-                    VariantClear(&v_type);
-                    last_error_message = runtime_text(
-                        "Runtime.Prg.Dll.Error.DotNetTypeNotFound",
-                        {{"typeName", declfn.dotnet_type_name}});
-                    return make_empty_value();
-                }
-
-                // GetMethod(method_name)
-                std::wstring method_name_w(declfn.dotnet_method_name.begin(), declfn.dotnet_method_name.end());
-                VARIANT vmn;
-                VariantInit(&vmn);
-                vmn.vt = VT_BSTR;
-                vmn.bstrVal = SysAllocString(method_name_w.c_str());
-                VARIANT v_method;
-                VariantInit(&v_method);
-                hr = dispatch_call(type_disp, L"GetMethod", {vmn}, &v_method);
-                VariantClear(&vmn);
-                type_disp->Release();
-                IDispatch *method_disp = SUCCEEDED(hr) ? take_dispatch(v_method) : nullptr;
-                if (!method_disp)
-                {
-                    VariantClear(&v_method);
-                    last_error_message = runtime_text(
-                        "Runtime.Prg.Dll.Error.DotNetMethodNotFound",
-                        {{"methodName", declfn.dotnet_method_name}});
-                    return make_empty_value();
-                }
-
-                // Build args SAFEARRAY wrapped in VARIANT for Invoke(null, args[])
-                SAFEARRAY *sa = SafeArrayCreateVector(VT_VARIANT, 0, static_cast<ULONG>(args.size()));
-                for (LONG idx = 0; idx < static_cast<LONG>(args.size()); ++idx)
-                {
-                    const std::string ptype = param_type_at(static_cast<std::size_t>(idx));
-                    VARIANT v = to_variant(args[static_cast<std::size_t>(idx)], ptype);
-                    SafeArrayPutElement(sa, &idx, &v);
-                    VariantClear(&v);
-                }
-                VARIANT vsa;
-                VariantInit(&vsa);
-                vsa.vt = VT_ARRAY | VT_VARIANT;
-                vsa.parray = sa;
-
-                VARIANT vnull;
-                VariantInit(&vnull);
-                vnull.vt = VT_NULL; // static method — null target
-
-                VARIANT ret_var;
-                VariantInit(&ret_var);
-                hr = dispatch_call(method_disp, L"Invoke", {vnull, vsa}, &ret_var);
-                VariantClear(&vsa); // also destroys sa
-                VariantClear(&vnull);
-                method_disp->Release();
-
-                if (FAILED(hr))
-                {
-                    last_error_message = runtime_text(
-                        "Runtime.Prg.Dll.Error.DotNetMethodInvokeFailed",
-                        {{"hresult", std::to_string(hr)}});
-                    return make_empty_value();
-                }
-                PrgValue result = from_variant(ret_var);
-                VariantClear(&ret_var);
+                PrgValue result = from_variant(return_value);
+                VariantClear(&return_value);
                 return result;
             }
             else

@@ -296,6 +296,7 @@ target_link_libraries(cf_xbase_runtime
 if(WIN32)
     target_sources(cf_xbase_runtime PRIVATE
         src/runtime/dispatch_exception_info.cpp
+        src/runtime/managed_declared_call.cpp
         src/runtime/managed_pe_image.cpp
     )
     target_link_libraries(cf_xbase_runtime PRIVATE oleaut32)

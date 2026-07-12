@@ -69,6 +69,11 @@ namespace
         return std::filesystem::path(COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH).generic_string();
     }
 
+    std::filesystem::path dependency_path()
+    {
+        return COPPERFIN_MANAGED_DECLARE_DEPENDENCY_PATH;
+    }
+
     std::vector<char> read_binary(const std::filesystem::path &path)
     {
         std::ifstream input(path, std::ios::binary);
@@ -308,10 +313,8 @@ namespace
             "#3943: managed declarations should preserve the invariant runtime.declare_dll event");
 
         const auto stats = copperfin::runtime::dispatch_exception_cleanup_stats();
-        expect(stats.invoke_results == 12U,
-               "#3943/#3945: two successful managed calls should retain all six IDispatch stages");
-        expect(stats.exception_results == 0U,
-               "#3943: successful managed dispatch should not report an exception result");
+        expect(stats.invoke_results == 0U && stats.exception_results == 0U,
+               "#3943: supported CLR vtable dispatch should not expose an EXCEPINFO ownership path");
 
         fs::remove_all(temp_root, ignored);
     }
@@ -323,16 +326,29 @@ namespace
         std::error_code ignored;
         fs::remove_all(temp_root, ignored);
         fs::create_directories(temp_root / "managed");
-        const fs::path relative_fixture = temp_root / "managed" / "Copperfin.ManagedDeclareFixture.dll";
-        fs::copy_file(fixture_path(), relative_fixture, fs::copy_options::overwrite_existing, ignored);
+        const fs::path relative_fixture = temp_root / "managed" / "Copperfin.ManagedDeclareRelative.dll";
+        fs::copy_file(
+            COPPERFIN_MANAGED_DECLARE_RELATIVE_PATH,
+            relative_fixture,
+            fs::copy_options::overwrite_existing,
+            ignored);
         expect(!ignored && fs::exists(relative_fixture),
                "#3945: managed fixture should copy beneath the PRG working directory");
+        const fs::path relative_dependency = temp_root / "managed" / dependency_path().filename();
+        ignored.clear();
+        fs::copy_file(
+            dependency_path(),
+            relative_dependency,
+            fs::copy_options::overwrite_existing,
+            ignored);
+        expect(!ignored && fs::exists(relative_dependency),
+               "#3945: managed dependency should copy beside the path-loaded fixture");
 
         const fs::path program_path = temp_root / "managed_relative.prg";
         write_text(
             program_path,
-            "DECLARE INTEGER Copperfin.ManagedDeclareFixture.Methods.ReturnFortyTwo IN "
-            "'managed/Copperfin.ManagedDeclareFixture.dll' AS ManagedRelative\n"
+            "DECLARE INTEGER Copperfin.ManagedDeclareFixture.Methods.ReturnDependencyValue IN "
+            "'managed/Copperfin.ManagedDeclareRelative.dll' AS ManagedRelative\n"
             "nResult = ManagedRelative()\n"
             "RETURN\n");
 
@@ -345,15 +361,15 @@ namespace
         expect(state.completed, "#3945: explicit-relative managed DECLARE should complete");
         const auto result = state.globals.find("nresult");
         expect(result != state.globals.end() &&
-                   copperfin::runtime::format_value(result->second) == "42",
-               "#3945: explicit-relative Assembly.LoadFrom should invoke the requested method");
-        expect(stats.invoke_results == 6U && stats.exception_results == 0U,
-               "#3945: explicit-relative managed dispatch should complete all reflection stages");
+                   copperfin::runtime::format_value(result->second) == "3945",
+               "#3945: explicit-relative Assembly.LoadFrom should resolve sibling dependencies");
+        expect(stats.invoke_results == 0U && stats.exception_results == 0U,
+               "#3943: explicit-relative CLR vtable dispatch should avoid IDispatch EXCEPINFO state");
         expect(
             std::any_of(state.events.begin(), state.events.end(), [](const auto &event)
             {
                 return event.category == "runtime.declare_dll" &&
-                       event.detail.find("managed/Copperfin.ManagedDeclareFixture.dll") != std::string::npos;
+                       event.detail.find("managed/Copperfin.ManagedDeclareRelative.dll") != std::string::npos;
             }),
             "#3945: explicit-relative managed declaration should preserve its source-facing event path");
 
@@ -388,17 +404,9 @@ namespace
 
         expect(state.completed,
                "#3943: repeatedly-throwing managed DECLARE fixture should retain the existing recoverable contract");
-        expect(stats.invoke_results == repeated_exception_count * 6U,
-               "#3943: repeated managed calls should execute all IDispatch stages without stale state");
-        expect(stats.exception_results == repeated_exception_count,
-               "#3943: every controlled managed throw should retain DISP_E_EXCEPTION identity");
-        expect(stats.bstrs_released >= repeated_exception_count,
-               "#3943: every managed exception should release at least one COM-owned BSTR");
-        expect(stats.bstrs_released ==
-                   stats.source_bstrs_released +
-                       stats.description_bstrs_released +
-                       stats.help_file_bstrs_released,
-               "#3943: managed cleanup should account for every populated EXCEPINFO BSTR field");
+        expect(stats.invoke_results == 0U && stats.exception_results == 0U &&
+                   stats.bstrs_released == 0U,
+               "#3943: repeated managed failures should avoid the obsolete IDispatch EXCEPINFO path");
 
         const auto failure_message = state.globals.find("cfailuremessage");
         expect(failure_message != state.globals.end(),
@@ -428,7 +436,11 @@ namespace
         fs::create_directories(temp_root);
         fs::create_directories(temp_root / "moved-cwd");
         const std::string parentless_name = "Copperfin.ManagedDeclareFixture.parentless.dll";
-        fs::copy_file(fixture_path(), temp_root / parentless_name, fs::copy_options::overwrite_existing, ignored);
+        fs::copy_file(
+            COPPERFIN_MANAGED_DECLARE_PARENTLESS_PATH,
+            temp_root / parentless_name,
+            fs::copy_options::overwrite_existing,
+            ignored);
         expect(!ignored, "#3947: parentless managed fixture should copy into the process search directory");
 
         const fs::path program_path = temp_root / "managed_parentless.prg";
@@ -460,8 +472,8 @@ namespace
             expect(result != state.globals.end() &&
                        copperfin::runtime::format_value(result->second) == "42",
                    "#3947: parentless managed DECLARE should retain invocation behavior");
-            expect(stats.invoke_results == 6U && stats.exception_results == 0U,
-                   "#3947: parentless managed dispatch should complete all reflection stages");
+            expect(stats.invoke_results == 0U && stats.exception_results == 0U,
+                   "#3943/#3947: parentless CLR vtable dispatch should avoid IDispatch state");
             expect(
                 std::any_of(state.events.begin(), state.events.end(), [&](const auto &event)
                 {
@@ -477,27 +489,26 @@ namespace
     void test_managed_load_failure_localization()
     {
         namespace fs = std::filesystem;
-        const fs::path temp_root = fs::temp_directory_path() / "copperfin_dotnet_declare_bad_image";
+        const fs::path temp_root = fs::temp_directory_path() / "copperfin_dotnet_declare_missing";
         std::error_code ignored;
         fs::remove_all(temp_root, ignored);
         fs::create_directories(temp_root / "managed");
 
-        std::ifstream source(fixture_path(), std::ios::binary);
-        std::vector<char> truncated_bytes(512U, '\0');
-        source.read(truncated_bytes.data(), static_cast<std::streamsize>(truncated_bytes.size()));
-        expect(source.gcount() == static_cast<std::streamsize>(truncated_bytes.size()),
-               "#3945: managed fixture should contain a complete PE header prefix");
-        const fs::path bad_fixture = temp_root / "managed" / "bad-managed.dll";
-        std::ofstream output(bad_fixture, std::ios::binary | std::ios::trunc);
-        output.write(truncated_bytes.data(), static_cast<std::streamsize>(truncated_bytes.size()));
-        output.close();
+        const fs::path missing_fixture = temp_root / "managed" / "removed-managed.dll";
+        fs::copy_file(
+            COPPERFIN_MANAGED_DECLARE_MISSING_PATH,
+            missing_fixture,
+            fs::copy_options::overwrite_existing,
+            ignored);
+        expect(!ignored && fs::exists(missing_fixture),
+               "#3945: distinct managed fixture should exist for declaration classification");
 
-        const fs::path program_path = temp_root / "managed_bad_image.prg";
+        const fs::path program_path = temp_root / "managed_missing.prg";
         write_text(
             program_path,
             "DECLARE INTEGER Copperfin.ManagedDeclareFixture.Methods.ReturnFortyTwo IN "
-            "'managed/bad-managed.dll' AS ManagedBad\n"
-            "nIgnored = ManagedBad()\n"
+            "'managed/removed-managed.dll' AS ManagedMissing\n"
+            "nIgnored = ManagedMissing()\n"
             "cFailureMessage = MESSAGE()\n"
             "RETURN\n");
 
@@ -505,16 +516,25 @@ namespace
         copperfin::runtime::reset_dispatch_exception_cleanup_stats();
         auto session = copperfin::runtime::PrgRuntimeSession::create(
             make_runtime_session_options(program_path.string(), temp_root.string()));
+        session.add_breakpoint({.file_path = program_path.string(), .line = 2U});
+        const auto declared_state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(declared_state.paused && declared_state.location.line == 2U,
+               "#3945: valid managed image should classify before the load-failure probe");
+
+        ignored.clear();
+        fs::remove(missing_fixture, ignored);
+        expect(!ignored && !fs::exists(missing_fixture),
+               "#3945: managed image should be removable before Assembly.LoadFrom");
         const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
         const auto stats = copperfin::runtime::dispatch_exception_cleanup_stats();
 
         expect(state.completed,
-               "#3945: managed bad-image load should retain the existing recoverable expression contract");
-        expect(stats.invoke_results == 3U && stats.exception_results == 1U,
-               "#3945: bad-image LoadFrom should fail at the path-loader reflection stage");
+               "#3945: missing managed load should retain the recoverable expression contract");
+        expect(stats.invoke_results == 0U && stats.exception_results == 0U,
+               "#3943: managed load failure should avoid IDispatch EXCEPINFO state");
         const auto failure_message = state.globals.find("cfailuremessage");
         expect(failure_message != state.globals.end(),
-               "#3945: bad-image LoadFrom should retain MESSAGE() diagnostic state");
+               "#3945: missing Assembly.LoadFrom should retain MESSAGE() diagnostic state");
         if (failure_message != state.globals.end())
         {
             const auto catalog = copperfin::localization::load_catalogs(
@@ -524,10 +544,10 @@ namespace
                 "Runtime.Prg.Dll.Error.DotNetAssemblyLoadFailed",
                 {
                     {"hresult", std::to_string(static_cast<long>(DISP_E_EXCEPTION))},
-                    {"path", bad_fixture.string()},
+                    {"path", missing_fixture.string()},
                 });
             expect(copperfin::runtime::format_value(failure_message->second) == expected,
-                   "#3945: bad-image load should preserve localized path and HRESULT placeholders");
+                   "#3945: missing load should preserve localized path and HRESULT placeholders");
         }
 
         fs::remove_all(temp_root, ignored);
@@ -539,8 +559,8 @@ int main()
     test_managed_pe_classification_contract();
     test_mixed_mode_native_export_precedence();
     test_deferred_exception_cleanup_contract();
-    test_managed_declare_success_contract();
     test_managed_declare_explicit_relative_path();
+    test_managed_declare_success_contract();
     test_managed_declare_parentless_search_path();
     test_repeated_managed_exception_cleanup();
     test_managed_load_failure_localization();

@@ -63,15 +63,9 @@
 #pragma comment(lib, "version.lib")
 #include <comdef.h>
 #include <oleauto.h>
-#include "dispatch_exception_info.h"
+#include "managed_declared_call.h"
 #include "managed_pe_image.h"
 
-// Minimal COM interface declarations for .NET CLR v4 hosting.
-// We only need AppDomain/Assembly/Type/MethodInfo reflection calls.
-// Rather than importing the full mscorlib.tlb (which collides with SDK headers),
-// we declare only what we need via IDispatch-based late binding.
-// The actual CLR invocation uses IDispatch::Invoke for safety and compatibility.
-#include <oaidl.h>
 #else
 #include <unistd.h>
 #endif

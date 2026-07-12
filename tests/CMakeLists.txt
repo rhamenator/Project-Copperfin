@@ -4007,31 +4007,75 @@ if(WIN32)
             "${CMAKE_CURRENT_BINARY_DIR}/fixtures/Copperfin.ManagedDeclareFixture.x86.dll")
         set(COPPERFIN_MANAGED_DECLARE_FIXTURE_X64_PATH
             "${CMAKE_CURRENT_BINARY_DIR}/fixtures/Copperfin.ManagedDeclareFixture.x64.dll")
+        set(COPPERFIN_MANAGED_DECLARE_DEPENDENCY_PATH
+            "${CMAKE_CURRENT_BINARY_DIR}/fixtures/Copperfin.ManagedDeclareDependency.dll")
+        set(COPPERFIN_MANAGED_DECLARE_MISSING_PATH
+            "${CMAKE_CURRENT_BINARY_DIR}/fixtures/Copperfin.ManagedDeclareMissing.dll")
+        set(COPPERFIN_MANAGED_DECLARE_RELATIVE_PATH
+            "${CMAKE_CURRENT_BINARY_DIR}/fixtures/Copperfin.ManagedDeclareRelative.dll")
+        set(COPPERFIN_MANAGED_DECLARE_PARENTLESS_PATH
+            "${CMAKE_CURRENT_BINARY_DIR}/fixtures/Copperfin.ManagedDeclareParentless.dll")
         add_custom_command(
             OUTPUT
                 "${COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH}"
                 "${COPPERFIN_MANAGED_DECLARE_FIXTURE_X86_PATH}"
                 "${COPPERFIN_MANAGED_DECLARE_FIXTURE_X64_PATH}"
+                "${COPPERFIN_MANAGED_DECLARE_DEPENDENCY_PATH}"
+                "${COPPERFIN_MANAGED_DECLARE_MISSING_PATH}"
+                "${COPPERFIN_MANAGED_DECLARE_RELATIVE_PATH}"
+                "${COPPERFIN_MANAGED_DECLARE_PARENTLESS_PATH}"
             COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/fixtures"
             COMMAND "${COPPERFIN_FRAMEWORK_CSC}"
                 /nologo
                 /target:library
+                /platform:anycpu
+                /out:${COPPERFIN_MANAGED_DECLARE_DEPENDENCY_PATH}
+                managed_declare_dependency.cs
+            COMMAND "${COPPERFIN_FRAMEWORK_CSC}"
+                /nologo
+                /target:library
                 /platform:${COPPERFIN_MANAGED_DECLARE_FIXTURE_PLATFORM}
+                /reference:${COPPERFIN_MANAGED_DECLARE_DEPENDENCY_PATH}
                 /out:${COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH}
                 managed_declare_fixture.cs
             COMMAND "${COPPERFIN_FRAMEWORK_CSC}"
                 /nologo
                 /target:library
                 /platform:x86
+                /reference:${COPPERFIN_MANAGED_DECLARE_DEPENDENCY_PATH}
                 /out:${COPPERFIN_MANAGED_DECLARE_FIXTURE_X86_PATH}
                 managed_declare_fixture.cs
             COMMAND "${COPPERFIN_FRAMEWORK_CSC}"
                 /nologo
                 /target:library
                 /platform:x64
+                /reference:${COPPERFIN_MANAGED_DECLARE_DEPENDENCY_PATH}
                 /out:${COPPERFIN_MANAGED_DECLARE_FIXTURE_X64_PATH}
                 managed_declare_fixture.cs
-            DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/managed_declare_fixture.cs"
+            COMMAND "${COPPERFIN_FRAMEWORK_CSC}"
+                /nologo
+                /target:library
+                /platform:${COPPERFIN_MANAGED_DECLARE_FIXTURE_PLATFORM}
+                /reference:${COPPERFIN_MANAGED_DECLARE_DEPENDENCY_PATH}
+                /out:${COPPERFIN_MANAGED_DECLARE_MISSING_PATH}
+                managed_declare_fixture.cs
+            COMMAND "${COPPERFIN_FRAMEWORK_CSC}"
+                /nologo
+                /target:library
+                /platform:${COPPERFIN_MANAGED_DECLARE_FIXTURE_PLATFORM}
+                /reference:${COPPERFIN_MANAGED_DECLARE_DEPENDENCY_PATH}
+                /out:${COPPERFIN_MANAGED_DECLARE_RELATIVE_PATH}
+                managed_declare_fixture.cs
+            COMMAND "${COPPERFIN_FRAMEWORK_CSC}"
+                /nologo
+                /target:library
+                /platform:${COPPERFIN_MANAGED_DECLARE_FIXTURE_PLATFORM}
+                /reference:${COPPERFIN_MANAGED_DECLARE_DEPENDENCY_PATH}
+                /out:${COPPERFIN_MANAGED_DECLARE_PARENTLESS_PATH}
+                managed_declare_fixture.cs
+            DEPENDS
+                "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/managed_declare_dependency.cs"
+                "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/managed_declare_fixture.cs"
             WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/fixtures"
             VERBATIM
         )
@@ -4040,6 +4084,10 @@ if(WIN32)
                 "${COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH}"
                 "${COPPERFIN_MANAGED_DECLARE_FIXTURE_X86_PATH}"
                 "${COPPERFIN_MANAGED_DECLARE_FIXTURE_X64_PATH}"
+                "${COPPERFIN_MANAGED_DECLARE_DEPENDENCY_PATH}"
+                "${COPPERFIN_MANAGED_DECLARE_MISSING_PATH}"
+                "${COPPERFIN_MANAGED_DECLARE_RELATIVE_PATH}"
+                "${COPPERFIN_MANAGED_DECLARE_PARENTLESS_PATH}"
         )
         copperfin_add_test(test_prg_engine_dotnet_dispatch cf_xbase_runtime
             test_prg_engine_dotnet_dispatch.cpp
@@ -4054,6 +4102,10 @@ if(WIN32)
             COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH="${COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH}"
             COPPERFIN_MANAGED_DECLARE_FIXTURE_X86_PATH="${COPPERFIN_MANAGED_DECLARE_FIXTURE_X86_PATH}"
             COPPERFIN_MANAGED_DECLARE_FIXTURE_X64_PATH="${COPPERFIN_MANAGED_DECLARE_FIXTURE_X64_PATH}"
+            COPPERFIN_MANAGED_DECLARE_DEPENDENCY_PATH="${COPPERFIN_MANAGED_DECLARE_DEPENDENCY_PATH}"
+            COPPERFIN_MANAGED_DECLARE_MISSING_PATH="${COPPERFIN_MANAGED_DECLARE_MISSING_PATH}"
+            COPPERFIN_MANAGED_DECLARE_RELATIVE_PATH="${COPPERFIN_MANAGED_DECLARE_RELATIVE_PATH}"
+            COPPERFIN_MANAGED_DECLARE_PARENTLESS_PATH="${COPPERFIN_MANAGED_DECLARE_PARENTLESS_PATH}"
         )
         add_dependencies(
             test_prg_engine_dotnet_dispatch

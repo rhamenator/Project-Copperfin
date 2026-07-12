@@ -18,6 +18,11 @@ namespace Copperfin.ManagedDeclareFixture
             return left + right;
         }
 
+        public static int ReturnDependencyValue()
+        {
+            return Copperfin.ManagedDeclareDependency.Values.Expected;
+        }
+
         public static int ThrowAlways()
         {
             throw new InvalidOperationException("Copperfin managed DECLARE fixture failure");
