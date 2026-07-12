@@ -18,6 +18,10 @@ jobs:
       - name: Restore and build VSIX
         run: msbuild vsix/Copperfin.VisualStudio/Copperfin.VisualStudio.csproj /restore /t:Rebuild /p:Configuration=Release /p:DeployExtension=false
 
+      - name: Verify localized command resources
+        shell: pwsh
+        run: ./scripts/test-vsix-command-localization.ps1 -VsixPath vsix/Copperfin.VisualStudio/bin/Release/net472/Copperfin.VisualStudio.vsix
+
       - name: Upload VSIX artifact
         uses: actions/upload-artifact@v7.0.1
         with:

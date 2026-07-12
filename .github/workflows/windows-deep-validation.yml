@@ -49,6 +49,10 @@ jobs:
       - name: Build Visual Studio extension
         run: msbuild vsix/Copperfin.VisualStudio/Copperfin.VisualStudio.csproj /restore /t:Rebuild /p:Configuration=${{ inputs.build_configuration }} /p:DeployExtension=false
 
+      - name: Verify localized command resources
+        shell: pwsh
+        run: ./scripts/test-vsix-command-localization.ps1 -VsixPath vsix/Copperfin.VisualStudio/bin/${{ inputs.build_configuration }}/net472/Copperfin.VisualStudio.vsix
+
       - name: Build standalone Studio shell
         run: msbuild vsix/Copperfin.Studio/Copperfin.Studio.csproj /restore /t:Rebuild /p:Configuration=${{ inputs.build_configuration }}
 

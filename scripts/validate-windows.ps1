@@ -9,6 +9,8 @@ $buildDir = Join-Path $repoRoot "build"
 $vsixDir = Join-Path $repoRoot "vsix"
 $nativeProject = $repoRoot
 $vsixProject = Join-Path $vsixDir "Copperfin.VisualStudio\Copperfin.VisualStudio.csproj"
+$vsixArtifact = Join-Path $vsixDir "Copperfin.VisualStudio\bin\Release\net472\Copperfin.VisualStudio.vsix"
+$vsixLocalizationTest = Join-Path $repoRoot "scripts\test-vsix-command-localization.ps1"
 $studioProject = Join-Path $vsixDir "Copperfin.Studio\Copperfin.Studio.csproj"
 $smokeProject = Join-Path $vsixDir "Copperfin.DesignerSmokeTests\Copperfin.DesignerSmokeTests.csproj"
 $smokeExe = Join-Path $vsixDir "Copperfin.DesignerSmokeTests\bin\Release\net472\Copperfin.DesignerSmokeTests.exe"
@@ -76,6 +78,10 @@ Invoke-Step -Name "Run native CTest suite" -Action {
 
 Invoke-Step -Name "Build Visual Studio extension" -Action {
     Invoke-Checked -FilePath $msbuild -ArgumentList @($vsixProject, "/restore", "/t:Rebuild", "/p:Configuration=Release", "/p:DeployExtension=false")
+}
+
+Invoke-Step -Name "Verify localized command resources" -Action {
+    & $vsixLocalizationTest -VsixPath $vsixArtifact
 }
 
 Invoke-Step -Name "Build standalone Studio shell" -Action {
