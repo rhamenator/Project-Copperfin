@@ -555,23 +555,39 @@ RuntimePackagePlan create_runtime_package_plan(
     for (const auto& entry : workspace.entries) {
         RuntimePackageAsset asset;
         asset.record_index = entry.record_index;
-        asset.relative_path = relative_asset_path(entry);
-        asset.source_path = resolve_project_item_source(document, entry);
+        asset.required_for_runtime =
+            entry.record_index == workspace.build_plan.startup_record_index;
+        asset.source_path = resolve_project_item_source(
+            document,
+            entry,
+            asset.required_for_runtime,
+            asset.source_resolution_error);
+        asset.exists =
+            asset.source_resolution_error.empty() &&
+            !asset.source_path.empty() &&
+            std::filesystem::exists(asset.source_path);
+        asset.relative_path = relative_asset_path(
+            document,
+            entry,
+            asset.source_path,
+            asset.required_for_runtime && asset.exists);
         asset.staged_path = (content_root / asset.relative_path).lexically_normal().string();
         asset.type_title = entry.type_title;
         asset.excluded = entry.excluded;
-        asset.exists = !asset.source_path.empty() && std::filesystem::exists(asset.source_path);
-        if (entry.record_index == workspace.build_plan.startup_record_index) {
-            asset.required_for_runtime = true;
+        if (asset.required_for_runtime) {
             plan.startup_source_path = asset.staged_path;
             plan.debug_plan.startup_source_path = asset.source_path;
         }
         asset.package_writable =
             !asset.required_for_runtime && is_writable_package_data_path(asset.source_path);
         if (!asset.exists && !entry.excluded && entry.group_id != "project") {
-            plan.warnings.push_back(runtime_text(
-                "Runtime.Package.Warning.MissingProjectAsset",
-                {{"path", asset.source_path}}));
+            if (!asset.source_resolution_error.empty()) {
+                plan.warnings.push_back(asset.source_resolution_error);
+            } else {
+                plan.warnings.push_back(runtime_text(
+                    "Runtime.Package.Warning.MissingProjectAsset",
+                    {{"path", asset.source_path}}));
+            }
         }
         plan.assets.push_back(std::move(asset));
     }
@@ -590,9 +606,17 @@ RuntimePackagePlan create_runtime_package_plan(
         source_working_directory,
         plan.content_root
     });
+    const auto startup_asset = std::find_if(
+        plan.assets.begin(),
+        plan.assets.end(),
+        [](const RuntimePackageAsset& asset) {
+            return asset.required_for_runtime;
+        });
     plan.debug_plan.supports_breakpoints =
-        is_prg_path(plan.debug_plan.startup_source_path) ||
-        is_xasset_path(plan.debug_plan.startup_source_path);
+        startup_asset != plan.assets.end() &&
+        startup_asset->exists &&
+        (is_prg_path(plan.debug_plan.startup_source_path) ||
+         is_xasset_path(plan.debug_plan.startup_source_path));
     plan.debug_plan.supports_step_debugging = plan.debug_plan.supports_breakpoints;
 
     if (enable_security && !security_profile.available) {
@@ -838,12 +862,25 @@ static RuntimeMaterializeResult materialize_runtime_package_in_fresh_root(
     RuntimePackagePlan materialized_plan = plan;
     std::string error;
     for (auto& asset : materialized_plan.assets) {
+        if (asset.required_for_runtime && !asset.source_resolution_error.empty()) {
+            return {.ok = false, .error = asset.source_resolution_error};
+        }
+        if (asset.required_for_runtime && !asset.exists) {
+            return {
+                .ok = false,
+                .error = runtime_text(
+                    "Runtime.Package.Error.SourceFileMissing",
+                    {{"path", asset.source_path}})};
+        }
         if (!should_stage_asset(asset)) {
             continue;
         }
 
         const std::filesystem::path destination = std::filesystem::path(plan.content_root) / asset.relative_path;
         if (!copy_file_if_exists(asset.source_path, destination, error)) {
+            if (asset.required_for_runtime) {
+                return {.ok = false, .error = error};
+            }
             materialized_plan.warnings.push_back(error);
             continue;
         }

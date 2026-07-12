@@ -77,8 +77,14 @@ bool validate_runtime_host_source_path(
     std::string& error);
 std::string resolve_project_item_source(
     const studio::StudioDocumentModel& document,
-    const studio::StudioProjectEntry& entry);
-std::string relative_asset_path(const studio::StudioProjectEntry& entry);
+    const studio::StudioProjectEntry& entry,
+    bool require_unique_casefold,
+    std::string& error);
+std::string relative_asset_path(
+    const studio::StudioDocumentModel& document,
+    const studio::StudioProjectEntry& entry,
+    const std::string& resolved_source_path,
+    bool preserve_resolved_spelling);
 std::string resolve_working_directory(
     const studio::StudioDocumentModel& document,
     const studio::StudioProjectWorkspace& workspace);

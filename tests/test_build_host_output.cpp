@@ -3075,7 +3075,7 @@ void run_default_runtime_host_resolution_smoke(const std::string& build_host_pat
         return;
     }
 
-    write_text(temp_bundle / "main.prg", "WAIT WINDOW 'host-resolution'\nRETURN\n");
+    write_text(temp_project_dir / "main.prg", "WAIT WINDOW 'host-resolution'\nRETURN\n");
     write_synthetic_executable_project(project_path, temp_project_dir, expected_output);
 
     {

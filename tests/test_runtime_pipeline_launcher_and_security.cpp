@@ -511,6 +511,7 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
         "Runtime.Package.Launcher.Error.RuntimeHostStartFailed",
         "Runtime.Package.Transpilation.Error.ManualPortRequiredForXAssetMethod",
         "Runtime.Package.Transpilation.Error.UnsupportedFoxProStatement",
+        "Runtime.Package.Error.AmbiguousProjectAssetPath",
         "Runtime.Package.Error.AmbiguousCompanionPath",
         "Runtime.Package.Error.CopyFileFailed",
         "Runtime.Package.Error.CreateContentRootFailed",
@@ -603,6 +604,12 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
         "#2390: runtime package diagnostics should preserve path placeholders");
     expect(
         english_catalog.translate(
+            "Runtime.Package.Error.AmbiguousProjectAssetPath",
+            {{"path", "forms/customer.scx"}}) ==
+            "Multiple case-insensitive project asset paths match: forms/customer.scx",
+        "#3953: ambiguous project-asset diagnostics should preserve path placeholders");
+    expect(
+        english_catalog.translate(
             "Runtime.Package.Error.AmbiguousCompanionPath",
             {{"path", "forms/customer.sct"}}) ==
             "Multiple case-insensitive companion files match: forms/customer.sct",
@@ -623,6 +630,14 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
         pseudo_catalog.translate("Runtime.Package.Error.PlanInvalid") !=
             english_catalog.translate("Runtime.Package.Error.PlanInvalid"),
         "#2390: runtime package diagnostics should be pseudo-localizable");
+    expect(
+        pseudo_catalog.translate(
+            "Runtime.Package.Error.AmbiguousProjectAssetPath",
+            {{"path", "forms/customer.scx"}}) !=
+            english_catalog.translate(
+                "Runtime.Package.Error.AmbiguousProjectAssetPath",
+                {{"path", "forms/customer.scx"}}),
+        "#3953: ambiguous project-asset diagnostics should be pseudo-localizable");
     expect(
         pseudo_catalog.translate(
             "Runtime.Package.Error.AmbiguousCompanionPath",

@@ -3935,6 +3935,7 @@ copperfin_add_test(test_runtime_pipeline cf_runtime_pipeline
     test_runtime_pipeline_shared_test_helpers.cpp
     test_runtime_pipeline_output_packaging.cpp
     test_runtime_pipeline_rematerialization.cpp
+    test_runtime_pipeline_startup_casefold.cpp
     test_runtime_pipeline_startup_and_staging.cpp
     test_runtime_pipeline_launcher_and_security.cpp
 )

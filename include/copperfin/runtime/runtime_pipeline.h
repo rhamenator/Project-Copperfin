@@ -42,6 +42,7 @@ struct RuntimePackageAsset {
     bool package_writable = false;
     bool copied = false;
     std::string sha256;
+    std::string source_resolution_error;
 };
 
 struct RuntimeArtifactDigest {

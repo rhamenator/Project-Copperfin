@@ -122,52 +122,72 @@ std::optional<std::filesystem::path> resolve_existing_path_casefold(
     const std::filesystem::path& candidate,
     bool& ambiguous) {
     ambiguous = false;
-    std::error_code error;
-    const std::string file_name = candidate.filename().string();
-    if (file_name.empty()) {
-        return std::nullopt;
-    }
-    const std::string folded_file_name = lowercase_copy(file_name);
-
-    std::filesystem::path search_root = candidate.parent_path();
-    if (search_root.empty()) {
-        search_root = ".";
-    }
-
-    error.clear();
-    if (!std::filesystem::exists(search_root, error) || error) {
+    if (candidate.empty()) {
         return std::nullopt;
     }
 
-    std::vector<std::filesystem::path> casefold_matches;
-    for (std::filesystem::directory_iterator it(search_root, error), end; it != end; it.increment(error)) {
-        if (error) {
-            error.clear();
+    std::filesystem::path resolved = candidate.root_path();
+    if (resolved.empty()) {
+        resolved = ".";
+    }
+
+    for (const auto& part : candidate.relative_path()) {
+        const std::string component = part.string();
+        if (component.empty() || component == ".") {
+            continue;
+        }
+        if (component == "..") {
+            resolved = (resolved / part).lexically_normal();
             continue;
         }
 
-        const std::filesystem::path entry_path = it->path();
-        const std::string entry_name = entry_path.filename().string();
-        if (entry_name == file_name) {
-            return entry_path.lexically_normal();
+        std::error_code error;
+        if (!std::filesystem::is_directory(resolved, error) || error) {
+            return std::nullopt;
         }
-        if (lowercase_copy(entry_name) == folded_file_name) {
-            casefold_matches.push_back(entry_path.lexically_normal());
+
+        std::optional<std::filesystem::path> exact_match;
+        std::vector<std::filesystem::path> casefold_matches;
+        const std::string folded_component = lowercase_copy(component);
+        for (std::filesystem::directory_iterator it(resolved, error), end; it != end; it.increment(error)) {
+            if (error) {
+                return std::nullopt;
+            }
+
+            const std::filesystem::path entry_path = it->path();
+            const std::string entry_name = entry_path.filename().string();
+            if (entry_name == component) {
+                exact_match = entry_path;
+                break;
+            }
+            if (lowercase_copy(entry_name) == folded_component) {
+                casefold_matches.push_back(entry_path);
+            }
         }
+
+        if (exact_match.has_value()) {
+            resolved = exact_match->lexically_normal();
+            continue;
+        }
+        if (casefold_matches.size() > 1U) {
+            ambiguous = true;
+            return std::nullopt;
+        }
+        if (casefold_matches.empty()) {
+            return std::nullopt;
+        }
+        resolved = casefold_matches.front().lexically_normal();
     }
 
-    if (casefold_matches.size() > 1U) {
-        ambiguous = true;
-        return std::nullopt;
-    }
-    return casefold_matches.empty()
-        ? std::nullopt
-        : std::optional<std::filesystem::path>(casefold_matches.front());
+    return resolved.lexically_normal();
 }
 
 std::optional<std::filesystem::path> find_case_insensitive_tail_match_under_root(
     const std::filesystem::path& search_root,
-    const std::string& value) {
+    const std::string& value,
+    bool require_unique,
+    bool& ambiguous) {
+    ambiguous = false;
     if (trim_copy(value).empty() || !std::filesystem::exists(search_root)) {
         return std::nullopt;
     }
@@ -185,6 +205,8 @@ std::optional<std::filesystem::path> find_case_insensitive_tail_match_under_root
     std::optional<std::filesystem::path> best_match;
     std::size_t best_extra_segments = static_cast<std::size_t>(-1);
     std::string best_key;
+    std::vector<std::filesystem::path> exact_tail_matches;
+    std::vector<std::filesystem::path> casefold_tail_matches;
     std::error_code iterator_error;
     for (std::filesystem::recursive_directory_iterator it(search_root, iterator_error), end; it != end; it.increment(iterator_error)) {
         if (iterator_error) {
@@ -208,6 +230,7 @@ std::optional<std::filesystem::path> find_case_insensitive_tail_match_under_root
         }
 
         bool matches = true;
+        bool exact_match = true;
         for (std::size_t index = 0; index < tail_segments.size(); ++index) {
             const auto& candidate_segment = candidate_segments[candidate_segments.size() - tail_segments.size() + index];
             const auto& expected_segment = tail_segments[index];
@@ -215,9 +238,20 @@ std::optional<std::filesystem::path> find_case_insensitive_tail_match_under_root
                 matches = false;
                 break;
             }
+            if (candidate_segment != expected_segment) {
+                exact_match = false;
+            }
         }
 
         if (!matches) {
+            continue;
+        }
+
+        if (require_unique) {
+            casefold_tail_matches.push_back(it->path().lexically_normal());
+            if (exact_match) {
+                exact_tail_matches.push_back(it->path().lexically_normal());
+            }
             continue;
         }
 
@@ -230,6 +264,18 @@ std::optional<std::filesystem::path> find_case_insensitive_tail_match_under_root
             best_extra_segments = extra_segments;
             best_key = candidate_key;
         }
+    }
+
+    if (require_unique) {
+        const auto& preferred_matches =
+            exact_tail_matches.empty() ? casefold_tail_matches : exact_tail_matches;
+        if (preferred_matches.size() > 1U) {
+            ambiguous = true;
+            return std::nullopt;
+        }
+        return preferred_matches.empty()
+            ? std::nullopt
+            : std::optional<std::filesystem::path>(preferred_matches.front());
     }
 
     return best_match;
@@ -464,17 +510,46 @@ bool validate_runtime_host_source_path(
 
 std::string resolve_project_item_source(
     const studio::StudioDocumentModel& document,
-    const studio::StudioProjectEntry& entry) {
+    const studio::StudioProjectEntry& entry,
+    bool require_unique_casefold,
+    std::string& error) {
+    error.clear();
     const std::filesystem::path base_dir = std::filesystem::path(document.path).parent_path();
+
+    const auto resolve_candidate = [&](const std::filesystem::path& candidate)
+        -> std::optional<std::filesystem::path> {
+        bool ambiguous = false;
+        const auto resolved = resolve_existing_path_casefold(candidate, ambiguous);
+        if (ambiguous) {
+            error = runtime_text(
+                "Runtime.Package.Error.AmbiguousProjectAssetPath",
+                {{"path", candidate.string()}});
+        }
+        return resolved;
+    };
 
     if (!entry.relative_path.empty()) {
         const std::filesystem::path from_relative = resolve_vfp_path_from_base(base_dir, entry.relative_path);
-        if (std::filesystem::exists(from_relative)) {
+        if (const auto resolved = resolve_candidate(from_relative); resolved.has_value()) {
+            return resolved->string();
+        }
+        if (!error.empty()) {
             return from_relative.lexically_normal().string();
         }
         if (has_parent_traversal_segment(entry.relative_path)) {
-            if (const auto fallback = find_case_insensitive_tail_match_under_root(base_dir.parent_path(), entry.relative_path)) {
+            bool fallback_ambiguous = false;
+            if (const auto fallback = find_case_insensitive_tail_match_under_root(
+                    base_dir.parent_path(),
+                    entry.relative_path,
+                    require_unique_casefold,
+                    fallback_ambiguous)) {
                 return fallback->string();
+            }
+            if (fallback_ambiguous) {
+                error = runtime_text(
+                    "Runtime.Package.Error.AmbiguousProjectAssetPath",
+                    {{"path", from_relative.string()}});
+                return from_relative.lexically_normal().string();
             }
         }
         if (entry.name.empty()) {
@@ -486,10 +561,30 @@ std::string resolve_project_item_source(
         return {};
     }
 
-    return resolve_vfp_path_from_base(base_dir, entry.name).string();
+    const std::filesystem::path from_name = resolve_vfp_path_from_base(base_dir, entry.name);
+    if (const auto resolved = resolve_candidate(from_name); resolved.has_value()) {
+        return resolved->string();
+    }
+    return from_name.lexically_normal().string();
 }
 
-std::string relative_asset_path(const studio::StudioProjectEntry& entry) {
+std::string relative_asset_path(
+    const studio::StudioDocumentModel& document,
+    const studio::StudioProjectEntry& entry,
+    const std::string& resolved_source_path,
+    bool preserve_resolved_spelling) {
+    if (preserve_resolved_spelling && !resolved_source_path.empty()) {
+        const std::filesystem::path base_dir = std::filesystem::path(document.path).parent_path();
+        const std::filesystem::path resolved_relative =
+            std::filesystem::path(resolved_source_path).lexically_relative(base_dir);
+        if (!resolved_relative.empty() && !resolved_relative.is_absolute()) {
+            const std::string sanitized = sanitize_package_relative_path(resolved_relative.generic_string());
+            if (!sanitized.empty()) {
+                return sanitized;
+            }
+        }
+    }
+
     const std::string path = !entry.relative_path.empty() ? entry.relative_path : entry.name;
     if (!path.empty()) {
         const std::string sanitized = sanitize_package_relative_path(path);
@@ -614,6 +709,13 @@ RuntimeCompanionCopyResult copy_companion_files_if_present(
             return result;
         }
         if (!resolved_companion_source.has_value()) {
+            if (asset.required_for_runtime && is_xasset_path(asset.source_path)) {
+                result.ok = false;
+                result.error = runtime_text(
+                    "Runtime.Package.Error.SourceFileMissing",
+                    {{"path", companion_source.string()}});
+                return result;
+            }
             continue;
         }
 
@@ -621,6 +723,11 @@ RuntimeCompanionCopyResult copy_companion_files_if_present(
             staged.parent_path() / resolved_companion_source->filename();
         std::string error;
         if (!copy_file_if_exists(*resolved_companion_source, companion_destination, error)) {
+            if (asset.required_for_runtime) {
+                result.ok = false;
+                result.error = error;
+                return result;
+            }
             warnings.push_back(error);
         } else {
             result.copied_paths.push_back(companion_destination);

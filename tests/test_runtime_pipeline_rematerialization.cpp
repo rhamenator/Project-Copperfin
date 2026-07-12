@@ -118,15 +118,24 @@ void test_repeated_materialization_replaces_generated_package_transactionally() 
     };
 
     const auto second_plan = create_rematerialization_plan(document, workspace, output_dir);
-    const auto second_result = materialize_rematerialization_plan(second_plan, runtime_host);
+    const PackageSnapshot package_before_missing_sidecar = snapshot_package_files(package_root);
+    const auto missing_sidecar_result = materialize_rematerialization_plan(second_plan, runtime_host);
+    expect(!missing_sidecar_result.ok,
+           "repeated materialization should reject a missing required startup sidecar");
+    expect(snapshot_package_files(package_root) == package_before_missing_sidecar,
+           "missing startup sidecar failure should preserve the prior generated package");
+
+    write_text(project_dir / "startup.sct", "form-memo-v2");
+    const auto restored_plan = create_rematerialization_plan(document, workspace, output_dir);
+    const auto second_result = materialize_rematerialization_plan(restored_plan, runtime_host);
     expect(second_result.ok, "repeated materialization should replace the prior generated package");
     if (!second_result.ok) {
         fs::remove_all(temp_root, ignored);
         return;
     }
 
-    expect(!fs::exists(content_root / "startup.sct"),
-           "repeated materialization should remove a deleted source sidecar");
+    expect(read_text(content_root / "startup.sct") == "form-memo-v2",
+           "repeated materialization should replace the restored startup sidecar");
     expect(!fs::exists(content_root / "old_name.prg"),
            "repeated materialization should remove an asset renamed out of the project");
     expect(fs::exists(content_root / "new_name.prg"),
@@ -136,9 +145,9 @@ void test_repeated_materialization_replaces_generated_package_transactionally() 
 
     const std::string archive_manifest = read_text(second_result.plan.app_archive_manifest_path);
     const std::string archive_output = read_text(second_result.plan.launcher_output_path);
-    expect(archive_manifest.find("startup.sct") == std::string::npos &&
-               archive_output.find("startup.sct") == std::string::npos,
-           "repeated APP materialization should not re-archive a removed sidecar");
+    expect(archive_manifest.find("startup.sct") != std::string::npos &&
+               archive_output.find("startup.sct") != std::string::npos,
+           "repeated APP materialization should archive the restored required sidecar");
     expect(archive_manifest.find("old_name.prg") == std::string::npos &&
                archive_output.find("old_name.prg") == std::string::npos,
            "repeated APP materialization should not re-archive a renamed-away asset");

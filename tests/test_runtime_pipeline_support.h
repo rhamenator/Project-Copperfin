@@ -118,6 +118,12 @@ void test_runtime_package_license_fields_stay_debug_only();
 
 // ==== Runtime package materialization and asset-staging tests ====
 void test_materialize_runtime_package();
+void test_casefold_startup_paths_preserve_actual_spelling_for_all_mvp_families();
+void test_exact_startup_path_wins_over_casefold_siblings();
+void test_ambiguous_casefold_startup_path_fails_closed();
+void test_startup_resolution_preserves_parent_tail_and_name_fallbacks();
+void test_missing_startup_primary_fails_for_all_mvp_families();
+void test_missing_required_startup_sidecar_fails_for_all_xasset_families();
 void test_materialize_excluded_xasset_startup_package();
 void test_uppercase_xasset_companion_assets_are_staged();
 void test_ambiguous_casefold_xasset_companions_fail_closed();
