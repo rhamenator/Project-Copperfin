@@ -24,6 +24,16 @@ if(DOTNET_EXECUTABLE)
 endif()
 
 add_test(
+    NAME test_package_document_install
+    COMMAND ${CMAKE_COMMAND}
+        -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -DBINARY_DIR=${CMAKE_BINARY_DIR}
+        -DTEST_ROOT_BASE=${CMAKE_CURRENT_BINARY_DIR}/package-document-install
+        -DTEST_CONFIGURATION=$<CONFIG>
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_package_document_install_check.cmake
+)
+
+add_test(
     NAME test_runtime_host_binding
     COMMAND ${CMAKE_COMMAND}
         -DRUNTIME_HOST_EXECUTABLE=$<TARGET_FILE:copperfin_runtime_host>

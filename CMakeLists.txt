@@ -417,8 +417,38 @@ install(TARGETS copperfin_inspect copperfin_studio_host copperfin_runtime_host c
     RUNTIME DESTINATION bin
 )
 
-install(FILES README.md LICENSE SECURITY.md remaining-work.md
+set(COPPERFIN_PACKAGE_DOCUMENTS
+    README.md
+    SECURITY.md
+    remaining-work.md
+)
+set(COPPERFIN_PACKAGE_LICENSE_DOCUMENT LICENSE.md)
+
+foreach(package_document IN ITEMS ${COPPERFIN_PACKAGE_DOCUMENTS} ${COPPERFIN_PACKAGE_LICENSE_DOCUMENT})
+    if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${package_document}")
+        message(FATAL_ERROR "Required package document is missing: ${package_document}")
+    endif()
+endforeach()
+
+install(FILES ${COPPERFIN_PACKAGE_DOCUMENTS}
     DESTINATION share/copperfin
+    COMPONENT Documentation
+)
+
+install(FILES ${COPPERFIN_PACKAGE_LICENSE_DOCUMENT}
+    DESTINATION share/copperfin
+    RENAME LICENSE
+    COMPONENT Documentation
+)
+
+add_custom_target(copperfin_package_document_check
+    COMMAND ${CMAKE_COMMAND}
+        -DSOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -DBINARY_DIR=${CMAKE_BINARY_DIR}
+        -DTEST_ROOT_BASE=${CMAKE_CURRENT_BINARY_DIR}/package-document-install
+        -DTEST_CONFIGURATION=$<CONFIG>
+        -P ${CMAKE_SOURCE_DIR}/tests/run_package_document_install_check.cmake
+    VERBATIM
 )
 
 install(DIRECTORY resources/locales/
