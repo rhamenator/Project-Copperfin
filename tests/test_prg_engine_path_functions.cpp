@@ -34,6 +34,19 @@ namespace
             "cUncPath = '\\\\server\\share\\reports\\invoice.frx'\n"
             "cPosixPath = '/home/rich/dev/Project-Copperfin/src/runtime/prg_engine.cpp'\n"
             "cDrive = JUSTDRIVE(cWinPath)\n"
+            "cUncDrive = JUSTDRIVE(cUncPath)\n"
+            "cExtendedUncDrive = JUSTDRIVE('\\\\?\\UNC\\server\\share\\reports\\invoice.frx')\n"
+            "cExtendedUncRootDrive = JUSTDRIVE('\\\\?\\UNC\\server\\share')\n"
+            "cLowerExtendedUncDrive = JUSTDRIVE('\\\\?\\unc\\server\\share\\reports\\invoice.frx')\n"
+            "cExtendedDrive = JUSTDRIVE('\\\\?\\E:\\reports\\invoice.frx')\n"
+            "cDeviceDrive = JUSTDRIVE('\\\\.\\E:\\reports\\invoice.frx')\n"
+            "cMalformedExtendedUncMissingShare = JUSTDRIVE('\\\\?\\UNC\\server')\n"
+            "cMalformedExtendedUncEmptyServer = JUSTDRIVE('\\\\?\\UNC\\\\share')\n"
+            "cGlobalRootDrive = JUSTDRIVE('\\\\?\\GLOBALROOT\\Device\\HarddiskVolume1')\n"
+            "cDevicePipeDrive = JUSTDRIVE('\\\\.\\pipe\\copperfin')\n"
+            "cPosixDrive = JUSTDRIVE(cPosixPath)\n"
+            "cRelativeDrive = JUSTDRIVE('forms\\main.prg')\n"
+            "cEmptyDrive = JUSTDRIVE('')\n"
             "cWinDir = JUSTPATH(cWinPath)\n"
             "cWinName = JUSTFNAME(cWinPath)\n"
             "cWinStem = JUSTSTEM(cWinPath)\n"
@@ -75,6 +88,19 @@ namespace
         expect(state.completed, "portable path function script should complete");
 
         const auto drive = state.globals.find("cdrive");
+        const auto unc_drive = state.globals.find("cuncdrive");
+        const auto extended_unc_drive = state.globals.find("cextendeduncdrive");
+        const auto extended_unc_root_drive = state.globals.find("cextendeduncrootdrive");
+        const auto lower_extended_unc_drive = state.globals.find("clowerextendeduncdrive");
+        const auto extended_drive = state.globals.find("cextendeddrive");
+        const auto device_drive = state.globals.find("cdevicedrive");
+        const auto malformed_extended_unc_missing_share = state.globals.find("cmalformedextendeduncmissingshare");
+        const auto malformed_extended_unc_empty_server = state.globals.find("cmalformedextendeduncemptyserver");
+        const auto global_root_drive = state.globals.find("cglobalrootdrive");
+        const auto device_pipe_drive = state.globals.find("cdevicepipedrive");
+        const auto posix_drive = state.globals.find("cposixdrive");
+        const auto relative_drive = state.globals.find("crelativedrive");
+        const auto empty_drive = state.globals.find("cemptydrive");
         const auto win_dir = state.globals.find("cwindir");
         const auto win_name = state.globals.find("cwinname");
         const auto win_stem = state.globals.find("cwinstem");
@@ -109,6 +135,19 @@ namespace
         const auto current_dir = state.globals.find("ccurrentdir");
 
         expect(drive != state.globals.end(), "JUSTDRIVE result should be captured");
+        expect(unc_drive != state.globals.end(), "UNC JUSTDRIVE result should be captured");
+        expect(extended_unc_drive != state.globals.end(), "extended UNC JUSTDRIVE result should be captured");
+        expect(extended_unc_root_drive != state.globals.end(), "extended UNC root JUSTDRIVE result should be captured");
+        expect(lower_extended_unc_drive != state.globals.end(), "lowercase extended UNC JUSTDRIVE result should be captured");
+        expect(extended_drive != state.globals.end(), "extended drive JUSTDRIVE result should be captured");
+        expect(device_drive != state.globals.end(), "device drive JUSTDRIVE result should be captured");
+        expect(malformed_extended_unc_missing_share != state.globals.end(), "missing-share extended UNC JUSTDRIVE result should be captured");
+        expect(malformed_extended_unc_empty_server != state.globals.end(), "empty-server extended UNC JUSTDRIVE result should be captured");
+        expect(global_root_drive != state.globals.end(), "GLOBALROOT JUSTDRIVE result should be captured");
+        expect(device_pipe_drive != state.globals.end(), "device pipe JUSTDRIVE result should be captured");
+        expect(posix_drive != state.globals.end(), "POSIX JUSTDRIVE result should be captured");
+        expect(relative_drive != state.globals.end(), "relative JUSTDRIVE result should be captured");
+        expect(empty_drive != state.globals.end(), "empty JUSTDRIVE result should be captured");
         expect(win_dir != state.globals.end(), "Windows JUSTPATH result should be captured");
         expect(win_name != state.globals.end(), "Windows JUSTFNAME result should be captured");
         expect(win_stem != state.globals.end(), "Windows JUSTSTEM result should be captured");
@@ -145,6 +184,71 @@ namespace
         if (drive != state.globals.end())
         {
             expect(copperfin::runtime::format_value(drive->second) == "E:", "JUSTDRIVE should parse drive-letter roots on every host");
+        }
+        if (unc_drive != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(unc_drive->second) == "\\\\server\\share",
+                   "#3964: JUSTDRIVE should preserve ordinary UNC server/share roots");
+        }
+        if (extended_unc_drive != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(extended_unc_drive->second) == "\\\\?\\UNC\\server\\share",
+                   "#3964: JUSTDRIVE should preserve complete extended UNC server/share roots");
+        }
+        if (extended_unc_root_drive != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(extended_unc_root_drive->second) == "\\\\?\\UNC\\server\\share",
+                   "#3964: JUSTDRIVE should accept an extended UNC root without a trailing path");
+        }
+        if (lower_extended_unc_drive != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(lower_extended_unc_drive->second) == "\\\\?\\unc\\server\\share",
+                   "#3964: JUSTDRIVE should recognize the extended UNC marker case-insensitively");
+        }
+        if (extended_drive != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(extended_drive->second) == "\\\\?\\E:",
+                   "#3964: JUSTDRIVE should preserve existing extended drive behavior");
+        }
+        if (device_drive != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(device_drive->second) == "\\\\.\\E:",
+                   "#3964: JUSTDRIVE should preserve explicit device drive behavior");
+        }
+        if (malformed_extended_unc_missing_share != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(malformed_extended_unc_missing_share->second).empty(),
+                   "#3964: JUSTDRIVE should reject an extended UNC path without a share");
+        }
+        if (malformed_extended_unc_empty_server != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(malformed_extended_unc_empty_server->second).empty(),
+                   "#3964: JUSTDRIVE should reject an extended UNC path without a server");
+        }
+        if (global_root_drive != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(global_root_drive->second).empty(),
+                   "#3964: JUSTDRIVE should not reinterpret GLOBALROOT as a drive root");
+        }
+        if (device_pipe_drive != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(device_pipe_drive->second).empty(),
+                   "#3964: JUSTDRIVE should not reinterpret a device pipe as a drive root");
+        }
+        if (posix_drive != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(posix_drive->second).empty(),
+                   "#3964: JUSTDRIVE should keep POSIX paths drive-less");
+        }
+        if (relative_drive != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(relative_drive->second).empty(),
+                   "#3964: JUSTDRIVE should keep relative paths drive-less");
+        }
+        if (empty_drive != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(empty_drive->second).empty(),
+                   "#3964: JUSTDRIVE should keep empty paths drive-less");
         }
         if (win_dir != state.globals.end())
         {

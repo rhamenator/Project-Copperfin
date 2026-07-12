@@ -981,6 +981,45 @@ std::string portable_path_drive(const std::string& path) {
     if (path.size() >= 2U && std::isalpha(static_cast<unsigned char>(path[0])) != 0 && path[1] == ':') {
         return path.substr(0U, 2U);
     }
+    const auto is_separator = [](const char ch) {
+        return ch == '\\' || ch == '/';
+    };
+    const bool is_namespace_path =
+        path.size() >= 4U &&
+        is_separator(path[0]) &&
+        path[1] == path[0] &&
+        (path[2] == '?' || path[2] == '.') &&
+        is_separator(path[3]);
+    if (is_namespace_path) {
+        const bool is_extended_unc =
+            path[2] == '?' &&
+            path.size() >= 8U &&
+            lowercase_copy(path.substr(4U, 3U)) == "unc" &&
+            is_separator(path[7]);
+        if (is_extended_unc) {
+            const std::size_t server_start = 8U;
+            const std::size_t server_end = path.find_first_of("\\/", server_start);
+            if (server_end != std::string::npos && server_end > server_start) {
+                const std::size_t share_start = server_end + 1U;
+                if (share_start < path.size()) {
+                    const std::size_t share_end = path.find_first_of("\\/", share_start);
+                    if (share_end == std::string::npos) {
+                        return path;
+                    }
+                    if (share_end > share_start) {
+                        return path.substr(0U, share_end);
+                    }
+                }
+            }
+            return {};
+        }
+        if (path.size() >= 6U &&
+            std::isalpha(static_cast<unsigned char>(path[4])) != 0 &&
+            path[5] == ':') {
+            return path.substr(0U, 6U);
+        }
+        return {};
+    }
     if (path.size() >= 2U && (path[0] == '\\' || path[0] == '/') && path[1] == path[0]) {
         const std::size_t server_end = path.find_first_of("\\/", 2U);
         if (server_end != std::string::npos) {
