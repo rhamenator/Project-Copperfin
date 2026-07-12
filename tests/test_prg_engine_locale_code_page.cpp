@@ -1,0 +1,93 @@
+// Copyright © 2026 Richard M. Hamilton. All rights reserved.
+// Licensed under the Project Copperfin Source-Available License or
+// Commercial License. See LICENSE.md in the repository root.
+
+#include "prg_engine_locale_code_page.h"
+#include "prg_engine_test_support.h"
+
+#include <array>
+#include <cstdlib>
+#include <iostream>
+#include <optional>
+#include <string>
+
+namespace {
+
+using copperfin::runtime::detail::parse_posix_locale_code_page;
+using copperfin::runtime::detail::resolve_posix_host_code_page;
+using copperfin::test_support::expect;
+
+void expect_code_page(const std::string& text, std::optional<int> expected) {
+    const auto actual = parse_posix_locale_code_page(text);
+    expect(actual == expected, "#3961: unexpected code page for locale/codeset '" + text + "'");
+}
+
+void test_codeset_and_full_locale_parsing() {
+    expect_code_page("UTF-8", 65001);
+    expect_code_page("utf8", 65001);
+    expect_code_page("C.UTF-8", 65001);
+    expect_code_page("en_US.UTF-8", 65001);
+    expect_code_page("pt_BR.UTF8@latin", 65001);
+    expect_code_page("1252", 1252);
+    expect_code_page("CP1251", 1251);
+    expect_code_page("cp-1250", 1250);
+    expect_code_page("WINDOWS-1252", 1252);
+    expect_code_page("windows_1254", 1254);
+    expect_code_page("IBM850", 850);
+    expect_code_page("ibm-437", 437);
+    expect_code_page("en_US.1252", 1252);
+    expect_code_page("sr_RS.CP1251@latin", 1251);
+    expect_code_page("de_DE.WINDOWS-1252@euro", 1252);
+    expect_code_page("C", 20127);
+    expect_code_page("POSIX", 20127);
+    expect_code_page("ANSI_X3.4-1968", 20127);
+}
+
+void test_malformed_values_do_not_scrape_unrelated_digits() {
+    expect_code_page("", std::nullopt);
+    expect_code_page("en_US", std::nullopt);
+    expect_code_page("es_419", std::nullopt);
+    expect_code_page("en_US@modifier", std::nullopt);
+    expect_code_page("en_US.", std::nullopt);
+    expect_code_page("en_US.UTF-8-extra", std::nullopt);
+    expect_code_page("locale123", std::nullopt);
+    expect_code_page("CP", std::nullopt);
+    expect_code_page("CP12x", std::nullopt);
+    expect_code_page("0", std::nullopt);
+    expect_code_page("999999999999999999999", std::nullopt);
+}
+
+void test_posix_fallback_order() {
+    using CandidateArray = std::array<std::optional<std::string>, 3U>;
+
+    expect(
+        resolve_posix_host_code_page("UTF-8", CandidateArray{"CP1250", "CP1251", "CP1252"}) == 65001,
+        "#3961: nl_langinfo codeset should take precedence over environment locales");
+    expect(
+        resolve_posix_host_code_page("unparseable", CandidateArray{"en_US.CP1250", "CP1251", "CP1252"}) == 1250,
+        "#3961: LC_ALL should be the first environment fallback");
+    expect(
+        resolve_posix_host_code_page(std::nullopt, CandidateArray{"es_419", "sr_RS.CP1251", "CP1252"}) == 1251,
+        "#3961: malformed LC_ALL should fall through to LC_CTYPE without scraping territory digits");
+    expect(
+        resolve_posix_host_code_page(std::nullopt, CandidateArray{std::nullopt, "", "C.UTF-8"}) == 65001,
+        "#3961: LANG should be used after missing or empty higher-priority candidates");
+    expect(
+        resolve_posix_host_code_page("bad", CandidateArray{"es_419", "CP12x", std::nullopt}) == 1252,
+        "#3961: unparseable sources should retain the deterministic 1252 fallback");
+}
+
+}  // namespace
+
+int main() {
+    test_codeset_and_full_locale_parsing();
+    test_malformed_values_do_not_scrape_unrelated_digits();
+    test_posix_fallback_order();
+
+    if (copperfin::test_support::test_failures() != 0) {
+        std::cerr << copperfin::test_support::test_failures() << " test(s) failed.\n";
+        return EXIT_FAILURE;
+    }
+    std::cout << "All tests passed.\n";
+    return EXIT_SUCCESS;
+}

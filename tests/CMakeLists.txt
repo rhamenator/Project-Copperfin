@@ -4179,6 +4179,17 @@ copperfin_add_test(test_prg_engine_runtime_surface_functions cf_xbase_runtime
     test_prg_engine_runtime_surface_functions.cpp
     prg_engine_test_support.cpp
 )
+target_include_directories(test_prg_engine_runtime_surface_functions PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/runtime
+)
+
+copperfin_add_test(test_prg_engine_locale_code_page cf_xbase_runtime
+    test_prg_engine_locale_code_page.cpp
+    prg_engine_test_support.cpp
+)
+target_include_directories(test_prg_engine_locale_code_page PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/runtime
+)
 
 copperfin_add_test(test_prg_engine_runtime_surface_itemid_selectors cf_xbase_runtime
     test_prg_engine_runtime_surface_itemid_selectors.cpp

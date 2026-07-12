@@ -7,6 +7,7 @@
 #include "copperfin/platform/environment.h"
 #include "prg_engine_file_io_functions.h"
 #include "prg_engine_helpers.h"
+#include "prg_engine_locale_code_page.h"
 #include "localized_text.h"
 
 #include <algorithm>
@@ -122,63 +123,22 @@ std::string strip_surrounding_quotes(std::string text) {
     return text;
 }
 
-std::optional<int> parse_codeset_to_code_page(std::string codeset) {
-    codeset = uppercase_copy(trim_copy(std::move(codeset)));
-    if (codeset.empty()) {
-        return std::nullopt;
-    }
-
-    if (codeset == "UTF-8" || codeset == "UTF8" || codeset == "C.UTF-8") {
-        return 65001;
-    }
-    if (codeset == "US-ASCII" || codeset == "ASCII" || codeset == "ANSI_X3.4-1968" || codeset == "C") {
-        return 20127;
-    }
-
-    std::string digits;
-    digits.reserve(codeset.size());
-    for (const unsigned char ch : codeset) {
-        if (std::isdigit(ch) != 0) {
-            digits.push_back(static_cast<char>(ch));
-        }
-    }
-
-    if (!digits.empty()) {
-        try {
-            return std::stoi(digits);
-        } catch (const std::exception&) {
-        }
-    }
-
-    return std::nullopt;
-}
-
 int current_host_code_page() {
 #if defined(_WIN32)
     const UINT active_code_page = GetACP();
     return active_code_page == 0U ? 1252 : static_cast<int>(active_code_page);
 #else
+    std::optional<std::string> system_codeset;
     if (const char* codeset = nl_langinfo(CODESET); codeset != nullptr) {
-        if (const auto parsed = parse_codeset_to_code_page(codeset); parsed.has_value()) {
-            return *parsed;
-        }
+        system_codeset = codeset;
     }
 
-    const std::optional<std::string> locale_candidates[] = {
+    const std::array<std::optional<std::string>, 3U> locale_candidates = {
         platform::read_environment_variable("LC_ALL"),
         platform::read_environment_variable("LC_CTYPE"),
         platform::read_environment_variable("LANG"),
     };
-    for (const auto& candidate : locale_candidates) {
-        if (!candidate.has_value()) {
-            continue;
-        }
-        if (const auto parsed = parse_codeset_to_code_page(*candidate); parsed.has_value()) {
-            return *parsed;
-        }
-    }
-
-    return 1252;
+    return detail::resolve_posix_host_code_page(system_codeset, locale_candidates);
 #endif
 }
 

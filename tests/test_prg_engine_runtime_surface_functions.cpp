@@ -3,11 +3,13 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 #include "copperfin/runtime/prg_engine.h"
+#include "prg_engine_locale_code_page.h"
 #include "prg_engine_test_support.h"
 #include "test_environment_support.h"
 #include "copperfin/vfp/dbf_table.h"
 
 #include <algorithm>
+#include <array>
 #include <cerrno>
 #include <cstdlib>
 #include <filesystem>
@@ -34,92 +36,24 @@ namespace
 
     using namespace copperfin::test_support;
 
-    std::optional<int> parse_codeset_to_code_page(std::string codeset)
-    {
-        const auto trim_ascii = [](std::string value) {
-            const auto first = std::find_if_not(value.begin(), value.end(), [](unsigned char ch) {
-                return std::isspace(ch) != 0;
-            });
-            const auto last = std::find_if_not(value.rbegin(), value.rend(), [](unsigned char ch) {
-                return std::isspace(ch) != 0;
-            }).base();
-            if (first >= last)
-            {
-                return std::string{};
-            }
-            return std::string(first, last);
-        };
-
-        codeset = uppercase_ascii(trim_ascii(std::move(codeset)));
-        if (codeset.empty())
-        {
-            return std::nullopt;
-        }
-
-        if (codeset == "UTF-8" || codeset == "UTF8" || codeset == "C.UTF-8")
-        {
-            return 65001;
-        }
-        if (codeset == "US-ASCII" || codeset == "ASCII" || codeset == "ANSI_X3.4-1968" || codeset == "C")
-        {
-            return 20127;
-        }
-
-        std::string digits;
-        for (const unsigned char ch : codeset)
-        {
-            if (std::isdigit(ch) != 0)
-            {
-                digits.push_back(static_cast<char>(ch));
-            }
-        }
-
-        if (!digits.empty())
-        {
-            try
-            {
-                return std::stoi(digits);
-            }
-            catch (const std::exception &)
-            {
-            }
-        }
-
-        return std::nullopt;
-    }
-
     int expected_host_code_page()
     {
 #if defined(_WIN32)
         const UINT active_code_page = GetACP();
         return active_code_page == 0U ? 1252 : static_cast<int>(active_code_page);
 #else
+        std::optional<std::string> system_codeset;
         if (const char *codeset = nl_langinfo(CODESET); codeset != nullptr)
         {
-            if (const auto parsed = parse_codeset_to_code_page(codeset); parsed.has_value())
-            {
-                return *parsed;
-            }
+            system_codeset = codeset;
         }
 
-        const std::optional<std::string> locale_candidates[] = {
+        const std::array<std::optional<std::string>, 3U> locale_candidates = {
             copperfin::test_support::getenv_optional("LC_ALL"),
             copperfin::test_support::getenv_optional("LC_CTYPE"),
             copperfin::test_support::getenv_optional("LANG"),
         };
-        for (const auto &candidate : locale_candidates)
-        {
-            if (!candidate.has_value())
-            {
-                continue;
-            }
-            if (const auto parsed = parse_codeset_to_code_page(*candidate); parsed.has_value())
-            {
-                return *parsed;
-            }
-        }
-
-        return 1252;
+        return copperfin::runtime::detail::resolve_posix_host_code_page(system_codeset, locale_candidates);
 #endif
     }
 
