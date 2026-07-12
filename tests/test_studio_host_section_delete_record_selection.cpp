@@ -183,35 +183,40 @@ void run_section_delete_case(
         expect_contains(delete_process.stdout_text, "\"isLabel\": true",
                         issue_prefix + " should retain label identity");
     }
-    expect_contains(delete_process.stdout_text, "\"sectionCount\": 0",
-                    issue_prefix + " should remove the section from live section counts");
-    expect_contains(delete_process.stdout_text, "\"deletedSectionCount\": 1",
-                    issue_prefix + " should expose deleted section counts");
+    expect_contains(
+        delete_process.stdout_text,
+        "\"sectionCount\": 0,\n      \"deletedSectionCount\": 1",
+        issue_prefix + " should preserve top-level live and deleted section counts");
     expect_contains_in_order(
         delete_process.stdout_text,
         {
             "\"deletedSections\": [",
+            "\"id\": \"detail_1\"",
+            "\"idFieldIndex\": null",
+            "\"idMemoBlockNumber\": 0",
+            "\"bandKind\": \"detail\"",
             "\"recordIndex\": 1",
             "\"deleted\": true",
             "\"sectionIndex\": null",
             "\"sectionCount\": 0",
-            "\"bandKind\": \"detail\""
+            "\"objectCount\": 3",
+            "\"deletedObjectCount\": 0"
         },
-        issue_prefix + " should move the section into deleted-section metadata");
-    expect_contains(delete_process.stdout_text, "\"previewBoundsAvailable\": false",
-                    issue_prefix + " should preserve zero live preview availability after section delete");
-    expect_contains(delete_process.stdout_text, "\"previewBoundsLeft\": 0",
-                    issue_prefix + " should preserve zero live preview left bounds after section delete");
-    expect_contains(delete_process.stdout_text, "\"previewBoundsTop\": 0",
-                    issue_prefix + " should preserve zero live preview top bounds after section delete");
-    expect_contains(delete_process.stdout_text, "\"previewBoundsRight\": 0",
-                    issue_prefix + " should preserve zero live preview right bounds after section delete");
-    expect_contains(delete_process.stdout_text, "\"previewBoundsBottom\": 0",
-                    issue_prefix + " should preserve zero live preview bottom bounds after section delete");
-    expect_contains(delete_process.stdout_text, "\"previewBoundsWidth\": 0",
-                    issue_prefix + " should preserve zero live preview widths after section delete");
-    expect_contains(delete_process.stdout_text, "\"previewBoundsHeight\": 0",
-                    issue_prefix + " should preserve zero live preview heights after section delete");
+        issue_prefix + " should preserve deleted-section identity, provenance, and object counts");
+    expect_contains(delete_process.stdout_text, "\"previewBoundsAvailable\": true",
+                    issue_prefix + " should preserve retained live-object preview availability after section delete");
+    expect_contains(delete_process.stdout_text, "\"previewBoundsLeft\": 100",
+                    issue_prefix + " should preserve retained live-object left bounds after section delete");
+    expect_contains(delete_process.stdout_text, "\"previewBoundsTop\": 2600",
+                    issue_prefix + " should preserve retained live-object top bounds after section delete");
+    expect_contains(delete_process.stdout_text, "\"previewBoundsRight\": 150",
+                    issue_prefix + " should preserve retained live-object right bounds after section delete");
+    expect_contains(delete_process.stdout_text, "\"previewBoundsBottom\": 2800",
+                    issue_prefix + " should preserve retained live-object bottom bounds after section delete");
+    expect_contains(delete_process.stdout_text, "\"previewBoundsWidth\": 50",
+                    issue_prefix + " should preserve retained live-object preview width after section delete");
+    expect_contains(delete_process.stdout_text, "\"previewBoundsHeight\": 200",
+                    issue_prefix + " should preserve retained live-object preview height after section delete");
     expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
                     issue_prefix + " should expose deleted preview availability after section delete");
     expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
@@ -234,13 +239,20 @@ void run_section_delete_case(
         delete_process.stdout_text,
         {
             "\"selectedReportSection\": {",
+            "\"id\": \"detail_1\"",
+            "\"idFieldIndex\": null",
+            "\"idMemoBlockNumber\": 0",
             "\"bandKind\": \"detail\"",
             "\"recordIndex\": 1",
             "\"deleted\": true",
             "\"sectionIndex\": null",
-            "\"sectionCount\": 0"
+            "\"sectionCount\": 0",
+            "\"objectCount\": 3",
+            "\"deletedObjectCount\": 0"
         },
-        issue_prefix + " should expose deleted selected-section metadata");
+        issue_prefix + " should preserve selected-section identity, provenance, and object counts");
+    expect_contains(delete_process.stdout_text, "\"placedObjectCount\": 3",
+                    issue_prefix + " should preserve three placed objects after section delete");
     expect_contains(delete_process.stdout_text, "\"unplacedObjectCount\": 0",
                     issue_prefix + " should preserve zero unplaced objects after section delete");
     expect_contains(delete_process.stdout_text, "\"containingSectionId\": \"detail_1\"",
