@@ -534,6 +534,7 @@ void test_studio_host_json_updates_visual_object_batches(const std::string& stud
     const auto update_batch_process = run_process_capture(
         studio_host_path,
         {
+            "--from-vs",
             "--visual-object-update-batch",
             "--path", form_path.string(),
             "--selected-unique-id", "existing-textbox-guid",
@@ -551,6 +552,8 @@ void test_studio_host_json_updates_visual_object_batches(const std::string& stud
         "#1447: visual object update-batch JSON should exit successfully for valid batches");
     expect_contains(update_batch_process.stdout_text, "\"visualObjectUpdateBatch\": {",
         "#1447: visual object update-batch JSON should expose a batch update object");
+    expect_contains(update_batch_process.stdout_text, "\"launchedFromVisualStudio\": true",
+        "#3985: VS-originated visual object update batches should preserve host provenance in JSON");
     expect_contains(update_batch_process.stdout_text, "\"affectedObjectCount\": 2",
         "#1447: visual object update-batch JSON should expose affected object counts");
     expect_contains(update_batch_process.stdout_text, "\"dryRun\": false",
@@ -584,6 +587,8 @@ void test_studio_host_json_updates_visual_object_batches(const std::string& stud
         "#1447: visual object update-batch JSON should reject unresolved later objects");
     expect_contains(later_object_process.stdout_text, "\"visualObjectUpdateBatch\": null",
         "#1447: failed visual object update-batch JSON should not expose a batch update object");
+    expect_contains(later_object_process.stdout_text, "\"launchedFromVisualStudio\": false",
+        "#3985: standalone visual object update batches should retain independent provenance");
     expect_contains(later_object_process.stdout_text, "No visual object with the requested name was found.",
         "#1447: unresolved later object visual object update-batch JSON should report editor errors");
     expect(visual_object_property(later_object_path, "existing-textbox-guid", "CAPTION") == "Existing" &&

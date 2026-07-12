@@ -1579,6 +1579,7 @@ void test_studio_host_json_applies_deleted_states_by_stable_selectors(const std:
     const auto batch_process = run_process_capture(
         studio_host_path,
         {
+            "--from-vs",
             "--path", batch_path.string(),
             "--deleted-states",
             "--deleted-state-target-object-name", "cmdSave",
@@ -1590,6 +1591,8 @@ void test_studio_host_json_applies_deleted_states_by_stable_selectors(const std:
         temp_root);
     expect(batch_process.exit_code == 0,
         "#1201: host deleted-states batch should exit successfully");
+    expect_contains(batch_process.stdout_text, "\"launchedFromVisualStudio\": true",
+        "#3985: VS-originated deleted-state batches should preserve host provenance in JSON");
     expect(visual_object_deleted(batch_path, "save-guid") &&
             !visual_object_deleted(batch_path, "name-guid") &&
             !visual_object_deleted(batch_path, "status-guid") &&

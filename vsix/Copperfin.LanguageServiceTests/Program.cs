@@ -28,6 +28,7 @@ internal static class Program
         TestStudioHostProcessStartInfoKeepsExecutableLaunchArguments();
         TestStudioHostProcessStartInfoWrapsWindowsBatchHosts();
         TestStudioHostProcessStartInfoAppliesExplicitLocalizationEnvironment();
+        TestStudioHostBatchArgumentsKeepVisualStudioProvenance();
         TestManagedHostResolutionHonorsEnvironmentOverrides();
         TestManagedHostResolutionFindsSiblingAndRepoBuildLayouts();
         TestLocalizationCatalogDoesNotLeakMachineSpecificHostPaths();
@@ -428,6 +429,58 @@ internal static class Program
             "Studio host launch info should stamp the selected UI locale into the child environment");
         Expect(string.Equals(locale, localization.Locale, StringComparison.Ordinal),
             "Studio host launch info should stamp the selected runtime locale into the child environment");
+    }
+
+    private static void TestStudioHostBatchArgumentsKeepVisualStudioProvenance()
+    {
+        var propertyArguments = CopperfinStudioHostBridge.BuildPropertyBatchUpdateArguments(
+            @"C:\Samples\invoice.frx",
+            7,
+            new List<KeyValuePair<string, string>>
+            {
+                new("CAPTION", "Say \"Hi\""),
+                new("WIDTH", "120")
+            });
+        Expect(propertyArguments.StartsWith(
+                "--from-vs --visual-object-update-batch --json ",
+                StringComparison.Ordinal),
+            "VSIX property-batch arguments should lead with Visual Studio provenance and preserve command tokens");
+        Expect(propertyArguments.Contains(
+                "--path \"C:\\Samples\\invoice.frx\" --selected-record 7",
+                StringComparison.Ordinal),
+            "VSIX property-batch arguments should preserve path quoting and record identity");
+        Expect(propertyArguments.Contains(
+                "--property-name \"CAPTION\" --property-value \"Say \"\"Hi\"\"\"",
+                StringComparison.Ordinal) &&
+               propertyArguments.Contains(
+                   "--property-name \"WIDTH\" --property-value \"120\"",
+                   StringComparison.Ordinal),
+            "VSIX property-batch arguments should preserve ordered property names and quoted values");
+        Expect(propertyArguments.Split("--from-vs", StringSplitOptions.None).Length == 2,
+            "VSIX property-batch arguments should emit Visual Studio provenance exactly once");
+
+        var deletedStateArguments = CopperfinStudioHostBridge.BuildDeletedStatesArguments(
+            @"C:\Samples\invoice.frx",
+            new List<KeyValuePair<string, bool>>
+            {
+                new("save-\"guid", true),
+                new("name-guid", false)
+            });
+        Expect(deletedStateArguments.StartsWith(
+                "--from-vs --path \"C:\\Samples\\invoice.frx\" --deleted-states",
+                StringComparison.Ordinal),
+            "VSIX deleted-state batch arguments should lead with Visual Studio provenance and preserve command tokens");
+        Expect(deletedStateArguments.Contains(
+                "--deleted-state-target-unique-id \"save-\"\"guid\" --deleted-state true",
+                StringComparison.Ordinal) &&
+               deletedStateArguments.Contains(
+                   "--deleted-state-target-unique-id \"name-guid\" --deleted-state false",
+                   StringComparison.Ordinal),
+            "VSIX deleted-state batch arguments should preserve selector quoting and invariant boolean values");
+        Expect(deletedStateArguments.EndsWith(" --json", StringComparison.Ordinal),
+            "VSIX deleted-state batch arguments should preserve the invariant JSON switch");
+        Expect(deletedStateArguments.Split("--from-vs", StringSplitOptions.None).Length == 2,
+            "VSIX deleted-state batch arguments should emit Visual Studio provenance exactly once");
     }
 
     private static void TestManagedHostResolutionHonorsEnvironmentOverrides()

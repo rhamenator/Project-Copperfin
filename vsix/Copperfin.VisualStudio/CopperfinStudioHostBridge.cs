@@ -37,7 +37,7 @@ internal static class CopperfinStudioHostBridge
         int recordIndex,
         IReadOnlyList<KeyValuePair<string, string>> propertyChanges)
     {
-        var arguments = $"--visual-object-update-batch --json --path {Quote(documentPath)} --selected-record {recordIndex}";
+        var arguments = $"--from-vs --visual-object-update-batch --json --path {Quote(documentPath)} --selected-record {recordIndex}";
         foreach (var propertyChange in propertyChanges)
         {
             arguments += $" --property-name {Quote(propertyChange.Key)} --property-value {Quote(propertyChange.Value)}";
@@ -61,7 +61,7 @@ internal static class CopperfinStudioHostBridge
         string documentPath,
         IReadOnlyList<KeyValuePair<string, bool>> deletedStateChanges)
     {
-        var arguments = $"--path {Quote(documentPath)} --deleted-states";
+        var arguments = $"--from-vs --path {Quote(documentPath)} --deleted-states";
         foreach (var deletedStateChange in deletedStateChanges)
         {
             arguments += $" --deleted-state-target-unique-id {Quote(deletedStateChange.Key)}";

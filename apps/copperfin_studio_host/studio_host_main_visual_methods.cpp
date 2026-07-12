@@ -1221,9 +1221,14 @@ void print_json_visual_method_query_result(
 void print_json_visual_method_update_result(
     const copperfin::vfp::VisualAssetEditResult& result,
     const copperfin::vfp::VisualAssetUndoStatus& undo_status,
-    const std::string& result_name) {
+    const std::string& result_name,
+    const std::optional<bool> launched_from_visual_studio) {
     std::cout << "{\n";
     std::cout << "  \"status\": " << (result.ok ? "\"ok\"" : "\"error\"") << ",\n";
+    if (launched_from_visual_studio.has_value()) {
+        std::cout << "  \"launchedFromVisualStudio\": "
+                  << (*launched_from_visual_studio ? "true" : "false") << ",\n";
+    }
     std::cout << "  ";
     print_json_string(result_name);
     std::cout << ": ";

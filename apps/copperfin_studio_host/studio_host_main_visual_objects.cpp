@@ -776,6 +776,8 @@ VisualObjectUpdateBatchParseResult parse_visual_object_update_batch_arguments(
     const std::vector<std::string>& args) {
     VisualObjectUpdateBatchParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
+    result.launched_from_visual_studio =
+        std::find(args.begin(), args.end(), "--from-vs") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--visual-object-update-batch") != args.end();
     if (!result.requested) {
         return result;
@@ -821,7 +823,8 @@ VisualObjectUpdateBatchParseResult parse_visual_object_update_batch_arguments(
             return args[index];
         };
 
-        if (argument == "--json" || argument == "--visual-object-update-batch") {
+        if (argument == "--json" || argument == "--from-vs" ||
+            argument == "--visual-object-update-batch") {
             continue;
         }
         if (argument == "--path") {
@@ -1411,7 +1414,11 @@ std::optional<int> try_handle_visual_object_update_batch(
             };
             const auto undo_status = copperfin::vfp::VisualAssetUndoStatus{};
             if (visual_object_update_batch_parse.output_json) {
-                print_json_visual_method_update_result(result, undo_status, "visualObjectUpdateBatch");
+                print_json_visual_method_update_result(
+                    result,
+                    undo_status,
+                    "visualObjectUpdateBatch",
+                    visual_object_update_batch_parse.launched_from_visual_studio);
             } else {
                 print_text_visual_method_update_result(result, undo_status);
                 print_usage(catalog);
@@ -1424,7 +1431,11 @@ std::optional<int> try_handle_visual_object_update_batch(
         const auto undo_status = copperfin::vfp::query_visual_object_undo(
             visual_object_update_batch_parse.request.path);
         if (visual_object_update_batch_parse.output_json) {
-            print_json_visual_method_update_result(result, undo_status, "visualObjectUpdateBatch");
+            print_json_visual_method_update_result(
+                result,
+                undo_status,
+                "visualObjectUpdateBatch",
+                visual_object_update_batch_parse.launched_from_visual_studio);
         } else {
             print_text_visual_method_update_result(result, undo_status);
         }

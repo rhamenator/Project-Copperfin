@@ -913,6 +913,7 @@ struct VisualObjectUpdateBatchParseResult {
     bool requested = false;
     bool ok = true;
     bool output_json = false;
+    bool launched_from_visual_studio = false;
     bool path_provided = false;
     std::string error;
     copperfin::vfp::VisualObjectBatchEditRequest request;
@@ -1997,7 +1998,8 @@ void print_json_visual_method_query_result(
 void print_json_visual_method_update_result(
     const copperfin::vfp::VisualAssetEditResult& result,
     const copperfin::vfp::VisualAssetUndoStatus& undo_status,
-    const std::string& result_name = "visualMethodUpdate");
+    const std::string& result_name = "visualMethodUpdate",
+    std::optional<bool> launched_from_visual_studio = std::nullopt);
 void print_text_visual_method_list_result(
     const copperfin::vfp::VisualObjectMethodListResult& result);
 void print_text_visual_method_query_result(
