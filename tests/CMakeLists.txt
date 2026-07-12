@@ -3972,6 +3972,17 @@ if(WIN32)
     )
     add_dependencies(test_prg_engine_seek_index copperfin_declared_dll_fixture)
 
+    if(MSVC)
+        add_library(copperfin_mixed_mode_declared_dll_fixture SHARED
+            fixtures/mixed_mode_declared_dll_fixture.cpp
+        )
+        set_target_properties(copperfin_mixed_mode_declared_dll_fixture PROPERTIES
+            CXX_STANDARD 17
+            CXX_STANDARD_REQUIRED ON
+        )
+        target_compile_options(copperfin_mixed_mode_declared_dll_fixture PRIVATE /clr /EHa)
+    endif()
+
     find_program(COPPERFIN_FRAMEWORK_CSC
         NAMES csc.exe
         HINTS
@@ -3986,8 +3997,15 @@ if(WIN32)
         endif()
         set(COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH
             "${CMAKE_CURRENT_BINARY_DIR}/fixtures/Copperfin.ManagedDeclareFixture.dll")
+        set(COPPERFIN_MANAGED_DECLARE_FIXTURE_X86_PATH
+            "${CMAKE_CURRENT_BINARY_DIR}/fixtures/Copperfin.ManagedDeclareFixture.x86.dll")
+        set(COPPERFIN_MANAGED_DECLARE_FIXTURE_X64_PATH
+            "${CMAKE_CURRENT_BINARY_DIR}/fixtures/Copperfin.ManagedDeclareFixture.x64.dll")
         add_custom_command(
-            OUTPUT "${COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH}"
+            OUTPUT
+                "${COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH}"
+                "${COPPERFIN_MANAGED_DECLARE_FIXTURE_X86_PATH}"
+                "${COPPERFIN_MANAGED_DECLARE_FIXTURE_X64_PATH}"
             COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/fixtures"
             COMMAND "${COPPERFIN_FRAMEWORK_CSC}"
                 /nologo
@@ -3995,12 +4013,27 @@ if(WIN32)
                 /platform:${COPPERFIN_MANAGED_DECLARE_FIXTURE_PLATFORM}
                 /out:${COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH}
                 managed_declare_fixture.cs
+            COMMAND "${COPPERFIN_FRAMEWORK_CSC}"
+                /nologo
+                /target:library
+                /platform:x86
+                /out:${COPPERFIN_MANAGED_DECLARE_FIXTURE_X86_PATH}
+                managed_declare_fixture.cs
+            COMMAND "${COPPERFIN_FRAMEWORK_CSC}"
+                /nologo
+                /target:library
+                /platform:x64
+                /out:${COPPERFIN_MANAGED_DECLARE_FIXTURE_X64_PATH}
+                managed_declare_fixture.cs
             DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/managed_declare_fixture.cs"
             WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/fixtures"
             VERBATIM
         )
         add_custom_target(copperfin_managed_declare_fixture
-            DEPENDS "${COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH}"
+            DEPENDS
+                "${COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH}"
+                "${COPPERFIN_MANAGED_DECLARE_FIXTURE_X86_PATH}"
+                "${COPPERFIN_MANAGED_DECLARE_FIXTURE_X64_PATH}"
         )
         copperfin_add_test(test_prg_engine_dotnet_dispatch cf_xbase_runtime
             test_prg_engine_dotnet_dispatch.cpp
@@ -4011,9 +4044,25 @@ if(WIN32)
         )
         target_compile_definitions(test_prg_engine_dotnet_dispatch PRIVATE
             COPPERFIN_ENABLE_DISPATCH_TEST_HOOKS=1
+            COPPERFIN_DECLARED_DLL_FIXTURE_PATH="$<TARGET_FILE:copperfin_declared_dll_fixture>"
             COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH="${COPPERFIN_MANAGED_DECLARE_FIXTURE_PATH}"
+            COPPERFIN_MANAGED_DECLARE_FIXTURE_X86_PATH="${COPPERFIN_MANAGED_DECLARE_FIXTURE_X86_PATH}"
+            COPPERFIN_MANAGED_DECLARE_FIXTURE_X64_PATH="${COPPERFIN_MANAGED_DECLARE_FIXTURE_X64_PATH}"
         )
-        add_dependencies(test_prg_engine_dotnet_dispatch copperfin_managed_declare_fixture)
+        add_dependencies(
+            test_prg_engine_dotnet_dispatch
+            copperfin_declared_dll_fixture
+            copperfin_managed_declare_fixture
+        )
+        if(TARGET copperfin_mixed_mode_declared_dll_fixture)
+            target_compile_definitions(test_prg_engine_dotnet_dispatch PRIVATE
+                COPPERFIN_MIXED_MODE_DECLARED_DLL_FIXTURE_PATH="$<TARGET_FILE:copperfin_mixed_mode_declared_dll_fixture>"
+            )
+            add_dependencies(
+                test_prg_engine_dotnet_dispatch
+                copperfin_mixed_mode_declared_dll_fixture
+            )
+        endif()
     else()
         message(STATUS "Legacy .NET Framework csc.exe not found; managed DECLARE runtime test is unavailable")
     endif()

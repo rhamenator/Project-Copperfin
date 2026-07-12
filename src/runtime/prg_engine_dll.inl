@@ -323,6 +323,42 @@
                     return hr;
                 };
 
+                auto take_dispatch = [](VARIANT &value) -> IDispatch *
+                {
+                    IDispatch *dispatch = nullptr;
+                    if (value.vt == VT_DISPATCH)
+                    {
+                        dispatch = value.pdispVal;
+                        if (dispatch != nullptr)
+                        {
+                            dispatch->AddRef();
+                        }
+                    }
+                    else if (value.vt == (VT_DISPATCH | VT_BYREF) && value.ppdispVal != nullptr)
+                    {
+                        dispatch = *value.ppdispVal;
+                        if (dispatch != nullptr)
+                        {
+                            dispatch->AddRef();
+                        }
+                    }
+                    else if (value.vt == VT_UNKNOWN && value.punkVal != nullptr)
+                    {
+                        (void)value.punkVal->QueryInterface(
+                            IID_IDispatch,
+                            reinterpret_cast<void **>(&dispatch));
+                    }
+                    else if (value.vt == (VT_UNKNOWN | VT_BYREF) && value.ppunkVal != nullptr &&
+                             *value.ppunkVal != nullptr)
+                    {
+                        (void)(*value.ppunkVal)->QueryInterface(
+                            IID_IDispatch,
+                            reinterpret_cast<void **>(&dispatch));
+                    }
+                    VariantClear(&value);
+                    return dispatch;
+                };
+
                 // Get default AppDomain as IDispatch
                 IUnknown *app_domain_unk = nullptr;
                 HRESULT hr = s_runtime_host->GetDefaultDomain(&app_domain_unk);
@@ -342,19 +378,126 @@
                     return make_empty_value();
                 }
 
-                // Load assembly: AppDomain.LoadFrom(path)
-                std::wstring asm_path_w(declfn.dll_path.begin(), declfn.dll_path.end());
-                VARIANT vpath;
-                VariantInit(&vpath);
-                vpath.vt = VT_BSTR;
-                vpath.bstrVal = SysAllocString(asm_path_w.c_str());
+                // Bootstrap Assembly.LoadFrom(path) through mscorlib reflection. AppDomain.Load(String)
+                // accepts an assembly display name, so the source path must not be sent to it directly.
+                VARIANT v_mscorlib_name;
+                VariantInit(&v_mscorlib_name);
+                v_mscorlib_name.vt = VT_BSTR;
+                v_mscorlib_name.bstrVal = SysAllocString(L"mscorlib");
+                VARIANT v_mscorlib_assembly;
+                VariantInit(&v_mscorlib_assembly);
+                hr = dispatch_call(app_domain_disp, L"Load", {v_mscorlib_name}, &v_mscorlib_assembly);
+                VariantClear(&v_mscorlib_name);
+                app_domain_disp->Release();
+                IDispatch *mscorlib_assembly_disp = SUCCEEDED(hr)
+                                                          ? take_dispatch(v_mscorlib_assembly)
+                                                          : nullptr;
+                if (mscorlib_assembly_disp == nullptr)
+                {
+                    VariantClear(&v_mscorlib_assembly);
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dll.Error.DotNetAssemblyLoadFailed",
+                        {
+                            {"hresult", std::to_string(hr)},
+                            {"path", declfn.dll_path}
+                        });
+                    return make_empty_value();
+                }
+
+                VARIANT v_assembly_type_name;
+                VariantInit(&v_assembly_type_name);
+                v_assembly_type_name.vt = VT_BSTR;
+                v_assembly_type_name.bstrVal = SysAllocString(L"System.Reflection.Assembly");
+                VARIANT v_assembly_type;
+                VariantInit(&v_assembly_type);
+                hr = dispatch_call(
+                    mscorlib_assembly_disp,
+                    L"GetType",
+                    {v_assembly_type_name},
+                    &v_assembly_type);
+                VariantClear(&v_assembly_type_name);
+                mscorlib_assembly_disp->Release();
+                IDispatch *assembly_type_disp = SUCCEEDED(hr) ? take_dispatch(v_assembly_type) : nullptr;
+                if (assembly_type_disp == nullptr)
+                {
+                    VariantClear(&v_assembly_type);
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dll.Error.DotNetAssemblyLoadFailed",
+                        {
+                            {"hresult", std::to_string(hr)},
+                            {"path", declfn.dll_path}
+                        });
+                    return make_empty_value();
+                }
+
+                const std::string &managed_load_path = declfn.loaded_module_path.empty()
+                                                           ? declfn.dll_path
+                                                           : declfn.loaded_module_path;
+                std::wstring asm_path_w(managed_load_path.begin(), managed_load_path.end());
+                SAFEARRAY *load_from_args = SafeArrayCreateVector(VT_VARIANT, 0, 1U);
+                if (load_from_args == nullptr)
+                {
+                    assembly_type_disp->Release();
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dll.Error.DotNetAssemblyLoadFailed",
+                        {
+                            {"hresult", std::to_string(E_OUTOFMEMORY)},
+                            {"path", declfn.dll_path}
+                        });
+                    return make_empty_value();
+                }
+                VARIANT v_load_path;
+                VariantInit(&v_load_path);
+                v_load_path.vt = VT_BSTR;
+                v_load_path.bstrVal = SysAllocString(asm_path_w.c_str());
+                LONG load_argument_index = 0;
+                hr = SafeArrayPutElement(load_from_args, &load_argument_index, &v_load_path);
+                VariantClear(&v_load_path);
+                if (FAILED(hr))
+                {
+                    SafeArrayDestroy(load_from_args);
+                    assembly_type_disp->Release();
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dll.Error.DotNetAssemblyLoadFailed",
+                        {
+                            {"hresult", std::to_string(hr)},
+                            {"path", declfn.dll_path}
+                        });
+                    return make_empty_value();
+                }
+
+                VARIANT v_member_name;
+                VariantInit(&v_member_name);
+                v_member_name.vt = VT_BSTR;
+                v_member_name.bstrVal = SysAllocString(L"LoadFrom");
+                VARIANT v_binding_flags;
+                VariantInit(&v_binding_flags);
+                v_binding_flags.vt = VT_I4;
+                v_binding_flags.lVal = 0x118L; // Public | Static | InvokeMethod
+                VARIANT v_binder;
+                VariantInit(&v_binder);
+                v_binder.vt = VT_NULL;
+                VARIANT v_target;
+                VariantInit(&v_target);
+                v_target.vt = VT_NULL;
+                VARIANT v_load_from_args;
+                VariantInit(&v_load_from_args);
+                v_load_from_args.vt = VT_ARRAY | VT_VARIANT;
+                v_load_from_args.parray = load_from_args;
                 VARIANT v_assembly;
                 VariantInit(&v_assembly);
-                hr = dispatch_call(app_domain_disp, L"Load", {vpath}, &v_assembly);
-                VariantClear(&vpath);
-                app_domain_disp->Release();
+                hr = dispatch_call(
+                    assembly_type_disp,
+                    L"InvokeMember",
+                    {v_member_name, v_binding_flags, v_binder, v_target, v_load_from_args},
+                    &v_assembly);
+                VariantClear(&v_member_name);
+                VariantClear(&v_binding_flags);
+                VariantClear(&v_binder);
+                VariantClear(&v_target);
+                VariantClear(&v_load_from_args);
+                assembly_type_disp->Release();
 
-                // Try LoadFrom on AppDomain.CurrentDomain if Load fails
                 if (FAILED(hr) || v_assembly.vt == VT_EMPTY || v_assembly.vt == VT_NULL)
                 {
                     // We couldn't load: return a graceful empty
@@ -368,19 +511,12 @@
                     return make_empty_value();
                 }
 
-                IDispatch *assembly_disp = nullptr;
-                if (v_assembly.vt == VT_DISPATCH)
-                    assembly_disp = v_assembly.pdispVal;
-                else if (v_assembly.vt == (VT_DISPATCH | VT_BYREF) && v_assembly.ppdispVal)
-                    assembly_disp = *v_assembly.ppdispVal;
+                IDispatch *assembly_disp = take_dispatch(v_assembly);
                 if (!assembly_disp)
                 {
-                    VariantClear(&v_assembly);
                     last_error_message = runtime_text("Runtime.Prg.Dll.Error.AssemblyNotDispatch");
                     return make_empty_value();
                 }
-                assembly_disp->AddRef();
-                VariantClear(&v_assembly);
 
                 // GetType(type_name)
                 std::wstring type_name_w(declfn.dotnet_type_name.begin(), declfn.dotnet_type_name.end());
@@ -393,9 +529,7 @@
                 hr = dispatch_call(assembly_disp, L"GetType", {vtn}, &v_type);
                 VariantClear(&vtn);
                 assembly_disp->Release();
-                IDispatch *type_disp = nullptr;
-                if (SUCCEEDED(hr) && v_type.vt == VT_DISPATCH)
-                    type_disp = v_type.pdispVal;
+                IDispatch *type_disp = SUCCEEDED(hr) ? take_dispatch(v_type) : nullptr;
                 if (!type_disp)
                 {
                     VariantClear(&v_type);
@@ -404,8 +538,6 @@
                         {{"typeName", declfn.dotnet_type_name}});
                     return make_empty_value();
                 }
-                type_disp->AddRef();
-                VariantClear(&v_type);
 
                 // GetMethod(method_name)
                 std::wstring method_name_w(declfn.dotnet_method_name.begin(), declfn.dotnet_method_name.end());
@@ -418,9 +550,7 @@
                 hr = dispatch_call(type_disp, L"GetMethod", {vmn}, &v_method);
                 VariantClear(&vmn);
                 type_disp->Release();
-                IDispatch *method_disp = nullptr;
-                if (SUCCEEDED(hr) && v_method.vt == VT_DISPATCH)
-                    method_disp = v_method.pdispVal;
+                IDispatch *method_disp = SUCCEEDED(hr) ? take_dispatch(v_method) : nullptr;
                 if (!method_disp)
                 {
                     VariantClear(&v_method);
@@ -429,8 +559,6 @@
                         {{"methodName", declfn.dotnet_method_name}});
                     return make_empty_value();
                 }
-                method_disp->AddRef();
-                VariantClear(&v_method);
 
                 // Build args SAFEARRAY wrapped in VARIANT for Invoke(null, args[])
                 SAFEARRAY *sa = SafeArrayCreateVector(VT_VARIANT, 0, static_cast<ULONG>(args.size()));

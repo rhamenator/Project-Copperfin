@@ -13,6 +13,11 @@ namespace Copperfin.ManagedDeclareFixture
             return 42;
         }
 
+        public static int Add(int left, int right)
+        {
+            return left + right;
+        }
+
         public static int ThrowAlways()
         {
             throw new InvalidOperationException("Copperfin managed DECLARE fixture failure");
