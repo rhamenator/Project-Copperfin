@@ -9,8 +9,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(MSVC)
-    add_compile_options(/sdl /guard:cf /Qspectre)
-    add_link_options(/DYNAMICBASE /NXCOMPAT /guard:cf)
+    add_compile_options(
+        /sdl
+        "$<$<NOT:$<BOOL:$<TARGET_PROPERTY:COPPERFIN_DISABLE_CFG>>>:/guard:cf>"
+        /Qspectre
+    )
+    add_link_options(
+        /DYNAMICBASE
+        /NXCOMPAT
+        "$<$<NOT:$<BOOL:$<TARGET_PROPERTY:COPPERFIN_DISABLE_CFG>>>:/guard:cf>"
+    )
 endif()
 
 option(COPPERFIN_BUILD_TESTS "Build Copperfin tests" ON)

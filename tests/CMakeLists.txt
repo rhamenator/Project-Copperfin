@@ -3979,6 +3979,7 @@ if(WIN32)
         set_target_properties(copperfin_mixed_mode_declared_dll_fixture PROPERTIES
             CXX_STANDARD 17
             CXX_STANDARD_REQUIRED ON
+            COPPERFIN_DISABLE_CFG TRUE
         )
         target_compile_options(copperfin_mixed_mode_declared_dll_fixture PRIVATE
             /guard:cf-
