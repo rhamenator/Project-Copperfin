@@ -37,6 +37,8 @@ Catalog roots resolve in this order where practical:
 4. A path relative to the executable.
 5. Developer-tree `resources/locales`.
 
+`COPPERFIN_LOCALE_DIR` is a filesystem-valued environment variable. Native code must read, write, and clear it through `copperfin::platform::read_environment_path(...)`, `write_environment_path(...)`, and `clear_environment_path(...)`. Those helpers preserve the native wide path on Windows and the existing byte path on POSIX. Do not route catalog roots through the generic string environment helpers or through `std::filesystem::path::string()` on Windows. Test scopes must preserve the same path-typed present, missing, and exact-restoration contract.
+
 ## Fallback
 
 Fallback is deterministic:
