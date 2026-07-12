@@ -68,6 +68,17 @@ bool has_validation_issue(
         });
 }
 
+std::size_t count_validation_issues(
+    const copperfin::vfp::AssetInspectionResult& result,
+    const std::string& code) {
+    return static_cast<std::size_t>(std::count_if(
+        result.validation_issues.begin(),
+        result.validation_issues.end(),
+        [&](const copperfin::vfp::AssetValidationIssue& issue) {
+            return issue.code == code;
+        }));
+}
+
 const copperfin::vfp::AssetValidationIssue* find_validation_issue(
     const copperfin::vfp::AssetInspectionResult& result,
     const std::string& code,
@@ -1303,27 +1314,58 @@ void test_inspect_asset_reports_malformed_memo_sidecar_findings() {
     fs::remove_all(temp_dir, ignored);
     fs::create_directories(temp_dir);
 
-    const auto write_form_with_memo_pointer = [&](const fs::path& table_path, std::uint32_t block_pointer) {
-        std::vector<std::uint8_t> table_bytes(115U, 0U);
+    const auto write_form_with_memo_fields = [&](
+        const fs::path& table_path,
+        const std::vector<char>& field_types,
+        const std::vector<std::vector<std::uint32_t>>& record_pointers) {
+        const std::size_t header_length = 33U + (field_types.size() * 32U);
+        const std::size_t record_length = 1U + (field_types.size() * 4U);
+        std::vector<std::uint8_t> table_bytes(
+            header_length + (record_pointers.size() * record_length) + 1U,
+            0U);
         table_bytes[0] = 0x30U;
         table_bytes[1] = 126U;
         table_bytes[2] = 4U;
         table_bytes[3] = 11U;
-        write_le_u32(table_bytes, 4U, 1U);
-        write_le_u16(table_bytes, 8U, 97U);
-        write_le_u16(table_bytes, 10U, 18U);
+        write_le_u32(table_bytes, 4U, static_cast<std::uint32_t>(record_pointers.size()));
+        write_le_u16(table_bytes, 8U, static_cast<std::uint16_t>(header_length));
+        write_le_u16(table_bytes, 10U, static_cast<std::uint16_t>(record_length));
         table_bytes[28U] = 0x00U;
         table_bytes[29U] = 0x03U;
-        write_field_descriptor(table_bytes, 32U, "OBJNAME", 'C', 1U, 12U);
-        write_field_descriptor(table_bytes, 64U, "PROPERTIES", 'M', 13U, 4U);
-        table_bytes[96U] = 0x0DU;
-        table_bytes[97U] = 0x20U;
-        write_ascii(table_bytes, 98U, "txtTitle");
-        write_le_u32(table_bytes, 110U, block_pointer);
+        for (std::size_t field_index = 0U; field_index < field_types.size(); ++field_index) {
+            write_field_descriptor(
+                table_bytes,
+                32U + (field_index * 32U),
+                "MEMO" + std::to_string(field_index + 1U),
+                field_types[field_index],
+                static_cast<std::uint32_t>(1U + (field_index * 4U)),
+                4U);
+        }
+        table_bytes[header_length - 1U] = 0x0DU;
+        for (std::size_t record_index = 0U; record_index < record_pointers.size(); ++record_index) {
+            expect(
+                record_pointers[record_index].size() == field_types.size(),
+                "#3983: memo validation fixture records should match the field count");
+            const std::size_t record_offset = header_length + (record_index * record_length);
+            table_bytes[record_offset] = 0x20U;
+            const std::size_t pointer_count =
+                std::min(record_pointers[record_index].size(), field_types.size());
+            for (std::size_t field_index = 0U; field_index < pointer_count; ++field_index) {
+                write_le_u32(
+                    table_bytes,
+                    record_offset + 1U + (field_index * 4U),
+                    record_pointers[record_index][field_index]);
+            }
+        }
         table_bytes.back() = 0x1AU;
 
         std::ofstream output(table_path, std::ios::binary);
         output.write(reinterpret_cast<const char*>(table_bytes.data()), static_cast<std::streamsize>(table_bytes.size()));
+    };
+    const auto write_form_with_memo_pointer = [&](
+        const fs::path& table_path,
+        std::uint32_t block_pointer) {
+        write_form_with_memo_fields(table_path, {'M'}, {{block_pointer}});
     };
 
     const fs::path bad_header_form_path = temp_dir / "bad_header.scx";
@@ -1385,6 +1427,197 @@ void test_inspect_asset_reports_malformed_memo_sidecar_findings() {
     expect(
         has_validation_issue(truncated_result, "memo.payload_truncated", "payload_truncated.sct"),
         "inspect_asset should report truncated payloads in referenced memo blocks");
+
+    const fs::path general_form_path = temp_dir / "general_pointer_out_of_range.scx";
+    const fs::path general_sidecar_path = temp_dir / "general_pointer_out_of_range.sct";
+    write_form_with_memo_fields(general_form_path, {'G'}, {{3U}});
+    {
+        std::vector<std::uint8_t> memo_bytes(1024U, 0U);
+        write_be_u32(memo_bytes, 0U, 2U);
+        write_be_u16(memo_bytes, 6U, 512U);
+        std::ofstream output(general_sidecar_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(memo_bytes.data()), static_cast<std::streamsize>(memo_bytes.size()));
+    }
+    const auto general_result = copperfin::vfp::inspect_asset(general_form_path.string());
+    expect(
+        has_validation_issue(general_result, "memo.pointer_out_of_range", "general_pointer_out_of_range.sct"),
+        "#3983: inspect_asset should validate General-field memo pointers");
+
+    const fs::path picture_form_path = temp_dir / "picture_payload_truncated.scx";
+    const fs::path picture_sidecar_path = temp_dir / "picture_payload_truncated.sct";
+    write_form_with_memo_fields(picture_form_path, {'P'}, {{1U}});
+    {
+        std::vector<std::uint8_t> memo_bytes(1024U, 0U);
+        write_be_u32(memo_bytes, 0U, 2U);
+        write_be_u16(memo_bytes, 6U, 512U);
+        write_be_u32(memo_bytes, 512U, 1U);
+        write_be_u32(memo_bytes, 516U, 900U);
+        std::ofstream output(picture_sidecar_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(memo_bytes.data()), static_cast<std::streamsize>(memo_bytes.size()));
+    }
+    const auto picture_result = copperfin::vfp::inspect_asset(picture_form_path.string());
+    expect(
+        has_validation_issue(picture_result, "memo.payload_truncated", "picture_payload_truncated.sct"),
+        "#3983: inspect_asset should validate Picture-field memo payload bounds");
+
+    const fs::path internal_terminator_byte_form_path =
+        temp_dir / "descriptor_contains_terminator_byte.scx";
+    const fs::path internal_terminator_byte_sidecar_path =
+        temp_dir / "descriptor_contains_terminator_byte.sct";
+    {
+        std::vector<std::uint8_t> table_bytes(115U, 0U);
+        table_bytes[0] = 0x30U;
+        write_le_u32(table_bytes, 4U, 1U);
+        write_le_u16(table_bytes, 8U, 97U);
+        write_le_u16(table_bytes, 10U, 17U);
+        write_field_descriptor(table_bytes, 32U, "OBJNAME", 'C', 1U, 12U);
+        write_field_descriptor(table_bytes, 64U, "PROPERTIES", 'M', 13U, 4U);
+        table_bytes[96U] = 0x0DU;
+        table_bytes[97U] = 0x20U;
+        write_ascii(table_bytes, 98U, "txtTitle");
+        write_le_u32(table_bytes, 110U, 3U);
+        table_bytes.back() = 0x1AU;
+        std::ofstream output(internal_terminator_byte_form_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(table_bytes.data()), static_cast<std::streamsize>(table_bytes.size()));
+    }
+    {
+        std::vector<std::uint8_t> memo_bytes(1024U, 0U);
+        write_be_u32(memo_bytes, 0U, 2U);
+        write_be_u16(memo_bytes, 6U, 512U);
+        std::ofstream output(internal_terminator_byte_sidecar_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(memo_bytes.data()), static_cast<std::streamsize>(memo_bytes.size()));
+    }
+    const auto internal_terminator_byte_result =
+        copperfin::vfp::inspect_asset(internal_terminator_byte_form_path.string());
+    expect(
+        !has_validation_issue(internal_terminator_byte_result, "dbf.descriptor_span_misaligned"),
+        "#3983: offset 13 inside a valid descriptor must not become a false terminator");
+    expect(
+        has_validation_issue(
+            internal_terminator_byte_result,
+            "memo.pointer_out_of_range",
+            "descriptor_contains_terminator_byte.sct"),
+        "#3983: aligned terminator discovery should still validate memo fields after an internal 0x0D byte");
+
+    const fs::path multiple_form_path = temp_dir / "multiple_memo_fields.scx";
+    const fs::path multiple_sidecar_path = temp_dir / "multiple_memo_fields.sct";
+    write_form_with_memo_fields(
+        multiple_form_path,
+        {'M', 'G', 'P'},
+        {
+            {0U, 3U, 3U},
+            {1U, 1U, 2U}
+        });
+    {
+        std::vector<std::uint8_t> memo_bytes(1536U, 0U);
+        write_be_u32(memo_bytes, 0U, 3U);
+        write_be_u16(memo_bytes, 6U, 512U);
+        write_be_u32(memo_bytes, 512U, 1U);
+        write_be_u32(memo_bytes, 516U, 4U);
+        write_ascii(memo_bytes, 520U, "safe");
+        write_be_u32(memo_bytes, 1024U, 1U);
+        write_be_u32(memo_bytes, 1028U, 900U);
+        std::ofstream output(multiple_sidecar_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(memo_bytes.data()), static_cast<std::streamsize>(memo_bytes.size()));
+    }
+    const auto multiple_result = copperfin::vfp::inspect_asset(multiple_form_path.string());
+    expect(
+        count_validation_issues(multiple_result, "memo.pointer_out_of_range") == 1U,
+        "#3983: shared corrupt blocks across later memo fields should produce one pointer diagnostic");
+    expect(
+        count_validation_issues(multiple_result, "memo.payload_truncated") == 1U,
+        "#3983: corruption in a later record and Picture field should be validated once");
+
+    const fs::path missing_terminator_form_path = temp_dir / "memo_descriptor_terminator_missing.scx";
+    const fs::path missing_terminator_sidecar_path = temp_dir / "memo_descriptor_terminator_missing.sct";
+    {
+        std::vector<std::uint8_t> table_bytes(98U, 0U);
+        table_bytes[0] = 0x30U;
+        write_le_u32(table_bytes, 4U, 1U);
+        write_le_u16(table_bytes, 8U, 65U);
+        write_le_u16(table_bytes, 10U, 32U);
+        write_field_descriptor(table_bytes, 32U, "NAME", 'C', 1U, 4U);
+        table_bytes[65U] = 0x20U;
+        write_le_u32(table_bytes, 66U, 3U);
+        table_bytes[75U] = static_cast<std::uint8_t>('M');
+        write_le_u32(table_bytes, 76U, 1U);
+        table_bytes[80U] = 4U;
+        table_bytes.back() = 0x1AU;
+        std::ofstream output(missing_terminator_form_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(table_bytes.data()), static_cast<std::streamsize>(table_bytes.size()));
+    }
+    {
+        std::vector<std::uint8_t> memo_bytes(1024U, 0U);
+        write_be_u32(memo_bytes, 0U, 2U);
+        write_be_u16(memo_bytes, 6U, 512U);
+        std::ofstream output(missing_terminator_sidecar_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(memo_bytes.data()), static_cast<std::streamsize>(memo_bytes.size()));
+    }
+    const auto missing_terminator_result =
+        copperfin::vfp::inspect_asset(missing_terminator_form_path.string());
+    expect(
+        has_validation_issue(missing_terminator_result, "dbf.descriptor_terminator_missing"),
+        "#3983: malformed descriptor fixtures should retain their descriptor diagnostic");
+    expect(
+        !has_validation_issue(missing_terminator_result, "memo.pointer_out_of_range") &&
+            !has_validation_issue(missing_terminator_result, "memo.payload_truncated"),
+        "#3983: record bytes after a missing descriptor terminator must not become fake memo fields");
+
+    const fs::path zero_offset_form_path = temp_dir / "memo_field_offset_zero.scx";
+    const fs::path zero_offset_sidecar_path = temp_dir / "memo_field_offset_zero.sct";
+    {
+        std::vector<std::uint8_t> table_bytes(71U, 0U);
+        table_bytes[0] = 0x30U;
+        write_le_u32(table_bytes, 4U, 1U);
+        write_le_u16(table_bytes, 8U, 65U);
+        write_le_u16(table_bytes, 10U, 5U);
+        write_field_descriptor(table_bytes, 32U, "MEMO1", 'M', 0U, 4U);
+        table_bytes[64U] = 0x0DU;
+        write_le_u32(table_bytes, 65U, 3U);
+        table_bytes.back() = 0x1AU;
+        std::ofstream output(zero_offset_form_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(table_bytes.data()), static_cast<std::streamsize>(table_bytes.size()));
+    }
+    {
+        std::vector<std::uint8_t> memo_bytes(1024U, 0U);
+        write_be_u32(memo_bytes, 0U, 2U);
+        write_be_u16(memo_bytes, 6U, 512U);
+        std::ofstream output(zero_offset_sidecar_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(memo_bytes.data()), static_cast<std::streamsize>(memo_bytes.size()));
+    }
+    const auto zero_offset_result = copperfin::vfp::inspect_asset(zero_offset_form_path.string());
+    expect(
+        has_validation_issue(zero_offset_result, "dbf.field_offset_invalid"),
+        "#3983: zero-offset memo fields should retain the descriptor-offset diagnostic");
+    expect(
+        !has_validation_issue(zero_offset_result, "memo.pointer_out_of_range") &&
+            !has_validation_issue(zero_offset_result, "memo.payload_truncated"),
+        "#3983: a zero-offset memo field must not reinterpret the deletion flag as a pointer");
+
+    const fs::path clean_form_path = temp_dir / "clean_memo_fields.scx";
+    const fs::path clean_sidecar_path = temp_dir / "clean_memo_fields.sct";
+    write_form_with_memo_fields(
+        clean_form_path,
+        {'M', 'G', 'P'},
+        {
+            {0U, 1U, 1U},
+            {1U, 0U, 1U}
+        });
+    {
+        std::vector<std::uint8_t> memo_bytes(1024U, 0U);
+        write_be_u32(memo_bytes, 0U, 2U);
+        write_be_u16(memo_bytes, 6U, 512U);
+        write_be_u32(memo_bytes, 512U, 1U);
+        write_be_u32(memo_bytes, 516U, 4U);
+        write_ascii(memo_bytes, 520U, "safe");
+        std::ofstream output(clean_sidecar_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(memo_bytes.data()), static_cast<std::streamsize>(memo_bytes.size()));
+    }
+    const auto clean_result = copperfin::vfp::inspect_asset(clean_form_path.string());
+    expect(
+        !has_validation_issue(clean_result, "memo.pointer_out_of_range") &&
+            !has_validation_issue(clean_result, "memo.payload_truncated"),
+        "#3983: zero pointers and valid shared M/G/P blocks should remain clean");
 
     fs::remove_all(temp_dir, ignored);
 }

@@ -205,6 +205,27 @@ std::vector<RawFieldDescriptor> read_raw_field_descriptors(const std::vector<std
     return fields;
 }
 
+std::optional<std::size_t> find_aligned_field_descriptor_terminator(
+    const std::vector<std::uint8_t>& table_bytes,
+    std::size_t descriptor_region_end) {
+    descriptor_region_end = std::min(descriptor_region_end, table_bytes.size());
+    if (descriptor_region_end <= 32U) {
+        return std::nullopt;
+    }
+
+    std::size_t offset = 32U;
+    while (offset < descriptor_region_end) {
+        if (table_bytes[offset] == 0x0DU) {
+            return offset;
+        }
+        if ((descriptor_region_end - offset) <= 32U) {
+            break;
+        }
+        offset += 32U;
+    }
+    return std::nullopt;
+}
+
 bool is_valid_field_name_char(char ch) {
     const auto raw = static_cast<unsigned char>(ch);
     return std::isalnum(raw) != 0 || ch == '_';
@@ -563,31 +584,29 @@ void validate_dbf_field_descriptors(
         return;
     }
 
-    const auto terminator = std::find(
-        table_bytes.begin() + static_cast<std::ptrdiff_t>(32U),
-        table_bytes.begin() + static_cast<std::ptrdiff_t>(descriptor_region_end),
-        static_cast<std::uint8_t>(0x0DU));
-    if (terminator == table_bytes.begin() + static_cast<std::ptrdiff_t>(descriptor_region_end)) {
+    const auto aligned_terminator =
+        find_aligned_field_descriptor_terminator(table_bytes, descriptor_region_end);
+    if (!aligned_terminator.has_value()) {
+        const auto any_terminator = std::find(
+            table_bytes.begin() + static_cast<std::ptrdiff_t>(32U),
+            table_bytes.begin() + static_cast<std::ptrdiff_t>(descriptor_region_end),
+            static_cast<std::uint8_t>(0x0DU));
+        const bool has_misaligned_terminator =
+            any_terminator != table_bytes.begin() + static_cast<std::ptrdiff_t>(descriptor_region_end);
         append_validation_issue(
             result,
             AssetValidationSeverity::error,
-            "dbf.descriptor_terminator_missing",
+            has_misaligned_terminator
+                ? "dbf.descriptor_span_misaligned"
+                : "dbf.descriptor_terminator_missing",
             path,
-            asset_inspector_text("Vfp.AssetInspector.Validation.DbfDescriptorTerminatorMissing"));
+            asset_inspector_text(
+                has_misaligned_terminator
+                    ? "Vfp.AssetInspector.Validation.DbfDescriptorSpanMisaligned"
+                    : "Vfp.AssetInspector.Validation.DbfDescriptorTerminatorMissing"));
         return;
     }
-
-    const std::size_t terminator_offset = static_cast<std::size_t>(std::distance(table_bytes.begin(), terminator));
-    const std::size_t descriptor_span = terminator_offset - 32U;
-    if ((descriptor_span % 32U) != 0U) {
-        append_validation_issue(
-            result,
-            AssetValidationSeverity::error,
-            "dbf.descriptor_span_misaligned",
-            path,
-            asset_inspector_text("Vfp.AssetInspector.Validation.DbfDescriptorSpanMisaligned"));
-        return;
-    }
+    const std::size_t terminator_offset = *aligned_terminator;
 
     if ((terminator_offset + 1U) != static_cast<std::size_t>(header.header_length)) {
         append_validation_issue(
@@ -789,11 +808,23 @@ void validate_memo_sidecar(
         return;
     }
 
-    const auto fields = read_raw_field_descriptors(table_bytes);
-    const auto memo_field = std::find_if(fields.begin(), fields.end(), [](const RawFieldDescriptor& field) {
-        return field.type == 'M';
-    });
-    if (memo_field == fields.end()) {
+    const std::size_t descriptor_region_end = static_cast<std::size_t>(header.header_length);
+    if (descriptor_region_end <= 32U) {
+        return;
+    }
+    const auto descriptor_terminator_offset =
+        find_aligned_field_descriptor_terminator(table_bytes, descriptor_region_end);
+    if (!descriptor_terminator_offset.has_value()) {
+        return;
+    }
+    const auto fields = read_raw_field_descriptors(std::vector<std::uint8_t>(
+        table_bytes.begin(),
+        table_bytes.begin() + static_cast<std::ptrdiff_t>(*descriptor_terminator_offset + 1U)));
+    const bool has_memo_pointer_field =
+        std::any_of(fields.begin(), fields.end(), [](const RawFieldDescriptor& field) {
+            return field.type == 'M' || field.type == 'G' || field.type == 'P';
+        });
+    if (!has_memo_pointer_field) {
         return;
     }
 
@@ -808,36 +839,49 @@ void validate_memo_sidecar(
     for (std::size_t record_index = 0; record_index < readable_records; ++record_index) {
         const std::size_t record_offset =
             static_cast<std::size_t>(header.header_length) + (record_index * static_cast<std::size_t>(header.record_length));
-        const std::size_t field_offset = record_offset + memo_field->offset;
-        if ((field_offset + 4U) > table_bytes.size()) {
-            break;
-        }
+        for (const RawFieldDescriptor& field : fields) {
+            if ((field.type != 'M' && field.type != 'G' && field.type != 'P') ||
+                field.length < 4U ||
+                field.offset < 1U ||
+                field.offset > header.record_length ||
+                4U > (header.record_length - field.offset)) {
+                continue;
+            }
 
-        const std::uint32_t block_number = read_le_u32(table_bytes, field_offset);
-        if (block_number == 0U || !checked_blocks.insert(block_number).second) {
-            continue;
-        }
+            const std::size_t field_offset = record_offset + static_cast<std::size_t>(field.offset);
+            if ((field_offset + 4U) > table_bytes.size()) {
+                continue;
+            }
 
-        const std::uint64_t block_offset = static_cast<std::uint64_t>(block_number) * static_cast<std::uint64_t>(block_size);
-        if ((block_offset + 8U) > memo_bytes.size()) {
-            append_validation_issue(
-                result,
-                AssetValidationSeverity::error,
-                "memo.pointer_out_of_range",
-                resolved_memo_path_text,
-                asset_inspector_text("Vfp.AssetInspector.Validation.MemoPointerOutOfRange"));
-            continue;
-        }
+            const std::uint32_t block_number = read_le_u32(table_bytes, field_offset);
+            if (block_number == 0U || !checked_blocks.insert(block_number).second) {
+                continue;
+            }
 
-        const std::uint32_t payload_length = read_be_u32(memo_bytes, static_cast<std::size_t>(block_offset + 4U));
-        const std::uint64_t payload_end = block_offset + 8U + static_cast<std::uint64_t>(payload_length);
-        if (payload_end > memo_bytes.size()) {
-            append_validation_issue(
-                result,
-                AssetValidationSeverity::error,
-                "memo.payload_truncated",
-                resolved_memo_path_text,
-                asset_inspector_text("Vfp.AssetInspector.Validation.MemoPayloadTruncated"));
+            const std::uint64_t block_offset =
+                static_cast<std::uint64_t>(block_number) * static_cast<std::uint64_t>(block_size);
+            if ((block_offset + 8U) > memo_bytes.size()) {
+                append_validation_issue(
+                    result,
+                    AssetValidationSeverity::error,
+                    "memo.pointer_out_of_range",
+                    resolved_memo_path_text,
+                    asset_inspector_text("Vfp.AssetInspector.Validation.MemoPointerOutOfRange"));
+                continue;
+            }
+
+            const std::uint32_t payload_length =
+                read_be_u32(memo_bytes, static_cast<std::size_t>(block_offset + 4U));
+            const std::uint64_t payload_end =
+                block_offset + 8U + static_cast<std::uint64_t>(payload_length);
+            if (payload_end > memo_bytes.size()) {
+                append_validation_issue(
+                    result,
+                    AssetValidationSeverity::error,
+                    "memo.payload_truncated",
+                    resolved_memo_path_text,
+                    asset_inspector_text("Vfp.AssetInspector.Validation.MemoPayloadTruncated"));
+            }
         }
     }
 }
