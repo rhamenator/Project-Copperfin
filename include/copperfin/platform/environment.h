@@ -6,15 +6,16 @@
 
 #include <cstdlib>
 #include <filesystem>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <string_view>
 
 namespace copperfin::platform {
 
-#if defined(_WIN32)
 namespace detail {
 
+#if defined(_WIN32)
 inline std::optional<std::wstring> widen_ascii_environment_name(std::string_view name) {
     if (name.empty()) {
         return std::nullopt;
@@ -30,9 +31,17 @@ inline std::optional<std::wstring> widen_ascii_environment_name(std::string_view
     }
     return wide_name;
 }
+#else
+// This boundary coordinates only callers that use these helpers. Code that calls
+// getenv, setenv, unsetenv, or putenv directly must provide the same external
+// process-wide serialization before running concurrently with Copperfin access.
+inline std::mutex& environment_mutex() {
+    static std::mutex mutex;
+    return mutex;
+}
+#endif
 
 }  // namespace detail
-#endif
 
 inline std::optional<std::string> read_environment_variable(std::string_view name) {
     if (name.empty()) {
@@ -50,6 +59,7 @@ inline std::optional<std::string> read_environment_variable(std::string_view nam
     std::free(raw);
     return value;
 #else
+    const std::lock_guard<std::mutex> lock(detail::environment_mutex());
     if (const char* raw = std::getenv(key.c_str()); raw != nullptr) {
         return std::string(raw);
     }
@@ -95,6 +105,7 @@ inline bool write_environment_variable(std::string_view name, std::string_view v
 #if defined(_WIN32)
     return _putenv_s(key.c_str(), assigned_value.c_str()) == 0;
 #else
+    const std::lock_guard<std::mutex> lock(detail::environment_mutex());
     return setenv(key.c_str(), assigned_value.c_str(), 1) == 0;
 #endif
 }
@@ -117,6 +128,7 @@ inline bool clear_environment_variable(std::string_view name) {
 #if defined(_WIN32)
     return _putenv_s(key.c_str(), "") == 0;
 #else
+    const std::lock_guard<std::mutex> lock(detail::environment_mutex());
     return unsetenv(key.c_str()) == 0;
 #endif
 }

@@ -3,6 +3,11 @@ cmake_minimum_required(VERSION 3.20)
 project(Copperfin LANGUAGES CXX C)
 
 include(CheckCXXCompilerFlag)
+find_package(Threads REQUIRED)
+
+# The environment boundary is header-only and used directly across native
+# product and test targets, so every consumer inherits platform thread flags.
+link_libraries(Threads::Threads)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

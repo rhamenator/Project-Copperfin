@@ -7,12 +7,14 @@
 #include "test_environment_support.h"
 #include "test_locale_catalog_environment_support.h"
 
+#include <atomic>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <iterator>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -33,6 +35,16 @@ void test_platform_environment_round_trips_values() {
 
     expect(!copperfin::platform::read_environment_variable(key).has_value(),
            "#3214: clearing a test environment variable should leave no readable value");
+    expect(copperfin::platform::write_environment_variable(key, ""),
+           "#4010: shared platform environment helper should accept an empty assignment");
+    const auto empty = copperfin::platform::read_environment_variable(key);
+#if defined(_WIN32)
+    expect(!empty.has_value(),
+           "#4010: Windows empty assignment should preserve _putenv_s removal semantics");
+#else
+    expect(empty.has_value() && empty->empty(),
+           "#4010: POSIX empty assignment should remain distinct from a missing variable");
+#endif
     expect(copperfin::platform::write_environment_variable(key, "alpha beta"),
            "#3214: shared platform environment helper should set variables");
 
@@ -77,6 +89,100 @@ void test_scoped_environment_support_uses_shared_platform_helpers() {
     const auto restored = copperfin::platform::read_environment_variable(key);
     expect(restored.has_value() && *restored == "original",
            "#3214: scoped test environment helper should restore the original environment value");
+}
+
+void test_platform_environment_serializes_concurrent_access() {
+    const std::string key = "COPPERFIN_TEST_PLATFORM_ENVIRONMENT_CONCURRENT";
+    const std::string alpha = "alpha:" + std::string(1024, 'A');
+    const std::string beta = "beta:" + std::string(1024, 'B');
+    constexpr int writer_count = 2;
+    constexpr int reader_count = 4;
+    constexpr int writer_iterations = 20000;
+    copperfin::test_support::ScopedEnvironmentValue scoped(key);
+
+    std::atomic<int> ready_count{0};
+    std::atomic<int> readers_started{0};
+    std::atomic<int> writers_remaining{writer_count};
+    std::atomic<std::size_t> read_count{0};
+    std::atomic<bool> start{false};
+    std::atomic<bool> operation_failed{false};
+    std::atomic<bool> invalid_value_observed{false};
+    std::vector<std::thread> threads;
+    threads.reserve(writer_count + reader_count);
+
+    for (int writer_index = 0; writer_index < writer_count; ++writer_index) {
+        threads.emplace_back([&, writer_index]() {
+            ready_count.fetch_add(1);
+            while (!start.load()) {
+                std::this_thread::yield();
+            }
+
+            for (int iteration = 0; iteration < writer_iterations; ++iteration) {
+                bool succeeded = false;
+                switch ((iteration + writer_index) % 4) {
+                    case 0:
+                        succeeded = copperfin::platform::write_environment_variable(key, alpha);
+                        break;
+                    case 1:
+                        succeeded = copperfin::platform::write_environment_variable(key, beta);
+                        break;
+                    case 2:
+                        succeeded = copperfin::platform::write_environment_variable(key, "");
+                        break;
+                    default:
+                        succeeded = copperfin::platform::clear_environment_variable(key);
+                        break;
+                }
+                if (!succeeded) {
+                    operation_failed.store(true);
+                }
+                if (iteration == 0) {
+                    while (readers_started.load() != reader_count) {
+                        std::this_thread::yield();
+                    }
+                }
+            }
+            writers_remaining.fetch_sub(1);
+        });
+    }
+
+    for (int reader_index = 0; reader_index < reader_count; ++reader_index) {
+        threads.emplace_back([&]() {
+            ready_count.fetch_add(1);
+            while (!start.load()) {
+                std::this_thread::yield();
+            }
+
+            bool announced = false;
+            do {
+                const auto value = copperfin::platform::read_environment_variable(key);
+                if (value.has_value() && *value != alpha && *value != beta && !value->empty()) {
+                    invalid_value_observed.store(true);
+                }
+                read_count.fetch_add(1);
+                if (!announced) {
+                    readers_started.fetch_add(1);
+                    announced = true;
+                }
+            } while (writers_remaining.load() > 0);
+        });
+    }
+
+    while (ready_count.load() != writer_count + reader_count) {
+        std::this_thread::yield();
+    }
+    start.store(true);
+
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    expect(!operation_failed.load(),
+           "#4010: concurrent shared-helper writes and clears should succeed");
+    expect(!invalid_value_observed.load(),
+           "#4010: concurrent reads should observe only complete present, empty, or missing values");
+    expect(read_count.load() >= reader_count,
+           "#4010: concurrent stress coverage should execute reads while writers are active");
 }
 
 void test_shell_command_preparation_preserves_platform_quoting_contract() {
@@ -281,6 +387,7 @@ int main(int argc, char** argv) {
     test_platform_environment_round_trips_values();
     test_platform_environment_rejects_empty_names();
     test_scoped_environment_support_uses_shared_platform_helpers();
+    test_platform_environment_serializes_concurrent_access();
     test_shell_command_preparation_preserves_platform_quoting_contract();
     test_default_locale_environment_preserves_valid_override_and_restores_values();
     test_default_locale_environment_falls_back_for_invalid_or_missing_override();
