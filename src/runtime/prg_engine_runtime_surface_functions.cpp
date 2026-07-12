@@ -389,8 +389,15 @@ std::vector<std::filesystem::path> parse_set_path_entries(const std::string& set
 std::filesystem::path resolve_runtime_file_probe_path(
     const std::string& raw_path,
     const std::string& default_directory,
-    const std::function<std::string(const std::string&)>& set_callback) {
+    const std::function<std::string(const std::string&)>& set_callback,
+    bool reject_directories = false) {
     std::error_code ignored;
+    const auto candidate_matches = [&](const std::filesystem::path& candidate) {
+        ignored.clear();
+        const std::filesystem::file_status status = std::filesystem::status(candidate, ignored);
+        return !ignored && std::filesystem::exists(status) &&
+               (!reject_directories || !std::filesystem::is_directory(status));
+    };
     if (raw_path.empty()) {
         return std::filesystem::path(default_directory).lexically_normal();
     }
@@ -405,7 +412,7 @@ std::filesystem::path resolve_runtime_file_probe_path(
 
     const std::filesystem::path default_candidate =
         (std::filesystem::path(default_directory) / path).lexically_normal();
-    if (std::filesystem::exists(default_candidate, ignored)) {
+    if (candidate_matches(default_candidate)) {
         return default_candidate;
     }
 
@@ -413,7 +420,7 @@ std::filesystem::path resolve_runtime_file_probe_path(
         parse_set_path_entries(set_callback("PATH"), default_directory);
     for (const auto& entry : set_path_entries) {
         const std::filesystem::path candidate = (entry / path).lexically_normal();
-        if (std::filesystem::exists(candidate, ignored)) {
+        if (candidate_matches(candidate)) {
             return candidate;
         }
     }
@@ -4760,8 +4767,11 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
     if (function == "file" && !arguments.empty()) {
         std::error_code ignored;
         const std::filesystem::path path =
-            resolve_runtime_file_probe_path(value_as_string(arguments[0]), default_directory, set_callback);
-        return make_boolean_value(std::filesystem::exists(path, ignored));
+            resolve_runtime_file_probe_path(
+                value_as_string(arguments[0]), default_directory, set_callback, true);
+        const std::filesystem::file_status status = std::filesystem::status(path, ignored);
+        return make_boolean_value(
+            !ignored && std::filesystem::exists(status) && !std::filesystem::is_directory(status));
     }
     if (function == "sys") {
         if (!arguments.empty()) {
@@ -4831,7 +4841,8 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         }
         std::error_code ignored;
         const std::filesystem::path path =
-            resolve_runtime_file_probe_path(value_as_string(arguments[0]), default_directory, set_callback);
+            resolve_runtime_file_probe_path(
+                value_as_string(arguments[0]), default_directory, set_callback, true);
         if (!std::filesystem::exists(path, ignored)) {
             return make_number_value(0.0);
         }

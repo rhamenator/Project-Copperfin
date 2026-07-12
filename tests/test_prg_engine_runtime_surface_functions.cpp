@@ -610,6 +610,20 @@ namespace
         const fs::path nested_path_only_file_path = nested_path_probe_dir / "path_only_backslash.txt";
         const std::string nested_path_only_content = "Found through backslash path";
         write_text(nested_path_only_file_path, nested_path_only_content);
+        const fs::path direct_directory = temp_root / "direct_directory.txt";
+        const fs::path nested_directory = temp_root / "relative" / "nested_directory.txt";
+        const fs::path absolute_directory = temp_root / "absolute_directory.txt";
+        const fs::path path_only_directory = path_probe_dir / "path_only_directory.txt";
+        const fs::path nested_path_only_directory = nested_path_probe_dir / "path_only_directory.txt";
+        const fs::path shadowing_directory = temp_root / "shadowed.txt";
+        fs::create_directories(direct_directory);
+        fs::create_directories(nested_directory);
+        fs::create_directories(absolute_directory);
+        fs::create_directories(path_only_directory);
+        fs::create_directories(nested_path_only_directory);
+        fs::create_directories(shadowing_directory);
+        const std::string shadowed_file_content = "SET PATH regular file";
+        write_text(path_probe_dir / "shadowed.txt", shadowed_file_content);
 
         const fs::path main_path = temp_root / "filesize_test.prg";
         write_text(
@@ -619,11 +633,20 @@ namespace
             "nMissingFile = FILESIZE('missing-file.txt')\n"
             "nEmptyArg = FILESIZE()\n"
             "nAbsolutePath = FILESIZE('" + test_file_path.string() + "')\n"
+            "lDirectDirectory = FILE('direct_directory.txt')\n"
+            "lRelativeDirectory = FILE('relative/nested_directory.txt')\n"
+            "lAbsoluteDirectory = FILE('" + absolute_directory.string() + "')\n"
+            "lAbsoluteFile = FILE('" + test_file_path.string() + "')\n"
+            "lEmptyFile = FILE('')\n"
             "lPathFileBefore = FILE('path_only.txt')\n"
             "SET PATH TO '" + path_probe_dir.string() + "'\n"
             "lPathFileAfter = FILE('path_only.txt')\n"
+            "lPathDirectory = FILE('path_only_directory.txt')\n"
+            "lPathShadowedFile = FILE('shadowed.txt')\n"
             "nPathFileSize = FILESIZE('path_only.txt')\n"
+            "nShadowedFileSize = FILESIZE('shadowed.txt')\n"
             "lBackslashPathFile = FILE('nested\\path_only_backslash.txt')\n"
+            "lBackslashPathDirectory = FILE('nested\\path_only_directory.txt')\n"
             "nBackslashPathFileSize = FILESIZE('nested\\path_only_backslash.txt')\n"
             "RETURN\n");
 
@@ -656,11 +679,22 @@ namespace
         // Absolute path should also work
         check("nabsolutepath", std::to_string(test_content.length()));
 
+        // FILE() should reject directories regardless of how the path is resolved.
+        check("ldirectdirectory", "false");
+        check("lrelativedirectory", "false");
+        check("labsolutedirectory", "false");
+        check("labsolutefile", "true");
+        check("lemptyfile", "false");
+
         // SET PATH resolution should make path-only file discoverable
         check("lpathfilebefore", "false");
         check("lpathfileafter", "true");
+        check("lpathdirectory", "false");
+        check("lpathshadowedfile", "true");
         check("npathfilesize", std::to_string(path_only_content.length()));
+        check("nshadowedfilesize", std::to_string(shadowed_file_content.length()));
         check("lbackslashpathfile", "true");
+        check("lbackslashpathdirectory", "false");
         check("nbackslashpathfilesize", std::to_string(nested_path_only_content.length()));
 
         fs::remove_all(temp_root, ignored);
