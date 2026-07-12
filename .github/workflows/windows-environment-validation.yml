@@ -1,0 +1,48 @@
+name: Windows Environment Path Validation
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/windows-environment-validation.yml"
+      - "apps/copperfin_runtime_host/main.cpp"
+      - "include/copperfin/platform/environment.h"
+      - "src/localization/localization.cpp"
+      - "tests/CMakeLists.txt"
+      - "tests/test_environment_support.h"
+      - "tests/test_locale_catalog_environment_support.h"
+      - "tests/test_platform_environment.cpp"
+      - "tests/test_runtime_host_debug_output.cpp"
+  pull_request:
+    paths:
+      - ".github/workflows/windows-environment-validation.yml"
+      - "apps/copperfin_runtime_host/main.cpp"
+      - "include/copperfin/platform/environment.h"
+      - "src/localization/localization.cpp"
+      - "tests/CMakeLists.txt"
+      - "tests/test_environment_support.h"
+      - "tests/test_locale_catalog_environment_support.h"
+      - "tests/test_platform_environment.cpp"
+      - "tests/test_runtime_host_debug_output.cpp"
+
+permissions:
+  contents: read
+
+jobs:
+  windows-environment-paths:
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6.0.2
+
+      - name: Configure native build
+        run: cmake -S . -B build -DCOPPERFIN_BUILD_TESTS=ON
+
+      - name: Build environment path regressions
+        run: cmake --build build --config Release --parallel 2 --target test_platform_environment test_runtime_host_debug_output
+
+      - name: Run environment path regressions
+        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_platform_environment|test_runtime_host_debug_output)$"
