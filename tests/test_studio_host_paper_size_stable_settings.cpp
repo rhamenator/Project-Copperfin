@@ -279,8 +279,7 @@ void run_paper_size_update_case(
     expect_empty_report_layout_preview_bounds(
         update_process.stdout_text,
         issue_prefix + " update");
-    expect_contains(update_process.stdout_text, deleted ? "\"pageSetupAvailable\": false"
-                                                        : "\"pageSetupAvailable\": true",
+    expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
                     issue_prefix + " update should preserve page setup availability");
     if (!deleted) {
         expect_contains(update_process.stdout_text, "\"orientationCode\": 0",
@@ -377,8 +376,7 @@ void run_paper_size_clear_case(
     expect_empty_report_layout_preview_bounds(
         clear_process.stdout_text,
         issue_prefix + " clear");
-    expect_contains(clear_process.stdout_text, deleted ? "\"pageSetupAvailable\": false"
-                                                       : "\"pageSetupAvailable\": true",
+    expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
                     issue_prefix + " clear should preserve page setup availability");
     if (!deleted) {
         expect_contains(clear_process.stdout_text, "\"orientationCode\": 0",

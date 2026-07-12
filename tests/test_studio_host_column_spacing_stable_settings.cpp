@@ -312,8 +312,8 @@ void run_column_spacing_update_case(
             "#2035: stable-selected deleted report/label column-spacing update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
                         issue_prefix + " update should not fabricate live page setup");
-        expect_contains(update_process.stdout_text, "\"columnSetupAvailable\": false",
-                        issue_prefix + " update should not fabricate live column setup");
+        expect_contains(update_process.stdout_text, "\"columnSetupAvailable\": true",
+                        issue_prefix + " update should expose effective deleted-root column setup");
         expect_contains(update_process.stdout_text, "\"settingCount\": 0",
                         issue_prefix + " update should not fabricate live settings");
         expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 3",
@@ -438,8 +438,8 @@ void run_column_spacing_clear_case(
             "#2035: stable-selected deleted report/label column-spacing clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
                         issue_prefix + " clear should not fabricate live page setup");
-        expect_contains(clear_process.stdout_text, "\"columnSetupAvailable\": false",
-                        issue_prefix + " clear should not fabricate live column setup");
+        expect_contains(clear_process.stdout_text, "\"columnSetupAvailable\": true",
+                        issue_prefix + " clear should preserve effective deleted-root column setup");
         expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
                         issue_prefix + " clear should not fabricate live settings");
         expect_contains(clear_process.stdout_text, "\"deletedSettingCount\": 2",

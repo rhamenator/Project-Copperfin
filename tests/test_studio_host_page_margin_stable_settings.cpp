@@ -287,7 +287,7 @@ void run_page_margin_update_case(
     }
     expect_full_report_layout_preview_bounds(update_process.stdout_text, issue_prefix + " update");
     expect_contains(update_process.stdout_text,
-                    deleted ? "\"pageSetupAvailable\": false" : "\"pageSetupAvailable\": true",
+                    "\"pageSetupAvailable\": true",
                     issue_prefix + " update should preserve page setup availability");
     if (!deleted) {
         expect_contains(update_process.stdout_text, "\"topMargin\": " + updated_margin,
@@ -381,7 +381,7 @@ void run_page_margin_clear_case(
     }
     expect_full_report_layout_preview_bounds(clear_process.stdout_text, issue_prefix + " clear");
     expect_contains(clear_process.stdout_text,
-                    deleted ? "\"pageSetupAvailable\": false" : "\"pageSetupAvailable\": true",
+                    "\"pageSetupAvailable\": true",
                     issue_prefix + " clear should preserve page setup availability");
     if (!deleted) {
         expect_contains(clear_process.stdout_text, "\"topMarginAvailable\": false",

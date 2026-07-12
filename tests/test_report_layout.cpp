@@ -1399,9 +1399,9 @@ void test_build_report_layout_preserves_live_objects_in_deleted_sections() {
     expect(layout.deleted_preview_bounds_available &&
                layout.deleted_preview_bounds_left == 0 &&
                layout.deleted_preview_bounds_top == 0 &&
-               layout.deleted_preview_bounds_right == 0 &&
+               layout.deleted_preview_bounds_right == 2700 &&
                layout.deleted_preview_bounds_bottom == 2000,
-           "#3684: live objects inside deleted sections should not contaminate deleted preview bounds");
+           "#3840: live objects retained inside deleted sections should expand deleted recovery preview bounds");
     if (layout.deleted_sections.size() == 1U) {
         expect(layout.deleted_sections[0].objects.size() == 1U,
                "#2690: deleted sections should preserve live object membership when geometry still belongs to the band");
@@ -2140,7 +2140,7 @@ void test_build_report_layout_prefers_live_root_summary_settings_over_deleted_fa
     const auto layout = copperfin::studio::build_report_layout(document);
     expect(layout.available, "#3815: mixed live/deleted report layout should be available");
     expect(layout.settings.size() == 3U, "#3815: mixed live/deleted report layout should keep live root settings intact");
-    expect(layout.deleted_settings.size() == 12U,
+    expect(layout.deleted_settings.size() == 13U,
         "#3815: mixed live/deleted report layout should keep deleted root settings separate");
     expect(layout.page_setup_available, "#3815: live root settings should still surface page-setup availability");
     expect(layout.orientation_available && layout.orientation_code == 0,

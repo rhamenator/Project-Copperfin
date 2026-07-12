@@ -351,8 +351,7 @@ void run_orientation_update_case(
     expect_empty_report_layout_preview_bounds(
         update_process.stdout_text,
         issue_prefix + " update");
-    expect_contains(update_process.stdout_text, deleted ? "\"pageSetupAvailable\": false"
-                                                        : "\"pageSetupAvailable\": true",
+    expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
                     issue_prefix + " update should preserve page setup availability");
     if (!deleted) {
         expect_contains(update_process.stdout_text, "\"orientationCode\": " + updated_orientation,
@@ -449,8 +448,7 @@ void run_orientation_clear_case(
     expect_empty_report_layout_preview_bounds(
         clear_process.stdout_text,
         issue_prefix + " clear");
-    expect_contains(clear_process.stdout_text, deleted ? "\"pageSetupAvailable\": false"
-                                                       : "\"pageSetupAvailable\": true",
+    expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
                     issue_prefix + " clear should preserve page setup availability");
     if (!deleted) {
         expect_contains(clear_process.stdout_text, "\"orientationAvailable\": false",
@@ -561,8 +559,8 @@ void run_unsupported_expr_line_preservation_case(
                             "\"name\": \"* keep-this-comment\", \"recordIndex\": 0, \"fieldIndex\": 2",
                             issue_prefix + " update should not fabricate comment lines as parsed settings");
     } else {
-        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
-                        issue_prefix + " update should not fabricate live page setup");
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
+                        issue_prefix + " update should expose effective deleted-root page setup");
         expect_contains(update_process.stdout_text, "\"settingCount\": 0",
                         issue_prefix + " update should not fabricate live settings");
         expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 4",
@@ -647,8 +645,8 @@ void run_unsupported_expr_line_preservation_case(
                             "\"name\": \"* keep-this-comment\", \"recordIndex\": 0, \"fieldIndex\": 2",
                             issue_prefix + " clear should not fabricate comment lines as parsed settings");
     } else {
-        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
-                        issue_prefix + " clear should not fabricate live page setup");
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
+                        issue_prefix + " clear should preserve effective deleted-root page setup");
         expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
                         issue_prefix + " clear should keep live settings absent");
         expect_contains(clear_process.stdout_text, "\"deletedSettingCount\": 3",

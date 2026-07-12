@@ -662,8 +662,12 @@ void test_studio_host_json_updates_deleted_report_bottom_margin_fields_by_stable
         expect_empty_report_layout_preview_bounds(
             update_process.stdout_text,
             "#2029: stable-selected deleted report/label bottom-margin update JSON");
-        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
-                        "#1830: report/label stable deleted bottom-margin field update should not fabricate live page setup");
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#3815: report/label stable deleted bottom-margin field update should expose effective page setup");
+        expect_contains(update_process.stdout_text, "\"bottomMarginAvailable\": true",
+                        "#3815: report/label stable deleted bottom-margin field update should expose effective availability");
+        expect_contains(update_process.stdout_text, "\"bottomMargin\": " + updated_margin,
+                        "#3815: report/label stable deleted bottom-margin field update should expose the effective value");
         expect_contains(update_process.stdout_text, "\"settingCount\": 0",
                         "#1830: report/label stable deleted bottom-margin field update should not fabricate live settings");
         expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 4",
@@ -752,8 +756,12 @@ void test_studio_host_json_clears_deleted_report_bottom_margin_fields_by_stable_
         expect_empty_report_layout_preview_bounds(
             clear_process.stdout_text,
             "#2029: stable-selected deleted report/label bottom-margin clear JSON");
-        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
-                        "#1830: report/label stable deleted bottom-margin field clear should not fabricate live page setup");
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#3815: report/label stable deleted bottom-margin field clear should preserve effective page setup");
+        expect_contains(clear_process.stdout_text, "\"bottomMarginAvailable\": false",
+                        "#3815: report/label stable deleted bottom-margin field clear should clear effective availability");
+        expect_contains(clear_process.stdout_text, "\"bottomMargin\": 0",
+                        "#3815: report/label stable deleted bottom-margin field clear should reset the effective value");
         expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
                         "#1830: report/label stable deleted bottom-margin field clear should not fabricate live settings");
         expect_contains(clear_process.stdout_text, "\"deletedSettingCount\": 3",
@@ -859,8 +867,10 @@ void test_studio_host_json_updates_report_left_margin_fields_by_stable_selection
                         "#3015: report/label stable left-margin field update should preserve selected-settings availability");
         expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
                         "#3015: report/label stable left-margin field update should preserve settings selection kind");
-        expect_not_contains(update_process.stdout_text, "\"leftMarginAvailable\":",
-                            "#3015: report/label stable left-margin field update should not add left-margin summary keys");
+        expect_contains(update_process.stdout_text, "\"leftMarginAvailable\": true",
+                        "#3815: report/label stable left-margin field update should expose summary availability");
+        expect_contains(update_process.stdout_text, "\"leftMargin\": " + updated_margin,
+                        "#3815: report/label stable left-margin field update should expose the summary value");
         expect_contains_in_order(
             update_process.stdout_text,
             {
@@ -958,8 +968,10 @@ void test_studio_host_json_clears_report_left_margin_fields_by_stable_selection(
                         "#3015: report/label stable left-margin field clear should preserve selected-settings availability");
         expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
                         "#3015: report/label stable left-margin field clear should preserve settings selection kind");
-        expect_not_contains(clear_process.stdout_text, "\"leftMarginAvailable\":",
-                            "#3015: report/label stable left-margin field clear should not add left-margin summary keys");
+        expect_contains(clear_process.stdout_text, "\"leftMarginAvailable\": false",
+                        "#3815: report/label stable left-margin field clear should clear summary availability");
+        expect_contains(clear_process.stdout_text, "\"leftMargin\": 0",
+                        "#3815: report/label stable left-margin field clear should reset the summary value");
         expect_contains_in_order(
             clear_process.stdout_text,
             {
@@ -1042,8 +1054,8 @@ void test_studio_host_json_updates_deleted_report_left_margin_fields_by_stable_s
         expect_empty_report_layout_preview_bounds(
             update_process.stdout_text,
             "#3015: stable-selected deleted report/label left-margin update JSON");
-        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
-                        "#3015: report/label stable deleted left-margin field update should not fabricate live page setup");
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#3815: report/label stable deleted left-margin field update should expose effective page setup");
         expect_contains(update_process.stdout_text, "\"settingCount\": 0",
                         "#3015: report/label stable deleted left-margin field update should not fabricate live settings");
         expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 5",
@@ -1052,8 +1064,10 @@ void test_studio_host_json_updates_deleted_report_left_margin_fields_by_stable_s
                         "#3015: report/label stable deleted left-margin field update should preserve selected-settings availability");
         expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
                         "#3015: report/label stable deleted left-margin field update should preserve settings selection kind");
-        expect_not_contains(update_process.stdout_text, "\"leftMarginAvailable\":",
-                            "#3015: report/label stable deleted left-margin field update should not add left-margin summary keys");
+        expect_contains(update_process.stdout_text, "\"leftMarginAvailable\": true",
+                        "#3815: report/label stable deleted left-margin field update should expose effective availability");
+        expect_contains(update_process.stdout_text, "\"leftMargin\": " + updated_margin,
+                        "#3815: report/label stable deleted left-margin field update should expose the effective value");
         expect_contains_in_order(
             update_process.stdout_text,
             {
@@ -1135,8 +1149,8 @@ void test_studio_host_json_clears_deleted_report_left_margin_fields_by_stable_se
         expect_empty_report_layout_preview_bounds(
             clear_process.stdout_text,
             "#3015: stable-selected deleted report/label left-margin clear JSON");
-        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
-                        "#3015: report/label stable deleted left-margin field clear should not fabricate live page setup");
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#3815: report/label stable deleted left-margin field clear should preserve effective page setup");
         expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
                         "#3015: report/label stable deleted left-margin field clear should not fabricate live settings");
         expect_contains(clear_process.stdout_text, "\"deletedSettingCount\": 4",
@@ -1145,8 +1159,10 @@ void test_studio_host_json_clears_deleted_report_left_margin_fields_by_stable_se
                         "#3015: report/label stable deleted left-margin field clear should preserve selected-settings availability");
         expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
                         "#3015: report/label stable deleted left-margin field clear should preserve settings selection kind");
-        expect_not_contains(clear_process.stdout_text, "\"leftMarginAvailable\":",
-                            "#3015: report/label stable deleted left-margin field clear should not add left-margin summary keys");
+        expect_contains(clear_process.stdout_text, "\"leftMarginAvailable\": false",
+                        "#3815: report/label stable deleted left-margin field clear should clear effective availability");
+        expect_contains(clear_process.stdout_text, "\"leftMargin\": 0",
+                        "#3815: report/label stable deleted left-margin field clear should reset the effective value");
         expect_contains_in_order(
             clear_process.stdout_text,
             {
@@ -1245,8 +1261,10 @@ void test_studio_host_json_updates_report_right_margin_fields_by_stable_selectio
                         "#3015: report/label stable right-margin field update should preserve selected-settings availability");
         expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
                         "#3015: report/label stable right-margin field update should preserve settings selection kind");
-        expect_not_contains(update_process.stdout_text, "\"rightMarginAvailable\":",
-                            "#3015: report/label stable right-margin field update should not add right-margin summary keys");
+        expect_contains(update_process.stdout_text, "\"rightMarginAvailable\": true",
+                        "#3815: report/label stable right-margin field update should expose summary availability");
+        expect_contains(update_process.stdout_text, "\"rightMargin\": " + updated_margin,
+                        "#3815: report/label stable right-margin field update should expose the summary value");
         expect_contains_in_order(
             update_process.stdout_text,
             {
@@ -1344,8 +1362,10 @@ void test_studio_host_json_clears_report_right_margin_fields_by_stable_selection
                         "#3015: report/label stable right-margin field clear should preserve selected-settings availability");
         expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
                         "#3015: report/label stable right-margin field clear should preserve settings selection kind");
-        expect_not_contains(clear_process.stdout_text, "\"rightMarginAvailable\":",
-                            "#3015: report/label stable right-margin field clear should not add right-margin summary keys");
+        expect_contains(clear_process.stdout_text, "\"rightMarginAvailable\": false",
+                        "#3815: report/label stable right-margin field clear should clear summary availability");
+        expect_contains(clear_process.stdout_text, "\"rightMargin\": 0",
+                        "#3815: report/label stable right-margin field clear should reset the summary value");
         expect_contains_in_order(
             clear_process.stdout_text,
             {
@@ -1428,8 +1448,8 @@ void test_studio_host_json_updates_deleted_report_right_margin_fields_by_stable_
         expect_empty_report_layout_preview_bounds(
             update_process.stdout_text,
             "#3015: stable-selected deleted report/label right-margin update JSON");
-        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
-                        "#3015: report/label stable deleted right-margin field update should not fabricate live page setup");
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#3815: report/label stable deleted right-margin field update should expose effective page setup");
         expect_contains(update_process.stdout_text, "\"settingCount\": 0",
                         "#3015: report/label stable deleted right-margin field update should not fabricate live settings");
         expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 5",
@@ -1438,8 +1458,10 @@ void test_studio_host_json_updates_deleted_report_right_margin_fields_by_stable_
                         "#3015: report/label stable deleted right-margin field update should preserve selected-settings availability");
         expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
                         "#3015: report/label stable deleted right-margin field update should preserve settings selection kind");
-        expect_not_contains(update_process.stdout_text, "\"rightMarginAvailable\":",
-                            "#3015: report/label stable deleted right-margin field update should not add right-margin summary keys");
+        expect_contains(update_process.stdout_text, "\"rightMarginAvailable\": true",
+                        "#3815: report/label stable deleted right-margin field update should expose effective availability");
+        expect_contains(update_process.stdout_text, "\"rightMargin\": " + updated_margin,
+                        "#3815: report/label stable deleted right-margin field update should expose the effective value");
         expect_contains_in_order(
             update_process.stdout_text,
             {
@@ -1521,8 +1543,8 @@ void test_studio_host_json_clears_deleted_report_right_margin_fields_by_stable_s
         expect_empty_report_layout_preview_bounds(
             clear_process.stdout_text,
             "#3015: stable-selected deleted report/label right-margin clear JSON");
-        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
-                        "#3015: report/label stable deleted right-margin field clear should not fabricate live page setup");
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#3815: report/label stable deleted right-margin field clear should preserve effective page setup");
         expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
                         "#3015: report/label stable deleted right-margin field clear should not fabricate live settings");
         expect_contains(clear_process.stdout_text, "\"deletedSettingCount\": 4",
@@ -1531,8 +1553,10 @@ void test_studio_host_json_clears_deleted_report_right_margin_fields_by_stable_s
                         "#3015: report/label stable deleted right-margin field clear should preserve selected-settings availability");
         expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
                         "#3015: report/label stable deleted right-margin field clear should preserve settings selection kind");
-        expect_not_contains(clear_process.stdout_text, "\"rightMarginAvailable\":",
-                            "#3015: report/label stable deleted right-margin field clear should not add right-margin summary keys");
+        expect_contains(clear_process.stdout_text, "\"rightMarginAvailable\": false",
+                        "#3815: report/label stable deleted right-margin field clear should clear effective availability");
+        expect_contains(clear_process.stdout_text, "\"rightMargin\": 0",
+                        "#3815: report/label stable deleted right-margin field clear should reset the effective value");
         expect_contains_in_order(
             clear_process.stdout_text,
             {
@@ -1810,8 +1834,12 @@ void test_studio_host_json_updates_deleted_report_grid_vertical_fields_by_stable
         expect_empty_report_layout_preview_bounds(
             update_process.stdout_text,
             "#2025: stable-selected deleted report/label vertical-grid update JSON");
-        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
-                        "#1831: report/label stable deleted vertical-grid field update should not fabricate live page setup");
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#3815: report/label stable deleted vertical-grid field update should expose effective page setup");
+        expect_contains(update_process.stdout_text, "\"gridVerticalAvailable\": true",
+                        "#3815: report/label stable deleted vertical-grid field update should expose effective availability");
+        expect_contains(update_process.stdout_text, "\"gridVertical\": " + updated_grid,
+                        "#3815: report/label stable deleted vertical-grid field update should expose the effective value");
         expect_contains(update_process.stdout_text, "\"settingCount\": 0",
                         "#1831: report/label stable deleted vertical-grid field update should not fabricate live settings");
         expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 4",
@@ -1900,8 +1928,12 @@ void test_studio_host_json_clears_deleted_report_grid_vertical_fields_by_stable_
         expect_empty_report_layout_preview_bounds(
             clear_process.stdout_text,
             "#2025: stable-selected deleted report/label vertical-grid clear JSON");
-        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
-                        "#1831: report/label stable deleted vertical-grid field clear should not fabricate live page setup");
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#3815: report/label stable deleted vertical-grid field clear should preserve effective page setup");
+        expect_contains(clear_process.stdout_text, "\"gridVerticalAvailable\": false",
+                        "#3815: report/label stable deleted vertical-grid field clear should clear effective availability");
+        expect_contains(clear_process.stdout_text, "\"gridVertical\": 0",
+                        "#3815: report/label stable deleted vertical-grid field clear should reset the effective value");
         expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
                         "#1831: report/label stable deleted vertical-grid field clear should not fabricate live settings");
         expect_contains(clear_process.stdout_text, "\"deletedSettingCount\": 3",
@@ -2186,8 +2218,12 @@ void test_studio_host_json_updates_deleted_report_grid_horizontal_fields_by_stab
         expect_empty_report_layout_preview_bounds(
             update_process.stdout_text,
             "#2027: stable-selected deleted report/label horizontal-grid update JSON");
-        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
-                        "#1832: report/label stable deleted horizontal-grid field update should not fabricate live page setup");
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#3815: report/label stable deleted horizontal-grid field update should expose effective page setup");
+        expect_contains(update_process.stdout_text, "\"gridHorizontalAvailable\": true",
+                        "#3815: report/label stable deleted horizontal-grid field update should expose effective availability");
+        expect_contains(update_process.stdout_text, "\"gridHorizontal\": " + updated_grid,
+                        "#3815: report/label stable deleted horizontal-grid field update should expose the effective value");
         expect_contains(update_process.stdout_text, "\"settingCount\": 0",
                         "#1832: report/label stable deleted horizontal-grid field update should not fabricate live settings");
         expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 4",
@@ -2276,8 +2312,12 @@ void test_studio_host_json_clears_deleted_report_grid_horizontal_fields_by_stabl
         expect_empty_report_layout_preview_bounds(
             clear_process.stdout_text,
             "#2027: stable-selected deleted report/label horizontal-grid clear JSON");
-        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
-                        "#1832: report/label stable deleted horizontal-grid field clear should not fabricate live page setup");
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#3815: report/label stable deleted horizontal-grid field clear should preserve effective page setup");
+        expect_contains(clear_process.stdout_text, "\"gridHorizontalAvailable\": false",
+                        "#3815: report/label stable deleted horizontal-grid field clear should clear effective availability");
+        expect_contains(clear_process.stdout_text, "\"gridHorizontal\": 0",
+                        "#3815: report/label stable deleted horizontal-grid field clear should reset the effective value");
         expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
                         "#1832: report/label stable deleted horizontal-grid field clear should not fabricate live settings");
         expect_contains(clear_process.stdout_text, "\"deletedSettingCount\": 3",
@@ -2576,8 +2616,12 @@ void test_studio_host_json_updates_deleted_report_orientation_fields_by_stable_s
         expect_empty_report_layout_preview_bounds(
             update_process.stdout_text,
             "#2023: stable-selected deleted report/label orientation update JSON");
-        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
-                        "#1833: report/label stable deleted orientation field update should not fabricate live page setup");
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#3815: report/label stable deleted orientation field update should expose effective page setup");
+        expect_contains(update_process.stdout_text, "\"orientationAvailable\": true",
+                        "#3815: report/label stable deleted orientation field update should expose effective availability");
+        expect_contains(update_process.stdout_text, "\"orientationCode\": " + updated_orientation,
+                        "#3815: report/label stable deleted orientation field update should expose the effective value");
         expect_contains(update_process.stdout_text, "\"settingCount\": 0",
                         "#1833: report/label stable deleted orientation field update should not fabricate live settings");
         expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 6",
@@ -2668,8 +2712,12 @@ void test_studio_host_json_clears_deleted_report_orientation_fields_by_stable_se
         expect_empty_report_layout_preview_bounds(
             clear_process.stdout_text,
             "#2023: stable-selected deleted report/label orientation clear JSON");
-        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
-                        "#1833: report/label stable deleted orientation field clear should not fabricate live page setup");
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#3815: report/label stable deleted orientation field clear should preserve effective page setup");
+        expect_contains(clear_process.stdout_text, "\"orientationAvailable\": false",
+                        "#3815: report/label stable deleted orientation field clear should clear effective availability");
+        expect_contains(clear_process.stdout_text, "\"orientationCode\": 0",
+                        "#3815: report/label stable deleted orientation field clear should reset the effective value");
         expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
                         "#1833: report/label stable deleted orientation field clear should not fabricate live settings");
         expect_contains(clear_process.stdout_text, "\"deletedSettingCount\": 5",
@@ -2970,8 +3018,12 @@ void test_studio_host_json_updates_deleted_report_paper_size_fields_by_stable_se
         expect_empty_report_layout_preview_bounds(
             update_process.stdout_text,
             "#2021: stable-selected deleted report/label paper-size update JSON");
-        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
-                        "#1834: report/label stable deleted paper-size field update should not fabricate live page setup");
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#3815: report/label stable deleted paper-size field update should expose effective page setup");
+        expect_contains(update_process.stdout_text, "\"paperSizeAvailable\": true",
+                        "#3815: report/label stable deleted paper-size field update should expose effective availability");
+        expect_contains(update_process.stdout_text, "\"paperSizeCode\": " + updated_paper_size,
+                        "#3815: report/label stable deleted paper-size field update should expose the effective value");
         expect_contains(update_process.stdout_text, "\"settingCount\": 0",
                         "#1834: report/label stable deleted paper-size field update should not fabricate live settings");
         expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 6",
@@ -3062,8 +3114,12 @@ void test_studio_host_json_clears_deleted_report_paper_size_fields_by_stable_sel
         expect_empty_report_layout_preview_bounds(
             clear_process.stdout_text,
             "#2021: stable-selected deleted report/label paper-size clear JSON");
-        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
-                        "#1834: report/label stable deleted paper-size field clear should not fabricate live page setup");
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#3815: report/label stable deleted paper-size field clear should preserve effective page setup");
+        expect_contains(clear_process.stdout_text, "\"paperSizeAvailable\": false",
+                        "#3815: report/label stable deleted paper-size field clear should clear effective availability");
+        expect_contains(clear_process.stdout_text, "\"paperSizeCode\": 0",
+                        "#3815: report/label stable deleted paper-size field clear should reset the effective value");
         expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
                         "#1834: report/label stable deleted paper-size field clear should not fabricate live settings");
         expect_contains(clear_process.stdout_text, "\"deletedSettingCount\": 5",

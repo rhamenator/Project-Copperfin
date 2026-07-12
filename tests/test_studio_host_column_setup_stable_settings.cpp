@@ -312,8 +312,8 @@ void run_column_setup_update_case(
             "#2037: stable-selected deleted report/label column setup update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
                         issue_prefix + " update should not fabricate live page setup");
-        expect_contains(update_process.stdout_text, "\"columnSetupAvailable\": false",
-                        issue_prefix + " update should not fabricate live column setup");
+        expect_contains(update_process.stdout_text, "\"columnSetupAvailable\": true",
+                        issue_prefix + " update should expose effective deleted-root column setup");
         expect_contains(update_process.stdout_text, "\"settingCount\": 0",
                         issue_prefix + " update should not fabricate live settings");
         expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 3",

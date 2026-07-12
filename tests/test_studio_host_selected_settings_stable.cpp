@@ -326,8 +326,20 @@ void run_deleted_settings_selection(
                     issue_prefix + " should not expose live settings");
     expect_contains(settings_process.stdout_text, "\"deletedSettingCount\": 6",
                     issue_prefix + " should expose deleted setting counts");
-    expect_contains(settings_process.stdout_text, "\"pageSetupAvailable\": false",
-                    issue_prefix + " should clear live page setup availability");
+    expect_contains(settings_process.stdout_text, "\"pageSetupAvailable\": true",
+                    issue_prefix + " should expose effective deleted-root page setup");
+    expect_contains(settings_process.stdout_text, "\"orientationAvailable\": true",
+                    issue_prefix + " should expose effective deleted-root orientation availability");
+    expect_contains(settings_process.stdout_text, "\"orientationCode\": 0",
+                    issue_prefix + " should expose the effective deleted-root orientation");
+    expect_contains(settings_process.stdout_text, "\"paperSizeAvailable\": true",
+                    issue_prefix + " should expose effective deleted-root paper-size availability");
+    expect_contains(settings_process.stdout_text, "\"paperSizeCode\": 1",
+                    issue_prefix + " should expose the effective deleted-root paper size");
+    expect_contains(settings_process.stdout_text, "\"topMarginAvailable\": true",
+                    issue_prefix + " should expose effective deleted-root top-margin availability");
+    expect_contains(settings_process.stdout_text, "\"topMargin\": 10",
+                    issue_prefix + " should expose the effective deleted-root top margin");
     expect_contains(settings_process.stdout_text, "\"previewBoundsAvailable\": true",
                     issue_prefix + " should preserve live preview availability");
     expect_contains(settings_process.stdout_text, "\"previewBoundsLeft\": 0",
