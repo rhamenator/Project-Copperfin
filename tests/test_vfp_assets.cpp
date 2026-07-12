@@ -438,6 +438,8 @@ void test_asset_inspector_errors_resolve_through_localization_catalog() {
     expect(
         export_result.error == "DBC path does not exist: " + temp_path.string(),
         "#2386: export_database_as_json should preserve the default localized missing-DBC error");
+    expect(export_result.json.empty(),
+           "#3988: failed database exports should leave the JSON result empty");
 }
 
 void test_parse_index_probe_for_cdx() {
@@ -1712,6 +1714,33 @@ void test_inspect_asset_reports_dbf_descriptor_validation_findings() {
 
 // ---- export_database_as_json tests ----
 
+void test_export_database_as_json_errors_leave_json_empty() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_export_error_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path empty_path = temp_dir / "empty.dbc";
+    {
+        std::ofstream output(empty_path, std::ios::binary);
+    }
+    const auto empty_result = copperfin::vfp::export_database_as_json(empty_path.string());
+    expect(!empty_result.ok && !empty_result.error.empty() && empty_result.json.empty(),
+           "#3988: unreadable empty DBC exports should report only an error");
+
+    const fs::path malformed_path = temp_dir / "malformed.dbc";
+    {
+        std::ofstream output(malformed_path, std::ios::binary);
+        output.put(static_cast<char>(0x30));
+    }
+    const auto malformed_result = copperfin::vfp::export_database_as_json(malformed_path.string());
+    expect(!malformed_result.ok && !malformed_result.error.empty() && malformed_result.json.empty(),
+           "#3988: malformed-header DBC exports should report only an error");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_export_database_as_json_produces_catalog_json() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() / "copperfin_dbc_export_tests";
@@ -1739,6 +1768,8 @@ void test_export_database_as_json_produces_catalog_json() {
 
     const auto result = copperfin::vfp::export_database_as_json(dbc_path.string());
     expect(result.ok, "export_database_as_json should succeed on a minimal DBC fixture");
+    expect(result.error.empty(),
+           "#3988: successful database exports should leave the error result empty");
     if (result.ok) {
         expect(result.json.find("\"northwind\"") != std::string::npos,
                "export JSON should include the database name");
@@ -1968,6 +1999,7 @@ int main() {
     test_inspect_asset_reports_malformed_memo_sidecar_findings();
     test_inspect_asset_reports_dbf_descriptor_validation_findings();
     test_export_database_as_json_produces_catalog_json();
+    test_export_database_as_json_errors_leave_json_empty();
     test_export_database_as_json_decodes_properties_blob();
     test_export_database_as_json_prefers_catalog_name_and_casefolded_assets();
     test_read_memo_block_raw_returns_correct_bytes();

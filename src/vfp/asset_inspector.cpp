@@ -130,11 +130,6 @@ bool is_index_extension(const std::string& extension) {
            extension == ".ndx" || extension == ".mdx";
 }
 
-std::uint16_t read_le_u16(const std::vector<std::uint8_t>& bytes, std::size_t offset) {
-    return static_cast<std::uint16_t>(bytes[offset]) |
-           (static_cast<std::uint16_t>(bytes[offset + 1U]) << 8U);
-}
-
 std::uint32_t read_le_u32(const std::vector<std::uint8_t>& bytes, std::size_t offset) {
     return static_cast<std::uint32_t>(bytes[offset]) |
            (static_cast<std::uint32_t>(bytes[offset + 1U]) << 8U) |
@@ -1344,7 +1339,8 @@ DatabaseExportResult export_database_as_json(
     if (!fs::exists(dbc_path)) {
         return {
             .ok = false,
-            .error = asset_inspector_text("Vfp.AssetInspector.Error.DbcPathMissing", {{"path", dbc_path}})
+            .error = asset_inspector_text("Vfp.AssetInspector.Error.DbcPathMissing", {{"path", dbc_path}}),
+            .json = {}
         };
     }
 
@@ -1353,7 +1349,8 @@ DatabaseExportResult export_database_as_json(
     if (dbc_bytes.empty()) {
         return {
             .ok = false,
-            .error = asset_inspector_text("Vfp.AssetInspector.Error.DbcReadFailed", {{"path", dbc_path}})
+            .error = asset_inspector_text("Vfp.AssetInspector.Error.DbcReadFailed", {{"path", dbc_path}}),
+            .json = {}
         };
     }
 
@@ -1363,7 +1360,8 @@ DatabaseExportResult export_database_as_json(
             .ok = false,
             .error = asset_inspector_text(
                 "Vfp.AssetInspector.Error.DbcHeaderParseFailed",
-                {{"error", header_result.error}})
+                {{"error", header_result.error}}),
+            .json = {}
         };
     }
 
@@ -1575,7 +1573,7 @@ DatabaseExportResult export_database_as_json(
     json << "  }\n";
     json << "}\n";
 
-    return {.ok = true, .json = json.str()};
+    return {.ok = true, .error = {}, .json = json.str()};
 }
 
 }  // namespace copperfin::vfp
