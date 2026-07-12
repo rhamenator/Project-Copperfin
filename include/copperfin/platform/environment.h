@@ -5,11 +5,34 @@
 #pragma once
 
 #include <cstdlib>
+#include <filesystem>
 #include <optional>
 #include <string>
 #include <string_view>
 
 namespace copperfin::platform {
+
+#if defined(_WIN32)
+namespace detail {
+
+inline std::optional<std::wstring> widen_ascii_environment_name(std::string_view name) {
+    if (name.empty()) {
+        return std::nullopt;
+    }
+
+    std::wstring wide_name;
+    wide_name.reserve(name.size());
+    for (const unsigned char ch : name) {
+        if (ch > 0x7FU) {
+            return std::nullopt;
+        }
+        wide_name.push_back(static_cast<wchar_t>(ch));
+    }
+    return wide_name;
+}
+
+}  // namespace detail
+#endif
 
 inline std::optional<std::string> read_environment_variable(std::string_view name) {
     if (name.empty()) {
@@ -39,6 +62,29 @@ inline std::string read_environment_variable_or_empty(std::string_view name) {
     return value.has_value() ? *value : std::string{};
 }
 
+inline std::optional<std::filesystem::path> read_environment_path(std::string_view name) {
+#if defined(_WIN32)
+    const auto wide_name = detail::widen_ascii_environment_name(name);
+    if (!wide_name.has_value()) {
+        return std::nullopt;
+    }
+
+    wchar_t* raw = nullptr;
+    std::size_t length = 0;
+    if (_wdupenv_s(&raw, &length, wide_name->c_str()) != 0 || raw == nullptr) {
+        return std::nullopt;
+    }
+    std::filesystem::path value(raw);
+    std::free(raw);
+    return value;
+#else
+    const auto value = read_environment_variable(name);
+    return value.has_value()
+        ? std::optional<std::filesystem::path>(std::filesystem::path(*value))
+        : std::nullopt;
+#endif
+}
+
 inline bool write_environment_variable(std::string_view name, std::string_view value) {
     if (name.empty()) {
         return false;
@@ -53,6 +99,15 @@ inline bool write_environment_variable(std::string_view name, std::string_view v
 #endif
 }
 
+inline bool write_environment_path(std::string_view name, const std::filesystem::path& value) {
+#if defined(_WIN32)
+    const auto wide_name = detail::widen_ascii_environment_name(name);
+    return wide_name.has_value() && _wputenv_s(wide_name->c_str(), value.c_str()) == 0;
+#else
+    return write_environment_variable(name, value.native());
+#endif
+}
+
 inline bool clear_environment_variable(std::string_view name) {
     if (name.empty()) {
         return false;
@@ -63,6 +118,15 @@ inline bool clear_environment_variable(std::string_view name) {
     return _putenv_s(key.c_str(), "") == 0;
 #else
     return unsetenv(key.c_str()) == 0;
+#endif
+}
+
+inline bool clear_environment_path(std::string_view name) {
+#if defined(_WIN32)
+    const auto wide_name = detail::widen_ascii_environment_name(name);
+    return wide_name.has_value() && _wputenv_s(wide_name->c_str(), L"") == 0;
+#else
+    return clear_environment_variable(name);
 #endif
 }
 

@@ -26,6 +26,7 @@
 namespace {
 
 using copperfin::test_support::ScopedEnvironmentValue;
+using copperfin::test_support::ScopedEnvironmentPath;
 
 int failures = 0;
 
@@ -4334,11 +4335,15 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
-    const fs::path locale_root = temp_root / "locales";
+#if defined(_WIN32)
+    const fs::path locale_root = temp_root / fs::path(L"locales_\u0416_\u6F22");
+#else
+    const fs::path locale_root = temp_root / "locales_\xD0\x96_\xE6\xBC\xA2";
+#endif
     write_runtime_host_usage_catalogs(locale_root);
 
     {
-        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentPath locale_dir("COPPERFIN_LOCALE_DIR", locale_root);
         const auto process = run_process_capture(runtime_host_path, {}, temp_root);
         expect(process.exit_code == 2,
                "#2349: runtime host without manifest should keep the usage exit code");
@@ -4368,7 +4373,7 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
     }
 
     {
-        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentPath locale_dir("COPPERFIN_LOCALE_DIR", locale_root);
         ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "es-419");
         const auto process = run_process_capture(runtime_host_path, {}, temp_root);
         expect(process.exit_code == 2,
@@ -4409,7 +4414,7 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
     }
 
     {
-        ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentPath locale_dir("COPPERFIN_LOCALE_DIR", locale_root);
         ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "qps-ploc");
         const auto process = run_process_capture(runtime_host_path, {}, temp_root);
         expect(process.exit_code == 2,

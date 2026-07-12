@@ -8,13 +8,38 @@
 #include "copperfin/platform/environment.h"
 
 #include <cstdlib>
+#include <filesystem>
 #include <optional>
 #include <string>
 #include <utility>
 
 namespace copperfin::test_support {
 
+inline bool is_filesystem_environment_variable(const std::string& name) {
+    return name == "COPPERFIN_LOCALE_DIR";
+}
+
+inline std::string path_to_utf8_string(const std::filesystem::path& value) {
+    const auto encoded = value.u8string();
+    return std::string(
+        reinterpret_cast<const char*>(encoded.data()),
+        encoded.size());
+}
+
+inline std::filesystem::path path_from_utf8_string(const std::string& value) {
+    const std::u8string encoded(
+        reinterpret_cast<const char8_t*>(value.data()),
+        value.size());
+    return std::filesystem::path(encoded);
+}
+
 inline std::optional<std::string> getenv_optional(const std::string& name) {
+    if (is_filesystem_environment_variable(name)) {
+        const auto value = copperfin::platform::read_environment_path(name);
+        return value.has_value()
+            ? std::optional<std::string>(path_to_utf8_string(*value))
+            : std::nullopt;
+    }
     return copperfin::platform::read_environment_variable(name);
 }
 
@@ -23,7 +48,26 @@ inline std::string getenv_value(const std::string& name) {
     return value.has_value() ? *value : std::string();
 }
 
+inline std::optional<std::filesystem::path> getenv_path_optional(const std::string& name) {
+    return copperfin::platform::read_environment_path(name);
+}
+
+inline std::filesystem::path getenv_path(const std::string& name) {
+    const auto value = getenv_path_optional(name);
+    return value.has_value() ? *value : std::filesystem::path();
+}
+
 inline void set_env_value(const std::string& name, const std::string& value, bool has_value) {
+    if (is_filesystem_environment_variable(name)) {
+        if (has_value) {
+            (void)copperfin::platform::write_environment_path(
+                name,
+                path_from_utf8_string(value));
+        } else {
+            (void)copperfin::platform::clear_environment_path(name);
+        }
+        return;
+    }
     if (has_value) {
         (void)copperfin::platform::write_environment_variable(name, value);
     } else {
@@ -83,6 +127,44 @@ struct ScopedEnvironmentValue {
     ~ScopedEnvironmentValue() {
         if (original_value.has_value()) {
             set_env_value(name, *original_value, true);
+        } else {
+            clear();
+        }
+    }
+};
+
+struct ScopedEnvironmentPath {
+    std::string name;
+    std::optional<std::filesystem::path> original_value;
+
+    explicit ScopedEnvironmentPath(std::string environment_name, bool clear_existing = true)
+        : name(std::move(environment_name)),
+          original_value(name.empty() ? std::nullopt : getenv_path_optional(name)) {
+        if (clear_existing && !name.empty()) {
+            clear();
+        }
+    }
+
+    ScopedEnvironmentPath(std::string environment_name, const std::filesystem::path& initial_value)
+        : ScopedEnvironmentPath(std::move(environment_name), false) {
+        set(initial_value);
+    }
+
+    void set(const std::filesystem::path& value) const {
+        if (!name.empty()) {
+            (void)copperfin::platform::write_environment_path(name, value);
+        }
+    }
+
+    void clear() const {
+        if (!name.empty()) {
+            (void)copperfin::platform::clear_environment_path(name);
+        }
+    }
+
+    ~ScopedEnvironmentPath() {
+        if (original_value.has_value()) {
+            set(*original_value);
         } else {
             clear();
         }

@@ -274,6 +274,21 @@ bool parse_json_string(std::string_view text, std::size_t& offset, std::string& 
     return false;
 }
 
+bool path_has_non_whitespace(const std::filesystem::path& value) {
+    using PathCharacter = std::filesystem::path::value_type;
+    const auto is_ascii_whitespace = [](PathCharacter ch) {
+        return ch == static_cast<PathCharacter>(' ') ||
+            ch == static_cast<PathCharacter>('\t') ||
+            ch == static_cast<PathCharacter>('\n') ||
+            ch == static_cast<PathCharacter>('\r') ||
+            ch == static_cast<PathCharacter>('\f') ||
+            ch == static_cast<PathCharacter>('\v');
+    };
+    return std::any_of(value.native().begin(), value.native().end(), [&](PathCharacter ch) {
+        return !is_ascii_whitespace(ch);
+    });
+}
+
 std::string pseudo_localize_segment(std::string_view segment) {
     std::string result;
     result.reserve(segment.size() * 2U);
@@ -512,9 +527,9 @@ LocalizedCatalog load_catalogs(const std::filesystem::path& locale_root, std::st
 }
 
 std::filesystem::path resolve_catalog_root(const std::filesystem::path& executable_path) {
-    const std::string configured = platform::read_environment_variable_or_empty("COPPERFIN_LOCALE_DIR");
-    if (!trim_copy(configured).empty()) {
-        return configured;
+    const auto configured = platform::read_environment_path("COPPERFIN_LOCALE_DIR");
+    if (configured.has_value() && path_has_non_whitespace(*configured)) {
+        return *configured;
     }
 
     if (!executable_path.empty()) {

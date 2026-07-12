@@ -2,6 +2,7 @@
 // Licensed under the Project Copperfin Source-Available License or
 // Commercial License. See LICENSE.md in the repository root.
 
+#include "copperfin/localization/localization.h"
 #include "copperfin/platform/environment.h"
 #include "test_environment_support.h"
 #include "test_locale_catalog_environment_support.h"
@@ -51,6 +52,12 @@ void test_platform_environment_rejects_empty_names() {
            "#3214: shared platform environment helper should reject empty write keys");
     expect(!copperfin::platform::clear_environment_variable(""),
            "#3214: shared platform environment helper should reject empty clear keys");
+    expect(!copperfin::platform::read_environment_path("").has_value(),
+           "#4005: filesystem environment helper should reject empty read keys");
+    expect(!copperfin::platform::write_environment_path("", std::filesystem::path("value")),
+           "#4005: filesystem environment helper should reject empty write keys");
+    expect(!copperfin::platform::clear_environment_path(""),
+           "#4005: filesystem environment helper should reject empty clear keys");
 }
 
 void test_scoped_environment_support_uses_shared_platform_helpers() {
@@ -181,6 +188,71 @@ void test_default_locale_environment_falls_back_for_invalid_or_missing_override(
     fs::remove_all(root, ignored);
 }
 
+void test_locale_catalog_root_preserves_non_ascii_environment_paths() {
+    namespace fs = std::filesystem;
+
+#if defined(_WIN32)
+    fs::path fixture_name = L"copperfin_\u0416_\u6F22_locale_tests_";
+#else
+    fs::path fixture_name = "copperfin_\xD0\x96_\xE6\xBC\xA2_locale_tests_";
+#endif
+    fixture_name += std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
+    const fs::path root = fs::temp_directory_path() / fixture_name;
+    const fs::path locale_root = root / "resources" / "locales";
+    const fs::path prior_value = root / "prior-locale-root";
+    fs::create_directories(locale_root / "en-US");
+    std::ofstream(locale_root / "en-US" / "strings.json")
+        << "{\"Test.NonAsciiLocaleRoot\":\"loaded\"}\n";
+
+    copperfin::test_support::ScopedEnvironmentPath original_locale_dir("COPPERFIN_LOCALE_DIR");
+    expect(copperfin::platform::write_environment_path("COPPERFIN_LOCALE_DIR", prior_value),
+           "#4005: filesystem environment helper should seed a prior path value");
+    {
+        copperfin::test_support::ScopedEnvironmentValue legacy_locale_dir("COPPERFIN_LOCALE_DIR");
+        expect(!copperfin::platform::read_environment_path("COPPERFIN_LOCALE_DIR").has_value(),
+               "#4005: legacy test scope should clear locale roots through the path boundary");
+    }
+    expect(copperfin::platform::read_environment_path("COPPERFIN_LOCALE_DIR") == prior_value,
+           "#4005: legacy test scope should restore a Unicode path through the path boundary");
+    {
+        copperfin::test_support::ScopedEnvironmentPath configured_locale_dir(
+            "COPPERFIN_LOCALE_DIR",
+            locale_root);
+        const auto configured = copperfin::platform::read_environment_path("COPPERFIN_LOCALE_DIR");
+        expect(configured.has_value() && *configured == locale_root,
+               "#4005: filesystem environment helper should round-trip a non-ASCII path exactly");
+        expect(copperfin::localization::resolve_catalog_root() == locale_root,
+               "#4005: locale-root resolution should preserve a non-ASCII configured path");
+        const auto catalog = copperfin::localization::load_catalogs(locale_root, "en-US");
+        expect(catalog.translate("Test.NonAsciiLocaleRoot") == "loaded",
+               "#4005: localization should load a catalog beneath the non-ASCII configured root");
+        {
+            copperfin::test_support::ScopedDefaultLocaleCatalogEnvironment default_locale;
+            expect(copperfin::test_support::getenv_path("COPPERFIN_LOCALE_DIR") == locale_root,
+                   "#4005: default locale scope should preserve a usable non-ASCII catalog root");
+        }
+        expect(copperfin::platform::read_environment_path("COPPERFIN_LOCALE_DIR") == locale_root,
+               "#4005: default locale scope should restore the exact non-ASCII path value");
+    }
+    expect(copperfin::platform::read_environment_path("COPPERFIN_LOCALE_DIR") == prior_value,
+           "#4005: filesystem environment scope should restore a present prior path exactly");
+
+    expect(copperfin::platform::clear_environment_path("COPPERFIN_LOCALE_DIR"),
+           "#4005: filesystem environment helper should clear the seeded prior path");
+    {
+        copperfin::test_support::ScopedEnvironmentPath configured_locale_dir(
+            "COPPERFIN_LOCALE_DIR",
+            locale_root);
+        expect(copperfin::localization::resolve_catalog_root() == locale_root,
+               "#4005: non-ASCII locale-root resolution should remain stable from a missing prior value");
+    }
+    expect(!copperfin::platform::read_environment_path("COPPERFIN_LOCALE_DIR").has_value(),
+           "#4005: filesystem environment scope should restore a missing prior path as missing");
+
+    std::error_code ignored;
+    fs::remove_all(root, ignored);
+}
+
 }  // namespace
 
 int main() {
@@ -190,6 +262,7 @@ int main() {
     test_shell_command_preparation_preserves_platform_quoting_contract();
     test_default_locale_environment_preserves_valid_override_and_restores_values();
     test_default_locale_environment_falls_back_for_invalid_or_missing_override();
+    test_locale_catalog_root_preserves_non_ascii_environment_paths();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

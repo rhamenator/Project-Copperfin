@@ -1773,8 +1773,10 @@ copperfin::localization::LocalizedCatalog load_localization(
     const char* executable_path,
     const std::string& explicit_locale) {
     const std::filesystem::path locale_root = copperfin::localization::resolve_catalog_root(executable_path);
-    if (trim_copy(copperfin::platform::read_environment_variable_or_empty("COPPERFIN_LOCALE_DIR")).empty()) {
-        (void)copperfin::platform::write_environment_variable("COPPERFIN_LOCALE_DIR", locale_root.string());
+    const auto configured_locale_root =
+        copperfin::platform::read_environment_path("COPPERFIN_LOCALE_DIR");
+    if (!configured_locale_root.has_value() || *configured_locale_root != locale_root) {
+        (void)copperfin::platform::write_environment_path("COPPERFIN_LOCALE_DIR", locale_root);
     }
     return copperfin::localization::load_catalogs(
         locale_root,
