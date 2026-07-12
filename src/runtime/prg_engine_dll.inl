@@ -316,9 +316,11 @@
                     DISPPARAMS dp{};
                     dp.rgvarg = args.empty() ? nullptr : args.data();
                     dp.cArgs = static_cast<UINT>(args.size());
-                    EXCEPINFO exc{};
-                    return obj->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD,
-                                       &dp, ret_out, &exc, nullptr);
+                    DispatchExceptionInfo exception_info;
+                    hr = obj->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD,
+                                     &dp, ret_out, exception_info.output(), nullptr);
+                    exception_info.record_result(hr);
+                    return hr;
                 };
 
                 // Get default AppDomain as IDispatch

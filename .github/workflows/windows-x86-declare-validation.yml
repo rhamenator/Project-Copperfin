@@ -11,6 +11,8 @@ on:
       - "resources/locales/**/strings.json"
       - "src/runtime/prg_engine.cpp"
       - "src/runtime/prg_engine_dll.inl"
+      - "src/runtime/dispatch_exception_info.cpp"
+      - "src/runtime/dispatch_exception_info.h"
       - "src/runtime/prg_engine_dispatch.inl"
       - "src/runtime/prg_engine_helpers.cpp"
       - "src/runtime/prg_engine_helpers.h"
@@ -19,6 +21,8 @@ on:
       - "src/runtime/win64_native_call.h"
       - "tests/CMakeLists.txt"
       - "tests/fixtures/declared_dll_fixture.cpp"
+      - "tests/fixtures/managed_declare_fixture.cs"
+      - "tests/test_prg_engine_dotnet_dispatch.cpp"
       - "tests/test_prg_engine_parser_classes.cpp"
       - "tests/test_prg_engine_seek_index.cpp"
       - "tests/test_localization.cpp"
@@ -29,6 +33,8 @@ on:
       - "resources/locales/**/strings.json"
       - "src/runtime/prg_engine.cpp"
       - "src/runtime/prg_engine_dll.inl"
+      - "src/runtime/dispatch_exception_info.cpp"
+      - "src/runtime/dispatch_exception_info.h"
       - "src/runtime/prg_engine_dispatch.inl"
       - "src/runtime/prg_engine_helpers.cpp"
       - "src/runtime/prg_engine_helpers.h"
@@ -37,6 +43,8 @@ on:
       - "src/runtime/win64_native_call.h"
       - "tests/CMakeLists.txt"
       - "tests/fixtures/declared_dll_fixture.cpp"
+      - "tests/fixtures/managed_declare_fixture.cs"
+      - "tests/test_prg_engine_dotnet_dispatch.cpp"
       - "tests/test_prg_engine_parser_classes.cpp"
       - "tests/test_prg_engine_seek_index.cpp"
       - "tests/test_localization.cpp"
@@ -64,7 +72,7 @@ jobs:
         run: cmake -S . -B build-${{ matrix.platform }} -A ${{ matrix.platform }} -DCOPPERFIN_BUILD_TESTS=ON
 
       - name: Build DECLARE regression target
-        run: cmake --build build-${{ matrix.platform }} --config Release --parallel --target test_prg_engine_seek_index test_prg_engine_parser_classes test_localization
+        run: cmake --build build-${{ matrix.platform }} --config Release --parallel --target test_prg_engine_seek_index test_prg_engine_dotnet_dispatch test_prg_engine_parser_classes test_localization
 
       - name: Run DECLARE regression target
-        run: ctest --test-dir build-${{ matrix.platform }} -C Release --output-on-failure -R "^(test_prg_engine_seek_index|test_prg_engine_parser_classes|test_localization)$"
+        run: ctest --test-dir build-${{ matrix.platform }} -C Release --output-on-failure -R "^(test_prg_engine_seek_index|test_prg_engine_dotnet_dispatch|test_prg_engine_parser_classes|test_localization)$"

@@ -286,6 +286,9 @@ target_link_libraries(cf_xbase_runtime
 )
 
 if(WIN32)
+    target_sources(cf_xbase_runtime PRIVATE
+        src/runtime/dispatch_exception_info.cpp
+    )
     target_link_libraries(cf_xbase_runtime PRIVATE oleaut32)
 endif()
 
