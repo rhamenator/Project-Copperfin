@@ -5,6 +5,7 @@
 #include "copperfin/licensing/license_status.h"
 #include "copperfin/localization/localization.h"
 #include "copperfin/platform/environment.h"
+#include "copperfin/platform/executable_path.h"
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/runtime/xasset_methods.h"
 #include "copperfin/platform/federation_execution.h"
@@ -1770,7 +1771,7 @@ std::string explicit_locale_from_arguments(int argc, char** argv) {
 }
 
 copperfin::localization::LocalizedCatalog load_localization(
-    const char* executable_path,
+    const std::filesystem::path& executable_path,
     const std::string& explicit_locale) {
     const std::filesystem::path locale_root = copperfin::localization::resolve_catalog_root(executable_path);
     const auto configured_locale_root =
@@ -2510,18 +2511,11 @@ std::optional<std::string> resolve_startup_source(
     return std::nullopt;
 }
 
-std::string resolve_implicit_manifest_path(const char* argv0, bool debug_mode) {
-    if (argv0 == nullptr || *argv0 == '\0') {
+std::string resolve_implicit_manifest_path(
+    const std::filesystem::path& executable_path,
+    bool debug_mode) {
+    if (executable_path.empty()) {
         return {};
-    }
-
-    std::error_code path_error;
-    std::filesystem::path executable_path(argv0);
-    if (executable_path.is_relative()) {
-        executable_path = std::filesystem::absolute(executable_path, path_error);
-        if (path_error) {
-            return {};
-        }
     }
 
     const auto deployed_path = [&](std::string_view file_name) {
@@ -2545,9 +2539,13 @@ std::string resolve_implicit_manifest_path(const char* argv0, bool debug_mode) {
 }  // namespace
 
 int main(int argc, char** argv) {
+    const std::filesystem::path invocation_path =
+        argc > 0 && argv[0] != nullptr ? std::filesystem::path(argv[0]) : std::filesystem::path();
+    const std::filesystem::path running_executable_path =
+        copperfin::platform::resolve_running_executable_path(invocation_path);
     const std::string explicit_locale = explicit_locale_from_arguments(argc, argv);
     const copperfin::localization::LocalizedCatalog catalog =
-        load_localization(argc > 0 ? argv[0] : nullptr, explicit_locale);
+        load_localization(running_executable_path, explicit_locale);
 
     const auto hardening = copperfin::security::apply_default_process_hardening();
     if (!hardening.applied) {
@@ -2744,7 +2742,7 @@ int main(int argc, char** argv) {
     }
 
     if (manifest_path.empty()) {
-        manifest_path = resolve_implicit_manifest_path(argc > 0 ? argv[0] : nullptr, debug_mode);
+        manifest_path = resolve_implicit_manifest_path(running_executable_path, debug_mode);
         if (manifest_path.empty()) {
             print_usage(catalog);
             return 2;

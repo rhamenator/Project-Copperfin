@@ -1,4 +1,4 @@
-name: Windows Environment Path Validation
+name: Windows Environment and Executable Path Validation
 
 on:
   workflow_dispatch:
@@ -8,7 +8,9 @@ on:
       - ".github/workflows/windows-environment-validation.yml"
       - "apps/copperfin_runtime_host/main.cpp"
       - "include/copperfin/platform/environment.h"
+      - "include/copperfin/platform/executable_path.h"
       - "src/localization/localization.cpp"
+      - "src/platform/executable_path.cpp"
       - "tests/CMakeLists.txt"
       - "tests/test_environment_support.h"
       - "tests/test_locale_catalog_environment_support.h"
@@ -19,7 +21,9 @@ on:
       - ".github/workflows/windows-environment-validation.yml"
       - "apps/copperfin_runtime_host/main.cpp"
       - "include/copperfin/platform/environment.h"
+      - "include/copperfin/platform/executable_path.h"
       - "src/localization/localization.cpp"
+      - "src/platform/executable_path.cpp"
       - "tests/CMakeLists.txt"
       - "tests/test_environment_support.h"
       - "tests/test_locale_catalog_environment_support.h"
@@ -41,8 +45,8 @@ jobs:
       - name: Configure native build
         run: cmake -S . -B build -DCOPPERFIN_BUILD_TESTS=ON
 
-      - name: Build environment path regressions
-        run: cmake --build build --config Release --parallel 2 --target test_platform_environment
+      - name: Build environment and executable path regressions
+        run: cmake --build build --config Release --parallel 2 --target test_platform_environment test_runtime_host_debug_output
 
-      - name: Run environment path regressions
-        run: ctest --test-dir build -C Release --output-on-failure -R "^test_platform_environment$"
+      - name: Run environment and executable path regressions
+        run: ctest --test-dir build -C Release --output-on-failure -R "^(test_platform_environment|test_runtime_host_debug_output)$"

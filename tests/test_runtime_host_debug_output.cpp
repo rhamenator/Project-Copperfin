@@ -1777,6 +1777,9 @@ void test_runtime_host_supports_single_breakpoint_removal(const std::string& run
 void test_runtime_host_prefers_debug_manifest_for_implicit_debug_launches(const std::string& runtime_host_path) {
     namespace fs = std::filesystem;
 
+    ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR");
+    ScopedEnvironmentValue locale("COPPERFIN_LOCALE", "en-US");
+
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_implicit_debug_manifest_tests";
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
@@ -1852,6 +1855,58 @@ void test_runtime_host_prefers_debug_manifest_for_implicit_debug_launches(const 
     expect(debug_process.stdout_text.find("debug.location: " + debug_startup_path.string() + ":2") != std::string::npos,
            "#3669: implicit debug launches should prefer app.cfdebug over app.cfmanifest");
 
+    const fs::path unrelated_working_directory = temp_root / "unrelated-caller";
+    fs::create_directories(unrelated_working_directory);
+    const fs::path deployed_locale_root = temp_root / "share" / "copperfin" / "locales" / "en-US";
+    const fs::path caller_locale_root =
+        unrelated_working_directory / "resources" / "locales" / "en-US";
+    fs::create_directories(deployed_locale_root);
+    fs::create_directories(caller_locale_root);
+    write_text(
+        deployed_locale_root / "strings.json",
+        "{\"RuntimeHost.Prefix.Error\":\"error: \","
+        "\"RuntimeHost.Error.ManifestNotFound\":\"DEPLOYED_LOCALE_ROOT\"}\n");
+    write_text(
+        caller_locale_root / "strings.json",
+        "{\"RuntimeHost.Prefix.Error\":\"error: \","
+        "\"RuntimeHost.Error.ManifestNotFound\":\"CALLER_LOCALE_ROOT\"}\n");
+    ScopedEnvironmentValue search_path("PATH", false);
+#if defined(_WIN32)
+    ScopedEnvironmentValue path_extensions("PATHEXT", ".EXE;.COM;.BAT;.CMD");
+#endif
+    const std::string original_path = copperfin::test_support::getenv_value("PATH");
+#if defined(_WIN32)
+    constexpr char path_separator = ';';
+#else
+    constexpr char path_separator = ':';
+#endif
+    search_path.set(
+        deployed_runtime_host.parent_path().string() +
+        (original_path.empty()
+             ? std::string()
+             : std::string(1U, path_separator) + original_path));
+
+#if defined(_WIN32)
+    const std::string path_launch_name = deployed_runtime_host.stem().string();
+#else
+    const std::string path_launch_name = deployed_runtime_host.filename().string();
+#endif
+
+    const auto path_debug_process = run_process_capture(
+        path_launch_name,
+        {
+            "--debug",
+            "--debug-command", "break:add:2",
+            "--debug-command", "continue"
+        },
+        unrelated_working_directory);
+    expect(path_debug_process.exit_code == 0,
+           "#4013: PATH-launched implicit debug should resolve beside the deployed runtime host");
+    expect(
+        path_debug_process.stdout_text.find(
+            "debug.location: " + debug_startup_path.string() + ":2") != std::string::npos,
+        "#4013: PATH-launched implicit debug should prefer the adjacent app.cfdebug");
+
     write_text(debug_manifest_path, "manifest_version=1\nproject_title=BrokenDebugManifest\n");
 
     const auto non_debug_process = run_process_capture(
@@ -1867,6 +1922,25 @@ void test_runtime_host_prefers_debug_manifest_for_implicit_debug_launches(const 
 
     expect(non_debug_process.exit_code == 0,
            "#3669: implicit non-debug launches should continue to use app.cfmanifest");
+
+    const auto path_non_debug_process = run_process_capture(
+        path_launch_name,
+        {},
+        unrelated_working_directory);
+    expect(path_non_debug_process.exit_code == 0,
+           "#4013: PATH-launched implicit runtime should resolve the adjacent app.cfmanifest");
+
+    const auto localized_failure_process = run_process_capture(
+        path_launch_name,
+        {"--manifest", (unrelated_working_directory / "missing.cfmanifest").string()},
+        unrelated_working_directory);
+    expect(localized_failure_process.exit_code == 3,
+           "#4013: PATH-launched explicit missing manifests should preserve exit code 3");
+    expect(localized_failure_process.stdout_text.find("status: error") != std::string::npos,
+           "#4013: PATH-launched localized failures should preserve invariant status fields");
+    expect(localized_failure_process.stdout_text.find("DEPLOYED_LOCALE_ROOT") != std::string::npos &&
+               localized_failure_process.stdout_text.find("CALLER_LOCALE_ROOT") == std::string::npos,
+           "#4013: PATH-launched localization should bind beside the running image, not caller CWD");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);

@@ -325,7 +325,14 @@ void test_catalog_root_resolution_finds_repo_build_output_layout_from_executable
 void test_catalog_root_resolution_finds_repo_build_output_layout_from_path_launched_basename() {
     namespace fs = std::filesystem;
     ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR");
+#if defined(_WIN32)
+    ScopedEnvironmentPath search_path("PATH", false);
+#else
     ScopedEnvironmentValue search_path("PATH", false);
+#endif
+#if defined(_WIN32)
+    ScopedEnvironmentValue path_extensions("PATHEXT", ".EXE;.COM;.BAT;.CMD");
+#endif
 
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_path_catalog_tests";
     std::error_code ignored;
@@ -334,30 +341,56 @@ void test_catalog_root_resolution_finds_repo_build_output_layout_from_path_launc
     seed_test_catalogs(temp_root / "resources" / "locales");
 
 #if defined(_WIN32)
-    const std::string executable_name = "copperfin_build_host.exe";
+    const std::string executable_file_name = "copperfin_build_host.exe";
+    const std::string invocation_name = "copperfin_build_host";
 #else
-    const std::string executable_name = "copperfin_build_host";
+    const std::string executable_file_name = "copperfin_build_host";
+    const std::string invocation_name = executable_file_name;
 #endif
-    const fs::path executable_path = temp_root / "build" / "Release" / executable_name;
+#if defined(_WIN32)
+    const fs::path executable_directory = temp_root / L"build_\u0416_\u6F22" / "Release";
+#else
+    const fs::path executable_directory = temp_root / "build" / "Release ";
+#endif
+    const fs::path executable_path = executable_directory / executable_file_name;
     fs::create_directories(executable_path.parent_path());
     write_text(executable_path, "");
-
-    const std::string original_path = getenv_value("PATH");
-#if defined(_WIN32)
-    const char path_separator = ';';
-#else
-    const char path_separator = ':';
+#if !defined(_WIN32)
+    fs::permissions(
+        executable_path,
+        fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec,
+        fs::perm_options::add,
+        ignored);
 #endif
-    const std::string seeded_path =
-        executable_path.parent_path().string() +
+
+#if defined(_WIN32)
+    const std::filesystem::path original_path = getenv_path("PATH");
+    std::wstring seeded_path = executable_path.parent_path().native();
+    if (!original_path.empty()) {
+        seeded_path += L';';
+        seeded_path += original_path.native();
+    }
+#else
+    const std::string original_path = getenv_value("PATH");
+    const char path_separator = ':';
+    std::string seeded_path = executable_path.parent_path().string() +
         (original_path.empty() ? std::string() : std::string(1U, path_separator) + original_path);
+    const fs::path shadow_root = temp_root / "non-executable-shadow";
+    fs::create_directories(shadow_root);
+    write_text(shadow_root / invocation_name, "not executable");
+    seeded_path = shadow_root.string() + std::string(1U, path_separator) + seeded_path;
+#endif
+#if defined(_WIN32)
+    search_path.set(fs::path(seeded_path));
+#else
     search_path.set(seeded_path);
+#endif
 
     const fs::path nested_working_directory = temp_root / "cwd" / "nested";
     fs::create_directories(nested_working_directory);
     const fs::path previous_working_directory = fs::current_path();
     fs::current_path(nested_working_directory);
-    const fs::path resolved_root = copperfin::localization::resolve_catalog_root(executable_name);
+    const fs::path resolved_root = copperfin::localization::resolve_catalog_root(invocation_name);
     const auto catalog = copperfin::localization::load_catalogs(resolved_root, "en-US");
     fs::current_path(previous_working_directory);
 

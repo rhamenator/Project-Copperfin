@@ -4,6 +4,7 @@
 
 #include "copperfin/localization/localization.h"
 #include "copperfin/platform/environment.h"
+#include "copperfin/platform/executable_path.h"
 
 #include <algorithm>
 #include <cctype>
@@ -15,21 +16,6 @@
 namespace copperfin::localization {
 
 namespace {
-
-std::vector<std::string> split_search_path_list(std::string_view raw_paths, char separator) {
-    std::vector<std::string> values;
-    std::size_t start = 0U;
-    while (start <= raw_paths.size()) {
-        const std::size_t end = raw_paths.find(separator, start);
-        if (end == std::string_view::npos) {
-            values.emplace_back(raw_paths.substr(start));
-            break;
-        }
-        values.emplace_back(raw_paths.substr(start, end - start));
-        start = end + 1U;
-    }
-    return values;
-}
 
 std::string trim_copy(std::string_view value) {
     std::size_t first = 0U;
@@ -56,70 +42,8 @@ void append_unique(std::vector<std::string>& values, const std::string& value) {
     }
 }
 
-std::vector<std::string> executable_search_suffixes(const std::filesystem::path& executable_path) {
-    if (executable_path.has_extension()) {
-        return {std::string()};
-    }
-
-#if defined(_WIN32)
-    std::vector<std::string> suffixes;
-    const std::string path_extensions = platform::read_environment_variable_or_empty("PATHEXT");
-    for (std::string suffix : split_search_path_list(path_extensions, ';')) {
-        suffix = trim_copy(suffix);
-        if (suffix.empty()) {
-            continue;
-        }
-        if (suffix.front() != '.') {
-            suffix.insert(suffix.begin(), '.');
-        }
-        append_unique(suffixes, suffix);
-    }
-    if (suffixes.empty()) {
-        suffixes = {".exe", ".com", ".bat", ".cmd"};
-    }
-    return suffixes;
-#else
-    return {std::string()};
-#endif
-}
-
 std::filesystem::path resolve_executable_root(const std::filesystem::path& executable_path) {
-    namespace fs = std::filesystem;
-
-    if (executable_path.empty()) {
-        return {};
-    }
-
-    if (executable_path.is_absolute() || executable_path.has_parent_path()) {
-        return fs::absolute(executable_path).parent_path();
-    }
-
-    const std::string path_value = platform::read_environment_variable_or_empty("PATH");
-#if defined(_WIN32)
-    constexpr char path_separator = ';';
-#else
-    constexpr char path_separator = ':';
-#endif
-    const std::vector<std::string> suffixes = executable_search_suffixes(executable_path);
-    for (const std::string& raw_root : split_search_path_list(path_value, path_separator)) {
-        const fs::path search_root =
-            raw_root.empty() ? fs::current_path() : fs::path(trim_copy(raw_root));
-        for (const std::string& suffix : suffixes) {
-            const fs::path candidate = search_root / (executable_path.string() + suffix);
-            if (!fs::exists(candidate)) {
-                continue;
-            }
-
-            std::error_code canonical_error;
-            const fs::path canonical = fs::weakly_canonical(candidate, canonical_error);
-            if (!canonical_error) {
-                return canonical.parent_path();
-            }
-            return fs::absolute(candidate).parent_path();
-        }
-    }
-
-    return fs::absolute(executable_path).parent_path();
+    return platform::resolve_executable_invocation_path(executable_path).parent_path();
 }
 
 void skip_json_space(std::string_view text, std::size_t& offset) {

@@ -39,9 +39,26 @@ function(copperfin_apply_windows_stack_reserve TARGET_NAME)
     endif()
 endfunction()
 
+add_library(cf_platform_support
+    src/platform/executable_path.cpp
+)
+
+target_include_directories(cf_platform_support
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+if(MSVC)
+    target_compile_options(cf_platform_support PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(cf_platform_support PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
 add_library(cf_localization
     src/localization/localization.cpp
 )
+
+target_link_libraries(cf_localization PUBLIC cf_platform_support)
 
 target_include_directories(cf_localization
     PUBLIC

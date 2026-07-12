@@ -4,6 +4,7 @@
 
 #include "copperfin/localization/localization.h"
 #include "copperfin/platform/environment.h"
+#include "copperfin/platform/executable_path.h"
 #include "test_environment_support.h"
 #include "test_locale_catalog_environment_support.h"
 
@@ -71,6 +72,24 @@ void test_platform_environment_rejects_empty_names() {
            "#4005: filesystem environment helper should reject empty write keys");
     expect(!copperfin::platform::clear_environment_path(""),
            "#4005: filesystem environment helper should reject empty clear keys");
+}
+
+void test_running_executable_path_resolves_current_process(const char* invocation_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path resolved = copperfin::platform::resolve_running_executable_path(
+        invocation_path == nullptr ? fs::path() : fs::path(invocation_path));
+    std::error_code type_error;
+    expect(!resolved.empty() && fs::is_regular_file(resolved, type_error),
+           "#4013: running executable discovery should resolve the current process image");
+
+    if (invocation_path != nullptr && *invocation_path != '\0') {
+        const fs::path invocation =
+            copperfin::platform::resolve_executable_invocation_path(invocation_path);
+        std::error_code equivalent_error;
+        expect(!invocation.empty() && fs::equivalent(resolved, invocation, equivalent_error),
+               "#4013: OS process-image discovery should agree with the launched test path");
+    }
 }
 
 void test_scoped_environment_support_uses_shared_platform_helpers() {
@@ -386,6 +405,7 @@ void test_locale_catalog_root_preserves_non_ascii_environment_paths(
 int main(int argc, char** argv) {
     test_platform_environment_round_trips_values();
     test_platform_environment_rejects_empty_names();
+    test_running_executable_path_resolves_current_process(argc > 0 ? argv[0] : nullptr);
     test_scoped_environment_support_uses_shared_platform_helpers();
     test_platform_environment_serializes_concurrent_access();
     test_shell_command_preparation_preserves_platform_quoting_contract();
