@@ -1273,6 +1273,7 @@
   "Runtime.Prg.Dll.Error.NativeArgumentLimitExceeded": "A chamada de DLL nativa tem {count} argumentos; o maximo e {maximum}",
   "Runtime.Prg.Dll.Error.NativeInvokeFailed": "Falha ao invocar a funcao de DLL nativa {functionName}: {hresult}",
   "Runtime.Prg.Dll.Error.NativeProcAddressMissing": "Nenhum endereco de proc para: {functionName}",
+  "Runtime.Prg.Dll.Error.NumericByReferenceArgumentRequired": "O argumento {position} da funcao de DLL nativa {functionName} foi declarado numerico por referencia e requer uma variavel @ na chamada.",
   "Runtime.Prg.Dll.Error.RegisteredApiHandleNotFound": "Handle de API registrado nao encontrado: {handle}",
   "Runtime.Prg.Dll.Error.TooFewArguments": "Poucos argumentos.",
   "Runtime.Prg.Dll.Error.TooManyArguments": "Muitos argumentos.",

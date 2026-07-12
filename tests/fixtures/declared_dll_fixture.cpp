@@ -24,6 +24,7 @@ namespace {
 int declared_dll_fixture_module_anchor = 0;
 #endif
 std::int32_t declared_dll_arity_entry_count = 0;
+std::int32_t declared_dll_numeric_byref_entry_count = 0;
 
 void record_declared_dll_arity_entry() {
     ++declared_dll_arity_entry_count;
@@ -203,6 +204,34 @@ COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllArityEight(
     std::int32_t eighth) {
     record_declared_dll_arity_entry();
     return static_cast<long>(first + second + third + fourth + fifth + sixth + seventh + eighth);
+}
+
+COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllNumericByRefReset() {
+    declared_dll_numeric_byref_entry_count = 0;
+    return 0L;
+}
+
+COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllNumericByRefCount() {
+    return static_cast<long>(declared_dll_numeric_byref_entry_count);
+}
+
+COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllNumericByRefProbe(
+    std::int32_t* integer_value,
+    std::int32_t* long_value,
+    std::int64_t* integer64_value,
+    float* single_value,
+    double* double_value) {
+    ++declared_dll_numeric_byref_entry_count;
+    if (integer_value == nullptr || long_value == nullptr || integer64_value == nullptr ||
+        single_value == nullptr || double_value == nullptr) {
+        return 0L;
+    }
+    *integer_value = -11;
+    *long_value = -22;
+    *integer64_value = -4294967297LL;
+    *single_value = 3.5F;
+    *double_value = 4.25;
+    return 3944L;
 }
 
 COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllModulePathA(char* buffer, long capacity) {

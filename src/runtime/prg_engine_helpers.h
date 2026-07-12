@@ -26,6 +26,7 @@ std::string normalize_identifier(std::string value);
 bool declared_dll_type_uses_64_bit_integer(std::string type_name);
 bool declared_dll_type_is_single(std::string type_name);
 bool declared_dll_type_is_short(std::string type_name);
+bool declared_dll_type_is_numeric_parameter(std::string type_name);
 bool declared_dll_parameter_list_contains_type(
     const std::string& parameter_types,
     const std::string& requested_type);

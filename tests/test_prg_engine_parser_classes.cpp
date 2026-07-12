@@ -559,6 +559,22 @@ void test_parse_declare_dll_preserves_vfp_parameter_contract() {
             !copperfin::runtime::declared_dll_type_is_short("LONG"),
         "#3938: documented SHORT returns should remain distinct from 32-bit integer types");
     copperfin::test_support::expect(
+        copperfin::runtime::declared_dll_type_is_numeric_parameter("INTEGER") &&
+            copperfin::runtime::declared_dll_type_is_numeric_parameter("I") &&
+            copperfin::runtime::declared_dll_type_is_numeric_parameter("LONG") &&
+            copperfin::runtime::declared_dll_type_is_numeric_parameter("L") &&
+            copperfin::runtime::declared_dll_type_is_numeric_parameter("SINGLE") &&
+            copperfin::runtime::declared_dll_type_is_numeric_parameter("DOUBLE") &&
+            copperfin::runtime::declared_dll_type_is_numeric_parameter("D") &&
+            copperfin::runtime::declared_dll_type_is_numeric_parameter("F") &&
+            copperfin::runtime::declared_dll_type_is_numeric_parameter("INTEGER64") &&
+            copperfin::runtime::declared_dll_type_is_numeric_parameter("I64") &&
+            copperfin::runtime::declared_dll_type_is_numeric_parameter("LONGLONG") &&
+            !copperfin::runtime::declared_dll_type_is_numeric_parameter("STRING") &&
+            !copperfin::runtime::declared_dll_type_is_numeric_parameter("OBJECT") &&
+            !copperfin::runtime::declared_dll_type_is_numeric_parameter("SHORT"),
+        "#3944: numeric by-reference rejection should cover canonical and legacy declaration aliases");
+    copperfin::test_support::expect(
         copperfin::runtime::declared_dll_parameter_list_contains_type(
             "INTEGER first, SHORT @ invalid, DOUBLE third", "SHORT") &&
             !copperfin::runtime::declared_dll_parameter_list_contains_type(

@@ -112,6 +112,15 @@ bool declared_dll_type_is_short(std::string type_name) {
     return normalize_identifier(std::move(type_name)) == "short";
 }
 
+bool declared_dll_type_is_numeric_parameter(std::string type_name) {
+    const std::string normalized = normalize_identifier(std::move(type_name));
+    return normalized == "integer" || normalized == "i" ||
+           normalized == "long" || normalized == "l" ||
+           normalized == "double" || normalized == "d" || normalized == "f" ||
+           declared_dll_type_is_single(normalized) ||
+           declared_dll_type_uses_64_bit_integer(normalized);
+}
+
 bool declared_dll_parameter_list_contains_type(
     const std::string& parameter_types,
     const std::string& requested_type) {

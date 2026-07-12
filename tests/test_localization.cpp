@@ -1477,9 +1477,14 @@ void test_runtime_dll_errors_route_through_catalog() {
         {"functionName", "pow"},
         {"hresult", "-2147352568"}
     };
+    const copperfin::localization::PlaceholderMap numeric_byref_placeholders{
+        {"functionName", "NumericByRef"},
+        {"position", "4"}
+    };
     const std::vector<std::string> native_keys{
         "Runtime.Prg.Dll.Error.NativeArgumentLimitExceeded",
         "Runtime.Prg.Dll.Error.NativeInvokeFailed",
+        "Runtime.Prg.Dll.Error.NumericByReferenceArgumentRequired",
         "Runtime.Prg.Dll.Error.TooFewArguments",
         "Runtime.Prg.Dll.Error.TooManyArguments"
     };
@@ -1516,6 +1521,12 @@ void test_runtime_dll_errors_route_through_catalog() {
             "Native DLL function pow failed to invoke: -2147352568",
         "#3895: native invocation error should preserve function and HRESULT placeholders");
     expect(
+        english.translate(
+            "Runtime.Prg.Dll.Error.NumericByReferenceArgumentRequired",
+            numeric_byref_placeholders) ==
+            "Native DLL function NumericByRef argument 4 is declared numeric by reference and requires a call-site @ variable.",
+        "#3944: numeric by-reference rejection should preserve alias and position placeholders");
+    expect(
         english.translate("Runtime.Prg.Dll.Error.TooFewArguments") == "Too few arguments." &&
             english.translate("Runtime.Prg.Dll.Error.TooManyArguments") == "Too many arguments.",
         "#3946: DECLARE arity errors should preserve the grounded VFP9 en-US wording");
@@ -1540,6 +1551,14 @@ void test_runtime_dll_errors_route_through_catalog() {
             spanish.translate("Runtime.Prg.Dll.Error.DotNetTypeNotFound", type_placeholders)
                     .find("Type not found") == std::string::npos,
         "#2549: es-419 .NET type error should preserve type name without falling back to English");
+    expect(
+        spanish.translate(
+            "Runtime.Prg.Dll.Error.NumericByReferenceArgumentRequired",
+            numeric_byref_placeholders).find("NumericByRef") != std::string::npos &&
+            spanish.translate(
+                "Runtime.Prg.Dll.Error.NumericByReferenceArgumentRequired",
+                numeric_byref_placeholders).find("declared numeric by reference") == std::string::npos,
+        "#3944: es-419 numeric by-reference rejection should preserve the alias without English fallback");
 
     const std::string pseudo_handle =
         pseudo.translate("Runtime.Prg.Dll.Error.RegisteredApiHandleNotFound", handle_placeholders);
@@ -1582,6 +1601,16 @@ void test_runtime_dll_errors_route_through_catalog() {
             pseudo_invoke.find("{functionName}") == std::string::npos &&
             pseudo_invoke.find("{hresult}") == std::string::npos,
         "#3895: qps-ploc native invocation error should preserve replaced identifiers");
+    const std::string pseudo_numeric_byref = pseudo.translate(
+        "Runtime.Prg.Dll.Error.NumericByReferenceArgumentRequired",
+        numeric_byref_placeholders);
+    expect(
+        pseudo_numeric_byref.find("[!! ") == 0U &&
+            pseudo_numeric_byref.find("NumericByRef") != std::string::npos &&
+            pseudo_numeric_byref.find("4") != std::string::npos &&
+            pseudo_numeric_byref.find("{functionName}") == std::string::npos &&
+            pseudo_numeric_byref.find("{position}") == std::string::npos,
+        "#3944: qps-ploc numeric by-reference rejection should preserve replaced alias and position");
     expect(
         pseudo.translate("Runtime.Prg.Dll.Error.TooFewArguments") ==
                 copperfin::localization::pseudo_localize("Too few arguments.") &&

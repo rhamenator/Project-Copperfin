@@ -479,6 +479,25 @@
                     return make_empty_value();
                 }
 
+                for (std::size_t index = 0U; index < declared_param_types.size(); ++index)
+                {
+                    const bool has_callsite_reference =
+                        index < argument_references.size() && argument_references[index].has_value();
+                    if (declared_param_types[index].by_ref &&
+                        declared_dll_type_is_numeric_parameter(declared_param_types[index].type) &&
+                        !has_callsite_reference)
+                    {
+                        throw PrgCompatibilityError(
+                            runtime_text(
+                                "Runtime.Prg.Dll.Error.NumericByReferenceArgumentRequired",
+                                {
+                                    {"functionName", declfn.alias},
+                                    {"position", std::to_string(index + 1U)},
+                                }),
+                            11);
+                    }
+                }
+
                 // Build typed argument storage for common calling conventions.
                 // We support the same limited set as VFP's DECLARE: up to 8 args,
                 // typed as INTEGER/LONG/SINGLE/DOUBLE/STRING.

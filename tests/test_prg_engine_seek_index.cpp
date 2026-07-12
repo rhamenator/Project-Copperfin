@@ -3492,6 +3492,211 @@ void test_declared_dll_argument_count_is_validated_before_native_entry() {
 #endif
 }
 
+void test_declared_dll_numeric_byref_requires_callsite_reference() {
+#if defined(_WIN32) && defined(COPPERFIN_DECLARED_DLL_FIXTURE_NAME)
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_declared_dll_numeric_byref";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root / "native");
+
+    const fs::path fixture_name = COPPERFIN_DECLARED_DLL_FIXTURE_NAME;
+    const fs::path fixture_copy = temp_root / "native" / fixture_name;
+    fs::copy_file(declared_dll_fixture_source_path(), fixture_copy, fs::copy_options::overwrite_existing, ignored);
+    expect(!ignored && fs::exists(fixture_copy),
+           "#3944: controlled numeric by-reference fixture should copy under the PRG working directory");
+
+    const std::string module = "native/" + fixture_name.string();
+    const std::string declarations =
+        "DECLARE LONG CopperfinDeclaredDllNumericByRefReset IN '" + module + "' AS NumericByRefReset\n"
+        "DECLARE LONG CopperfinDeclaredDllNumericByRefCount IN '" + module + "' AS NumericByRefCount\n"
+        "DECLARE LONG CopperfinDeclaredDllNumericByRefProbe IN '" + module +
+            "' AS NumericByRef INTEGER @ integerValue, LONG @ longValue, INTEGER64 @ integer64Value, SINGLE @ singleValue, DOUBLE @ doubleValue\n";
+    const std::string initialize_values =
+        "nInteger = 1\n"
+        "nLong = 2\n"
+        "nInteger64 = 3\n"
+        "nSingle = 4\n"
+        "nDouble = 5\n";
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "en-US", true);
+
+    const fs::path valid_path = temp_root / "numeric_byref_valid.prg";
+    write_text(
+        valid_path,
+        declarations + initialize_values +
+        "nReset = NumericByRefReset()\n"
+        "nResult = NumericByRef(@nInteger, @nLong, @nInteger64, @nSingle, @nDouble)\n"
+        "nNativeEntries = NumericByRefCount()\n"
+        "RETURN\n");
+    {
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(valid_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "#3944: valid numeric by-reference call should complete: " + state.message);
+        const auto expect_value = [&](const std::string &name, const std::string &expected, const std::string &label) {
+            const auto found = state.globals.find(name);
+            expect(found != state.globals.end() &&
+                       copperfin::runtime::format_value(found->second) == expected,
+                   label);
+        };
+        expect_value("nresult", "3944", "#3944: valid numeric by-reference fixture should return its sentinel");
+        expect_value("ninteger", "-11", "#3944: INTEGER @ should retain valid writeback");
+        expect_value("nlong", "-22", "#3944: LONG @ should retain valid writeback");
+        expect_value("ninteger64", "-4294967297", "#3944: INTEGER64 @ should retain valid writeback");
+        expect_value("nsingle", "3.5", "#3944: SINGLE @ should retain valid writeback");
+        expect_value("ndouble", "4.25", "#3944: DOUBLE @ should retain valid writeback");
+        expect_value("nnativeentries", "1", "#3944: valid numeric by-reference call should enter native code once");
+
+        const HMODULE loaded_module = GetModuleHandleW(fixture_copy.wstring().c_str());
+        expect(loaded_module != nullptr, "#3944: controlled numeric by-reference module should be loaded");
+        if (loaded_module != nullptr) {
+#if defined(_WIN64)
+            expect(GetProcAddress(loaded_module, "CopperfinDeclaredDllNumericByRefProbe") != nullptr,
+                   "#3944: x64 should expose the unified exact numeric by-reference export");
+#else
+            expect(GetProcAddress(loaded_module, "CopperfinDeclaredDllNumericByRefProbe") == nullptr,
+                   "#3944: Win32 fixture should not hide stdcall decoration behind an exact alias");
+            expect(GetProcAddress(loaded_module, "_CopperfinDeclaredDllNumericByRefProbe@20") != nullptr ||
+                       GetProcAddress(loaded_module, "CopperfinDeclaredDllNumericByRefProbe@20") != nullptr,
+                   "#3944: Win32 should resolve the five pointer slots through a stdcall @20 export");
+#endif
+        }
+    }
+
+    const fs::path stack_path = temp_root / "numeric_byref_stack_frugal.prg";
+    write_text(
+        stack_path,
+        "PUBLIC nHandled\n"
+        "nHandled = 0\n" +
+        declarations + initialize_values +
+        "nReset = NumericByRefReset()\n"
+        "nAttempts = 0\n"
+        "ON ERROR DO HandleRepeatedNumericByRefError\n"
+        "DO WHILE nAttempts < 512\n"
+        "nAttempts = nAttempts + 1\n"
+        "nUnexpected = NumericByRef(1, @nLong, @nInteger64, @nSingle, @nDouble)\n"
+        "ENDDO\n"
+        "ON ERROR\n"
+        "nNativeEntries = NumericByRefCount()\n"
+        "RETURN\n"
+        "PROCEDURE HandleRepeatedNumericByRefError\n"
+        "nHandled = nHandled + 1\n"
+        "RETURN\n"
+        "ENDPROC\n");
+    {
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(stack_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "#3944: repeated numeric by-reference rejections should remain stack-frugal: " + state.message);
+        const auto attempts = state.globals.find("nattempts");
+        const auto handled = state.globals.find("nhandled");
+        const auto native_entries = state.globals.find("nnativeentries");
+        expect(attempts != state.globals.end() &&
+                   copperfin::runtime::format_value(attempts->second) == "512",
+               "#3944: repeated rejection loop should complete all iterations");
+        expect(handled != state.globals.end() &&
+                   copperfin::runtime::format_value(handled->second) == "512",
+               "#3944: repeated rejection loop should unwind every recoverable handler frame");
+        expect(native_entries != state.globals.end() &&
+                   copperfin::runtime::format_value(native_entries->second) == "0",
+               "#3944: repeated rejection loop must never enter native code");
+    }
+
+    struct MissingReferenceCase {
+        std::string label;
+        std::string invocation_arguments;
+        std::size_t position;
+        bool pseudo_locale = false;
+    };
+    const std::vector<MissingReferenceCase> cases{
+        {"integer_literal", "1, @nLong, @nInteger64, @nSingle, @nDouble", 1U},
+        {"long_variable", "@nInteger, nLong, @nInteger64, @nSingle, @nDouble", 2U},
+        {"integer64_variable", "@nInteger, @nLong, nInteger64, @nSingle, @nDouble", 3U},
+        {"single_variable", "@nInteger, @nLong, @nInteger64, nSingle, @nDouble", 4U},
+        {"double_variable", "@nInteger, @nLong, @nInteger64, @nSingle, nDouble", 5U, true}
+    };
+
+    for (const MissingReferenceCase &missing_case : cases) {
+        set_env_value("COPPERFIN_LOCALE", missing_case.pseudo_locale ? "qps-ploc" : "en-US", true);
+        const fs::path script_path = temp_root / (missing_case.label + ".prg");
+        write_text(
+            script_path,
+            "PUBLIC nCapturedCode\n"
+            "PUBLIC cCapturedMessage\n"
+            "nCapturedCode = 0\n"
+            "cCapturedMessage = ''\n" +
+            declarations + initialize_values +
+            "nReset = NumericByRefReset()\n"
+            "ON ERROR DO HandleNumericByRefError\n"
+            "nUnexpected = NumericByRef(" + missing_case.invocation_arguments + ")\n"
+            "ON ERROR\n"
+            "nNativeEntries = NumericByRefCount()\n"
+            "RETURN\n"
+            "PROCEDURE HandleNumericByRefError\n"
+            "nCapturedCode = ERROR()\n"
+            "cCapturedMessage = MESSAGE()\n"
+            "RETURN\n"
+            "ENDPROC\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(script_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "#3944: recoverable " + missing_case.label + " rejection should complete: " + state.message);
+
+        const auto captured_code = state.globals.find("ncapturedcode");
+        const auto captured_message = state.globals.find("ccapturedmessage");
+        const auto native_entries = state.globals.find("nnativeentries");
+        expect(captured_code != state.globals.end() &&
+                   copperfin::runtime::format_value(captured_code->second) == "11",
+               "#3944: " + missing_case.label + " should report VFP-compatible Error 11");
+        expect(native_entries != state.globals.end() &&
+                   copperfin::runtime::format_value(native_entries->second) == "0",
+               "#3944: " + missing_case.label + " must not enter native code");
+
+        const std::string message = captured_message == state.globals.end()
+            ? std::string{}
+            : copperfin::runtime::format_value(captured_message->second);
+        const std::string position = std::to_string(missing_case.position);
+        if (missing_case.pseudo_locale) {
+            expect(message.find("[!! ") == 0U &&
+                       message.find("NumericByRef") != std::string::npos &&
+                       message.find(position) != std::string::npos &&
+                       message.find("is declared numeric by reference") == std::string::npos,
+                   "#3944: qps-ploc should pseudo-localize the rejection while preserving alias and position");
+        } else {
+            expect(message ==
+                       "Native DLL function NumericByRef argument " + position +
+                           " is declared numeric by reference and requires a call-site @ variable.",
+                   "#3944: " + missing_case.label + " should report the actionable localized rejection");
+        }
+        expect(state.globals.find("nunexpected") == state.globals.end(),
+               "#3944: " + missing_case.label + " should reject before assigning a native result");
+        expect(std::any_of(state.events.begin(), state.events.end(), [&](const auto &event) {
+                   return event.category == "runtime.declare_dll" &&
+                          event.detail == "NumericByRef IN " + module;
+               }),
+               "#3944: " + missing_case.label + " should preserve the invariant source DECLARE event");
+        expect(std::any_of(state.events.begin(), state.events.end(), [&](const auto &event) {
+                   return event.category == "runtime.error" && event.detail == message;
+               }),
+               "#3944: " + missing_case.label + " should preserve the invariant runtime.error category");
+        expect(std::any_of(state.events.begin(), state.events.end(), [](const auto &event) {
+                   return event.category == "runtime.error_handler";
+               }),
+               "#3944: " + missing_case.label + " should dispatch the recoverable error handler");
+    }
+
+    set_env_value("COPPERFIN_LOCALE", "en-US", true);
+    expect(GetModuleHandleW(fixture_copy.wstring().c_str()) == nullptr,
+           "#3944: numeric by-reference sessions should release every controlled module reference");
+    fs::remove_all(temp_root, ignored);
+#endif
+}
+
 void test_declare_dll_runtime_errors_localize() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_declare_localization";
@@ -4120,6 +4325,7 @@ int main() {
     test_declared_dll_module_ownership_and_failed_redeclare_rollback();
     test_declared_dll_explicit_ansi_fallback_and_exact_precedence();
     test_declared_dll_argument_count_is_validated_before_native_entry();
+    test_declared_dll_numeric_byref_requires_callsite_reference();
     test_declare_dll_runtime_errors_localize();
     test_set_exact_affects_comparisons_and_seek();
     test_use_again_and_alias_collision_semantics();
