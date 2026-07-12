@@ -34,6 +34,19 @@ void expect(bool condition, const std::string& message) {
     }
 }
 
+std::string read_file_bytes(const std::filesystem::path& path) {
+    std::ifstream input(path, std::ios::binary);
+    return std::string(
+        std::istreambuf_iterator<char>(input),
+        std::istreambuf_iterator<char>());
+}
+
+void write_file_bytes(const std::filesystem::path& path, const std::string& bytes) {
+    std::filesystem::create_directories(path.parent_path());
+    std::ofstream output(path, std::ios::binary | std::ios::trunc);
+    output.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+}
+
 void test_authorization() {
     const auto profile = copperfin::security::default_native_security_profile();
     expect(
@@ -126,6 +139,14 @@ void test_security_diagnostics_resolve_through_localization_catalog() {
             "Malformed audit line 7",
         "#2388: audit diagnostics should resolve through the en-US catalog");
     expect(
+        english_catalog.translate("Security.Audit.Error.InvalidExistingLogTail") ==
+            "Existing audit log has an invalid or truncated tail.",
+        "#3970: invalid existing audit-tail diagnostics should resolve through the en-US catalog");
+    expect(
+        english_catalog.translate("Security.Audit.Error.ReadExistingLogFailed") ==
+            "Unable to read existing audit log.",
+        "#3970: existing audit-log read diagnostics should resolve through the en-US catalog");
+    expect(
         english_catalog.translate(
             "Security.ExternalProcessPolicy.Error.ResolveExecutableOnPathFailed",
             {{"executableName", "dotnet"}}) ==
@@ -151,6 +172,10 @@ void test_security_diagnostics_resolve_through_localization_catalog() {
         pseudo_catalog.translate("Security.ProcessHardening.Status.NoopOutsideWindows") !=
             english_catalog.translate("Security.ProcessHardening.Status.NoopOutsideWindows"),
         "#2388: security diagnostics should be pseudo-localizable");
+    expect(
+        pseudo_catalog.translate("Security.Audit.Error.InvalidExistingLogTail") !=
+            english_catalog.translate("Security.Audit.Error.InvalidExistingLogTail"),
+        "#3970: invalid existing audit-tail diagnostics should be pseudo-localizable");
 }
 
 void test_security_diagnostics_follow_selected_locale() {
@@ -354,6 +379,123 @@ void test_audit_stream_chain_verification() {
     const auto verify_deleted = copperfin::security::verify_immutable_audit_chain(deleted_line_log.string());
     expect(!verify_deleted.ok, "verify should fail when a middle audit line is removed");
     expect(!verify_deleted.error.empty(), "audit verification should report chain break for deleted line");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_audit_stream_append_rejects_invalid_existing_tail() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_security_audit_tail_tests";
+    const fs::path empty_log = temp_root / "empty" / "events.log";
+    const fs::path blank_log = temp_root / "blank" / "events.log";
+    const fs::path whitespace_log = temp_root / "whitespace" / "events.log";
+    const fs::path blank_crlf_log = temp_root / "blank-crlf" / "events.log";
+    const fs::path malformed_log = temp_root / "malformed" / "events.log";
+    const fs::path truncated_log = temp_root / "truncated" / "events.log";
+    const fs::path invalid_hash_log = temp_root / "invalid-hash" / "events.log";
+    const fs::path invalid_previous_hash_log = temp_root / "invalid-previous" / "events.log";
+    const fs::path localized_malformed_log = temp_root / "localized-malformed" / "events.log";
+    const fs::path whitespace_injected_log = temp_root / "whitespace-injected" / "events.log";
+    const fs::path unreadable_log = temp_root / "unreadable" / "events.log";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+
+    write_file_bytes(empty_log, {});
+    const auto empty_append = copperfin::security::append_immutable_audit_event(
+        empty_log.string(), "runtime.empty", "empty-log");
+    expect(empty_append.ok, "#3970: an existing zero-byte audit log should start at GENESIS");
+    const auto empty_verify = copperfin::security::verify_immutable_audit_chain(empty_log.string());
+    expect(empty_verify.ok && empty_verify.entries == 1U,
+           "#3970: a first append to a zero-byte audit log should produce one valid entry");
+
+    write_file_bytes(blank_log, "\n\n");
+    const auto blank_append = copperfin::security::append_immutable_audit_event(
+        blank_log.string(), "runtime.blank", "blank-log");
+    expect(blank_append.ok, "#3970: a blank-only audit log should start at GENESIS");
+    const auto blank_verify = copperfin::security::verify_immutable_audit_chain(blank_log.string());
+    expect(blank_verify.ok && blank_verify.entries == 1U,
+           "#3970: a first append after blank lines should produce one valid entry");
+
+    const auto reject_unchanged = [&](
+        const fs::path& path,
+        const std::string& fixture,
+        const std::string& label) {
+        write_file_bytes(path, fixture);
+        const std::string before = read_file_bytes(path);
+        const auto result = copperfin::security::append_immutable_audit_event(
+            path.string(), "runtime.rejected", label);
+        expect(!result.ok, "#3970: " + label + " should reject audit append");
+        expect(
+            result.error == "Existing audit log has an invalid or truncated tail.",
+            "#3970: " + label + " should use the localized invalid-tail diagnostic");
+        expect(result.entry_hash.empty(), "#3970: " + label + " should not return a new entry hash");
+        expect(read_file_bytes(path) == before, "#3970: " + label + " should leave the audit bytes unchanged");
+    };
+
+    reject_unchanged(malformed_log, "not|enough|fields\n", "malformed tail");
+    reject_unchanged(whitespace_log, "  \t  ", "unterminated whitespace tail");
+    reject_unchanged(blank_crlf_log, "\r\n\r\n", "CRLF whitespace tail");
+    reject_unchanged(
+        invalid_hash_log,
+        "1|runtime.start|detail|GENESIS|not-a-sha256-hash\n",
+        "invalid observed hash");
+    reject_unchanged(
+        invalid_previous_hash_log,
+        "1|runtime.start|detail|not-a-previous-hash|" + std::string(64U, '0') + "\n",
+        "invalid previous hash");
+
+    write_file_bytes(localized_malformed_log, "not|enough|fields\n");
+    const std::string localized_before = read_file_bytes(localized_malformed_log);
+    {
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
+        set_env_value("COPPERFIN_LOCALE", "es-419", true);
+        const auto localized = copperfin::security::append_immutable_audit_event(
+            localized_malformed_log.string(), "runtime.rejected", "localized-malformed-tail");
+        expect(!localized.ok, "#3970: localized malformed-tail append should reject corruption");
+        expect(
+            localized.error == "El log de auditoria existente tiene una cola no valida o truncada.",
+            "#3970: malformed-tail rejection should route through the selected locale");
+        expect(localized.entry_hash.empty(),
+               "#3970: localized malformed-tail rejection should not return an entry hash");
+    }
+    expect(read_file_bytes(localized_malformed_log) == localized_before,
+           "#3970: localized malformed-tail rejection should leave audit bytes unchanged");
+
+    const auto initial = copperfin::security::append_immutable_audit_event(
+        truncated_log.string(), "runtime.start", "valid-before-truncation");
+    expect(initial.ok, "#3970: truncated-tail fixture should begin with a valid event");
+    if (initial.ok) {
+        std::string truncated = read_file_bytes(truncated_log);
+        if (!truncated.empty() && truncated.back() == '\n') {
+            truncated.pop_back();
+        }
+        reject_unchanged(truncated_log, truncated, "non-newline-terminated tail");
+    }
+
+    const auto whitespace_fixture = copperfin::security::append_immutable_audit_event(
+        whitespace_injected_log.string(), "runtime.start", "before-whitespace-injection");
+    expect(whitespace_fixture.ok, "#3970: whitespace-injection fixture should begin with a valid event");
+    if (whitespace_fixture.ok) {
+        write_file_bytes(
+            whitespace_injected_log,
+            " \t\n" + read_file_bytes(whitespace_injected_log));
+        const auto whitespace_verify = copperfin::security::verify_immutable_audit_chain(
+            whitespace_injected_log.string());
+        expect(!whitespace_verify.ok && whitespace_verify.entries == 0U,
+               "#3970: verification should not ignore injected whitespace-only audit lines");
+    }
+
+    fs::create_directories(unreadable_log);
+    const auto unreadable = copperfin::security::append_immutable_audit_event(
+        unreadable_log.string(), "runtime.unreadable", "directory-at-log-path");
+    expect(!unreadable.ok, "#3970: an unreadable existing audit path should reject append");
+    expect(
+        unreadable.error == "Unable to read existing audit log.",
+        "#3970: an unreadable existing audit path should use the localized read diagnostic");
+    expect(unreadable.entry_hash.empty(),
+           "#3970: an unreadable existing audit path should not return a new entry hash");
+    expect(fs::is_directory(unreadable_log) && fs::is_empty(unreadable_log),
+           "#3970: unreadable existing audit rejection should leave the directory path unchanged");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -582,6 +724,7 @@ int main() {
     test_secret_provider_rejects_malformed_env_var_names();
     test_audit_stream_tamper_detection();
     test_audit_stream_chain_verification();
+    test_audit_stream_append_rejects_invalid_existing_tail();
     test_audit_stream_localized_malformed_line_diagnostic();
     test_audit_stream_append_to_readonly_path_fails_gracefully();
     test_external_process_and_process_hardening_diagnostics();

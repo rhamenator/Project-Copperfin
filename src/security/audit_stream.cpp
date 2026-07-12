@@ -7,7 +7,9 @@
 #include "copperfin/security/sha256.h"
 #include "localized_text.h"
 
+#include <algorithm>
 #include <chrono>
+#include <cctype>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -32,31 +34,11 @@ std::string escape_field(std::string value) {
     return value;
 }
 
-std::string read_last_hash(const std::string& log_path) {
-    std::ifstream input(log_path, std::ios::binary);
-    if (!input) {
-        return "GENESIS";
-    }
-
-    std::string line;
-    std::string last_line;
-    while (std::getline(input, line)) {
-        if (!line.empty()) {
-            last_line = line;
-        }
-    }
-
-    if (last_line.empty()) {
-        return "GENESIS";
-    }
-
-    const auto last_delimiter = last_line.rfind('|');
-    if (last_delimiter == std::string::npos || last_delimiter + 1U >= last_line.size()) {
-        return "GENESIS";
-    }
-
-    return last_line.substr(last_delimiter + 1U);
-}
+struct AuditTailReadResult {
+    bool ok = false;
+    std::string hash;
+    std::string error;
+};
 
 std::vector<std::string> split_audit_line(const std::string& line) {
     std::vector<std::string> tokens;
@@ -66,6 +48,100 @@ std::vector<std::string> split_audit_line(const std::string& line) {
         tokens.push_back(token);
     }
     return tokens;
+}
+
+bool is_sha256_hex(const std::string& value) {
+    return value.size() == 64U &&
+        std::all_of(value.begin(), value.end(), [](const unsigned char ch) {
+            return std::isxdigit(ch) != 0;
+        });
+}
+
+AuditTailReadResult read_last_hash(const std::string& log_path) {
+    std::ifstream input(log_path, std::ios::binary);
+    if (!input) {
+        std::error_code status_error;
+        const bool exists = std::filesystem::exists(log_path, status_error);
+        if (!exists && !status_error) {
+            return {
+                .ok = true,
+                .hash = "GENESIS",
+                .error = {}};
+        }
+        return {
+            .ok = false,
+            .hash = {},
+            .error = security_text("Security.Audit.Error.ReadExistingLogFailed")};
+    }
+
+    input.seekg(0, std::ios::end);
+    const std::streampos end = input.tellg();
+    if (end < 0) {
+        return {
+            .ok = false,
+            .hash = {},
+            .error = security_text("Security.Audit.Error.ReadExistingLogFailed")};
+    }
+    if (end == 0) {
+        return {
+            .ok = true,
+            .hash = "GENESIS",
+            .error = {}};
+    }
+
+    input.seekg(-1, std::ios::end);
+    char final_byte = '\0';
+    input.get(final_byte);
+    if (!input.good()) {
+        return {
+            .ok = false,
+            .hash = {},
+            .error = security_text("Security.Audit.Error.ReadExistingLogFailed")};
+    }
+    input.clear();
+    input.seekg(0, std::ios::beg);
+    std::string line;
+    std::string last_line;
+    while (std::getline(input, line)) {
+        if (!line.empty()) {
+            last_line = line;
+        }
+    }
+    if (input.bad()) {
+        return {
+            .ok = false,
+            .hash = {},
+            .error = security_text("Security.Audit.Error.ReadExistingLogFailed")};
+    }
+
+    if (last_line.empty()) {
+        return {
+            .ok = true,
+            .hash = "GENESIS",
+            .error = {}};
+    }
+    if (final_byte != '\n') {
+        return {
+            .ok = false,
+            .hash = {},
+            .error = security_text("Security.Audit.Error.InvalidExistingLogTail")};
+    }
+
+    const auto fields = split_audit_line(last_line);
+    if (fields.size() != 5U ||
+        fields[0].empty() ||
+        (fields[3] != "GENESIS" && !is_sha256_hex(fields[3])) ||
+        !is_sha256_hex(fields[4])) {
+        return {
+            .ok = false,
+            .hash = {},
+            .error = security_text("Security.Audit.Error.InvalidExistingLogTail")};
+    }
+
+    return {
+        .ok = true,
+        .hash = fields[4],
+        .error = {}};
 }
 
 std::string compute_entry_hash(const std::string& timestamp,
@@ -89,7 +165,11 @@ AuditAppendResult append_immutable_audit_event(
         return {.ok = false, .error = security_text("Security.Audit.Error.CreateLogDirectoryFailed"), .entry_hash = {}};
     }
 
-    const std::string previous_hash = read_last_hash(log_path);
+    const auto tail = read_last_hash(log_path);
+    if (!tail.ok) {
+        return {.ok = false, .error = tail.error, .entry_hash = {}};
+    }
+    const std::string& previous_hash = tail.hash;
     const std::string timestamp = now_utc_compact();
     const std::string safe_event = escape_field(event_name);
     const std::string safe_detail = escape_field(detail);
