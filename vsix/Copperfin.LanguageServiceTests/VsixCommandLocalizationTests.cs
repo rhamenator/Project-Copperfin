@@ -41,6 +41,8 @@ internal static partial class Program
         {
             (Id: "OpenInCopperfinStudioCommand", Key: "VSIX.Command.OpenInStudio", EmbeddedKey: (string?)null,
                 CanonicalName: ".Copperfin.OpenInStudio", SymbolValue: "0x0100"),
+            (Id: "OpenSelectedInCopperfinStudioCommand", Key: "VSIX.Command.OpenInStudio", EmbeddedKey: (string?)null,
+                CanonicalName: ".Copperfin.OpenSelectedInStudio", SymbolValue: "0x0101"),
             (Id: "BuildCopperfinProjectCommand", Key: "VSIX.Command.BuildProject", EmbeddedKey: "AssetEditor.Project.BuildButton",
                 CanonicalName: ".Copperfin.BuildProject", SymbolValue: "0x0200"),
             (Id: "RunCopperfinProjectCommand", Key: "VSIX.Command.RunProject", EmbeddedKey: "AssetEditor.Project.RunButton",

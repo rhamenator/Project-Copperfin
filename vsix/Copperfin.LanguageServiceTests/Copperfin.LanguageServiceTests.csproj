@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <Compile Include="Program.cs" />
+    <Compile Include="CopperfinStudioTargetSelectionTests.cs" />
     <Compile Include="VsixCommandLocalizationTests.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinDesignerSelection.cs" Link="Shared\CopperfinDesignerSelection.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinLocalization.cs" Link="Shared\CopperfinLocalization.cs" />
@@ -21,6 +22,7 @@
     <Compile Include="..\Copperfin.VisualStudio\CopperfinRuntimeDebugClient.cs" Link="Shared\CopperfinRuntimeDebugClient.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinRuntimeDebugModels.cs" Link="Shared\CopperfinRuntimeDebugModels.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinStudioHostBridge.cs" Link="Shared\CopperfinStudioHostBridge.cs" />
+    <Compile Include="..\Copperfin.VisualStudio\CopperfinStudioTargetSelection.cs" Link="Shared\CopperfinStudioTargetSelection.cs" />
     <Compile Include="..\Copperfin.VisualStudio\CopperfinStudioSnapshotModels.cs" Link="Shared\CopperfinStudioSnapshotModels.cs" />
     <Compile Include="..\Copperfin.VisualStudio\FoxProIntelliSenseCatalog.cs" Link="Shared\FoxProIntelliSenseCatalog.cs" />
   </ItemGroup>

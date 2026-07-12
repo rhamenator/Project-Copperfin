@@ -3,6 +3,7 @@
 // Commercial License. See LICENSE.md in the repository root.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using EnvDTE;
 using Microsoft.VisualStudio.Shell;
@@ -11,51 +12,49 @@ namespace Copperfin.VisualStudio;
 
 internal static class CopperfinStudioLauncher
 {
-    public static string? ResolveTargetPath(DTE dte)
+    public static string? ResolveTargetPath(
+        DTE dte,
+        CopperfinStudioTargetPreference preference = CopperfinStudioTargetPreference.ActiveDocument)
     {
         ThreadHelper.ThrowIfNotOnUIThread();
 
         var activeDocumentPath = dte.ActiveDocument?.FullName;
-        if (!string.IsNullOrWhiteSpace(activeDocumentPath) && File.Exists(activeDocumentPath))
+        if (preference == CopperfinStudioTargetPreference.ActiveDocument &&
+            !string.IsNullOrWhiteSpace(activeDocumentPath) &&
+            File.Exists(activeDocumentPath))
         {
             return activeDocumentPath;
         }
 
+        var selectedTargets = new List<CopperfinStudioSelectedTarget>();
         var selectedItems = dte.SelectedItems;
-        if (selectedItems is null || selectedItems.Count <= 0)
+        if (selectedItems is not null && selectedItems.Count > 0)
         {
-            return null;
-        }
-
-        for (var index = 1; index <= selectedItems.Count; ++index)
-        {
-            var selectedItem = selectedItems.Item(index);
-            if (selectedItem?.ProjectItem is ProjectItem projectItem)
+            for (var index = 1; index <= selectedItems.Count; ++index)
             {
-                try
+                var selectedItem = selectedItems.Item(index);
+                var projectItemPaths = new List<string?>();
+                if (selectedItem?.ProjectItem is ProjectItem projectItem)
                 {
-                    for (short fileIndex = 1; fileIndex <= projectItem.FileCount; ++fileIndex)
+                    try
                     {
-                        var candidate = projectItem.FileNames[fileIndex];
-                        if (!string.IsNullOrWhiteSpace(candidate) && File.Exists(candidate))
+                        for (short fileIndex = 1; fileIndex <= projectItem.FileCount; ++fileIndex)
                         {
-                            return candidate;
+                            projectItemPaths.Add(projectItem.FileNames[fileIndex]);
                         }
                     }
+                    catch (ArgumentException)
+                    {
+                        // Some project systems expose non-file nodes. Skip them.
+                    }
                 }
-                catch (ArgumentException)
-                {
-                    // Some project systems expose non-file nodes. Skip them.
-                }
-            }
 
-            var projectPath = selectedItem?.Project?.FullName;
-            if (!string.IsNullOrWhiteSpace(projectPath) && File.Exists(projectPath))
-            {
-                return projectPath;
+                selectedTargets.Add(new CopperfinStudioSelectedTarget(
+                    projectItemPaths,
+                    selectedItem?.Project?.FullName));
             }
         }
 
-        return null;
+        return CopperfinStudioTargetSelection.Resolve(activeDocumentPath, selectedTargets, preference);
     }
 }

@@ -14,7 +14,6 @@ namespace Copperfin.VisualStudio;
 
 internal sealed class OpenInCopperfinStudioCommand
 {
-    private const int CommandId = 0x0100;
     private static readonly Guid CommandSet = new(PackageGuids.CommandSetString);
     private static readonly CopperfinLocalization Localization = CopperfinLocalization.FromEnvironment();
 
@@ -25,8 +24,21 @@ internal sealed class OpenInCopperfinStudioCommand
         ThreadHelper.ThrowIfNotOnUIThread();
         this.package = package;
 
-        var menuCommandId = new CommandID(CommandSet, CommandId);
-        var menuItem = new OleMenuCommand((_, _) => { _ = package.JoinableTaskFactory.RunAsync(ExecuteAsync); }, menuCommandId)
+        foreach (var registration in CopperfinStudioCommandRegistrations.All)
+        {
+            AddCommand(commandService, registration.CommandId, registration.Preference);
+        }
+    }
+
+    private void AddCommand(
+        OleMenuCommandService commandService,
+        int commandId,
+        CopperfinStudioTargetPreference preference)
+    {
+        var menuCommandId = new CommandID(CommandSet, commandId);
+        var menuItem = new OleMenuCommand(
+            (_, _) => { _ = package.JoinableTaskFactory.RunAsync(() => ExecuteAsync(preference)); },
+            menuCommandId)
         {
             Text = Localization.Text("VSIX.Command.OpenInStudio")
         };
@@ -46,12 +58,14 @@ internal sealed class OpenInCopperfinStudioCommand
         _ = new OpenInCopperfinStudioCommand(package, commandService);
     }
 
-    private async Task ExecuteAsync()
+    private async Task ExecuteAsync(CopperfinStudioTargetPreference preference)
     {
         await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
         var dte = await package.GetServiceAsync(typeof(DTE)) as DTE;
-        var documentPath = dte is null ? null : CopperfinStudioLauncher.ResolveTargetPath(dte);
+        var documentPath = dte is null
+            ? null
+            : CopperfinStudioLauncher.ResolveTargetPath(dte, preference);
         if (string.IsNullOrWhiteSpace(documentPath) || !File.Exists(documentPath))
         {
             VsShellUtilities.ShowMessageBox(

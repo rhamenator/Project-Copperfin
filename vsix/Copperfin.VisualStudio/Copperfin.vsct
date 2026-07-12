@@ -8,6 +8,9 @@
       <Group guid="guidCopperfinCommandSet" id="CopperfinGroup" priority="0x0600">
         <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_TOOLS" />
       </Group>
+      <Group guid="guidCopperfinCommandSet" id="CopperfinItemGroup" priority="0x0100">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE" />
+      </Group>
     </Groups>
 
     <Buttons>
@@ -28,6 +31,25 @@
         <Strings Language="qps-ploc">
           <ButtonText>[!! Óþéñ Íñ Çóþþéŕƒíñ Šťúðíó !!]</ButtonText>
           <LocCanonicalName>.Copperfin.OpenInStudio</LocCanonicalName>
+        </Strings>
+      </Button>
+      <Button guid="guidCopperfinCommandSet" id="OpenSelectedInCopperfinStudioCommand" priority="0x0100" type="Button">
+        <Parent guid="guidCopperfinCommandSet" id="CopperfinItemGroup" />
+        <Strings Language="en-US">
+          <ButtonText>Open In Copperfin Studio</ButtonText>
+          <LocCanonicalName>.Copperfin.OpenSelectedInStudio</LocCanonicalName>
+        </Strings>
+        <Strings Language="es-419">
+          <ButtonText>Abrir en Copperfin Studio</ButtonText>
+          <LocCanonicalName>.Copperfin.OpenSelectedInStudio</LocCanonicalName>
+        </Strings>
+        <Strings Language="pt-BR">
+          <ButtonText>Abrir no Copperfin Studio</ButtonText>
+          <LocCanonicalName>.Copperfin.OpenSelectedInStudio</LocCanonicalName>
+        </Strings>
+        <Strings Language="qps-ploc">
+          <ButtonText>[!! Óþéñ Íñ Çóþþéŕƒíñ Šťúðíó !!]</ButtonText>
+          <LocCanonicalName>.Copperfin.OpenSelectedInStudio</LocCanonicalName>
         </Strings>
       </Button>
       <Button guid="guidCopperfinCommandSet" id="BuildCopperfinProjectCommand" priority="0x0110" type="Button">
@@ -91,17 +113,14 @@
   </Commands>
 
   <CommandPlacements>
-    <CommandPlacement guid="guidCopperfinCommandSet" id="OpenInCopperfinStudioCommand" priority="0x0100">
-      <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE" />
-    </CommandPlacement>
     <CommandPlacement guid="guidCopperfinCommandSet" id="BuildCopperfinProjectCommand" priority="0x0110">
-      <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE" />
+      <Parent guid="guidCopperfinCommandSet" id="CopperfinItemGroup" />
     </CommandPlacement>
     <CommandPlacement guid="guidCopperfinCommandSet" id="RunCopperfinProjectCommand" priority="0x0120">
-      <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE" />
+      <Parent guid="guidCopperfinCommandSet" id="CopperfinItemGroup" />
     </CommandPlacement>
     <CommandPlacement guid="guidCopperfinCommandSet" id="DebugCopperfinProjectCommand" priority="0x0130">
-      <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE" />
+      <Parent guid="guidCopperfinCommandSet" id="CopperfinItemGroup" />
     </CommandPlacement>
   </CommandPlacements>
 
@@ -109,7 +128,9 @@
     <GuidSymbol name="guidCopperfinPackage" value="{1de4e419-0de5-4fb7-9c0f-c0212d97d4a5}" />
     <GuidSymbol name="guidCopperfinCommandSet" value="{4b56ff76-d352-4027-bb18-ef4c759d260b}">
       <IDSymbol name="CopperfinGroup" value="0x1020" />
+      <IDSymbol name="CopperfinItemGroup" value="0x1021" />
       <IDSymbol name="OpenInCopperfinStudioCommand" value="0x0100" />
+      <IDSymbol name="OpenSelectedInCopperfinStudioCommand" value="0x0101" />
       <IDSymbol name="BuildCopperfinProjectCommand" value="0x0200" />
       <IDSymbol name="RunCopperfinProjectCommand" value="0x0201" />
       <IDSymbol name="DebugCopperfinProjectCommand" value="0x0202" />

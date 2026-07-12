@@ -30,6 +30,7 @@ internal static partial class Program
         TestStudioHostProcessStartInfoWrapsWindowsBatchHosts();
         TestStudioHostProcessStartInfoAppliesExplicitLocalizationEnvironment();
         TestStudioHostBatchArgumentsKeepVisualStudioProvenance();
+        TestStudioTargetSelectionPrefersSelectedItemsForItemCommands();
         TestManagedHostResolutionHonorsEnvironmentOverrides();
         TestManagedHostResolutionFindsSiblingAndRepoBuildLayouts();
         TestLocalizationCatalogDoesNotLeakMachineSpecificHostPaths();
