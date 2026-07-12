@@ -2461,18 +2461,30 @@ void test_studio_host_json_refreshes_detail_header_footer_section_delete_restore
             }
             expect_contains(delete_process.stdout_text, "\"previewBoundsAvailable\": true",
                             "#2278: detail-header section preview delete should preserve live preview availability");
-            expect_contains(delete_process.stdout_text, "\"previewBoundsTop\": 300",
-                            "#2278: detail-header section preview delete should shrink live preview top bounds to the sibling section");
+            expect_contains(delete_process.stdout_text, "\"previewBoundsLeft\": 0",
+                            "#2278: detail-header section preview delete should preserve live preview left bounds");
+            expect_contains(delete_process.stdout_text, "\"previewBoundsTop\": 50",
+                            "#2278: detail-header section preview delete should preserve the retained header-object top bounds");
+            expect_contains(delete_process.stdout_text, "\"previewBoundsRight\": 1040",
+                            "#2278: detail-header section preview delete should preserve live preview right bounds");
             expect_contains(delete_process.stdout_text, "\"previewBoundsBottom\": 550",
                             "#2278: detail-header section preview delete should preserve sibling live preview bottom bounds");
-            expect_contains(delete_process.stdout_text, "\"previewBoundsHeight\": 250",
-                            "#2278: detail-header section preview delete should shrink live preview heights to the sibling section");
+            expect_contains(delete_process.stdout_text, "\"previewBoundsWidth\": 1040",
+                            "#2278: detail-header section preview delete should preserve live preview widths");
+            expect_contains(delete_process.stdout_text, "\"previewBoundsHeight\": 500",
+                            "#2278: detail-header section preview delete should preserve the retained header-object preview height");
             expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
                             "#2278: detail-header section preview delete should expose deleted preview availability");
+            expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                            "#2278: detail-header section preview delete should expose deleted preview left bounds");
             expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsTop\": 0",
                             "#2278: detail-header section preview delete should expose deleted preview top bounds");
+            expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsRight\": 800",
+                            "#2278: detail-header section preview delete should expose deleted preview right bounds");
             expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsBottom\": 300",
                             "#2278: detail-header section preview delete should expose deleted preview bottom bounds");
+            expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsWidth\": 800",
+                            "#2278: detail-header section preview delete should expose deleted preview widths");
             expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
                             "#2278: detail-header section preview delete should expose deleted preview heights");
             expect_contains(delete_process.stdout_text, "\"sectionCount\": 1",
@@ -2647,18 +2659,30 @@ void test_studio_host_json_refreshes_detail_header_footer_section_delete_restore
             }
             expect_contains(delete_process.stdout_text, "\"previewBoundsAvailable\": true",
                             "#1821: detail-footer section preview delete should preserve live preview availability");
+            expect_contains(delete_process.stdout_text, "\"previewBoundsLeft\": 0",
+                            "#1821: detail-footer section preview delete should preserve live preview left bounds");
             expect_contains(delete_process.stdout_text, "\"previewBoundsTop\": 0",
                             "#1821: detail-footer section preview delete should preserve live preview top bounds");
-            expect_contains(delete_process.stdout_text, "\"previewBoundsBottom\": 300",
-                            "#1821: detail-footer section preview delete should shrink live preview bottom bounds to the sibling section");
-            expect_contains(delete_process.stdout_text, "\"previewBoundsHeight\": 300",
-                            "#1821: detail-footer section preview delete should shrink live preview heights to the sibling section");
+            expect_contains(delete_process.stdout_text, "\"previewBoundsRight\": 1040",
+                            "#1821: detail-footer section preview delete should preserve live preview right bounds");
+            expect_contains(delete_process.stdout_text, "\"previewBoundsBottom\": 460",
+                            "#1821: detail-footer section preview delete should preserve the retained footer-object bottom bounds");
+            expect_contains(delete_process.stdout_text, "\"previewBoundsWidth\": 1040",
+                            "#1821: detail-footer section preview delete should preserve live preview widths");
+            expect_contains(delete_process.stdout_text, "\"previewBoundsHeight\": 460",
+                            "#1821: detail-footer section preview delete should preserve the retained footer-object preview height");
             expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
                             "#1821: detail-footer section preview delete should expose deleted preview availability");
+            expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                            "#1821: detail-footer section preview delete should expose deleted preview left bounds");
             expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsTop\": 300",
                             "#1821: detail-footer section preview delete should expose deleted preview top bounds");
+            expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsRight\": 1040",
+                            "#1821: detail-footer section preview delete should expose deleted preview right bounds");
             expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsBottom\": 550",
                             "#1821: detail-footer section preview delete should expose deleted preview bottom bounds");
+            expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1040",
+                            "#1821: detail-footer section preview delete should expose deleted preview widths");
             expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsHeight\": 250",
                             "#1821: detail-footer section preview delete should expose deleted preview heights");
             expect_contains(delete_process.stdout_text, "\"sectionCount\": 1",
