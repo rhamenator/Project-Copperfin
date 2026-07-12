@@ -4264,6 +4264,9 @@ copperfin_add_test(test_prg_engine_table_structure cf_xbase_runtime
     test_prg_engine_table_structure.cpp
     prg_engine_test_support.cpp
 )
+target_include_directories(test_prg_engine_table_structure PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/runtime
+)
 
 copperfin_add_test(test_xasset_methods cf_xbase_runtime
     test_xasset_methods.cpp

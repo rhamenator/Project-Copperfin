@@ -5,6 +5,7 @@
 #include "copperfin/localization/localization.h"
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/vfp/dbf_table.h"
+#include "prg_engine_table_structure_helpers.h"
 #include "test_environment_support.h"
 #include "prg_engine_test_support.h"
 
@@ -256,6 +257,147 @@ void test_create_table_rejects_duplicate_field_names() {
     expect(state.message == english_catalog.translate("Vfp.DbfTable.Error.TargetFieldExists"),
            "#3678: CREATE TABLE duplicate field names should surface the standard TargetFieldExists error");
     expect(!fs::exists(table_path), "#3678: failed CREATE TABLE should not leave a partial DBF on disk");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_table_field_dimensions_require_complete_bounded_integers() {
+    const std::vector<std::string> malformed_declarations = {
+        "VALUE C(10x)",
+        "VALUE N(3,0junk)",
+        "VALUE C()",
+        "VALUE N(3,)",
+        "VALUE C(-1)",
+        "VALUE C(256)",
+        "VALUE N(3,256)",
+        "VALUE C(9999999999999999999999999999999999999999)",
+        "VALUE C(10)junk",
+    };
+    for (const std::string& declaration : malformed_declarations) {
+        expect(
+            !copperfin::runtime::parse_table_field_declaration(declaration).has_value(),
+            "#3980: malformed or out-of-range field dimensions should reject the complete declaration: " +
+                declaration);
+    }
+
+    const auto zero_width = copperfin::runtime::parse_table_field_declaration("VALUE C(0)");
+    expect(zero_width.has_value(), "#3980: zero should remain a valid field-dimension token");
+    if (zero_width.has_value()) {
+        expect(zero_width->descriptor.length == 10U,
+               "#3980: zero character width should retain the existing default-width behavior");
+    }
+
+    const auto maximum_width = copperfin::runtime::parse_table_field_declaration("VALUE C(255)");
+    expect(maximum_width.has_value(), "#3980: the uint8 field-width boundary should remain valid");
+    if (maximum_width.has_value()) {
+        expect(maximum_width->descriptor.length == 255U,
+               "#3980: the maximum supported field width should remain unchanged");
+    }
+
+    const auto numeric = copperfin::runtime::parse_table_field_declaration("VALUE N(20,19)");
+    expect(numeric.has_value(), "#3980: ordinary complete numeric dimensions should remain valid");
+    if (numeric.has_value()) {
+        expect(numeric->descriptor.length == 20U && numeric->descriptor.decimal_count == 19U,
+               "#3980: valid numeric width and precision should remain unchanged");
+    }
+
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_table_field_dimensions";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto catalog = copperfin::localization::load_catalogs(
+        copperfin::localization::resolve_catalog_root(), "en-US");
+
+    const fs::path rejected_table_path = temp_root / "rejected.dbf";
+    const fs::path create_table_path = temp_root / "create_table_rejected.prg";
+    write_text(
+        create_table_path,
+        "CREATE TABLE '" + rejected_table_path.string() + "' (GOOD C(5), BAD C(10x))\nRETURN\n");
+    auto create_table_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(create_table_path.string(), temp_root.string()));
+    const auto create_table_state =
+        create_table_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!create_table_state.completed,
+           "#3980: CREATE TABLE should reject an invalid declaration instead of keeping valid siblings");
+    expect(
+        create_table_state.message ==
+            catalog.translate("Runtime.Prg.Dispatch.Error.CreateTableRequiresSupportedFieldDeclaration"),
+        "#3980: CREATE TABLE should retain its catalog-routed field-declaration diagnostic");
+    expect(!fs::exists(rejected_table_path),
+           "#3980: rejected CREATE TABLE declarations should not create a partial DBF");
+    expect(std::none_of(create_table_state.events.begin(), create_table_state.events.end(), [](const auto& event) {
+        return event.category == "runtime.create_table";
+    }), "#3980: rejected CREATE TABLE declarations should not emit a success event");
+
+    const fs::path create_cursor_path = temp_root / "create_cursor_rejected.prg";
+    write_text(
+        create_cursor_path,
+        "CREATE CURSOR BadCursor (BAD N(3,0junk), GOOD C(5))\nRETURN\n");
+    auto create_cursor_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(create_cursor_path.string(), temp_root.string()));
+    const auto create_cursor_state =
+        create_cursor_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!create_cursor_state.completed,
+           "#3980: CREATE CURSOR should reject an invalid declaration instead of keeping valid siblings");
+    expect(
+        create_cursor_state.message ==
+            catalog.translate("Runtime.Prg.Dispatch.Error.CreateCursorRequiresSupportedFieldDeclaration"),
+        "#3980: CREATE CURSOR should retain its catalog-routed field-declaration diagnostic");
+    expect(std::none_of(create_cursor_state.cursors.begin(), create_cursor_state.cursors.end(), [](const auto& cursor) {
+        return cursor.alias == "BadCursor" || cursor.alias == "BADCURSOR";
+    }), "#3980: rejected CREATE CURSOR declarations should not materialize a partial cursor");
+    expect(std::none_of(create_cursor_state.events.begin(), create_cursor_state.events.end(), [](const auto& event) {
+        return event.category == "runtime.create_cursor";
+    }), "#3980: rejected CREATE CURSOR declarations should not emit a success event");
+
+    const fs::path existing_table_path = temp_root / "existing.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields = {
+        {.name = "NAME", .type = 'C', .length = 10U},
+    };
+    const auto create_result =
+        copperfin::vfp::create_dbf_table_file(existing_table_path.string(), fields, {{"ALPHA"}});
+    expect(create_result.ok, "#3980: ALTER TABLE rejection fixture should be created");
+
+    const fs::path alter_add_path = temp_root / "alter_add_rejected.prg";
+    write_text(
+        alter_add_path,
+        "ALTER TABLE '" + existing_table_path.string() + "' ADD COLUMN EXTRA C(10x)\nRETURN\n");
+    auto alter_add_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(alter_add_path.string(), temp_root.string()));
+    const auto alter_add_state = alter_add_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!alter_add_state.completed, "#3980: ALTER TABLE ADD COLUMN should reject a malformed width");
+    expect(
+        alter_add_state.message == catalog.translate(
+            "Runtime.Prg.Dispatch.Error.AlterTableRequiresSupportedFieldDeclaration",
+            {{"command", "ALTER TABLE ADD COLUMN"}}),
+        "#3980: ALTER TABLE ADD COLUMN should retain its catalog-routed diagnostic");
+
+    const fs::path alter_column_path = temp_root / "alter_column_rejected.prg";
+    write_text(
+        alter_column_path,
+        "ALTER TABLE '" + existing_table_path.string() + "' ALTER COLUMN NAME C(256)\nRETURN\n");
+    auto alter_column_session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(alter_column_path.string(), temp_root.string()));
+    const auto alter_column_state =
+        alter_column_session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(!alter_column_state.completed, "#3980: ALTER TABLE ALTER COLUMN should reject an oversized width");
+    expect(
+        alter_column_state.message == catalog.translate(
+            "Runtime.Prg.Dispatch.Error.AlterTableRequiresSupportedFieldDeclaration",
+            {{"command", "ALTER TABLE ALTER COLUMN"}}),
+        "#3980: ALTER TABLE ALTER COLUMN should retain its catalog-routed diagnostic");
+
+    const auto unchanged_table = copperfin::vfp::parse_dbf_table_from_file(existing_table_path.string(), 10U);
+    expect(unchanged_table.ok, "#3980: rejected ALTER TABLE declarations should leave the DBF readable");
+    expect(unchanged_table.table.fields.size() == 1U &&
+               unchanged_table.table.fields[0].name == "NAME" &&
+               unchanged_table.table.fields[0].length == 10U,
+           "#3980: rejected ALTER TABLE declarations should leave the schema unchanged");
+    expect(unchanged_table.table.records.size() == 1U &&
+               unchanged_table.table.records[0].values[0].display_value == "ALPHA",
+           "#3980: rejected ALTER TABLE declarations should leave record data unchanged");
 
     fs::remove_all(temp_root, ignored);
 }
@@ -729,6 +871,7 @@ int main() {
     test_alter_table_rollback_restores_schema_and_disk_readability();
     test_create_table_defaults_and_not_null_constraints();
     test_create_table_rejects_duplicate_field_names();
+    test_table_field_dimensions_require_complete_bounded_integers();
     test_create_cursor_uses_temp_backed_local_table_flow();
     test_create_cursor_not_null_insert_failure_rolls_back();
     test_not_null_insert_failure_rolls_back();

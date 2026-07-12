@@ -7,10 +7,11 @@
 #include "prg_engine_command_helpers.h"
 #include "prg_engine_helpers.h"
 
-#include <algorithm>
+#include <charconv>
 #include <cstdint>
-#include <exception>
+#include <limits>
 #include <sstream>
+#include <system_error>
 
 namespace copperfin::runtime {
 
@@ -33,6 +34,23 @@ std::string take_type_token(std::istringstream& stream) {
         }
     }
     return type_text;
+}
+
+std::optional<std::uint8_t> parse_field_dimension(std::string text) {
+    text = trim_copy(std::move(text));
+    if (text.empty()) {
+        return std::nullopt;
+    }
+
+    unsigned int value = 0U;
+    const char* const begin = text.data();
+    const char* const end = begin + text.size();
+    const auto result = std::from_chars(begin, end, value, 10);
+    if (result.ec != std::errc{} || result.ptr != end ||
+        value > std::numeric_limits<std::uint8_t>::max()) {
+        return std::nullopt;
+    }
+    return static_cast<std::uint8_t>(value);
 }
 
 }  // namespace
@@ -62,18 +80,29 @@ std::optional<TableFieldDeclaration> parse_table_field_declaration(std::string t
 
     const std::size_t open_paren = type_text.find('(');
     std::string type_name = open_paren == std::string::npos ? type_text : type_text.substr(0U, open_paren);
-    if (open_paren != std::string::npos && type_text.back() == ')') {
-        const std::string inside = type_text.substr(open_paren + 1U, type_text.size() - open_paren - 2U);
-        const std::vector<std::string> parts = split_csv_like(inside);
-        try {
-            if (!parts.empty()) {
-                length = static_cast<std::uint8_t>(std::clamp(std::stoi(trim_copy(parts[0])), 0, 255));
-            }
-            if (parts.size() > 1U) {
-                decimals = static_cast<std::uint8_t>(std::clamp(std::stoi(trim_copy(parts[1])), 0, 255));
-            }
-        } catch (const std::exception&) {
+    if (open_paren != std::string::npos) {
+        if (type_text.back() != ')') {
             return std::nullopt;
+        }
+        const std::string inside = type_text.substr(open_paren + 1U, type_text.size() - open_paren - 2U);
+        const std::string trimmed_inside = trim_copy(inside);
+        const std::vector<std::string> parts = split_csv_like(inside);
+        if (trimmed_inside.empty() || parts.empty() || parts.size() > 2U || trimmed_inside.back() == ',') {
+            return std::nullopt;
+        }
+
+        const auto parsed_length = parse_field_dimension(parts[0]);
+        if (!parsed_length.has_value()) {
+            return std::nullopt;
+        }
+        length = *parsed_length;
+
+        if (parts.size() == 2U) {
+            const auto parsed_decimals = parse_field_dimension(parts[1]);
+            if (!parsed_decimals.has_value()) {
+                return std::nullopt;
+            }
+            decimals = *parsed_decimals;
         }
     }
 
@@ -164,9 +193,11 @@ std::optional<TableFieldDeclaration> parse_table_field_declaration(std::string t
 std::vector<TableFieldDeclaration> parse_table_field_declarations(const std::string& field_list) {
     std::vector<TableFieldDeclaration> declarations;
     for (const std::string& part : split_csv_like(field_list)) {
-        if (auto declaration = parse_table_field_declaration(part)) {
-            declarations.push_back(*declaration);
+        auto declaration = parse_table_field_declaration(part);
+        if (!declaration.has_value()) {
+            return {};
         }
+        declarations.push_back(std::move(*declaration));
     }
     return declarations;
 }
