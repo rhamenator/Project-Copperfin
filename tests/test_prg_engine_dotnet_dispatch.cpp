@@ -652,6 +652,10 @@ namespace
                "#3945: missing managed load should retain the recoverable expression contract");
         expect(stats.invoke_results == 0U && stats.exception_results == 0U,
                "#3943: managed load failure should avoid IDispatch EXCEPINFO state");
+        const auto ignored_result = state.globals.find("nignored");
+        expect(ignored_result != state.globals.end() &&
+                   copperfin::runtime::format_value(ignored_result->second).empty(),
+               "#3945: failed Assembly.LoadFrom should retain the empty expression result");
         const auto failure_message = state.globals.find("cfailuremessage");
         expect(failure_message != state.globals.end(),
                "#3945: missing Assembly.LoadFrom should retain MESSAGE() diagnostic state");
@@ -666,8 +670,11 @@ namespace
                     {"hresult", std::to_string(static_cast<long>(DISP_E_EXCEPTION))},
                     {"path", missing_fixture.string()},
                 });
-            expect(copperfin::runtime::format_value(failure_message->second) == expected,
-                   "#3945: missing load should preserve localized path and HRESULT placeholders");
+            const std::string actual =
+                copperfin::runtime::format_value(failure_message->second);
+            expect(actual == expected,
+                   "#3945: missing load should preserve localized path and HRESULT placeholders; "
+                   "expected=[" + expected + "] actual=[" + actual + "]");
             expect(
                 std::any_of(state.events.begin(), state.events.end(), [&](const auto &event)
                 {
