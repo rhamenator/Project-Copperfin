@@ -261,8 +261,12 @@ void run_paper_size_update_case(
         expect_empty_report_layout_preview_bounds(
             update_process.stdout_text,
             "#2020: record-selected deleted report/label paper-size update JSON");
-        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
-                        issue_prefix + " update should not fabricate live page setup");
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
+                        issue_prefix + " update should expose effective deleted-root page setup");
+        expect_contains(update_process.stdout_text, "\"paperSizeAvailable\": true",
+                        issue_prefix + " update should expose effective paper-size availability");
+        expect_contains(update_process.stdout_text, "\"paperSizeCode\": " + updated_paper_size,
+                        issue_prefix + " update should expose the effective paper-size code");
         expect_contains(update_process.stdout_text, "\"settingCount\": 0",
                         issue_prefix + " update should not fabricate live settings");
         expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 6",
@@ -383,8 +387,12 @@ void run_paper_size_clear_case(
         expect_empty_report_layout_preview_bounds(
             clear_process.stdout_text,
             "#2020: record-selected deleted report/label paper-size clear JSON");
-        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
-                        issue_prefix + " clear should not fabricate live page setup");
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
+                        issue_prefix + " clear should preserve effective deleted-root page setup");
+        expect_contains(clear_process.stdout_text, "\"paperSizeAvailable\": false",
+                        issue_prefix + " clear should clear effective paper-size availability");
+        expect_contains(clear_process.stdout_text, "\"paperSizeCode\": 0",
+                        issue_prefix + " clear should reset the effective paper-size code");
         expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
                         issue_prefix + " clear should not fabricate live settings");
         expect_contains(clear_process.stdout_text, "\"deletedSettingCount\": 5",

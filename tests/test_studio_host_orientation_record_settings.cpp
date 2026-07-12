@@ -273,8 +273,12 @@ void run_orientation_update_case(
             },
             issue_prefix + " update should preserve field setting provenance");
     } else {
-        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
-                        issue_prefix + " update should not fabricate live page setup");
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
+                        issue_prefix + " update should expose effective deleted-root page setup");
+        expect_contains(update_process.stdout_text, "\"orientationAvailable\": true",
+                        issue_prefix + " update should expose effective orientation availability");
+        expect_contains(update_process.stdout_text, "\"orientationCode\": " + updated_orientation,
+                        issue_prefix + " update should expose the effective orientation code");
         expect_contains(update_process.stdout_text, "\"settingCount\": 0",
                         issue_prefix + " update should not fabricate live settings");
         expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 6",
@@ -390,8 +394,12 @@ void run_orientation_clear_case(
             },
             issue_prefix + " clear should preserve remaining setting provenance");
     } else {
-        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
-                        issue_prefix + " clear should not fabricate live page setup");
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
+                        issue_prefix + " clear should preserve effective deleted-root page setup");
+        expect_contains(clear_process.stdout_text, "\"orientationAvailable\": false",
+                        issue_prefix + " clear should clear effective orientation availability");
+        expect_contains(clear_process.stdout_text, "\"orientationCode\": 0",
+                        issue_prefix + " clear should reset the effective orientation code");
         expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
                         issue_prefix + " clear should not fabricate live settings");
         expect_contains(clear_process.stdout_text, "\"deletedSettingCount\": 5",
@@ -776,8 +784,8 @@ void run_unsupported_expr_line_preservation_case(
                             "\"name\": \"* keep-this-comment\", \"recordIndex\": 0, \"fieldIndex\": 2",
                             issue_prefix + " update should not fabricate comment lines as parsed settings");
     } else {
-        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
-                        issue_prefix + " update should not fabricate live page setup");
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
+                        issue_prefix + " update should expose effective deleted-root page setup");
         expect_contains(update_process.stdout_text, "\"settingCount\": 0",
                         issue_prefix + " update should not fabricate live settings");
         expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 4",
@@ -862,8 +870,8 @@ void run_unsupported_expr_line_preservation_case(
                             "\"name\": \"* keep-this-comment\", \"recordIndex\": 0, \"fieldIndex\": 2",
                             issue_prefix + " undo should not fabricate comment lines as parsed settings");
     } else {
-        expect_contains(undo_process.stdout_text, "\"pageSetupAvailable\": false",
-                        issue_prefix + " undo should not fabricate live page setup");
+        expect_contains(undo_process.stdout_text, "\"pageSetupAvailable\": true",
+                        issue_prefix + " undo should preserve effective deleted-root page setup");
         expect_contains(undo_process.stdout_text, "\"settingCount\": 0",
                         issue_prefix + " undo should keep live settings absent");
         expect_contains(undo_process.stdout_text, "\"deletedSettingCount\": 3",

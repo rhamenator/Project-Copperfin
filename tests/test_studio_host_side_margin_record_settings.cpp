@@ -282,8 +282,8 @@ void run_side_margin_update_case(
     expect_side_margin_summary_state(
         update_process.stdout_text,
         property_name,
-        !deleted,
-        deleted ? "0" : updated_margin,
+        true,
+        updated_margin,
         issue_prefix + " update");
 
     if (!deleted) {
@@ -332,8 +332,8 @@ void run_side_margin_update_case(
             },
             issue_prefix + " update should refresh selected settings");
     } else {
-        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
-                        issue_prefix + " update should not fabricate live page setup");
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
+                        issue_prefix + " update should expose effective deleted-root page setup");
         expect_contains(update_process.stdout_text, "\"settingCount\": 0",
                         issue_prefix + " update should not fabricate live settings");
         expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 6",
@@ -482,8 +482,8 @@ void run_side_margin_clear_case(
                             "\"name\": \"" + property_name + "\", \"recordIndex\": 0, \"fieldIndex\": 8",
                             issue_prefix + " clear should remove direct side-margin settings");
     } else {
-        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
-                        issue_prefix + " clear should not fabricate live page setup");
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
+                        issue_prefix + " clear should preserve effective deleted-root page setup");
         expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
                         issue_prefix + " clear should not fabricate live settings");
         expect_contains(clear_process.stdout_text, "\"deletedSettingCount\": 5",

@@ -190,8 +190,24 @@ void test_studio_host_json_deletes_report_settings_by_record_selection(const std
         "#2040: record-selected report settings delete JSON");
     expect_contains(delete_process.stdout_text, "\"settingCount\": 0",
                     "#1475: deleted report settings JSON should remove settings from live counts");
-    expect_contains(delete_process.stdout_text, "\"pageSetupAvailable\": false",
-                    "#1517: deleted report settings JSON should clear live page setup summaries");
+    expect_contains(delete_process.stdout_text, "\"pageSetupAvailable\": true",
+                    "#3815: deleted report settings JSON should expose effective page setup summaries");
+    expect_contains(delete_process.stdout_text, "\"orientationAvailable\": true",
+                    "#3815: deleted report settings JSON should expose effective orientation availability");
+    expect_contains(delete_process.stdout_text, "\"orientationCode\": 0",
+                    "#3815: deleted report settings JSON should expose the effective orientation code");
+    expect_contains(delete_process.stdout_text, "\"paperSizeAvailable\": true",
+                    "#3815: deleted report settings JSON should expose effective paper-size availability");
+    expect_contains(delete_process.stdout_text, "\"paperSizeCode\": 1",
+                    "#3815: deleted report settings JSON should expose the effective paper-size code");
+    expect_contains(delete_process.stdout_text, "\"topMargin\": 10",
+                    "#3815: deleted report settings JSON should expose the effective top margin");
+    expect_contains(delete_process.stdout_text, "\"bottomMargin\": 20",
+                    "#3815: deleted report settings JSON should expose the effective bottom margin");
+    expect_contains(delete_process.stdout_text, "\"gridVertical\": 4",
+                    "#3815: deleted report settings JSON should expose effective vertical-grid spacing");
+    expect_contains(delete_process.stdout_text, "\"gridHorizontal\": 8",
+                    "#3815: deleted report settings JSON should expose effective horizontal-grid spacing");
     expect_contains(delete_process.stdout_text, "\"deletedSettingCount\": 6",
                     "#1475: deleted report settings JSON should expose deleted setting counts");
     expect_contains_in_order(

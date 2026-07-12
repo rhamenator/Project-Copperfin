@@ -251,8 +251,12 @@ void run_grid_vertical_update_case(
             },
             issue_prefix + " update should preserve field setting provenance");
     } else {
-        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
-                        issue_prefix + " update should not fabricate live page setup");
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
+                        issue_prefix + " update should expose effective deleted-root page setup");
+        expect_contains(update_process.stdout_text, "\"gridVerticalAvailable\": true",
+                        issue_prefix + " update should expose effective vertical-grid availability");
+        expect_contains(update_process.stdout_text, "\"gridVertical\": " + updated_grid,
+                        issue_prefix + " update should expose the effective vertical-grid value");
         expect_contains(update_process.stdout_text, "\"settingCount\": 0",
                         issue_prefix + " update should not fabricate live settings");
         expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 4",
@@ -358,8 +362,12 @@ void run_grid_vertical_clear_case(
             },
             issue_prefix + " clear should preserve remaining setting provenance");
     } else {
-        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
-                        issue_prefix + " clear should not fabricate live page setup");
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
+                        issue_prefix + " clear should preserve effective deleted-root page setup");
+        expect_contains(clear_process.stdout_text, "\"gridVerticalAvailable\": false",
+                        issue_prefix + " clear should clear effective vertical-grid availability");
+        expect_contains(clear_process.stdout_text, "\"gridVertical\": 0",
+                        issue_prefix + " clear should reset the effective vertical-grid value");
         expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
                         issue_prefix + " clear should not fabricate live settings");
         expect_contains(clear_process.stdout_text, "\"deletedSettingCount\": 3",
