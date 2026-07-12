@@ -85,6 +85,24 @@ namespace copperfin::runtime
         constexpr std::intptr_t kCopperfinScreenWhandle = 900001;
         constexpr std::intptr_t kCopperfinVfpWhandle = 900002;
 
+        class PrgCompatibilityError final : public std::runtime_error
+        {
+        public:
+            PrgCompatibilityError(std::string message, int error_code)
+                : std::runtime_error(std::move(message)),
+                  error_code_(error_code)
+            {
+            }
+
+            [[nodiscard]] int error_code() const noexcept
+            {
+                return error_code_;
+            }
+
+        private:
+            int error_code_;
+        };
+
         PrgValue canonicalize_native_olecontrol_doverb_argument(const PrgValue &verb)
         {
             if (verb.kind == PrgValueKind::string)
@@ -7567,6 +7585,26 @@ namespace copperfin::runtime
                     break;
                 }
             }
+        }
+        catch (const PrgCompatibilityError &error)
+        {
+            ensure_fault_context_defaults(current_statement(), last_fault_location, last_fault_statement);
+            last_error_message = error.what();
+            last_error_code = error.error_code();
+            last_error_compatibility = {};
+            last_error_compatibility.explicit_error_code = last_error_code;
+            events.push_back({.category = "runtime.error",
+                              .detail = last_error_message,
+                              .location = last_fault_location});
+            if (!stack.empty())
+            {
+                fault_frame_file_path = stack.back().file_path;
+                fault_frame_routine_name = stack.back().routine_name;
+                fault_statement_index = stack.back().pc > 0U ? stack.back().pc - 1U : 0U;
+                fault_pc_valid = true;
+            }
+            error_metadata_stack.push_back(snapshot_current_error_metadata());
+            return finalize_pause_state(DebugPauseReason::error, last_error_message);
         }
         catch (const std::bad_alloc &)
         {

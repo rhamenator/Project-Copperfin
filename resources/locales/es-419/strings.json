@@ -1274,6 +1274,8 @@
   "Runtime.Prg.Dll.Error.NativeInvokeFailed": "No se pudo invocar la funcion DLL nativa {functionName}: {hresult}",
   "Runtime.Prg.Dll.Error.NativeProcAddressMissing": "No hay direccion de proc para: {functionName}",
   "Runtime.Prg.Dll.Error.RegisteredApiHandleNotFound": "No se encontro el handle de API registrado: {handle}",
+  "Runtime.Prg.Dll.Error.TooFewArguments": "Faltan argumentos.",
+  "Runtime.Prg.Dll.Error.TooManyArguments": "Hay demasiados argumentos.",
   "Runtime.Prg.Dispatch.Error.AwaitRequiresTaskHandle": "{command} requiere un handle de tarea",
   "Runtime.Prg.Dispatch.Error.CommandDoesNotTakeArguments": "{command} no acepta argumentos",
   "Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed": "No se pudo resolver el destino de {command}: {target}",

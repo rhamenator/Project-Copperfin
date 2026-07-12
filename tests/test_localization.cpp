@@ -1479,7 +1479,9 @@ void test_runtime_dll_errors_route_through_catalog() {
     };
     const std::vector<std::string> native_keys{
         "Runtime.Prg.Dll.Error.NativeArgumentLimitExceeded",
-        "Runtime.Prg.Dll.Error.NativeInvokeFailed"
+        "Runtime.Prg.Dll.Error.NativeInvokeFailed",
+        "Runtime.Prg.Dll.Error.TooFewArguments",
+        "Runtime.Prg.Dll.Error.TooManyArguments"
     };
 
     expect(
@@ -1513,6 +1515,10 @@ void test_runtime_dll_errors_route_through_catalog() {
         english.translate("Runtime.Prg.Dll.Error.NativeInvokeFailed", native_invoke_placeholders) ==
             "Native DLL function pow failed to invoke: -2147352568",
         "#3895: native invocation error should preserve function and HRESULT placeholders");
+    expect(
+        english.translate("Runtime.Prg.Dll.Error.TooFewArguments") == "Too few arguments." &&
+            english.translate("Runtime.Prg.Dll.Error.TooManyArguments") == "Too many arguments.",
+        "#3946: DECLARE arity errors should preserve the grounded VFP9 en-US wording");
     for (const std::string &native_key : native_keys) {
         expect(
             spanish.catalogs.contains("es-419") && spanish.catalogs.at("es-419").contains(native_key),
@@ -1576,6 +1582,12 @@ void test_runtime_dll_errors_route_through_catalog() {
             pseudo_invoke.find("{functionName}") == std::string::npos &&
             pseudo_invoke.find("{hresult}") == std::string::npos,
         "#3895: qps-ploc native invocation error should preserve replaced identifiers");
+    expect(
+        pseudo.translate("Runtime.Prg.Dll.Error.TooFewArguments") ==
+                copperfin::localization::pseudo_localize("Too few arguments.") &&
+            pseudo.translate("Runtime.Prg.Dll.Error.TooManyArguments") ==
+                copperfin::localization::pseudo_localize("Too many arguments."),
+        "#3946: DECLARE arity errors should pseudo-localize without changing machine contracts");
 }
 
 void test_runtime_core_errors_route_through_catalog() {

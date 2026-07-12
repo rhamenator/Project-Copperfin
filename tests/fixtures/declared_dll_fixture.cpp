@@ -23,6 +23,11 @@ namespace {
 #if defined(_WIN32)
 int declared_dll_fixture_module_anchor = 0;
 #endif
+std::int32_t declared_dll_arity_entry_count = 0;
+
+void record_declared_dll_arity_entry() {
+    ++declared_dll_arity_entry_count;
+}
 }
 
 #if defined(_MSC_VER) && defined(_M_IX86)
@@ -150,6 +155,54 @@ COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllAnsiOnlyA(lon
 
 COPPERFIN_TEST_EXPORT long CopperfinDeclaredDllAnsiCdeclOnlyA() {
     return 4002L;
+}
+
+COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllArityReset() {
+    declared_dll_arity_entry_count = 0;
+    return 0L;
+}
+
+COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllArityCount() {
+    return static_cast<long>(declared_dll_arity_entry_count);
+}
+
+COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllArityZero() {
+    record_declared_dll_arity_entry();
+    return 3946L;
+}
+
+COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllArityOne(std::int32_t value) {
+    record_declared_dll_arity_entry();
+    return static_cast<long>(value);
+}
+
+COPPERFIN_TEST_EXPORT long CopperfinDeclaredDllArityCdeclOne(std::int32_t value) {
+    record_declared_dll_arity_entry();
+    return static_cast<long>(value);
+}
+
+COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllArityMixed(
+    std::int32_t first,
+    double second,
+    std::int64_t* third,
+    float fourth) {
+    record_declared_dll_arity_entry();
+    return static_cast<long>(first + static_cast<std::int32_t>(second) +
+                             (third == nullptr ? 0 : static_cast<std::int32_t>(*third)) +
+                             static_cast<std::int32_t>(fourth));
+}
+
+COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllArityEight(
+    std::int32_t first,
+    std::int32_t second,
+    std::int32_t third,
+    std::int32_t fourth,
+    std::int32_t fifth,
+    std::int32_t sixth,
+    std::int32_t seventh,
+    std::int32_t eighth) {
+    record_declared_dll_arity_entry();
+    return static_cast<long>(first + second + third + fourth + fifth + sixth + seventh + eighth);
 }
 
 COPPERFIN_TEST_EXPORT long COPPERFIN_TEST_CALL CopperfinDeclaredDllModulePathA(char* buffer, long capacity) {

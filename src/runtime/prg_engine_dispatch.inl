@@ -8489,6 +8489,19 @@
             }
         }
         }
+        catch (const PrgCompatibilityError &error)
+        {
+            last_error_message = error.what();
+            last_error_code = error.error_code();
+            last_error_compatibility = {};
+            last_error_compatibility.explicit_error_code = last_error_code;
+            last_fault_location = statement.location;
+            last_fault_statement = statement.text;
+            events.push_back({.category = "runtime.error",
+                              .detail = last_error_message,
+                              .location = statement.location});
+            return {.ok = false, .message = last_error_message};
+        }
         catch (const std::bad_alloc &)
         {
             last_error_message = runtime_text("Runtime.Prg.Core.Error.ResourceOutOfMemory");

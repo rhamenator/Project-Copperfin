@@ -3313,6 +3313,185 @@ void test_declared_dll_explicit_ansi_fallback_and_exact_precedence() {
 #endif
 }
 
+void test_declared_dll_argument_count_is_validated_before_native_entry() {
+#if defined(_WIN32) && defined(COPPERFIN_DECLARED_DLL_FIXTURE_NAME)
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_declared_dll_arity";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root / "native");
+
+    const fs::path fixture_name = COPPERFIN_DECLARED_DLL_FIXTURE_NAME;
+    const fs::path fixture_copy = temp_root / "native" / fixture_name;
+    fs::copy_file(declared_dll_fixture_source_path(), fixture_copy, fs::copy_options::overwrite_existing, ignored);
+    expect(!ignored && fs::exists(fixture_copy),
+           "#3946: controlled arity fixture should copy under the PRG working directory");
+
+    const std::string module = "native/" + fixture_name.string();
+    const std::string counter_declarations =
+        "DECLARE LONG CopperfinDeclaredDllArityReset IN '" + module + "' AS ArityReset\n"
+        "DECLARE LONG CopperfinDeclaredDllArityCount IN '" + module + "' AS ArityCount\n";
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+    set_env_value("COPPERFIN_LOCALE", "en-US", true);
+
+    const fs::path baseline_path = temp_root / "arity_baseline.prg";
+    write_text(
+        baseline_path,
+        counter_declarations +
+        "DECLARE LONG CopperfinDeclaredDllArityOne IN '" + module + "' AS ArityTarget LONG value\n"
+        "nReset = ArityReset()\n"
+        "nValidResult = ArityTarget(7)\n"
+        "nNativeEntries = ArityCount()\n"
+        "RETURN\n");
+    {
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(baseline_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "#3946: arity fixture baseline should complete: " + state.message);
+        const auto valid_result = state.globals.find("nvalidresult");
+        const auto native_entries = state.globals.find("nnativeentries");
+        expect(valid_result != state.globals.end() &&
+                   copperfin::runtime::format_value(valid_result->second) == "7",
+               "#3946: valid one-argument stdcall should enter the controlled fixture");
+        expect(native_entries != state.globals.end() &&
+                   copperfin::runtime::format_value(native_entries->second) == "1",
+               "#3946: controlled fixture counter should observe the valid native entry");
+    }
+
+    const fs::path handler_argument_path = temp_root / "arity_handler_argument.prg";
+    write_text(
+        handler_argument_path,
+        counter_declarations +
+        "DECLARE LONG CopperfinDeclaredDllArityOne IN '" + module + "' AS ArityTarget LONG value\n"
+        "nReset = ArityReset()\n"
+        "ON ERROR DO HandleOuterError WITH ArityTarget()\n"
+        "DO CopperfinMissingArityHandlerTarget\n"
+        "ON ERROR\n"
+        "nOuterCode = ERROR()\n"
+        "nNativeEntries = ArityCount()\n"
+        "RETURN\n"
+        "PROCEDURE HandleOuterError\n"
+        "RETURN\n"
+        "ENDPROC\n");
+    {
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(handler_argument_path.string(), temp_root.string()));
+        auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(!state.completed && state.reason == copperfin::runtime::DebugPauseReason::error,
+               "#3946: an arity fault in ON ERROR arguments should pause safely");
+        expect(state.message == "Too few arguments.",
+               "#3946: the outer run boundary should not wrap an arity compatibility fault");
+
+        state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed,
+               "#3946: the runtime should remain resumable after an outer-boundary arity fault: " + state.message);
+        const auto outer_code = state.globals.find("noutercode");
+        const auto native_entries = state.globals.find("nnativeentries");
+        expect(outer_code != state.globals.end() &&
+                   copperfin::runtime::format_value(outer_code->second) == "1229",
+               "#3946: the outer run boundary should preserve VFP error 1229");
+        expect(native_entries != state.globals.end() &&
+                   copperfin::runtime::format_value(native_entries->second) == "0",
+               "#3946: handler-argument arity faults must not enter the native target");
+    }
+
+    struct ArityCase {
+        std::string label;
+        std::string export_name;
+        std::string declaration_suffix;
+        std::string invocation;
+        int expected_error;
+        std::string expected_message;
+        bool pseudo_locale = false;
+    };
+
+    const std::vector<ArityCase> cases{
+        {"zero_too_many", "CopperfinDeclaredDllArityZero", "", "ArityTarget(1)", 1230, "Too many arguments."},
+        {"stdcall_one_too_few", "CopperfinDeclaredDllArityOne", " LONG value", "ArityTarget()", 1229, "Too few arguments."},
+        {"stdcall_one_too_many", "CopperfinDeclaredDllArityOne", " LONG value", "ArityTarget(1, 2)", 1230, "Too many arguments."},
+        {"cdecl_one_too_few", "CopperfinDeclaredDllArityCdeclOne", " LONG value", "ArityTarget()", 1229, "Too few arguments.", true},
+        {"mixed_byref_too_few", "CopperfinDeclaredDllArityMixed",
+         " LONG first, DOUBLE second, INTEGER64 @ third, SINGLE fourth",
+         "ArityTarget(1, 2.0, @nWide)", 1229, "Too few arguments."},
+        {"eight_too_few", "CopperfinDeclaredDllArityEight",
+         " LONG first, LONG second, LONG third, LONG fourth, LONG fifth, LONG sixth, LONG seventh, LONG eighth",
+         "ArityTarget(1, 2, 3, 4, 5, 6, 7)", 1229, "Too few arguments."},
+        {"eight_too_many", "CopperfinDeclaredDllArityEight",
+         " LONG first, LONG second, LONG third, LONG fourth, LONG fifth, LONG sixth, LONG seventh, LONG eighth",
+         "ArityTarget(1, 2, 3, 4, 5, 6, 7, 8, 9)", 1230, "Too many arguments."},
+        {"native_limit", "CopperfinDeclaredDllArityCdeclOne",
+         " LONG first, LONG second, LONG third, LONG fourth, LONG fifth, LONG sixth, LONG seventh, LONG eighth, LONG ninth",
+         "ArityTarget(1, 2, 3, 4, 5, 6, 7, 8, 9)", 1230,
+         "Native DLL call has 9 arguments; the maximum is 8", true}
+    };
+
+    for (const ArityCase &arity_case : cases) {
+        set_env_value("COPPERFIN_LOCALE", arity_case.pseudo_locale ? "qps-ploc" : "en-US", true);
+        const fs::path script_path = temp_root / (arity_case.label + ".prg");
+        write_text(
+            script_path,
+            "PUBLIC nCapturedCode\n"
+            "PUBLIC cCapturedMessage\n"
+            "nCapturedCode = 0\n"
+            "cCapturedMessage = ''\n" +
+            counter_declarations +
+            "DECLARE LONG " + arity_case.export_name + " IN '" + module +
+                "' AS ArityTarget" + arity_case.declaration_suffix + "\n"
+            "nWide = 3\n"
+            "nReset = ArityReset()\n"
+            "ON ERROR DO HandleArityError\n"
+            "nUnexpected = " + arity_case.invocation + "\n"
+            "ON ERROR\n"
+            "nNativeEntries = ArityCount()\n"
+            "RETURN\n"
+            "PROCEDURE HandleArityError\n"
+            "nCapturedCode = ERROR()\n"
+            "cCapturedMessage = MESSAGE()\n"
+            "RETURN\n"
+            "ENDPROC\n");
+
+        copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+            make_runtime_session_options(script_path.string(), temp_root.string()));
+        const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+        expect(state.completed, "#3946: recoverable " + arity_case.label + " mismatch should complete: " + state.message);
+
+        const auto captured_code = state.globals.find("ncapturedcode");
+        const auto captured_message = state.globals.find("ccapturedmessage");
+        const auto native_entries = state.globals.find("nnativeentries");
+        const std::string expected_message = arity_case.pseudo_locale
+            ? copperfin::localization::pseudo_localize(arity_case.expected_message)
+            : arity_case.expected_message;
+        expect(captured_code != state.globals.end() &&
+                   copperfin::runtime::format_value(captured_code->second) == std::to_string(arity_case.expected_error),
+               "#3946: " + arity_case.label + " should preserve the grounded VFP error identity");
+        expect(captured_message != state.globals.end() &&
+                   copperfin::runtime::format_value(captured_message->second) == expected_message,
+               "#3946: " + arity_case.label + " should preserve the localized arity diagnostic");
+        expect(native_entries != state.globals.end() &&
+                   copperfin::runtime::format_value(native_entries->second) == "0",
+               "#3946: " + arity_case.label + " must not enter the native target");
+        expect(std::any_of(state.events.begin(), state.events.end(), [&](const auto &event) {
+                   return event.category == "runtime.declare_dll" &&
+                          event.detail.find(arity_case.export_name) != std::string::npos;
+               }),
+               "#3946: " + arity_case.label + " should retain the invariant DECLARE event");
+        expect(std::any_of(state.events.begin(), state.events.end(), [&](const auto &event) {
+                   return event.category == "runtime.error" && event.detail == expected_message;
+               }),
+               "#3946: " + arity_case.label + " should emit the stable runtime.error category");
+        expect(std::any_of(state.events.begin(), state.events.end(), [](const auto &event) {
+                   return event.category == "runtime.error_handler";
+               }),
+               "#3946: " + arity_case.label + " should emit the stable runtime.error_handler category");
+    }
+
+    set_env_value("COPPERFIN_LOCALE", "en-US", true);
+    expect(GetModuleHandleW(fixture_copy.wstring().c_str()) == nullptr,
+           "#3946: arity validation sessions should release every controlled module reference");
+    fs::remove_all(temp_root, ignored);
+#endif
+}
+
 void test_declare_dll_runtime_errors_localize() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_declare_localization";
@@ -3940,6 +4119,7 @@ int main() {
     test_declared_dll_win32api_missing_symbol_localizes();
     test_declared_dll_module_ownership_and_failed_redeclare_rollback();
     test_declared_dll_explicit_ansi_fallback_and_exact_precedence();
+    test_declared_dll_argument_count_is_validated_before_native_entry();
     test_declare_dll_runtime_errors_localize();
     test_set_exact_affects_comparisons_and_seek();
     test_use_again_and_alias_collision_semantics();

@@ -148,6 +148,17 @@
                 }
             }
 
+            if (args.size() != declared_param_types.size())
+            {
+                const bool too_few = args.size() < declared_param_types.size();
+                throw PrgCompatibilityError(
+                    runtime_text(
+                        too_few
+                            ? "Runtime.Prg.Dll.Error.TooFewArguments"
+                            : "Runtime.Prg.Dll.Error.TooManyArguments"),
+                    too_few ? 1229 : 1230);
+            }
+
             auto param_type_at = [&](std::size_t i) -> std::string
             {
                 return i < declared_param_types.size() ? declared_param_types[i].type : std::string("integer");
@@ -674,13 +685,14 @@
 
                 if (nargs > 8U)
                 {
-                    last_error_message = runtime_text(
-                        "Runtime.Prg.Dll.Error.NativeArgumentLimitExceeded",
-                        {
-                            {"count", std::to_string(nargs)},
-                            {"maximum", "8"}
-                        });
-                    return make_empty_value();
+                    throw PrgCompatibilityError(
+                        runtime_text(
+                            "Runtime.Prg.Dll.Error.NativeArgumentLimitExceeded",
+                            {
+                                {"count", std::to_string(nargs)},
+                                {"maximum", "8"}
+                            }),
+                        1230);
                 }
 
                 const auto invoke_via_disp_call_func = [&]() -> PrgValue
