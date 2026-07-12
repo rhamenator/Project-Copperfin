@@ -21,15 +21,20 @@ inline bool is_filesystem_environment_variable(const std::string& name) {
 
 inline std::string path_to_utf8_string(const std::filesystem::path& value) {
     const auto encoded = value.u8string();
-    return std::string(
-        reinterpret_cast<const char*>(encoded.data()),
-        encoded.size());
+    std::string decoded;
+    decoded.reserve(encoded.size());
+    for (const char8_t ch : encoded) {
+        decoded.push_back(static_cast<char>(ch));
+    }
+    return decoded;
 }
 
 inline std::filesystem::path path_from_utf8_string(const std::string& value) {
-    const std::u8string encoded(
-        reinterpret_cast<const char8_t*>(value.data()),
-        value.size());
+    std::u8string encoded;
+    encoded.reserve(value.size());
+    for (const unsigned char ch : value) {
+        encoded.push_back(static_cast<char8_t>(ch));
+    }
     return std::filesystem::path(encoded);
 }
 
