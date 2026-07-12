@@ -53,21 +53,21 @@
     <EmbeddedResource Update="CommandResources.es.resx">
       <Culture>es</Culture>
       <WithCulture>true</WithCulture>
-      <ManifestResourceName>CopperfinCommandResources</ManifestResourceName>
+      <ManifestResourceName>CopperfinCommandResources.es</ManifestResourceName>
       <MergeWithCTO>true</MergeWithCTO>
       <GenerateSource>false</GenerateSource>
     </EmbeddedResource>
     <EmbeddedResource Update="CommandResources.pt.resx">
       <Culture>pt</Culture>
       <WithCulture>true</WithCulture>
-      <ManifestResourceName>CopperfinCommandResources</ManifestResourceName>
+      <ManifestResourceName>CopperfinCommandResources.pt</ManifestResourceName>
       <MergeWithCTO>true</MergeWithCTO>
       <GenerateSource>false</GenerateSource>
     </EmbeddedResource>
     <EmbeddedResource Update="CommandResources.qps-ploc.resx">
       <Culture>qps-ploc</Culture>
       <WithCulture>true</WithCulture>
-      <ManifestResourceName>CopperfinCommandResources</ManifestResourceName>
+      <ManifestResourceName>CopperfinCommandResources.qps-ploc</ManifestResourceName>
       <MergeWithCTO>true</MergeWithCTO>
       <GenerateSource>false</GenerateSource>
     </EmbeddedResource>

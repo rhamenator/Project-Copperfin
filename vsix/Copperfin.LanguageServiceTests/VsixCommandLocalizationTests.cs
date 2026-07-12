@@ -187,11 +187,11 @@ internal static partial class Program
                resourceAnchors.TryGetValue("CommandResources.resx", out var neutralAnchor) &&
                    neutralAnchor == ("", "false", "CopperfinCommandResources", "true") &&
                resourceAnchors.TryGetValue("CommandResources.es.resx", out var spanishAnchor) &&
-                   spanishAnchor == ("es", "true", "CopperfinCommandResources", "true") &&
+                   spanishAnchor == ("es", "true", "CopperfinCommandResources.es", "true") &&
                resourceAnchors.TryGetValue("CommandResources.pt.resx", out var portugueseAnchor) &&
-                   portugueseAnchor == ("pt", "true", "CopperfinCommandResources", "true") &&
+                   portugueseAnchor == ("pt", "true", "CopperfinCommandResources.pt", "true") &&
                resourceAnchors.TryGetValue("CommandResources.qps-ploc.resx", out var pseudoAnchor) &&
-                   pseudoAnchor == ("qps-ploc", "true", "CopperfinCommandResources", "true") &&
+                   pseudoAnchor == ("qps-ploc", "true", "CopperfinCommandResources.qps-ploc", "true") &&
                resourceAnchors.Keys.All(fileName => File.Exists(Path.Combine(
                    repositoryRoot,
                    "vsix",
