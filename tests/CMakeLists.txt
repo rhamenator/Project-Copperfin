@@ -3980,7 +3980,12 @@ if(WIN32)
             CXX_STANDARD 17
             CXX_STANDARD_REQUIRED ON
         )
-        target_compile_options(copperfin_mixed_mode_declared_dll_fixture PRIVATE /clr /EHa)
+        target_compile_options(copperfin_mixed_mode_declared_dll_fixture PRIVATE
+            /guard:cf-
+            /clr
+            /EHa
+        )
+        target_link_options(copperfin_mixed_mode_declared_dll_fixture PRIVATE /GUARD:NO)
     endif()
 
     find_program(COPPERFIN_FRAMEWORK_CSC
