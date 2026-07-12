@@ -4,7 +4,84 @@
 
 #include "visual_asset_editor_support.h"
 
+#include <new>
+#include <stdexcept>
+
 namespace copperfin::vfp {
+
+namespace {
+
+constexpr std::uint64_t kVisualAssetUndoGroupedHeaderBytes =
+    sizeof(std::uint64_t) + sizeof(std::uint8_t) + 2U * sizeof(std::uint64_t);
+
+bool read_undo_bytes(
+    std::ifstream& input,
+    char* destination,
+    std::uint64_t length,
+    std::uint64_t& remaining) {
+    if (length > remaining ||
+        length > static_cast<std::uint64_t>(std::numeric_limits<std::streamsize>::max())) {
+        return false;
+    }
+    if (length != 0U) {
+        input.read(destination, static_cast<std::streamsize>(length));
+        if (!input.good()) {
+            return false;
+        }
+    }
+    remaining -= length;
+    return true;
+}
+
+template <typename Value>
+bool read_undo_value(std::ifstream& input, Value& value, std::uint64_t& remaining) {
+    return read_undo_bytes(
+        input,
+        reinterpret_cast<char*>(&value),
+        sizeof(value),
+        remaining);
+}
+
+bool read_undo_string(
+    std::ifstream& input,
+    std::uint64_t length,
+    std::uint64_t& remaining,
+    std::string& value) {
+    if (length > static_cast<std::uint64_t>(std::numeric_limits<std::size_t>::max()) ||
+        length > static_cast<std::uint64_t>(std::numeric_limits<std::streamsize>::max()) ||
+        length > remaining) {
+        return false;
+    }
+    value.resize(static_cast<std::size_t>(length));
+    return read_undo_bytes(input, value.data(), length, remaining);
+}
+
+bool undo_record_index_fits(std::uint64_t value) {
+    return value <= static_cast<std::uint64_t>(std::numeric_limits<std::size_t>::max());
+}
+
+bool undo_change_targets_asset(
+    const std::string& path,
+    const VisualAssetUndoEntry& change,
+    const DbfTable& table) {
+    if (change.record_index >= table.records.size()) {
+        return false;
+    }
+    if (change.property_name == kVisualAssetDeletedStateUndoPropertyName) {
+        return change.prior_value_exists &&
+            (change.prior_value == "0" || change.prior_value == "1");
+    }
+    if (trim_both(change.property_name).empty()) {
+        return false;
+    }
+    return read_current_visual_property_state(
+        path,
+        change.record_index,
+        change.property_name).has_value();
+}
+
+}  // namespace
+
 std::filesystem::path visual_asset_undo_root_directory(const std::string& path) {
     const auto normalized = std::filesystem::absolute(std::filesystem::path(path)).string();
     const auto hash = static_cast<unsigned long long>(std::hash<std::string>{}(normalized));
@@ -111,72 +188,102 @@ std::optional<VisualAssetUndoEntry> read_visual_asset_undo_entry(const std::file
         return std::nullopt;
     }
 
-    VisualAssetUndoEntry entry;
-    std::uint64_t record_index = 0;
-    std::uint8_t prior_exists = 0;
-    std::uint64_t property_name_length = 0;
-    std::uint64_t prior_value_length = 0;
-    std::uint64_t label_length = 0;
-    input.read(reinterpret_cast<char*>(&record_index), sizeof(record_index));
-    input.read(reinterpret_cast<char*>(&prior_exists), sizeof(prior_exists));
-    input.read(reinterpret_cast<char*>(&property_name_length), sizeof(property_name_length));
-    input.read(reinterpret_cast<char*>(&prior_value_length), sizeof(prior_value_length));
-    input.read(reinterpret_cast<char*>(&label_length), sizeof(label_length));
+    input.seekg(0, std::ios::end);
+    const std::streamoff end = input.tellg();
+    if (end < 0) {
+        return std::nullopt;
+    }
+    std::uint64_t remaining = static_cast<std::uint64_t>(end);
+    input.seekg(0, std::ios::beg);
     if (!input.good()) {
         return std::nullopt;
     }
 
-    entry.record_index = static_cast<std::size_t>(record_index);
-    entry.prior_value_exists = prior_exists != 0U;
-    entry.property_name.resize(static_cast<std::size_t>(property_name_length));
-    entry.prior_value.resize(static_cast<std::size_t>(prior_value_length));
-    entry.label.resize(static_cast<std::size_t>(label_length));
-    input.read(entry.property_name.data(), static_cast<std::streamsize>(entry.property_name.size()));
-    input.read(entry.prior_value.data(), static_cast<std::streamsize>(entry.prior_value.size()));
-    input.read(entry.label.data(), static_cast<std::streamsize>(entry.label.size()));
-    if (!input.good()) {
-        return std::nullopt;
-    }
+    try {
+        VisualAssetUndoEntry entry;
+        std::uint64_t record_index = 0;
+        std::uint8_t prior_exists = 0;
+        std::uint64_t property_name_length = 0;
+        std::uint64_t prior_value_length = 0;
+        std::uint64_t label_length = 0;
+        if (!read_undo_value(input, record_index, remaining) ||
+            !read_undo_value(input, prior_exists, remaining) ||
+            !read_undo_value(input, property_name_length, remaining) ||
+            !read_undo_value(input, prior_value_length, remaining) ||
+            !read_undo_value(input, label_length, remaining) ||
+            !undo_record_index_fits(record_index) ||
+            prior_exists > 1U ||
+            !read_undo_string(input, property_name_length, remaining, entry.property_name) ||
+            !read_undo_string(input, prior_value_length, remaining, entry.prior_value) ||
+            !read_undo_string(input, label_length, remaining, entry.label)) {
+            return std::nullopt;
+        }
 
-    std::uint64_t grouped_change_count = 0;
-    input.read(reinterpret_cast<char*>(&grouped_change_count), sizeof(grouped_change_count));
-    if (input.eof()) {
-        input.clear();
+        entry.record_index = static_cast<std::size_t>(record_index);
+        entry.prior_value_exists = prior_exists != 0U;
+
+        // Journals created before grouped undo ended exactly after the scalar payload.
+        if (remaining == 0U) {
+            if (input.peek() != std::ifstream::traits_type::eof()) {
+                return std::nullopt;
+            }
+            return entry;
+        }
+        if (remaining < sizeof(std::uint64_t)) {
+            return std::nullopt;
+        }
+
+        std::uint64_t grouped_change_count = 0;
+        if (!read_undo_value(input, grouped_change_count, remaining) ||
+            grouped_change_count > static_cast<std::uint64_t>(std::numeric_limits<std::size_t>::max()) ||
+            grouped_change_count > remaining / kVisualAssetUndoGroupedHeaderBytes) {
+            return std::nullopt;
+        }
+
+        const auto grouped_change_size = static_cast<std::size_t>(grouped_change_count);
+        if (grouped_change_size > entry.grouped_changes.max_size()) {
+            return std::nullopt;
+        }
+        entry.grouped_changes.reserve(grouped_change_size);
+        for (std::uint64_t index = 0; index < grouped_change_count; ++index) {
+            VisualAssetUndoEntry grouped_change;
+            std::uint64_t grouped_record_index = 0;
+            std::uint8_t grouped_prior_exists = 0;
+            std::uint64_t grouped_property_name_length = 0;
+            std::uint64_t grouped_prior_value_length = 0;
+            if (!read_undo_value(input, grouped_record_index, remaining) ||
+                !read_undo_value(input, grouped_prior_exists, remaining) ||
+                !read_undo_value(input, grouped_property_name_length, remaining) ||
+                !read_undo_value(input, grouped_prior_value_length, remaining) ||
+                !undo_record_index_fits(grouped_record_index) ||
+                grouped_prior_exists > 1U ||
+                !read_undo_string(
+                    input,
+                    grouped_property_name_length,
+                    remaining,
+                    grouped_change.property_name) ||
+                !read_undo_string(
+                    input,
+                    grouped_prior_value_length,
+                    remaining,
+                    grouped_change.prior_value)) {
+                return std::nullopt;
+            }
+
+            grouped_change.record_index = static_cast<std::size_t>(grouped_record_index);
+            grouped_change.prior_value_exists = grouped_prior_exists != 0U;
+            entry.grouped_changes.push_back(std::move(grouped_change));
+        }
+
+        if (remaining != 0U || input.peek() != std::ifstream::traits_type::eof()) {
+            return std::nullopt;
+        }
         return entry;
-    }
-    if (!input.good()) {
+    } catch (const std::bad_alloc&) {
+        return std::nullopt;
+    } catch (const std::length_error&) {
         return std::nullopt;
     }
-
-    entry.grouped_changes.reserve(static_cast<std::size_t>(grouped_change_count));
-    for (std::uint64_t index = 0; index < grouped_change_count; ++index) {
-        VisualAssetUndoEntry grouped_change;
-        std::uint64_t grouped_record_index = 0;
-        std::uint8_t grouped_prior_exists = 0;
-        std::uint64_t grouped_property_name_length = 0;
-        std::uint64_t grouped_prior_value_length = 0;
-        input.read(reinterpret_cast<char*>(&grouped_record_index), sizeof(grouped_record_index));
-        input.read(reinterpret_cast<char*>(&grouped_prior_exists), sizeof(grouped_prior_exists));
-        input.read(reinterpret_cast<char*>(&grouped_property_name_length), sizeof(grouped_property_name_length));
-        input.read(reinterpret_cast<char*>(&grouped_prior_value_length), sizeof(grouped_prior_value_length));
-        if (!input.good()) {
-            return std::nullopt;
-        }
-
-        grouped_change.record_index = static_cast<std::size_t>(grouped_record_index);
-        grouped_change.prior_value_exists = grouped_prior_exists != 0U;
-        grouped_change.property_name.resize(static_cast<std::size_t>(grouped_property_name_length));
-        grouped_change.prior_value.resize(static_cast<std::size_t>(grouped_prior_value_length));
-        input.read(grouped_change.property_name.data(), static_cast<std::streamsize>(grouped_change.property_name.size()));
-        input.read(grouped_change.prior_value.data(), static_cast<std::streamsize>(grouped_change.prior_value.size()));
-        if (!input.good()) {
-            return std::nullopt;
-        }
-
-        entry.grouped_changes.push_back(std::move(grouped_change));
-    }
-
-    return entry;
 }
 
 bool record_visual_asset_undo_entry(const std::string& path, const VisualAssetUndoEntry& entry, std::string& error) {
@@ -242,6 +349,25 @@ VisualAssetEditResult undo_visual_object_property(const std::string& path) {
 
     const auto entry = read_visual_asset_undo_entry(files.back());
     if (!entry.has_value()) {
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Undo.JournalReadFailed")};
+    }
+
+    const auto table_result = parse_dbf_table_from_file(
+        path,
+        std::numeric_limits<std::size_t>::max());
+    if (!table_result.ok) {
+        return {.ok = false, .error = table_result.error};
+    }
+    const auto change_targets_asset = [&](const VisualAssetUndoEntry& change) {
+        return undo_change_targets_asset(path, change, table_result.table);
+    };
+    const bool targets_are_valid = entry->grouped_changes.empty()
+        ? change_targets_asset(*entry)
+        : std::all_of(
+              entry->grouped_changes.begin(),
+              entry->grouped_changes.end(),
+              change_targets_asset);
+    if (!targets_are_valid) {
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Undo.JournalReadFailed")};
     }
 

@@ -1104,6 +1104,7 @@ void test_list_visual_object_ancestors_walks_parent_chain();
 
 // ==== Property/method update and batch round-trip tests ====
 void test_update_visual_object_property_rewrites_properties_memo();
+void test_visual_asset_undo_rejects_corrupt_journals_without_mutating_assets();
 void test_update_visual_object_properties_updates_selected_geometry_fields();
 void test_update_visual_object_properties_rolls_back_failed_batches();
 void test_update_visual_object_batch_undoes_report_and_label_batches_in_single_step();

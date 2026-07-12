@@ -9,6 +9,7 @@ using namespace cf_test_visual_asset_editor;
 int main() {
     test_visual_asset_editor_errors_resolve_through_localization_catalog();
     test_update_visual_object_property_rewrites_properties_memo();
+    test_visual_asset_undo_rejects_corrupt_journals_without_mutating_assets();
     test_update_visual_object_properties_updates_selected_geometry_fields();
     test_update_visual_object_properties_rolls_back_failed_batches();
     test_update_visual_object_batch_undoes_report_and_label_batches_in_single_step();

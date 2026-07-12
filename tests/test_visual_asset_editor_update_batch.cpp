@@ -5,7 +5,71 @@
 #include "test_visual_asset_editor_support.h"
 #include "test_environment_support.h"
 
+#include <cstring>
+#include <functional>
+#include <iomanip>
+#include <sstream>
+
 namespace cf_test_visual_asset_editor {
+
+namespace {
+
+template <typename Value>
+void append_native_value(std::vector<std::uint8_t>& bytes, const Value& value) {
+    const auto* begin = reinterpret_cast<const std::uint8_t*>(&value);
+    bytes.insert(bytes.end(), begin, begin + sizeof(value));
+}
+
+void append_native_text(std::vector<std::uint8_t>& bytes, const std::string& value) {
+    const auto* begin = reinterpret_cast<const std::uint8_t*>(value.data());
+    bytes.insert(bytes.end(), begin, begin + value.size());
+}
+
+std::vector<std::uint8_t> make_legacy_scalar_undo_journal() {
+    const std::string property_name = "HPOS";
+    const std::string prior_value = "100";
+    const std::string label = "Property HPOS";
+    std::vector<std::uint8_t> bytes;
+    append_native_value(bytes, std::uint64_t{0U});
+    append_native_value(bytes, std::uint8_t{1U});
+    append_native_value(bytes, static_cast<std::uint64_t>(property_name.size()));
+    append_native_value(bytes, static_cast<std::uint64_t>(prior_value.size()));
+    append_native_value(bytes, static_cast<std::uint64_t>(label.size()));
+    append_native_text(bytes, property_name);
+    append_native_text(bytes, prior_value);
+    append_native_text(bytes, label);
+    return bytes;
+}
+
+void append_grouped_undo_change(
+    std::vector<std::uint8_t>& bytes,
+    std::uint64_t record_index,
+    const std::string& property_name,
+    const std::string& prior_value) {
+    append_native_value(bytes, record_index);
+    append_native_value(bytes, std::uint8_t{1U});
+    append_native_value(bytes, static_cast<std::uint64_t>(property_name.size()));
+    append_native_value(bytes, static_cast<std::uint64_t>(prior_value.size()));
+    append_native_text(bytes, property_name);
+    append_native_text(bytes, prior_value);
+}
+
+std::filesystem::path visual_asset_undo_root_for_test(const std::filesystem::path& asset_path) {
+    const auto normalized = std::filesystem::absolute(asset_path).string();
+    const auto hash = static_cast<unsigned long long>(std::hash<std::string>{}(normalized));
+    std::ostringstream stream;
+    stream << "asset_" << std::hex << std::setw(16) << std::setfill('0') << hash;
+    return std::filesystem::temp_directory_path() / "copperfin_visual_asset_undo" / stream.str();
+}
+
+void write_test_binary_file(const std::filesystem::path& path, const std::vector<std::uint8_t>& bytes) {
+    std::filesystem::create_directories(path.parent_path());
+    std::ofstream output(path, std::ios::binary | std::ios::trunc);
+    output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+}
+
+}  // namespace
+
 void test_update_visual_object_property_rewrites_properties_memo() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -112,6 +176,164 @@ void test_update_visual_object_property_rewrites_properties_memo() {
     expect(!missing_undo_result.ok, "#1008: undo should fail when no visual asset undo history is available");
     expect(missing_undo_result.affected_object_count == 0U,
         "#1008: failed visual property undo should report zero affected objects");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_visual_asset_undo_rejects_corrupt_journals_without_mutating_assets() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_visual_editor_corrupt_undo_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "HPOS", .type = 'N', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> records{{"200"}};
+    const auto create_fixture = [&](const std::string& stem) {
+        const fs::path asset_path = temp_dir / (stem + ".frx");
+        const auto create_result = copperfin::vfp::create_dbf_table_file(
+            asset_path.string(),
+            fields,
+            records);
+        expect(create_result.ok, "#3971: " + stem + " target asset should be writable");
+        const fs::path undo_root = visual_asset_undo_root_for_test(asset_path);
+        fs::remove_all(undo_root, ignored);
+        return std::pair{asset_path, undo_root};
+    };
+    const auto install_journal = [&](const fs::path& undo_root, const std::vector<std::uint8_t>& bytes) {
+        const fs::path journal_path = undo_root / "entries" / "00000000000000000001.bin";
+        write_test_binary_file(journal_path, bytes);
+        return journal_path;
+    };
+    const auto reject_corrupt_journal = [&](
+        const std::string& stem,
+        const std::vector<std::uint8_t>& journal_bytes) {
+        const auto [asset_path, undo_root] = create_fixture(stem);
+        const fs::path journal_path = install_journal(undo_root, journal_bytes);
+        const auto asset_before = read_file_bytes(asset_path);
+        const auto journal_before = read_file_bytes(journal_path);
+
+        const auto status = copperfin::vfp::query_visual_object_undo(asset_path.string());
+        expect(!status.available, "#3971: " + stem + " should not expose corrupt undo history");
+        const auto undo_result = copperfin::vfp::undo_visual_object_property(asset_path.string());
+        expect(!undo_result.ok, "#3971: " + stem + " should reject corrupt undo history");
+        expect(
+            undo_result.error == "Unable to read the visual asset undo journal.",
+            "#3971: " + stem + " should use the existing localized journal-read diagnostic");
+        expect(undo_result.affected_object_count == 0U,
+               "#3971: " + stem + " should report no affected objects");
+        expect(read_file_bytes(asset_path) == asset_before,
+               "#3971: " + stem + " should leave the target asset byte-for-byte unchanged");
+        expect(read_file_bytes(journal_path) == journal_before,
+               "#3971: " + stem + " should leave the corrupt journal unchanged");
+        fs::remove_all(undo_root, ignored);
+    };
+
+    {
+        const auto [asset_path, undo_root] = create_fixture("legacy-scalar");
+        install_journal(undo_root, make_legacy_scalar_undo_journal());
+        const auto status = copperfin::vfp::query_visual_object_undo(asset_path.string());
+        expect(status.available && status.label == "Property HPOS",
+               "#3971: exact-EOF legacy scalar journals should remain available");
+        const auto undo_result = copperfin::vfp::undo_visual_object_property(asset_path.string());
+        expect(undo_result.ok, "#3971: exact-EOF legacy scalar journals should remain undoable");
+        const auto property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "HPOS"
+        });
+        expect(property.ok && property.value == "100",
+               "#3971: legacy scalar undo should restore the serialized prior value");
+        fs::remove_all(undo_root, ignored);
+    }
+
+    auto oversized_scalar_length = make_legacy_scalar_undo_journal();
+    const std::uint64_t impossible_length = std::numeric_limits<std::uint64_t>::max();
+    std::memcpy(oversized_scalar_length.data() + 9U, &impossible_length, sizeof(impossible_length));
+    reject_corrupt_journal("oversized-scalar-length", oversized_scalar_length);
+
+    auto oversized_scalar_prior_length = make_legacy_scalar_undo_journal();
+    std::memcpy(oversized_scalar_prior_length.data() + 17U, &impossible_length, sizeof(impossible_length));
+    reject_corrupt_journal("oversized-scalar-prior-length", oversized_scalar_prior_length);
+
+    auto oversized_scalar_label_length = make_legacy_scalar_undo_journal();
+    std::memcpy(oversized_scalar_label_length.data() + 25U, &impossible_length, sizeof(impossible_length));
+    reject_corrupt_journal("oversized-scalar-label-length", oversized_scalar_label_length);
+
+    auto truncated_scalar_payload = make_legacy_scalar_undo_journal();
+    truncated_scalar_payload.pop_back();
+    reject_corrupt_journal("truncated-scalar-payload", truncated_scalar_payload);
+
+    auto partial_group_count = make_legacy_scalar_undo_journal();
+    partial_group_count.push_back(1U);
+    reject_corrupt_journal("partial-group-count", partial_group_count);
+
+    auto missing_group_payload = make_legacy_scalar_undo_journal();
+    append_native_value(missing_group_payload, std::uint64_t{1U});
+    reject_corrupt_journal("missing-group-payload", missing_group_payload);
+
+    auto impossible_group_count = make_legacy_scalar_undo_journal();
+    append_native_value(impossible_group_count, std::numeric_limits<std::uint64_t>::max());
+    reject_corrupt_journal("impossible-group-count", impossible_group_count);
+
+    auto oversized_grouped_length = make_legacy_scalar_undo_journal();
+    append_native_value(oversized_grouped_length, std::uint64_t{1U});
+    append_native_value(oversized_grouped_length, std::uint64_t{0U});
+    append_native_value(oversized_grouped_length, std::uint8_t{1U});
+    append_native_value(oversized_grouped_length, impossible_length);
+    append_native_value(oversized_grouped_length, std::uint64_t{0U});
+    reject_corrupt_journal("oversized-grouped-length", oversized_grouped_length);
+
+    auto oversized_grouped_prior_length = make_legacy_scalar_undo_journal();
+    append_native_value(oversized_grouped_prior_length, std::uint64_t{1U});
+    append_native_value(oversized_grouped_prior_length, std::uint64_t{0U});
+    append_native_value(oversized_grouped_prior_length, std::uint8_t{1U});
+    append_native_value(oversized_grouped_prior_length, std::uint64_t{0U});
+    append_native_value(oversized_grouped_prior_length, impossible_length);
+    reject_corrupt_journal("oversized-grouped-prior-length", oversized_grouped_prior_length);
+
+    auto truncated_grouped_payload = make_legacy_scalar_undo_journal();
+    append_native_value(truncated_grouped_payload, std::uint64_t{1U});
+    append_native_value(truncated_grouped_payload, std::uint64_t{0U});
+    append_native_value(truncated_grouped_payload, std::uint8_t{1U});
+    append_native_value(truncated_grouped_payload, std::uint64_t{4U});
+    append_native_value(truncated_grouped_payload, std::uint64_t{3U});
+    append_native_text(truncated_grouped_payload, "HP");
+    reject_corrupt_journal("truncated-grouped-payload", truncated_grouped_payload);
+
+    auto trailing_corruption = make_legacy_scalar_undo_journal();
+    append_native_value(trailing_corruption, std::uint64_t{0U});
+    trailing_corruption.push_back(0xA5U);
+    reject_corrupt_journal("trailing-corruption", trailing_corruption);
+
+    {
+        const auto [asset_path, undo_root] = create_fixture("invalid-grouped-target");
+        auto semantic_corruption = make_legacy_scalar_undo_journal();
+        append_native_value(semantic_corruption, std::uint64_t{2U});
+        append_grouped_undo_change(semantic_corruption, 0U, "HPOS", "100");
+        append_grouped_undo_change(semantic_corruption, 99U, "HPOS", "300");
+        const fs::path journal_path = install_journal(undo_root, semantic_corruption);
+        const auto asset_before = read_file_bytes(asset_path);
+        const auto journal_before = read_file_bytes(journal_path);
+        const auto status = copperfin::vfp::query_visual_object_undo(asset_path.string());
+        expect(status.available,
+               "#3971: structurally valid grouped journals should remain visible before target preflight");
+
+        const auto undo_result = copperfin::vfp::undo_visual_object_property(asset_path.string());
+        expect(!undo_result.ok &&
+                   undo_result.error == "Unable to read the visual asset undo journal.",
+               "#3971: invalid grouped targets should fail as corrupt journal data");
+        expect(read_file_bytes(asset_path) == asset_before,
+               "#3971: invalid later grouped targets should not partially mutate the asset");
+        expect(read_file_bytes(journal_path) == journal_before,
+               "#3971: invalid grouped-target rejection should preserve the journal");
+        fs::remove_all(undo_root, ignored);
+    }
 
     fs::remove_all(temp_dir, ignored);
 }
