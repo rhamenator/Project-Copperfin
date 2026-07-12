@@ -44,6 +44,16 @@ namespace
             "cPosixExt = JUSTEXT(cPosixPath)\n"
             "cWinFullPath = FULLPATH(cWinPath)\n"
             "cUncFullPath = FULLPATH(cUncPath)\n"
+            "cWinDotFullPath = FULLPATH('E:\\Project-Copperfin\\src\\.\\runtime\\..\\main.prg')\n"
+            "cWinMixedDotFullPath = FULLPATH('E:/Project-Copperfin\\src/../main.prg')\n"
+            "cWinRootBoundaryFullPath = FULLPATH('E:\\..\\..\\main.prg')\n"
+            "cUncDotFullPath = FULLPATH('\\\\server\\share\\reports\\.\\drafts\\..\\invoice.frx')\n"
+            "cUncMixedDotFullPath = FULLPATH('//server/share\\reports/../invoice.frx')\n"
+            "cUncRootBoundaryFullPath = FULLPATH('\\\\server\\share\\..\\..\\invoice.frx')\n"
+            "cExtendedUncDotFullPath = FULLPATH('\\\\?\\UNC\\server\\share\\reports\\..\\invoice.frx')\n"
+            "cExtendedDriveDotFullPath = FULLPATH('\\\\?\\E:\\reports\\..\\invoice.frx')\n"
+            "cDevicePipeFullPath = FULLPATH('\\\\.\\pipe\\alpha\\..\\beta')\n"
+            "cGlobalRootFullPath = FULLPATH('\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\..\\file')\n"
             "cPosixFullPath = FULLPATH(cPosixPath)\n"
             "cPosixDotFullPath = FULLPATH('/opt/copperfin/../shared/main.prg')\n"
             "cPosixMixedFullPath = FULLPATH('/opt\\copperfin\\main.prg')\n"
@@ -75,6 +85,16 @@ namespace
         const auto posix_ext = state.globals.find("cposixext");
         const auto win_full_path = state.globals.find("cwinfullpath");
         const auto unc_full_path = state.globals.find("cuncfullpath");
+        const auto win_dot_full_path = state.globals.find("cwindotfullpath");
+        const auto win_mixed_dot_full_path = state.globals.find("cwinmixeddotfullpath");
+        const auto win_root_boundary_full_path = state.globals.find("cwinrootboundaryfullpath");
+        const auto unc_dot_full_path = state.globals.find("cuncdotfullpath");
+        const auto unc_mixed_dot_full_path = state.globals.find("cuncmixeddotfullpath");
+        const auto unc_root_boundary_full_path = state.globals.find("cuncrootboundaryfullpath");
+        const auto extended_unc_dot_full_path = state.globals.find("cextendeduncdotfullpath");
+        const auto extended_drive_dot_full_path = state.globals.find("cextendeddrivedotfullpath");
+        const auto device_pipe_full_path = state.globals.find("cdevicepipefullpath");
+        const auto global_root_full_path = state.globals.find("cglobalrootfullpath");
         const auto posix_full_path = state.globals.find("cposixfullpath");
         const auto posix_dot_full_path = state.globals.find("cposixdotfullpath");
         const auto posix_mixed_full_path = state.globals.find("cposixmixedfullpath");
@@ -99,6 +119,16 @@ namespace
         expect(posix_ext != state.globals.end(), "POSIX JUSTEXT result should be captured");
         expect(win_full_path != state.globals.end(), "Windows FULLPATH result should be captured");
         expect(unc_full_path != state.globals.end(), "UNC FULLPATH result should be captured");
+        expect(win_dot_full_path != state.globals.end(), "Windows dot-segment FULLPATH result should be captured");
+        expect(win_mixed_dot_full_path != state.globals.end(), "Windows mixed-separator FULLPATH result should be captured");
+        expect(win_root_boundary_full_path != state.globals.end(), "Windows root-boundary FULLPATH result should be captured");
+        expect(unc_dot_full_path != state.globals.end(), "UNC dot-segment FULLPATH result should be captured");
+        expect(unc_mixed_dot_full_path != state.globals.end(), "UNC mixed-separator FULLPATH result should be captured");
+        expect(unc_root_boundary_full_path != state.globals.end(), "UNC root-boundary FULLPATH result should be captured");
+        expect(extended_unc_dot_full_path != state.globals.end(), "extended UNC FULLPATH result should be captured");
+        expect(extended_drive_dot_full_path != state.globals.end(), "extended drive FULLPATH result should be captured");
+        expect(device_pipe_full_path != state.globals.end(), "device pipe FULLPATH result should be captured");
+        expect(global_root_full_path != state.globals.end(), "GLOBALROOT FULLPATH result should be captured");
         expect(posix_full_path != state.globals.end(), "POSIX FULLPATH result should be captured");
         expect(posix_dot_full_path != state.globals.end(), "POSIX dot-segment FULLPATH result should be captured");
         expect(posix_mixed_full_path != state.globals.end(), "POSIX mixed-separator FULLPATH result should be captured");
@@ -165,6 +195,57 @@ namespace
         {
             expect(copperfin::runtime::format_value(unc_full_path->second) == "\\\\server\\share\\reports\\invoice.frx",
                    "FULLPATH should preserve UNC absolute paths on every host");
+        }
+        if (win_dot_full_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(win_dot_full_path->second) == "E:\\Project-Copperfin\\src\\main.prg",
+                   "#3962: FULLPATH should normalize Windows drive-absolute dot segments on every host");
+        }
+        if (win_mixed_dot_full_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(win_mixed_dot_full_path->second) == "E:\\Project-Copperfin\\main.prg",
+                   "#3962: FULLPATH should normalize mixed Windows separators and parent segments");
+        }
+        if (win_root_boundary_full_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(win_root_boundary_full_path->second) == "E:\\main.prg",
+                   "#3962: FULLPATH should not reduce a drive-absolute path above its root");
+        }
+        if (unc_dot_full_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(unc_dot_full_path->second) == "\\\\server\\share\\reports\\invoice.frx",
+                   "#3962: FULLPATH should normalize UNC dot segments while preserving the share root");
+        }
+        if (unc_mixed_dot_full_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(unc_mixed_dot_full_path->second) == "\\\\server\\share\\invoice.frx",
+                   "#3962: FULLPATH should normalize mixed UNC separators to Windows separators");
+        }
+        if (unc_root_boundary_full_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(unc_root_boundary_full_path->second) == "\\\\server\\share\\invoice.frx",
+                   "#3962: FULLPATH should not reduce a UNC path above its share root");
+        }
+        if (extended_unc_dot_full_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(extended_unc_dot_full_path->second) == "\\\\?\\UNC\\server\\share\\invoice.frx",
+                   "#3962: FULLPATH should lock the share root of extended UNC paths");
+        }
+        if (extended_drive_dot_full_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(extended_drive_dot_full_path->second) == "\\\\?\\E:\\invoice.frx",
+                   "#3962: FULLPATH should normalize extended drive paths without host-root interpretation");
+        }
+        if (device_pipe_full_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(device_pipe_full_path->second) == "\\\\.\\pipe\\alpha\\..\\beta",
+                   "#3962: FULLPATH should preserve non-filesystem device namespaces byte-for-byte");
+        }
+        if (global_root_full_path != state.globals.end())
+        {
+            expect(copperfin::runtime::format_value(global_root_full_path->second) ==
+                       "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\..\\file",
+                   "#3962: FULLPATH should not reinterpret GLOBALROOT namespace paths as UNC shares");
         }
         if (posix_full_path != state.globals.end())
         {

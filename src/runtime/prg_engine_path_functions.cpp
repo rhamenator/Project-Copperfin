@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
+#include <utility>
+#include <vector>
 
 namespace copperfin::runtime {
 
@@ -35,6 +37,90 @@ std::string normalize_posix_absolute_path(std::string value) {
     return std::filesystem::path(value).lexically_normal().generic_string();
 }
 
+std::vector<std::string> split_windows_path_components(const std::string& value, std::size_t start) {
+    std::vector<std::string> components;
+    while (start < value.size()) {
+        const std::size_t separator = value.find('\\', start);
+        const std::size_t end = separator == std::string::npos ? value.size() : separator;
+        if (end > start) {
+            components.push_back(value.substr(start, end - start));
+        }
+        if (separator == std::string::npos) {
+            break;
+        }
+        start = separator + 1U;
+    }
+    return components;
+}
+
+void normalize_windows_tail(std::vector<std::string>& components, std::size_t root_component_count) {
+    std::vector<std::string> normalized;
+    normalized.reserve(components.size());
+    const std::size_t locked_count = std::min(root_component_count, components.size());
+    normalized.insert(normalized.end(), components.begin(), components.begin() + locked_count);
+    for (std::size_t index = locked_count; index < components.size(); ++index) {
+        const std::string& component = components[index];
+        if (component == ".") {
+            continue;
+        }
+        if (component == "..") {
+            if (normalized.size() > locked_count) {
+                normalized.pop_back();
+            }
+            continue;
+        }
+        normalized.push_back(component);
+    }
+    components = std::move(normalized);
+}
+
+std::string normalize_windows_absolute_path(std::string value) {
+    const std::string original = value;
+    std::replace(value.begin(), value.end(), '/', '\\');
+    if (is_windows_drive_absolute_path(value)) {
+        std::vector<std::string> components = split_windows_path_components(value, 3U);
+        normalize_windows_tail(components, 0U);
+
+        std::string result = value.substr(0U, 3U);
+        for (std::size_t index = 0U; index < components.size(); ++index) {
+            if (index != 0U) {
+                result.push_back('\\');
+            }
+            result += components[index];
+        }
+        return result;
+    }
+
+    const bool device_namespace = value.size() >= 4U &&
+        value[0] == '\\' && value[1] == '\\' &&
+        (value[2] == '?' || value[2] == '.') && value[3] == '\\';
+    if (device_namespace) {
+        const bool extended_unc = value.size() >= 8U && uppercase_copy(value.substr(0U, 8U)) == "\\\\?\\UNC\\";
+        const bool extended_drive = value.size() >= 7U && value[2] == '?' &&
+            std::isalpha(static_cast<unsigned char>(value[4])) != 0 &&
+            value[5] == ':' && value[6] == '\\';
+        if (!extended_unc && !extended_drive) {
+            return original;
+        }
+    }
+
+    std::vector<std::string> components = split_windows_path_components(value, 2U);
+    std::size_t root_component_count = 2U;
+    if (components.size() >= 2U && components[0] == "?" && uppercase_copy(components[1]) == "UNC") {
+        root_component_count = 4U;
+    }
+    normalize_windows_tail(components, root_component_count);
+
+    std::string result = "\\\\";
+    for (std::size_t index = 0U; index < components.size(); ++index) {
+        if (index != 0U) {
+            result.push_back('\\');
+        }
+        result += components[index];
+    }
+    return result;
+}
+
 std::string normalize_relative_path_separators(std::string value) {
     std::replace(
         value.begin(),
@@ -46,7 +132,7 @@ std::string normalize_relative_path_separators(std::string value) {
 
 std::string portable_full_path(const std::string& raw_path, const std::string& default_directory) {
     if (is_windows_drive_absolute_path(raw_path) || is_unc_path(raw_path)) {
-        return raw_path;
+        return normalize_windows_absolute_path(raw_path);
     }
     if (is_posix_absolute_path(raw_path)) {
         return normalize_posix_absolute_path(raw_path);
