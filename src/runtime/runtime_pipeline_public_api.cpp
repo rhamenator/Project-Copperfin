@@ -565,7 +565,7 @@ RuntimePackagePlan create_runtime_package_plan(
         asset.exists =
             asset.source_resolution_error.empty() &&
             !asset.source_path.empty() &&
-            std::filesystem::exists(asset.source_path);
+            source_path_exists_on_host(asset.source_path);
         asset.relative_path = relative_asset_path(
             document,
             entry,

@@ -59,14 +59,6 @@ std::filesystem::path resolve_vfp_path_from_base(
         return (base_dir / candidate).lexically_normal();
     }
 
-    if (std::filesystem::exists(candidate)) {
-        return candidate.lexically_normal();
-    }
-
-    if (!candidate.filename().empty()) {
-        return (base_dir / candidate.filename()).lexically_normal();
-    }
-
     return candidate.lexically_normal();
 }
 
@@ -529,11 +521,22 @@ std::string resolve_project_item_source(
     };
 
     if (!entry.relative_path.empty()) {
+        const std::string normalized_relative_path =
+            normalize_vfp_separators(entry.relative_path);
         const std::filesystem::path from_relative = resolve_vfp_path_from_base(base_dir, entry.relative_path);
+#if !defined(_WIN32)
+        if (is_windows_drive_absolute_path(normalized_relative_path) ||
+            is_unc_path(normalized_relative_path)) {
+            return normalized_relative_path;
+        }
+#endif
         if (const auto resolved = resolve_candidate(from_relative); resolved.has_value()) {
             return resolved->string();
         }
         if (!error.empty()) {
+            return from_relative.lexically_normal().string();
+        }
+        if (is_vfp_absolute_path(normalized_relative_path)) {
             return from_relative.lexically_normal().string();
         }
         if (has_parent_traversal_segment(entry.relative_path)) {
@@ -566,6 +569,22 @@ std::string resolve_project_item_source(
         return resolved->string();
     }
     return from_name.lexically_normal().string();
+}
+
+bool source_path_exists_on_host(const std::string& value) {
+    if (trim_copy(value).empty()) {
+        return false;
+    }
+
+    const std::string normalized = normalize_vfp_separators(value);
+#if !defined(_WIN32)
+    if (is_windows_drive_absolute_path(normalized) || is_unc_path(normalized)) {
+        return false;
+    }
+#endif
+
+    std::error_code error;
+    return std::filesystem::exists(std::filesystem::path(normalized), error) && !error;
 }
 
 std::string relative_asset_path(

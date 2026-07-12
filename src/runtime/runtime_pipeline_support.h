@@ -80,6 +80,7 @@ std::string resolve_project_item_source(
     const studio::StudioProjectEntry& entry,
     bool require_unique_casefold,
     std::string& error);
+bool source_path_exists_on_host(const std::string& value);
 std::string relative_asset_path(
     const studio::StudioDocumentModel& document,
     const studio::StudioProjectEntry& entry,

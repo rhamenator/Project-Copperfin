@@ -373,6 +373,223 @@ void test_startup_resolution_preserves_parent_tail_and_name_fallbacks() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_absolute_project_item_paths_never_rebind_to_project_decoys() {
+    namespace fs = std::filesystem;
+
+    struct MissingAbsoluteCase {
+        std::string label;
+        std::string recorded_path;
+        std::string decoy_name;
+        std::string type_title;
+        std::string companion_extension;
+    };
+
+    const fs::path shared_root =
+        fs::temp_directory_path() / "copperfin_runtime_pipeline_absolute_project_items";
+    std::error_code ignored;
+    fs::remove_all(shared_root, ignored);
+    fs::create_directories(shared_root);
+
+    const std::vector<MissingAbsoluteCase> missing_cases{
+        {
+            "POSIX PRG",
+            (shared_root / "missing-posix" / "startup.prg").string(),
+            "startup.prg",
+            "Program",
+            {}
+        },
+        {
+            "Windows PRG",
+            R"(Q:\CopperfinMissingAbsolute\Sources\startup.prg)",
+            "startup.prg",
+            "Program",
+            {}
+        },
+        {
+            "UNC PRG",
+            R"(\\tmp\copperfin_runtime_pipeline_absolute_project_items\unc-alias\startup.prg)",
+            "startup.prg",
+            "Program",
+            {}
+        },
+        {
+            "POSIX FRX",
+            (shared_root / "missing-posix" / "invoice.frx").string(),
+            "invoice.frx",
+            "Report",
+            ".frt"
+        },
+        {
+            "Windows LBX",
+            R"(Q:\CopperfinMissingAbsolute\Labels\customer.lbx)",
+            "customer.lbx",
+            "Label",
+            ".lbt"
+        }
+    };
+
+    std::size_t case_index = 0U;
+    for (const auto& missing_case : missing_cases) {
+        const fs::path temp_root = shared_root / ("missing-" + std::to_string(case_index));
+        const fs::path project_dir = temp_root / "project";
+        const fs::path output_dir = temp_root / "output";
+        const fs::path runtime_host = runtime_host_fixture_path(temp_root);
+        const fs::path decoy_path = project_dir / missing_case.decoy_name;
+        fs::create_directories(project_dir);
+        write_text(decoy_path, "project-decoy-bytes");
+        if (!missing_case.companion_extension.empty()) {
+            fs::path decoy_companion = decoy_path;
+            decoy_companion.replace_extension(missing_case.companion_extension);
+            write_text(decoy_companion, "project-decoy-companion-bytes");
+        }
+        write_text(runtime_host, "runtime-host");
+
+        const fs::path original_working_directory = fs::current_path();
+        bool changed_working_directory = false;
+#if !defined(_WIN32)
+        if (missing_case.recorded_path.size() >= 2U &&
+            missing_case.recorded_path[0U] == '\\' &&
+            missing_case.recorded_path[1U] == '\\') {
+            std::string normalized_host_alias = missing_case.recorded_path;
+            std::replace(
+                normalized_host_alias.begin(),
+                normalized_host_alias.end(),
+                '\\',
+                '/');
+            const fs::path host_alias_decoy(normalized_host_alias);
+            fs::create_directories(host_alias_decoy.parent_path());
+            write_text(host_alias_decoy, "unc-host-alias-decoy-bytes");
+        }
+        if (missing_case.recorded_path.size() >= 3U &&
+            missing_case.recorded_path[1U] == ':') {
+            const fs::path cwd_decoy_root = temp_root / "cwd-decoy";
+            std::string normalized_cwd_decoy = missing_case.recorded_path;
+            std::replace(
+                normalized_cwd_decoy.begin(),
+                normalized_cwd_decoy.end(),
+                '\\',
+                '/');
+            const fs::path cwd_decoy_path = cwd_decoy_root / fs::path(normalized_cwd_decoy);
+            fs::create_directories(cwd_decoy_path.parent_path());
+            write_text(cwd_decoy_path, "cwd-drive-decoy-bytes");
+            if (!missing_case.companion_extension.empty()) {
+                fs::path cwd_decoy_companion = cwd_decoy_path;
+                cwd_decoy_companion.replace_extension(missing_case.companion_extension);
+                write_text(cwd_decoy_companion, "cwd-drive-decoy-companion-bytes");
+            }
+            fs::current_path(cwd_decoy_root, ignored);
+            changed_working_directory = !ignored;
+        }
+#endif
+
+        copperfin::studio::StudioDocumentModel document;
+        document.path = (project_dir / "absolute_items.pjx").string();
+        auto workspace = startup_workspace(
+            project_dir,
+            output_dir,
+            "MissingAbsolute" + std::to_string(case_index),
+            missing_case.recorded_path,
+            missing_case.type_title);
+        workspace.entries[0U].name = missing_case.decoy_name;
+
+        const auto plan = create_startup_plan(document, workspace, output_dir);
+        if (changed_working_directory) {
+            fs::current_path(original_working_directory, ignored);
+        }
+        std::string normalized_recorded_path = missing_case.recorded_path;
+        std::replace(
+            normalized_recorded_path.begin(),
+            normalized_recorded_path.end(),
+            '\\',
+            '/');
+        const fs::path expected_unresolved =
+            normalized_recorded_path.rfind("//", 0U) == 0U
+                ? fs::path(normalized_recorded_path)
+                : fs::path(normalized_recorded_path).lexically_normal();
+        expect(plan.assets.size() == 1U,
+               "#3991: " + missing_case.label + " missing-absolute plan should retain one startup asset");
+        if (plan.assets.size() == 1U) {
+            expect(plan.assets[0U].source_path == expected_unresolved.string() &&
+                       !plan.assets[0U].exists,
+                   "#3991: " + missing_case.label +
+                       " missing absolute should remain unresolved instead of binding the decoy");
+            expect(plan.assets[0U].source_path != decoy_path.string(),
+                   "#3991: " + missing_case.label + " plan must not adopt the project decoy path");
+        }
+        expect(plan.debug_plan.startup_source_path == expected_unresolved.string() &&
+                   !plan.debug_plan.supports_breakpoints,
+               "#3991: " + missing_case.label +
+                   " debug metadata should retain unresolved absolute provenance");
+
+        const auto security_profile = copperfin::security::default_native_security_profile();
+        const auto extensibility_profile = copperfin::platform::default_extensibility_profile();
+        const std::string runtime_manifest = copperfin::runtime::build_runtime_manifest_text(
+            plan, security_profile, extensibility_profile);
+        const std::string debug_manifest = copperfin::runtime::build_debug_manifest_text(
+            plan, security_profile, extensibility_profile);
+        expect(runtime_manifest.find(decoy_path.string()) == std::string::npos &&
+                   debug_manifest.find(decoy_path.string()) == std::string::npos &&
+                   runtime_manifest.find("project-decoy-bytes") == std::string::npos &&
+                   debug_manifest.find("project-decoy-bytes") == std::string::npos,
+               "#3991: " + missing_case.label +
+                   " decoy path and bytes must not enter manifest contracts");
+
+        const auto result = materialize_startup_plan(plan, runtime_host);
+        const std::string expected_error = runtime_pipeline_english_catalog().translate(
+            "Runtime.Package.Error.SourceFileMissing",
+            {{"path", expected_unresolved.string()}});
+        expect(!result.ok && result.error == expected_error,
+               "#3991: " + missing_case.label +
+                   " missing absolute should fail through the localized source diagnostic");
+        expect(!fs::exists(plan.package_root),
+               "#3991: " + missing_case.label +
+                   " missing absolute failure should not commit package content");
+
+        ++case_index;
+    }
+
+    const fs::path valid_root = shared_root / "valid";
+    const fs::path project_dir = valid_root / "project";
+    const fs::path external_dir = valid_root / "external";
+    const fs::path output_dir = valid_root / "output";
+    const fs::path runtime_host = runtime_host_fixture_path(valid_root);
+    const fs::path decoy_path = project_dir / "startup.prg";
+    const fs::path absolute_source = external_dir / "startup.prg";
+    fs::create_directories(project_dir);
+    fs::create_directories(external_dir);
+    write_text(decoy_path, "project-decoy-bytes");
+    write_text(absolute_source, "authoritative-absolute-bytes");
+    write_text(runtime_host, "runtime-host");
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "valid_absolute.pjx").string();
+    auto workspace = startup_workspace(
+        project_dir,
+        output_dir,
+        "ValidAbsolute",
+        absolute_source.string(),
+        "Program");
+    workspace.entries[0U].name = "startup.prg";
+
+    const auto plan = create_startup_plan(document, workspace, output_dir);
+    expect(plan.assets.size() == 1U && plan.assets[0U].exists &&
+               plan.assets[0U].source_path == absolute_source.string() &&
+               plan.debug_plan.startup_source_path == absolute_source.string(),
+           "#3991: an existing absolute source should preserve authoritative provenance");
+    const auto result = materialize_startup_plan(plan, runtime_host);
+    expect(result.ok, "#3991: an existing absolute source should still materialize");
+    if (result.ok && !result.plan.assets.empty()) {
+        expect(read_text(result.plan.assets[0U].staged_path) == "authoritative-absolute-bytes",
+               "#3991: valid absolute materialization should stage source bytes, not decoy bytes");
+        const std::string debug_manifest = read_text(result.plan.debug_manifest_path);
+        expect(debug_manifest.find(absolute_source.string()) != std::string::npos &&
+                   debug_manifest.find(decoy_path.string()) == std::string::npos,
+               "#3991: valid absolute debug metadata should retain only authoritative provenance");
+    }
+
+    fs::remove_all(shared_root, ignored);
+}
+
 void test_missing_startup_primary_fails_for_all_mvp_families() {
     namespace fs = std::filesystem;
 
